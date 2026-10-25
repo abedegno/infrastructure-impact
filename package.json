@@ -1,0 +1,12 @@
+{
+  "name": "infrastructure-impact-quality",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write infrastructure_impact/web",
+    "format:check": "prettier --check infrastructure_impact/web"
+  },
+  "devDependencies": {
+    "prettier": "3.9.10"
+  },
+  "license": "Apache-2.0"
+}

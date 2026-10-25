@@ -1,0 +1,44 @@
+HPE Cray / CVE-2024-6387 — timing investigation
+Reviewed: 2026-10-25
+Status: unresolved research candidate; no verified silent-fix or concealment finding.
+
+Observed association
+HPESBCR04733 identifies seven HPE Cray EX blade/server products, CcNc firmware
+before 1.9.5-39, and HFP 24.8.1 dated 2024-08-28. Its Release Date field and
+initial-history entry identify 2024-11-06. The reported date difference is 70 days.
+The fix association and the earlier firmware date come from the same bulletin;
+they are not independent evidence that customers could download it in August.
+https://support.hpe.com/hpesc/public/api/document/hpesbcr04733en_us
+
+Corroboration attempted
+A separately indexed official HFP release-history page lists version 24.8.1 on
+2024-08-28. This corroborates a vendor-reported release date at the search-index
+level. Direct collection returned a page without a usable release table, and
+browser inspection did not produce usable content. The raw response is retained
+locally. An indexed excerpt is not being substituted for an archived release page
+or evidence of actual public availability on that date.
+https://support.hpe.com/connect/s/softwaredetails?collectionId=MTX-575acc2c0e334c3a&language=fr&softwareId=MTX_c65e615117944819bcdc6219e0
+
+Searches performed
+Exact firmware version 1.9.5-39, HFP 24.8.1, the CVE plus Cray, release notes and
+NOTES/README references were searched across official HPE sources. No separately
+retrievable original 24.8.1 release notes, dated download metadata, component
+manifest or pre-November CVE notice was collected in this pass. A no-result
+search cannot prove those documents or earlier disclosures never existed.
+
+Questions that remain open
+1. Was HFP 24.8.1 publicly downloadable on 2024-08-28, and on what entitlement?
+2. Does an archived release manifest establish that it contained CcNc 1.9.5-39
+   for each listed product, rather than a similarly named package or build?
+3. Do the original release notes, customer notices or coordinated disclosures
+   identify the OpenSSH security fix before the collected November bulletin?
+4. Does independent patch/component evidence confirm the specific fix, rather
+   than relying solely on the later bulletin's statement?
+
+Assessment
+The chronology is worth investigating. Firmware labels may be build dates or
+vendor-reported release dates, and the earliest collected bulletin may be later
+than a customer notification or another public notice. No intent is inferred.
+The application keeps this at unverified_release_date_candidate and does not
+register it as verified fix_evidence. Upgrading the finding requires archived
+release-availability evidence plus the exact CVE/product/component association.

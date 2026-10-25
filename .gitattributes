@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.gz binary
+# Applied migrations are byte-preserved because their checksums are immutable.
+infrastructure_impact/migrations/001_initial.sql -text whitespace=-blank-at-eol

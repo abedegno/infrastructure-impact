@@ -1,0 +1,366 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:advisory:2",
+  "title": "Infrastructure Impact normalized advisory v2",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "vendor",
+    "advisory_id",
+    "title",
+    "adapter_version",
+    "source_url",
+    "source_format",
+    "document_status",
+    "cves",
+    "assessments",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "vendor": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "advisory_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_url": {
+      "type": "string",
+      "pattern": "^https://"
+    },
+    "advisory_url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_format": {
+      "type": "string",
+      "minLength": 1
+    },
+    "published_at": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "format": "local-date-time"
+        }
+      ]
+    },
+    "updated_at": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "string",
+          "format": "local-date-time"
+        }
+      ]
+    },
+    "reported_fix_date": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
+    "document_status": {
+      "enum": [
+        "unknown",
+        "final",
+        "interim",
+        "draft",
+        "published",
+        "rejected"
+      ]
+    },
+    "cves": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/cve"
+      },
+      "uniqueItems": true
+    },
+    "assessments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assessment"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "extensions": {
+      "type": "object"
+    },
+    "evidence_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revision_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_at": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "string",
+          "format": "date-time"
+        }
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_observed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "cve": {
+      "type": "string",
+      "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+    },
+    "assessment": {
+      "type": "object",
+      "required": [
+        "cve_id",
+        "product_id",
+        "product",
+        "status",
+        "scope",
+        "versions",
+        "remediations",
+        "exposure",
+        "evidence_locator"
+      ],
+      "properties": {
+        "cve_id": {
+          "$ref": "#/$defs/cve"
+        },
+        "product_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1
+        },
+        "product_family": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "affected",
+            "unaffected",
+            "fixed",
+            "partially_mitigated",
+            "investigating",
+            "unknown",
+            "recommended",
+            "conflicting"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "cve_specific",
+            "bulletin_shared"
+          ]
+        },
+        "source_statuses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "expression": {
+                "type": "string",
+                "minLength": 1
+              },
+              "status": {
+                "enum": [
+                  "affected",
+                  "unaffected",
+                  "unknown",
+                  "fixed"
+                ]
+              },
+              "lessThan": {
+                "type": "string"
+              },
+              "lessThanOrEqual": {
+                "type": "string"
+              },
+              "versionType": {
+                "type": "string"
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "version"
+                ]
+              },
+              {
+                "required": [
+                  "expression"
+                ]
+              }
+            ],
+            "additionalProperties": true
+          }
+        },
+        "remediations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "availability": {
+                "enum": [
+                  "vendor_reports_fixed",
+                  "planned",
+                  "partial_mitigation",
+                  "no_fix_planned",
+                  "unavailable",
+                  "not_a_fix",
+                  "unknown"
+                ]
+              },
+              "details": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "exposure": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "evidence_locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "product_context": {
+          "type": "array"
+        },
+        "relationship": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "identifiers": {
+          "type": "object",
+          "properties": {
+            "cpe": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "purl": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "document": {
+    "title": "Synthetic advisory",
+    "tracking": {
+      "id": "synthetic-aruba",
+      "status": "final",
+      "initial_release_date": "2025-01-01T00:00:00Z"
+    }
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2026-109618",
+      "product_status": {
+        "fixed": [
+          "CPPM-6.14.1"
+        ]
+      },
+      "remediations": [
+        {
+          "category": "vendor_fix",
+          "details": "Partial mitigation; full fix planned."
+        }
+      ]
+    }
+  ],
+  "product_tree": {
+    "full_product_names": [
+      {
+        "product_id": "CPPM-6.14.1",
+        "name": "Synthetic ClearPass case"
+      }
+    ]
+  }
+}

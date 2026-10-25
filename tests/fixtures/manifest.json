@@ -1,0 +1,112 @@
+[
+  {
+    "file": "arista-0200.html",
+    "kind": "synthetic",
+    "sha256": "3c2cb39f74ffcc485f55a22c7051a02ca16c77da9974da63550cb1dcc132807a"
+  },
+  {
+    "file": "arista-0201.html",
+    "kind": "synthetic",
+    "sha256": "50d85c192e29acb1d368ebace53568b63a4a3543f109eb34a0d9263f6eb7e619"
+  },
+  {
+    "file": "arista-log4shell.html",
+    "kind": "synthetic",
+    "sha256": "60c7840469457fa1c6321ef07d41504ef6401a9a857cdbfbe142b496aec674bc"
+  },
+  {
+    "file": "arista-openssh.html",
+    "kind": "synthetic",
+    "sha256": "de377b41546502f970b2c05c6ef594cc2ee38c7b91d0decd46f26da5ee6dba37"
+  },
+  {
+    "file": "arista-openssl.html",
+    "kind": "synthetic",
+    "sha256": "0cbcb3ca1e0a265fbf22a36246d4300fbf484338556f397b69572f80d81eb77c"
+  },
+  {
+    "file": "arista120.json",
+    "kind": "synthetic",
+    "sha256": "b77dc7095d24358e3aa88ecdbebf2418cc13454280ff5abd2656c4d1d7fac518"
+  },
+  {
+    "file": "aruba.json",
+    "kind": "synthetic",
+    "sha256": "21aa8cb04dba38394bdfff64184da727e3ba76b2c0bad687331e9f7e950ea6dc"
+  },
+  {
+    "file": "checkpoint-advisories.json",
+    "kind": "synthetic",
+    "sha256": "5fc7a3207b527411e920c3cf730afd366d75058dda526d7567fac6d65a968138"
+  },
+  {
+    "file": "checkpoint-regresshion.html",
+    "kind": "synthetic",
+    "sha256": "5d64c1fda3991eaa6b161625d59c5727ea82a359ef8c99ed46bda785c501c279"
+  },
+  {
+    "file": "checkpoint-terrapin.html",
+    "kind": "synthetic",
+    "sha256": "8646a80a4afbb25cffacbfde4130a2f01f1f5f1f3e96f74ab51bb58479960bce"
+  },
+  {
+    "file": "cisco-curl.html",
+    "kind": "synthetic",
+    "sha256": "1ec31dba12bb2f3e1ec35c45cc7666b601e4ecc44b4a7afa13555d4eaf2b9988"
+  },
+  {
+    "file": "cisco-php.html",
+    "kind": "synthetic",
+    "sha256": "125ebb22e2080cfc67dcf433348b137b7673199c2d53a491e20857d22085c8bb"
+  },
+  {
+    "file": "fortinac-release.html",
+    "kind": "synthetic",
+    "sha256": "ec2561af60f96d91a5277486f9d22c216016b35969552ab11066f0be2a6cab39"
+  },
+  {
+    "file": "fortinet-php.json",
+    "kind": "synthetic",
+    "sha256": "c5f97ee9e6a43f19c1cf209c1ff80093a12f95425cee5ca34c46ab139b8b648f"
+  },
+  {
+    "file": "fortios-727.html",
+    "kind": "synthetic",
+    "sha256": "10e0a627d6245de7ea2e77856a897f4ec719e95fff74c3ba96ab643296648f4f"
+  },
+  {
+    "file": "fortiproxy-728.html",
+    "kind": "synthetic",
+    "sha256": "5f9b5bda17274f7eb1f213753d9b919cf0b9c64e20c3c2d28a045be730e58107"
+  },
+  {
+    "file": "hpe-cray.html",
+    "kind": "synthetic",
+    "sha256": "8db14660f7a11f4b2eda7797b39660747e077447d8a0418d805c988774d635dd"
+  },
+  {
+    "file": "hpe-document.raw",
+    "kind": "synthetic",
+    "sha256": "feda279876267e8e8512158c49edf65def96843c8ab4052e12dc922374e56a8d"
+  },
+  {
+    "file": "juniper-ssr.pdf",
+    "kind": "synthetic",
+    "sha256": "15e437b5479713bd7b6c2a1d3dcb4619b9fa38edeb146201257d251934fa564a"
+  },
+  {
+    "file": "pan-cna.json",
+    "kind": "synthetic",
+    "sha256": "033c29523b2f2a77e1710ace4fe2c72b37f3f0fafce8fa9f22c7f892de3b5b65"
+  },
+  {
+    "file": "pan-impact-2024.html",
+    "kind": "synthetic",
+    "sha256": "455065213bbdbc9a31f317b84ab103b167fac4b47f232e8d9e3ba1e4e818243a"
+  },
+  {
+    "file": "pan-oss.html",
+    "kind": "synthetic",
+    "sha256": "7c83204e20e75672b44473e27d907f5161b59f25628ef6ee1d63b211c78e1480"
+  }
+]

@@ -1,0 +1,79 @@
+{
+  "cveMetadata": {
+    "cveId": "CVE-2026-109618"
+  },
+  "containers": {
+    "cna": {
+      "title": "Synthetic version and score scenarios",
+      "affected": [
+        {
+          "vendor": "Example",
+          "product": "Example default",
+          "versions": [
+            {
+              "version": "1",
+              "status": "unaffected"
+            }
+          ]
+        },
+        {
+          "vendor": "Example",
+          "product": "PAN-OS",
+          "versions": [
+            {
+              "version": "12.2.0",
+              "lessThan": "12.2.4-h1",
+              "status": "affected"
+            }
+          ]
+        },
+        {
+          "vendor": "Example",
+          "product": "Panorama",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "version": "1",
+              "status": "affected"
+            }
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "cvssV3_1": {
+            "baseScore": 8.7
+          },
+          "scenarios": [
+            {
+              "lang": "en",
+              "value": "Synthetic scenario 0"
+            }
+          ]
+        },
+        {
+          "cvssV3_1": {
+            "baseScore": 7.1
+          },
+          "scenarios": [
+            {
+              "lang": "en",
+              "value": "Synthetic scenario 1"
+            }
+          ]
+        },
+        {
+          "cvssV3_1": {
+            "baseScore": 9.2
+          },
+          "scenarios": [
+            {
+              "lang": "en",
+              "value": "Synthetic scenario 2"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,209 @@
+"""Vendor-independent collection orchestration."""
+
+import json
+from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
+from xml.etree import ElementTree as ET
+
+from ..adapters.compat import HTML, auto, cves
+from ..application.cohort import COHORT
+from ..plugins.registry import default_registry
+from ..storage.repository import collection_result, connect, evidence, ingest, now
+from .discovery import discovery
+from .transport import allowed, fetch
+
+__all__ = ["fetch", "allowed", "discovery", "resolve_document", "run"]
+
+
+def record_checks(db, raw, feed, present, scope):
+    ev = evidence(db, raw, feed["url"])
+    for cid in COHORT:
+        db.execute(
+            "INSERT OR REPLACE INTO coverage_checks VALUES(?,?,?,?,?,?,?)",
+            (
+                feed["vendor"],
+                cid,
+                now(),
+                feed["url"],
+                scope,
+                "match" if cid in present else "no_match",
+                ev["id"],
+            ),
+        )
+
+
+def index_checks(db, raw, feed):
+    if feed["kind"] != "rss":
+        return
+    items = ET.fromstring(raw).findall(".//item")
+    present = {c for item in items for c in cves(" ".join(item.itertext()))}
+    record_checks(
+        db,
+        raw,
+        feed,
+        present,
+        f"Current RSS window ({len(items)} entries); historical coverage not implied",
+    )
+
+
+def resolve_document(db, url, vendor):
+    registry = default_registry()
+    plugin = registry.get(vendor)
+    u = urlsplit(url)
+    params = [(k, v) for k, v in parse_qsl(u.query) if not k.startswith(("utm_", "vs_"))]
+    url = plugin.canonicalize(urlunsplit((u.scheme, u.netloc, u.path, urlencode(params), "")))
+    raw = fetch(db, url, vendor)
+    if plugin.resolve:
+        url, raw = plugin.resolve(raw, url, lambda target: fetch(db, target, vendor))
+    if raw.lstrip().startswith(b"{"):
+        return url, raw
+    for link in HTML(raw).root.find({"a"}):
+        href = link.attrs.get("href", "")
+        if "csaf" in href.lower() and href.lower().endswith(".json"):
+            target = plugin.canonicalize(urljoin(url, href))
+            structured = fetch(db, target, vendor)
+            parsed = json.loads(structured)
+            if not any(v.get("product_status") for v in parsed.get("vulnerabilities", [])):
+                try:
+                    fallback = registry.normalize(raw, url, vendor)
+                    if fallback["assessments"]:
+                        return url, raw
+                except (ValueError, KeyError):
+                    pass
+            return target, structured
+    return url, raw
+
+
+def run(config, limit=None, db_path=None, upstream_limit=0):
+    from .config import validate_config
+
+    validate_config(config)
+    registry = default_registry()
+    imported = failed = 0
+    db = connect(db_path) if db_path else connect()
+    with db:
+        targets = list(config.get("pinned", []))
+        for feed in config["vendors"]:
+            count = feed.get("limit", 4) if limit is None else limit
+            if not count:
+                continue
+            try:
+                raw = fetch(db, feed["url"], feed["vendor"])
+                plugin = registry.get(feed["vendor"])
+                if plugin.parse_feed:
+                    batch = plugin.parse_feed(raw, feed["url"], count, frozenset(COHORT))
+                    record_checks(db, raw, feed, batch.referenced_cves, batch.scope)
+                    for record in batch.records:
+                        previous = db.execute(
+                            "SELECT normalized FROM revisions WHERE vendor=? AND advisory_id=? ORDER BY id DESC LIMIT 1",
+                            (feed["vendor"], record["advisory_id"]),
+                        ).fetchone()
+                        if previous and plugin.prefer_existing(
+                            json.loads(previous["normalized"]), record
+                        ):
+                            continue
+                        record = registry.finalize(record, feed["url"], feed["vendor"])
+                        imported += ingest(
+                            db,
+                            raw,
+                            feed["url"],
+                            lambda *args, record=record: record,
+                            feed["vendor"],
+                        )
+                    collection_result(db, feed["vendor"], feed["url"], batch.outcome, batch.scope)
+                    continue
+                index_checks(db, raw, feed)
+                urls = discovery(
+                    raw, feed["url"], feed["kind"], count, feed.get("order", "oldest_first")
+                )
+                if not urls:
+                    raise ValueError("No advisory links discovered; check feed layout")
+                targets += [{"vendor": feed["vendor"], "url": u} for u in urls]
+                collection_result(
+                    db,
+                    feed["vendor"],
+                    feed["url"],
+                    "ok",
+                    f"Discovered {len(urls)} documents from a bounded sample; full portfolio not enumerated.",
+                )
+            except Exception as e:
+                failed += 1
+                collection_result(db, feed["vendor"], feed["url"], "error", str(e))
+                print(f"ERROR {feed['vendor']} feed: {e}", flush=True)
+        seen = set()
+        for target in targets:
+            key = (target["vendor"], target["url"])
+            if key in seen:
+                continue
+            seen.add(key)
+            try:
+                url, raw = resolve_document(db, target["url"], target["vendor"])
+                parsed = auto(raw, url, target["vendor"])
+                if registry.get(target["vendor"]).non_cve_notice(parsed):
+                    collection_result(
+                        db,
+                        target["vendor"],
+                        target["url"],
+                        "not_applicable",
+                        "Recognised non-CVE notice; source retained, excluded from CVE assessments.",
+                    )
+                    continue
+                changed = ingest(db, raw, url, lambda *args: parsed, target["vendor"])
+                imported += changed
+                collection_result(
+                    db,
+                    target["vendor"],
+                    target["url"],
+                    "ok",
+                    f"{'New revision' if changed else 'Unchanged'}; resolved source {url}",
+                )
+                print(
+                    f"{'IMPORTED' if changed else 'UNCHANGED'} {target['vendor']} {url}", flush=True
+                )
+            except Exception as e:
+                failed += 1
+                collection_result(db, target["vendor"], target["url"], "error", str(e))
+                print(f"ERROR {target['vendor']} {target['url']}: {e}", flush=True)
+        for doc in config.get("release_documents", []):
+            try:
+                from ..application.disclosure import import_release_note
+
+                raw = fetch(db, doc["url"], doc["vendor"])
+                import_release_note(
+                    db, raw, doc["url"], doc["vendor"], doc["product"], doc.get("published_at")
+                )
+                collection_result(
+                    db, doc["vendor"], doc["url"], "ok", "Release-note evidence collected"
+                )
+            except Exception as e:
+                failed += 1
+                collection_result(db, doc["vendor"], doc["url"], "error", str(e))
+    if upstream_limit:
+        from ..storage.repository import latest
+
+        ids = sorted({c for r in latest(db) for c in r["cves"]})
+        for cid in ids[:upstream_limit]:
+            url = "https://cveawg.mitre.org/api/cve/" + cid
+            try:
+                raw = fetch(db, url, "upstream")
+                metadata = json.loads(raw)["cveMetadata"]
+                with db:
+                    ev = evidence(db, raw, url)
+                    db.execute(
+                        "INSERT OR REPLACE INTO vulnerabilities VALUES(?,?,?,?,?)",
+                        (
+                            cid,
+                            metadata.get("datePublished"),
+                            metadata.get("dateUpdated"),
+                            url,
+                            ev["id"],
+                        ),
+                    )
+                collection_result(
+                    db, "upstream", url, "ok", "Upstream CVE publication metadata collected"
+                )
+            except Exception as e:
+                failed += 1
+                collection_result(db, "upstream", url, "error", str(e))
+                print(f"ERROR upstream {cid}: {e}", flush=True)
+    db.close()
+    return imported, failed

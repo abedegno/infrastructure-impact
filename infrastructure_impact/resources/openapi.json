@@ -1,0 +1,282 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Infrastructure Impact public reader",
+    "version": "1.0.0",
+    "description": "Read-only public-source intelligence. No vault or write access. Data schema major 2 is independent of HTTP API version 1."
+  },
+  "paths": {
+    "/api/v1/advisories": {
+      "get": {
+        "summary": "Normalized advisories with cohort-filtered assessments",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "description": "Comma-separated CVE IDs; at most 200. Omit for all published CVEs.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page from a named immutable publication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "publication",
+                    "total",
+                    "offset",
+                    "limit",
+                    "items"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "const": 2
+                    },
+                    "publication": {
+                      "type": "object"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "/schemas/advisory-v2.json"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid cohort, vendor or pagination"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/assessments": {
+      "get": {
+        "summary": "CVE/product assessments with advisory provenance",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "description": "Comma-separated CVE IDs; at most 200. Omit for all published CVEs.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page from a named immutable publication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schema_version",
+                    "publication",
+                    "total",
+                    "offset",
+                    "limit",
+                    "items"
+                  ],
+                  "properties": {
+                    "schema_version": {
+                      "const": 2
+                    },
+                    "publication": {
+                      "type": "object"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "description": "Assessment fields plus vendor, advisory_id, source_url and sha256"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid cohort, vendor or pagination"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "summary": "Reader process liveness",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Readiness; stale publication returns 503",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "summary": "Publication age and current collection status",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    },
+    "/api/export.json": {
+      "get": {
+        "summary": "Selected-cohort public dataset",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    },
+    "/api/export.csv": {
+      "get": {
+        "summary": "Selected-cohort CSV",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    },
+    "/snapshot.json": {
+      "get": {
+        "summary": "Complete current public generation",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    },
+    "/schemas/advisory-v2.json": {
+      "get": {
+        "summary": "Canonical normalized advisory JSON Schema",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "503": {
+            "description": "Publication unavailable or stale (readiness only)"
+          }
+        }
+      }
+    }
+  }
+}

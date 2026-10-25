@@ -1,0 +1,71 @@
+"""Read-only dataset queries used to assemble a publication."""
+
+import json
+import os
+
+from ..plugins.registry import default_registry
+from ..settings import Paths
+from ..storage.repository import VENDORS, health, history, latest, now
+from .cohort import COHORT, coverage
+from .comparison import advisory_delays, compare
+from .disclosure import signals
+
+ROOT = Paths.from_env().home
+
+
+def state(db, cohort=None):
+    records = latest(db)
+    upstream = {r["cve_id"]: dict(r) for r in db.execute("SELECT * FROM vulnerabilities")}
+    comparison = compare(records, cohort)
+    selection = set(comparison["cohort"])
+    review_signals = signals(db)
+    research = {
+        "release_documents": [
+            dict(r)
+            for r in db.execute(
+                "SELECT vendor,product,source_url,published_at,evidence_id FROM documents WHERE id IN (SELECT MAX(id) FROM documents GROUP BY vendor,product,source_url)"
+            )
+        ],
+        "fix_candidates": [
+            dict(r) for r in db.execute("SELECT * FROM fix_evidence ORDER BY id DESC")
+        ],
+    }
+    run = None
+    if db.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='pipeline_runs'"
+    ).fetchone():
+        row = db.execute("SELECT * FROM pipeline_runs ORDER BY id DESC LIMIT 1").fetchone()
+        if row:
+            run = dict(row)
+    schedule_path = Paths.from_env().home / "ops/schedule-status.json"
+    schedule = (
+        json.loads(schedule_path.read_text()) if schedule_path.exists() else {"installed": False}
+    )
+    return {
+        "generated_at": now(),
+        "vendors": dict(VENDORS),
+        "plugins": [
+            {"id": p.id, "name": p.name, "version": p.version, "capabilities": p.capabilities}
+            for p in default_registry().all()
+        ],
+        "records": records,
+        "comparison": comparison,
+        "collector": {
+            "last_run": run,
+            "schedule": schedule,
+            "hosted_auto_publication": os.environ.get("IMPACT_DELIVERY_MODE") == "live_reader",
+        },
+        "benchmark_cohort": COHORT,
+        "coverage": coverage(db, records, comparison["cohort"]),
+        "changes": history(db, full=False),
+        "signals": review_signals,
+        "research": research,
+        "health": health(db),
+        "upstream": upstream,
+        "delays": [d for d in advisory_delays(records, upstream) if d["cve_id"] in selection],
+        "all_cves": sorted({c for r in records for c in r["cves"]}),
+        "counts": {
+            "advisories": len(records),
+            "evidence_snapshots": db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0],
+        },
+    }

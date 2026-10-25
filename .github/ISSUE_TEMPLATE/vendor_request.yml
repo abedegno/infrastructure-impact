@@ -1,0 +1,21 @@
+name: Vendor or source request
+description: Propose a vendor, product family or official advisory source.
+body:
+  - type: input
+    id: vendor
+    attributes:
+      label: Vendor and product families
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Official sources
+      description: Feed, CSAF index, advisory API or release-note links; describe access or rate limits you know about.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Representative advisory cases
+      description: Links illustrating affected, unaffected, investigating or fixed statements. Do not upload full source captures.

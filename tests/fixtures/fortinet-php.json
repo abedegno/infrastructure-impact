@@ -1,0 +1,11 @@
+{
+  "document": {
+    "title": "Synthetic CVE-2026-109618 CVE-2026-109619 discovery",
+    "tracking": {
+      "id": "synthetic-fortinet",
+      "status": "final",
+      "initial_release_date": "2025-01-01T00:00:00Z"
+    }
+  },
+  "vulnerabilities": []
+}

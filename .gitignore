@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+.env
+.env.*
+!.env.example
+.aws/
+data/
+publications/
+dist/
+site/
+site-deployment*.tar.gz
+benchmark/snapshots/
+*.egg-info/
+.DS_Store
+
+# Local scheduling, research results and release staging
+ops/*.plist
+ops/schedule-status.json
+release/
+*-preview.png
+benchmark/*.json
+benchmark/*.csv
+benchmark/*.txt

@@ -1,0 +1,13 @@
+**
+!Dockerfile
+!README.md
+!LICENSE
+!NOTICE
+!THIRD_PARTY.md
+!pyproject.toml
+!requirements.lock
+!requirements-build.lock
+!infrastructure_impact/
+!infrastructure_impact/**
+infrastructure_impact/**/__pycache__/
+infrastructure_impact/**/*.pyc

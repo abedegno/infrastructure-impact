@@ -1,0 +1,17 @@
+name: Data correction
+description: Correct a product assessment, source scope, date or provenance claim.
+body:
+  - type: textarea
+    id: claim
+    attributes:
+      label: Claim to correct
+      description: Identify the publication generation, CVE, vendor, product and current statement where possible.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Correction and primary evidence
+      description: Link the official source and explain the exact scope. Missing evidence does not establish unaffectedness or concealment.
+    validations:
+      required: true

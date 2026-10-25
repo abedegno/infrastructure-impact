@@ -1,0 +1,50 @@
+{
+  "document": {
+    "title": "Synthetic advisory",
+    "tracking": {
+      "id": "synthetic-arista-120",
+      "status": "draft",
+      "initial_release_date": "2025-01-01T00:00:00Z"
+    }
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2025-12345",
+      "product_status": {
+        "known_affected": [
+          "p1",
+          "p2",
+          "p3"
+        ]
+      }
+    }
+  ],
+  "product_tree": {
+    "branches": [
+      {
+        "category": "product_family",
+        "name": "Example platform",
+        "branches": [
+          {
+            "category": "product_name",
+            "name": "Example router",
+            "product": {
+              "name": "Example router 1",
+              "product_id": "p1"
+            }
+          }
+        ]
+      }
+    ],
+    "full_product_names": [
+      {
+        "product_id": "p2",
+        "name": "Example switch 2"
+      },
+      {
+        "product_id": "p3",
+        "name": "Example router 3"
+      }
+    ]
+  }
+}

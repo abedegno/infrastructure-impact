@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "impact-example-vendor"
+version = "0.1.0"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = ["infrastructure-impact>=0.3,<0.4"]
+
+[project.entry-points."infrastructure_impact.vendors"]
+acme = "acme_impact_plugin:plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["acme_impact_plugin"]

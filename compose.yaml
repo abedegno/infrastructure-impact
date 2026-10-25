@@ -1,0 +1,40 @@
+name: infrastructure-impact
+services:
+  reader:
+    image: infrastructure-impact:0.3.0
+    build: .
+    command: [serve, --host, 0.0.0.0, --port, "8080"]
+    ports: ["127.0.0.1:8080:8080"]
+    volumes:
+      - publications:/srv/publications:ro
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    mem_limit: 512m
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready',timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5m
+      retries: 3
+  collector:
+    image: infrastructure-impact:0.3.0
+    build: .
+    command: [collect, --watch, --at, "08:15", --timezone, Europe/London]
+    environment:
+      IMPACT_DELIVERY_MODE: live_reader
+    volumes:
+      - vault:/var/lib/impact
+      - publications:/srv/publications
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    stop_grace_period: 120s
+    mem_limit: 1g
+volumes:
+  vault:
+  publications:

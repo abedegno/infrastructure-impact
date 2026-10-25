@@ -1,0 +1,7 @@
+{
+  "vendors": [
+    {"vendor":"acme","kind":"index","url":"https://security.acme.example/csaf/index.txt","limit":4}
+  ],
+  "pinned": [],
+  "release_documents": []
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "skId": "sk182459",
+    "summary": "Synthetic regreSSHion index",
+    "cveId": "CVE-2024-6387",
+    "products": [
+      {
+        "name": "Example appliance",
+        "version": "1.0",
+        "affected": "Details in SK"
+      },
+      {
+        "name": "Example OS",
+        "version": "2.0",
+        "affected": "None"
+      }
+    ]
+  }
+]

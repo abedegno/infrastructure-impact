@@ -1,0 +1,171 @@
+{
+  "vendors": [
+    {
+      "vendor": "cisco",
+      "kind": "rss",
+      "url": "https://sec.cloudapps.cisco.com/security/center/psirtrss20/CiscoSecurityAdvisory.xml",
+      "limit": 4
+    },
+    {
+      "vendor": "aruba",
+      "kind": "index",
+      "url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "limit": 4
+    },
+    {
+      "vendor": "arista",
+      "kind": "rss",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory-rss",
+      "limit": 4
+    },
+    {
+      "vendor": "paloalto",
+      "kind": "rss",
+      "url": "https://security.paloaltonetworks.com/rss.xml",
+      "limit": 4
+    },
+    {
+      "vendor": "juniper",
+      "kind": "rss",
+      "url": "https://supportportal.juniper.net/knowledgerss?type=Security",
+      "limit": 4
+    },
+    {
+      "vendor": "checkpoint",
+      "kind": "checkpoint",
+      "url": "https://iapi-services-ucs.checkpoint.com/public/api/support-center-mms/api/securityAdvisories/getAllActive",
+      "limit": 4
+    },
+    {
+      "vendor": "fortinet",
+      "kind": "rss",
+      "url": "https://filestore.fortinet.com/fortiguard/rss/ir.xml",
+      "limit": 4
+    }
+  ],
+  "pinned": [
+    {
+      "vendor": "cisco",
+      "url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://sec.cloudapps.cisco.com/security/center/contentjson/CiscoSecurityAdvisory/cisco-sa-apache-log4j-qRuKNEbd/csaf/cisco-sa-apache-log4j-qRuKNEbd.json"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/13425-security-advisory-0070"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_120_CSAF.json"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2026-109618"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2021-44228"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2023-48795"
+    },
+    {
+      "vendor": "hpe",
+      "url": "https://support.hpe.com/hpesc/public/api/document/hpesbns04567en_us"
+    },
+    {
+      "vendor": "hpe",
+      "url": "https://support.hpe.com/hpesc/public/api/document/hpesbcr04733en_us"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000IReTQIA1?operationContext=S1"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://docs.fortinet.com/document/fortinac-f/7.4.1/release-notes/112589/common-vulnerabilities-and-exposures"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/16339-security-advisory-0081"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/PAN-SA-2025-0012"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIqkIAH"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://docs.fortinet.com/document/fortigate/7.2.7/fortios-release-notes/289806/resolved-issues"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/PAN-SA-2024-0001"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/PAN-SA-2022-0006"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2024-6387"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-curl-libcurl-D9ds39cV"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://support.checkpoint.com/results/sk/sk182459"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://support.checkpoint.com/results/sk/sk181833"
+    }
+  ],
+  "release_documents": [
+    {
+      "vendor": "cisco",
+      "product": "Nexus 9000 NX-OS 10.4(2)F",
+      "url": "https://www.cisco.com/c/en/us/td/docs/dcn/nx-os/nexus9000/104x/release-notes/cisco-nexus-9000-nxos-release-notes-1042.html"
+    },
+    {
+      "vendor": "fortinet",
+      "product": "FortiNAC-F 7.4.1 on FortiNAC-OS",
+      "url": "https://docs.fortinet.com/document/fortinac-f/7.4.1/release-notes/112589/common-vulnerabilities-and-exposures"
+    },
+    {
+      "vendor": "juniper",
+      "product": "Apstra release notes (document version as observed; date unverified)",
+      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIqkIAH"
+    },
+    {
+      "vendor": "fortinet",
+      "product": "FortiOS 7.2.7",
+      "url": "https://docs.fortinet.com/document/fortigate/7.2.7/fortios-release-notes/289806/resolved-issues"
+    },
+    {
+      "vendor": "fortinet",
+      "product": "FortiProxy 7.2.8",
+      "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible software or extraction problem.
+body:
+  - type: markdown
+    attributes:
+      value: For security vulnerabilities in this project, follow SECURITY.md. Do not attach credentials, private reviews or complete vendor captures.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include commands or a small synthetic input, plus version/commit and environment.
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Official source and affected scope
+      description: For extraction issues, link the primary advisory and identify the CVE/product/version scope.
