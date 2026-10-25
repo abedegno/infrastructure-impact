@@ -125,6 +125,10 @@ is unavailable. Network collection and real HTTP/container checks are separate
 integrations. `verify_pilot.py` is an optional check against a populated local
 research vault, not a clean-checkout requirement.
 
+The installed-wheel integration check may download its locked dependencies and
+the example plugin's build requirements. Use `checks/distribution.py --offline`
+only after those dependencies have been cached.
+
 ## Documentation
 
 | Guide | Contents |
