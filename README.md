@@ -11,6 +11,11 @@ Early-stage software: the pipeline works end to end, but source coverage is boun
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.
 
+![Infrastructure Impact web app showing coverage-aware comparisons across eight vendors for an eleven-CVE benchmark cohort](docs/images/vendor-comparison.jpg)
+
+*Vendor comparison view, captured 25 October 2026 from the bounded benchmark dataset.
+The screenshot shows a dated research snapshot, not a live or comprehensive vendor ranking.*
+
 ## What it does
 
 - Collects structured CSAF/CVE JSON, feeds and reviewed HTML/PDF layouts.
