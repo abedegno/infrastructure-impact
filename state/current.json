@@ -1,8 +1,8 @@
 {
-  "archive": "vault-20261026T163750065760Z.sqlite3.gz.fernet",
-  "sha256": "bddb63f6d63149d116f13dc2df253c4f8972c7f6023aa72b6deb5cd5c9ca4926",
-  "checked_at": "2026-10-26T16:37:50.947607+00:00",
-  "source_commit": "66da95c00f4c3bf7697d689e87cf90e3770bc999",
+  "archive": "vault-20261026T174916566146Z.sqlite3.gz.fernet",
+  "sha256": "68880579e5cfbb8e4a5b95e9a5b85f0eb304d8ae22d74740a6b25df641c1115c",
+  "checked_at": "2026-10-26T17:49:17.565627+00:00",
+  "source_commit": "430afeefa5907e985ae2097a4be794437b398716",
   "private": true,
   "encryption": "fernet-v1"
 }
