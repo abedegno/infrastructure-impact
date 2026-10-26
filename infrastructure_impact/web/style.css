@@ -478,3 +478,40 @@ textarea {
 #correction-form label {
   display: block;
 }
+
+.scorecard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+.vendor-scorecard {
+  border: 1px solid var(--line, #34434b);
+  padding: 22px;
+  border-radius: 10px;
+}
+.vendor-scorecard h3 {
+  font-size: 1.5rem;
+  margin: 12px 0 20px;
+}
+.scorecard-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.scorecard-counts strong {
+  display: block;
+  font-size: 1.8rem;
+}
+.scorecard-counts span {
+  font-size: 0.8rem;
+}
+.vendor-scorecard details,
+.scorecard-case {
+  border-top: 1px solid var(--line, #34434b);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.evidence-timeline code {
+  overflow-wrap: anywhere;
+}

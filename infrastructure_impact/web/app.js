@@ -105,6 +105,8 @@ function render() {
     changes: renderChanges,
     sources: renderSources,
     catalogue: renderCatalogue,
+    scorecards: renderScorecards,
+    timeline: renderTimeline,
     correction: renderCorrection,
   })[view]();
 }
@@ -337,4 +339,82 @@ function renderCatalogue() {
 
   $('#view').innerHTML =
     `<h2>Vendor coverage catalogue</h2>${evaluated}<p>Product families and exact source boundaries. Freshness describes successful collection checks, not the date a vendor last updated an advisory.</p>${(catalogue?.vendors || []).map((v) => `<article><h3>${esc(v.name)} · ${badge(v.freshness)}</h3><p>${esc(v.product_families.join('; '))}</p><p>${esc(v.history_scope)}</p><p>Expected cadence: ${v.cadence_hours} hours · Stale after ${v.stale_after_hours} hours · Last successful check: ${date(v.last_successful_check)} · ${v.current_source_errors} source error${v.current_source_errors === 1 ? '' : 's'}</p><ul>${v.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><details><summary>${v.sources.length} configured sources</summary>${v.sources.map((s) => `<p>${esc(s.role)} · ${link(s.url, 'Official source')}</p>`).join('')}</details></article>`).join('')}`;
+}
+
+let scoreVendor = '',
+  timelineVendor = '',
+  timelineCve = '',
+  timelineLimit = 80;
+function renderScorecards() {
+  const cards = data.scorecards?.vendors || [];
+  $('#view').innerHTML =
+    `<h2>Vendor evidence scorecards</h2><p>Compare documented CVE states within this cohort. Counts overlap across products and version branches; they do not measure the proportion of a vendor’s estate affected.</p><div class="notice">No product-portfolio or installed-base denominator is available. Missing statements and failed collection remain gaps. Source health below covers configured URLs, not a complete vendor scan.</div><label>Vendor<select id="score-vendor"><option value="">All vendors</option>${cards.map((c) => `<option value="${esc(c.vendor)}" ${scoreVendor === c.vendor ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label><div class="scorecard-grid">${cards
+      .filter((c) => !scoreVendor || c.vendor === scoreVendor)
+      .map(
+        (c) =>
+          `<article class="vendor-scorecard"><div class="eyebrow">${c.cohort_size} selected CVEs · ${c.configured_sources.length} configured source URLs</div><h3>${esc(c.name)}</h3><div class="scorecard-counts">${['affected', 'unaffected', 'investigating', 'fixed'].map((s) => `<div><strong>${c.status_counts[s]}</strong><span>${esc(s)}</span></div>`).join('')}<div><strong>${c.explicit_unknown}</strong><span>explicit unknown</span></div><div><strong>${c.without_statement}</strong><span>no product statement</span></div></div><p>${c.with_statement}/${c.cohort_size} CVEs have a product statement. Partial mitigation: ${c.status_counts.partially_mitigated}; conflicting: ${c.status_counts.conflicting}; recommendation-only claims: ${c.status_counts.recommended}.</p><p>Source checks: ${
+            Object.entries(c.source_outcomes)
+              .map(([k, v]) => `${v} ${esc(k.replaceAll('_', ' '))}`)
+              .join(' · ') || 'No configured sources'
+          } · ${c.stale_sources} stale checks.</p><details><summary>Coverage and known gaps</summary><p>${esc(c.history_scope)}</p><p>${esc(c.product_families.join(', '))}</p><ul>${c.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul>${c.configured_sources.map((s) => `<p>${link(s.source_url, 'Configured source')} · ${badge(s.outcome)} ${s.stale ? '· stale' : ''}${s.error_code ? `<small>${esc(s.error_code.replaceAll('_', ' '))}</small>` : ''}</p>`).join('')}</details><details><summary>CVE and product evidence</summary>${c.cases.map((e) => `<div class="scorecard-case"><strong>${esc(e.cve_id)}</strong><p>${e.statuses.map(badge).join(' ') || 'No product statement'} · ${esc(e.coverage_state.replaceAll('_', ' '))}</p><p>${e.product_labels.length} product labels · ${e.cve_specific_statements} CVE-specific / ${e.shared_bulletin_statements} shared-bulletin statements.</p>${e.statement_count ? `<button class="score-products" data-vendor="${esc(c.vendor)}" data-cve="${esc(e.cve_id)}">Inspect products and versions</button>` : ''}</div>`).join('')}</details></article>`,
+      )
+      .join('')}</div><p>${esc(data.scorecards?.method || '')}</p>`;
+  $('#score-vendor').addEventListener('change', (e) => {
+    scoreVendor = e.target.value;
+    renderScorecards();
+  });
+  document.querySelectorAll('.score-products').forEach((b) =>
+    b.addEventListener('click', () => {
+      matrixVendor = b.dataset.vendor;
+      matrixCve = b.dataset.cve;
+      matrixStatus = '';
+      matrixQuery = '';
+      shown = 150;
+      view = 'matrix';
+      render();
+    }),
+  );
+}
+function renderTimeline() {
+  const document = data.timeline || { events: [] };
+  if (timelineCve && !selected().has(timelineCve)) timelineCve = '';
+  const events = document.events.filter(
+    (e) =>
+      (!timelineVendor || e.vendor === timelineVendor) &&
+      (!timelineCve || e.cve_id === timelineCve),
+  );
+  $('#view').innerHTML =
+    `<h2>Evidence timeline</h2><p>Ordered by when this collector observed revisions. Publisher publication, update and reported fix dates are separate claims, shown inside each event. A first observation can occur years after publication.</p><div class="matrix-filters"><label>Vendor<select id="timeline-vendor"><option value="">All vendors</option>${Object.entries(
+      data.vendors,
+    )
+      .map(
+        ([v, n]) =>
+          `<option value="${esc(v)}" ${timelineVendor === v ? 'selected' : ''}>${esc(n)}</option>`,
+      )
+      .join(
+        '',
+      )}</select></label><label>CVE<select id="timeline-cve"><option value="">All selected CVEs</option>${data.comparison.cohort.map((c) => `<option ${timelineCve === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label></div><div class="notice">${document.history_truncated ? `History is truncated to ${document.revision_limit} retained revisions. ` : ''}${document.events_truncated ? `Events are truncated to ${document.event_limit}. ` : ''}Parser reinterpretations and source-view switches are labelled separately from source changes. No event establishes intent, first-ever disclosure, or verified historical fix availability.</div><p>${events.length} events in this selection; showing ${Math.min(events.length, timelineLimit)}.</p><div class="evidence-timeline">${
+      events
+        .slice(0, timelineLimit)
+        .map(
+          (e) =>
+            `<article class="change"><div class="eyebrow">Observed ${date(e.observed_at)} · ${esc(name(e.vendor))} · ${esc(e.cve_id)}</div><h3>${esc(e.advisory_id)}</h3>${badge(e.kind)} ${e.document_status === 'draft' ? badge('draft') : ''}<p>${e.reference_present ? e.statuses.map(badge).join(' ') || 'CVE reference without a product statement' : 'CVE reference absent in this revision; no unaffectedness inferred.'} · ${e.product_count} product labels</p>${e.cve_reference_added ? '<p>CVE reference added between observed source revisions; earlier disclosures may exist.</p>' : ''}<details><summary>Publisher dates and source evidence</summary><dl><dt>Publisher publication date</dt><dd>${date(e.publisher_published_at)}</dd><dt>Publisher update date</dt><dd>${date(e.publisher_updated_at)}</dd><dt>Publisher reported fix date · ${esc(e.publisher_fix_date_scope.replaceAll('_', ' '))}</dt><dd>${date(e.publisher_reported_fix_date)}</dd></dl>${e.previous_statuses ? `<p>Previously retained states across this document’s products and versions: ${e.previous_statuses.map(badge).join(' ') || 'No product statement'}.</p>` : ''}<p>A reported fix date does not verify availability or applicability for every product in this document.</p><p>${link(e.source_url, 'Publisher source')} · revision ${e.revision_id} · evidence ${e.evidence_id}</p><code>${esc(e.source_sha256)}</code><p>Changed fields: ${esc(e.change_fields.join(', ') || 'No scoped semantic change recorded')}</p></details></article>`,
+        )
+        .join('') ||
+      '<p class="empty">No retained revision events for this selection. This does not establish absence of a vendor disclosure.</p>'
+    }</div>${events.length > timelineLimit ? '<button id="timeline-more">Show more events</button>' : ''}`;
+  $('#timeline-vendor').addEventListener('change', (e) => {
+    timelineVendor = e.target.value;
+    timelineLimit = 80;
+    renderTimeline();
+  });
+  $('#timeline-cve').addEventListener('change', (e) => {
+    timelineCve = e.target.value;
+    timelineLimit = 80;
+    renderTimeline();
+  });
+  $('#timeline-more')?.addEventListener('click', () => {
+    timelineLimit += 80;
+    renderTimeline();
+  });
 }

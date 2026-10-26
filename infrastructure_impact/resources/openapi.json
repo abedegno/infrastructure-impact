@@ -307,6 +307,92 @@
           }
         }
       }
+    },
+    "/api/v1/scorecards": {
+      "get": {
+        "summary": "Coverage-aware vendor evidence scorecards",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "description": "Comma-separated CVE IDs, maximum 200; omit for all published CVEs",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schema version 1 metadata from one immutable publication; no security ranking or intent inference"
+          },
+          "400": {
+            "description": "Invalid cohort or unknown vendor"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
+    },
+    "/scorecards.json": {
+      "get": {
+        "summary": "Complete published scorecards metadata",
+        "responses": {
+          "200": {
+            "description": "Static schema version 1 JSON; timeline bounds are explicit"
+          }
+        }
+      }
+    },
+    "/api/v1/timeline": {
+      "get": {
+        "summary": "Locally observed revision timeline with separate publisher dates",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "description": "Comma-separated CVE IDs, maximum 200; omit for all published CVEs",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Schema version 1 metadata from one immutable publication; no security ranking or intent inference"
+          },
+          "400": {
+            "description": "Invalid cohort or unknown vendor"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
+    },
+    "/timeline.json": {
+      "get": {
+        "summary": "Complete published timeline metadata",
+        "responses": {
+          "200": {
+            "description": "Static schema version 1 JSON; timeline bounds are explicit"
+          }
+        }
+      }
     }
   }
 }

@@ -125,12 +125,42 @@ class Application:
             "/api/export.json",
             "/api/export.csv",
             "/api/assessments",
+            "/api/v1/scorecards",
+            "/api/v1/timeline",
             "/api/v1/advisories",
             "/api/v1/assessments",
         ):
             selected = select(data, ids)
             if path == "/api/state":
                 return self.json(selected)
+            if path in ("/api/v1/scorecards", "/api/v1/timeline"):
+                key = "scorecards" if path.endswith("scorecards") else "timeline"
+                result = selected[key]
+                if query.get("vendor"):
+                    vendor = query["vendor"][0]
+                    if vendor not in data["vendors"]:
+                        raise BadRequest("Unknown vendor")
+                    if key == "scorecards":
+                        result = {
+                            **result,
+                            "vendors": [
+                                r for r in result.get("vendors", []) if r["vendor"] == vendor
+                            ],
+                        }
+                    else:
+                        result = {
+                            **result,
+                            "events": [
+                                e for e in result.get("events", []) if e["vendor"] == vendor
+                            ],
+                        }
+                return self.json(
+                    {
+                        **result,
+                        "publication": data["publication"],
+                        "generated_at": data["generated_at"],
+                    }
+                )
             selected = assessment_export(selected)
             if path.endswith(".csv"):
                 return 200, "text/csv", csv_export(selected).encode()
@@ -187,6 +217,8 @@ class Application:
             "/snapshot.json",
             "/catalogue.json",
             "/benchmark.json",
+            "/scorecards.json",
+            "/timeline.json",
             "/release-assets.json",
             "/impact.csv",
             "/manifest.json",

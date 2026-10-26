@@ -71,6 +71,16 @@ def write_bundle(destination, data):
         json.dumps(data["research"].get("release_assets", []))
     )
     (destination / "catalogue.json").write_text(json.dumps(data.get("catalogue", {})))
+    for name in ("scorecards", "timeline"):
+        (destination / (name + ".json")).write_text(
+            json.dumps(
+                {
+                    **data.get(name, {}),
+                    "publication": data["publication"],
+                    "generated_at": data["generated_at"],
+                }
+            )
+        )
     (destination / "benchmark.json").write_text(json.dumps(data.get("benchmark", {})))
     for record in data["records"]:
         path = destination / "evidence" / f"{record['evidence_id']}.json"

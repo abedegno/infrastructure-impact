@@ -23,8 +23,8 @@ jobs:
           git diff --exit-code -- requirements.lock requirements-build.lock
       - run: uv run pytest -q
       - run: uv run python checks/release.py --output /tmp/public-source-check
-      - run: uv run ruff check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py tests/test_release_sources.py tests/test_benchmark_boundaries.py tests/test_browser_capture.py ops
-      - run: uv run ruff format --check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py tests/test_release_sources.py tests/test_benchmark_boundaries.py tests/test_browser_capture.py ops
+      - run: uv run ruff check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py tests/test_release_sources.py tests/test_benchmark_boundaries.py tests/test_browser_capture.py tests/test_scorecards.py tests/test_arista_history.py ops
+      - run: uv run ruff format --check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py tests/test_release_sources.py tests/test_benchmark_boundaries.py tests/test_browser_capture.py tests/test_scorecards.py tests/test_arista_history.py ops
       - run: npm ci --ignore-scripts
       - run: npm run format:check
       - run: uv run --group build python -m build --wheel --no-isolation

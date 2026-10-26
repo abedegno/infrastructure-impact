@@ -9,7 +9,17 @@ class AccessVerificationRequired(ValueError):
 
 def check_access_response(raw):
     prefix = raw[:15000].lower()
-    if prefix.lstrip().startswith((b"<!doctype html", b"<html")) and (
+    html = prefix.lstrip().startswith((b"<!doctype html", b"<html"))
+    if (
+        html
+        and b"<title>client challenge</title>" in prefix
+        and b"/_fs-ch-" in prefix
+        and b"javascript is disabled" in prefix
+    ):
+        raise AccessVerificationRequired(
+            "Source returned an interactive client challenge; no challenge execution or product inference performed."
+        )
+    if html and (
         b"token.awswaf.com" in prefix
         and b"javascript is disabled" in prefix
         and b"not a robot" in prefix

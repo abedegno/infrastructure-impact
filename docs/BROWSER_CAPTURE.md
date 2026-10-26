@@ -42,8 +42,11 @@ included in Pages, release assets or product assessments.
 
 The optional plugin hook `parse_release_history` returns the strict
 `schemas/release-history-v1.json` contract: product, platforms, branch, and dated
-publisher release statements. The initial Aruba parser deliberately covers only
-4100i / AOS-CX 10.13 consolidated Version history articles. Other layouts fail
+publisher release statements. The Aruba parser deliberately covers only
+4100i / AOS-CX 10.13 consolidated Version history articles. The Arista parser covers
+only the visible CloudVision Software Lifecycle panel and labels its dates with
+`version_granularity: release_train`. Capture its visible `[role="tabpanel"]`
+using the exporter selector option; do not capture other product panels. Other layouts fail
 closed until reviewed and tested. This contract does not require firmware hashes
 that a history table does not publish.
 

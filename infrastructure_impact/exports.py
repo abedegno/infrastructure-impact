@@ -5,6 +5,8 @@ import io
 import json
 
 from .application.comparison import compare
+from .application.scorecards import select_scorecards
+from .application.timeline import select_timeline
 
 FIELDS = [
     "cve_id",
@@ -27,7 +29,22 @@ def select(data, cohort=None):
     return {
         **data,
         "comparison": compare(data["records"], cohort, vendors=data["vendors"]),
-        "coverage": [p for p in data["coverage"] if p["cve_id"] in selected],
+        "scorecards": select_scorecards(data.get("scorecards", {}), cohort),
+        "timeline": select_timeline(data.get("timeline", {}), cohort),
+        "coverage": [
+            next(
+                (p for p in data["coverage"] if p["vendor"] == vendor and p["cve_id"] == cid),
+                {
+                    "vendor": vendor,
+                    "cve_id": cid,
+                    "state": "not_checked",
+                    "checks": [],
+                    "advisory_sources": [],
+                },
+            )
+            for cid in cohort
+            for vendor in data["vendors"]
+        ],
         "delays": [d for d in data["delays"] if d["cve_id"] in selected],
     }
 

@@ -170,3 +170,6 @@ linked primary advisory before taking operational action.
 Browser-visible public release histories can be retained through the private
 [browser-assisted evidence workflow](docs/BROWSER_CAPTURE.md), with capture
 provenance and completeness checks kept separate from scheduled HTTP collection.
+
+[Vendor evidence scorecards and revision timelines](docs/SCORECARDS.md) keep
+collection gaps, overlapping CVE states and publisher dates visible in the comparison.

@@ -56,7 +56,15 @@ def claim_key(c):
 
 def semantic_diff(before, after):
     changes = []
-    for key in ("cves", "published_at", "updated_at", "document_status", "notes", "metrics"):
+    for key in (
+        "cves",
+        "published_at",
+        "updated_at",
+        "reported_fix_date",
+        "document_status",
+        "notes",
+        "metrics",
+    ):
         if before.get(key) != after.get(key):
             changes.append({"field": key, "before": before.get(key), "after": after.get(key)})
 

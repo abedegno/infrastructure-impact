@@ -12,6 +12,8 @@ from .comparison import advisory_delays, compare
 from .disclosure import latest_documents, signals
 from .evaluation import evaluate
 from .release_assets import listings
+from .scorecards import scorecards
+from .timeline import evidence_timeline
 
 ROOT = Paths.from_env().home
 
@@ -19,7 +21,14 @@ ROOT = Paths.from_env().home
 def state(db, cohort=None):
     records = latest(db)
     upstream = {r["cve_id"]: dict(r) for r in db.execute("SELECT * FROM vulnerabilities")}
+    generated = now()
     comparison = compare(records, cohort)
+    all_scope = sorted(
+        set(COHORT) | {c for r in records for c in r["cves"]} | set(comparison["cohort"])
+    )
+    all_coverage = coverage(db, records, all_scope)
+    profiles = catalogue(db, records)
+    checks = health(db)
     selection = set(comparison["cohort"])
     review_signals = signals(db)
     research = {
@@ -44,7 +53,7 @@ def state(db, cohort=None):
         json.loads(schedule_path.read_text()) if schedule_path.exists() else {"installed": False}
     )
     return {
-        "generated_at": now(),
+        "generated_at": generated,
         "vendors": dict(VENDORS),
         "plugins": [
             {"id": p.id, "name": p.name, "version": p.version, "capabilities": p.capabilities}
@@ -59,13 +68,17 @@ def state(db, cohort=None):
             in ("live_reader", "scheduled_static"),
         },
         "benchmark_cohort": COHORT,
-        "catalogue": catalogue(db, records),
+        "catalogue": profiles,
+        "scorecards": scorecards(
+            records, all_coverage, profiles, checks, all_scope, dict(VENDORS), generated
+        ),
+        "timeline": evidence_timeline(db),
         "benchmark": evaluate(records),
-        "coverage": coverage(db, records, comparison["cohort"]),
+        "coverage": all_coverage,
         "changes": history(db, full=False),
         "signals": review_signals,
         "research": research,
-        "health": health(db),
+        "health": checks,
         "upstream": upstream,
         "delays": [d for d in advisory_delays(records, upstream) if d["cve_id"] in selection],
         "all_cves": sorted({c for r in records for c in r["cves"]}),

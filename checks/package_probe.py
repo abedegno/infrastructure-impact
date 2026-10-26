@@ -17,6 +17,7 @@ def main():
     registry = default_registry()
     assert "acme" in registry.names()
     assert registry.get("aruba").parse_release_history is not None
+    assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
     for name in ("browser-capture-v1.json", "release-history-v1.json"):
         assert (package / "schemas" / name).is_file()
@@ -75,6 +76,8 @@ def main():
         assert response == ["200 OK"]
         assert json.loads(body)["items"][0]["vendor"] == "acme"
         assert (root / "current/schemas/advisory-v2.json").exists()
+        assert (root / "current/scorecards.json").exists()
+        assert (root / "current/timeline.json").exists()
     db.close()
     print(
         json.dumps(

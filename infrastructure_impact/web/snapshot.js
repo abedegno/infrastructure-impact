@@ -36,6 +36,50 @@ function snapshotCompare(records, cohort, vendors, template) {
     draft_advisories_excluded: records.length - included.length,
   };
 }
+function selectScorecards(document, cohort) {
+  const states = [
+    'affected',
+    'partially_mitigated',
+    'unaffected',
+    'fixed',
+    'investigating',
+    'unknown',
+    'recommended',
+    'conflicting',
+  ];
+  return {
+    ...document,
+    cohort,
+    vendors: (document.vendors || []).map((card) => {
+      const by = new Map(card.cases.map((c) => [c.cve_id, c]));
+      const cases = cohort.map(
+        (cid) =>
+          by.get(cid) || {
+            cve_id: cid,
+            statuses: [],
+            product_labels: [],
+            statement_count: 0,
+            cve_specific_statements: 0,
+            shared_bulletin_statements: 0,
+            coverage_state: 'not_checked',
+            source_urls: [],
+          },
+      );
+      return {
+        ...card,
+        cases,
+        cohort_size: cases.length,
+        with_statement: cases.filter((c) => c.statement_count > 0).length,
+        without_statement: cases.filter((c) => c.statement_count === 0).length,
+        explicit_unknown: cases.filter((c) => c.statuses.includes('unknown')).length,
+        status_counts: Object.fromEntries(
+          states.map((s) => [s, cases.filter((c) => c.statuses.includes(s)).length]),
+        ),
+      };
+    }),
+  };
+}
+
 function selectSnapshot(source, ids) {
   const cohort = [...new Set(ids || source.all_cves)].sort();
   const coverage = cohort.flatMap((cid) =>
@@ -54,6 +98,11 @@ function selectSnapshot(source, ids) {
     ...source,
     comparison: snapshotCompare(source.records, cohort, source.vendors, source.comparison),
     coverage,
+    scorecards: selectScorecards(source.scorecards || {}, cohort),
+    timeline: {
+      ...(source.timeline || {}),
+      events: (source.timeline?.events || []).filter((e) => cohort.includes(e.cve_id)),
+    },
     delays: source.delays.filter((d) => cohort.includes(d.cve_id)),
   };
 }

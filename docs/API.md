@@ -50,3 +50,8 @@ Publisher artifact checksums differ from source-page fingerprints. No firmware i
 downloaded and no CVE applicability is inferred from a listing. The corresponding
 contract is `schemas/release-asset-v1.json`. Source health includes an `error_code`
 when a failure is classified (for example, `access_verification_required`).
+
+`/api/v1/scorecards` and `/api/v1/timeline` accept the same optional `cves` and
+`vendor` filters. Their version 1 derived metadata and static Pages equivalents
+are described in [SCORECARDS.md](SCORECARDS.md). These endpoints never read the
+vault and do not assign vendor security scores.
