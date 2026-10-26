@@ -6,6 +6,7 @@ const esc = (v) =>
   );
 const date = (v) => {
   if (!v) return 'Not supplied';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return esc(v) + ' (date only)';
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(v))
     return esc(v.replace('T', ' ')) + ' (publisher timezone unspecified)';
   const d = new Date(v);
