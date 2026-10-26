@@ -1,0 +1,8 @@
+{
+  "archive": "vault-20261026T115650184887Z.sqlite3.gz.fernet",
+  "sha256": "d474bbeecd88d0de48aea9fa8c377bfd236b4fed1514c8388a62bb0cfba799ce",
+  "checked_at": "2026-10-26T11:56:50.644531+00:00",
+  "source_commit": "3fbefda29ea24edd2dc65d9c5a05d1f704938e9b",
+  "private": true,
+  "encryption": "fernet-v1"
+}
