@@ -78,3 +78,10 @@ and full CSAF conformance validation are separate future capabilities.
 Plugins are trusted operator-installed Python code. Remote feed data cannot name
 a module to import. Schema validity establishes structure and scope consistency,
 not truth, exploitability or comprehensive vendor coverage.
+
+Revision comparison groups every assessment branch by CVE and product identity,
+then compares order-independent branch lists. Removal counts and status lists
+survive the public projection without exporting private conditions or notes. A
+removed branch is a review signal, never an unaffectedness claim. Changes retain
+their source revision, parser reinterpretation or source-view classification;
+changed extraction alone does not establish a publisher disclosure change.

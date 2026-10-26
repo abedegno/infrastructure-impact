@@ -6,8 +6,9 @@ import re
 from ..settings import PACKAGE
 
 
-def evaluate(records):
-    definition = json.loads((PACKAGE / "resources/benchmark-cases.json").read_text())
+def evaluate(records, *, definition=None):
+    if definition is None:
+        definition = json.loads((PACKAGE / "resources/benchmark-cases.json").read_text())
     results = []
     for case in definition["cases"]:
         sources = [
@@ -33,11 +34,14 @@ def evaluate(records):
                 )
             )
 
+        forbidden = [a for _, a in claims if a["status"] in case.get("forbidden_statuses", [])]
         outcome = (
             "source_missing"
             if not sources
             else "product_scope_missing"
             if not claims
+            else "forbidden_claim"
+            if forbidden
             else "pass"
             if any(agrees(a) for _, a in claims)
             else "disagreement"
@@ -47,6 +51,7 @@ def evaluate(records):
                 **case,
                 "outcome": outcome,
                 "source_fingerprints": sorted({r["sha256"] for r in sources}),
+                "forbidden_claim_count": len(forbidden),
                 "observed_statuses": sorted({a["status"] for _, a in claims}),
             }
         )
@@ -57,6 +62,8 @@ def evaluate(records):
         "total": len(results),
         "passed": passed,
         "agreement_on_declared_cases": passed / len(results),
+        "negative_boundaries": sum(bool(c.get("forbidden_statuses")) for c in results),
+        "forbidden_claim_count": sum(c["forbidden_claim_count"] for c in results),
         "global_precision": None,
         "limitations": definition["limitations"],
     }

@@ -4,7 +4,7 @@
     "Purposive cases reviewed by an automated assistant; not independent multi-reviewer ground truth.",
     "Case agreement measures declared expectations only; global extraction precision is not estimated.",
     "Pinned source hashes in evaluation receipts identify the exact version tested; publisher revisions may require re-review.",
-    "Cases check the presence of an expected scoped statement. Additional statements outside a case are not exhaustively labelled."
+    "Cases check expected statements and explicitly forbidden statuses within declared product selectors. Unlabelled output and version branches are not exhaustively evaluated."
   ],
   "cases": [
     {
@@ -16,7 +16,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope."
+      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2021-45046-2",
@@ -27,7 +32,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope."
+      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2021-45105-3",
@@ -38,7 +48,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope."
+      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2021-44832-4",
@@ -49,7 +64,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope."
+      "rationale": "Publisher states firewalls are unaffected; Panorama is a distinct deployment scope.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2021-45105-5",
@@ -60,7 +80,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Narrative explicitly excludes Panorama for this CVE, overriding the common multi-CVE product table."
+      "rationale": "Narrative explicitly excludes Panorama for this CVE, overriding the common multi-CVE product table.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2021-44832-6",
@@ -71,7 +96,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Narrative explicitly excludes Panorama for this CVE, overriding the common multi-CVE product table."
+      "rationale": "Narrative explicitly excludes Panorama for this CVE, overriding the common multi-CVE product table.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2024-3094-7",
@@ -82,7 +112,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Primary source product table; conditions and version expressions remain source-defined."
+      "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2023-4863-8",
@@ -93,7 +128,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Library presence in PAN-OS 10.2+ does not imply exploitable product exposure."
+      "rationale": "Library presence in PAN-OS 10.2+ does not imply exploitable product exposure.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2023-44487-9",
@@ -104,7 +144,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "No HTTP/2 server endpoints; PAN-OS inspection/DDoS qualifications are a separate statement."
+      "rationale": "No HTTP/2 server endpoints; PAN-OS inspection/DDoS qualifications are a separate statement.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2023-38408-10",
@@ -116,7 +161,12 @@
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
       "rationale": "Reviewed per-CVE applicability rationale; dependency presence is not product exploitability.",
-      "expected_scope": "cve_specific"
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2023-40217-11",
@@ -128,7 +178,12 @@
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
       "rationale": "Reviewed per-CVE applicability rationale; dependency presence is not product exploitability.",
-      "expected_scope": "cve_specific"
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2023-45283-12",
@@ -140,7 +195,12 @@
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
       "rationale": "Reviewed per-CVE applicability rationale; dependency presence is not product exploitability.",
-      "expected_scope": "cve_specific"
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2022-0847-13",
@@ -152,7 +212,12 @@
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
       "rationale": "Reviewed per-CVE applicability rationale; dependency presence is not product exploitability.",
-      "expected_scope": "cve_specific"
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "paloalto-CVE-2022-37434-14",
@@ -214,7 +279,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Primary source product table; conditions and version expressions remain source-defined."
+      "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "arista-CVE-2021-44228-19",
@@ -237,7 +307,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Primary source product table; conditions and version expressions remain source-defined."
+      "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "arista-CVE-2024-6387-21",
@@ -271,7 +346,12 @@
       "expected_status": "unaffected",
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
-      "rationale": "Primary source product table; conditions and version expressions remain source-defined."
+      "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     },
     {
       "id": "checkpoint-CVE-2023-48795-24",
@@ -322,6 +402,92 @@
       "reviewed_at": "2026-10-26",
       "review_method": "Assistant review of official primary source, separate from normalized output",
       "rationale": "Primary source product table; conditions and version expressions remain source-defined."
+    },
+    {
+      "id": "cisco-CVE-2022-3602-28",
+      "vendor": "cisco",
+      "cve_id": "CVE-2022-3602",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a",
+      "product_pattern": "^Identity Services Engine \\(ISE\\)$",
+      "expected_status": "unaffected",
+      "rationale": "Explicitly listed among products confirmed not vulnerable; do not infer dependency exposure.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of official primary source, separate from normalized output",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
+    },
+    {
+      "id": "cisco-CVE-2022-3602-29",
+      "vendor": "cisco",
+      "cve_id": "CVE-2022-3602",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a",
+      "product_pattern": "^IoT Field Network Director",
+      "expected_status": "affected",
+      "rationale": "Listed among vulnerable products; the table is shared across both CVEs and must retain that scope.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of official primary source, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2022-3602-30",
+      "vendor": "aruba",
+      "cve_id": "CVE-2022-3602",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-017.json",
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "unaffected",
+      "rationale": "Official advisory lists ArubaOS-CX switches as unaffected and identifies no affected products.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of official primary source, separate from normalized output",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
+    },
+    {
+      "id": "cisco-CVE-2022-3786-31",
+      "vendor": "cisco",
+      "cve_id": "CVE-2022-3786",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a",
+      "product_pattern": "^Identity Services Engine \\(ISE\\)$",
+      "expected_status": "unaffected",
+      "rationale": "Explicitly listed among products confirmed not vulnerable; do not infer dependency exposure.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of official primary source, separate from normalized output",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
+    },
+    {
+      "id": "cisco-CVE-2022-3786-32",
+      "vendor": "cisco",
+      "cve_id": "CVE-2022-3786",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a",
+      "product_pattern": "^IoT Field Network Director",
+      "expected_status": "affected",
+      "rationale": "Listed among vulnerable products; the table is shared across both CVEs and must retain that scope.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of official primary source, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2022-3786-33",
+      "vendor": "aruba",
+      "cve_id": "CVE-2022-3786",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-017.json",
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "unaffected",
+      "rationale": "Official advisory lists ArubaOS-CX switches as unaffected and identifies no affected products.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of official primary source, separate from normalized output",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "investigating"
+      ]
     }
   ]
 }

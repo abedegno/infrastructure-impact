@@ -3,6 +3,7 @@
 import hashlib
 import json
 import sqlite3
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -58,8 +59,17 @@ def semantic_diff(before, after):
     for key in ("cves", "published_at", "updated_at", "document_status", "notes", "metrics"):
         if before.get(key) != after.get(key):
             changes.append({"field": key, "before": before.get(key), "after": after.get(key)})
-    old = {claim_key(c): c for c in before.get("assessments", [])}
-    new = {claim_key(c): c for c in after.get("assessments", [])}
+
+    def branches(record):
+        grouped = defaultdict(list)
+        for claim in record.get("assessments", []):
+            grouped[claim_key(claim)].append(claim)
+        return {
+            key: sorted(values, key=lambda c: json.dumps(c, sort_keys=True))
+            for key, values in grouped.items()
+        }
+
+    old, new = branches(before), branches(after)
     for key in sorted(old.keys() | new.keys()):
         if old.get(key) != new.get(key):
             changes.append(
@@ -69,6 +79,9 @@ def semantic_diff(before, after):
                     "product_id": key[1],
                     "before": old.get(key),
                     "after": new.get(key),
+                    "removed_branch_count": sum(
+                        c not in new.get(key, []) for c in old.get(key, [])
+                    ),
                 }
             )
     return changes
@@ -179,6 +192,13 @@ def history(db, full=True):
                     "before_status": (d.get("before") or {}).get("status")
                     if isinstance(d.get("before"), dict)
                     else None,
+                    "before_statuses": sorted({c["status"] for c in d.get("before", [])})
+                    if d["field"] == "assessment" and isinstance(d.get("before"), list)
+                    else [],
+                    "after_statuses": sorted({c["status"] for c in d.get("after", [])})
+                    if d["field"] == "assessment" and isinstance(d.get("after"), list)
+                    else [],
+                    "removed_branch_count": d.get("removed_branch_count", 0),
                     "after_status": (d.get("after") or {}).get("status")
                     if isinstance(d.get("after"), dict)
                     else None,
