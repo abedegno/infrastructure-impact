@@ -60,9 +60,10 @@
       "product_families": [
         "Session Smart Router",
         "Apstra",
-        "RSS advisory discovery"
+        "RSS advisory discovery",
+        "Selected Junos OS and Junos OS Evolved CNA rows with platform/configuration context"
       ],
-      "history_scope": "Current security RSS metadata and two scoped PDF release documents",
+      "history_scope": "Current RSS discovery and bounded verified Juniper CNA follow-ups; pinned SSR/Apstra documents and selected Junos records; not a historical portfolio census",
       "known_gaps": [
         "Application shells can prevent article extraction.",
         "RSS discovery is not resolved product applicability; PDF adapters are deliberately narrow."
@@ -100,9 +101,11 @@
     "hpe": {
       "product_families": [
         "Selected Cray EX products",
-        "Selected NonStop products"
+        "Selected NonStop products",
+        "Selected iLO 5/6/7 firmware",
+        "Selected ProLiant AMD server BIOS"
       ],
-      "history_scope": "Two pinned historical bulletins; no general HPE advisory discovery feed",
+      "history_scope": "Four pinned bulletins for Cray, NonStop, iLO and ProLiant; no general HPE advisory discovery feed",
       "known_gaps": [
         "This profile is a curated sample, not HPE-wide coverage.",
         "Reported firmware dates are not independently verified public availability."

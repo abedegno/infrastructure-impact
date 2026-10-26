@@ -86,6 +86,13 @@ function classifyProduct(vendor, assessment, taxonomy) {
   let matches = (taxonomy?.rules || []).filter(
     (r) =>
       r.vendor === vendor &&
+      (!r.platform_prefixes ||
+        (Array.isArray(assessment.platforms) &&
+          assessment.platforms.length > 0 &&
+          assessment.platforms.every(
+            (p) =>
+              typeof p === 'string' && r.platform_prefixes.some((prefix) => p.startsWith(prefix)),
+          ))) &&
       (name === r.prefix ||
         (name.startsWith(r.prefix) &&
           [' ', '-', '('].includes(name.slice(r.prefix.length, r.prefix.length + 1)))),
@@ -93,6 +100,8 @@ function classifyProduct(vendor, assessment, taxonomy) {
   if (!matches.length) return { state: 'unmapped', group: null, rule_ids: [] };
   const length = Math.max(...matches.map((r) => r.prefix.length));
   matches = matches.filter((r) => r.prefix.length === length);
+  if (matches.some((r) => r.platform_prefixes))
+    matches = matches.filter((r) => r.platform_prefixes);
   const groups = [...new Set(matches.map((r) => r.group))];
   return {
     state: groups.length === 1 ? 'mapped' : 'ambiguous',

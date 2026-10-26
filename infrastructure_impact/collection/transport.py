@@ -28,6 +28,7 @@ def allowed(url, vendor):
                 else default_registry().get(vendor).domains
             )
         )
+        and (vendor == "upstream" or default_registry().get(vendor).url_filter(url))
     )
 
 

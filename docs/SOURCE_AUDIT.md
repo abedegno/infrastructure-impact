@@ -36,10 +36,10 @@ not empty archives or evidence of no vendor disclosure.
 | HPE Aruba Networking | CSAF text index; normal sample 4; benchmark cap 200 | 110 listed documents; resumable normalization at 16 documents per daily pass; raw retention does not establish complete product/configuration qualification |
 | Arista | Current security RSS, normal sample 4 | Curated EOS/CloudVision/other supported layouts; reviewed HTML archive pagination enabled; sampled terminal listing reaches 2008; lifecycle browser capture is separate |
 | Palo Alto Networks | Current RSS, normal sample 4 | Pinned CVE JSON and OSS bulletin cases; public historical GET-form listing enabled; CSV is page-limited; shared product tables remain scoped; no portfolio denominator |
-| Juniper | Current RSS metadata, normal sample 4 | Scoped SSR/Apstra documents; article shells and metadata do not establish product applicability |
+| Juniper | Current RSS metadata, normal sample 4 | Scoped SSR/Apstra documents plus selected Junos CNA records; up to eight selected Security Bulletin registry follow-ups verify Juniper CNA identity; article shells and RSS metadata do not establish product applicability |
 | Check Point | Single active-index API response | Retained local response had 157 rows; server-side completeness and historical archive coverage are not established; gated SK/listing bodies remain gaps |
 | Fortinet | Current PSIRT RSS, normal sample 4 | Structured exports and selected release notes; historical PSIRT listing enabled for its default infrastructure product filter; empty product-status envelopes and fixed-only statements remain qualified |
-| HPE other products | Two pinned bulletins; no general feed | Selected Cray/NonStop coverage, not an HPE-wide product search |
+| HPE other products | Four pinned bulletins; no general feed | Selected Cray/NonStop/iLO/ProLiant coverage, not an HPE-wide product search |
 
 The retained RSS windows contained 25–50 entries in this pass. These observations
 are tied to source fingerprints in the machine-readable audit and can change.

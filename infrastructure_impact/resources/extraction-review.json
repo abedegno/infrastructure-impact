@@ -41,7 +41,11 @@
       "expected_status": "affected",
       "source_locator": "Vulnerability Assessment / EOS release trains",
       "rationale": "Affected train ranges are explicit; do not promote low impact or protected-network wording to unaffected.",
-      "version_contains": "4.27.3"
+      "version_contains": "4.27.3",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "373d8b37a130f8e46ff1592b6c7a2c844ff50c89ad7d88643079575d05e3ce07"
+      }
     },
     {
       "id": "arista-source-check-4",
@@ -56,7 +60,11 @@
       "forbidden_statuses": [
         "affected",
         "fixed"
-      ]
+      ],
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "373d8b37a130f8e46ff1592b6c7a2c844ff50c89ad7d88643079575d05e3ce07"
+      }
     },
     {
       "id": "cisco-source-check-5",
@@ -215,7 +223,11 @@
         "affected",
         "fixed",
         "unaffected"
-      ]
+      ],
+      "reviewed_scope": {
+        "scheme": "fortinet_investigation_v1",
+        "sha256": "1e4ac8589bb9bcfe814c40ff1025f46032a05a8267eb915cbf907aaaf7b032ec"
+      }
     },
     {
       "id": "fortinet-source-check-16",
@@ -231,7 +243,91 @@
       "forbidden_statuses": [
         "affected",
         "fixed"
+      ],
+      "reviewed_scope": {
+        "scheme": "fortinet_investigation_v1",
+        "sha256": "1e4ac8589bb9bcfe814c40ff1025f46032a05a8267eb915cbf907aaaf7b032ec"
+      }
+    },
+    {
+      "id": "juniper-source-check-17",
+      "vendor": "juniper",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-101960",
+      "source_sha256": "1a91893ef0c3d3948fe8d28195b03d01efab2c6c536ea9877a13052cc9733c06",
+      "cve_id": "CVE-2026-101960",
+      "product_pattern": "^Junos OS Evolved \\(QFX5240, QFX5241, QFX5250\\)$",
+      "expected_status": "affected",
+      "source_locator": "containers.cna.affected, descriptions and configurations",
+      "rationale": "QFX platforms and BGP/ECMP configuration restrict applicability; solution text is not independent release availability.",
+      "version_contains": "23.4R2-S8.11-EVO",
+      "exposure_contains": "global-load-balancing"
+    },
+    {
+      "id": "juniper-source-check-18",
+      "vendor": "juniper",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-101950",
+      "source_sha256": "32fa45dc6e9fa2007aafc2db5da1258bf88a2e299112ff3a2e96414f817eaae7",
+      "cve_id": "CVE-2026-101950",
+      "product_pattern": "^Junos OS$",
+      "expected_status": "affected",
+      "source_locator": "containers.cna.affected and configurations",
+      "rationale": "Retain the vector-routing prerequisite and SRX context; do not generalize to every Junos deployment.",
+      "version_contains": "23.4R2-S8.13",
+      "exposure_contains": "vector-routing"
+    },
+    {
+      "id": "hpe-source-check-19",
+      "vendor": "hpe",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05170en_us",
+      "source_sha256": "804f80c7abda260712edf65ee5cbb13fa564ba030c58c84ff61790931787a022",
+      "cve_id": "CVE-2026-65204",
+      "product_pattern": "^HPE Integrated Lights-Out 5",
+      "expected_status": "affected",
+      "source_locator": "SUPPORTED SOFTWARE VERSIONS / iLO 5",
+      "rationale": "Shared table applies to iLO 5; preserve prior-to expression.",
+      "version_contains": "3.22"
+    },
+    {
+      "id": "hpe-source-check-20",
+      "vendor": "hpe",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05170en_us",
+      "source_sha256": "804f80c7abda260712edf65ee5cbb13fa564ba030c58c84ff61790931787a022",
+      "cve_id": "CVE-2026-65204",
+      "product_pattern": "^HPE Integrated Lights-Out 7",
+      "expected_status": "unaffected",
+      "source_locator": "VULNERABILITY SUMMARY / CVE-2026-65204 exception",
+      "rationale": "Explicit iLO 7 exception overrides the shared affected table for this CVE only.",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
       ]
+    },
+    {
+      "id": "hpe-source-check-21",
+      "vendor": "hpe",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05170en_us",
+      "source_sha256": "804f80c7abda260712edf65ee5cbb13fa564ba030c58c84ff61790931787a022",
+      "cve_id": "CVE-2026-65205",
+      "product_pattern": "^HPE Integrated Lights-Out 7",
+      "expected_status": "affected",
+      "source_locator": "SUPPORTED SOFTWARE VERSIONS / iLO 7",
+      "rationale": "The exception for CVE-2026-65204 does not exclude another CVE.",
+      "version_contains": "1.25.01",
+      "expected_scope": "bulletin_shared"
+    },
+    {
+      "id": "hpe-source-check-22",
+      "vendor": "hpe",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05034en_us",
+      "source_sha256": "4819e67eae0800f62542b0a347536e3b36ac288f1b31c8b1eb25f65f8046f066",
+      "cve_id": "CVE-2025-54502",
+      "product_pattern": "^HPE ProLiant Compute DL325 Gen12$",
+      "expected_status": "affected",
+      "source_locator": "SUPPORTED SOFTWARE VERSIONS / DL325 Gen12",
+      "rationale": "Preserve exact BIOS expression and AMD processor scope; no generalized server affectedness.",
+      "version_contains": "1.40_01-09-2026",
+      "exposure_contains": "AMD"
     }
   ]
 }

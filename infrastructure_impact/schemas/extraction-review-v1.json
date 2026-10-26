@@ -2,13 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "reviewed_at",
-    "review_method",
-    "sample_strategy",
-    "cases"
-  ],
+  "required": ["schema_version", "reviewed_at", "review_method", "sample_strategy", "cases"],
   "properties": {
     "schema_version": {
       "const": 1
@@ -93,10 +87,7 @@
             ]
           },
           "expected_scope": {
-            "enum": [
-              "cve_specific",
-              "bulletin_shared"
-            ]
+            "enum": ["cve_specific", "bulletin_shared"]
           },
           "remediation_availability": {
             "enum": [
@@ -132,6 +123,24 @@
               "maxItems": 2,
               "items": {
                 "type": "string"
+              }
+            }
+          },
+          "exposure_contains": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewed_scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["scheme", "sha256"],
+            "properties": {
+              "scheme": {
+                "enum": ["arista_advisory_body_v1", "fortinet_investigation_v1"]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
               }
             }
           }

@@ -29,11 +29,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "scope"
-        ]
+        "required": ["id", "name", "scope"]
       }
     },
     "rules": {
@@ -65,17 +61,19 @@
           },
           "rationale": {
             "type": "string"
+          },
+          "platform_prefixes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,40}$"
+            }
           }
         },
-        "required": [
-          "id",
-          "vendor",
-          "group",
-          "prefix",
-          "source_url",
-          "reviewed_at",
-          "rationale"
-        ]
+        "required": ["id", "vendor", "group", "prefix", "source_url", "reviewed_at", "rationale"]
       }
     },
     "vendors": {
@@ -129,11 +127,7 @@
                   }
                 }
               },
-              "required": [
-                "group",
-                "statement_count",
-                "product_labels"
-              ]
+              "required": ["group", "statement_count", "product_labels"]
             }
           }
         },
@@ -162,10 +156,7 @@
           "const": 2
         }
       },
-      "required": [
-        "id",
-        "advisory_schema_version"
-      ]
+      "required": ["id", "advisory_schema_version"]
     },
     "generated_at": {
       "type": "string",

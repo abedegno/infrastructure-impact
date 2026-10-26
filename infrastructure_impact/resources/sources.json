@@ -163,6 +163,22 @@
     {
       "vendor": "fortinet",
       "url": "https://www.fortiguard.com/psirt/FG-IR-23-385"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-101960"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-101950"
+    },
+    {
+      "vendor": "hpe",
+      "url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05170en_us"
+    },
+    {
+      "vendor": "hpe",
+      "url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05034en_us"
     }
   ],
   "release_documents": [

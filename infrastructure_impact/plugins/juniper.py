@@ -1,10 +1,12 @@
 """Juniper RSS discovery and explicitly reviewed public PDF scopes."""
 
 from email.utils import parsedate_to_datetime
+from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 from ..adapters.common import base, cves
 from ..adapters.juniper import juniper_pdf
+from ..adapters.vendor_cna import juniper_cna, registry_route
 from .contracts import FeedBatch, VendorPlugin
 from .shared import structured
 
@@ -35,15 +37,27 @@ def parse_feed(raw, url, limit, cohort):
         if (i < limit or set(cves(item.findtext("title") or "")) & cohort)
         and cves(item.findtext("title") or "")
     )
+    targets = tuple(
+        dict.fromkeys(
+            "https://cveawg.mitre.org/api/cve/" + cid
+            for i, item in enumerate(items)
+            if (i < limit or set(cves(item.findtext("title") or "")) & cohort)
+            and "Security Bulletin:" in (item.findtext("title") or "")
+            for cid in cves(item.findtext("title") or "")
+        )
+    )[:8]
     return FeedBatch(
         records,
         frozenset(c for item in items for c in cves(item.findtext("title") or "")),
-        f"Current RSS window ({len(items)} entries); discovery metadata only",
+        f"Current RSS window ({len(items)} entries); titles are discovery metadata; up to eight selected Security Bulletin CVE registry targets require separate Juniper CNA verification",
         "partial",
+        targets,
     )
 
 
 def parse(raw, url, vendor):
+    if urlsplit(url).hostname == "cveawg.mitre.org":
+        return juniper_cna(raw, url, vendor)
     return (
         juniper_pdf(raw, url, vendor)
         if isinstance(raw, bytes) and raw.startswith(b"%PDF")
@@ -55,8 +69,13 @@ def plugin():
     return VendorPlugin(
         "juniper",
         "Juniper",
-        ("juniper.net",),
+        ("juniper.net", "cveawg.mitre.org"),
         parse,
         parse_feed=parse_feed,
-        capabilities=("rss-discovery", "scoped-pdf"),
+        capabilities=("rss-discovery", "scoped-pdf", "verified-vendor-cna"),
+        url_filter=lambda url: (
+            (urlsplit(url).hostname or "").endswith(".juniper.net")
+            or urlsplit(url).hostname == "juniper.net"
+            or registry_route(url)
+        ),
     )

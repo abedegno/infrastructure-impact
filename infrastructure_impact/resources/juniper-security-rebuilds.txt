@@ -1,0 +1,34 @@
+Juniper disclosed security rebuilds — source-led research, 2026-10-26
+
+Question: Do rebuilt Junos release images imply undisclosed CVE exposure?
+Current finding: incomplete chronology; no concealment finding.
+
+Primary vendor-authored CNA records delivered by the CVE registry:
+https://cveawg.mitre.org/api/cve/CVE-2026-101960
+Reviewed raw SHA-256: 1a91893ef0c3d3948fe8d28195b03d01efab2c6c536ea9877a13052cc9733c06
+https://cveawg.mitre.org/api/cve/CVE-2026-101950
+Reviewed raw SHA-256: 32fa45dc6e9fa2007aafc2db5da1258bf88a2e299112ff3a2e96414f817eaae7
+Both records identify Juniper CNA organization 8cbe9d5a-a066-4c94-8978-4b15efeae968
+in metadata and the CNA container. ADP and generic upstream assertions are excluded.
+Vendor references: https://supportportal.juniper.net/JSA112250 and
+https://supportportal.juniper.net/JSA112186 . These are leads, not independently
+retrieved release-availability evidence; the portal returns an application shell.
+
+CVE-2026-101960 retains affected Junos OS Evolved QFX5240, QFX5241 and QFX5250
+platforms, custom version ranges and BGP global-load-balancing / ECMP configuration
+requirements. CVE-2026-101950 retains Junos OS ranges with SRX/vector-routing
+context. The normalized publisher descriptions, configurations and solutions must
+be read together; a generic OS label does not make every deployment affected.
+
+The vendor's solutions text explicitly describes previously published releases
+being rebuilt to address security vulnerabilities. This disclosure is relevant
+counter-evidence to treating a same-branch replacement as a hidden security fix.
+It does not independently establish when original or replacement images became
+available, whether every package includes a fix, or the first notice to customers.
+
+Still needed: independent historical release captures; exact image/build/platform
+linkage; retained original and replacement provenance; review for earlier public
+or customer notices. No firmware binaries were downloaded or redistributed.
+
+Method: automated source-led review in the implementation session. Independent
+human adjudication remains pending. No vendor ranking or intent inference follows.

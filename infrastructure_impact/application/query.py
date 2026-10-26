@@ -13,12 +13,14 @@ from .comparison import compare
 from .disclosure import latest_documents, signals
 from .eligibility import eligibility
 from .evaluation import evaluate
+from .extraction_validation import definition as review_definition
 from .extraction_validation import review_packet, validation_report
 from .product_groups import product_groups
 from .publisher_history import publisher_history
 from .release_assets import listings
 from .scorecards import scorecards
 from .source_audit import source_audit
+from .source_scope import retained_scopes
 from .timeline import evidence_timeline
 
 ROOT = Paths.from_env().home
@@ -26,6 +28,7 @@ ROOT = Paths.from_env().home
 
 def state(db, cohort=None):
     records = latest(db)
+    scopes = retained_scopes(db, records, review_definition())
     upstream = {
         r["cve_id"]: dict(r)
         for r in db.execute(
@@ -85,7 +88,8 @@ def state(db, cohort=None):
         "timeline": evidence_timeline(db),
         "source_audit": source_audit(db, records),
         "benchmark": evaluate(records),
-        "extraction_validation": validation_report(records),
+        "extraction_validation": validation_report(records, scopes=scopes),
+        "reviewed_source_scopes": scopes,
         "review_packet": review_packet(records),
         "publisher_history": publisher_history(db),
         "coverage": all_coverage,

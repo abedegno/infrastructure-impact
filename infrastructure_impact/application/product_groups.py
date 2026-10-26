@@ -47,10 +47,23 @@ def classify(vendor, assessment, taxonomy=None):
     taxonomy = definition() if taxonomy is None else taxonomy
     # The named family is more informative than a CSAF numeric version leaf.
     names = [assessment.get("product_family") or assessment.get("product", "")]
+    platforms = assessment.get("platforms", [])
     matches = [
         r
         for r in taxonomy["rules"]
         if r["vendor"] == vendor
+        and (
+            not r.get("platform_prefixes")
+            or (
+                isinstance(platforms, list)
+                and bool(platforms)
+                and all(
+                    isinstance(p, str)
+                    and any(p.startswith(prefix) for prefix in r["platform_prefixes"])
+                    for p in platforms
+                )
+            )
+        )
         and any(
             name.strip() == r["prefix"]
             or (
@@ -62,8 +75,8 @@ def classify(vendor, assessment, taxonomy=None):
     ]
     if not matches:
         return {"state": "unmapped", "group": None, "rule_ids": []}
-    length = max(len(r["prefix"]) for r in matches)
-    matches = [r for r in matches if len(r["prefix"]) == length]
+    rank = max((len(r["prefix"]), bool(r.get("platform_prefixes"))) for r in matches)
+    matches = [r for r in matches if (len(r["prefix"]), bool(r.get("platform_prefixes"))) == rank]
     groups = {r["group"] for r in matches}
     return {
         "state": "mapped" if len(groups) == 1 else "ambiguous",

@@ -35,9 +35,37 @@ def hpe_bulletin(raw, url, vendor):
     candidates = [t for t in candidates if not any(t != s and s in t for s in candidates)]
     if not candidates:
         raise ValueError("No scoped HPE affected-version statements")
+    products = {
+        expression: re.split(r"\s+-\s+|\s+Prior to\s+", expression, maxsplit=1)[0].strip()
+        for expression in candidates
+    }
+    exception_rows = re.findall(
+        r"(CVE-\d{4}-\d{4,})\s+-\s+([A-Za-z0-9 ()+/-]{1,100}?)\s+is not vulnerable\b", before
+    )
+    if len(re.findall(r"\bnot (?:vulnerable|affected)\b", before, re.I)) != len(exception_rows):
+        raise ValueError("Unreviewed HPE applicability exception; no shared-table inference")
+    exceptions = set()
+    for cid, alias in exception_rows:
+        matches = {
+            p for p in products.values() if alias == p or alias in re.findall(r"\(([^()]*)\)", p)
+        }
+        if cid not in out["cves"] or len(matches) != 1:
+            raise ValueError("HPE CVE exception needs one exact product/alias match")
+        exceptions.add((cid, matches.pop()))
+    scope_context = before.split("VULNERABILITY SUMMARY", 1)[-1].strip()
     for expression in candidates:
-        product = re.split(r"\s+-\s+|\s+Prior to\s+", expression, maxsplit=1)[0].strip()
+        product = products[expression]
         for cid in out["cves"]:
+            if (cid, product) in exceptions:
+                out["assessments"].append(
+                    assessment(
+                        cid,
+                        product,
+                        "unaffected",
+                        "VULNERABILITY SUMMARY / explicit CVE/product exception",
+                    )
+                )
+                continue
             out["assessments"].append(
                 assessment(
                     cid,
@@ -56,12 +84,25 @@ def hpe_bulletin(raw, url, vendor):
                     "bulletin_shared" if len(out["cves"]) > 1 else "cve_specific",
                 )
             )
+    for claim in out["assessments"]:
+        claim["exposure"] = [
+            dict(
+                category="publisher_scope",
+                details=scope_context,
+                source_scope="bulletin_context_requires_product_configuration_review",
+                source_locator="VULNERABILITY SUMMARY",
+            )
+        ]
     out["notes"] = [
         {"category": "bulletin_context", "text": before.split("VULNERABILITY SUMMARY", 1)[-1]}
     ]
     out["warnings"].append(
         "Curated HPE bulletin; coverage is restricted to the listed products. Supported-version and resolution blocks preserve vendor expressions; no range comparison performed."
     )
+    if exceptions:
+        out["warnings"].append(
+            "Explicit CVE/product exceptions override the shared affected-version block; exception rows carry no inferred version range or remediation."
+        )
     # Store a candidate date as a source assertion, never a verified release observation.
     date_match = re.search(r"\((\d{1,2}/\d{1,2}/\d{4})\)", resolution)
     if date_match:

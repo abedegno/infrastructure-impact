@@ -90,6 +90,35 @@
         "Current publisher dates are claims rather than historical availability observations"
       ],
       "prior_advisory_product_pattern": "^FortiProxy(?:$|[- ])"
+    },
+    {
+      "id": "juniper-disclosed-security-rebuilds",
+      "vendor": "juniper",
+      "cve_ids": [
+        "CVE-2026-101960",
+        "CVE-2026-101950"
+      ],
+      "product_pattern": "^Junos OS",
+      "product_scope": "QFX5240/QFX5241/QFX5250 Junos OS Evolved with specified BGP/ECMP configuration; SRX Junos OS with vector-routing prerequisites. Separate affected version expressions apply.",
+      "question": "Do explicitly disclosed security rebuilds support a hidden-fix allegation, and can historical binary availability be independently established?",
+      "advisory_urls": [
+        "https://cveawg.mitre.org/api/cve/CVE-2026-101960",
+        "https://cveawg.mitre.org/api/cve/CVE-2026-101950"
+      ],
+      "release_source_leads": [
+        "https://supportportal.juniper.net/JSA112250",
+        "https://supportportal.juniper.net/JSA112186"
+      ],
+      "research_record": "research/juniper-security-rebuilds.txt",
+      "missing_evidence": [
+        "Independent historical release availability for each exact rebuilt image",
+        "Original and rebuilt binary/package linkage and build timestamps",
+        "Historical captures of notices and review for earlier customer/public disclosure"
+      ],
+      "alternative_explanations": [
+        "The vendor explicitly states that previously published releases were rebuilt to resolve security vulnerabilities; this is counter-evidence to an undisclosed-fix allegation",
+        "A same-branch replacement or build-date difference does not establish concealment, affectedness of all platforms or a first-disclosure delay"
+      ]
     }
   ]
 }

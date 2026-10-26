@@ -19,6 +19,15 @@ class FeedBatch:
     referenced_cves: frozenset[str]
     scope: str
     outcome: str = "ok"
+    document_urls: tuple[str, ...] = ()
+
+    def __post_init__(self):
+        if (
+            not isinstance(self.document_urls, tuple)
+            or len(self.document_urls) > 20
+            or any(not isinstance(u, str) or not u for u in self.document_urls)
+        ):
+            raise ValueError("Feed document targets must be a tuple of at most 20 URLs")
 
 
 @dataclass(frozen=True)
@@ -39,6 +48,7 @@ class VendorPlugin:
     parse_release_history: DocumentParser | None = None
     parse_archive: Callable[[bytes, str, str], "ArchivePage"] | None = None
     parse_document_history: Callable[[bytes, str, str], dict | None] | None = None
+    url_filter: Callable[[str], bool] = lambda url: True
 
 
 @dataclass(frozen=True)

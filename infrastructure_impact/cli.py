@@ -51,7 +51,11 @@ def main(argv=None):
         "validation",
         help="Evaluate pinned source-led checks or emit a blind independent-review packet",
     )
-    validation.add_argument("--packet", action="store_true")
+    validation_modes = validation.add_mutually_exclusive_group()
+    validation_modes.add_argument("--packet", action="store_true")
+    validation_modes.add_argument("--submission", type=Path)
+    validation_modes.add_argument("--submission-template", action="store_true")
+    validation.add_argument("--packet-file", type=Path)
     validation.add_argument("--fail-on-disagreement", action="store_true")
     sub.add_parser(
         "source-audit", help="Audit retained source scope without making network requests"
@@ -88,15 +92,47 @@ def main(argv=None):
             )
         )
     elif args.command == "validation":
+        from .application.extraction_validation import definition as review_definition
         from .application.extraction_validation import review_packet, validation_report
+        from .application.review_submission import audit_submission, submission_template
+        from .application.source_scope import retained_scopes
         from .storage.repository import latest
 
-        with closing(connect(read_only=True)) as db:
-            result = review_packet(latest(db)) if args.packet else validation_report(latest(db))
+        def read_review_file(path):
+            with path.open("rb") as stream:
+                raw = stream.read(262145)
+            if len(raw) > 262144:
+                raise ValueError("Review file exceeds 256 KiB")
+            return json.loads(raw)
+
+        if args.packet_file and not args.submission:
+            parser.error("--packet-file requires --submission")
+        try:
+            if args.submission and args.packet_file:
+                result = audit_submission(
+                    read_review_file(args.submission), read_review_file(args.packet_file)
+                )
+            else:
+                with closing(connect(read_only=True)) as db:
+                    records = latest(db)
+                    packet = review_packet(records)
+                    result = (
+                        audit_submission(read_review_file(args.submission), packet)
+                        if args.submission
+                        else submission_template(packet)
+                        if args.submission_template
+                        else packet
+                        if args.packet
+                        else validation_report(
+                            records, scopes=retained_scopes(db, records, review_definition())
+                        )
+                    )
+        except ValueError as error:
+            parser.error(str(error))
         print(json.dumps(result, indent=2))
         if (
             args.fail_on_disagreement
-            and not args.packet
+            and not (args.packet or args.submission or args.submission_template)
             and any(
                 c["outcome"] in ("disagreement", "product_scope_missing") for c in result["cases"]
             )

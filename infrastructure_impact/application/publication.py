@@ -65,9 +65,18 @@ def public_projection(data, public_release_urls=()):
     ]
     for signal in data["signals"]:
         signal.pop("basis", None)
+    known_sources = {(r["source_url"], r["sha256"]) for r in data["records"]}
+    data["reviewed_source_scopes"] = [
+        {k: s[k] for k in ("source_url", "source_sha256", "scheme", "scope_sha256")}
+        for s in data.get("reviewed_source_scopes", [])
+        if (s.get("source_url"), s.get("source_sha256")) in known_sources
+        and re.fullmatch(r"[a-f0-9]{64}", s.get("scope_sha256", ""))
+    ]
     data["casefiles"] = casefiles(data)
     data["product_groups"] = product_groups(data)
-    data["extraction_validation"] = validation_report(data["records"])
+    data["extraction_validation"] = validation_report(
+        data["records"], scopes=data["reviewed_source_scopes"]
+    )
     data["review_packet"] = review_packet(data["records"])
     data["comparison_eligibility"] = eligibility(data, data["comparison"]["cohort"])
     data["delays"] = []
@@ -157,6 +166,7 @@ def write_bundle(destination, data):
         "hpe-timing-investigation.txt",
         "fortiproxy-curl-investigation.txt",
         "aruba-cx-investigation.txt",
+        "juniper-security-rebuilds.txt",
     ):
         source = (
             Paths.from_env().home / "benchmark" / name
@@ -181,6 +191,7 @@ def write_bundle(destination, data):
         "product-groups-v1.json",
         "publisher-history-v1.json",
         "extraction-review-v1.json",
+        "review-submission-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

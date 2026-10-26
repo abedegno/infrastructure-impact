@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "taxonomy_version": "2026-10-26.1",
+  "taxonomy_version": "2026-10-26.2",
   "review_method": "Automated source-led role classification; independent human review pending",
   "groups": [
     {
@@ -733,6 +733,72 @@
       "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
       "reviewed_at": "2026-10-26",
       "rationale": "Explicit ClearPass NAC product-name variant in current CSAF."
+    },
+    {
+      "id": "juniper-junos-shared",
+      "vendor": "juniper",
+      "group": "routing_switching",
+      "prefix": "Junos OS",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2025-52989",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Generic Junos statements do not establish a platform class."
+    },
+    {
+      "id": "juniper-junos-switches",
+      "vendor": "juniper",
+      "group": "switching",
+      "prefix": "Junos OS",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-101960",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Every explicitly retained platform must be an EX/QFX family; mixed or absent platform lists fall back to shared OS scope.",
+      "platform_prefixes": [
+        "EX",
+        "QFX"
+      ]
+    },
+    {
+      "id": "juniper-junos-routers",
+      "vendor": "juniper",
+      "group": "routing",
+      "prefix": "Junos OS",
+      "source_url": "https://www.juniper.net/us/en/products/routers.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Only explicit all-router platform lists qualify; mixed hardware classes are not split.",
+      "platform_prefixes": [
+        "MX",
+        "PTX",
+        "ACX"
+      ]
+    },
+    {
+      "id": "juniper-junos-firewalls",
+      "vendor": "juniper",
+      "group": "firewalls",
+      "prefix": "Junos OS",
+      "source_url": "https://www.juniper.net/us/en/products/security/srx-series.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Only explicit all-SRX platform lists qualify.",
+      "platform_prefixes": [
+        "SRX"
+      ]
+    },
+    {
+      "id": "hpe-proliant",
+      "vendor": "hpe",
+      "group": "servers",
+      "prefix": "HPE ProLiant",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05034en_us",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Exact ProLiant model and firmware assertions; processor/platform limits remain in the publisher scope."
+    },
+    {
+      "id": "hpe-ilo",
+      "vendor": "hpe",
+      "group": "management",
+      "prefix": "HPE Integrated Lights-Out",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05170en_us",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Server management controller software is separately scoped from the host operating system."
     }
   ]
 }

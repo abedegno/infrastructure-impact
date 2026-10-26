@@ -46,6 +46,8 @@ def validate_config(config):
                 url.hostname == d or (url.hostname or "").endswith("." + d) for d in plugin.domains
             ):
                 raise ValueError(f"Source URL outside {plugin.id} official domains")
+            if not plugin.url_filter(entry["url"]):
+                raise ValueError(f"Source URL outside {plugin.id} reviewed routes")
             if section == "archives":
                 if entry.get("kind") not in ("rss", "index", "listing") or (
                     entry.get("kind") != "listing" and plugin.parse_feed

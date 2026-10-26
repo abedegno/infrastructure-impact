@@ -95,6 +95,7 @@ def main():
             "product-groups-v1.json",
             "publisher-history-v1.json",
             "extraction-review-v1.json",
+            "review-submission-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         groups = json.loads((root / "current/product-groups.json").read_text())
@@ -113,7 +114,7 @@ def main():
         assert json.loads(report_body)["vendors"][0]["vendor"] == "acme"
         assert (root / "current/timeline.json").exists()
         assert (root / "current/source-audit.json").exists()
-        assert len(json.loads((root / "current/casefiles.json").read_text())["cases"]) == 3
+        assert len(json.loads((root / "current/casefiles.json").read_text())["cases"]) == 4
     # Selection for external vendors uses the same pure policy as bundled vendors.
     from infrastructure_impact.application.eligibility import eligibility
 

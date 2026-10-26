@@ -38,3 +38,11 @@ CVE/product-link evidence and review candidates. Publication of a reviewed case
 conclusion requires a separately reviewed evidence projection; these initial files
 do not automatically verify a fix, register a candidate, or infer intent. See
 [DISCLOSURE_RESEARCH.md](DISCLOSURE_RESEARCH.md).
+
+## Disclosed Juniper rebuilds
+
+The fourth case follows two vendor-authored Junos CNA records with explicit
+security rebuild statements. It preserves QFX and SRX configuration limits. The
+vendor's disclosure is counter-evidence to a hidden-fix allegation; exact image
+availability and historical notices still require independent evidence. See
+[the source-led record](../infrastructure_impact/resources/juniper-security-rebuilds.txt).

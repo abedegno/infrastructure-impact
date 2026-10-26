@@ -3,6 +3,14 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Review and infrastructure coverage — 2026-10-26
+
+- Add identity-checked Juniper CNA collection and bounded RSS follow-ups, retaining platform/configuration prerequisites.
+- Expand curated HPE coverage to iLO and ProLiant, preserving explicit per-CVE product exceptions.
+- Expand source-led review to 22 assertions; separate reviewed section matches from raw-byte passes.
+- Add hash-bound private review proposals without automatic human certification or eligibility changes.
+- Add a disclosed Juniper security-rebuild case and record an authenticated backup recovery drill.
+
 ## 0.3.0 — Unreleased
 
 - Add versioned source-linked product roles, comparison group filtering and mapping gaps.

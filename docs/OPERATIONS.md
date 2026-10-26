@@ -141,3 +141,20 @@ a review **with findings**, never as a successful availability claim.
 uptime or a claim of complete vendor coverage. Existing partial source failures
 will yield `review_with_findings` if unresolved. Monitoring can complete an
 operational evidence review; independent human sign-off is not manufactured.
+
+## Restore drill, 26 October 2026
+
+A separate local recovery of the encrypted hosted backup at source commit
+`9b0de99c50b847219f9700ff58209d5477fab5e5` passed database, normalized-record
+and retained-source fingerprint audits: 216 advisories and 610 evidence items.
+The encrypted archive was 10,654,156 bytes; the restored database was 71,819,264
+bytes. A tampered archive with its manifest checksum adjusted was rejected by
+authenticated decryption (`InvalidToken`), before a restored database was created.
+The active vault was not overwritten. No private native vault or decryption key
+was uploaded. This verifies this recovery exercise, not seven days of uptime.
+
+The same-day operational receipt observed 13 successful manual collections, seven
+successful monitors (one scheduled), and no failed workflows in the retrieved
+window. At 0.336 elapsed days it remained `waiting_for_window`; five source
+failures remained visible. Repository storage was 38,894 KiB against the 512 MiB
+review threshold. These are a dated observation, not a week of scheduled reliability.

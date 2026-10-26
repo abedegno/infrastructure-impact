@@ -117,3 +117,21 @@ Product-role classification is data-driven and vendor-specific. External vendors
 receive unmapped classification until reviewed family rules are added; see
 [Product groups](PRODUCT_GROUPS.md). Installed plugins still require no core parser
 dispatch or database changes.
+
+## Bounded feed follow-ups and route guards
+
+`FeedBatch.document_urls` optionally supplies up to 20 document URLs (an immutable
+tuple, empty by default). The collector checks each against the plugin allowlist
+and runs the normal document fetch, resolver, normalization, schema and evidence
+pipeline. A feed title alone never establishes product applicability. Juniper
+emits at most eight selected Security Bulletin registry routes; reference titles
+are discovery metadata only.
+
+`VendorPlugin.url_filter` optionally narrows approved domains to reviewed routes.
+It applies to configuration, transport and redirects. Juniper permits the exact
+CVE registry host and `/api/cve/CVE-YYYY-NNNN...` route, without query or fragment.
+Its parser additionally requires Juniper's configured CNA organization in both
+metadata and the CNA container, matching record identity, published state and
+Juniper product rows. Generic upstream and ADP enrichment cannot supply a Juniper
+impact assessment. Publisher configurations and solutions remain attributed
+context; they do not independently prove firmware availability.

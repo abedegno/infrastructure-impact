@@ -278,11 +278,13 @@ class Application:
             "/schemas/product-groups-v1.json",
             "/schemas/publisher-history-v1.json",
             "/schemas/extraction-review-v1.json",
+            "/schemas/review-submission-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",
             "/research/fortiproxy-curl-investigation.txt",
             "/research/aruba-cx-investigation.txt",
+            "/research/juniper-security-rebuilds.txt",
         ) or re.fullmatch(r"/(evidence|changes)/\d+\.json", path)
         if not allowed:
             return 404, "application/json", b'{"error":"Not found"}'
