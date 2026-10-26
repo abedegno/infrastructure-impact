@@ -728,7 +728,23 @@ function renderReadiness() {
     return;
   }
   $('#view').innerHTML =
-    `<h2>Vendor comparison readiness</h2><div class="notice">${esc(report.method)}</div><p>${esc(report.cohort_design)} These plans use their predeclared cohort regardless of the browser cohort selector.</p><p>${link('/comparison-readiness.json', 'Download predeclared cohort plans')}</p>${report.plans.map((p) => `<article class="change"><h3>${esc(p.name)}</h3>${badge(p.state)}<p>${p.cohort.length} common CVEs; ${esc(p.period.start)} to ${esc(p.period.end)}. Latest retained statements grouped by initial advisory date; not an as-of history.</p><p>${p.requirements.map((r) => `${esc(r.code.replaceAll('_', ' '))}: ${esc(r.state)}`).join(' · ')}</p><div class="table-wrap"><table><thead><tr><th>Family</th><th>Explicit case assessments</th><th>Gaps</th><th>Readiness blockers</th></tr></thead><tbody>${p.members.map((m) => `<tr><td>${esc(name(m.vendor))} · ${esc(m.name)}</td><td>${m.explicit_cases} of ${p.cohort.length} reference cases<small>Evidence cells, not a vulnerability rate.</small></td><td>${m.unknown_or_unresolved_cases} unknown, shared-only or unresolved<small>${m.undated_statements_excluded} undated statements excluded</small></td><td>${m.reason_codes.map((r) => `<small>${esc(r.replaceAll('_', ' '))}</small>`).join('')}<details><summary>Inspect common CVE cells</summary>${m.cases.map((c) => `<p>${esc(c.cve_id)} · ${esc(c.state.replaceAll('_', ' '))} · ${c.statuses.map(esc).join(', ') || 'No statement'}</p>`).join('')}</details></td></tr>`).join('')}</tbody></table></div></article>`).join('')}`;
+    `<h2>Vendor comparison readiness</h2><div class="notice">${esc(report.method)}</div><p>${esc(report.cohort_design)} These plans use their predeclared cohort regardless of the browser cohort selector.</p><p>${link('/comparison-readiness.json', 'Download predeclared cohort plans')}</p>${report.plans
+      .map(
+        (p) =>
+          `<article class="change"><h3>${esc(p.name)}</h3>${badge(p.state)}${
+            p.protocol
+              ? `<details><summary>Comparison protocol and confounders</summary>${Object.entries(
+                  p.protocol,
+                )
+                  .map(
+                    ([k, v]) =>
+                      `<p><strong>${esc(k.replaceAll('_', ' '))}</strong>: ${esc(Array.isArray(v) ? v.join('; ') : v)}</p>`,
+                  )
+                  .join('')}</details>`
+              : ''
+          }<p>${p.cohort.length} common CVEs; ${esc(p.period.start)} to ${esc(p.period.end)}. Latest retained statements grouped by initial advisory date; not an as-of history.</p><p>${p.requirements.map((r) => `${esc(r.code.replaceAll('_', ' '))}: ${esc(r.state)}`).join(' · ')}</p><div class="table-wrap"><table><thead><tr><th>Family</th><th>Explicit case assessments</th><th>Gaps</th><th>Readiness blockers</th></tr></thead><tbody>${p.members.map((m) => `<tr><td>${esc(name(m.vendor))} · ${esc(m.name)}</td><td>${m.explicit_cases} of ${p.cohort.length} reference cases<small>Evidence cells, not a vulnerability rate.</small></td><td>${m.unknown_or_unresolved_cases} unknown, shared-only or unresolved<small>${m.undated_statements_excluded} undated statements excluded</small></td><td>${m.reason_codes.map((r) => `<small>${esc(r.replaceAll('_', ' '))}</small>`).join('')}<details><summary>Inspect common CVE cells</summary>${m.cases.map((c) => `<p>${esc(c.cve_id)} · ${esc(c.state.replaceAll('_', ' '))} · ${c.statuses.map(esc).join(', ') || 'No statement'}</p>${(c.evidence || []).map((e) => `<p>${link(e.source_url, e.product)} · ${esc(e.status)} / ${esc(e.scope)}<small>${esc(e.period_state)} · publisher ${date(e.publisher_date_claim)} · captured ${date(e.observed_at)}</small><small>${e.platforms.map(esc).join('; ')} ${e.version_scope.map(esc).join('; ')} · ${esc(e.evidence_locator || 'No locator supplied')}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}${c.evidence_truncated ? '<p>Evidence examples truncated to twenty statements.</p>' : ''}`).join('')}</details></td></tr>`).join('')}</tbody></table></div></article>`,
+      )
+      .join('')}`;
 }
 
 function renderFixLeads() {
@@ -738,14 +754,14 @@ function renderFixLeads() {
     return;
   }
   $('#view').innerHTML =
-    `<h2>Potential security-fix investigation leads</h2><div class="notice">${esc(report.method)}</div><p>${link('/fix-leads.json', 'Download dated leads and analysis gaps')}</p>${report.leads.map((l) => `<article class="change"><div class="eyebrow">${esc(name(l.vendor))} · ${esc(l.kind.replaceAll('_', ' '))}</div><h3>${esc(l.product)}</h3>${badge(l.state.replaceAll('_', ' '))}<p>${esc(l.details)}</p><p>${l.cve_ids.map(esc).join(', ') || 'No CVE linkage established'}${l.component ? ` · ${esc(l.component)}` : ''}</p><h4>Dated retained evidence</h4>${l.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')}<small>Local observation ${date(e.observed_at)}; publisher date claim ${date(e.publisher_date_claim)}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}<h4>Alternative explanations</h4><ul>${l.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Evidence still needed</h4><ul>${l.missing_evidence.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment: not established. No prior product exposure or public fix availability inferred.</p></article>`).join('') || '<p>No leads established from the currently eligible sources. This does not establish absence of security fixes.</p>'}<h3>Component tracking and source gaps</h3>${report.sources
+    `<h2>Potential security-fix investigation leads</h2><div class="notice">${esc(report.method)}</div><p>${link('/fix-leads.json', 'Download dated leads and analysis gaps')}</p>${report.leads.map((l) => `<article class="change"><div class="eyebrow">${esc(name(l.vendor))} · ${esc(l.kind.replaceAll('_', ' '))}</div><h3>${esc(l.product)}</h3>${badge(l.state.replaceAll('_', ' '))}<p>${esc(l.details)}</p><p>${l.cve_ids.map(esc).join(', ') || 'No CVE linkage established'}${l.component ? ` · ${esc(l.component)}` : ''}</p><h4>Dated retained evidence</h4>${l.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')}<small>Local observation ${date(e.observed_at)}; publisher date claim ${date(e.publisher_date_claim)}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}<h4>Alternative explanations</h4><ul>${l.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Evidence still needed</h4><ul>${l.missing_evidence.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment: not established. No prior product exposure or public fix availability inferred.</p></article>`).join('') || '<p>No leads established from the currently eligible sources. This does not establish absence of security fixes.</p>'}<h3>Component references and source gaps</h3><p>Distinct retained content revisions are counted below. Repeated unchanged checks do not create a new revision. Different product branches are never treated as before/after snapshots.</p>${report.sources
       .map(
         (s) =>
-          `<p>${esc(name(s.vendor))} · ${esc(s.product)} · ${s.snapshots} retained snapshots · ${esc(s.analysis_state.replaceAll('_', ' '))}<small>${
+          `<p>${esc(name(s.vendor))} · ${esc(s.product)} · ${s.snapshots} distinct retained revisions · ${esc(s.analysis_state.replaceAll('_', ' '))}<small>${esc(s.component_scope || 'Patch and deployment scope unverified.')}</small><small>${
             Object.entries(s.components)
               .map(([c, v]) => `${esc(c)}: ${v.map(esc).join(', ')}`)
               .join('; ') || 'No explicit component-version references in reviewed sections.'
-          }</small></p>`,
+          }</small><small>${link(s.source_url, 'Component/release source')} · captured ${date(s.current_evidence.observed_at)}</small><code>${esc(s.current_evidence.source_sha256)}</code></p>`,
       )
       .join(
         '',

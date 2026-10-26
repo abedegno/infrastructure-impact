@@ -1,5 +1,15 @@
 # Adding a vendor
 
+For reviewed component references, plugins may provide the optional pure hook
+`parse_component_inventory(raw, url, vendor)`. Return `None` for unrelated routes;
+raise `ValueError` when a recognized source changes identity or layout. Return
+`state`, `blocks` (locator/text/CVEs), `components` (literal version lists) and
+`component_scope`. This is separate from CVE affectedness normalization. Add exact
+sources under `release_documents` with `kind: component_inventory`. Collection
+validates the hook before storing a baseline. The public projection accepts only
+configured official routes and the six reviewed component names; it strips other
+analysis fields. Ambiguous versions and changed scope cannot establish a fix.
+
 A CSAF/CVE JSON vendor can use the existing shared parser. The complete example is
 in `examples/vendor-plugin`; its `.example` domain is synthetic and must not be
 used as a real feed.

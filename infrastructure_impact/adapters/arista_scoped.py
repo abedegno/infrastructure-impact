@@ -169,6 +169,9 @@ def grouped_software(raw, url, vendor):
 
 
 REVIEWED_SOFTWARE = {
+    "0105": {
+        "Arista Edge Threat Management - Arista NG Firewall Versions": "Arista Edge Threat Management - Arista NG Firewall"
+    },
     "0116": {"CVP Versions": "CloudVision Portal (on-premises)"},
     "0123": {
         "Arista Edge Threat Management - Arista Next Generation Firewall (NGFW) Versions": "Arista Edge Threat Management - Arista Next Generation Firewall (NGFW)"
@@ -289,13 +292,13 @@ def reviewed_software(raw, url, vendor):
     ]
     sections = reviewed_sections(a)
     ids = cves(" ".join(headers))
-    if number in {"0123", "0133"}:
+    if number in {"0105", "0123", "0133"}:
         descriptions = [
             n.text()
             for n in sections.get("Description", [])
             if n.tag == "p" and re.search(r"\bCVE\s*:", n.text())
         ]
-        expected = 3 if number == "0123" else 6
+        expected = {"0105": 9, "0123": 3, "0133": 6}[number]
         if len(descriptions) != expected or any(len(cves(t)) != 1 for t in descriptions):
             raise ValueError("NGFW per-CVE descriptions changed")
         ids = cves(" ".join(descriptions))
@@ -328,7 +331,7 @@ def reviewed_software(raw, url, vendor):
     groups = {}
     product = None
     for node in sections.get("Affected Software", []):
-        if number == "0138" and node.tag == "ul":
+        if number in {"0105", "0138"} and node.tag == "ul":
             for item in node.children:
                 if not isinstance(item, Node) or item.tag != "li":
                     continue

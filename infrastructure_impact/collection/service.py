@@ -191,6 +191,12 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
 
                     ingest_listing(db, raw, doc["url"], doc["vendor"])
                 else:
+                    if doc.get("kind") == "component_inventory":
+                        inventory = registry.get(doc["vendor"]).parse_component_inventory(
+                            raw, doc["url"], doc["vendor"]
+                        )
+                        if inventory is None:
+                            raise ValueError("Unreviewed component inventory source")
                     import_release_note(
                         db, raw, doc["url"], doc["vendor"], doc["product"], doc.get("published_at")
                     )

@@ -50,6 +50,7 @@ class VendorPlugin:
     parse_document_history: Callable[[bytes, str, str], dict | None] | None = None
     url_filter: Callable[[str], bool] = lambda url: True
     retain_unlinked_notice: Callable[[Advisory], bool] = lambda document: False
+    parse_component_inventory: Callable[[bytes, str, str], dict | None] | None = None
 
 
 @dataclass(frozen=True)

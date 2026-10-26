@@ -7,6 +7,29 @@ from .eligibility import calendar_date
 from .families import definition, statements
 
 
+def case_evidence(record, claim, start, end):
+    published = calendar_date(record.get("published_at"))
+    return dict(
+        source_url=record["source_url"],
+        source_sha256=record["sha256"],
+        observed_at=record.get("source_observed_at"),
+        publisher_date_claim=record.get("published_at"),
+        period_state="undated_excluded"
+        if not published
+        else "included"
+        if start <= published.isoformat() <= end
+        else "outside_period_excluded",
+        product=claim["product"],
+        platforms=list(claim.get("platforms", [])),
+        version_scope=[
+            json.dumps(v, sort_keys=True, ensure_ascii=False) for v in claim.get("versions", [])
+        ],
+        evidence_locator=claim.get("evidence_locator"),
+        status=claim["status"],
+        scope=claim["scope"],
+    )
+
+
 def readiness(data):
     policy = json.loads((PACKAGE / "resources/comparison-plans.json").read_text())
     catalog = {f["id"]: f for f in definition()["families"]}
@@ -40,6 +63,8 @@ def readiness(data):
                     if "conflicting" in explicit or {"affected", "unaffected"} <= explicit
                     else "explicit_assessment"
                     if explicit & {"affected", "unaffected", "partially_mitigated"}
+                    else "unresolved"
+                    if explicit
                     else "shared_only"
                     if claims
                     else "unknown"
@@ -50,6 +75,12 @@ def readiness(data):
                         state=disposition,
                         statuses=sorted({a["status"] for a in claims}),
                         statement_count=len(claims),
+                        evidence=[
+                            case_evidence(r, a, policy["period_start"], end.isoformat())
+                            for r, a in found
+                            if a["cve_id"] == cid
+                        ][:20],
+                        evidence_truncated=sum(a["cve_id"] == cid for _, a in found) > 20,
                     )
                 )
             blockers = [
@@ -89,6 +120,7 @@ def readiness(data):
         plans.append(
             dict(
                 **plan,
+                protocol=policy["protocol"],
                 state="blocked",
                 cohort=cohort,
                 period=dict(

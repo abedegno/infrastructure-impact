@@ -1,5 +1,11 @@
 # Changelog
 
+- Support Arista 0105 nested NGFW scope without promoting acknowledgment-only CVEs.
+- Schedule three reviewed PAN-OS/Panorama OSS reference sources through an optional
+  component parser hook; retain patch/deployment qualifications and source hashes.
+- Add comparison protocols and per-cell provenance, including excluded evidence;
+  distinguish fixed-only unresolved assessments from shared statements.
+
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 

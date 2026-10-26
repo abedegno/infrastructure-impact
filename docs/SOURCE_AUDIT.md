@@ -102,3 +102,8 @@ separate from independent human review and archive completeness.
 The [research foundations](RESEARCH_FOUNDATIONS.md) separate curated family evidence
 from inventories, comparison readiness from rates, and dated fix leads from
 verified public availability or concealment findings.
+
+The [source and component follow-up](research/source-and-component-followup-20261026.md)
+adds the nested Arista 0105 layout and three public OSS reference tables. The
+[comparison protocol](research/comparison-protocol.md) describes cell-level
+provenance, excluded evidence and the remaining equivalence/denominator gates.

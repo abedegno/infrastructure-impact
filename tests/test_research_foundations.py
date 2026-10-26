@@ -2,6 +2,68 @@
 
 from infrastructure_impact.application.families import completeness, matches
 
+PAN_URL = "https://docs.paloaltonetworks.com/oss-listings/panorama-oss-listings/panorama-11-2-open-source-software-oss-listing"
+
+
+def inventory(version="3.0.10"):
+    return f"<h1>Panorama 11.2 OSS Listing</h1><p>Open-Source Software (OSS) licensing for the Panorama release.</p><table><tr><th>NAME</th><th>VERSION</th><th>LICENSE TYPE</th></tr><tr><td>openssl</td><td>{version}</td><td>Example license</td></tr><tr><td>openssh</td><td>8.0p1</td><td>Example license</td></tr><tr><td></td><td></td></tr></table>".encode()
+
+
+def test_component_inventory_requires_reviewed_identity_table_and_literal_versions():
+    import pytest
+
+    from infrastructure_impact.adapters.pan_components import component_inventory
+
+    result = component_inventory(inventory(), PAN_URL, "paloalto")
+    assert result["components"] == {"openssl": ["3.0.10"], "openssh": ["8.0p1"]}
+    assert "No running-appliance" in result["component_scope"] and not any(
+        b["cves"] for b in result["blocks"]
+    )
+    assert component_inventory(inventory(), "https://example.test/list", "paloalto") is None
+    for before, after in [
+        (b"Panorama 11.2 OSS Listing", b"PAN-OS 11.2 OSS Listing"),
+        (b"VERSION", b"UPSTREAM AFFECTED RANGE"),
+        (b"3.0.10", b"before 3.0.10"),
+    ]:
+        with pytest.raises(ValueError):
+            component_inventory(inventory().replace(before, after), PAN_URL, "paloalto")
+
+
+def test_component_listings_keep_multiple_versions_ambiguous_and_require_pan_scope():
+    import pytest
+
+    from infrastructure_impact.adapters.pan_components import component_inventory
+
+    assert component_inventory(inventory("3.0.10, 3.0.11"), PAN_URL, "paloalto")["components"][
+        "openssl"
+    ] == ["3.0.10", "3.0.11"]
+    pan_url = PAN_URL.replace("panorama", "pan-os")
+    raw = inventory().replace(b"Panorama", b"PAN-OS")
+    with pytest.raises(ValueError):
+        component_inventory(raw, pan_url, "paloalto")
+    raw += b"<p>Our goal is the latest maintenance release; we do not attempt to capture these differences in detail or per product.</p>"
+    assert component_inventory(raw, pan_url, "paloalto")["state"] == "scoped"
+
+
+def test_component_collection_rejects_invalid_listing_without_creating_a_baseline(
+    tmp_path, monkeypatch
+):
+    from infrastructure_impact.collection import service
+    from infrastructure_impact.storage.repository import connect
+
+    monkeypatch.setattr(service, "fetch", lambda *args: b"<h1>Unreviewed layout</h1>")
+    path = tmp_path / "vault.sqlite3"
+    config = dict(
+        vendors=[],
+        release_documents=[
+            dict(vendor="paloalto", url=PAN_URL, product="Panorama OSS", kind="component_inventory")
+        ],
+    )
+    result = service.run(config, db_path=path)
+    with connect(path) as db:
+        assert db.execute("SELECT count(*) FROM documents").fetchone()[0] == 0
+    assert result == (0, 1)
+
 
 def family():
     return dict(id="test", vendor="juniper", prefixes=["Junos OS"], platform_prefixes=["SRX"])
@@ -104,6 +166,43 @@ def test_a_fixed_only_statement_does_not_establish_prior_exposure_for_comparison
         m for p in readiness(data)["plans"] for m in p["members"] if m["family_id"] == "cisco-nxos"
     )
     assert row["explicit_cases"] == 0 and row["state"] == "blocked"
+    assert row["cases"][0]["state"] == "unresolved"
+    assert row["cases"][0]["evidence"][0]["source_sha256"] == "a" * 64
+
+
+def test_readiness_retains_excluded_evidence_and_protocol_without_counting_it():
+    from infrastructure_impact.application.readiness import readiness
+
+    record = dict(
+        vendor="cisco",
+        advisory_id="TEST",
+        source_url="https://www.cisco.com/test",
+        sha256="b" * 64,
+        published_at=None,
+        assessments=[
+            dict(
+                product="Cisco NX-OS Software",
+                cve_id="CVE-2026-12345",
+                status="affected",
+                scope="cve_specific",
+                versions=[dict(expression="1.0")],
+                platforms=["Nexus"],
+            )
+        ],
+    )
+    data = dict(
+        vendors={"cisco": "Cisco"},
+        records=[record],
+        generated_at="2026-10-26T12:00:00Z",
+        benchmark_cohort=["CVE-2026-12345"],
+    )
+    data["family_completeness"] = completeness(data)
+    plan = next(p for p in readiness(data)["plans"] if p["id"] == "switching")
+    row = next(m for m in plan["members"] if m["family_id"] == "cisco-nxos")
+    assert row["explicit_cases"] == 0 and row["cases"][0]["state"] == "unknown"
+    evidence = row["cases"][0]["evidence"][0]
+    assert evidence["period_state"] == "undated_excluded" and evidence["platforms"] == ["Nexus"]
+    assert plan["protocol"]["confounders"] and plan["rate_comparison"] == "suppressed"
 
 
 def release_snapshot(raw, digest, at):
@@ -246,10 +345,13 @@ def test_public_reports_share_generation_and_remove_private_inputs(tmp_path):
                 "fortinet",
                 "FortiOS test",
             )
+            import_release_note(
+                db, inventory(version), PAN_URL, "paloalto", "Panorama 11.2 OSS reference"
+            )
         data = state(db)
     data["family_completeness"]["PRIVATE_SENTINEL"] = "private"
     data["fix_leads"]["PRIVATE_SENTINEL"] = "private"
-    generation = publish(data, tmp_path, public_release_urls=[url])
+    generation = publish(data, tmp_path, public_release_urls=[url, PAN_URL])
     snapshot = json.loads((generation / "snapshot.json").read_text())
     assert "lead_inputs" not in snapshot["research"] and "PRIVATE_SENTINEL" not in json.dumps(
         snapshot
@@ -257,6 +359,16 @@ def test_public_reports_share_generation_and_remove_private_inputs(tmp_path):
     assert any(
         lead["kind"] == "component_version_changed" for lead in snapshot["fix_leads"]["leads"]
     )
+    component_lead = next(
+        lead for lead in snapshot["fix_leads"]["leads"] if lead["vendor"] == "paloalto"
+    )
+    assert (
+        component_lead["kind"] == "component_version_changed"
+        and component_lead["concealment"] == "not_established"
+    )
+    assert len(component_lead["evidence"]) == 2
+    source = next(s for s in snapshot["fix_leads"]["sources"] if s["vendor"] == "paloalto")
+    assert "patch" in source["component_scope"] and source["components"]["openssl"] == ["3.0.11"]
     app = Application(tmp_path)
     for name in ["family-completeness", "comparison-readiness", "fix-leads"]:
         status, _, raw = app.route(

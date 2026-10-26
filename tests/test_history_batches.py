@@ -178,6 +178,35 @@ def test_nested_ngfw_mitigation_headings_remain_with_their_cve_context():
         assert "Unrelated solution" not in context
 
 
+def test_nested_ngfw_0105_uses_numbered_descriptions_not_acknowledgment_cves():
+    ids = ["CVE-2026-" + str(50000 + i) for i in range(9)]
+    descriptions = "".join(
+        f"<p>{i}) Description: issue; CVE : {cid}</p>" for i, cid in enumerate(ids)
+    )
+    raw = article(
+        "0105",
+        f"<h2>Description</h2>{descriptions}<p>Acknowledgment mentions CVE-2026-99999.</p>"
+        "<h3>Affected Software</h3><ul><li>Arista Edge Threat Management - Arista NG Firewall Versions<ul><li>17.1.1 and prior</li></ul></li></ul>"
+        "<h3>Affected Platforms</h3><p>NGFW only. Other platforms are excluded.</p>"
+        "<h3>Required Configuration for Exploitation, Indicators of Compromise and Mitigation Options</h3><h4>Mitigation</h4><p>Captive portal configuration must be reviewed.</p>",
+    )
+    result = validate_advisory(arista(raw, ARISTA + "20454-security-advisory-0105", "arista"))
+    assert set(result["cves"]) == set(ids) and len(result["assessments"]) == 9
+    assert all(
+        a["scope"] == "bulletin_shared" and a["status"] == "affected" for a in result["assessments"]
+    )
+    assert all(
+        a["versions"] == [dict(expression="17.1.1 and prior")] for a in result["assessments"]
+    )
+    assert "Captive portal" in json.dumps(result["assessments"][0]["exposure"])
+    with pytest.raises(ValueError):
+        arista(
+            raw.replace("17.1.1 and prior", "17.1.1 except special builds"),
+            ARISTA + "20454-security-advisory-0105",
+            "arista",
+        )
+
+
 def test_cisco_feed_follows_bounded_author_verified_records_and_keeps_primary_urls():
     from infrastructure_impact.plugins.cisco import parse_feed
 

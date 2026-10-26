@@ -1,11 +1,59 @@
 {
   "schema_version": 1,
-  "plan_version": "2026-10-26.1",
+  "plan_version": "2026-10-26.2",
   "cohort_design": "Predeclared reference dependency cohort inherited from the benchmark; purposive, not statistically representative or selected from each vendor's observed outcomes.",
   "period_start": "2021-01-01",
   "plans": [
-    {"id":"security-gateways","name":"Security gateway evidence cohort","families":["cisco-asa-ftd","paloalto-panos","juniper-srx","checkpoint-quantum-gateway","fortinet-fortios"]},
-    {"id":"switching","name":"Switching software evidence cohort","families":["cisco-nxos","aruba-aoscx","arista-eos","juniper-switches"]},
-    {"id":"management","name":"Infrastructure management evidence cohort","families":["arista-cvp","paloalto-panorama","checkpoint-quantum-management","fortinet-fortimanager","hpe-oneview"]}
-  ]
+    {
+      "id": "security-gateways",
+      "name": "Security gateway evidence cohort",
+      "families": [
+        "cisco-asa-ftd",
+        "paloalto-panos",
+        "juniper-srx",
+        "checkpoint-quantum-gateway",
+        "fortinet-fortios"
+      ]
+    },
+    {
+      "id": "switching",
+      "name": "Switching software evidence cohort",
+      "families": [
+        "cisco-nxos",
+        "aruba-aoscx",
+        "arista-eos",
+        "juniper-switches"
+      ]
+    },
+    {
+      "id": "management",
+      "name": "Infrastructure management evidence cohort",
+      "families": [
+        "arista-cvp",
+        "paloalto-panorama",
+        "checkpoint-quantum-management",
+        "fortinet-fortimanager",
+        "hpe-oneview"
+      ]
+    }
+  ],
+  "protocol": {
+    "registered_on": "2026-10-26",
+    "question": "For each common reference CVE, which explicit applicability statements exist for each selected family, and which exact version/deployment boundaries still need review?",
+    "unit": "One selected product-family/CVE evidence cell; not a deployed appliance or an independent vulnerability event.",
+    "selection": "The same predeclared 24-CVE dependency benchmark for every member, independent of observed vendor affectedness. Purposive; population rates cannot be estimated.",
+    "endpoint": "A publisher CVE-specific applicability statement within the date period. Fixed-only, shared, unknown and conflicting scope do not settle prior exposure.",
+    "denominator": "Family/CVE evidence cells only. Supported models, release trains, deployment configurations and installed-base denominators remain unestablished.",
+    "period": "Latest retained statements grouped by initial advisory publication date. No historical as-of exposure, first disclosure or fix availability is reconstructed.",
+    "unknown_policy": "Missing evidence is unknown. Access failures, absent product labels, undated claims and unreviewed mixed-platform scope must remain visible.",
+    "confounders": [
+      "Different product roles and enabled features",
+      "Vendor publication practices and archive depth",
+      "Unequal model and release-train inventories",
+      "Dependency forks, backports and build configuration",
+      "CVE assignment and bundling practices",
+      "Unequal collection access and extraction validation"
+    ],
+    "review_rule": "Inspect exact publisher product/version/platform scope and source fingerprints. Independent human adjudication and a separate representative cohort design are required before rates."
+  }
 }

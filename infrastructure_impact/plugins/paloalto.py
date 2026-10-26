@@ -6,6 +6,7 @@ from urllib.parse import urljoin, urlsplit
 
 from ..adapters.common import HTML, cves
 from ..adapters.paloalto import pan_impact_bulletin, pan_oss_bulletin
+from ..adapters.pan_components import component_inventory
 from .archive_listings import paloalto as archive_listing
 from .contracts import VendorPlugin
 from .shared import is_json, structured
@@ -73,5 +74,6 @@ def plugin():
         parse,
         parse_archive=archive_listing,
         resolve=resolve,
-        capabilities=("cve-json", "html"),
+        capabilities=("cve-json", "html", "component-inventory"),
+        parse_component_inventory=component_inventory,
     )

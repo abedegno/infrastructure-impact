@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from ..adapters.common import HTML, cves
 from ..collection.transport import allowed
+from ..plugins.registry import default_registry
 from .disclosure import latest_documents
 
 SECTIONS = {
@@ -32,6 +33,24 @@ ALTERNATIVES = [
     "A separate earlier advisory, issue tracker or release channel may already disclose the issue.",
     "Publisher date claims and local capture dates can differ from public availability.",
 ]
+SECTION_SCOPE = "Literal references in reviewed document sections; exact appliance, patch applicability and backport status are unverified."
+
+
+def scoped_document(raw, url, vendor):
+    parser = default_registry().get(vendor).parse_component_inventory
+    if parser:
+        try:
+            result = parser(raw, url, vendor)
+        except ValueError:
+            return dict(
+                state="component_inventory_layout_requires_review",
+                blocks=[],
+                components={},
+                component_scope=SECTION_SCOPE,
+            )
+        if result is not None:
+            return result
+    return scoped_release(raw)
 
 
 def scoped_release(raw):
@@ -117,7 +136,7 @@ def evidence_inputs(db):
                 source_sha256=row["sha256"],
                 observed_at=row["capture"],
                 publisher_date_claim=row["published_at"],
-                analysis=scoped_release(row["raw"]),
+                analysis=scoped_document(row["raw"], row["source_url"], row["vendor"]),
             )
         )
     # Older retained documents may predate document-observation logging.
@@ -134,7 +153,7 @@ def evidence_inputs(db):
                 source_sha256=ev["sha256"],
                 observed_at=ev["observed_at"],
                 publisher_date_claim=document["published_at"],
-                analysis=scoped_release(ev["raw"]),
+                analysis=scoped_document(ev["raw"], document["source_url"], document["vendor"]),
             )
         )
     advisory = []
@@ -200,6 +219,7 @@ def public_inputs(inputs, urls, records):
             analysis = s["analysis"]
             snapshot["analysis"] = dict(
                 state=analysis["state"],
+                component_scope=analysis.get("component_scope", SECTION_SCOPE),
                 blocks=[
                     {k: b[k] for k in ["locator", "text", "cves"]} for b in analysis["blocks"][:200]
                 ],
@@ -289,6 +309,7 @@ def leads(data):
                 snapshots=len(snapshots),
                 analysis_state=analysis["state"],
                 components=analysis["components"],
+                component_scope=analysis.get("component_scope", SECTION_SCOPE),
                 current_evidence=evidence(current),
             )
         )
@@ -330,6 +351,17 @@ def leads(data):
                     [evidence(current)],
                 )
         if not previous or previous["analysis"]["state"] != "scoped":
+            continue
+        if analysis.get("component_scope", SECTION_SCOPE) != previous["analysis"].get(
+            "component_scope", SECTION_SCOPE
+        ):
+            gaps.append(
+                dict(
+                    vendor=source["vendor"],
+                    source_url=source["source_url"],
+                    reason="component_scope_changed_requires_review",
+                )
+            )
             continue
         for name, versions in analysis["components"].items():
             before = previous["analysis"]["components"].get(name, [])

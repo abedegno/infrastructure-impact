@@ -157,6 +157,86 @@
                       "statement_count": {
                         "type": "integer",
                         "minimum": 0
+                      },
+                      "evidence": {
+                        "type": "array",
+                        "maxItems": 20,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "source_url",
+                            "source_sha256",
+                            "observed_at",
+                            "publisher_date_claim",
+                            "period_state",
+                            "product",
+                            "platforms",
+                            "version_scope",
+                            "evidence_locator",
+                            "status",
+                            "scope"
+                          ],
+                          "properties": {
+                            "source_url": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "source_sha256": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            },
+                            "observed_at": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "publisher_date_claim": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "period_state": {
+                              "enum": [
+                                "included",
+                                "undated_excluded",
+                                "outside_period_excluded"
+                              ]
+                            },
+                            "product": {
+                              "type": "string"
+                            },
+                            "platforms": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "version_scope": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "evidence_locator": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "scope": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "evidence_truncated": {
+                        "type": "boolean"
                       }
                     }
                   }
@@ -206,6 +286,57 @@
                     "pending"
                   ]
                 }
+              }
+            }
+          },
+          "protocol": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "registered_on",
+              "question",
+              "unit",
+              "selection",
+              "endpoint",
+              "denominator",
+              "period",
+              "unknown_policy",
+              "confounders",
+              "review_rule"
+            ],
+            "properties": {
+              "registered_on": {
+                "type": "string"
+              },
+              "question": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "selection": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "denominator": {
+                "type": "string"
+              },
+              "period": {
+                "type": "string"
+              },
+              "unknown_policy": {
+                "type": "string"
+              },
+              "confounders": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "review_rule": {
+                "type": "string"
               }
             }
           }

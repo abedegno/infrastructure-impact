@@ -3,6 +3,14 @@
 Three whole-publication research views build on each other. They are separate from
 the browser's selected CVE cohort and from independent human adjudication.
 
+The [comparison protocol](research/comparison-protocol.md) explains adjudication
+and denominator requirements. Each cell now includes bounded publisher provenance,
+including excluded undated/out-of-period statements. Fixed-only evidence remains
+unresolved. [Source follow-up](research/source-and-component-followup-20261026.md)
+documents the Arista 0105 adapter, remaining access gaps and three scheduled OSS
+reference tables. Component references carry explicit patch/deployment limits;
+different branches never form a before/after pair.
+
 ## 1. Product families
 
 The versioned `product-families.json` catalogue selects 33 infrastructure families

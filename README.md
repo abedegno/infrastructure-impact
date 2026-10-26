@@ -31,6 +31,8 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 - Groups comparable product roles while exposing unmapped labels and coverage gaps.
 - Publishes source-led extraction checks and blind independent-review packets.
 - Investigates disclosure leads with publisher histories and counter-evidence.
+- Watches reviewed OSS component references with explicit patch/deployment limits;
+  exposes comparison protocols and source provenance for each common-CVE cell.
 
 Bundled vendor plugins cover **Cisco, HPE Aruba Networking, Arista, Palo Alto
 Networks, Juniper, Check Point, Fortinet and other HPE products**. Juniper also verifies vendor-authored CNA records; HPE coverage includes curated iLO and ProLiant bulletins. These remain bounded sources, not whole-portfolio coverage. Each plugin has

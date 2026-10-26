@@ -303,6 +303,10 @@
     {
       "vendor": "arista",
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/21316-security-advisory-0116"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/20454-security-advisory-0105"
     }
   ],
   "release_documents": [
@@ -347,6 +351,24 @@
       "vendor": "fortinet",
       "product": "FortiProxy 7.2.8 documentation change log",
       "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log"
+    },
+    {
+      "vendor": "paloalto",
+      "product": "PAN-OS 11.1 feature-release OSS reference (patch applicability unverified)",
+      "kind": "component_inventory",
+      "url": "https://docs.paloaltonetworks.com/oss-listings/pan-os-oss-listings/pan-os-11-1-open-source-software-oss-listing"
+    },
+    {
+      "vendor": "paloalto",
+      "product": "PAN-OS 11.2 feature-release OSS reference (patch applicability unverified)",
+      "kind": "component_inventory",
+      "url": "https://docs.paloaltonetworks.com/oss-listings/pan-os-oss-listings/pan-os-11-2-open-source-software-oss-listing"
+    },
+    {
+      "vendor": "paloalto",
+      "product": "Panorama 11.2 feature-release OSS reference (patch applicability unverified)",
+      "kind": "component_inventory",
+      "url": "https://docs.paloaltonetworks.com/oss-listings/panorama-oss-listings/panorama-11-2-open-source-software-oss-listing"
     }
   ],
   "archives": [

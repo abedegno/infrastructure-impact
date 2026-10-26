@@ -78,8 +78,15 @@ def validate_config(config):
             if section == "release_documents" and entry.get("kind", "release_notes") not in (
                 "release_notes",
                 "release_listing",
+                "component_inventory",
             ):
                 raise ValueError("Unsupported release document kind")
+            if (
+                section == "release_documents"
+                and entry.get("kind") == "component_inventory"
+                and not plugin.parse_component_inventory
+            ):
+                raise ValueError("Component inventory requires a reviewed vendor parser")
             if (
                 section == "release_documents"
                 and entry.get("kind") == "release_listing"
