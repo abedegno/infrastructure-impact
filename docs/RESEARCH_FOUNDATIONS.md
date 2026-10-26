@@ -99,3 +99,7 @@ add synthetic boundary tests, then update its catalogue entry. To watch an expli
 component manifest, register its official URL as a release document, review its
 named section and retain a baseline. A later observation is needed to establish a
 change. Do not replace missing source evidence with guessed component/product links.
+
+## Component studies
+
+The [OpenSSH service study](COMPONENT_STUDIES.md) adds a separately collected upstream reference cohort, explicit server/client exclusions, downstream variant qualifiers and frozen enrollment drift. It joins whole-publication family evidence with unknown cells; it does not supply affectedness rates or ranking eligibility.

@@ -206,6 +206,27 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
             except Exception as e:
                 failed += 1
                 collection_result(db, doc["vendor"], doc["url"], "error", str(e), failure_code(e))
+        for ref in config.get("reference_sources", []):
+            try:
+                from ..references.storage import ingest as ingest_reference
+
+                raw = fetch(db, ref["url"], "upstream")
+                changed = ingest_reference(db, raw, ref["source_id"])
+                collection_result(
+                    db,
+                    "upstream",
+                    ref["url"],
+                    "ok",
+                    "Reference source retained; not a vendor product assessment",
+                )
+                print(
+                    f"REFERENCE {ref['source_id']} {'changed' if changed else 'unchanged'}",
+                    flush=True,
+                )
+            except Exception as e:
+                failed += 1
+                collection_result(db, "upstream", ref["url"], "error", str(e), failure_code(e))
+                print(f"ERROR reference {ref['source_id']}: {e}", flush=True)
     if upstream_limit:
         from ..storage.repository import latest
 

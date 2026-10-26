@@ -27,6 +27,8 @@ def main():
     assert (package / "migrations/004_browser_captures.sql").is_file()
     assert (package / "migrations/006_archive_scope.sql").is_file()
     assert (package / "migrations/007_source_observations.sql").is_file()
+    assert (package / "migrations/008_reference_documents.sql").is_file()
+    assert (package / "resources/studies/openssh-service-2023-2026.json").is_file()
     assert (package / "resources/archive-source-review.json").is_file()
     assert (package / "schemas/comparison-eligibility-v1.json").is_file()
     assert not Path(infrastructure_impact.__file__).resolve().is_relative_to(Path.cwd())
@@ -102,6 +104,7 @@ def main():
             "family-completeness-v1.json",
             "comparison-readiness-v1.json",
             "fix-leads-v1.json",
+            "component-studies-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         groups = json.loads((root / "current/product-groups.json").read_text())

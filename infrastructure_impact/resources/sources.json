@@ -428,5 +428,11 @@
       "page_limit": 2,
       "document_limit": 8
     }
+  ],
+  "reference_sources": [
+    {
+      "source_id": "nvd-openssh-products",
+      "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?virtualMatchString=cpe%3A2.3%3Aa%3Aopenbsd%3Aopenssh%3A*&resultsPerPage=2000&startIndex=0"
+    }
   ]
 }

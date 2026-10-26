@@ -11,6 +11,10 @@ from .errors import SourceHTTPError, check_access_response
 
 
 def allowed(url, vendor):
+    from ..references.registry import allowed as reference_allowed
+
+    if vendor == "upstream" and reference_allowed(url):
+        return True
     if vendor != "upstream" and vendor not in default_registry().names():
         return False
     u = urlsplit(url)

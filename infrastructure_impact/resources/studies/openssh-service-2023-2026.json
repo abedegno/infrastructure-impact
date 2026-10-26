@@ -1,0 +1,430 @@
+{
+  "id": "openssh-service-2023-2026",
+  "name": "OpenSSH service reference study",
+  "schema_version": 1,
+  "cohort_version": "2026-10-26.1",
+  "component": "openssh",
+  "source_id": "nvd-openssh-products",
+  "period": {
+    "start": "2023-01-01",
+    "end": "2026-10-26",
+    "basis": "NVD published-date claim for registry product-mapped candidates"
+  },
+  "frozen_at": "2026-10-26T23:48:29.410150+00:00",
+  "baseline_source_sha256": "5f28bf6c14e7bfd500fea80bd6db5b4715333be904e904f35671462cf8c03ff4",
+  "baseline_source_url": "https://services.nvd.nist.gov/rest/json/cves/2.0?virtualMatchString=cpe%3A2.3%3Aa%3Aopenbsd%3Aopenssh%3A*&resultsPerPage=2000&startIndex=0",
+  "families": [
+    "cisco-asa-ftd",
+    "paloalto-panos",
+    "juniper-srx",
+    "checkpoint-quantum-gateway",
+    "fortinet-fortios",
+    "arista-ngfw"
+  ],
+  "candidate_reviews": [
+    {
+      "cve_id": "CVE-2023-25136",
+      "publisher_published_at": "2023-02-03T06:15:09.350",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "3d1b0644c5f22b1b7b3e9a91862c5740e1cc57c6d04732f5a3e55a63b94493f1"
+    },
+    {
+      "cve_id": "CVE-2023-28531",
+      "publisher_published_at": "2023-03-17T04:15:14.553",
+      "role": "agent",
+      "enrollment": "excluded",
+      "reason": "agent_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "35edd6b926083ba5536b91b397f22b52752ab4abc3d3f94146e3cf3a8f95ff06"
+    },
+    {
+      "cve_id": "CVE-2023-38408",
+      "publisher_published_at": "2023-07-20T03:15:10.170",
+      "role": "agent",
+      "enrollment": "excluded",
+      "reason": "agent_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "584cec9dc4ec1be1531780f6d504c4e587dfff5104eaca24b43877260a408fce"
+    },
+    {
+      "cve_id": "CVE-2023-48795",
+      "publisher_published_at": "2023-12-18T16:15:10.897",
+      "role": "server_and_client",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "d735363f741c9bd7c2ef7189883f901169b6d167c9a9a0fdfa58118d97e23da9"
+    },
+    {
+      "cve_id": "CVE-2023-51384",
+      "publisher_published_at": "2023-12-18T19:15:08.720",
+      "role": "agent",
+      "enrollment": "excluded",
+      "reason": "agent_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "682930912bcd3b6645eeb33a46725ada489d88d1b20bf7050cf39ff98b51d0b3"
+    },
+    {
+      "cve_id": "CVE-2023-51385",
+      "publisher_published_at": "2023-12-18T19:15:08.773",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "e0ec8939960615fa3a66c6da2eb68b49ff037fbe550cf2b7e32567bbc51d9638"
+    },
+    {
+      "cve_id": "CVE-2023-51767",
+      "publisher_published_at": "2023-12-24T07:15:07.410",
+      "role": "server",
+      "enrollment": "excluded",
+      "reason": "co_location_memory_threat_model_excluded",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "75504c37e83c19f05354d7f4ac45d4a74eb050559aa835d795047bfaff2e2104"
+    },
+    {
+      "cve_id": "CVE-2024-6387",
+      "publisher_published_at": "2024-07-01T13:15:06.467",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "7c19dd6aacab602e759b1866259b304a85415b968dd2c019e5326cdc77bb675d"
+    },
+    {
+      "cve_id": "CVE-2025-26465",
+      "publisher_published_at": "2025-02-18T19:15:29.230",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "9854b663112fe0b567592e319606e7d74489f617f8992b932d9282192a44d723"
+    },
+    {
+      "cve_id": "CVE-2025-26466",
+      "publisher_published_at": "2025-02-28T22:15:40.080",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "c904ff409238200954339bcb86cae639a7d25d62c082a81bcc5ae26166ef657e"
+    },
+    {
+      "cve_id": "CVE-2025-32728",
+      "publisher_published_at": "2025-04-10T02:15:30.873",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "9ca636fcd49a9bf3d012e7e8609957c65b8d8abfb20a5629187f3a7d8714108a"
+    },
+    {
+      "cve_id": "CVE-2026-106552",
+      "publisher_published_at": "2026-10-06T21:17:18.917",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "bbf01e7f713a5a9d7d18e5ece464e1fc60526152e6b3d66061b5a415ce23beaf"
+    },
+    {
+      "cve_id": "CVE-2026-106553",
+      "publisher_published_at": "2026-10-06T21:17:19.067",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "a4246dc03e21556df271567c56db55dd40ab6bc903de76f401917a3f71da7adb"
+    },
+    {
+      "cve_id": "CVE-2026-106555",
+      "publisher_published_at": "2026-10-06T21:17:19.213",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "a61e798c0df8a584921fcb2d2a19cb0aeacc87c6107e32f835bda37708ade359"
+    },
+    {
+      "cve_id": "CVE-2026-106582",
+      "publisher_published_at": "2026-10-06T21:17:19.370",
+      "role": "server_and_client",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "0bf8d65aaf616925459164c23a6ca4556a067f2d59d4e7cd26d6b7d0b2c8f915"
+    },
+    {
+      "cve_id": "CVE-2026-106583",
+      "publisher_published_at": "2026-10-07T00:17:20.743",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "5fedebd0536b1e5e6e96f853748317447dfafe2c41c8abaf74a43c349d2fbe4e"
+    },
+    {
+      "cve_id": "CVE-2026-106584",
+      "publisher_published_at": "2026-10-06T21:17:19.520",
+      "role": "tool",
+      "enrollment": "excluded",
+      "reason": "tool_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "16b89d9081f98602c951c7109cfa8796935f3d388fb270674d7b4989adb45ed7"
+    },
+    {
+      "cve_id": "CVE-2026-106585",
+      "publisher_published_at": "2026-10-06T21:17:19.663",
+      "role": "server_and_client",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "b6eff4eaddf9ce1f9c323194e574f67fbf8e32cf8c6b95fdbe9b30812ba387b8"
+    },
+    {
+      "cve_id": "CVE-2026-106586",
+      "publisher_published_at": "2026-10-06T21:17:19.803",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "9198db0e49c336e5211acf57e1c14e5b3164dfec20b2b5a56060a6420c54f094"
+    },
+    {
+      "cve_id": "CVE-2026-106587",
+      "publisher_published_at": "2026-10-06T22:17:06.620",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "8c6071b8c1c9ecfe9dac8f5e8d942d95923f4d6f8bed2d867e2be9ff779285ef"
+    },
+    {
+      "cve_id": "CVE-2026-3497",
+      "publisher_published_at": "2026-03-12T19:16:19.910",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "downstream_gssapi_patch_only",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "912468333536695fc78d64a4ffc631810ca90acd1b29022fade7c1e0a891c8c2"
+    },
+    {
+      "cve_id": "CVE-2026-35385",
+      "publisher_published_at": "2026-04-02T17:16:27.450",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "a417cb18556652ccebe31bf285f038df722eabf60720872cb3dd6503e239160b"
+    },
+    {
+      "cve_id": "CVE-2026-35386",
+      "publisher_published_at": "2026-04-02T17:16:27.623",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "643840f85645ce07f7a37f6202a2cec2188be438fb25215e1e0aa15c4f08df36"
+    },
+    {
+      "cve_id": "CVE-2026-35387",
+      "publisher_published_at": "2026-04-02T17:16:27.790",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "b450799d0e2e36422b7f7f3a89705a57f214e6318053546220970413e37096cc"
+    },
+    {
+      "cve_id": "CVE-2026-35388",
+      "publisher_published_at": "2026-04-02T17:16:27.947",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "d3c82aa730a3582dbd010fa55d91ad4738b18ec413856572169c86d50e47adde"
+    },
+    {
+      "cve_id": "CVE-2026-35414",
+      "publisher_published_at": "2026-04-02T18:16:34.690",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "78375927a3fad2f4153eed54d05db80ea51d80dfdc0683086f6c154f8a20e087"
+    },
+    {
+      "cve_id": "CVE-2026-55653",
+      "publisher_published_at": "2026-06-23T04:17:36.600",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "032024370aeb10e393b67899ca979a0782593d1f19082bc0e0785fedb3d5735f"
+    },
+    {
+      "cve_id": "CVE-2026-55654",
+      "publisher_published_at": "2026-06-23T04:17:40.587",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "gssapi_variant_provenance_requires_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "144583f378608940bdec7e650ba00aac1a1327798fa97b4a5d810117668262e9"
+    },
+    {
+      "cve_id": "CVE-2026-55655",
+      "publisher_published_at": "2026-06-23T04:17:40.787",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "4ea3838a60ecc37b95989f0a923dd5efe9ed5af905afe949904a3a77a9718938"
+    },
+    {
+      "cve_id": "CVE-2026-59995",
+      "publisher_published_at": "2026-07-08T01:16:28.390",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "a49af6d649f03d03ae8f8add1fde0a4fc8d099f983cd54544b2353843a6ce58d"
+    },
+    {
+      "cve_id": "CVE-2026-59996",
+      "publisher_published_at": "2026-07-08T01:16:28.557",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "622d61b35215a68a024013c9db8d2e43a44f9db3f132094cf78f49efa0cc6dba"
+    },
+    {
+      "cve_id": "CVE-2026-59997",
+      "publisher_published_at": "2026-07-08T01:16:28.727",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "e13af91b1d9d8a0b2b1241b51d297fc6d44d6bc91e738c50b51efc677b66e9bd"
+    },
+    {
+      "cve_id": "CVE-2026-59998",
+      "publisher_published_at": "2026-07-08T01:16:28.870",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "794946e3e958b4d865f0412a0550f2c61580eb56eb2b0efc314d73a865b0635c"
+    },
+    {
+      "cve_id": "CVE-2026-59999",
+      "publisher_published_at": "2026-07-08T01:16:29.010",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "913dd5f4ed471c112c9df79d1c4f9d95f3e6af9e8d5600b8c0633b9d180e4550"
+    },
+    {
+      "cve_id": "CVE-2026-60000",
+      "publisher_published_at": "2026-07-08T01:16:29.153",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "c3c53d84cd403e893efc53b51efa01a53ee5e7d3d66ac229d10da816420c5fb3"
+    },
+    {
+      "cve_id": "CVE-2026-60001",
+      "publisher_published_at": "2026-07-08T01:16:29.290",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "458ce6006a49cd487a6e203bae79db268003142d96b867d0045491f67d42b12e"
+    },
+    {
+      "cve_id": "CVE-2026-60002",
+      "publisher_published_at": "2026-07-08T01:16:29.430",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "8b2f0c3623883c3680c0135208204e1ee9fd6d24080c506faddeeb432d0ebbb3"
+    },
+    {
+      "cve_id": "CVE-2026-73281",
+      "publisher_published_at": "2026-08-11T20:18:49.690",
+      "role": "agent",
+      "enrollment": "excluded",
+      "reason": "agent_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "e2c5d1c6ae5b1b4216572a4f8672330331ed8c94c964d8f544e90ffd091c6865"
+    },
+    {
+      "cve_id": "CVE-2026-73282",
+      "publisher_published_at": "2026-08-11T20:18:49.830",
+      "role": "client",
+      "enrollment": "excluded",
+      "reason": "client_role_outside_service_endpoint",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "5dc78b344d067e6e2bce3f4f07842ecca596e5b94144e13d3d259325ed6c61fb"
+    },
+    {
+      "cve_id": "CVE-2026-73283",
+      "publisher_published_at": "2026-08-11T20:18:49.960",
+      "role": "server",
+      "enrollment": "included",
+      "reason": "server_service_reference",
+      "variant_scope": "component_scope_requires_product_build_review",
+      "role_review_method": "assistant_source_review_not_independent_human_adjudication",
+      "record_semantic_sha256": "e1146c48ffe608d284d9ab38c8ff23e7802fa5a52f67c9d7304ce019c2c2023c"
+    }
+  ],
+  "design": "Retrospective registry product-mapped reference cohort. Selection rules and component-role decisions are fixed before this study joins vendor evidence. Prior vendor evidence already exists in the project; this is not historical preregistration or an exhaustive upstream vulnerability catalogue.",
+  "selection_rule": "All records returned by the complete NVD OpenSSH CPE query with published-date claims in the fixed period; include server/server-and-client roles for the SSH service endpoint, keep downstream patch qualifications explicit, exclude client/agent/tool-only and co-location memory cases without inferring unaffectedness.",
+  "independent_human_review_completed": false,
+  "cohort_sha256": "10e9b2e833247658f83a7d55d4d598197d56ba78b353fe7614469dc756046c5c"
+}

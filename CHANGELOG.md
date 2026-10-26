@@ -88,3 +88,5 @@ source version; this file does not imply a package or GitHub release was publish
 - Provide Docker/Compose, API documentation and deployment/recovery guidance.
 - Add synthetic parser fixtures, contribution/security policies and public-source
   release preparation tooling.
+
+- Add a frozen OpenSSH service reference study, reviewed NVD reference-source registry and separate append-only reference storage. Expose role exclusions, downstream variants, source drift, scoped vendor cells and explicit comparison blockers through a strict public report and dashboard.

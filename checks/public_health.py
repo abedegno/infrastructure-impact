@@ -81,7 +81,13 @@ def check(origin, expected=None):
         )
         for key in report_keys + tuple(
             k
-            for k in ("vendor_gaps", "family_completeness", "comparison_readiness", "fix_leads")
+            for k in (
+                "vendor_gaps",
+                "family_completeness",
+                "comparison_readiness",
+                "fix_leads",
+                "component_studies",
+            )
             if data.get(k)
         ):
             filename = key.replace("_", "-") + ".json"

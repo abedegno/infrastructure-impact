@@ -129,6 +129,7 @@ function render() {
     families: renderFamilies,
     readiness: renderReadiness,
     fixleads: renderFixLeads,
+    studies: renderComponentStudies,
     scorecards: renderScorecards,
     timeline: renderTimeline,
     correction: renderCorrection,
@@ -761,7 +762,7 @@ function renderComponentSource(source) {
         : 'no; review collection health';
   const checks =
     history && history.logged_checks > 0
-      ? `<p>${history.logged_checks} successful checks logged; ${history.distinct_fingerprints} raw fingerprint${history.distinct_fingerprints === 1 ? '' : 's'}; ${history.same_as_previous_checks} same as previous; ${history.http_304_checks} HTTP 304.</p>
+      ? `<p>${history.logged_checks} successful check${history.logged_checks === 1 ? '' : 's'} logged; ${history.distinct_fingerprints} raw fingerprint${history.distinct_fingerprints === 1 ? '' : 's'}; ${history.same_as_previous_checks} same as previous; ${history.http_304_checks} HTTP 304.</p>
        <p><small>Logging began ${date(history.first_logged_check_at)}; latest ${date(history.last_logged_check_at)}. Latest logged retrieval matches this analyzed snapshot: ${alignment}.</small></p>
        <details><summary>Inspect retrieval checks</summary>${history.checks.map((check) => `<p>${date(check.checked_at)} · HTTP ${check.http_status} · ${esc(check.content_state.replaceAll('_', ' '))}<small>${esc(check.source_sha256)}</small></p>`).join('')}${history.checks_truncated ? '<p>Latest twelve checks shown.</p>' : ''}<p>${esc(history.method)}</p></details>`
       : '<p><small>No retrieval checks have been logged for this source; earlier checks remain unknown.</small></p>';
@@ -781,4 +782,49 @@ function renderFixLeads() {
   }
   $('#view').innerHTML =
     `<h2>Potential security-fix investigation leads</h2><div class="notice">${esc(report.method)}</div><p>${link('/fix-leads.json', 'Download dated leads and analysis gaps')}</p>${report.leads.map((l) => `<article class="change"><div class="eyebrow">${esc(name(l.vendor))} · ${esc(l.kind.replaceAll('_', ' '))}</div><h3>${esc(l.product)}</h3>${badge(l.state.replaceAll('_', ' '))}<p>${esc(l.details)}</p><p>${l.cve_ids.map(esc).join(', ') || 'No CVE linkage established'}${l.component ? ` · ${esc(l.component)}` : ''}</p><h4>Dated retained evidence</h4>${l.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')}<small>Local observation ${date(e.observed_at)}; publisher date claim ${date(e.publisher_date_claim)}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}<h4>Alternative explanations</h4><ul>${l.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Evidence still needed</h4><ul>${l.missing_evidence.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment: not established. No prior product exposure or public fix availability inferred.</p></article>`).join('') || '<p>No leads established from the currently eligible sources. This does not establish absence of security fixes.</p>'}<h3>Component references and source gaps</h3><p>Distinct retained content revisions are counted below. Repeated unchanged checks do not create a new revision. Different product branches are never treated as before/after snapshots. Successful HTTP checks are logged separately from content revisions; logging does not reconstruct earlier availability or establish parser validity.</p>${report.sources.map(renderComponentSource).join('')}<details><summary>${report.analysis_gaps.length} analysis gaps</summary>${report.analysis_gaps.map((g) => `<p>${esc(name(g.vendor))} · ${link(g.source_url, 'Source')} · ${esc(g.reason.replaceAll('_', ' '))}</p>`).join('')}</details>`;
+}
+
+function renderComponentStudies() {
+  const report = data.component_studies;
+  if (!report) {
+    $('#view').innerHTML = '<p>Component study report unavailable for this publication.</p>';
+    return;
+  }
+  const labels = {
+    unknown_no_retained_family_assessment: 'No family assessment retained',
+    vendor_reference_without_family_assessment: 'Vendor reference; family unresolved',
+    shared_bulletin_only: 'Shared bulletin only',
+    scope_requires_review: 'Scope requires review',
+    explicit_affected_statement: 'Affected statement',
+    explicit_partial_mitigation_statement: 'Partial mitigation statement',
+    explicit_unaffected_statement: 'Unaffected statement',
+    fixed_statement_without_prior_exposure_inference: 'Fixed statement; prior exposure unknown',
+    assessment_unresolved: 'Assessment unresolved',
+  };
+  $('#view').innerHTML =
+    `<h2>Component reference studies</h2><div class="notice">${esc(report.method)}</div><p>${link('/component-studies.json', 'Download frozen enrollment, evidence and source drift')}</p>${report.studies
+      .map((study) => {
+        const reference = study.reference_status;
+        const source = reference.source;
+        const excluded = study.candidate_reviews.filter(
+          (candidate) => candidate.enrollment === 'excluded',
+        );
+        return `<article class="change"><div class="eyebrow">${esc(study.component)} · ${esc(study.cohort_version)}</div><h3>${esc(study.name)}</h3><p>${study.included_cves.length} enrolled CVEs · ${excluded.length} explicit exclusions · ${study.members.length} selected product families. Independent human review pending.</p><p>Registry publication window: ${esc(study.period.start)} to ${esc(study.period.end)}. Current retained vendor statements are shown; this is not a historical exposure reconstruction.</p><p>${esc(study.design)}</p><details><summary>Enrollment rule, scope and fingerprint</summary><p>${esc(study.selection_rule)}</p><p>Frozen ${date(study.frozen_at)} · ${link(study.baseline_source_url, 'Official registry query')}</p><p>Cohort fingerprint</p><code>${esc(study.cohort_sha256)}</code><p>Baseline response fingerprint</p><code>${esc(study.baseline_source_sha256)}</code><p>Registry mappings do not prove a shipped dependency, enabled service or appliance affectedness. NVD publication dates are publisher metadata claims. This candidate catalogue may omit upstream vulnerabilities.</p></details><h4>Current reference check</h4><p>${esc(reference.state.replaceAll('_', ' '))}. Enrollment stays frozen when the source changes.</p>${source ? `<p>${link(source.source_url, 'Official reference source')} · retained ${date(source.source_observed_at)}; latest collection ${date(source.collection?.checked_at)} · ${esc(source.collection?.outcome || 'No collection check retained')}${source.collection?.error_code ? ` · ${esc(source.collection.error_code)}` : ''}</p><code>${esc(source.source_sha256)}</code>` : '<p>The frozen baseline is recorded, but this vault has no independently collected current reference response.</p>'}${reference.added_candidates.length || reference.removed_candidates.length || reference.changed_candidates.length ? `<p>Added candidates: ${esc(reference.added_candidates.join(', ') || 'None')}. Removed candidates: ${esc(reference.removed_candidates.join(', ') || 'None')}. Changed candidate semantics: ${esc(reference.changed_candidates.join(', ') || 'None')}. Review is required before any enrollment revision.</p>` : ''}<h4>Vendor family statements</h4><p>Every label describes retained publisher evidence. Unknown cells remain unknown. Different affected and unaffected branches require scope review. Open a cell for literal product and version references; configuration prerequisites require the linked source.</p><div class="table-wrap"><table><thead><tr><th>CVE / variant qualification</th>${study.members.map((member) => `<th>${esc(name(member.vendor))}<small>${esc(member.name)}</small></th>`).join('')}</tr></thead><tbody>${study.included_cves
+          .map((cid) => {
+            const candidate = study.candidate_reviews.find((row) => row.cve_id === cid);
+            return `<tr><th>${esc(cid)}<small>${esc(candidate.role.replaceAll('_', ' '))}</small><small>${esc(candidate.variant_scope.replaceAll('_', ' '))}</small></th>${study.members
+              .map((member) => {
+                const cell = study.cells.find(
+                  (row) => row.cve_id === cid && row.family_id === member.id,
+                );
+                if (!cell) return '<td>Vendor unavailable in this publication</td>';
+                return `<td>${esc(labels[cell.state] || cell.state)}${cell.evidence.length ? `<details><summary>${cell.statements} publisher statement${cell.statements === 1 ? '' : 's'}</summary>${cell.evidence.map((evidence) => `<p><strong>${esc(evidence.product)}</strong> · ${esc(evidence.status)} · ${esc(evidence.scope.replaceAll('_', ' '))}</p><p>${esc(evidence.platforms.join('; ') || 'Platform equivalence unverified')}</p><p>Literal versions: ${esc(JSON.stringify(evidence.versions))}</p><p>Product context: ${esc(JSON.stringify(evidence.product_context))}</p><p>${esc(evidence.evidence_locator || 'Review the original product section')}. Exposure context retained by parser: ${evidence.exposure_context_present ? 'yes; review source prerequisites' : 'not supplied; prerequisites remain unverified'}.</p><p>${link(evidence.source_url, evidence.advisory_id)} · publisher date ${date(evidence.publisher_published_at)} · retained ${date(evidence.source_observed_at)}</p><code>${esc(evidence.source_sha256)}</code>`).join('')}${cell.evidence_truncated ? '<p>Latest dataset order bounded to twelve statements; count includes all matching statements.</p>' : ''}<p>Product-build equivalence and deployment exposure are not verified.</p></details>` : ''}</td>`;
+              })
+              .join('')}</tr>`;
+          })
+          .join(
+            '',
+          )}</tbody></table></div><details><summary>${excluded.length} excluded candidates and their reasons</summary>${excluded.map((candidate) => `<p>${esc(candidate.cve_id)} · ${esc(candidate.role)} · ${esc(candidate.reason.replaceAll('_', ' '))}</p>`).join('')}<p>Exclusion defines this service study's scope; it does not establish vendor unaffectedness.</p></details><h4>Comparison prerequisites</h4><ul>${study.blockers.map((blocker) => `<li>${esc(blocker)}</li>`).join('')}</ul><p>Affectedness rates are suppressed. Vendor ranking and intentional concealment are not established.</p></article>`;
+      })
+      .join('')}`;
 }

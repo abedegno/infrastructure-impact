@@ -116,6 +116,7 @@ class Application:
             "/api/v1/family-completeness",
             "/api/v1/comparison-readiness",
             "/api/v1/fix-leads",
+            "/api/v1/component-studies",
         }:
             key = path.rsplit("/", 1)[-1].replace("-", "_")
             if key not in data:
@@ -297,6 +298,7 @@ class Application:
             "/family-completeness.json",
             "/comparison-readiness.json",
             "/fix-leads.json",
+            "/component-studies.json",
             "/comparison-eligibility.json",
             "/product-groups.json",
             "/extraction-validation.json",
@@ -319,6 +321,7 @@ class Application:
             "/schemas/family-completeness-v1.json",
             "/schemas/comparison-readiness-v1.json",
             "/schemas/fix-leads-v1.json",
+            "/schemas/component-studies-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",

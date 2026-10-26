@@ -20,6 +20,21 @@ def audit():
             ).fetchone():
                 raise ValueError("Retrieval observation evidence URL mismatch")
             observation_count = db.execute("SELECT count(*) FROM source_observations").fetchone()[0]
+        reference_count = 0
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='reference_documents'").fetchone():
+            import json
+
+            from ..references.registry import source
+
+            for row in db.execute(
+                "SELECT d.*,e.source_url AS evidence_url,e.raw FROM reference_documents d JOIN evidence e ON e.id=d.evidence_id"
+            ):
+                spec = source(row["source_id"])
+                if row["source_url"] != spec.url or row["evidence_url"] != spec.url:
+                    raise ValueError("Reference evidence URL mismatch")
+                if spec.parse(row["raw"]) != json.loads(row["normalized"]):
+                    raise ValueError("Reference normalization differs from retained source")
+                reference_count += 1
         records = latest(db)
         for record in records:
             validate_advisory(record)
@@ -44,5 +59,6 @@ def audit():
             "browser_captures": len(browser),
             "evidence_snapshots": count,
             "source_observations": observation_count,
+            "reference_documents": reference_count,
             "fingerprints": "ok",
         }

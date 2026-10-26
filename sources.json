@@ -303,6 +303,26 @@
     {
       "vendor": "arista",
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/21316-security-advisory-0116"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/20454-security-advisory-0105"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19905-security-advisory-0101"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19222-security-advisory-0095"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19221-security-advisory-0094"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19025-security-advisory-0092"
     }
   ],
   "release_documents": [
@@ -347,6 +367,36 @@
       "vendor": "fortinet",
       "product": "FortiProxy 7.2.8 documentation change log",
       "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log"
+    },
+    {
+      "vendor": "paloalto",
+      "product": "PAN-OS 11.1 feature-release OSS reference (patch applicability unverified)",
+      "kind": "component_inventory",
+      "url": "https://docs.paloaltonetworks.com/oss-listings/pan-os-oss-listings/pan-os-11-1-open-source-software-oss-listing"
+    },
+    {
+      "vendor": "paloalto",
+      "product": "PAN-OS 11.2 feature-release OSS reference (patch applicability unverified)",
+      "kind": "component_inventory",
+      "url": "https://docs.paloaltonetworks.com/oss-listings/pan-os-oss-listings/pan-os-11-2-open-source-software-oss-listing"
+    },
+    {
+      "vendor": "paloalto",
+      "product": "Panorama 11.2 feature-release OSS reference (patch applicability unverified)",
+      "kind": "component_inventory",
+      "url": "https://docs.paloaltonetworks.com/oss-listings/panorama-oss-listings/panorama-11-2-open-source-software-oss-listing"
+    },
+    {
+      "vendor": "juniper",
+      "product": "Junos OS Evolved 24.2R1 OpenSSH upgrade reference (listed ACX/PTX models)",
+      "kind": "component_inventory",
+      "url": "https://www.juniper.net/documentation/us/en/software/junos/release-notes/24.2/junos-evo-release-notes-24.2r1/topics/new-features/feature-descriptions/authentication-access-control.html"
+    },
+    {
+      "vendor": "hpe",
+      "product": "HPE iLO 6 1.57 OpenSSL enhancement reference",
+      "kind": "component_inventory",
+      "url": "https://support.hpe.com/hpesc/public/api/document/sd00004028en_us?page=GUID-C4AB7B5A-16C4-4C37-9C86-17365FE3B258.html"
     }
   ],
   "archives": [
@@ -377,6 +427,12 @@
       "url": "https://www.fortiguard.com/psirt",
       "page_limit": 2,
       "document_limit": 8
+    }
+  ],
+  "reference_sources": [
+    {
+      "source_id": "nvd-openssh-products",
+      "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?virtualMatchString=cpe%3A2.3%3Aa%3Aopenbsd%3Aopenssh%3A*&resultsPerPage=2000&startIndex=0"
     }
   ]
 }

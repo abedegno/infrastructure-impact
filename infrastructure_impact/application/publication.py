@@ -91,6 +91,13 @@ def public_projection(data, public_release_urls=()):
         data["research"].pop("lead_inputs", {}), public_release_urls, data["records"]
     )
     data["fix_leads"] = leads({**data, "research": {**data["research"], "lead_inputs": inputs}})
+    from .component_studies import component_studies
+    from .component_studies import public_inputs as public_study_inputs
+
+    study_inputs = public_study_inputs(data["research"].pop("study_inputs", []))
+    data["component_studies"] = component_studies(
+        {**data, "research": {"study_inputs": study_inputs}}
+    )
     data["delays"] = []
     data["snapshot_notice"] = (
         "Dated public-source evidence; not a representative vendor security ranking. No finding of intentional concealment."
@@ -126,6 +133,7 @@ def write_bundle(destination, data):
         "family_completeness",
         "comparison_readiness",
         "fix_leads",
+        "component_studies",
     ):
         (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
@@ -224,6 +232,7 @@ def write_bundle(destination, data):
         "family-completeness-v1.json",
         "comparison-readiness-v1.json",
         "fix-leads-v1.json",
+        "component-studies-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

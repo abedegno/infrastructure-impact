@@ -12,9 +12,30 @@ from ..settings import PACKAGE, Paths
 def validate_config(config):
     if not isinstance(config, dict) or not isinstance(config.get("vendors"), list):
         raise ValueError("Sources configuration must contain a vendor feed list")
-    unknown = set(config) - {"vendors", "pinned", "release_documents", "archives"}
+    unknown = set(config) - {
+        "vendors",
+        "pinned",
+        "release_documents",
+        "archives",
+        "reference_sources",
+    }
     if unknown:
         raise ValueError(f"Unknown sources configuration keys: {sorted(unknown)}")
+    from ..references.registry import source
+
+    reference_ids = []
+    entries = config.get("reference_sources", [])
+    if not isinstance(entries, list):
+        raise ValueError("reference_sources must be a list")
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"source_id", "url"}:
+            raise ValueError("Reference entries require only source_id and url")
+        spec = source(entry["source_id"])
+        if entry["url"] != spec.url:
+            raise ValueError("Reference URL outside reviewed exact route")
+        reference_ids.append(spec.id)
+    if len(set(reference_ids)) != len(reference_ids):
+        raise ValueError("Duplicate reference source")
     registry = default_registry()
     for section in ("vendors", "pinned", "release_documents", "archives"):
         entries = config.get(section, [])

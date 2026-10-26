@@ -47,7 +47,10 @@ def state(db, cohort=None):
     profiles = catalogue(db, records)
     checks = health(db)
     review_signals = signals(db)
+    from ..references.storage import latest as reference_inputs
+
     research = {
+        "study_inputs": reference_inputs(db),
         "release_assets": listings(db),
         "release_documents": [
             {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}
@@ -119,4 +122,7 @@ def state(db, cohort=None):
     result["family_completeness"] = completeness(result)
     result["comparison_readiness"] = readiness(result)
     result["fix_leads"] = leads(result)
+    from .component_studies import component_studies
+
+    result["component_studies"] = component_studies(result)
     return result

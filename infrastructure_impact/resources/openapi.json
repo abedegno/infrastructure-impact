@@ -687,6 +687,24 @@
           }
         }
       }
+    },
+    "/api/v1/component-studies": {
+      "get": {
+        "summary": "Frozen component reference cohorts with scoped vendor statements and unknowns",
+        "description": "Whole-publication study independent of dashboard cohort. No rates or ranking. Static Pages serves /component-studies.json.",
+        "responses": {
+          "200": {
+            "description": "Generation-bound component study report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/component-studies-v1.json"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
