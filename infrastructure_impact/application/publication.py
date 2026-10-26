@@ -72,11 +72,14 @@ def public_projection(data, public_release_urls=()):
         if (s.get("source_url"), s.get("source_sha256")) in known_sources
         and re.fullmatch(r"[a-f0-9]{64}", s.get("scope_sha256", ""))
     ]
+    from .vendor_gaps import vendor_gaps
+
     data["casefiles"] = casefiles(data)
     data["product_groups"] = product_groups(data)
     data["extraction_validation"] = validation_report(
         data["records"], scopes=data["reviewed_source_scopes"]
     )
+    data["vendor_gaps"] = vendor_gaps(data)
     data["review_packet"] = review_packet(data["records"])
     data["comparison_eligibility"] = eligibility(data, data["comparison"]["cohort"])
     data["delays"] = []
@@ -101,6 +104,7 @@ def write_bundle(destination, data):
         "scorecards",
         "timeline",
         "source_audit",
+        "vendor_gaps",
         "casefiles",
         "comparison_eligibility",
         "product_groups",
@@ -201,6 +205,7 @@ def write_bundle(destination, data):
         "extraction-review-v1.json",
         "review-submission-v1.json",
         "static-index-v1.json",
+        "vendor-gaps-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

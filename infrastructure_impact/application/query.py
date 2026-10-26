@@ -106,6 +106,9 @@ def state(db, cohort=None):
         },
     }
 
+    from .vendor_gaps import vendor_gaps
+
+    result["vendor_gaps"] = vendor_gaps(result)
     result["casefiles"] = casefiles(result)
     result["product_groups"] = product_groups(result)
     result["comparison_eligibility"] = eligibility(result, comparison["cohort"])

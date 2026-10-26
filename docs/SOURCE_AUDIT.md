@@ -78,3 +78,9 @@ The [dated alternative-source review](research/checkpoint-alternatives.md) adds 
 curated vendor customer-product blog section. Its three explicit product statements
 supplement the index while blocked detailed SK and release-listing checks remain
 visible. Protection/detection claims never supply appliance impact assessments.
+
+The [Arista layout review](research/arista-layouts-20261026.md) distinguishes a
+security notice without CVE identifiers, explicit CVE-grouped software ranges and
+a reference-only informational index. These are retained without treating the
+notice or index as appliance exposure. See [Vendor gaps](VENDOR_GAPS.md) for the
+global collection and source-review view.

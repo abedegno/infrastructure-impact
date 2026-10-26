@@ -158,3 +158,39 @@ successful monitors (one scheduled), and no failed workflows in the retrieved
 window. At 0.336 elapsed days it remained `waiting_for_window`; five source
 failures remained visible. Repository storage was 38,894 KiB against the 512 MiB
 review threshold. These are a dated observation, not a week of scheduled reliability.
+
+## Backup growth and retention accounting
+
+`checks/backup_storage.py --repository OWNER/REPO --output backup-storage.json`
+reads GitHub repository, commit, tree and manifest metadata. It downloads neither
+ciphertext nor a recovery key. The six-hour monitor runs it and retains its report
+alongside `operations.json` for 30 days. It inspects up to 100 backup-branch commits,
+flags truncation, deduplicates historical encrypted blobs and distinguishes their
+logical byte sizes from GitHub's reported repository storage. Four concurrent API
+requests bound metadata retrieval. The manifest is read at the inspected commit.
+
+**Three current recovery files do not cap Git storage.** Older encrypted archives
+remain in Git history. The helper reports current-tree bytes, logical historical
+bytes, the latest archive size and storage-budget findings. It never rewrites
+history or deletes recovery data. The collector manifest also records consistent
+database, gzip and encrypted-archive sizes; its retention statement applies to the
+current directory, not historical Git objects.
+
+At the 26 October 20:45 UTC check, the latest archive was 14,424,908 bytes. Three
+current files used 39,925,864 bytes; 16 unique historical backup blobs represented
+120,560,460 logical bytes across 17 inspected commits. GitHub reported 70,852,608
+repository bytes. Its metric may lag and packed storage is not the logical sum.
+No storage-review threshold had been reached.
+
+The repository review budget is 512 MiB and the encrypted per-file limit is 50 MiB.
+Reports flag 80% usage before the limit. A remaining-runs scenario assumes one
+new archive per run at the latest size, no compression savings and no other growth;
+it is not a prediction of days remaining or a reason to manufacture scheduled
+reliability. At the dated check that scenario was 32 further backups.
+
+Before limits are approached, choose a bounded recovery store and test restore
+there, or plan an explicit Git-history maintenance operation with independently
+retained recovery copies. GitHub Actions artifacts with deliberate retention are
+one account-local option to assess; they are not implemented as the recovery
+backend here. Do not force-push, expire backups or migrate key custody as routine
+cleanup. A storage-limit finding requires operator review; no data is deleted.

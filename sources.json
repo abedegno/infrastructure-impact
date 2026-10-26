@@ -183,6 +183,18 @@
     {
       "vendor": "checkpoint",
       "url": "https://blog.checkpoint.com/research/cve-2024-6387-regresshion-remote-code-execution-vulnerability-seen-in-openssh/"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24500-security-advisory-0146"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24515-security-advisory-0147"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148"
     }
   ],
   "release_documents": [

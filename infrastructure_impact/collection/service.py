@@ -152,6 +152,11 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                     )
                     continue
                 changed = ingest(db, raw, url, lambda *args: parsed, target["vendor"])
+                from .archive import acknowledge_retained
+
+                acknowledge_retained(
+                    db, target["vendor"], target["url"], url, evidence(db, raw, url)["id"]
+                )
                 imported += changed
                 collection_result(
                     db,

@@ -112,6 +112,19 @@ class Application:
                 },
                 status=503 if stale else 200,
             )
+        if path == "/api/v1/vendor-gaps":
+            report = data["vendor_gaps"]
+            values = parse_qs(environ.get("QUERY_STRING", "")).get("vendor", [])
+            if values:
+                if len(values) != 1 or values[0] not in data["vendors"]:
+                    raise BadRequest("Unknown or repeated vendor")
+                report = {
+                    **report,
+                    "vendors": [v for v in report["vendors"] if v["vendor"] == values[0]],
+                }
+            return self.json(
+                {**report, "publication": data["publication"], "generated_at": data["generated_at"]}
+            )
         if path == "/api/v1/source-audit":
             return self.json(data.get("source_audit", {}))
         if path == "/api/v1/catalogue":
@@ -263,6 +276,7 @@ class Application:
             "/benchmark.json",
             "/scorecards.json",
             "/source-audit.json",
+            "/vendor-gaps.json",
             "/comparison-eligibility.json",
             "/product-groups.json",
             "/extraction-validation.json",
@@ -281,6 +295,7 @@ class Application:
             "/schemas/extraction-review-v1.json",
             "/schemas/review-submission-v1.json",
             "/schemas/static-index-v1.json",
+            "/schemas/vendor-gaps-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",

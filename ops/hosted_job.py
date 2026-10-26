@@ -74,12 +74,14 @@ def backup(state, database, encryption_key=None):
         copy = Path(directory) / "vault.sqlite3"
         with closing(sqlite3.connect(database)) as source, closing(sqlite3.connect(copy)) as target:
             source.backup(target)
-        if copy.stat().st_size > MAX_VAULT_BYTES:
+        database_bytes = copy.stat().st_size
+        if database_bytes > MAX_VAULT_BYTES:
             raise ValueError("Vault size limit reached; move to persistent-host deployment")
         pending = state / ("." + name)
         with copy.open("rb") as source, gzip.open(pending, "wb") as target:
             shutil.copyfileobj(source, target)
-        if pending.stat().st_size > MAX_ARCHIVE_BYTES:
+        compressed_bytes = pending.stat().st_size
+        if compressed_bytes > MAX_ARCHIVE_BYTES:
             pending.unlink()
             raise ValueError("Compressed private vault exceeds repository storage budget")
         if encryption_key:
@@ -96,6 +98,10 @@ def backup(state, database, encryption_key=None):
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "source_commit": os.environ.get("IMPACT_SOURCE_COMMIT", "local"),
         "private": True,
+        "database_bytes": database_bytes,
+        "compressed_bytes": compressed_bytes,
+        "archive_bytes": (state / name).stat().st_size,
+        "retention": {"current_directory_copy_target": 3, "git_history_pruned": False},
         "encryption": "fernet-v1" if encryption_key else None,
     }
     temp = state / ".current.json"

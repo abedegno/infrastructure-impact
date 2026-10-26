@@ -8,7 +8,8 @@ from .common import HTML, assessment, base, cves, iso_date
 
 def arista_aggregate_notice(raw, url, vendor):
     """Reviewed informational summary: references, never per-product exposure."""
-    if not urlsplit(url).path.endswith("/24776-security-advisory-0184"):
+    slug = urlsplit(url).path.rsplit("/", 1)[-1]
+    if slug not in {"24776-security-advisory-0184", "24535-security-advisory-0148"}:
         raise ValueError("Unreviewed Arista informational summary")
     tree = HTML(raw).root
     if "Update Type: Informational" not in tree.text():
@@ -45,8 +46,10 @@ def arista_aggregate_notice(raw, url, vendor):
     out = base(
         vendor,
         url,
-        "24776-security-advisory-0184",
-        "Arista Security Advisory 0184: informational bulk-advisory summary",
+        slug,
+        "Arista Security Advisory "
+        + slug.rsplit("-", 1)[-1]
+        + ": informational bulk-advisory summary",
         iso_date(initial[0]),
     )
     out.update(

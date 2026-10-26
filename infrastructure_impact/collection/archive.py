@@ -110,6 +110,18 @@ def page(db, source, item):
         )
 
 
+def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
+    """A normal collection success can also satisfy matching archive documents.
+
+    Called only after schema-validated ingestion, never from a listing or title.
+    This clears obsolete queue errors without retrying unrelated failed sources.
+    """
+    db.execute(
+        "UPDATE archive_items SET state='done',checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL WHERE kind='document' AND source_id IN (SELECT id FROM archive_sources WHERE vendor=?) AND (url IN (?,?) OR resolved_url=?)",
+        (now(), evidence_id, resolved_url, vendor, requested_url, resolved_url, resolved_url),
+    )
+
+
 def document(db, source, item):
     url, raw = resolve_document(db, item["url"], source["vendor"])
     parsed = auto(raw, url, source["vendor"])

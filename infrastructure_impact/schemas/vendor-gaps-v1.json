@@ -1,0 +1,205 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "scope",
+    "independent_human_review_completed",
+    "vendors",
+    "method"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "whole_publication"
+    },
+    "independent_human_review_completed": {
+      "const": false
+    },
+    "vendors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "name",
+          "advisories",
+          "metadata_only_advisories",
+          "without_cve_advisories",
+          "without_cve_sources",
+          "without_cve_sources_truncated",
+          "freshness",
+          "configured_sources",
+          "source_error_count",
+          "source_errors",
+          "source_errors_truncated",
+          "archive_pending",
+          "archive_failed",
+          "review_total",
+          "review_raw_passes",
+          "review_section_matches",
+          "review_unresolved",
+          "portfolio_completeness"
+        ],
+        "properties": {
+          "vendor": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "advisories": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "metadata_only_advisories": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "without_cve_advisories": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "without_cve_sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["title", "source_url", "source_sha256"],
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "source_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "maxItems": 100
+          },
+          "without_cve_sources_truncated": {
+            "type": "boolean"
+          },
+          "freshness": {
+            "enum": ["fresh", "stale", "not_checked"]
+          },
+          "configured_sources": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source_error_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source_errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_url", "error_code", "checked_at"],
+              "properties": {
+                "source_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "error_code": {
+                  "type": "string"
+                },
+                "checked_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "maxItems": 100
+          },
+          "source_errors_truncated": {
+            "type": "boolean"
+          },
+          "archive_pending": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "archive_failed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "review_total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "review_raw_passes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "review_section_matches": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "review_unresolved": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "cve_id", "source_url", "outcome"],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "cve_id": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                },
+                "source_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "outcome": {
+                  "enum": [
+                    "source_missing",
+                    "source_revision_unreviewed",
+                    "product_scope_missing",
+                    "disagreement"
+                  ]
+                }
+              }
+            }
+          },
+          "portfolio_completeness": {
+            "const": "not_established"
+          }
+        }
+      }
+    },
+    "method": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "advisory_schema_version"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

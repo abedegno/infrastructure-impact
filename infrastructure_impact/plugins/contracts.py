@@ -49,6 +49,7 @@ class VendorPlugin:
     parse_archive: Callable[[bytes, str, str], "ArchivePage"] | None = None
     parse_document_history: Callable[[bytes, str, str], dict | None] | None = None
     url_filter: Callable[[str], bool] = lambda url: True
+    retain_unlinked_notice: Callable[[Advisory], bool] = lambda document: False
 
 
 @dataclass(frozen=True)

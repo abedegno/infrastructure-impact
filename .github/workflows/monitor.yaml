@@ -29,11 +29,20 @@ jobs:
           OBSERVATION_START: ${{ vars.IMPACT_RELIABILITY_START }}
         run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY" --observation-start "$OBSERVATION_START" --health-report "$RUNNER_TEMP/public-health.json"
 
+      - name: Assess encrypted backup growth without downloading evidence
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: python3 checks/backup_storage.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/backup-storage.json" --summary "$GITHUB_STEP_SUMMARY"
+
       - name: Retain operational review evidence
         if: always()
         uses: actions/upload-artifact@v7.0.2
         with:
           name: reliability-review-${{ github.run_id }}
-          path: ${{ runner.temp }}/operations.json
+          path: |
+            ${{ runner.temp }}/operations.json
+            ${{ runner.temp }}/backup-storage.json
           if-no-files-found: warn
           retention-days: 30

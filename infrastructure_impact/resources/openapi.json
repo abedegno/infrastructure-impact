@@ -611,6 +611,28 @@
           }
         }
       }
+    },
+    "/api/v1/vendor-gaps": {
+      "get": {
+        "summary": "Whole-publication collection, archive and source-review gaps; not a security ranking",
+        "parameters": [
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor-gap report v1. Independent of any selected CVE cohort; human review remains pending."
+          },
+          "400": {
+            "description": "Unknown or repeated vendor"
+          }
+        }
+      }
     }
   }
 }

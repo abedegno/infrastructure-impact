@@ -124,6 +124,7 @@ function render() {
     changes: renderChanges,
     sources: renderSources,
     catalogue: renderCatalogue,
+    gaps: renderVendorGaps,
     casefiles: renderCasefiles,
     scorecards: renderScorecards,
     timeline: renderTimeline,
@@ -614,4 +615,44 @@ function renderValidation() {
   }
   $('#view').innerHTML =
     `<h2>Extraction validation</h2><p>${report.passed} raw-byte passes and ${report.scope_matches || 0} reviewed-section matches with changed raw sources, out of ${report.total} assertions across ${report.vendors.length} vendors and ${report.source_documents} source documents. This report covers the whole review sample, independently of the selected CVE cohort.</p><div class="notice"><strong>Independent human review pending.</strong> ${esc(report.review_method)}. Global precision is not estimated. Changed sources remain visible; only explicitly reviewed section digests can corroborate unchanged article content.</div><p>${esc(report.sample_strategy)}</p><p>${link('/extraction-validation.json', 'Full validation report')} · ${link('/review-packet.json', 'Blind independent-review packet')}</p><details><summary>Review method and limitations</summary><ul>${report.limitations.map((s) => `<li>${esc(s)}</li>`).join('')}</ul><p>The blind packet withholds expected labels and parser output. A reviewer should read the official sources and complete the packet before consulting this report.</p></details><div class="table-wrap"><table><thead><tr><th>Vendor / CVE</th><th>Source-led expectation</th><th>Current extraction</th><th>Source and review basis</th></tr></thead><tbody>${report.cases.map((c) => `<tr><td>${esc(name(c.vendor))}<small>${esc(c.cve_id)}</small></td><td>${badge(c.expected_status)}<small>${esc(c.product_pattern)}</small>${c.remediation_availability ? `<small>Remediation: ${esc(c.remediation_availability)}</small>` : ''}</td><td>${badge(c.outcome)}<small>${esc(c.observed_statuses.join(', ') || 'No reviewed matching claim')}</small></td><td>${link(c.source_url, 'Official source')}<small>${esc(c.source_locator)}</small><p>${esc(c.rationale)}</p><details><summary>Reviewed and current fingerprints</summary><code>${esc(c.source_sha256)}</code>${c.current_source_fingerprints.map((h) => `<code>${esc(h)}</code>`).join('')}</details></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+let gapVendor = '',
+  gapFilter = '';
+function renderVendorGaps() {
+  const report = data.vendor_gaps;
+  if (!report) {
+    $('#view').innerHTML = '<p>Vendor gap report unavailable.</p>';
+    return;
+  }
+  const rows = report.vendors.filter(
+    (v) =>
+      (!gapVendor || v.vendor === gapVendor) &&
+      (!gapFilter ||
+        (gapFilter === 'sources' && v.source_error_count) ||
+        (gapFilter === 'review' && v.review_unresolved.length) ||
+        (gapFilter === 'notices' && v.without_cve_advisories)),
+  );
+  $('#view').innerHTML =
+    `<h2>Vendor coverage and review gaps</h2><p>Whole-publication status, independent of the selected CVE cohort. A clean row does not establish complete coverage or a more secure vendor.</p><div class="notice">${esc(report.method)}</div><div class="matrix-filters"><label>Vendor<select id="gap-vendor"><option value="">All vendors</option>${report.vendors.map((v) => `<option value="${esc(v.vendor)}" ${gapVendor === v.vendor ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}</select></label><label>Show<select id="gap-filter">${[
+      ['', 'All gaps and coverage'],
+      ['sources', 'Source errors'],
+      ['review', 'Unresolved review assertions'],
+      ['notices', 'Notices without CVE identifiers'],
+    ]
+      .map(
+        ([id, label]) =>
+          `<option value="${id}" ${gapFilter === id ? 'selected' : ''}>${label}</option>`,
+      )
+      .join(
+        '',
+      )}</select></label></div><p>${link('/vendor-gaps.json', 'Download full gap report')}</p><div class="table-wrap"><table><thead><tr><th>Vendor / source scope</th><th>Retained documents</th><th>Collection and archive gaps</th><th>Source-led review</th></tr></thead><tbody>${rows.map((v) => `<tr><td><strong>${esc(v.name)}</strong>${badge(v.freshness)}<small>${v.configured_sources} configured sources; portfolio completeness not established</small></td><td>${v.advisories} advisories<small>${v.metadata_only_advisories} metadata-only; ${v.without_cve_advisories} without CVE identifiers</small>${v.without_cve_sources.map((s) => `<p>${link(s.source_url, s.title)}<small>Security review lead; no CVE/product exposure inferred</small></p>`).join('')}</td><td>${v.source_error_count} latest retained URL errors<small>${v.archive_pending} queued; ${v.archive_failed} failed archive items</small><details><summary>Inspect source gaps</summary>${v.source_errors.map((e) => `<p>${link(e.source_url, 'Source')} · ${esc(e.error_code.replaceAll('_', ' '))}<small>${date(e.checked_at)}</small></p>`).join('') || '<p>No errors in retained URL checks. This does not prove a complete archive.</p>'}${v.source_errors_truncated ? '<p>List bounded to 100; total count shown above.</p>' : ''}</details></td><td>${v.review_total} sampled assertions<small>${v.review_raw_passes} raw-byte passes; ${v.review_section_matches} reviewed-section matches; ${v.review_unresolved.length} unresolved</small><small>Independent human review pending</small><details><summary>Inspect unresolved assertions</summary>${v.review_unresolved.map((c) => `<p>${esc(c.cve_id)} · ${esc(c.outcome.replaceAll('_', ' '))} · ${link(c.source_url, 'Source')}</p>`).join('') || '<p>No unresolved assertions in this sample; global accuracy is not estimated.</p>'}</details></td></tr>`).join('')}</tbody></table></div>${!rows.length ? '<p class="empty">No vendors match this filter in the current publication.</p>' : ''}`;
+  $('#gap-vendor').addEventListener('change', (e) => {
+    gapVendor = e.target.value;
+    renderVendorGaps();
+  });
+  $('#gap-filter').addEventListener('change', (e) => {
+    gapFilter = e.target.value;
+    renderVendorGaps();
+  });
 }

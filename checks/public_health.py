@@ -72,13 +72,14 @@ def check(origin, expected=None):
     assert not expected or data["publication"]["id"] == expected, "Old deployment still served"
     assert data["records"], "Empty public dataset"
     if data.get("product_groups"):
-        for key in (
+        report_keys = (
             "product_groups",
             "extraction_validation",
             "review_packet",
             "publisher_history",
             "comparison_eligibility",
-        ):
+        )
+        for key in report_keys + (("vendor_gaps",) if data.get("vendor_gaps") else ()):
             filename = key.replace("_", "-") + ".json"
             with urlopen(origin + filename, timeout=20) as response:
                 report_raw = response.read(15_000_001)

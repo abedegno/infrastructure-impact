@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "taxonomy_version": "2026-10-26.2",
+  "taxonomy_version": "2026-10-26.3",
   "review_method": "Automated source-led role classification; independent human review pending",
   "groups": [
     {
@@ -799,6 +799,15 @@
       "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05170en_us",
       "reviewed_at": "2026-10-26",
       "rationale": "Server management controller software is separately scoped from the host operating system."
+    },
+    {
+      "id": "arista-wifi-publisher-label",
+      "vendor": "arista",
+      "group": "wireless",
+      "prefix": "Arista Wi-Fi Access Points",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24515-security-advisory-0147",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit Wi-Fi access point product heading; preserves the advisory platform and configuration prerequisites."
     }
   ]
 }

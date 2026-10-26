@@ -98,7 +98,12 @@ def semantic_diff(before, after):
 def ingest(db, raw, url, adapter, vendor):
     """A->B->A reversions are revisions, while repeated identical states are not."""
     normalized = json.loads(json.dumps(adapter(raw, url, vendor)))
-    if not normalized.get("advisory_id") or not normalized.get("cves"):
+    unlinked = (
+        not normalized.get("cves")
+        and not normalized.get("assessments")
+        and default_registry().get(vendor).retain_unlinked_notice(normalized)
+    )
+    if not normalized.get("advisory_id") or (not normalized.get("cves") and not unlinked):
         raise ValueError("Advisory has no stable identity or explicit CVE references")
     validate_advisory(normalized, vendor=vendor, source_url=url)
     for c in normalized["assessments"]:

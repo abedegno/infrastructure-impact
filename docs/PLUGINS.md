@@ -135,3 +135,14 @@ metadata and the CNA container, matching record identity, published state and
 Juniper product rows. Generic upstream and ADP enrichment cannot supply a Juniper
 impact assessment. Publisher configurations and solutions remain attributed
 context; they do not independently prove firmware availability.
+
+## Explicit retention of notices without CVE identifiers
+
+`retain_unlinked_notice(document)` is an optional plugin hook, false by default.
+A reviewed parser may opt in a stable, schema-valid notice with an empty CVE list
+and no product assessments. The bundled opt-in is restricted to the exact reviewed
+Arista 0146 identity, source URL and format. Unknown empty records still fail
+storage validation. This is distinct from `non_cve_notice`, which excludes known
+non-CVE material from advisory ingestion. No GHSA-to-CVE association is inferred.
+Unlinked retained notices appear in the global Vendor gaps report; they do not
+appear as CVE impact claims in cohort exports or comparisons.

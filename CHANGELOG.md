@@ -3,6 +3,13 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Vendor gap visibility and Arista review — 2026-10-26
+
+- Add whole-publication vendor gap reports, filters, schema and read-only endpoint.
+- Support three reviewed Arista exceptional layouts, keeping a no-CVE notice and informational index separate from product/CVE claims.
+- A successful pinned-document ingestion can acknowledge matching archive queue items without resetting unrelated failures.
+- Add metadata-only backup history accounting and manifest size receipts; retain recovery history and flag budget pressure without deleting data.
+
 ## Cohort delivery and review follow-up — 2026-10-26
 
 - Load selected CVE evidence in content-addressed parts with bounded concurrency and explicit generation/hash checks. Keep full archive downloads available.
