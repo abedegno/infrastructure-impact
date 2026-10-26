@@ -183,7 +183,7 @@ def cna(raw, url, vendor):
     out["warnings"].append(
         "Unmapped solution/workaround text is retained at advisory scope; it is not automatically applied to every product."
     )
-    for p in c.get("affected", []):
+    for p, source_indices in cna_product_rows(c.get("affected", []), out["warnings"]):
         platforms = p.get("platforms", [])
         product_label = p["product"].strip() + (f" ({', '.join(platforms)})" if platforms else "")
         product_identity = p["product"].strip() + (
@@ -229,7 +229,51 @@ def cna(raw, url, vendor):
                         "versions": group_versions,
                         "remediations": remediations if group_status != "unaffected" else [],
                         "exposure": [],
-                        "evidence_locator": f"containers.cna.affected[product={p['product']}].versions[status={group_status}]",
+                        "evidence_locator": f"containers.cna.affected[indices={source_indices};product={p['product']}].versions[status={group_status}]",
                     }
                 )
     return out
+
+
+def cna_product_rows(rows, warnings):
+    """Combine same-status release branches only when all other scope agrees."""
+    grouped = {}
+    for index, row in enumerate(rows):
+        key = row["product"].strip(), tuple(sorted(row.get("platforms", [])))
+        grouped.setdefault(key, []).append((index, row))
+    for entries in grouped.values():
+        indices = [i for i, _ in entries]
+        result = dict(entries[0][1])
+        if len(entries) > 1:
+
+            def scope(row):
+                return {
+                    **{k: v for k, v in row.items() if k not in {"versions", "cpes", "platforms"}},
+                    "platforms": sorted(row.get("platforms", [])),
+                }
+
+            states = [
+                {v.get("status", "unknown") for v in row.get("versions", [])} for _, row in entries
+            ]
+            if (
+                any(scope(row) != scope(result) for _, row in entries)
+                or len(states[0]) != 1
+                or any(s != states[0] for s in states)
+            ):
+                raise ValueError("Conflicting repeated CNA product/platform scope requires review")
+            versions = {}
+            starts = {}
+            for _, row in entries:
+                for version in row.get("versions", []):
+                    fingerprint = json.dumps(version, sort_keys=True)
+                    start = version.get("version")
+                    if start in starts and starts[start] != fingerprint:
+                        raise ValueError("Conflicting repeated CNA range start requires review")
+                    starts[start] = fingerprint
+                    versions[fingerprint] = version
+            result["versions"] = list(versions.values())
+            result["cpes"] = sorted({cpe for _, row in entries for cpe in row.get("cpes", [])})
+            warnings.append(
+                f"Repeated CNA product/platform rows {indices} retain their same-status release ranges and CPEs together. Other scope fields agree; range overlap and version ordering are not inferred."
+            )
+        yield result, indices

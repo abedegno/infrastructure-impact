@@ -68,7 +68,11 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["title", "source_url", "source_sha256"],
+              "required": [
+                "title",
+                "source_url",
+                "source_sha256"
+              ],
               "properties": {
                 "title": {
                   "type": "string"
@@ -89,7 +93,11 @@
             "type": "boolean"
           },
           "freshness": {
-            "enum": ["fresh", "stale", "not_checked"]
+            "enum": [
+              "fresh",
+              "stale",
+              "not_checked"
+            ]
           },
           "configured_sources": {
             "type": "integer",
@@ -104,7 +112,11 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["source_url", "error_code", "checked_at"],
+              "required": [
+                "source_url",
+                "error_code",
+                "checked_at"
+              ],
               "properties": {
                 "source_url": {
                   "type": "string",
@@ -149,7 +161,12 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["id", "cve_id", "source_url", "outcome"],
+              "required": [
+                "id",
+                "cve_id",
+                "source_url",
+                "outcome"
+              ],
               "properties": {
                 "id": {
                   "type": "string"
@@ -175,6 +192,257 @@
           },
           "portfolio_completeness": {
             "const": "not_established"
+          },
+          "coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "declared_product_families",
+              "declared_history_scope",
+              "declared_gaps",
+              "capabilities",
+              "configured_sources",
+              "observed_formats",
+              "publisher_date_range",
+              "documents_without_publisher_date",
+              "archives",
+              "unsupported_sources",
+              "access_blocked_sources",
+              "other_error_sources"
+            ],
+            "properties": {
+              "declared_product_families": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "declared_history_scope": {
+                "type": "string"
+              },
+              "declared_gaps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "configured_sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source_url",
+                    "role",
+                    "kind",
+                    "per_pass_limit"
+                  ],
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "role": {
+                      "enum": [
+                        "vendors",
+                        "pinned",
+                        "release_documents",
+                        "archives"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "per_pass_limit": {
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "observed_formats": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "format",
+                    "advisories"
+                  ],
+                  "properties": {
+                    "format": {
+                      "type": "string"
+                    },
+                    "advisories": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              "publisher_date_range": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "earliest",
+                  "latest"
+                ],
+                "properties": {
+                  "earliest": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "latest": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "documents_without_publisher_date": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "archives": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source_url",
+                    "kind",
+                    "page_limit",
+                    "document_limit",
+                    "pages",
+                    "documents",
+                    "known_queue_exhausted",
+                    "publisher_date_range"
+                  ],
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "page_limit": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "document_limit": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "pages": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "pending",
+                        "done",
+                        "not_applicable",
+                        "error"
+                      ],
+                      "properties": {
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "done": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_applicable": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "error": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    },
+                    "documents": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "pending",
+                        "done",
+                        "not_applicable",
+                        "error"
+                      ],
+                      "properties": {
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "done": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_applicable": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "error": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    },
+                    "known_queue_exhausted": {
+                      "type": "boolean"
+                    },
+                    "publisher_date_range": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "earliest",
+                        "latest"
+                      ],
+                      "properties": {
+                        "earliest": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "latest": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "unsupported_sources": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "access_blocked_sources": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "other_error_sources": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
           }
         }
       }
@@ -185,7 +453,10 @@
     "publication": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "advisory_schema_version"],
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ],
       "properties": {
         "id": {
           "type": "string",

@@ -19,6 +19,7 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 ## What it does
 
 - Collects structured CSAF/CVE JSON, feeds and reviewed HTML/PDF layouts.
+- Shows a [vendor coverage matrix](docs/COVERAGE_MATRIX.md) with source routes, archive progress, retained formats and collection gaps.
 - Keeps product, platform, version and configuration scope attached to each claim.
 - Separates affectedness from planned fixes, partial mitigation and reported fixes.
 - Retains raw bytes, source URLs, hashes, capture times and normalized revisions.

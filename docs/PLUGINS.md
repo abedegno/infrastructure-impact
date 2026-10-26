@@ -148,3 +148,12 @@ storage validation. This is distinct from `non_cve_notice`, which excludes known
 non-CVE material from advisory ingestion. No GHSA-to-CVE association is inferred.
 Unlinked retained notices appear in the global Vendor gaps report; they do not
 appear as CVE impact claims in cohort exports or comparisons.
+
+## Repeated CNA release branches
+
+The shared CNA adapter can combine repeated product/platform blocks when other
+scope metadata and version-status sets agree. It retains distinct version objects,
+change points, CPEs and contributing row indices. Conflicting scope, defaults,
+statuses or same-start range expressions fail closed. A warning records that
+version overlap and ordering were not inferred. This does not turn release branches
+into independently verified inventory applicability.

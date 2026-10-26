@@ -1,5 +1,7 @@
 """Whole-publication coverage and review gaps, without comparative security rates."""
 
+from .comparison import parse_date
+
 
 def vendor_gaps(data):
     profiles = {v["vendor"]: v for v in data.get("catalogue", {}).get("vendors", [])}
@@ -54,6 +56,9 @@ def vendor_gaps(data):
                 ),
                 review_unresolved=unresolved,
                 portfolio_completeness="not_established",
+                coverage=coverage_matrix_row(
+                    profiles.get(vendor, {}), audits.get(vendor, {}), records, checks
+                ),
             )
         )
     result = dict(
@@ -79,3 +84,62 @@ def validate_report(value):
         json.loads((PACKAGE / "schemas/vendor-gaps-v1.json").read_text()),
         format_checker=FormatChecker(),
     ).validate(value)
+
+
+def coverage_matrix_row(profile, audit, records, checks):
+    """Project explicit coverage fields, separating publisher dates from collection."""
+    dates = sorted(
+        [r["published_at"] for r in records if parse_date(r.get("published_at"))], key=parse_date
+    )
+    formats = sorted({r["source_format"] for r in records})
+    access_codes = {"access_verification_required", "edge_access_denied"}
+    return dict(
+        declared_product_families=list(profile.get("product_families", [])),
+        declared_history_scope=profile.get("history_scope", "Coverage profile not declared"),
+        declared_gaps=list(profile.get("known_gaps", [])),
+        capabilities=list(profile.get("capabilities", [])),
+        configured_sources=[
+            dict(
+                source_url=s["url"],
+                role=s["role"],
+                kind=s.get("kind", "document"),
+                per_pass_limit=s.get("document_limit", s.get("limit")),
+            )
+            for s in profile.get("sources", [])
+        ],
+        observed_formats=[
+            dict(format=f, advisories=sum(r["source_format"] == f for r in records))
+            for f in formats
+        ],
+        publisher_date_range=dict(
+            earliest=dates[0] if dates else None, latest=dates[-1] if dates else None
+        ),
+        documents_without_publisher_date=sum(
+            not parse_date(r.get("published_at")) for r in records
+        ),
+        archives=[
+            dict(
+                source_url=a["source_url"],
+                kind=a["kind"],
+                page_limit=a["page_limit"],
+                document_limit=a["document_limit"],
+                pages={k: a["pages"][k] for k in ["pending", "done", "not_applicable", "error"]},
+                documents={
+                    k: a["documents"][k] for k in ["pending", "done", "not_applicable", "error"]
+                },
+                known_queue_exhausted=a["known_queue_exhausted"],
+                publisher_date_range={
+                    k: a["publisher_date_range"][k] for k in ["earliest", "latest"]
+                },
+            )
+            for a in audit.get("archives", [])
+        ],
+        unsupported_sources=sum(
+            c.get("error_code") == "unsupported_or_invalid_document" for c in checks
+        ),
+        other_error_sources=sum(
+            c.get("error_code") not in access_codes | {"unsupported_or_invalid_document"}
+            for c in checks
+        ),
+        access_blocked_sources=sum(c.get("error_code") in access_codes for c in checks),
+    )

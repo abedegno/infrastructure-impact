@@ -89,3 +89,7 @@ The [five-advisory follow-up](research/advisory-gaps-20261026.md) covers nested
 VeloCloud versions, MCS/CVX and Secure Boot prerequisites, the AirSnitch notice
 and exactly repeated Palo Alto CSAF entries. It preserves configuration and
 platform scope without guessing CVE mappings or silently resolving differences.
+
+The [shared-layout follow-up](research/shared-layouts-20261026.md) covers five
+Arista layouts, two Palo Alto release-branch records and a Fortinet explicit
+version list, preserving repost provenance and ambiguous solution scope.

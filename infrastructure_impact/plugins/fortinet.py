@@ -3,7 +3,12 @@
 import json
 import re
 
-from ..adapters.fortinet import document_history, fortinet_release, investigation_advisory
+from ..adapters.fortinet import (
+    affected_products_advisory,
+    document_history,
+    fortinet_release,
+    investigation_advisory,
+)
 from .archive_listings import fortinet as archive_listing
 from .contracts import VendorPlugin
 from .shared import is_json, structured
@@ -12,6 +17,8 @@ from .shared import is_json, structured
 def parse(raw, url, vendor):
     if "docs.fortinet.com/" in url:
         return fortinet_release(raw, url, vendor)
+    if not is_json(raw) and url.rstrip("/").endswith("/psirt/FG-IR-23-494"):
+        return affected_products_advisory(raw, url, vendor)
     if not is_json(raw):
         return investigation_advisory(raw, url, vendor)
     return structured(raw, url, vendor)

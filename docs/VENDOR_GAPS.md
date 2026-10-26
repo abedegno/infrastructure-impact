@@ -23,3 +23,7 @@ rather than copying caller-supplied reports or review notes. It contains no revi
 identity, private annotation, raw source bytes or correction submission. Static
 cohort delivery retains this global report, so a narrow CVE selection cannot hide
 unrelated collection gaps. Publication IDs and generated times bind static exports.
+
+The [evidence coverage matrix](COVERAGE_MATRIX.md) adds configured source routes,
+archive depth, observed formats, publisher-date bounds and classified layout/access
+gaps to the same view and report.

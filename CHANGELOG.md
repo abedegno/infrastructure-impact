@@ -3,6 +3,13 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Shared layouts and coverage matrix — 2026-10-26
+
+- Add configured routes, archive progress, observed formats, publisher-date ranges and classified source gaps to the vendor coverage view and report.
+- Extend reviewed Arista section parsing while preserving repost provenance, per-CVE configuration context and physical appliance scope.
+- Preserve repeated CNA release branches with compatible metadata, version change points, CPEs and source indices; refuse conflicting scope.
+- Normalize the reviewed Fortinet affected-product list without claiming unconditional configuration-dependent fixes.
+
 ## Scoped advisory parser follow-up — 2026-10-26
 
 - Support three further reviewed Arista software layouts with platform and configuration context.

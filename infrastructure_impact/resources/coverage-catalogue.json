@@ -36,7 +36,7 @@
         "DANZ/Converged Cloud Fabric",
         "Selected cloud-service statements"
       ],
-      "history_scope": "Current RSS and curated advisories; paginated public historical listing at four documents per scheduled pass",
+      "history_scope": "Current RSS and curated advisories; paginated public historical listing at eight documents per scheduled pass",
       "known_gaps": [
         "Only reviewed layouts are supported; affected platforms and deployment scope require consulting the source.",
         "Historical enumeration follows advertised pages; unsupported document layouts remain explicit gaps."
@@ -49,7 +49,7 @@
         "Prisma products",
         "GlobalProtect and other explicitly named product rows"
       ],
-      "history_scope": "Current RSS and curated JSON/HTML; public historical GET-form listing at four documents per scheduled pass",
+      "history_scope": "Current RSS and curated JSON/HTML; public historical GET-form listing at eight documents per scheduled pass",
       "known_gaps": [
         "Shared multi-CVE tables remain shared unless a scoped exception is explicitly encoded.",
         "Component presence alone does not establish exploitable exposure.",
@@ -92,7 +92,7 @@
         "FortiNAC-F on FortiNAC-OS",
         "Structured PSIRT products when encoded"
       ],
-      "history_scope": "Current RSS and curated release notes; filtered historical PSIRT listing at four documents per scheduled pass",
+      "history_scope": "Current RSS and curated release notes; filtered historical PSIRT listing at eight documents per scheduled pass",
       "known_gaps": [
         "Some structured exports contain discovery metadata without product assessments.",
         "Fixed release statements do not establish affected ranges in older firmware.",

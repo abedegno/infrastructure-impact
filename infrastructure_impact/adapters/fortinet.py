@@ -263,3 +263,87 @@ def fortinet_release(raw, url, vendor):
     if not out["assessments"]:
         raise ValueError("No explicit product/version CVE fix statements in expected section")
     return out
+
+
+def affected_products_advisory(raw, url, vendor):
+    """Reviewed line-based ranges; conditional solution prose is not a full fix."""
+    if (
+        vendor != "fortinet"
+        or urlsplit(url).hostname not in {"www.fortiguard.com", "fortiguard.fortinet.com"}
+        or urlsplit(url).path != "/psirt/FG-IR-23-494"
+    ):
+        raise ValueError("Unreviewed Fortinet affected-product layout")
+    tree = HTML(raw).root
+    meta = {}
+    for row in tree.find({"tr"}):
+        cells = [n.text() for n in row.children if isinstance(n, Node) and n.tag == "td"]
+        if len(cells) == 2:
+            meta[cells[0]] = cells[1]
+    if meta.get("IR Number") != "FG-IR-23-494" or len(ids := cves(meta.get("CVE ID", ""))) != 1:
+        raise ValueError("Fortinet advisory identity changed")
+    sections = {}
+    for node in tree.find({"div"}):
+        if "detail-item" not in node.attrs.get("class", "").split():
+            continue
+        headings = list(node.find({"h2"}))
+        if len(headings) != 1 or headings[0].text() in sections:
+            raise ValueError("Ambiguous Fortinet section")
+        sections[headings[0].text()] = node
+    if not {"Summary", "Affected Products", "Solutions"} <= sections.keys():
+        raise ValueError("Fortinet applicability or solution context missing")
+
+    def lines(node):
+        if isinstance(node, str):
+            return node
+        if node.tag == "h2":
+            return ""
+        return "\n" if node.tag == "br" else "".join(lines(c) for c in node.children)
+
+    groups = {}
+    for text in lines(sections["Affected Products"]).splitlines():
+        text = text.strip()
+        if not text or text == "At least":
+            continue
+        match = re.fullmatch(
+            r"(Forti[A-Za-z0-9-]+(?: on-premise)?) (version \d+(?:\.\d+)*(?: through \d+(?:\.\d+)*)?|\d+\.\d+ all versions(?: are not affected)?)",
+            text,
+        )
+        if not match:
+            raise ValueError("Unreviewed Fortinet product/version condition")
+        status = "unaffected" if text.endswith(" are not affected") else "affected"
+        groups.setdefault((match[1], status), []).append(dict(expression=text))
+    titles = list(tree.find({"h1"}))
+    if not groups or len(titles) != 1 or not meta.get("Published Date"):
+        raise ValueError("Fortinet heading or affected range missing")
+    out = base(
+        vendor,
+        url,
+        meta["IR Number"],
+        titles[0].text(),
+        iso_date(meta["Published Date"]),
+        iso_date(meta.get("Updated Date")),
+    )
+    out.update(
+        cves=ids,
+        source_format="Fortinet reviewed affected-product ranges HTML",
+        document_status="published",
+    )
+    for (product, status), versions in groups.items():
+        claim = assessment(
+            ids[0], product, status, "Affected Products / " + product + " / " + status, versions
+        )
+        claim["product_id"] += ":" + status
+        claim["exposure"] = [
+            dict(
+                category="publisher_context",
+                details=lines(sections[name]).strip(),
+                source_scope="advisory_context_requires_product_configuration_review",
+                source_locator=name,
+            )
+            for name in ["Summary", "Affected Products", "Solutions"]
+        ]
+        out["assessments"].append(claim)
+    out["warnings"] = [
+        "Only literal listed affected and unaffected ranges are normalized. Publisher 'At least' markers remain in ordered affected-products context and do not establish exhaustive ranges. Solutions include interface-specific upgrades AND configuration requirements; no available full software fix or version arithmetic is inferred."
+    ]
+    return out

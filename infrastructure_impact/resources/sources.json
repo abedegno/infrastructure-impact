@@ -215,6 +215,38 @@
     {
       "vendor": "paloalto",
       "url": "https://security.paloaltonetworks.com/PAN-SA-2026-0009"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/23118-security-advisory-0130"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/23119-security-advisory-0131"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/23399-security-advisory-0133"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/23784-security-advisory-0135"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24004-security-advisory-0136"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://www.fortiguard.com/psirt/FG-IR-23-494"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/CVE-2026-0249"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/CVE-2026-0250"
     }
   ],
   "release_documents": [

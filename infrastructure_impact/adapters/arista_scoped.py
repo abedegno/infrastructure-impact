@@ -169,6 +169,26 @@ def grouped_software(raw, url, vendor):
 
 
 REVIEWED_SOFTWARE = {
+    "0130": {
+        "VMware SD-WAN by VeloCloud (VeloCloud)": "VMware SD-WAN by VeloCloud (publisher Orchestrator context)"
+    },
+    "0131": {"VeloCloud Orchestrator": "VeloCloud Orchestrator"},
+    "0133": {
+        "Arista Edge Threat Management - Arista Next Generation Firewall (NGFW) Versions": "Arista Edge Threat Management - Arista Next Generation Firewall (NGFW)"
+    },
+    "0135": {
+        "cEOS Version": "Arista cEOS-lab",
+        "Docker SWIX Extension Versions associated with the below EOS versions (Available in the Arista Download portal under Extensions section)": "Arista Docker SWIX extension",
+        "Arista 7130 Systems running MOS": "Arista 7130 Systems running MOS",
+    },
+    "0136": {
+        "CloudVision Portal": "CloudVision Portal",
+        "VeloCloud Orchestrator (Formerly VeloCloud Orchestrator by Broadcom)": "VeloCloud Orchestrator",
+        "VeloCloud Gateway (Formerly VeloCloud Gateway by Broadcom)": "VeloCloud Gateway",
+        "VeloCloud Edge (Formerly VeloCloud Edge by Broadcom)": "VeloCloud Edge",
+        "CloudVision AGNI - Virtual or physical appliance": "CloudVision AGNI physical appliance DCA-AGNI-100",
+        "Netvisor Software": "Netvisor Software",
+    },
     "0138": {
         "VeloCloud Orchestrator (Formerly VeloCloud Orchestrator by Broadcom)": "VeloCloud Orchestrator",
         "VeloCloud Gateway (Formerly VeloCloud Gateway by Broadcom)": "VeloCloud Gateway",
@@ -182,6 +202,9 @@ REVIEWED_SOFTWARE = {
 SECTION_NAMES = {
     "Description",
     "Vulnerability Assessment",
+    "Required Configuration for Exploitation, Indicators of Compromise and Mitigation Options",
+    "Hotfix",
+    "References",
     "Affected Software",
     "Affected Platforms",
     "Required Configuration for Exploitation",
@@ -219,7 +242,12 @@ def section_context(sections):
             source_scope="advisory_context_requires_product_configuration_review",
             source_locator=name,
         )
-        for name in ("Description", "Affected Platforms", "Required Configuration for Exploitation")
+        for name in (
+            "Description",
+            "Affected Platforms",
+            "Required Configuration for Exploitation",
+            "Required Configuration for Exploitation, Indicators of Compromise and Mitigation Options",
+        )
         if sections.get(name)
     ]
 
@@ -234,13 +262,23 @@ def reviewed_software(raw, url, vendor):
         for n in a.children
         if isinstance(n, Node) and n.tag == "p" and "tracking this issue:" in n.text()
     ]
-    if len(headers) != 1 or not (ids := cves(headers[0])):
-        raise ValueError("Explicit Arista tracking CVEs missing")
     sections = reviewed_sections(a)
+    ids = cves(" ".join(headers))
+    if number == "0133":
+        descriptions = [
+            n.text() for n in sections.get("Description", []) if n.tag == "p" and "CVE:" in n.text()
+        ]
+        if len(descriptions) != 6 or any(len(cves(t)) != 1 for t in descriptions):
+            raise ValueError("NGFW per-CVE descriptions changed")
+        ids = cves(" ".join(descriptions))
+    if not ids:
+        raise ValueError("Explicit Arista tracking CVEs missing")
     context = section_context(sections)
     if not sections.get("Affected Platforms") or not sections.get("Description"):
         raise ValueError("Arista applicability context missing")
-    if number in {"0139", "0140"} and not sections.get("Required Configuration for Exploitation"):
+    if number in {"0135", "0136", "0139", "0140"} and not sections.get(
+        "Required Configuration for Exploitation"
+    ):
         raise ValueError("Arista exploitation prerequisites missing")
     groups = {}
     product = None
@@ -254,14 +292,28 @@ def reviewed_software(raw, url, vendor):
                 if not product or len(lists) != 1 or product in groups:
                     raise ValueError("Unreviewed Arista nested product list")
                 groups[product] = version_expressions(lists[0])
-        elif node.tag == "h4":
+        elif node.tag in {"h4", "div", "p"} and node.text() in REVIEWED_SOFTWARE[number]:
             product = REVIEWED_SOFTWARE[number].get(node.text())
             if not product:
                 raise ValueError("Unreviewed Arista product heading")
         elif node.tag == "ul":
             if not product or product in groups:
                 raise ValueError("Unbound or repeated Arista version list")
-            groups[product] = version_expressions(node)
+            if number == "0136" and product == "CloudVision AGNI physical appliance DCA-AGNI-100":
+                if not node.text().startswith("AGNI Physical Appliance DCA-AGNI-100 "):
+                    raise ValueError("AGNI physical appliance qualifier changed")
+                groups[product] = [dict(expression=node.text())]
+            else:
+                groups[product] = version_expressions(node)
+        elif (
+            number in {"0130", "0131"}
+            and node.tag == "div"
+            and node.text() == "Versions"
+            and product
+        ):
+            continue
+        elif not node.text():
+            continue
         elif node.tag == "div" and number == "0139":
             # Keep the local MCS-only restriction as well as advisory-wide context.
             if node.text():
@@ -294,6 +346,16 @@ def reviewed_software(raw, url, vendor):
             )
             claim["exposure"] = context
             out["assessments"].append(claim)
+    notices = [
+        n.text()
+        for n in a.children
+        if isinstance(n, Node) and n.tag == "p" and n.text().startswith("NOTICE:")
+    ]
+    if notices:
+        out["notes"].append(dict(category="publisher_republication", text="\n".join(notices)))
+        out["warnings"].append(
+            "Publisher identifies this as a repost of an older VMware advisory; the revision-table initial date is not established as first Arista disclosure."
+        )
     for name in ("Mitigation", "Resolution"):
         if sections.get(name):
             out["notes"].append(
@@ -303,7 +365,16 @@ def reviewed_software(raw, url, vendor):
                     source_locator=name,
                 )
             )
-    out["warnings"] = [
+    foreign_resolution_ids = set(
+        cves(" ".join(n.text() for n in sections.get("Resolution", [])))
+    ) - set(ids)
+    if foreign_resolution_ids:
+        out["warnings"].append(
+            "Resolution section names CVEs outside the tracking scope: "
+            + ", ".join(sorted(foreign_resolution_ids))
+            + ". No CVE-specific fix is inferred from this inconsistent section."
+        )
+    out["warnings"] += [
         "Only explicit affected software lists are normalized. Publisher platform exclusions, triage and configuration prerequisites remain ordered advisory context; they do not establish blanket product exposure. Resolution and mitigation remain advisory notes, including planned releases; no available fixed firmware or automatic inventory match is inferred."
     ]
     return out
