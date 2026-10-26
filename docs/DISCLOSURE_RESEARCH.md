@@ -39,3 +39,12 @@ absence of all earlier disclosures remain unestablished.
 The HPE Cray timing lead remains unresolved. Its date claim has not been promoted
 to an independently verified release-availability finding. No confirmed concealment
 finding is published.
+
+The [26 October pilot](research/disclosure-pilot-20261026.md) records all three
+initial investigations and counter-evidence. `publisher-history.json` projects
+reviewed documentation change-log entries, including exact source hashes and
+row locators. These retrospective entries remain separate from locally observed
+revision diffs. The `parse_document_history` vendor hook is optional and pure;
+unsupported/changed layouts remain visible. Only configured public release sources
+cross the publication boundary. The common contract is
+`schemas/publisher-history-v1.json`.

@@ -9,6 +9,7 @@ import pytest
 
 from infrastructure_impact.adapters.common import assessment, base
 from infrastructure_impact.application.eligibility import eligibility, report_validator
+from infrastructure_impact.application.product_groups import definition
 from infrastructure_impact.application.publication import publish
 from infrastructure_impact.application.query import state
 from infrastructure_impact.exports import select
@@ -40,6 +41,7 @@ def dataset(records=None):
         vendors={"arista": "Arista", "missing": "Missing"},
         records=[record()] if records is None else records,
         all_cves=[CID, OTHER],
+        product_groups=definition(),
         upstream={
             CID: dict(
                 published_at="2025-01-01T12:00:00Z",

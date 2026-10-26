@@ -25,7 +25,7 @@ is refreshed on every invocation when eligible; links removed from a later index
 never delete retained documents or normalized revisions.
 
 Each configured source has independent page and document budgets. Defaults are
-2 pages and 8 documents per pass; bundled new listing sources use 4 documents; valid ranges are 1–20 and 1–200 respectively.
+2 pages and 8 documents per pass; bundled sources use 16 documents for Aruba and 8 each for Arista, Palo Alto and Fortinet. Valid ranges are 1–20 pages and 1–200 documents respectively.
 The root counts against the page budget and gets a reserved first slot when the
 page budget is at least two. With a one-page budget, refresh can be deferred while
 unvisited continuation pages remain. An unvisited continuation page takes

@@ -16,6 +16,14 @@ priorities, not delivery commitments or claims of complete vendor coverage.
 
 The source now includes a coverage catalogue, a 24-CVE benchmark, declared primary-source mapping evaluations, release-note revision history and stricter availability review gates. A scheduled collector publishes the public static dashboard, with authenticated encrypted recovery copies and freshness monitoring. See the corresponding guides for current limits.
 
+## Evidence-quality expansion — 26 October 2026
+
+Versioned product-role filtering, a 16-assertion source-led spot check across all eight
+vendors, blind review packets and publisher documentation histories are implemented.
+Three disclosure investigations include earlier-advisory counter-evidence and
+explicit unresolved availability/access gaps. Independent human adjudication,
+portfolio denominators and verified fix timing remain outstanding.
+
 ## Next priorities
 
 - Continue expanding vendor/product families and historical collection; publish source-specific

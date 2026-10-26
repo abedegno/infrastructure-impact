@@ -1,0 +1,738 @@
+{
+  "schema_version": 1,
+  "taxonomy_version": "2026-10-26.1",
+  "review_method": "Automated source-led role classification; independent human review pending",
+  "groups": [
+    {
+      "id": "firewalls",
+      "name": "Firewalls and security gateways",
+      "scope": "Appliance and virtual firewall software; deployment and feature equivalence unverified."
+    },
+    {
+      "id": "switching",
+      "name": "Switching platforms",
+      "scope": "Products explicitly identified as switches or switch operating systems."
+    },
+    {
+      "id": "routing",
+      "name": "Routing and SD-WAN",
+      "scope": "Products explicitly identified as routers or SD-WAN."
+    },
+    {
+      "id": "routing_switching",
+      "name": "Shared routing/switching operating systems",
+      "scope": "Broad operating-system statements whose router/switch platform split is unresolved."
+    },
+    {
+      "id": "wireless",
+      "name": "Wireless infrastructure",
+      "scope": "Access points and wireless controllers; not equivalent hardware inventories."
+    },
+    {
+      "id": "management",
+      "name": "Infrastructure management",
+      "scope": "Management, orchestration and monitoring software; excludes the managed appliance itself."
+    },
+    {
+      "id": "access_control",
+      "name": "Network access control",
+      "scope": "Policy and admission-control products."
+    },
+    {
+      "id": "servers",
+      "name": "Servers and HPC",
+      "scope": "Server/platform software explicitly identified by the vendor."
+    },
+    {
+      "id": "web_gateways",
+      "name": "Secure web gateways",
+      "scope": "Explicit proxy/gateway products; not equated to network firewalls."
+    }
+  ],
+  "rules": [
+    {
+      "id": "paloalto-1",
+      "vendor": "paloalto",
+      "group": "firewalls",
+      "prefix": "PAN-OS",
+      "source_url": "https://www.paloaltonetworks.com/network-security",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall software family; Panorama and endpoint clients excluded."
+    },
+    {
+      "id": "paloalto-2",
+      "vendor": "paloalto",
+      "group": "firewalls",
+      "prefix": "Cloud NGFW",
+      "source_url": "https://www.paloaltonetworks.com/network-security",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall software family; Panorama and endpoint clients excluded."
+    },
+    {
+      "id": "paloalto-3",
+      "vendor": "paloalto",
+      "group": "management",
+      "prefix": "Panorama",
+      "source_url": "https://www.paloaltonetworks.com/network-security/panorama",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall management plane, separately scoped from managed firewalls."
+    },
+    {
+      "id": "paloalto-4",
+      "vendor": "paloalto",
+      "group": "routing",
+      "prefix": "Prisma SD-WAN",
+      "source_url": "https://www.paloaltonetworks.com/sase/sd-wan",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit SD-WAN product family."
+    },
+    {
+      "id": "fortinet-5",
+      "vendor": "fortinet",
+      "group": "firewalls",
+      "prefix": "FortiOS",
+      "source_url": "https://www.fortinet.com/products",
+      "reviewed_at": "2026-10-26",
+      "rationale": "FortiOS firewall OS and FortiProxy secure web gateway; product differences remain visible."
+    },
+    {
+      "id": "fortinet-6",
+      "vendor": "fortinet",
+      "group": "web_gateways",
+      "prefix": "FortiProxy",
+      "source_url": "https://docs.fortinet.com/fortiproxy/7.2.7",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Secure web proxy family, separately scoped from FortiOS firewalls."
+    },
+    {
+      "id": "fortinet-7",
+      "vendor": "fortinet",
+      "group": "management",
+      "prefix": "FortiManager",
+      "source_url": "https://www.fortinet.com/products",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and analysis products, including named cloud/version variants."
+    },
+    {
+      "id": "fortinet-8",
+      "vendor": "fortinet",
+      "group": "management",
+      "prefix": "FortiAnalyzer",
+      "source_url": "https://www.fortinet.com/products",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and analysis products, including named cloud/version variants."
+    },
+    {
+      "id": "fortinet-9",
+      "vendor": "fortinet",
+      "group": "switching",
+      "prefix": "FortiSwitch",
+      "source_url": "https://www.fortinet.com/products/ethernet-switches",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Switching family; manager mapping is intentionally excluded below pending role review."
+    },
+    {
+      "id": "fortinet-10",
+      "vendor": "fortinet",
+      "group": "wireless",
+      "prefix": "FortiAP",
+      "source_url": "https://www.fortinet.com/products/wireless-access-points",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Access point family."
+    },
+    {
+      "id": "fortinet-11",
+      "vendor": "fortinet",
+      "group": "access_control",
+      "prefix": "FortiNAC",
+      "source_url": "https://www.fortinet.com/products/network-access-control",
+      "reviewed_at": "2026-10-26",
+      "rationale": "NAC products; OS qualifiers are retained."
+    },
+    {
+      "id": "fortinet-12",
+      "vendor": "fortinet",
+      "group": "access_control",
+      "prefix": "FortiNAC-F",
+      "source_url": "https://www.fortinet.com/products/network-access-control",
+      "reviewed_at": "2026-10-26",
+      "rationale": "NAC products; OS qualifiers are retained."
+    },
+    {
+      "id": "aruba-13",
+      "vendor": "aruba",
+      "group": "switching",
+      "prefix": "AOS-CX",
+      "source_url": "https://www.arubanetworks.com/products/switches/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch operating systems and switch family."
+    },
+    {
+      "id": "aruba-14",
+      "vendor": "aruba",
+      "group": "switching",
+      "prefix": "ArubaOS-CX",
+      "source_url": "https://www.arubanetworks.com/products/switches/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch operating systems and switch family."
+    },
+    {
+      "id": "aruba-15",
+      "vendor": "aruba",
+      "group": "switching",
+      "prefix": "ArubaOS-CX 8000",
+      "source_url": "https://www.arubanetworks.com/products/switches/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch operating systems and switch family."
+    },
+    {
+      "id": "aruba-16",
+      "vendor": "aruba",
+      "group": "switching",
+      "prefix": "AOS-S",
+      "source_url": "https://www.arubanetworks.com/products/switches/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch operating systems and switch family."
+    },
+    {
+      "id": "aruba-17",
+      "vendor": "aruba",
+      "group": "switching",
+      "prefix": "ArubaOS-Switch",
+      "source_url": "https://www.arubanetworks.com/products/switches/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch operating systems and switch family."
+    },
+    {
+      "id": "aruba-18",
+      "vendor": "aruba",
+      "group": "switching",
+      "prefix": "1930 Switch Series",
+      "source_url": "https://www.arubanetworks.com/products/switches/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch operating systems and switch family."
+    },
+    {
+      "id": "aruba-19",
+      "vendor": "aruba",
+      "group": "management",
+      "prefix": "Aruba AirWave Management Platform",
+      "source_url": "https://www.arubanetworks.com/products/network-management-operations/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and orchestration products; deployment qualifiers remain."
+    },
+    {
+      "id": "aruba-20",
+      "vendor": "aruba",
+      "group": "management",
+      "prefix": "Aruba Airwave Management Platform",
+      "source_url": "https://www.arubanetworks.com/products/network-management-operations/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and orchestration products; deployment qualifiers remain."
+    },
+    {
+      "id": "aruba-21",
+      "vendor": "aruba",
+      "group": "management",
+      "prefix": "AirWave Management Platform",
+      "source_url": "https://www.arubanetworks.com/products/network-management-operations/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and orchestration products; deployment qualifiers remain."
+    },
+    {
+      "id": "aruba-22",
+      "vendor": "aruba",
+      "group": "management",
+      "prefix": "Aruba Central",
+      "source_url": "https://www.arubanetworks.com/products/network-management-operations/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and orchestration products; deployment qualifiers remain."
+    },
+    {
+      "id": "aruba-23",
+      "vendor": "aruba",
+      "group": "management",
+      "prefix": "Aruba EdgeConnect Enterprise Orchestrator",
+      "source_url": "https://www.arubanetworks.com/products/network-management-operations/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management and orchestration products; deployment qualifiers remain."
+    },
+    {
+      "id": "aruba-24",
+      "vendor": "aruba",
+      "group": "access_control",
+      "prefix": "Aruba ClearPass Policy Manager",
+      "source_url": "https://www.arubanetworks.com/products/security/network-access-control/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "ClearPass NAC family."
+    },
+    {
+      "id": "aruba-25",
+      "vendor": "aruba",
+      "group": "access_control",
+      "prefix": "ClearPass Policy Manager",
+      "source_url": "https://www.arubanetworks.com/products/security/network-access-control/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "ClearPass NAC family."
+    },
+    {
+      "id": "aruba-26",
+      "vendor": "aruba",
+      "group": "routing",
+      "prefix": "Aruba EdgeConnect Enterprise",
+      "source_url": "https://www.arubanetworks.com/products/sd-wan/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "SD-WAN family; longer Orchestrator rule takes precedence."
+    },
+    {
+      "id": "arista-27",
+      "vendor": "arista",
+      "group": "routing_switching",
+      "prefix": "EOS",
+      "source_url": "https://www.arista.com/en/products/eos",
+      "reviewed_at": "2026-10-26",
+      "rationale": "EOS spans routing and switching; no platform split inferred."
+    },
+    {
+      "id": "arista-28",
+      "vendor": "arista",
+      "group": "routing_switching",
+      "prefix": "Arista EOS-based products",
+      "source_url": "https://www.arista.com/en/products/eos",
+      "reviewed_at": "2026-10-26",
+      "rationale": "EOS spans routing and switching; no platform split inferred."
+    },
+    {
+      "id": "arista-29",
+      "vendor": "arista",
+      "group": "switching",
+      "prefix": "Arista 7130 Systems running MOS",
+      "source_url": "https://www.arista.com/en/products/7130-series",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit 7130 systems; configuration scope stays source-defined."
+    },
+    {
+      "id": "arista-30",
+      "vendor": "arista",
+      "group": "management",
+      "prefix": "CloudVision Portal",
+      "source_url": "https://www.arista.com/en/products/cloudvision",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane; similarly named Wi-Fi and Sensor products not automatically included."
+    },
+    {
+      "id": "arista-31",
+      "vendor": "arista",
+      "group": "management",
+      "prefix": "CloudVision Appliance",
+      "source_url": "https://www.arista.com/en/products/cloudvision",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane; similarly named Wi-Fi and Sensor products not automatically included."
+    },
+    {
+      "id": "arista-32",
+      "vendor": "arista",
+      "group": "management",
+      "prefix": "CloudVision physical appliance",
+      "source_url": "https://www.arista.com/en/products/cloudvision",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane; similarly named Wi-Fi and Sensor products not automatically included."
+    },
+    {
+      "id": "arista-33",
+      "vendor": "arista",
+      "group": "management",
+      "prefix": "CloudVision as-a-Service",
+      "source_url": "https://www.arista.com/en/products/cloudvision",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane; similarly named Wi-Fi and Sensor products not automatically included."
+    },
+    {
+      "id": "arista-34",
+      "vendor": "arista",
+      "group": "wireless",
+      "prefix": "Arista Wireless Access Points",
+      "source_url": "https://www.arista.com/en/products/wifi",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit access point family."
+    },
+    {
+      "id": "juniper-35",
+      "vendor": "juniper",
+      "group": "routing",
+      "prefix": "Session Smart Router",
+      "source_url": "https://www.juniper.net/us/en/products/routers/session-smart-router.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit router family."
+    },
+    {
+      "id": "juniper-36",
+      "vendor": "juniper",
+      "group": "management",
+      "prefix": "Apstra Server",
+      "source_url": "https://www.juniper.net/us/en/products/network-automation/apstra.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Data center management/automation software."
+    },
+    {
+      "id": "checkpoint-37",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "Quantum Spark",
+      "source_url": "https://www.checkpoint.com/quantum/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall/gateway families; broad Gaia statement retains its platform exclusions."
+    },
+    {
+      "id": "checkpoint-38",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "Quantum Spark Appliances",
+      "source_url": "https://www.checkpoint.com/quantum/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall/gateway families; broad Gaia statement retains its platform exclusions."
+    },
+    {
+      "id": "checkpoint-39",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "Quantum Security Gateways",
+      "source_url": "https://www.checkpoint.com/quantum/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall/gateway families; broad Gaia statement retains its platform exclusions."
+    },
+    {
+      "id": "checkpoint-40",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "Security Gateway",
+      "source_url": "https://www.checkpoint.com/quantum/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall/gateway families; broad Gaia statement retains its platform exclusions."
+    },
+    {
+      "id": "checkpoint-42",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "Quantum Scalable Chassis",
+      "source_url": "https://www.checkpoint.com/quantum/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall/gateway families; broad Gaia statement retains its platform exclusions."
+    },
+    {
+      "id": "checkpoint-43",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "CloudGuard Network for AWS",
+      "source_url": "https://www.checkpoint.com/quantum/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Firewall/gateway families; broad Gaia statement retains its platform exclusions."
+    },
+    {
+      "id": "checkpoint-45",
+      "vendor": "checkpoint",
+      "group": "management",
+      "prefix": "Quantum Security Management",
+      "source_url": "https://www.checkpoint.com/quantum/security-management/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane only."
+    },
+    {
+      "id": "checkpoint-46",
+      "vendor": "checkpoint",
+      "group": "management",
+      "prefix": "Multi-Domain Security Management",
+      "source_url": "https://www.checkpoint.com/quantum/security-management/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane only."
+    },
+    {
+      "id": "checkpoint-47",
+      "vendor": "checkpoint",
+      "group": "management",
+      "prefix": "Security Management",
+      "source_url": "https://www.checkpoint.com/quantum/security-management/",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Management plane only."
+    },
+    {
+      "id": "cisco-48",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Cisco Secure Firewall Adaptive Security Appliance (ASA) Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/security/firewalls/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named firewall software; generic Firepower products are not guessed."
+    },
+    {
+      "id": "cisco-49",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Cisco Adaptive Security Appliance (ASA) Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/security/firewalls/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named firewall software; generic Firepower products are not guessed."
+    },
+    {
+      "id": "cisco-50",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Cisco Firepower Threat Defense (FTD) Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/security/firewalls/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named firewall software; generic Firepower products are not guessed."
+    },
+    {
+      "id": "cisco-51",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Cisco Firepower Threat Defense Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/security/firewalls/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named firewall software; generic Firepower products are not guessed."
+    },
+    {
+      "id": "cisco-52",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Cisco Secure Firewall Threat Defense Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/security/firewalls/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named firewall software; generic Firepower products are not guessed."
+    },
+    {
+      "id": "cisco-53",
+      "vendor": "cisco",
+      "group": "switching",
+      "prefix": "Cisco NX-OS Software",
+      "source_url": "https://www.cisco.com/c/en/us/products/switches/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch OS/family; numeric CSAF version leaves use retained product_family."
+    },
+    {
+      "id": "cisco-54",
+      "vendor": "cisco",
+      "group": "switching",
+      "prefix": "Cisco Nexus 9000 Series Switches",
+      "source_url": "https://www.cisco.com/c/en/us/products/switches/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit switch OS/family; numeric CSAF version leaves use retained product_family."
+    },
+    {
+      "id": "cisco-55",
+      "vendor": "cisco",
+      "group": "routing_switching",
+      "prefix": "Cisco IOS Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/networking/software/ios-xe/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "IOS/IOS XE span routers and switches; no device-class split inferred."
+    },
+    {
+      "id": "cisco-56",
+      "vendor": "cisco",
+      "group": "routing_switching",
+      "prefix": "Cisco IOS XE Software",
+      "source_url": "https://www.cisco.com/site/us/en/products/networking/software/ios-xe/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "IOS/IOS XE span routers and switches; no device-class split inferred."
+    },
+    {
+      "id": "cisco-57",
+      "vendor": "cisco",
+      "group": "routing",
+      "prefix": "Cisco IOS XR Software",
+      "source_url": "https://www.cisco.com/c/en/us/products/ios-nx-os-software/ios-xr-software/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit router OS family."
+    },
+    {
+      "id": "cisco-58",
+      "vendor": "cisco",
+      "group": "access_control",
+      "prefix": "Cisco Identity Services Engine (ISE)",
+      "source_url": "https://www.cisco.com/site/us/en/products/security/identity-services-engine/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "NAC/identity policy product."
+    },
+    {
+      "id": "cisco-59",
+      "vendor": "cisco",
+      "group": "management",
+      "prefix": "Cisco Network Services Orchestrator",
+      "source_url": "https://www.cisco.com/site/us/en/products/networking/network-management/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named orchestration/management applications; managed endpoints excluded."
+    },
+    {
+      "id": "cisco-60",
+      "vendor": "cisco",
+      "group": "management",
+      "prefix": "Cisco Evolved Programmable Network Manager (EPNM)",
+      "source_url": "https://www.cisco.com/site/us/en/products/networking/network-management/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named orchestration/management applications; managed endpoints excluded."
+    },
+    {
+      "id": "cisco-61",
+      "vendor": "cisco",
+      "group": "management",
+      "prefix": "Cisco IoT Field Network Director",
+      "source_url": "https://www.cisco.com/site/us/en/products/networking/network-management/index.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Named orchestration/management applications; managed endpoints excluded."
+    },
+    {
+      "id": "hpe-62",
+      "vendor": "hpe",
+      "group": "servers",
+      "prefix": "HPE Cray",
+      "source_url": "https://www.hpe.com/us/en/compute/hpc.html",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit Cray server/blade family; firmware and model qualifiers retained."
+    },
+    {
+      "id": "paloalto-panorama-role",
+      "vendor": "paloalto",
+      "group": "management",
+      "prefix": "PAN-OS (Panorama)",
+      "source_url": "https://security.paloaltonetworks.com/json/CVE-2021-44228",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit Panorama platform scope in the CNA overrides the broader PAN-OS family."
+    },
+    {
+      "id": "arista-eos-role",
+      "vendor": "arista",
+      "group": "routing_switching",
+      "prefix": "Arista EOS",
+      "source_url": "https://www.arista.com/en/products/eos",
+      "reviewed_at": "2026-10-26",
+      "rationale": "EOS product wording varies; router/switch platform split remains unverified."
+    },
+    {
+      "id": "cisco-html-63",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Secure Firewall Adaptive Security Appliance",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-64",
+      "vendor": "cisco",
+      "group": "firewalls",
+      "prefix": "Secure Firewall Threat Defense",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-65",
+      "vendor": "cisco",
+      "group": "management",
+      "prefix": "Secure Firewall Management Center",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-66",
+      "vendor": "cisco",
+      "group": "management",
+      "prefix": "Nexus Dashboard",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-67",
+      "vendor": "cisco",
+      "group": "management",
+      "prefix": "Catalyst Center",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-68",
+      "vendor": "cisco",
+      "group": "access_control",
+      "prefix": "Identity Services Engine (ISE)",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-69",
+      "vendor": "cisco",
+      "group": "switching",
+      "prefix": "NX-OS Software",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-70",
+      "vendor": "cisco",
+      "group": "switching",
+      "prefix": "Meraki MS Series Switches",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-71",
+      "vendor": "cisco",
+      "group": "switching",
+      "prefix": "Catalyst 1300 Series Switches",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-72",
+      "vendor": "cisco",
+      "group": "routing_switching",
+      "prefix": "IOS Software",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-73",
+      "vendor": "cisco",
+      "group": "routing_switching",
+      "prefix": "IOS XE Software",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-74",
+      "vendor": "cisco",
+      "group": "routing",
+      "prefix": "IOS XR Software",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "cisco-html-75",
+      "vendor": "cisco",
+      "group": "wireless",
+      "prefix": "Meraki MR Wireless Access Points",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-php-october26-Jj384Daq",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Unprefixed publisher label in the reviewed Cisco HTML advisory; preserves platform and version scope."
+    },
+    {
+      "id": "aruba-cppm-short",
+      "vendor": "aruba",
+      "group": "access_control",
+      "prefix": "ClearPass Policy Manager (CPPM)",
+      "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Explicit ClearPass NAC product-name variant in current CSAF."
+    }
+  ]
+}

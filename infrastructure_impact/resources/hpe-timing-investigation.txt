@@ -42,3 +42,11 @@ than a customer notification or another public notice. No intent is inferred.
 The application keeps this at unverified_release_date_candidate and does not
 register it as verified fix_evidence. Upgrading the finding requires archived
 release-availability evidence plus the exact CVE/product/component association.
+
+Follow-up 2026-10-26
+The exact HFP release lead was retrieved again (9,531 bytes; SHA-256
+f7239be15222c5200d563cf82689573d186e9acb20971680a3b41008813f6df0).
+It remains an application shell without a usable independent release manifest
+or dated availability table. The primary bulletin was checked again against its
+listed products, CcNc version and resolution. The 70-day publisher-claim gap
+remains unresolved; it has not been promoted to verified release availability.

@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import datetime
 
 from jsonschema import Draft202012Validator
 
@@ -82,6 +83,72 @@ def casefiles(data, definition=None):
             if h["vendor"] == vendor
             and h["source_url"] in case["advisory_urls"] + case["release_source_leads"]
         ]
+        histories = [
+            d
+            for d in data.get("publisher_history", {}).get("documents", [])
+            if d["vendor"] == vendor and d["source_url"] in case["release_source_leads"]
+        ]
+        offsets = []
+        prior_documents = []
+        for history in histories:
+            initials = [e for e in history["events"] if e["kind"] == "initial_document_release"]
+            if len(initials) != 1:
+                continue
+            initial = initials[0]["publisher_date"]
+            for event in history["events"]:
+                for cid in sorted(set(event["cve_ids"]) & set(case["cve_ids"])):
+                    if (
+                        event["kind"] == "cve_references_added"
+                        and event["publisher_date"] >= initial
+                    ):
+                        offsets.append(
+                            dict(
+                                cve_id=cid,
+                                initial_document_date=initial,
+                                reference_added_date=event["publisher_date"],
+                                days=(
+                                    datetime.fromisoformat(event["publisher_date"])
+                                    - datetime.fromisoformat(initial)
+                                ).days,
+                                source_url=history["source_url"],
+                                source_sha256=history["source_sha256"],
+                                basis="Publisher-reported documentation chronology in one currently retained document; not independent release availability or a silent fix.",
+                            )
+                        )
+            for record in records:
+                product_pattern = case.get("prior_advisory_product_pattern")
+                if not product_pattern or not any(
+                    re.search(product_pattern, a["product"]) and a["cve_id"] in case["cve_ids"]
+                    for a in record["assessments"]
+                ):
+                    continue
+                try:
+                    # A labelled calendar claim; never infer UTC or eligible timing.
+                    published = datetime.fromisoformat(
+                        record["published_at"].replace("Z", "+00:00")
+                    )
+                except (ValueError, TypeError, AttributeError):
+                    continue
+                if published.date().isoformat() < initial:
+                    prior_documents.append(
+                        dict(
+                            source_url=record["source_url"],
+                            source_sha256=record["sha256"],
+                            publisher_published_at=record["published_at"],
+                            date_basis="publisher_calendar_claim_timezone_unspecified"
+                            if published.tzinfo is None
+                            else "publisher_calendar_claim_timezone_qualified",
+                            cve_ids=sorted(set(record["cves"]) & set(case["cve_ids"])),
+                            product_labels=sorted(
+                                {
+                                    a["product"]
+                                    for a in record["assessments"]
+                                    if re.search(product_pattern, a["product"])
+                                }
+                            ),
+                            interpretation="An earlier-dated vendor advisory is counter-evidence to inferring nondisclosure from the release-note edit. Its historical availability and first-ever disclosure remain unverified.",
+                        )
+                    )
         cases.append(
             dict(
                 **case,
@@ -108,7 +175,12 @@ def casefiles(data, definition=None):
                 ),
                 evidence=evidence,
                 reported_date_gaps=gaps,
-                release_source_state="leads_only_not_verified"
+                publisher_document_histories=histories,
+                reported_documentation_offsets=offsets,
+                earlier_dated_vendor_documents=prior_documents,
+                release_source_state="documentation_history_retained_availability_unverified"
+                if histories
+                else "leads_only_not_verified"
                 if case["release_source_leads"]
                 else "not_identified",
                 independent_release_availability_verified=False,
@@ -121,7 +193,7 @@ def casefiles(data, definition=None):
     return dict(
         schema_version=1,
         cases=cases,
-        method="Case files link retained publisher statements to explicit research gaps and alternative explanations. Source leads are not retained or verified evidence. Browser captures and private review notes are excluded. No automated verification, prior affectedness or intent inference.",
+        method="Case files link retained publisher statements, current documentation histories and earlier-dated vendor documents to research gaps and alternative explanations. Uncollected source leads are not evidence. Publisher dates do not verify historical availability. Browser captures and private review notes are excluded. No automated verification, prior affectedness or intent inference.",
     )
 
 
@@ -138,6 +210,27 @@ def select_casefiles(document, cohort, vendor=None):
             {
                 **case,
                 "selected_cve_ids": selected,
+                "reported_documentation_offsets": [
+                    o
+                    for o in case.get("reported_documentation_offsets", [])
+                    if o["cve_id"] in selected
+                ],
+                "earlier_dated_vendor_documents": [
+                    {**d, "cve_ids": sorted(set(d["cve_ids"]) & set(selected))}
+                    for d in case.get("earlier_dated_vendor_documents", [])
+                    if set(d["cve_ids"]) & set(selected)
+                ],
+                "publisher_document_histories": [
+                    {
+                        **d,
+                        "events": [
+                            e
+                            for e in d["events"]
+                            if not e["cve_ids"] or set(e["cve_ids"]) & set(selected)
+                        ],
+                    }
+                    for d in case.get("publisher_document_histories", [])
+                ],
                 "exposure": {
                     **case["exposure"],
                     "by_cve": rows,

@@ -102,3 +102,12 @@ Use the dedicated endpoint or scoped download for the qualified comparison.
 The publication boundary rebuilds this report after removing private review
 material, validates its strict schema, and exports no private fix-candidate notes
 or raw evidence. No database migration or additional network collection is needed.
+
+## Product-role filtering
+
+A shared `group` control narrows statements using the versioned source-linked
+[product taxonomy](PRODUCT_GROUPS.md). Exact labels intersect the role filter.
+Unmapped and ambiguous labels are excluded from a specific group and remain
+visible in grouping coverage. Role classification does not establish equivalent
+portfolios or remove any existing metric suppression. The downloaded report
+includes the group ID and taxonomy version.

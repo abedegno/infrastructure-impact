@@ -44,7 +44,7 @@
       "release_source_leads": [
         "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/4100i%20Release%20Notes/aos-cx-10-13-xx/version-history-43.html"
       ],
-      "research_record": null,
+      "research_record": "research/aruba-cx-investigation.txt",
       "missing_evidence": [
         "A retained independent date for the selected 10.13.1031 release",
         "Historical availability and earlier-disclosure review",
@@ -70,20 +70,26 @@
       ],
       "product_pattern": "^FortiProxy 7.2.8",
       "product_scope": "FortiProxy 7.2.8 resolved-issues statements; no affected range in earlier versions is inferred",
-      "question": "What independent release-date and disclosure evidence exists for this documented security fix?",
+      "question": "Does a later release-note CVE addition indicate undisclosed exposure when an earlier-dated vendor advisory exists?",
       "advisory_urls": [
-        "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues"
+        "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+        "https://www.fortiguard.com/psirt/csaf/FG-IR-23-385?csaf_url=https://filestore.fortinet.com/fortiguard/psirt/csaf_curl-and-libcurl-cve-2023-38545-and-cve-2023-38546-vulnerabilities_fg-ir-23-385.json"
       ],
-      "release_source_leads": [],
-      "research_record": null,
+      "release_source_leads": [
+        "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log"
+      ],
+      "research_record": "research/fortiproxy-curl-investigation.txt",
       "missing_evidence": [
-        "Independent retained release-date and availability evidence",
-        "Reviewed earlier-disclosure chronology"
+        "Independent firmware availability and exact VM/platform/build linkage",
+        "Historical captures establishing when each document and CVE statement was actually public",
+        "Earlier customer/private notice search and independent chronology review"
       ],
       "alternative_explanations": [
-        "A normal disclosed security update is not a silent fix",
-        "A fixed statement alone does not establish exploitability in prior releases"
-      ]
+        "The publisher change log records a documentation edit after the initial document entry",
+        "The earlier-dated vendor curl advisory is counter-evidence to a nondisclosure inference",
+        "Current publisher dates are claims rather than historical availability observations"
+      ],
+      "prior_advisory_product_pattern": "^FortiProxy(?:$|[- ])"
     }
   ]
 }

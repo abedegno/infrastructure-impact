@@ -14,6 +14,7 @@ from functools import lru_cache
 from jsonschema import Draft202012Validator, FormatChecker
 
 from ..settings import PACKAGE
+from .product_groups import classify, definition
 
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}\Z")
 STAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})\Z")
@@ -88,8 +89,17 @@ def controls(data, start=None, end=None, products=None):
     return as_at, start, end, {v: sorted(set(labels)) for v, labels in sorted(products.items())}
 
 
-def eligibility(data, cohort=None, *, start=None, end=None, products=None):
+def eligibility(data, cohort=None, *, start=None, end=None, products=None, group=None):
     as_at, start, end, products = controls(data, start, end, products)
+    taxonomy = definition()
+    if group is not None and (
+        not isinstance(group, str) or group not in {g["id"] for g in taxonomy["groups"]}
+    ):
+        raise ValueError("Unknown reviewed product group")
+
+    def in_group(vendor, claim):
+        return group is None or classify(vendor, claim, taxonomy)["group"] == group
+
     cohort = sorted(set(data.get("all_cves", []) if cohort is None else cohort))
     selected = set(cohort)
     profiles = {v["vendor"]: v for v in data.get("catalogue", {}).get("vendors", [])}
@@ -104,9 +114,10 @@ def eligibility(data, cohort=None, *, start=None, end=None, products=None):
                 for r in data["records"]
                 if r["vendor"] == vendor and r.get("document_status") != "draft"
                 for a in r["assessments"]
+                if in_group(vendor, a)
             }
         )
-        labels = products.get(vendor, available)
+        labels = sorted(set(products.get(vendor, available)) & set(available))
         label_set = set(labels)
         pool = {cid: [] for cid in cohort}
         included = {cid: [] for cid in cohort}
@@ -120,6 +131,7 @@ def eligibility(data, cohort=None, *, start=None, end=None, products=None):
             if record.get("document_status") == "draft":
                 if any(
                     a["cve_id"] in selected
+                    and in_group(vendor, a)
                     and (vendor not in products or a["product"] in label_set)
                     for a in record["assessments"]
                 ):
@@ -128,7 +140,7 @@ def eligibility(data, cohort=None, *, start=None, end=None, products=None):
             claims = [
                 a
                 for a in record["assessments"]
-                if a["cve_id"] in selected and a["product"] in label_set
+                if a["cve_id"] in selected and a["product"] in label_set and in_group(vendor, a)
             ]
             if not claims:
                 continue
@@ -354,6 +366,8 @@ def eligibility(data, cohort=None, *, start=None, end=None, products=None):
             start=start, end=end, basis="initial_advisory_publication_calendar_date", inclusive=True
         ),
         product_selection=products,
+        product_group=group,
+        taxonomy_version=taxonomy["taxonomy_version"],
         vendors=vendors,
         method="Latest retained non-draft product statements grouped by initial advisory publication date. Timezone-qualified timestamps use UTC dates; date-only values keep their calendar date. Missing or timezone-unspecified timestamps are excluded. This is not an as-of reconstruction or a date of individual CVE disclosure.",
         metric_policy=dict(

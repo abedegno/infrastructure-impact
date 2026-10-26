@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "taxonomy_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review_method": {
+      "type": "string"
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "scope"
+        ]
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date"
+          },
+          "rationale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "vendor",
+          "group",
+          "prefix",
+          "source_url",
+          "reviewed_at",
+          "rationale"
+        ]
+      }
+    },
+    "vendors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "type": "string"
+          },
+          "statement_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mapped_statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unmapped_statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ambiguous_statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unresolved_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "group": {
+                  "type": "string"
+                },
+                "statement_count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "product_labels": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "group",
+                "statement_count",
+                "product_labels"
+              ]
+            }
+          }
+        },
+        "required": [
+          "vendor",
+          "statement_count",
+          "mapped_statements",
+          "unmapped_statements",
+          "ambiguous_statements",
+          "unresolved_labels",
+          "groups"
+        ]
+      }
+    },
+    "method": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      },
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "taxonomy_version",
+    "review_method",
+    "groups",
+    "rules",
+    "vendors",
+    "method"
+  ]
+}

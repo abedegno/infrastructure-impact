@@ -22,7 +22,7 @@
         "ClearPass",
         "ArubaOS and networking products encoded in the CSAF index"
       ],
-      "history_scope": "Current CSAF index, benchmark search up to 200 documents; historical normalization resumes at 8 documents per scheduled pass",
+      "history_scope": "Current CSAF index, benchmark search up to 200 documents; historical normalization resumes at 16 documents per scheduled pass",
       "known_gaps": [
         "Index cap and exact inspected count are recorded; hardware/configuration qualifications remain source-defined.",
         "Historical queue progress is reported separately; the listed index does not establish every product or earlier disclosure."
@@ -93,7 +93,8 @@
       "known_gaps": [
         "Some structured exports contain discovery metadata without product assessments.",
         "Fixed release statements do not establish affected ranges in older firmware.",
-        "Historical listing uses the publisher default infrastructure product selection, not the entire Fortinet portfolio; observed filters are reported."
+        "Historical listing uses the publisher default infrastructure product selection, not the entire Fortinet portfolio; observed filters are reported.",
+        "Empty CSAF exports can use the reviewed public HTML investigation-list fallback; other unsupported layouts remain gaps."
       ]
     },
     "hpe": {

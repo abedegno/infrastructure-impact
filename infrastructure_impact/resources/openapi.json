@@ -509,6 +509,14 @@
               "type": "string"
             },
             "description": "JSON object of vendor IDs to exact retained product-label arrays, at most 20 labels per vendor and 4096 UTF-8 bytes. Missing key includes all retained labels; empty array selects none."
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Reviewed product-role group ID; intersects exact product selectors. Unknown or duplicate IDs return 400. Role membership does not establish equivalent portfolios."
           }
         ],
         "responses": {
@@ -551,6 +559,55 @@
         "responses": {
           "200": {
             "description": "Strict schema for qualified counts and currently suppressed rates/timing."
+          }
+        }
+      }
+    },
+    "/api/v1/product-groups": {
+      "get": {
+        "summary": "Versioned product roles and mapping coverage",
+        "responses": {
+          "200": {
+            "description": "All retained non-draft statement roles, unmapped labels and source-linked rules. Not a portfolio inventory."
+          }
+        },
+        "parameters": [
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/extraction-validation": {
+      "get": {
+        "summary": "Pinned source-led extraction validation",
+        "responses": {
+          "200": {
+            "description": "Whole purposive review sample; source revisions require re-review; independent human review pending."
+          }
+        }
+      }
+    },
+    "/api/v1/review-packet": {
+      "get": {
+        "summary": "Blind independent-review packet",
+        "responses": {
+          "200": {
+            "description": "Source links and fingerprints with blank adjudications; expected labels and parser output withheld."
+          }
+        }
+      }
+    },
+    "/api/v1/publisher-history": {
+      "get": {
+        "summary": "Publisher-reported documentation changes",
+        "responses": {
+          "200": {
+            "description": "Current change-log entries with provenance; not historical captures, first disclosure or firmware availability."
           }
         }
       }

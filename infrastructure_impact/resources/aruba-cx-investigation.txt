@@ -1,0 +1,28 @@
+Aruba AOS-CX / CVE-2024-6387 — release chronology investigation
+Reviewed: 2026-10-26
+Status: incomplete evidence; no verified release delay or concealment finding.
+Review: automated primary-source investigation; independent human review pending.
+
+The official HPESBNW04669 CSAF advisory identifies AOS-CX branch fixes including
+10.13.1031. The case selects that exact product-version context; affected earlier
+ranges and other branches must not overwrite this fixed-branch statement.
+https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json
+
+The selected 4100i release-history lead was rechecked anonymously on 2026-10-26.
+It returned an edge HTTP 403 to the local collector. Prior reviewed table evidence
+did not establish a date for the selected 10.13.1031 release. The current denial
+neither verifies that older table nor establishes that the vendor omitted a release.
+https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/4100i%20Release%20Notes/aos-cx-10-13-xx/version-history-43.html
+
+Search scope
+Official HPE/Aruba sources were searched for the exact version and CVE. The
+advisory and a dated vendor-community discussion corroborate the listed fixed
+version, but neither supplies independently retained release availability for
+this specific hardware/software combination. A neighbouring row, software build
+date or third-party patch date is not substituted for missing evidence.
+
+Still needed
+A separately retained listing for the selected release and hardware, historical
+availability and component/CVE linkage, and a reviewed earlier-disclosure search.
+Documentation migration, platform-specific release numbering or an incomplete
+history table remain plausible explanations. No fix-delay value is published.

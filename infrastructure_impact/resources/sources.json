@@ -159,6 +159,10 @@
     {
       "vendor": "paloalto",
       "url": "https://security.paloaltonetworks.com/PAN-SA-2024-0012"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://www.fortiguard.com/psirt/FG-IR-23-385"
     }
   ],
   "release_documents": [
@@ -198,6 +202,11 @@
       "url": "https://support.checkpoint.com/results/download/134302",
       "product": "Spark Firewall: 1600/1800/1900/2000",
       "kind": "release_listing"
+    },
+    {
+      "vendor": "fortinet",
+      "product": "FortiProxy 7.2.8 documentation change log",
+      "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log"
     }
   ],
   "archives": [
@@ -206,28 +215,28 @@
       "kind": "index",
       "url": "https://csaf.arubanetworking.hpe.com/index.txt",
       "page_limit": 2,
-      "document_limit": 8
+      "document_limit": 16
     },
     {
       "vendor": "arista",
       "kind": "listing",
       "url": "https://www.arista.com/en/support/advisories-notices",
       "page_limit": 2,
-      "document_limit": 4
+      "document_limit": 8
     },
     {
       "vendor": "paloalto",
       "kind": "listing",
       "url": "https://security.paloaltonetworks.com/",
       "page_limit": 2,
-      "document_limit": 4
+      "document_limit": 8
     },
     {
       "vendor": "fortinet",
       "kind": "listing",
       "url": "https://www.fortiguard.com/psirt",
       "page_limit": 2,
-      "document_limit": 4
+      "document_limit": 8
     }
   ]
 }

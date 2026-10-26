@@ -6,6 +6,60 @@ from urllib.parse import urlsplit
 from .common import HTML, assessment, base, cves, iso_date
 
 
+def arista_aggregate_notice(raw, url, vendor):
+    """Reviewed informational summary: references, never per-product exposure."""
+    if not urlsplit(url).path.endswith("/24776-security-advisory-0184"):
+        raise ValueError("Unreviewed Arista informational summary")
+    tree = HTML(raw).root
+    if "Update Type: Informational" not in tree.text():
+        raise ValueError("Arista informational notice marker changed")
+    expected = [
+        "Security Advisory #",
+        "Product (Component)",
+        "CVE ID",
+        "Severity",
+        "CVSS 3.1 Score",
+    ]
+    tables = [
+        t
+        for t in tree.find({"table"})
+        if any([c.text() for c in row.find({"td", "th"})] == expected for row in t.find({"tr"}))
+    ]
+    if len(tables) != 1:
+        raise ValueError("Reviewed informational advisory table changed")
+    ids = []
+    for row in tables[0].find({"tr"}):
+        cells = [c.text() for c in row.find({"td", "th"})]
+        if cells == expected:
+            continue
+        if len(cells) != 5 or not cells[0].isdigit() or not cves(cells[2]):
+            raise ValueError("Unreviewed informational advisory row")
+        ids += cves(cells[2])
+    initial = [
+        cells[1]
+        for row in tree.find({"tr"})
+        if len(cells := [c.text() for c in row.find({"td"})]) == 3 and cells[0] == "1.0"
+    ]
+    if len(initial) != 1 or not ids:
+        raise ValueError("Informational summary publication context missing")
+    out = base(
+        vendor,
+        url,
+        "24776-security-advisory-0184",
+        "Arista Security Advisory 0184: informational bulk-advisory summary",
+        iso_date(initial[0]),
+    )
+    out.update(
+        cves=sorted(set(ids)),
+        document_status="published",
+        source_format="Arista informational summary HTML",
+    )
+    out["warnings"] = [
+        "References to separate advisories only. No product affectedness, unaffectedness, fixed versions or fix availability are inferred from this aggregate notice. Follow each individual advisory for applicability."
+    ]
+    return out
+
+
 def arista_software(raw, url, vendor):
     tree = HTML(raw).root
     nodes = list(tree.find({"h1", "h2", "h3", "h4", "p", "li", "div"}))

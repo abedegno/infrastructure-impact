@@ -121,6 +121,10 @@
                 "type": "string"
               }
             }
+          },
+          "prior_advisory_product_pattern": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }

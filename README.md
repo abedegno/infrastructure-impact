@@ -25,13 +25,17 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 - Distinguishes parser reinterpretation from changes to publisher content.
 - Supports external vendor plugins without core, database or frontend changes.
 - Publishes immutable, sanitized datasets for a separate read-only reader.
-- Flags disclosure-timing leads for review; it does not infer intent or concealment.
+- Groups comparable product roles while exposing unmapped labels and coverage gaps.
+- Publishes source-led extraction checks and blind independent-review packets.
+- Investigates disclosure leads with publisher histories and counter-evidence.
 
 Bundled vendor plugins cover **Cisco, HPE Aruba Networking, Arista, Palo Alto
 Networks, Juniper, Check Point, Fortinet and other HPE products**. Each plugin has
 specific source/layout limits; this is not a complete inventory of those vendors.
 The benchmark spans multiple components, including PHP, OpenSSL, OpenSSH, curl,
 Log4j and Linux. Custom CVE cohorts are supported.
+
+[Product grouping](docs/PRODUCT_GROUPS.md) · [Extraction validation](docs/EXTRACTION_VALIDATION.md) · [Disclosure pilot](docs/research/disclosure-pilot-20261026.md)
 
 **[Open the public dashboard](https://abedegno.github.io/infrastructure-impact/)** · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
 

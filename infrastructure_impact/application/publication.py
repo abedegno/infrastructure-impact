@@ -17,6 +17,10 @@ from ..storage.repository import connect
 from .casefiles import casefiles
 from .cohort import COHORT, coverage
 from .eligibility import eligibility, report_validator
+from .extraction_validation import review_packet, validation_report
+from .product_groups import product_groups
+from .product_groups import validate_report as validate_groups
+from .publisher_history import public_history
 from .query import state
 from .release_assets import validate_asset
 
@@ -42,6 +46,9 @@ def public_projection(data, public_release_urls=()):
     data["research"]["release_documents"] = [
         d for d in data["research"]["release_documents"] if d["source_url"] in public_release_urls
     ]
+    data["publisher_history"] = public_history(
+        data.get("publisher_history", {}), public_release_urls
+    )
     for asset in data["research"]["release_assets"]:
         validate_asset(
             {
@@ -59,6 +66,9 @@ def public_projection(data, public_release_urls=()):
     for signal in data["signals"]:
         signal.pop("basis", None)
     data["casefiles"] = casefiles(data)
+    data["product_groups"] = product_groups(data)
+    data["extraction_validation"] = validation_report(data["records"])
+    data["review_packet"] = review_packet(data["records"])
     data["comparison_eligibility"] = eligibility(data, data["comparison"]["cohort"])
     data["delays"] = []
     data["snapshot_notice"] = (
@@ -69,6 +79,7 @@ def public_projection(data, public_release_urls=()):
 
 def write_bundle(destination, data):
     report_validator().validate(data["comparison_eligibility"])
+    validate_groups(data["product_groups"])
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "snapshot.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
@@ -77,7 +88,17 @@ def write_bundle(destination, data):
         json.dumps(data["research"].get("release_assets", []))
     )
     (destination / "catalogue.json").write_text(json.dumps(data.get("catalogue", {})))
-    for name in ("scorecards", "timeline", "source_audit", "casefiles", "comparison_eligibility"):
+    for name in (
+        "scorecards",
+        "timeline",
+        "source_audit",
+        "casefiles",
+        "comparison_eligibility",
+        "product_groups",
+        "extraction_validation",
+        "review_packet",
+        "publisher_history",
+    ):
         (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
                 {
@@ -131,8 +152,17 @@ def write_bundle(destination, data):
     (destination / "index.html").write_text(html)
     (destination / ".nojekyll").touch()
     (destination / "research").mkdir(exist_ok=True)
-    for name in ("cohort-report.txt", "hpe-timing-investigation.txt"):
-        source = Paths.from_env().home / "benchmark" / name
+    for name in (
+        "cohort-report.txt",
+        "hpe-timing-investigation.txt",
+        "fortiproxy-curl-investigation.txt",
+        "aruba-cx-investigation.txt",
+    ):
+        source = (
+            Paths.from_env().home / "benchmark" / name
+            if name == "cohort-report.txt"
+            else PACKAGE / "resources" / name
+        )
         if not source.exists():
             source = PACKAGE / "resources" / name
         if source.exists():
@@ -147,6 +177,12 @@ def write_bundle(destination, data):
         PACKAGE / "schemas/comparison-eligibility-v1.json",
         destination / "schemas/comparison-eligibility-v1.json",
     )
+    for name in (
+        "product-groups-v1.json",
+        "publisher-history-v1.json",
+        "extraction-review-v1.json",
+    ):
+        shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")
     (destination / "_headers").write_text(
         "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'\n"

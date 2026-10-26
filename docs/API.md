@@ -82,3 +82,20 @@ is `comparison-eligibility.json`; Pages provides equivalent local filtering.
 See [Comparison eligibility](COMPARISON_ELIGIBILITY.md) for date precision, scope,
 limits and export semantics. The deprecated `delays` array is empty. Legacy
 `comparison` counts and global record exports retain their cohort-only scope.
+
+The comparison also accepts `group=firewalls` (or another declared product-role
+ID), intersecting any exact product selectors. It returns `product_group` and
+`taxonomy_version`. Unknown/duplicate groups return 400. The additive group fields
+are included in the current v1 report schema; strict consumers should retain that
+schema with their publication. See [Product groups](PRODUCT_GROUPS.md).
+
+| Evidence-quality route | Static publication | Scope |
+| --- | --- | --- |
+| `/api/v1/product-groups` | `product-groups.json` | Role rules, mapping coverage and unresolved labels; optional vendor filter on the Python reader. |
+| `/api/v1/extraction-validation` | `extraction-validation.json` | Whole pinned source-led review sample; human review remains pending. |
+| `/api/v1/review-packet` | `review-packet.json` | Blind packet with source fingerprints and blank adjudication fields. |
+| `/api/v1/publisher-history` | `publisher-history.json` | Publisher-reported documentation chronology, not firmware availability. |
+
+Pages serves the static files and runs comparison filtering in the browser; it
+does not host these REST routes. [Extraction validation](EXTRACTION_VALIDATION.md)
+and [disclosure pilot](research/disclosure-pilot-20261026.md) describe the limits.

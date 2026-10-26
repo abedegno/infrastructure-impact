@@ -84,6 +84,23 @@ def main():
         assert (root / "current/schemas/advisory-v2.json").exists()
         assert (root / "current/scorecards.json").exists()
         assert (root / "current/comparison-eligibility.json").exists()
+        for filename in (
+            "product-groups.json",
+            "extraction-validation.json",
+            "review-packet.json",
+            "publisher-history.json",
+        ):
+            assert (root / "current" / filename).exists()
+        for filename in (
+            "product-groups-v1.json",
+            "publisher-history-v1.json",
+            "extraction-review-v1.json",
+        ):
+            assert (root / "current/schemas" / filename).exists()
+        groups = json.loads((root / "current/product-groups.json").read_text())
+        assert (
+            next(v for v in groups["vendors"] if v["vendor"] == "acme")["unmapped_statements"] == 1
+        )
         status, _, report_body = app.route(
             {
                 "REQUEST_METHOD": "GET",

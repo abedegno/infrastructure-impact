@@ -611,6 +611,16 @@
     "generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "product_group": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "taxonomy_version": {
+      "type": "string",
+      "minLength": 1
     }
   },
   "required": [
@@ -620,7 +630,9 @@
     "product_selection",
     "vendors",
     "method",
-    "metric_policy"
+    "metric_policy",
+    "product_group",
+    "taxonomy_version"
   ],
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:infrastructure-impact:comparison-eligibility:1",

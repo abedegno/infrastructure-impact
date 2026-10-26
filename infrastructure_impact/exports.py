@@ -25,12 +25,14 @@ FIELDS = [
 ]
 
 
-def select(data, cohort=None, *, start=None, end=None, products=None):
+def select(data, cohort=None, *, start=None, end=None, products=None, group=None):
     cohort = sorted(set(cohort if cohort is not None else data["all_cves"]))
     return {
         **data,
         "comparison": compare(data["records"], cohort, vendors=data["vendors"]),
-        "comparison_eligibility": eligibility(data, cohort, start=start, end=end, products=products)
+        "comparison_eligibility": eligibility(
+            data, cohort, start=start, end=end, products=products, group=group
+        )
         if data.get("generated_at")
         else {},
         "scorecards": select_scorecards(data.get("scorecards", {}), cohort),

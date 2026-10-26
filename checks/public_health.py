@@ -26,6 +26,29 @@ def check(origin, expected=None):
         "Fingerprint mismatch"
     )
     assert data["records"], "Empty public dataset"
+    if data.get("product_groups"):
+        for key in (
+            "product_groups",
+            "extraction_validation",
+            "review_packet",
+            "publisher_history",
+            "comparison_eligibility",
+        ):
+            filename = key.replace("_", "-") + ".json"
+            with urlopen(origin + filename, timeout=20) as response:
+                report_raw = response.read(15_000_001)
+            assert len(report_raw) <= 15_000_000, "Evidence-quality report exceeds monitor budget"
+            assert hashlib.sha256(report_raw).hexdigest() == manifest["sha256"][filename], (
+                "Evidence-quality report fingerprint mismatch"
+            )
+            report = json.loads(report_raw)
+            assert report["publication"] == data["publication"], "Mixed report generations"
+            assert report["generated_at"] == data["generated_at"], "Mixed report dates"
+        assert data["extraction_validation"]["independent_human_review_completed"] is False
+        assert all(
+            v["eligibility"]["rate_comparison"] == "suppressed"
+            for v in data["comparison_eligibility"]["vendors"]
+        )
     assert all(not r.get("notes") and not r.get("metrics") for r in data["records"]), (
         "Private projection failed"
     )

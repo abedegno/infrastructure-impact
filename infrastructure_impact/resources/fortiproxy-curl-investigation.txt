@@ -1,0 +1,43 @@
+FortiProxy 7.2.8 / curl CVEs — documentation chronology investigation
+Reviewed: 2026-10-26
+Status: incomplete evidence; earlier-dated vendor advisory found; no concealment finding.
+Review: source-led automated assistant investigation; independent human review pending.
+
+Current retained release-note statements
+The resolved-issues page identifies bug 973351 and lists CVE-2023-38545 and
+CVE-2023-38546 as fixed in this exact release. Earlier affected ranges and public
+firmware availability are not established by that statement.
+https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues
+Reviewed SHA-256: 1a36eaedc19a1a020633fbef318260902f1fc3698296d475f8fd8796b3e8c733
+
+The current change log reports an initial entry on 2023-12-08 and addition of
+these two CVE references on 2023-12-12: a four-day documentation interval.
+These are publisher retrospective claims in one current document, not two
+independently captured historical versions. They do not date a firmware download.
+https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log
+Reviewed SHA-256: b111802669f8ddd2aae73500bf74b0566b72e920dc58ecb59c4879082fa1ab52
+
+Counter-evidence and date ambiguity
+A separately collected vendor advisory FG-IR-23-385 covers both curl CVEs and
+includes FortiProxy VM platform/version qualifications. Its CSAF initial date is
+2023-11-14T00:00:00 with no timezone. Its public HTML timeline instead labels
+initial publication 2023-11-07. Preserve both claims; do not infer a UTC instant,
+choose the earlier as proven first disclosure, or turn a planned fix into an
+available release. Both claimed November dates precede the December document
+entry. This is counter-evidence to interpreting the December edit as nondisclosure.
+https://www.fortiguard.com/psirt/FG-IR-23-385
+Reviewed structured-source SHA-256: e4eed2efd94bdedf2e15aa5e475c932d23a47694e7482d8eb6aa500116e44104
+
+Search scope
+Official PSIRT sources were searched for both curl IDs and reviewed alongside
+release-note resolved issues, the advertised change-log link, and the official
+release-note PDF discovery reference. No third-party scanner's patch date is used
+as independent availability proof. This was not an exhaustive search of customer
+notices, historical web captures or entitled download systems.
+
+Still needed
+Independent firmware availability, exact VM/platform/build and component linkage,
+historical versions of the disclosure documents, and independent chronology review.
+The case remains incomplete_evidence. No verified fix_evidence is registered and
+no intention to conceal exposure is inferred. Current runtime fingerprints and
+source revisions are reported separately; a changed source requires re-review.

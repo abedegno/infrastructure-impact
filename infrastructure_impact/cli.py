@@ -47,6 +47,12 @@ def main(argv=None):
         "evaluate", help="Evaluate primary-source-reviewed benchmark expectations"
     )
     evaluation.add_argument("--fail-on-disagreement", action="store_true")
+    validation = sub.add_parser(
+        "validation",
+        help="Evaluate pinned source-led checks or emit a blind independent-review packet",
+    )
+    validation.add_argument("--packet", action="store_true")
+    validation.add_argument("--fail-on-disagreement", action="store_true")
     sub.add_parser(
         "source-audit", help="Audit retained source scope without making network requests"
     )
@@ -81,6 +87,21 @@ def main(argv=None):
                 indent=2,
             )
         )
+    elif args.command == "validation":
+        from .application.extraction_validation import review_packet, validation_report
+        from .storage.repository import latest
+
+        with closing(connect(read_only=True)) as db:
+            result = review_packet(latest(db)) if args.packet else validation_report(latest(db))
+        print(json.dumps(result, indent=2))
+        if (
+            args.fail_on_disagreement
+            and not args.packet
+            and any(
+                c["outcome"] in ("disagreement", "product_scope_missing") for c in result["cases"]
+            )
+        ):
+            raise SystemExit(1)
     elif args.command == "migrate":
         with closing(connect()) as db:
             print(json.dumps([dict(row) for row in db.execute("SELECT * FROM schema_migrations")]))

@@ -102,3 +102,18 @@ changed pagination controls must fail, rather than pretend the archive ended.
 `scope` records any publisher product filters in the source audit. Listing text
 never becomes a product assessment. The separately installed example plugin and
 wheel probe exercise this extension boundary.
+
+`parse_document_history(raw, url, vendor)` optionally returns `product`, `version`
+and `events` for a reviewed documentation change-log source, or `None` for a source
+outside its supported layout. Each event has a publisher calendar date, kind
+(`initial_document_release` or `cve_references_added`), CVE IDs and exact source
+locator. This hook is distinct from `parse_release_history`, which describes
+release trains in a reviewed lifecycle panel. Documentation dates never establish
+firmware availability. Invalid supported layouts raise a parser error and appear
+as an unresolved history document. Public output uses the shared publisher-history
+schema and configured release-source boundary.
+
+Product-role classification is data-driven and vendor-specific. External vendors
+receive unmapped classification until reviewed family rules are added; see
+[Product groups](PRODUCT_GROUPS.md). Installed plugins still require no core parser
+dispatch or database changes.

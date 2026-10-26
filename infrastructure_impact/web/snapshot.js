@@ -80,8 +80,35 @@ function selectScorecards(document, cohort) {
   };
 }
 
+/* Conservative, versioned family rules. A match never establishes exposure. */
+function classifyProduct(vendor, assessment, taxonomy) {
+  const name = (assessment.product_family || assessment.product || '').trim();
+  let matches = (taxonomy?.rules || []).filter(
+    (r) =>
+      r.vendor === vendor &&
+      (name === r.prefix ||
+        (name.startsWith(r.prefix) &&
+          [' ', '-', '('].includes(name.slice(r.prefix.length, r.prefix.length + 1)))),
+  );
+  if (!matches.length) return { state: 'unmapped', group: null, rule_ids: [] };
+  const length = Math.max(...matches.map((r) => r.prefix.length));
+  matches = matches.filter((r) => r.prefix.length === length);
+  const groups = [...new Set(matches.map((r) => r.group))];
+  return {
+    state: groups.length === 1 ? 'mapped' : 'ambiguous',
+    group: groups.length === 1 ? groups[0] : null,
+    rule_ids: matches.map((r) => r.id).sort(),
+  };
+}
+
 /* Pure comparison policy shared with the Python reader through parity tests. */
 function comparisonEligibility(source, ids, options = {}) {
+  const taxonomy = source.product_groups;
+  const group = options.group ?? null;
+  if (group !== null && !(taxonomy?.groups || []).some((g) => g.id === group))
+    throw Error('Unknown reviewed product group');
+  const inGroup = (vendor, a) =>
+    group === null || classifyProduct(vendor, a, taxonomy).group === group;
   const datePattern = /^\d{4}-\d{2}-\d{2}$/;
   const stampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
   const calendar = (v) => {
@@ -173,10 +200,12 @@ function comparisonEligibility(source, ids, options = {}) {
       ...new Set(
         source.records
           .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
-          .flatMap((r) => r.assessments.map((a) => a.product)),
+          .flatMap((r) => r.assessments.filter((a) => inGroup(vendor, a)).map((a) => a.product)),
       ),
     ].sort();
-    const labels = Object.hasOwn(products, vendor) ? products[vendor] : available;
+    const labels = Object.hasOwn(products, vendor)
+      ? products[vendor].filter((p) => available.includes(p))
+      : available;
     const pool = new Map(cohort.map((cid) => [cid, []]));
     const included = new Map(cohort.map((cid) => [cid, []]));
     const excluded = {
@@ -192,6 +221,7 @@ function comparisonEligibility(source, ids, options = {}) {
           r.assessments.some(
             (a) =>
               cohort.includes(a.cve_id) &&
+              inGroup(vendor, a) &&
               (!Object.hasOwn(products, vendor) || labels.includes(a.product)),
           )
         )
@@ -199,7 +229,7 @@ function comparisonEligibility(source, ids, options = {}) {
         continue;
       }
       const claims = r.assessments.filter(
-        (a) => cohort.includes(a.cve_id) && labels.includes(a.product),
+        (a) => cohort.includes(a.cve_id) && labels.includes(a.product) && inGroup(vendor, a),
       );
       if (!claims.length) continue;
       claims.forEach((a) => pool.get(a.cve_id).push([r, a]));
@@ -403,6 +433,8 @@ function comparisonEligibility(source, ids, options = {}) {
     cohort,
     period: { start, end, basis: 'initial_advisory_publication_calendar_date', inclusive: true },
     product_selection: products,
+    product_group: group,
+    taxonomy_version: taxonomy?.taxonomy_version ?? null,
     vendors,
     method:
       'Latest retained non-draft product statements grouped by initial advisory publication date. Timezone-qualified timestamps use UTC dates; date-only values keep their calendar date. Missing or timezone-unspecified timestamps are excluded. This is not an as-of reconstruction or a date of individual CVE disclosure.',
@@ -449,6 +481,21 @@ function selectSnapshot(source, ids, options = {}) {
           return {
             ...c,
             selected_cve_ids: selected,
+            reported_documentation_offsets: (c.reported_documentation_offsets || []).filter((o) =>
+              selected.includes(o.cve_id),
+            ),
+            earlier_dated_vendor_documents: (c.earlier_dated_vendor_documents || [])
+              .filter((d) => d.cve_ids.some((id) => selected.includes(id)))
+              .map((d) => ({
+                ...d,
+                cve_ids: d.cve_ids.filter((id) => selected.includes(id)).sort(),
+              })),
+            publisher_document_histories: (c.publisher_document_histories || []).map((d) => ({
+              ...d,
+              events: d.events.filter(
+                (e) => !e.cve_ids.length || e.cve_ids.some((id) => selected.includes(id)),
+              ),
+            })),
             exposure: {
               ...c.exposure,
               by_cve: rows,
@@ -519,6 +566,7 @@ if (typeof document !== 'undefined') {
       const options = {
         start: url.searchParams.get('start') ?? undefined,
         end: url.searchParams.get('end') ?? undefined,
+        group: url.searchParams.get('group') ?? undefined,
         products: url.searchParams.has('products')
           ? JSON.parse(url.searchParams.get('products'))
           : undefined,

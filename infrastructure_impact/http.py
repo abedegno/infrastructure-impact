@@ -116,6 +116,19 @@ class Application:
             return self.json(data.get("source_audit", {}))
         if path == "/api/v1/catalogue":
             return self.json(data.get("catalogue", {}))
+        if path in (
+            "/api/v1/extraction-validation",
+            "/api/v1/review-packet",
+            "/api/v1/publisher-history",
+        ):
+            key = path.rsplit("/", 1)[-1].replace("-", "_")
+            return self.json(
+                {
+                    **data.get(key, {}),
+                    "publication": data["publication"],
+                    "generated_at": data["generated_at"],
+                }
+            )
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
         ids = None
         if "cves" in query or "cve" in query:
@@ -129,13 +142,14 @@ class Application:
             "/api/assessments",
             "/api/v1/scorecards",
             "/api/v1/comparison-eligibility",
+            "/api/v1/product-groups",
             "/api/v1/casefiles",
             "/api/v1/timeline",
             "/api/v1/advisories",
             "/api/v1/assessments",
         ):
             try:
-                for key in ("start", "end", "products"):
+                for key in ("start", "end", "products", "group"):
                     if key in query and len(query[key]) != 1:
                         raise ValueError("Duplicate comparison control")
                 products = json.loads(query["products"][0]) if "products" in query else None
@@ -145,6 +159,7 @@ class Application:
                     start=query.get("start", [None])[0],
                     end=query.get("end", [None])[0],
                     products=products,
+                    group=query.get("group", [None])[0],
                 )
             except (ValueError, TypeError) as error:
                 raise BadRequest("Invalid comparison selection") from error
@@ -155,6 +170,7 @@ class Application:
                 "/api/v1/timeline",
                 "/api/v1/casefiles",
                 "/api/v1/comparison-eligibility",
+                "/api/v1/product-groups",
             ):
                 key = path.rsplit("/", 1)[-1].replace("-", "_")
                 result = selected[key]
@@ -162,7 +178,7 @@ class Application:
                     vendor = query["vendor"][0]
                     if vendor not in data["vendors"]:
                         raise BadRequest("Unknown vendor")
-                    if key in ("scorecards", "comparison_eligibility"):
+                    if key in ("scorecards", "comparison_eligibility", "product_groups"):
                         result = {
                             **result,
                             "vendors": [
@@ -247,6 +263,10 @@ class Application:
             "/scorecards.json",
             "/source-audit.json",
             "/comparison-eligibility.json",
+            "/product-groups.json",
+            "/extraction-validation.json",
+            "/review-packet.json",
+            "/publisher-history.json",
             "/casefiles.json",
             "/timeline.json",
             "/release-assets.json",
@@ -255,9 +275,14 @@ class Application:
             "/schemas/advisory-v2.json",
             "/schemas/release-asset-v1.json",
             "/schemas/comparison-eligibility-v1.json",
+            "/schemas/product-groups-v1.json",
+            "/schemas/publisher-history-v1.json",
+            "/schemas/extraction-review-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",
+            "/research/fortiproxy-curl-investigation.txt",
+            "/research/aruba-cx-investigation.txt",
         ) or re.fullmatch(r"/(evidence|changes)/\d+\.json", path)
         if not allowed:
             return 404, "application/json", b'{"error":"Not found"}'

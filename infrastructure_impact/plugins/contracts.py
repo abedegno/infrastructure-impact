@@ -38,6 +38,7 @@ class VendorPlugin:
     parse_release: DocumentParser | None = None
     parse_release_history: DocumentParser | None = None
     parse_archive: Callable[[bytes, str, str], "ArchivePage"] | None = None
+    parse_document_history: Callable[[bytes, str, str], dict | None] | None = None
 
 
 @dataclass(frozen=True)

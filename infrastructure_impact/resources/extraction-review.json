@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-26",
+  "review_method": "Second source-led verification by automated assistant; same implementation session; independent human adjudication pending",
+  "sample_strategy": "Purposive sample across all eight bundled vendors: platform exceptions, version ranges, unaffected exclusions, fixed-only release statements, planned fixes and an incomplete structured export. Not representative or statistically sampled.",
+  "cases": [
+    {
+      "id": "paloalto-source-check-1",
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/json/CVE-2021-44228",
+      "source_sha256": "87003e32bd5073a10dbef90ac70527422a4ec113683987147eac17b65a7842fa",
+      "cve_id": "CVE-2021-44228",
+      "product_pattern": "^PAN-OS.*Firewall",
+      "expected_status": "unaffected",
+      "source_locator": "containers.cna.affected / PAN-OS platforms Firewall, WildFire",
+      "rationale": "Firewall/WildFire row is unaffected; do not inherit the separate Panorama affected range.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    },
+    {
+      "id": "paloalto-source-check-2",
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/json/CVE-2021-44228",
+      "source_sha256": "87003e32bd5073a10dbef90ac70527422a4ec113683987147eac17b65a7842fa",
+      "cve_id": "CVE-2021-44228",
+      "product_pattern": "^PAN-OS.*Panorama",
+      "expected_status": "affected",
+      "source_locator": "containers.cna.affected / PAN-OS platform Panorama / 9.1 branch",
+      "rationale": "Panorama has vulnerable version branches despite the firewall exception.",
+      "version_contains": "9.1.12-h3"
+    },
+    {
+      "id": "arista-source-check-3",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/15438-security-advisory-0075",
+      "source_sha256": "408c68d76c4c08d3010214d04487e1e7baa0a21ce3861cdb05bb73649f5ff78e",
+      "cve_id": "CVE-2022-0778",
+      "product_pattern": "^Arista EOS-based products$",
+      "expected_status": "affected",
+      "source_locator": "Vulnerability Assessment / EOS release trains",
+      "rationale": "Affected train ranges are explicit; do not promote low impact or protected-network wording to unaffected.",
+      "version_contains": "4.27.3"
+    },
+    {
+      "id": "arista-source-check-4",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/15438-security-advisory-0075",
+      "source_sha256": "408c68d76c4c08d3010214d04487e1e7baa0a21ce3861cdb05bb73649f5ff78e",
+      "cve_id": "CVE-2022-0778",
+      "product_pattern": "^Arista Wireless Access Points$",
+      "expected_status": "unaffected",
+      "source_locator": "Vulnerability Assessment / NOT affected products",
+      "rationale": "Wireless access points are explicitly excluded from this advisory.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    },
+    {
+      "id": "cisco-source-check-5",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a",
+      "source_sha256": "e24f1e881ad619b48f0696ee4b8c120ce2515c38940879c164881c4ec3a72114",
+      "cve_id": "CVE-2022-3602",
+      "product_pattern": "^Identity Services Engine \\(ISE\\)$",
+      "expected_status": "unaffected",
+      "source_locator": "Products Confirmed Not Vulnerable / Network and Content Security Devices",
+      "rationale": "ISE is in the explicit exclusion list, not the vulnerable product table.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    },
+    {
+      "id": "cisco-source-check-6",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssl-W9sdCc2a",
+      "source_sha256": "e24f1e881ad619b48f0696ee4b8c120ce2515c38940879c164881c4ec3a72114",
+      "cve_id": "CVE-2022-3786",
+      "product_pattern": "^IoT Field Network Director",
+      "expected_status": "affected",
+      "source_locator": "Vulnerable Products / Network Management and Provisioning table",
+      "rationale": "The shared OpenSSL table identifies IoT Field Network Director; no per-CVE configuration split is encoded.",
+      "expected_scope": "bulletin_shared"
+    },
+    {
+      "id": "aruba-source-check-7",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-017.json",
+      "source_sha256": "eda14edea2bc27237302800cd27ec4ada28213e406502c5714d6c658479e93cb",
+      "cve_id": "CVE-2022-3602",
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "unaffected",
+      "source_locator": "product_tree / vers:all/*_aoscx and vulnerabilities[cve=CVE-2022-3602].product_status.known_not_affected",
+      "rationale": "Resolve the product ID to AOS-CX and retain the explicit all-versions exclusion.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    },
+    {
+      "id": "checkpoint-source-check-8",
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "source_sha256": "9d775ef85b46ea54ddbec3c23a311d23de985a1cae0f4a8556602446c375260e",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Quantum Spark R81.10.x$",
+      "expected_status": "affected",
+      "source_locator": "Important Notes / Quantum Spark R81.10.x",
+      "rationale": "The paragraph explicitly identifies the vulnerable Spark OS branch; no blanket Gaia claim."
+    },
+    {
+      "id": "checkpoint-source-check-9",
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "source_sha256": "9d775ef85b46ea54ddbec3c23a311d23de985a1cae0f4a8556602446c375260e",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Quantum Spark R80.20.x and earlier$",
+      "expected_status": "unaffected",
+      "source_locator": "Important Notes / R80.20.x or lower",
+      "rationale": "The stated Dropbear exception is separate from R81.10.x.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    },
+    {
+      "id": "checkpoint-source-check-10",
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "source_sha256": "9d775ef85b46ea54ddbec3c23a311d23de985a1cae0f4a8556602446c375260e",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Gaia OS",
+      "expected_status": "unaffected",
+      "source_locator": "Important Notes / Gaia OS excludes Quantum Spark",
+      "rationale": "Retain the Spark exclusion; the background upstream CVE does not broaden product scope.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    },
+    {
+      "id": "fortinet-source-check-11",
+      "vendor": "fortinet",
+      "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+      "source_sha256": "1a36eaedc19a1a020633fbef318260902f1fc3698296d475f8fd8796b3e8c733",
+      "cve_id": "CVE-2023-38545",
+      "product_pattern": "^FortiProxy 7.2.8$",
+      "expected_status": "fixed",
+      "source_locator": "Common vulnerabilities and exposures / bug 973351",
+      "rationale": "The exact release is stated no longer vulnerable. This does not establish earlier affected versions or independent release availability.",
+      "version_contains": "7.2.8",
+      "forbidden_statuses": [
+        "affected",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "fortinet-source-check-12",
+      "vendor": "fortinet",
+      "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+      "source_sha256": "1a36eaedc19a1a020633fbef318260902f1fc3698296d475f8fd8796b3e8c733",
+      "cve_id": "CVE-2023-38546",
+      "product_pattern": "^FortiProxy 7.2.8$",
+      "expected_status": "fixed",
+      "source_locator": "Common vulnerabilities and exposures / bug 973351",
+      "rationale": "The exact release is stated no longer vulnerable. This does not establish earlier affected versions or independent release availability.",
+      "version_contains": "7.2.8",
+      "forbidden_statuses": [
+        "affected",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "hpe-source-check-13",
+      "vendor": "hpe",
+      "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbcr04733en_us",
+      "source_sha256": "f0be647ad086633bda0dac7a135fa3d23ee6d3c8a4448cc32e7e890fbecab4a2",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^HPE Cray EX235a Accelerator Blade$",
+      "expected_status": "affected",
+      "source_locator": "SUPPORTED SOFTWARE VERSIONS and RESOLUTION / CcNc 1.9.5-39",
+      "rationale": "Only the listed Cray products and prior CcNc firmware are in scope. The August firmware date remains a publisher claim."
+    },
+    {
+      "id": "juniper-source-check-14",
+      "vendor": "juniper",
+      "source_url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIqkIAH",
+      "source_sha256": "0dc987fc2cf3b083fd9a19e20d49249b07a2bf6c1f8e69f87d25362de5c0f5d3",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Apstra Server 4.2.x",
+      "expected_status": "affected",
+      "source_locator": "PDF page 43/96 / AOS-47640 / Resolution",
+      "rationale": "The exact Apstra 4.2.x Ubuntu scope is exposed. The future-tense fixed-package statement is planned, not proof of an available release. Adjacent Python issue resolution must not leak into OpenSSH.",
+      "remediation_availability": "planned",
+      "forbidden_statuses": [
+        "fixed",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "fortinet-source-check-15",
+      "vendor": "fortinet",
+      "source_url": "https://www.fortiguard.com/psirt/FG-IR-26-187",
+      "source_sha256": "2e06f80407bb9ccc55a02a180ecbbf4522aba562adf14150cd9686db26625a80",
+      "cve_id": "CVE-2026-106069",
+      "product_pattern": "^FortiOS$",
+      "expected_status": "investigating",
+      "source_locator": "Summary and Products under investigation",
+      "rationale": "The HTML list supplies a shared investigation statement despite the empty CSAF envelope. No affected or fixed range is inferred.",
+      "expected_scope": "bulletin_shared",
+      "forbidden_statuses": [
+        "affected",
+        "fixed",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "fortinet-source-check-16",
+      "vendor": "fortinet",
+      "source_url": "https://www.fortiguard.com/psirt/FG-IR-26-187",
+      "source_sha256": "2e06f80407bb9ccc55a02a180ecbbf4522aba562adf14150cd9686db26625a80",
+      "cve_id": "CVE-2026-105482",
+      "product_pattern": "^FortiManager$",
+      "expected_status": "unaffected",
+      "source_locator": "Summary and Products confirmed NOT impacted",
+      "rationale": "The list explicitly applies to these summary CVEs; retain bulletin-shared scope rather than claiming individual assessments.",
+      "expected_scope": "bulletin_shared",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
+    }
+  ]
+}
