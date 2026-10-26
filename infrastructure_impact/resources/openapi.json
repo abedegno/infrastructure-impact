@@ -393,6 +393,77 @@
           }
         }
       }
+    },
+    "/api/v1/source-audit": {
+      "get": {
+        "summary": "Retained feed/index scope audit; no archive-completeness claim",
+        "responses": {
+          "200": {
+            "description": "Version 1 public metadata from an immutable publication; no intent inference"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
+    },
+    "/source-audit.json": {
+      "get": {
+        "summary": "Static source-scope audit",
+        "responses": {
+          "200": {
+            "description": "Version 1 public metadata from an immutable publication; no intent inference"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/casefiles": {
+      "get": {
+        "summary": "Evidence-linked disclosure research questions",
+        "responses": {
+          "200": {
+            "description": "Version 1 public metadata from an immutable publication; no intent inference"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          },
+          "400": {
+            "description": "Invalid cohort or unknown vendor"
+          }
+        },
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/casefiles.json": {
+      "get": {
+        "summary": "Static public research case files",
+        "responses": {
+          "200": {
+            "description": "Version 1 public metadata from an immutable publication; no intent inference"
+          },
+          "503": {
+            "description": "Publication unavailable"
+          }
+        }
+      }
     }
   }
 }

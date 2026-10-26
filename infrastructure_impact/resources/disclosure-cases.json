@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-26",
+  "review_method": "Automated assistant review of retained primary sources; independent human adjudication remains outstanding",
+  "cases": [
+    {
+      "id": "hpe-cray-openssh-timing",
+      "vendor": "hpe",
+      "cve_ids": [
+        "CVE-2024-6387"
+      ],
+      "product_pattern": "^HPE Cray",
+      "product_scope": "Listed Cray EX products; CcNc 1.9.5-39 / HFP 24.8.1 association requires exact bundle and platform review",
+      "question": "Can the reported earlier firmware date be independently tied to the listed product fix and first public disclosure?",
+      "advisory_urls": [
+        "https://support.hpe.com/hpesc/public/api/document/hpesbcr04733en_us"
+      ],
+      "release_source_leads": [
+        "https://support.hpe.com/connect/s/softwaredetails?collectionId=MTX-575acc2c0e334c3a&language=fr&softwareId=MTX_c65e615117944819bcdc6219e0"
+      ],
+      "research_record": "research/hpe-timing-investigation.txt",
+      "missing_evidence": [
+        "Independent retained release-availability evidence",
+        "Exact firmware bundle/component/platform linkage",
+        "Reviewed search for earlier public or customer disclosure"
+      ],
+      "alternative_explanations": [
+        "The earlier date may describe a build or publisher release label",
+        "An earlier disclosure may exist outside the collected sample"
+      ]
+    },
+    {
+      "id": "aruba-cx-release-date-gap",
+      "vendor": "aruba",
+      "cve_ids": [
+        "CVE-2024-6387"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "product_scope": "AOS-CX 10.13.1031; the 4100i history lead requires independent platform/release linkage",
+      "question": "Can the fixed branch's date be independently established when the reviewed history table omits that release?",
+      "advisory_urls": [
+        "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json"
+      ],
+      "release_source_leads": [
+        "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/4100i%20Release%20Notes/aos-cx-10-13-xx/version-history-43.html"
+      ],
+      "research_record": null,
+      "missing_evidence": [
+        "A retained independent date for the selected 10.13.1031 release",
+        "Historical availability and earlier-disclosure review",
+        "Selected hardware/release association independently checked"
+      ],
+      "alternative_explanations": [
+        "A documentation migration or incomplete table may explain the missing row",
+        "A neighbouring release date cannot establish the selected release's date"
+      ],
+      "claim_context": [
+        [
+          "product_version",
+          "10.13.1031"
+        ]
+      ]
+    },
+    {
+      "id": "fortiproxy-curl-documented-fix",
+      "vendor": "fortinet",
+      "cve_ids": [
+        "CVE-2023-38545",
+        "CVE-2023-38546"
+      ],
+      "product_pattern": "^FortiProxy 7.2.8",
+      "product_scope": "FortiProxy 7.2.8 resolved-issues statements; no affected range in earlier versions is inferred",
+      "question": "What independent release-date and disclosure evidence exists for this documented security fix?",
+      "advisory_urls": [
+        "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues"
+      ],
+      "release_source_leads": [],
+      "research_record": null,
+      "missing_evidence": [
+        "Independent retained release-date and availability evidence",
+        "Reviewed earlier-disclosure chronology"
+      ],
+      "alternative_explanations": [
+        "A normal disclosed security update is not a silent fix",
+        "A fixed statement alone does not establish exploitability in prior releases"
+      ]
+    }
+  ]
+}

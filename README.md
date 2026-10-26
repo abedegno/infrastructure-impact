@@ -173,3 +173,6 @@ provenance and completeness checks kept separate from scheduled HTTP collection.
 
 [Vendor evidence scorecards and revision timelines](docs/SCORECARDS.md) keep
 collection gaps, overlapping CVE states and publisher dates visible in the comparison.
+
+[Source-scope audits](docs/SOURCE_AUDIT.md) and [disclosure case files](docs/CASE_FILES.md)
+make collection limits and unresolved evidence questions reviewable.

@@ -47,6 +47,8 @@ def validate_config(config):
             if section == "vendors":
                 if entry.get("kind") not in ("rss", "index", "advisory_index", "checkpoint"):
                     raise ValueError("Unsupported feed discovery kind")
+                if entry.get("order", "oldest_first") not in ("oldest_first", "newest_first"):
+                    raise ValueError("Unsupported source index ordering")
                 limit = entry.get("limit", 4)
                 if isinstance(limit, bool) or not isinstance(limit, int) or not 0 <= limit <= 1000:
                     raise ValueError("Source limit must be an integer from 0 to 1000")

@@ -515,3 +515,7 @@ textarea {
 .evidence-timeline code {
   overflow-wrap: anywhere;
 }
+
+.change code {
+  overflow-wrap: anywhere;
+}

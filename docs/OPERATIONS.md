@@ -113,3 +113,31 @@ requested document still exists behind the edge rule.
 For a source visible in a normal browser, use the private
 [browser-assisted capture workflow](BROWSER_CAPTURE.md). A manual capture does
 not clear an HTTP error or satisfy the scheduled collector's freshness check.
+
+## Initial seven-day reliability review
+
+The public service's verified observation start is 2026-10-26T11:53:57Z, so its
+initial seven-day window cannot complete before **2026-11-02T11:53:57Z**. The
+repository variable `IMPACT_RELIABILITY_START` anchors that timestamp independently
+of the retrieved workflow-list window. For another deployment, set it to that
+service's evidenced first run; do not reuse this project's timestamp.
+
+The six-hour monitor retains `operations.json` as a `reliability-review-RUN_ID`
+GitHub Actions artifact for 30 days. It runs the operational report even if public
+health verification fails. The first normal monitor scheduled after this project's
+window is 2 November at 12:17 UTC, subject to GitHub scheduling delays. Until the
+window elapses, the report remains `waiting_for_window`.
+
+At eligibility, the automated review checks up to 1,000 runs per workflow, flags
+truncation, distinguishes successful scheduled collections/monitors from manual
+runs, includes the verified public-health receipt and source-failure count, and
+checks repository storage against 512 MiB. Fewer than seven successful scheduled
+collections or 24 successful scheduled monitors remains a finding. Failed,
+cancelled and timed-out runs remain visible. A missing health receipt or truncated
+history prevents automated review completion. A failed health receipt can complete
+a review **with findings**, never as a successful availability claim.
+
+`review_without_detected_operational_findings` is not a measurement of continuous
+uptime or a claim of complete vendor coverage. Existing partial source failures
+will yield `review_with_findings` if unresolved. Monitoring can complete an
+operational evidence review; independent human sign-off is not manufactured.

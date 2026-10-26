@@ -14,6 +14,7 @@ from ..domain import validate_advisory
 from ..exports import csv_export
 from ..settings import PACKAGE, Paths
 from ..storage.repository import connect
+from .casefiles import casefiles
 from .cohort import COHORT, coverage
 from .query import state
 from .release_assets import validate_asset
@@ -56,6 +57,7 @@ def public_projection(data, public_release_urls=()):
     ]
     for signal in data["signals"]:
         signal.pop("basis", None)
+    data["casefiles"] = casefiles(data)
     data["snapshot_notice"] = (
         "Dated public-source evidence; not a representative vendor security ranking. No finding of intentional concealment."
     )
@@ -71,8 +73,8 @@ def write_bundle(destination, data):
         json.dumps(data["research"].get("release_assets", []))
     )
     (destination / "catalogue.json").write_text(json.dumps(data.get("catalogue", {})))
-    for name in ("scorecards", "timeline"):
-        (destination / (name + ".json")).write_text(
+    for name in ("scorecards", "timeline", "source_audit", "casefiles"):
+        (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
                 {
                     **data.get(name, {}),

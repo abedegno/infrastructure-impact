@@ -112,6 +112,8 @@ class Application:
                 },
                 status=503 if stale else 200,
             )
+        if path == "/api/v1/source-audit":
+            return self.json(data.get("source_audit", {}))
         if path == "/api/v1/catalogue":
             return self.json(data.get("catalogue", {}))
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
@@ -126,6 +128,7 @@ class Application:
             "/api/export.csv",
             "/api/assessments",
             "/api/v1/scorecards",
+            "/api/v1/casefiles",
             "/api/v1/timeline",
             "/api/v1/advisories",
             "/api/v1/assessments",
@@ -133,8 +136,8 @@ class Application:
             selected = select(data, ids)
             if path == "/api/state":
                 return self.json(selected)
-            if path in ("/api/v1/scorecards", "/api/v1/timeline"):
-                key = "scorecards" if path.endswith("scorecards") else "timeline"
+            if path in ("/api/v1/scorecards", "/api/v1/timeline", "/api/v1/casefiles"):
+                key = path.rsplit("/", 1)[-1]
                 result = selected[key]
                 if query.get("vendor"):
                     vendor = query["vendor"][0]
@@ -146,6 +149,11 @@ class Application:
                             "vendors": [
                                 r for r in result.get("vendors", []) if r["vendor"] == vendor
                             ],
+                        }
+                    elif key == "casefiles":
+                        result = {
+                            **result,
+                            "cases": [c for c in result.get("cases", []) if c["vendor"] == vendor],
                         }
                     else:
                         result = {
@@ -218,6 +226,8 @@ class Application:
             "/catalogue.json",
             "/benchmark.json",
             "/scorecards.json",
+            "/source-audit.json",
+            "/casefiles.json",
             "/timeline.json",
             "/release-assets.json",
             "/impact.csv",

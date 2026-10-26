@@ -7,7 +7,7 @@ the package; the dashboard reads that definition from its publication. It is a
 purposive sample, including applicability exceptions and precautionary fixes.
 It is not a representative sample for ranking vendor security.
 
-`resources/benchmark-cases.json` contains **33 declared mapping expectations** over
+`resources/benchmark-cases.json` contains **47 declared mapping expectations** over
 primary sources from Arista, Palo Alto Networks, Check Point, Fortinet, HPE, Cisco and Aruba.
 Each identifies its vendor, CVE, exact source URL, product selector, expected status,
 optional version/scope constraint, rationale, review method and review date.
@@ -18,7 +18,7 @@ pair has a curated expectation.
 Run `impact evaluate` against a collected vault. `--fail-on-disagreement` exits
 nonzero when a declared case is absent or disagrees. Publications include
 `benchmark.json` with pass/missing/disagreement states and exact source fingerprints.
-Cases require the expected scoped statement. Twenty cases also declare forbidden
+Cases require the expected scoped statement. Thirty-four cases also declare forbidden
 statuses: a correct unaffected claim cannot mask an additional affected, fixed or
 investigating claim for the same selected product and CVE. A violation reports
 `forbidden_claim` and fails the CLI check. `negative_boundaries` and
@@ -38,3 +38,10 @@ The enlarged evaluation found and corrected nested Arista heading/date handling
 and a Panorama per-CVE exception in a shared Log4j table. Synthetic offline tests
 protect these scope boundaries. Publisher assertions still require product/version
 and configuration context before operational use.
+
+Fourteen additional OpenSSH cases cover Aruba fixed/affected version boundaries,
+legacy AOS-CX, cloud/support-token versus local mode, Rocky Linux 9 deployment
+scope, AOS-S and Fabric Composer, plus Arista EOS train exceptions. `claim_context`
+selects exact retained product-tree pairs; `claim_version_contains` selects a
+reviewed source expression before forbidden-status checks. These selectors do not
+implement version arithmetic or generalize a branch conclusion to other branches.

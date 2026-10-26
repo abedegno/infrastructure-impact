@@ -55,3 +55,8 @@ when a failure is classified (for example, `access_verification_required`).
 `vendor` filters. Their version 1 derived metadata and static Pages equivalents
 are described in [SCORECARDS.md](SCORECARDS.md). These endpoints never read the
 vault and do not assign vendor security scores.
+
+`/api/v1/source-audit` returns the configured-source/retained-response audit.
+`/api/v1/casefiles` accepts optional `cves` and `vendor` filters; the static
+equivalents are `source-audit.json` and `casefiles.json`. See
+[SOURCE_AUDIT.md](SOURCE_AUDIT.md) and [CASE_FILES.md](CASE_FILES.md).

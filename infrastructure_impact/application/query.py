@@ -6,6 +6,7 @@ import os
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import VENDORS, health, history, latest, now
+from .casefiles import casefiles
 from .catalogue import catalogue
 from .cohort import COHORT, coverage
 from .comparison import advisory_delays, compare
@@ -13,6 +14,7 @@ from .disclosure import latest_documents, signals
 from .evaluation import evaluate
 from .release_assets import listings
 from .scorecards import scorecards
+from .source_audit import source_audit
 from .timeline import evidence_timeline
 
 ROOT = Paths.from_env().home
@@ -52,7 +54,7 @@ def state(db, cohort=None):
     schedule = (
         json.loads(schedule_path.read_text()) if schedule_path.exists() else {"installed": False}
     )
-    return {
+    result = {
         "generated_at": generated,
         "vendors": dict(VENDORS),
         "plugins": [
@@ -73,6 +75,7 @@ def state(db, cohort=None):
             records, all_coverage, profiles, checks, all_scope, dict(VENDORS), generated
         ),
         "timeline": evidence_timeline(db),
+        "source_audit": source_audit(db, records),
         "benchmark": evaluate(records),
         "coverage": all_coverage,
         "changes": history(db, full=False),
@@ -87,3 +90,6 @@ def state(db, cohort=None):
             "evidence_snapshots": db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0],
         },
     }
+
+    result["casefiles"] = casefiles(result)
+    return result

@@ -20,9 +20,20 @@ jobs:
       - name: Check public HTML, dataset age and fingerprints
         env:
           PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
-        run: python3 checks/public_health.py "$PUBLIC_URL"
+        run: python3 checks/public_health.py "$PUBLIC_URL" | tee "$RUNNER_TEMP/public-health.json"
       - name: Summarize the seven-day observation window and storage budget
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
-        run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY"
+          OBSERVATION_START: ${{ vars.IMPACT_RELIABILITY_START }}
+        run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY" --observation-start "$OBSERVATION_START" --health-report "$RUNNER_TEMP/public-health.json"
+
+      - name: Retain operational review evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: reliability-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/operations.json
+          if-no-files-found: warn
+          retention-days: 30

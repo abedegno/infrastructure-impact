@@ -78,6 +78,8 @@ def main():
         assert (root / "current/schemas/advisory-v2.json").exists()
         assert (root / "current/scorecards.json").exists()
         assert (root / "current/timeline.json").exists()
+        assert (root / "current/source-audit.json").exists()
+        assert len(json.loads((root / "current/casefiles.json").read_text())["cases"]) == 3
     db.close()
     print(
         json.dumps(

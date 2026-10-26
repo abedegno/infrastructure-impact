@@ -99,6 +99,30 @@ function selectSnapshot(source, ids) {
     comparison: snapshotCompare(source.records, cohort, source.vendors, source.comparison),
     coverage,
     scorecards: selectScorecards(source.scorecards || {}, cohort),
+    casefiles: {
+      ...(source.casefiles || {}),
+      cases: (source.casefiles?.cases || [])
+        .filter((c) => c.cve_ids.some((id) => cohort.includes(id)))
+        .map((c) => {
+          const selected = c.cve_ids.filter((id) => cohort.includes(id)).sort();
+          const rows = c.exposure.by_cve.filter((r) => selected.includes(r.cve_id));
+          const count = rows.reduce((n, r) => n + r.statement_count, 0);
+          return {
+            ...c,
+            selected_cve_ids: selected,
+            exposure: {
+              ...c.exposure,
+              by_cve: rows,
+              statement_count: count,
+              publisher_statement_retained: count > 0,
+              observed_statuses: [...new Set(rows.flatMap((r) => r.observed_statuses))].sort(),
+            },
+            timeline_event_ids: c.timeline_event_ids.filter((e) =>
+              selected.some((id) => e.endsWith('-' + id)),
+            ),
+          };
+        }),
+    },
     timeline: {
       ...(source.timeline || {}),
       events: (source.timeline?.events || []).filter((e) => cohort.includes(e.cve_id)),

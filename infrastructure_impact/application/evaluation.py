@@ -22,6 +22,11 @@ def evaluate(records, *, definition=None):
             for a in r["assessments"]
             if a["cve_id"] == case["cve_id"]
             and re.search(case["product_pattern"], a["product"], re.I)
+            and all(pair in a.get("product_context", []) for pair in case.get("claim_context", []))
+            and (
+                not case.get("claim_version_contains")
+                or case["claim_version_contains"] in json.dumps(a["versions"])
+            )
         ]
 
         def agrees(a):

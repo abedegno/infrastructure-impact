@@ -488,6 +488,285 @@
         "fixed",
         "investigating"
       ]
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-34",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "unaffected"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "fixed",
+      "claim_context": [
+        [
+          "product_version",
+          "10.14.0007"
+        ]
+      ],
+      "rationale": "Publisher fixed-version leaf; no prior-version affectedness inferred.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-35",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "unaffected"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "fixed",
+      "claim_context": [
+        [
+          "product_version",
+          "10.13.1031"
+        ]
+      ],
+      "rationale": "Publisher fixed-version leaf; no prior-version affectedness inferred.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-36",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "unaffected"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "fixed",
+      "claim_context": [
+        [
+          "product_version",
+          "10.10.1131"
+        ]
+      ],
+      "rationale": "Publisher fixed-version leaf; no prior-version affectedness inferred.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-37",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "unaffected",
+        "fixed"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "affected",
+      "claim_context": [
+        [
+          "product_version_range",
+          "vers:semver/>=10.14.0000|<=10.14.0006"
+        ]
+      ],
+      "rationale": "Explicit publisher affected branch, retained without interpreting version ordering.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-38",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "unaffected",
+        "fixed"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "affected",
+      "claim_context": [
+        [
+          "product_version_range",
+          "vers:semver/>=10.13.0000|<=10.13.1030"
+        ]
+      ],
+      "rationale": "Explicit publisher affected branch, retained without interpreting version ordering.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-39",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "product_pattern": "^AOS-CX$",
+      "expected_status": "unaffected",
+      "claim_context": [
+        [
+          "legacy",
+          "vers:semver/>=10.0.0000|<10.10.0000"
+        ]
+      ],
+      "rationale": "Explicit earlier-branch exception; end of support does not imply affectedness.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-40",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "unaffected",
+        "fixed"
+      ],
+      "product_pattern": "^All switches and APs.*cloud mode.*support token",
+      "expected_status": "affected",
+      "rationale": "Exposure statement requires cloud mode and the activated support token.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-41",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "product_pattern": "^HPE Networking Instant On Switches running in local mode$",
+      "expected_status": "unaffected",
+      "rationale": "Local-mode exception remains separate from cloud-mode exposure.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-42",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "unaffected",
+        "fixed"
+      ],
+      "product_pattern": "^All supported versions running on Rocky Linux 9",
+      "expected_status": "affected",
+      "claim_context": [
+        [
+          "product_name",
+          "Aruba EdgeConnect Enterprise Orchestrator (on prem)"
+        ]
+      ],
+      "rationale": "Operating-system condition and on-premises deployment are part of the selected claim.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-43",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "product_pattern": "^ArubaOS-S Switches$",
+      "expected_status": "unaffected",
+      "rationale": "Explicit product exception; AOS-CX exposure does not transfer to AOS-S.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-44",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "unaffected"
+      ],
+      "product_pattern": "^Aruba Fabric Composer$",
+      "expected_status": "fixed",
+      "claim_context": [
+        [
+          "product_version",
+          "7.0.3"
+        ]
+      ],
+      "rationale": "Fixed leaf remains distinct from the affected release range.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "aruba-CVE-2024-6387-boundary-45",
+      "vendor": "aruba",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "unaffected",
+        "fixed"
+      ],
+      "product_pattern": "^Aruba Fabric Composer$",
+      "expected_status": "affected",
+      "claim_context": [
+        [
+          "product_version_range",
+          "vers:semver/>=7.0.0|<=7.0.2"
+        ]
+      ],
+      "rationale": "Affected range does not include the separate fixed-version leaf.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "arista-CVE-2024-6387-boundary-46",
+      "vendor": "arista",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100",
+      "product_pattern": "^EOS release",
+      "claim_version_contains": "4.32.1F",
+      "expected_status": "affected",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "unaffected"
+      ],
+      "rationale": "Reviewed EOS release-train boundary; other branches are independently scoped.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
+    },
+    {
+      "id": "arista-CVE-2024-6387-boundary-47",
+      "vendor": "arista",
+      "cve_id": "CVE-2024-6387",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100",
+      "product_pattern": "^EOS release",
+      "claim_version_contains": "4.31.X",
+      "expected_status": "unaffected",
+      "expected_scope": "cve_specific",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "rationale": "Reviewed EOS release-train boundary; other branches are independently scoped.",
+      "reviewed_at": "2026-10-26",
+      "review_method": "Assistant review of retained official CSAF product tree and publisher text, separate from normalized output"
     }
   ]
 }

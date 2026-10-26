@@ -40,6 +40,9 @@ def main(argv=None):
         "evaluate", help="Evaluate primary-source-reviewed benchmark expectations"
     )
     evaluation.add_argument("--fail-on-disagreement", action="store_true")
+    sub.add_parser(
+        "source-audit", help="Audit retained source scope without making network requests"
+    )
     sub.add_parser("report", help="Regenerate coverage reports")
     research = sub.add_parser("research", help="Release evidence and correction review workflow")
     research.add_argument("arguments", nargs=argparse.REMAINDER)
@@ -143,6 +146,12 @@ def main(argv=None):
         print(json.dumps(result, indent=2))
         if args.fail_on_disagreement and result["passed"] != result["total"]:
             raise SystemExit(1)
+    elif args.command == "source-audit":
+        from .application.source_audit import source_audit
+        from .storage.repository import latest
+
+        with closing(connect(read_only=True)) as db:
+            print(json.dumps(source_audit(db, latest(db)), indent=2))
     elif args.command == "report":
         from .application.reporting import report
 

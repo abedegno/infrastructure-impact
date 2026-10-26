@@ -36,6 +36,7 @@ def check(origin, expected=None):
         "advisories": len(data["records"]),
         "source_failures": data.get("collector", {}).get("last_run", {}).get("failures"),
         "benchmark_passed": data.get("benchmark", {}).get("passed"),
+        "benchmark_total": data.get("benchmark", {}).get("total"),
     }
 
 

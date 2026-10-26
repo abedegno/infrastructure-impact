@@ -4,6 +4,7 @@ import csv
 import io
 import json
 
+from .application.casefiles import select_casefiles
 from .application.comparison import compare
 from .application.scorecards import select_scorecards
 from .application.timeline import select_timeline
@@ -31,6 +32,7 @@ def select(data, cohort=None):
         "comparison": compare(data["records"], cohort, vendors=data["vendors"]),
         "scorecards": select_scorecards(data.get("scorecards", {}), cohort),
         "timeline": select_timeline(data.get("timeline", {}), cohort),
+        "casefiles": select_casefiles(data.get("casefiles", {}), cohort),
         "coverage": [
             next(
                 (p for p in data["coverage"] if p["vendor"] == vendor and p["cve_id"] == cid),

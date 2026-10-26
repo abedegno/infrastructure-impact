@@ -84,14 +84,10 @@ def run(aruba_limit=200):
         url = feed["url"]
         vendor = feed["vendor"]
         try:
-            from urllib.parse import urljoin
-
             raw = fetch(db, url, vendor)
-            urls = [
-                urljoin(url, line.strip())
-                for line in raw.decode().splitlines()
-                if line.strip().endswith(".json")
-            ]
+            from ..collection.discovery import inventory
+
+            urls = inventory(raw, url, "index")["urls"]
             inspected = 0
             found = set()
             errors = 0
