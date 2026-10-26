@@ -141,7 +141,9 @@ context; they do not independently prove firmware availability.
 `retain_unlinked_notice(document)` is an optional plugin hook, false by default.
 A reviewed parser may opt in a stable, schema-valid notice with an empty CVE list
 and no product assessments. The bundled opt-in is restricted to the exact reviewed
-Arista 0146 identity, source URL and format. Unknown empty records still fail
+Arista 0146 and 0141 identities, source URLs and format. When an advertised CSAF
+file contains no product dispositions, the resolver can retain a reviewed HTML
+notice only through this explicit hook; an arbitrary empty envelope is insufficient. Unknown empty records still fail
 storage validation. This is distinct from `non_cve_notice`, which excludes known
 non-CVE material from advisory ingestion. No GHSA-to-CVE association is inferred.
 Unlinked retained notices appear in the global Vendor gaps report; they do not
