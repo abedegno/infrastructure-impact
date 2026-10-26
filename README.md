@@ -33,9 +33,9 @@ specific source/layout limits; this is not a complete inventory of those vendors
 The benchmark spans multiple components, including PHP, OpenSSL, OpenSSH, curl,
 Log4j and Linux. Custom CVE cohorts are supported.
 
-**[Open the public dashboard](https://abedegno.github.io/infrastructure-impact-service/)** · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
+**[Open the public dashboard](https://abedegno.github.io/infrastructure-impact/)** · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
 
-The hosted static reader refreshes through a private scheduled collector; see
+The hosted static reader refreshes through a scheduled collector with encrypted evidence backups; see
 [hosting and recovery](docs/HOSTED_SERVICE.md) for cadence, monitoring and limits.
 
 ## Quick start with Docker
@@ -66,7 +66,7 @@ Requirements: Python 3.11+, [uv](https://docs.astral.sh/uv/), and Poppler's
 From a checkout:
 
 ```sh
-uv sync --frozen --group build
+uv sync --frozen --group build --group hosted
 uv run impact plugins
 uv run impact migrate
 uv run impact collect
@@ -119,7 +119,7 @@ no public write, raw-evidence or collection-trigger endpoints.
 ## Development
 
 ```sh
-uv sync --frozen --group build
+uv sync --frozen --group build --group hosted
 npm ci --ignore-scripts
 uv run pytest -q
 uv run ruff check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py ops

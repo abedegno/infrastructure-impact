@@ -1,12 +1,14 @@
 """Scheduled writer for a private service repository; publish only its public output.
 
-The state directory must remain private. It contains compressed SQLite backups
-with raw evidence. It must never be passed to a Pages/artifact upload action.
+The unencrypted state directory must remain private. The public-runner mode
+requires authenticated encryption and a dedicated secret key. Neither form of
+state may be passed to a Pages/artifact upload action.
 """
 
 import argparse
 import gzip
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -20,10 +22,10 @@ MAX_VAULT_BYTES = 512 * 1024 * 1024
 MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
 
 
-def restore(state, database):
+def restore(state, database, encryption_key=None):
     receipt = state / "current.json"
     if not receipt.exists():
-        if list(state.glob("*.gz")):
+        if list(state.glob("vault-*")):
             raise ValueError(
                 "Backup archives exist without a current manifest; manual recovery required"
             )
@@ -38,8 +40,20 @@ def restore(state, database):
         or hashlib.sha256(archive.read_bytes()).hexdigest() != manifest["sha256"]
     ):
         raise ValueError("Private backup size or fingerprint check failed")
+    compressed = archive.read_bytes()
+    if manifest.get("encryption") == "fernet-v1":
+        from cryptography.fernet import Fernet
+
+        if not encryption_key:
+            raise ValueError("Encrypted backup requires the dedicated recovery key")
+        compressed = Fernet(encryption_key).decrypt(compressed)
+    elif encryption_key:
+        raise ValueError("Public-runner state must never contain a plaintext backup")
     database.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(archive, "rb") as source, database.open("xb") as target:
+    with (
+        gzip.GzipFile(fileobj=io.BytesIO(compressed), mode="rb") as source,
+        database.open("xb") as target,
+    ):
         count = 0
         while block := source.read(1024 * 1024):
             count += len(block)
@@ -52,10 +66,10 @@ def restore(state, database):
     return True
 
 
-def backup(state, database):
+def backup(state, database, encryption_key=None):
     state.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-    name = "vault-" + stamp + ".sqlite3.gz"
+    name = "vault-" + stamp + ".sqlite3.gz" + (".fernet" if encryption_key else "")
     with tempfile.TemporaryDirectory() as directory:
         copy = Path(directory) / "vault.sqlite3"
         with closing(sqlite3.connect(database)) as source, closing(sqlite3.connect(copy)) as target:
@@ -68,6 +82,13 @@ def backup(state, database):
         if pending.stat().st_size > MAX_ARCHIVE_BYTES:
             pending.unlink()
             raise ValueError("Compressed private vault exceeds repository storage budget")
+        if encryption_key:
+            from cryptography.fernet import Fernet
+
+            pending.write_bytes(Fernet(encryption_key).encrypt(pending.read_bytes()))
+            if pending.stat().st_size > MAX_ARCHIVE_BYTES:
+                pending.unlink()
+                raise ValueError("Encrypted backup exceeds repository storage budget")
         pending.replace(state / name)
     manifest = {
         "archive": name,
@@ -75,12 +96,13 @@ def backup(state, database):
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "source_commit": os.environ.get("IMPACT_SOURCE_COMMIT", "local"),
         "private": True,
+        "encryption": "fernet-v1" if encryption_key else None,
     }
     temp = state / ".current.json"
     temp.write_text(json.dumps(manifest, indent=2) + "\n")
     temp.replace(state / "current.json")
     # This directory is service-owned. Git history retains previous private states.
-    for previous in sorted(state.glob("vault-*.sqlite3.gz"))[:-3]:
+    for previous in sorted(state.glob("vault-*"))[:-3]:
         previous.unlink()
     return manifest
 
@@ -90,14 +112,18 @@ def main():
     parser.add_argument("--state-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--base-path", default="/")
+    parser.add_argument("--encrypted-state", action="store_true")
     args = parser.parse_args()
+    encryption_key = os.environ.get("IMPACT_STATE_KEY") if args.encrypted_state else None
+    if args.encrypted_state and not encryption_key:
+        parser.error("Encrypted public-runner state requires IMPACT_STATE_KEY")
     state, output = args.state_dir.resolve(), args.output.resolve()
     if state == output or state.is_relative_to(output) or output.is_relative_to(state):
         parser.error("Private state and public output must be separate directory trees")
     with tempfile.TemporaryDirectory(prefix="impact-writer-") as directory:
         home = Path(directory)
         database = home / "data/intel.sqlite3"
-        restore(state, database)
+        restore(state, database, encryption_key)
         os.environ.update(
             IMPACT_HOME=str(home),
             IMPACT_DATABASE=str(database),
@@ -129,7 +155,7 @@ def main():
             audit()
         finally:
             if database.exists():
-                backup(state, database)
+                backup(state, database, encryption_key)
         print(
             json.dumps(
                 {

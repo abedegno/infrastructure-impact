@@ -1,0 +1,81 @@
+# Public-runner alternative: Pages and an encrypted publication-state branch.
+# Requires secret IMPACT_STATE_KEY; never seed it with an existing local vault.
+# Set repository variable IMPACT_SOURCE_COMMIT to a reviewed full source commit.
+name: Collect and publish
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 8 * * *'
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: service-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: service
+          ref: publication-state
+      - name: Check pinned source
+        env:
+          SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
+        run: |
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/infrastructure-impact
+          ref: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - run: python -m pip install uv==0.11.21
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Install locked source
+        working-directory: source
+        run: uv sync --frozen --no-dev --group hosted
+      - name: Restore, collect, audit and back up privately
+        working-directory: source
+        env:
+          IMPACT_SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
+          PRIVATE_STATE: ${{ github.workspace }}/service/state
+          PUBLIC_OUTPUT: ${{ runner.temp }}/public-publication
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: uv run --no-dev python ops/hosted_job.py --state-dir "$PRIVATE_STATE" --output "$PUBLIC_OUTPUT" --base-path "$BASE_PATH" --encrypted-state
+      - name: Retain only encrypted recovery copies
+        if: always()
+        working-directory: service
+        run: |
+          if test -f state/current.json; then
+            git config user.name 'Infrastructure Impact collector'
+            git config user.email 'collector@users.noreply.github.com'
+            python3 -c 'import json,pathlib; d=pathlib.Path("state"); m=json.loads((d/"current.json").read_text()); assert m["encryption"]=="fernet-v1"; assert all(p.name=="current.json" or p.name.endswith(".fernet") for p in d.iterdir())'
+            git add state
+            if ! git diff --cached --quiet; then
+              git commit -m 'Retain collected evidence and recovery copies'
+              git push
+            fi
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ runner.temp }}/public-publication
+      - name: Publish sanitized generation
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Verify public availability and freshness
+        env:
+          PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
+        working-directory: source
+        run: python checks/public_health.py "$PUBLIC_URL"

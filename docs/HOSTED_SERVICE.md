@@ -1,53 +1,73 @@
 # Hosted public service
 
-Public dashboard: https://abedegno.github.io/infrastructure-impact-service/
+Public dashboard: https://abedegno.github.io/infrastructure-impact/
 Source repository: https://github.com/abedegno/infrastructure-impact
 
-The deployment uses a separate **private** service repository. A pinned, reviewed
-source commit supplies the collector. GitHub Actions restores its private vault,
-collects official sources, audits evidence, creates an online compressed backup,
-commits that state privately, then deploys **only** the sanitized publication to
-GitHub Pages. No personal access token is stored in the workflow; its built-in
-GitHub token is scoped to the service repository.
+The active deployment uses public GitHub Actions runners. A reviewed source commit
+is pinned by repository variable `IMPACT_SOURCE_COMMIT`. The writer starts from
+its own hosted state, collects official public sources, audits evidence, creates an
+authenticated encrypted recovery copy, and deploys **only the sanitized publication**
+to GitHub Pages. The maintainer's existing local research vault and notes are not
+uploaded or used to seed the hosted service.
+
+## Scheduling and monitoring
 
 Collection runs daily at **08:37 UTC**, with manual dispatch available. GitHub can
-delay scheduled jobs; the cadence is not an availability SLA. A separate scheduled
-monitor checks the public HTML, snapshot age (36-hour threshold) and checksum
-manifest every six hours. Failed Actions runs are visible to service maintainers;
-notification delivery follows their existing GitHub notification settings.
-No Slack or email integration is configured by this project.
+delay scheduled jobs; the cadence is not an availability SLA. A separate monitor
+checks public HTML, snapshot age (36-hour threshold) and the checksum manifest
+every six hours. Actions failures are visible to maintainers; notification delivery
+uses their existing GitHub settings. No Slack or email integration is configured.
 
-The public UI supports cohort filtering and JSON/CSV exports in the browser. It
-also serves `snapshot.json`, `catalogue.json`, `benchmark.json`, the schema and
-source fingerprint JSON. **Pages is a static reader**: it does not run Python or
-provide the Python service's query-string API routes. Use the documented Compose
-reader on a persistent host when a live REST query service is needed. Neither
-public deployment exposes raw source bytes, the private database or review notes.
+The UI supports cohort filtering and JSON/CSV exports in the browser. It also serves
+`snapshot.json`, `catalogue.json`, `benchmark.json`, the schema and source fingerprint
+JSON. **Pages is a static reader**: it does not run Python or implement the Python
+reader's query-string REST routes. Use Compose on a persistent host for a live REST
+query service. Neither public deployment exposes plaintext source bytes, the vault
+or private review notes.
 
-## Backups and recovery
+## Encrypted backups and recovery
 
-Private state keeps three current compressed SQLite recovery copies plus their
-private Git history, with a SHA-256 manifest. Restore validates the archive hash,
-limits decompression and checks SQLite integrity before collecting. The state and
-public output directories must be separate. A failed collection retains evidence
-privately and does not replace the public site when all source checks failed.
-A damaged backup requires deliberate recovery from a prior private commit; it is
-not silently discarded in favor of an empty vault.
+The public `publication-state` branch stores only encrypted backup archives and
+public manifests. Its three current compressed SQLite recovery copies use Fernet
+from the maintained `cryptography` library, providing authentication and encryption.
+`IMPACT_STATE_KEY` is a dedicated Actions secret, never a committed file or Pages
+artifact. A local recovery copy is retained outside Git. Losing the key prevents
+recovery; compromise could expose encrypted history. Keep a protected recovery
+copy and plan key rotation deliberately. Ciphertext sizes and timestamps are public.
+This is not forward-secret storage.
 
-The repository-backed vault is an initial deployment with explicit storage limits:
-512 MiB uncompressed and 50 MiB per archive. Monitor private repository size and
-migrate to persistent-host/object-storage backups before growth approaches platform
-limits. Private Git history is retention, not an off-provider disaster-recovery
-copy. Use the Compose backup/recovery procedure for independent archival storage.
+Restore verifies archive fingerprints, authenticates/decrypts before processing,
+limits decompression and checks SQLite integrity. Public-runner mode rejects
+plaintext backups and refuses to run without its key. Backup state and public output
+must be separate directories. The workflow uploads only the sanitized output.
+A failed collection keeps its evidence encrypted and does not replace the public
+site when all source checks failed. Corrupt or missing recovery metadata requires
+manual recovery; it is not silently replaced with an empty vault.
+
+Restore a prior encrypted archive using the protected key and the hosted restore
+helper, audit it, then test a collection before replacing the current state manifest.
+Never paste the key in an issue, shell argument, log or source file. The repository
+state is not an off-provider disaster-recovery copy; retain an independent protected
+copy of the key and required archives using the operator's approved backup storage.
+
+Storage limits are 512 MiB uncompressed and 50 MiB per archive. Monitor branch/repo
+size and migrate to persistent-host or object-storage backups before growth reaches
+platform limits. Removing old working-tree copies does not erase public Git history;
+previous ciphertext remains retrievable and key rotation must account for it.
 
 ## Operate and update
 
-The templates are `deploy/github-service.yaml` and `deploy/github-monitor.yaml`.
-Install them only in a private service repository with Pages enabled. Set repository
-variable `IMPACT_SOURCE_COMMIT` to a reviewed full source commit. The writer refuses
-a public service repository; never upload `state/` as a Pages or Actions artifact.
-Update the pin only after source CI passes, then manually dispatch collection and
-check publication freshness. The source repo does not itself schedule collection.
+Active workflows are `.github/workflows/collect.yaml` and `monitor.yaml`, with the
+reusable public-runner template in `deploy/github-public-service.yaml`. Collection
+triggers are schedule/manual dispatch, not pull requests. Only trusted maintainers
+should modify these workflows, the source pin or Actions secrets. Update the pin
+after source CI passes, manually dispatch collection, and verify public freshness.
+The workflow uses its built-in repository-scoped GitHub token, not a personal token.
 
-The existing Mac research schedule uses its own vault and is independent of the
-hosted service. Existing private Sites previews are also separate and unchanged.
+`deploy/github-service.yaml` remains a private-repository alternative. The separate
+private service repo was configured, but its jobs were blocked by account billing
+or spending limits and are disabled. Billing settings were not changed. Do not
+interpret that alternative as the active service.
+
+The Mac research schedule retains its own local vault and remains independent.
+Existing private Sites previews are separate and unchanged.

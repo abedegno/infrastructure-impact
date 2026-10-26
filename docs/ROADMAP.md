@@ -13,7 +13,7 @@ priorities, not delivery commitments or claims of complete vendor coverage.
 
 ## Coverage and deployment expansion
 
-The source now includes a coverage catalogue, a 24-CVE benchmark, declared primary-source mapping evaluations, release-note revision history and stricter availability review gates. A separate private scheduled collector publishes the public static dashboard, with private recovery copies and freshness monitoring. See the corresponding guides for current limits.
+The source now includes a coverage catalogue, a 24-CVE benchmark, declared primary-source mapping evaluations, release-note revision history and stricter availability review gates. A scheduled collector publishes the public static dashboard, with authenticated encrypted recovery copies and freshness monitoring. See the corresponding guides for current limits.
 
 ## Next priorities
 

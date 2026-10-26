@@ -330,6 +330,11 @@ function renderCorrection() {
 
 function renderCatalogue() {
   const catalogue = data.catalogue;
+  const evaluation = data.benchmark;
+  const evaluated = evaluation
+    ? `<p class="notice">${evaluation.passed}/${evaluation.total} declared mapping expectations matched. Global extraction precision is not estimated. ${link('/benchmark.json', 'Evaluation details')}</p>`
+    : '';
+
   $('#view').innerHTML =
-    `<h2>Vendor coverage catalogue</h2><p>Product families and exact source boundaries. Freshness describes successful collection checks, not the date a vendor last updated an advisory.</p>${(catalogue?.vendors || []).map((v) => `<article><h3>${esc(v.name)} · ${badge(v.freshness)}</h3><p>${esc(v.product_families.join('; '))}</p><p>${esc(v.history_scope)}</p><p>Expected cadence: ${v.cadence_hours} hours · Stale after ${v.stale_after_hours} hours · Last successful check: ${date(v.last_successful_check)} · ${v.current_source_errors} source errors</p><ul>${v.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><details><summary>${v.sources.length} configured sources</summary>${v.sources.map((s) => `<p>${esc(s.role)} · ${link(s.url, 'Official source')}</p>`).join('')}</details></article>`).join('')}`;
+    `<h2>Vendor coverage catalogue</h2>${evaluated}<p>Product families and exact source boundaries. Freshness describes successful collection checks, not the date a vendor last updated an advisory.</p>${(catalogue?.vendors || []).map((v) => `<article><h3>${esc(v.name)} · ${badge(v.freshness)}</h3><p>${esc(v.product_families.join('; '))}</p><p>${esc(v.history_scope)}</p><p>Expected cadence: ${v.cadence_hours} hours · Stale after ${v.stale_after_hours} hours · Last successful check: ${date(v.last_successful_check)} · ${v.current_source_errors} source errors</p><ul>${v.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><details><summary>${v.sources.length} configured sources</summary>${v.sources.map((s) => `<p>${esc(s.role)} · ${link(s.url, 'Official source')}</p>`).join('')}</details></article>`).join('')}`;
 }

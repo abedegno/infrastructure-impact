@@ -7,7 +7,7 @@ coverage improvements and documentation. Start with the [README](README.md),
 ## Development workflow
 
 1. Install Python 3.11+, uv, Node.js/npm and Poppler (`pdftotext`).
-2. Run `uv sync --frozen --group build` and `npm ci --ignore-scripts`.
+2. Run `uv sync --frozen --group build --group hosted` and `npm ci --ignore-scripts`.
 3. Make a focused change with an offline regression case where behavior changes.
 4. Run the checks in the README. Test installed packages when changing resources,
    entry points, packaging or plugin contracts.

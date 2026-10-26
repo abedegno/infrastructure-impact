@@ -193,3 +193,35 @@ class ExpansionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EncryptedStateTests(unittest.TestCase):
+    def test_encrypted_backup_roundtrip_and_wrong_key_rejection(self):
+        from cryptography.fernet import Fernet, InvalidToken
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / "vault.sqlite3"
+            with connect(database) as db:
+                evidence(db, b"PRIVATE RAW SENTINEL", "https://www.arista.com/test")
+            key = Fernet.generate_key()
+            receipt = hosted.backup(root / "encrypted", database, key)
+            self.assertEqual(receipt["encryption"], "fernet-v1")
+            archive = root / "encrypted" / receipt["archive"]
+            self.assertNotIn(b"PRIVATE RAW SENTINEL", archive.read_bytes())
+            self.assertTrue(hosted.restore(root / "encrypted", root / "recovered.sqlite3", key))
+            with self.assertRaises(InvalidToken):
+                hosted.restore(root / "encrypted", root / "wrong.sqlite3", Fernet.generate_key())
+            with self.assertRaises(ValueError):
+                hosted.restore(root / "encrypted", root / "no-key.sqlite3")
+
+    def test_public_runner_rejects_plaintext_state(self):
+        from cryptography.fernet import Fernet
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / "vault.sqlite3"
+            connect(database).close()
+            hosted.backup(root / "private", database)
+            with self.assertRaises(ValueError):
+                hosted.restore(root / "private", root / "public.sqlite3", Fernet.generate_key())
