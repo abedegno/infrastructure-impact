@@ -221,3 +221,32 @@ def test_monitor_checks_cohort_parts_without_full_archive_download(tmp_path, mon
     assert result["status"] == "fresh" and result["advisories"] == 3
     assert result["delivery"] == "cohort_parts_v1" and not result["full_archive_download_verified"]
     assert result["checked_default_bytes"] < 8_000_000
+
+
+@pytest.mark.parametrize("fault", [False, True])
+def test_json_download_hydrates_history_and_reports_fetch_failure(tmp_path, fault):
+    d = dataset()
+    d["changes"] = [dict(id=1, details={"Synthetic": "history"})]
+    generation = publish(d, tmp_path)
+    script = r"""
+const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
+const x=JSON.parse(fs.readFileSync(0,'utf8')), handlers={},blobs=[],feedback={textContent:''};
+const changes=new Set(JSON.parse(fs.readFileSync(x.root+'/data/index.json','utf8')).changes.map(p=>p.path));
+URL.createObjectURL=b=>{blobs.push(b);return 'blob:synthetic'};URL.revokeObjectURL=()=>{};
+const fetch=async(path)=>{const file=path.replace('/site/','');if(x.fault&&changes.has(file))return new Response('',{status:404});return new Response(fs.readFileSync(x.root+'/'+file));};
+const c={window:{fetch},document:{baseURI:'https://example.test/site/',addEventListener:(n,fn)=>handlers[n]=fn,querySelector:()=>feedback,createElement:()=>({click(){}})},location:{origin:'https://example.test'},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,setTimeout:fn=>fn()};
+vm.createContext(c);for(const f of ['delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+(async()=>{await c.window.fetch('/api/state?cves=CVE-2025-12345');await handlers.click({target:{closest:()=>({id:'json-export'})},preventDefault(){}});process.stdout.write(JSON.stringify({exported:blobs.length?JSON.parse(await blobs[0].text()):null,error:feedback.textContent}));})();
+"""
+    result = json.loads(
+        subprocess.check_output(
+            ["node", "-e", script],
+            input=json.dumps(
+                dict(root=str(generation), web=str(PACKAGE / "web"), fault=fault)
+            ).encode(),
+        )
+    )
+    if fault:
+        assert result["exported"] is None and result["error"].startswith("Export failed:")
+    else:
+        assert result["exported"]["changes"] == d["changes"] and not result["error"]

@@ -606,20 +606,33 @@ if (typeof document !== 'undefined') {
     }
     return originalFetch(input, options);
   };
-  document.addEventListener('click', (e) => {
+  document.addEventListener('click', async (e) => {
     const a = e.target.closest('#json-export,#csv-export');
     if (!a) return;
     e.preventDefault();
     if (!current) return;
+    const chosen = current;
     const csv = a.id === 'csv-export';
-    const content = csv ? snapshotCSV(current) : JSON.stringify(exportSnapshot(current), null, 2);
-    const url = URL.createObjectURL(
-      new Blob([content], { type: csv ? 'text/csv' : 'application/json' }),
-    );
-    const out = document.createElement('a');
-    out.href = url;
-    out.download = csv ? 'impact.csv' : 'impact.json';
-    out.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    try {
+      const complete = csv
+        ? chosen
+        : {
+            ...chosen,
+            changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
+          };
+      const content = csv
+        ? snapshotCSV(complete)
+        : JSON.stringify(exportSnapshot(complete), null, 2);
+      const url = URL.createObjectURL(
+        new Blob([content], { type: csv ? 'text/csv' : 'application/json' }),
+      );
+      const out = document.createElement('a');
+      out.href = url;
+      out.download = csv ? 'impact.csv' : 'impact.json';
+      out.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      document.querySelector('#feedback').textContent = 'Export failed: ' + error.message;
+    }
   });
 }
