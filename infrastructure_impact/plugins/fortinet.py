@@ -25,7 +25,13 @@ def resolve(raw, url, fetch):
             target = "https://www.fortiguard.com/psirt/" + identity
             html = fetch(target)
             # Only a fully reviewed, identity-matching layout can replace the empty envelope.
-            investigation_advisory(html, target, "fortinet")
+            try:
+                investigation_advisory(html, target, "fortinet")
+            except ValueError:
+                # Preserve a valid title-scoped structured record with unknown
+                # applicability when the optional HTML layout is unsupported.
+                # Truly empty envelopes still fail normal schema validation.
+                return url, raw
             return target, html
     return url, raw
 

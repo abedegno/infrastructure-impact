@@ -289,3 +289,23 @@ def test_reader_uses_the_taxonomy_pinned_to_its_publication():
         )
     )
     assert js == result
+
+
+def test_unreviewed_html_keeps_structured_title_scope_without_product_inference():
+    from infrastructure_impact.plugins.shared import structured
+
+    url = "https://filestore.fortinet.com/synthetic-envelope.json"
+    raw = json.dumps(
+        {
+            "document": {
+                "title": "Synthetic component " + CID,
+                "tracking": {"id": "FG-IR-25-123", "status": "final"},
+            }
+        }
+    ).encode()
+    resolved_url, result = resolve(raw, url, lambda _: b"<html>Unreviewed publisher layout</html>")
+    assert (resolved_url, result) == (url, raw)
+    record = structured(result, resolved_url, "fortinet")
+    assert record["cves"] == [CID]
+    assert record["assessments"] == []
+    assert any("no encoded product assessments" in w.lower() for w in record["warnings"])
