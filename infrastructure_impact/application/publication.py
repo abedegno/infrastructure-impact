@@ -140,16 +140,24 @@ def write_bundle(destination, data):
         path = destination / "changes" / f"{change['id']}.json"
         path.parent.mkdir(exist_ok=True)
         path.write_text(json.dumps(change))
-    for name in ("app.js", "style.css", "snapshot.js"):
+    for name in ("app.js", "style.css", "snapshot.js", "delivery.js"):
         shutil.copyfile(PACKAGE / "web" / name, destination / name)
     html = (
         (PACKAGE / "web/index.html")
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
+    # Immutable script/style paths avoid mixing old cached readers with a new
+    # delivery contract. Root names remain available for existing integrations.
+    (destination / "assets").mkdir(exist_ok=True)
+    for name in ("app.js", "snapshot.js", "delivery.js", "style.css"):
+        raw = (destination / name).read_bytes()
+        asset = "assets/" + sha256(raw).hexdigest() + Path(name).suffix
+        (destination / asset).write_bytes(raw)
+        html = html.replace('"/' + name + '"', '"/' + asset + '"')
     html = html.replace("LOCAL RESEARCH PILOT", "EVIDENCE PUBLICATION")
     notice = '<div class="notice">Evidence publication generated ' + data["generated_at"][:10]
     notice += ". Review source dates and coverage. Collection status is shown under Collection health.</div>"
@@ -192,12 +200,16 @@ def write_bundle(destination, data):
         "publisher-history-v1.json",
         "extraction-review-v1.json",
         "review-submission-v1.json",
+        "static-index-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")
     (destination / "_headers").write_text(
         "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'\n"
     )
+    from .static_delivery import write_static_delivery
+
+    write_static_delivery(destination, data)
     manifest = {
         str(p.relative_to(destination)): sha256(p.read_bytes()).hexdigest()
         for p in sorted(destination.rglob("*"))

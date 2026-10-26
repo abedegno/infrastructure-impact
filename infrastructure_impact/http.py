@@ -257,6 +257,7 @@ class Application:
             "/app.js",
             "/style.css",
             "/snapshot.js",
+            "/delivery.js",
             "/snapshot.json",
             "/catalogue.json",
             "/benchmark.json",
@@ -279,6 +280,7 @@ class Application:
             "/schemas/publisher-history-v1.json",
             "/schemas/extraction-review-v1.json",
             "/schemas/review-submission-v1.json",
+            "/schemas/static-index-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",
@@ -286,6 +288,12 @@ class Application:
             "/research/aruba-cx-investigation.txt",
             "/research/juniper-security-rebuilds.txt",
         ) or re.fullmatch(r"/(evidence|changes)/\d+\.json", path)
+        allowed = (
+            allowed
+            or path == "/data/index.json"
+            or re.fullmatch(r"/data/[a-f0-9]{64}\.json", path)
+            or re.fullmatch(r"/assets/[a-f0-9]{64}\.(?:js|css)", path)
+        )
         if not allowed:
             return 404, "application/json", b'{"error":"Not found"}'
         target = generation / ("index.html" if path == "/" else path.lstrip("/"))

@@ -3,6 +3,14 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Cohort delivery and review follow-up — 2026-10-26
+
+- Load selected CVE evidence in content-addressed parts with bounded concurrency and explicit generation/hash checks. Keep full archive downloads available.
+- Preserve complete vendor/product selection context and Python/static comparison parity; defer source-change history.
+- Pin unchanged Fortinet release-article evidence despite surrounding byte changes.
+- Add a curated Check Point vendor-blog source and three source-led assertions; detailed blocked SK checks remain gaps.
+- Expand the review packet to 25 assertions and document maintainer conflicts and partial adjudication.
+
 ## Review and infrastructure coverage — 2026-10-26
 
 - Add identity-checked Juniper CNA collection and bounded RSS follow-ups, retaining platform/configuration prerequisites.

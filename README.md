@@ -189,3 +189,6 @@ for queue progress, retry policy, additional sources and coverage limits.
 Vendor comparison now uses a shared reporting window and exact product scopes,
 with source gaps and explicit suppression of unsupported rates and timing. See
 [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md).
+
+Static browser delivery now loads selected CVE evidence in verified parts; the full
+archive remains available for explicit downloads. See [delivery architecture](docs/STATIC_DELIVERY.md).

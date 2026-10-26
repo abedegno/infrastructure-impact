@@ -74,13 +74,15 @@
         "Quantum Spark",
         "Gaia OS",
         "Scalable Platforms",
-        "Products listed by the active advisory index"
+        "Products listed by the active advisory index",
+        "Explicit Quantum Force, CloudGuard Network and Quantum Spark customer statements in a curated vendor blog"
       ],
       "history_scope": "Active product index plus two reviewed public SK articles",
       "known_gaps": [
         "Active index is not a complete archive.",
         "Details-in-SK rows remain unknown; IPS signatures do not establish affectedness.",
-        "Cloud requests to some support pages receive interactive bot-verification pages. These are classified as access gaps, never solved or treated as advisory content."
+        "Cloud requests to some support pages receive interactive bot-verification pages. These are classified as access gaps, never solved or treated as advisory content.",
+        "The curated regreSSHion blog does not replace detailed SK platform/version exceptions or Terrapin scope."
       ]
     },
     "fortinet": {

@@ -85,3 +85,11 @@ survive the public projection without exporting private conditions or notes. A
 removed branch is a review signal, never an unaffectedness claim. Changes retain
 their source revision, parser reinterpretation or source-view classification;
 changed extraction alone does not establish a publisher disclosure change.
+
+## Cohort delivery
+
+The public projection feeds a content-addressed static delivery layer. See
+[Static cohort delivery](STATIC_DELIVERY.md) for the index contract, budgets, cache
+behavior, integrity checks and parity tests. The Python reader and full snapshot
+retain their existing contracts; selected browser transfers preserve global
+product-label scope without loading unrelated assessment bodies.

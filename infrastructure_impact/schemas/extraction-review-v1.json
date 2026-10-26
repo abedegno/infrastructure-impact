@@ -136,7 +136,12 @@
             "required": ["scheme", "sha256"],
             "properties": {
               "scheme": {
-                "enum": ["arista_advisory_body_v1", "fortinet_investigation_v1"]
+                "enum": [
+                  "arista_advisory_body_v1",
+                  "fortinet_investigation_v1",
+                  "fortinet_release_article_v1",
+                  "checkpoint_customer_section_v1"
+                ]
               },
               "sha256": {
                 "type": "string",

@@ -179,6 +179,10 @@
     {
       "vendor": "hpe",
       "url": "https://support.hpe.com/hpesc/public/api/document/hpesbhf05034en_us"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://blog.checkpoint.com/research/cve-2024-6387-regresshion-remote-code-execution-vulnerability-seen-in-openssh/"
     }
   ],
   "release_documents": [

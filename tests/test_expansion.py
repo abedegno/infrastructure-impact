@@ -176,8 +176,9 @@ class ExpansionTests(unittest.TestCase):
             with patch.dict(os.environ, {"IMPACT_BASE_PATH": "/impact/"}):
                 generation = publish(data, root / "public")
             html = (generation / "index.html").read_text()
-            self.assertIn('src="/impact/snapshot.js"', html)
-            self.assertIn('href="/impact/style.css"', html)
+            self.assertIn('src="/impact/assets/', html)
+            self.assertNotIn('src="/snapshot.js"', html)
+            self.assertIn('href="/impact/assets/', html)
             self.assertTrue((generation / "catalogue.json").exists())
             hosted.backup(root / "private", database)
             target = root / "restore/vault.sqlite3"

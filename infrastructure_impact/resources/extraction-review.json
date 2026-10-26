@@ -163,7 +163,11 @@
       "forbidden_statuses": [
         "affected",
         "unaffected"
-      ]
+      ],
+      "reviewed_scope": {
+        "scheme": "fortinet_release_article_v1",
+        "sha256": "70cc2c85565968c885322f22d75c16d8e99eaeba4168bb419de99a82f4970658"
+      }
     },
     {
       "id": "fortinet-source-check-12",
@@ -179,7 +183,11 @@
       "forbidden_statuses": [
         "affected",
         "unaffected"
-      ]
+      ],
+      "reviewed_scope": {
+        "scheme": "fortinet_release_article_v1",
+        "sha256": "70cc2c85565968c885322f22d75c16d8e99eaeba4168bb419de99a82f4970658"
+      }
     },
     {
       "id": "hpe-source-check-13",
@@ -328,6 +336,63 @@
       "rationale": "Preserve exact BIOS expression and AMD processor scope; no generalized server affectedness.",
       "version_contains": "1.40_01-09-2026",
       "exposure_contains": "AMD"
+    },
+    {
+      "id": "checkpoint-source-check-23",
+      "vendor": "checkpoint",
+      "source_url": "https://blog.checkpoint.com/research/cve-2024-6387-regresshion-remote-code-execution-vulnerability-seen-in-openssh/",
+      "source_sha256": "86148e14a6121bc83f8bcb5f70b216944487c6d0acf7491d0472ac162292dabb",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Quantum Force$",
+      "expected_status": "unaffected",
+      "source_locator": "Check Point Customers / explicit product exclusion",
+      "rationale": "Explicit vendor customer-product statement, separate from IPS protection and detection coverage. No lower-version exclusion or exact fixed build is inferred.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "reviewed_scope": {
+        "scheme": "checkpoint_customer_section_v1",
+        "sha256": "613b010013b7aedc26fcf556e7e77998343ec6e181953e02476965d3de4932f1"
+      }
+    },
+    {
+      "id": "checkpoint-source-check-24",
+      "vendor": "checkpoint",
+      "source_url": "https://blog.checkpoint.com/research/cve-2024-6387-regresshion-remote-code-execution-vulnerability-seen-in-openssh/",
+      "source_sha256": "86148e14a6121bc83f8bcb5f70b216944487c6d0acf7491d0472ac162292dabb",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^CloudGuard Network$",
+      "expected_status": "unaffected",
+      "source_locator": "Check Point Customers / explicit product exclusion",
+      "rationale": "Explicit vendor customer-product statement, separate from IPS protection and detection coverage. No lower-version exclusion or exact fixed build is inferred.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "reviewed_scope": {
+        "scheme": "checkpoint_customer_section_v1",
+        "sha256": "613b010013b7aedc26fcf556e7e77998343ec6e181953e02476965d3de4932f1"
+      }
+    },
+    {
+      "id": "checkpoint-source-check-25",
+      "vendor": "checkpoint",
+      "source_url": "https://blog.checkpoint.com/research/cve-2024-6387-regresshion-remote-code-execution-vulnerability-seen-in-openssh/",
+      "source_sha256": "86148e14a6121bc83f8bcb5f70b216944487c6d0acf7491d0472ac162292dabb",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Quantum Spark R81\\.10\\.x and above$",
+      "expected_status": "affected",
+      "source_locator": "Check Point Customers / Quantum Spark",
+      "rationale": "Explicit vendor customer-product statement, separate from IPS protection and detection coverage. No lower-version exclusion or exact fixed build is inferred.",
+      "forbidden_statuses": [
+        "unaffected",
+        "fixed"
+      ],
+      "reviewed_scope": {
+        "scheme": "checkpoint_customer_section_v1",
+        "sha256": "613b010013b7aedc26fcf556e7e77998343ec6e181953e02476965d3de4932f1"
+      }
     }
   ]
 }

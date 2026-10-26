@@ -96,6 +96,7 @@ def main():
             "publisher-history-v1.json",
             "extraction-review-v1.json",
             "review-submission-v1.json",
+            "static-index-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         groups = json.loads((root / "current/product-groups.json").read_text())

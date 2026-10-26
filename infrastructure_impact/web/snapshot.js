@@ -1,6 +1,6 @@
 /* Snapshot transport: no vendor requests, credentials, or writable backend. */
 window.snapshotMode = true;
-function snapshotCompare(records, cohort, vendors, template) {
+function snapshotCompare(records, cohort, vendors, template, retainedVendors, retainedDrafts) {
   const included = records.filter((r) => r.document_status !== 'draft');
   const rows = Object.entries(vendors).map(([vendor, name]) => {
     const claims = included
@@ -14,7 +14,9 @@ function snapshotCompare(records, cohort, vendors, template) {
       vendor,
       name,
       cohort_size: cohort.length,
-      has_imported_advisories: included.some((r) => r.vendor === vendor),
+      has_imported_advisories: retainedVendors
+        ? retainedVendors.includes(vendor)
+        : included.some((r) => r.vendor === vendor),
       assessed_cves: assessed,
       no_assessment_in_dataset: cohort.length - assessed,
       affected_cves: count((a) => ['affected', 'partially_mitigated'].includes(a.status)),
@@ -33,7 +35,7 @@ function snapshotCompare(records, cohort, vendors, template) {
     ...template,
     cohort,
     vendors: rows,
-    draft_advisories_excluded: records.length - included.length,
+    draft_advisories_excluded: retainedDrafts ?? records.length - included.length,
   };
 }
 function selectScorecards(document, cohort) {
@@ -111,6 +113,25 @@ function classifyProduct(vendor, assessment, taxonomy) {
 }
 
 /* Pure comparison policy shared with the Python reader through parity tests. */
+function productLabels(source, vendor, group = null) {
+  if (source.product_label_index)
+    return group
+      ? source.product_label_index[vendor]?.groups[group] || []
+      : source.product_label_index[vendor]?.all || [];
+  return [
+    ...new Set(
+      source.records
+        .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
+        .flatMap((r) =>
+          r.assessments
+            .filter(
+              (a) => !group || classifyProduct(vendor, a, source.product_groups).group === group,
+            )
+            .map((a) => a.product),
+        ),
+    ),
+  ].sort();
+}
 function comparisonEligibility(source, ids, options = {}) {
   const taxonomy = source.product_groups;
   const group = options.group ?? null;
@@ -175,11 +196,7 @@ function comparisonEligibility(source, ids, options = {}) {
   const products = {};
   for (const vendor of Object.keys(rawProducts).sort()) {
     const labels = rawProducts[vendor];
-    const available = new Set(
-      source.records
-        .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
-        .flatMap((r) => r.assessments.map((a) => a.product)),
-    );
+    const available = new Set(productLabels(source, vendor));
     if (
       !Object.hasOwn(source.vendors, vendor) ||
       !Array.isArray(labels) ||
@@ -205,13 +222,7 @@ function comparisonEligibility(source, ids, options = {}) {
   const vendors = Object.entries(source.vendors).map(([vendor, name]) => {
     const profile = profiles.get(vendor) || {},
       audit = audits.get(vendor) || {};
-    const available = [
-      ...new Set(
-        source.records
-          .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
-          .flatMap((r) => r.assessments.filter((a) => inGroup(vendor, a)).map((a) => a.product)),
-      ),
-    ].sort();
+    const available = productLabels(source, vendor, group);
     const labels = Object.hasOwn(products, vendor)
       ? products[vendor].filter((p) => available.includes(p))
       : available;
@@ -473,7 +484,14 @@ function selectSnapshot(source, ids, options = {}) {
   );
   return {
     ...source,
-    comparison: snapshotCompare(source.records, cohort, source.vendors, source.comparison),
+    comparison: snapshotCompare(
+      source.records,
+      cohort,
+      source.vendors,
+      source.comparison,
+      source.non_draft_record_vendors,
+      source.draft_advisories_count,
+    ),
     comparison_eligibility: source.generated_at
       ? comparisonEligibility(source, cohort, options)
       : {},
@@ -563,11 +581,9 @@ function snapshotCSV(source) {
 if (typeof document !== 'undefined') {
   const originalFetch = window.fetch.bind(window);
   const siteBase = new URL('.', document.baseURI).pathname;
-  const snapshot = originalFetch(siteBase + 'snapshot.json').then((r) => {
-    if (!r.ok) throw Error('Snapshot unavailable');
-    return r.json();
-  });
-  let current;
+  const delivery = createStaticDelivery(originalFetch, siteBase);
+  let current,
+    requestSequence = 0;
   window.fetch = async (input, options) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
     if (url.origin === location.origin && url.pathname === '/api/state') {
@@ -580,8 +596,11 @@ if (typeof document !== 'undefined') {
           ? JSON.parse(url.searchParams.get('products'))
           : undefined,
       };
-      current = selectSnapshot(await snapshot, ids, options);
-      return new Response(JSON.stringify(current), {
+      const sequence = ++requestSequence;
+      const source = await (await delivery)(ids, url.searchParams.get('view') === 'changes');
+      const chosen = selectSnapshot(source, ids ?? Object.keys(source.benchmark_cohort), options);
+      if (sequence === requestSequence) current = chosen;
+      return new Response(JSON.stringify(chosen), {
         headers: { 'Content-Type': 'application/json' },
       });
     }

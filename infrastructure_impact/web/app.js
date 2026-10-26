@@ -58,16 +58,22 @@ function stats() {
   $('#summary').innerHTML = [
     ['Advisories', c.advisories],
     ['CVEs in cohort', data.comparison.cohort.length],
-    ['Vendors collected', new Set(data.records.map((r) => r.vendor)).size],
+    [
+      'Vendors collected',
+      data.record_vendors?.length ?? new Set(data.records.map((r) => r.vendor)).size,
+    ],
     ['Evidence snapshots', c.evidence_snapshots],
   ]
     .map(([l, n]) => `<div><strong>${n}</strong><span>${l}</span></div>`)
     .join('');
 }
+let loadSequence = 0;
 async function load() {
+  const sequence = ++loadSequence;
   $('#feedback').textContent = 'Loading evidence…';
   try {
     const params = new URLSearchParams();
+    params.set('view', view);
     if (selectedCves) params.set('cves', selectedCves.join(','));
     if (comparisonSelection.start) params.set('start', comparisonSelection.start);
     if (comparisonSelection.end) params.set('end', comparisonSelection.end);
@@ -77,7 +83,9 @@ async function load() {
     const suffix = params.size ? '?' + params.toString() : '';
     const response = await fetch('/api/state' + suffix);
     if (!response.ok) throw Error('Could not load the evidence store');
-    data = await response.json();
+    const loaded = await response.json();
+    if (sequence !== loadSequence) return;
+    data = loaded;
     benchmark = Object.keys(data.benchmark_cohort);
     if (selectedCves === null && $('#cohort').value === 'benchmark') {
       selectedCves = benchmark;
@@ -97,6 +105,7 @@ async function load() {
       ? new URL('impact.csv', document.baseURI).href
       : '/api/export.csv' + suffix;
   } catch (e) {
+    if (sequence !== loadSequence) return;
     $('#feedback').textContent = e.message;
   }
 }
@@ -224,13 +233,15 @@ function renderComparison() {
     return;
   }
   const vendor = comparisonScopeVendor || Object.keys(data.vendors)[0];
-  const available = [
-    ...new Set(
-      data.records
-        .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
-        .flatMap((r) => r.assessments.map((a) => a.product)),
-    ),
-  ].sort();
+  const available = window.snapshotMode
+    ? productLabels(data, vendor)
+    : [
+        ...new Set(
+          data.records
+            .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
+            .flatMap((r) => r.assessments.map((a) => a.product)),
+        ),
+      ].sort();
   const labels = Object.hasOwn(c.product_selection, vendor) ? c.product_selection[vendor] : [];
   const paired = c.vendors.flatMap((v) =>
     v.cases.flatMap((row) =>
@@ -350,7 +361,10 @@ function renderSources() {
 document.querySelectorAll('[data-view]').forEach((b) =>
   b.addEventListener('click', () => {
     view = b.dataset.view;
-    if (data) render();
+    if (data) {
+      if (window.snapshotMode) load();
+      else render();
+    }
   }),
 );
 $('#cohort').addEventListener('change', (e) => {

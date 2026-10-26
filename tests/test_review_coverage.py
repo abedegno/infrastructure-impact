@@ -299,3 +299,51 @@ def test_private_submission_cli_can_audit_saved_packet_without_database(
     main(["validation", "--submission", str(submitted), "--packet-file", str(packet)])
     assert "PRIVATE_" not in capsys.readouterr().out
     assert not (tmp_path / "does-not-exist.sqlite3").exists()
+
+
+def test_release_article_scope_includes_links_and_structure_but_not_page_chrome():
+    scheme = "fortinet_release_article_v1"
+    raw = '<nav>old</nav><article class="reader__page"><h1>Resolved issues</h1><table><tr><td>Fixed CVE-2025-12345</td></tr></table><a href="/fix">Fix</a></article>'
+    digest = scope_sha256(raw, scheme)
+    assert digest == scope_sha256(raw.replace("old", "new"), scheme)
+    assert digest != scope_sha256(raw.replace("/fix", "/other"), scheme)
+    assert digest != scope_sha256(raw.replace("Fixed", "Affected"), scheme)
+    with pytest.raises(ValueError):
+        scope_sha256(raw.replace("reader__page", "unknown"), scheme)
+
+
+def test_checkpoint_alternative_preserves_only_explicit_customer_product_scope():
+    from infrastructure_impact.adapters.checkpoint_blog import REGRESSHION_PATH, checkpoint_blog
+
+    raw = '<time class="published" datetime="2024-07-05T02:59:47+00:00"></time><h1 class="entry-title">CVE-2024-6387 synthetic title</h1><article class="post--single"><h2>Check Point Customers</h2><p>Quantum Force &amp; CloudGuard Network are not vulnerable. See SK.</p><p>Quantum Spark does utilize a vulnerable version of OpenSSH in R81.10.x and above new firmware mitigates the vulnerability.</p><p>IPS protects and CNAPP detects this vulnerability.</p></article>'
+    url = "https://blog.checkpoint.com" + REGRESSHION_PATH
+    result = checkpoint_blog(raw, url, "checkpoint")
+    assert [(a["product"], a["status"]) for a in result["assessments"]] == [
+        ("Quantum Force", "unaffected"),
+        ("CloudGuard Network", "unaffected"),
+        ("Quantum Spark R81.10.x and above", "affected"),
+    ]
+    assert all(not a["remediations"] for a in result["assessments"])
+    assert result["published_at"] == "2024-07-05T02:59:47+00:00"
+    for changed in [
+        raw.replace("not vulnerable", "vulnerable"),
+        raw.replace("Check Point Customers", "Customers"),
+        raw.replace("post--single", "other"),
+    ]:
+        with pytest.raises(ValueError):
+            checkpoint_blog(changed, url, "checkpoint")
+    with pytest.raises(ValueError):
+        checkpoint_blog(raw, "https://blog.checkpoint.com/other", "checkpoint")
+
+
+def test_customer_section_fingerprint_retains_product_claims_and_date():
+    scheme = "checkpoint_customer_section_v1"
+    raw = '<time class="published" datetime="2024-07-05T00:00:00Z"></time><h1 class="entry-title">CVE-2024-6387</h1><article class="post--single"><p>Background</p><p>Check Point Customers</p><p>Explicit product condition</p><p>Resources</p></article><aside>Widgets</aside>'
+    digest = scope_sha256(raw, scheme)
+    assert digest == scope_sha256(raw.replace("Widgets", "Changed widgets"), scheme)
+    assert digest != scope_sha256(
+        raw.replace("Explicit product condition", "Changed product condition"), scheme
+    )
+    assert digest != scope_sha256(raw.replace("2024-07-05", "2024-07-06"), scheme)
+    with pytest.raises(ValueError):
+        scope_sha256(raw.replace("Resources", "Links"), scheme)

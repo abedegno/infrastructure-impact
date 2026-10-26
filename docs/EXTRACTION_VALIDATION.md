@@ -1,6 +1,6 @@
 # Source-led extraction validation
 
-The initial second-pass review has **22 assertions across eight vendors and thirteen
+The initial second-pass review has **25 assertions across eight vendors and fourteen
 primary source documents**. It checks affected ranges, unaffected platform
 exceptions, fixed-only statements, shared bulletin scope, and a planned fix next
 to an unrelated issue's completed fix. It also checks the Fortinet HTML statement
@@ -56,11 +56,11 @@ file that can unlock vendor rankings or verified fix timing.
 
 ## Changed bytes and reviewed article sections
 
-Four assertions additionally pin a structural digest of the reviewed static HTML
+Nine assertions additionally pin a structural digest of the reviewed static HTML
 article. Arista's `item-page` body and Fortinet's title, detail sections and metadata
 table have explicit boundaries. Tags, text, attributes, table structure and link
 targets remain significant. Only surrounding page content, blank whitespace and
-randomized Joomla email-cloak span IDs are excluded. This does not verify rendered
+randomized Joomla email-cloak span IDs are excluded. The reviewed Fortinet release article includes its complete `reader__page` content. Check Point's reviewed customer section includes the article title, publisher date and paragraphs through the Resources boundary. This does not verify rendered
 JavaScript, every site layout or general semantic equivalence. Changed boundaries
 fail closed. A section match is reported as
 `reviewed_scope_match_source_changed`, separately from a raw-byte pass; changed raw
@@ -85,3 +85,13 @@ expected label or eligibility change. Reviewer names, independence statements an
 rationale are excluded from audit output. A declared human reviewer is not a
 machine-verified independent reviewer. Keep submissions private until a maintainer
 has reviewed identity, conflicts, source access and any proposed public text.
+
+## Project maintainer review
+
+A maintainer may review the sources independently of the implementation, but must
+disclose project ownership, prior knowledge of parser results and other conflicts.
+Do not describe a review as blind if expected results were already seen. Return
+a partial submission when source access is unavailable; record `not_adjudicated`
+and explain the access gap instead of substituting an IPS signature or guess.
+An audited submission remains a proposal until semantic disagreements and reviewer
+independence have been reviewed. It does not automatically certify accuracy.

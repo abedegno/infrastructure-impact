@@ -71,3 +71,10 @@ The extended pass also reviewed Arista advisory 0184 as an informational aggrega
 notice. Its separate-advisory CVE references are retained without product-impact
 assessments; it is not treated as evidence that every listed product shares every
 listed CVE. The archive item can complete while product applicability remains unresolved.
+
+## Check Point alternative source
+
+The [dated alternative-source review](research/checkpoint-alternatives.md) adds a
+curated vendor customer-product blog section. Its three explicit product statements
+supplement the index while blocked detailed SK and release-listing checks remain
+visible. Protection/detection claims never supply appliance impact assessments.

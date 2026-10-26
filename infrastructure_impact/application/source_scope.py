@@ -36,18 +36,50 @@ def canonical(node):
 def scope_sha256(raw, scheme):
     tree = HTML(raw).root
     if scheme == "arista_advisory_body_v1":
-        nodes = [n for n in tree.find({"div"}) if "item-page" in n.attrs.get("class", "").split()]
+        nodes = [
+            n for n in tree.find({"div"}) if "item-page" in (n.attrs.get("class") or "").split()
+        ]
         if len(nodes) != 1:
             raise ValueError("Reviewed Arista article boundary changed")
     elif scheme == "fortinet_investigation_v1":
         details = [
-            n for n in tree.find({"div"}) if "detail-item" in n.attrs.get("class", "").split()
+            n for n in tree.find({"div"}) if "detail-item" in (n.attrs.get("class") or "").split()
         ]
-        metadata = [n for n in tree.find({"table"}) if "meta" in n.attrs.get("class", "").split()]
+        metadata = [
+            n for n in tree.find({"table"}) if "meta" in (n.attrs.get("class") or "").split()
+        ]
         titles = list(tree.find({"h1"}))
         if not details or len(metadata) != 1 or len(titles) != 1:
             raise ValueError("Reviewed Fortinet advisory boundaries changed")
         nodes = titles + details + metadata
+    elif scheme == "fortinet_release_article_v1":
+        nodes = [
+            n
+            for n in tree.find({"article"})
+            if "reader__page" in (n.attrs.get("class") or "").split()
+        ]
+        if len(nodes) != 1 or not any(n.text() == "Resolved issues" for n in nodes[0].find({"h1"})):
+            raise ValueError("Reviewed Fortinet release article boundary changed")
+    elif scheme == "checkpoint_customer_section_v1":
+        articles = [
+            n
+            for n in tree.find({"article"})
+            if "post--single" in (n.attrs.get("class") or "").split()
+        ]
+        titles = [
+            n for n in tree.find({"h1"}) if "entry-title" in (n.attrs.get("class") or "").split()
+        ]
+        times = [
+            n for n in tree.find({"time"}) if "published" in (n.attrs.get("class") or "").split()
+        ]
+        if len(articles) != 1 or len(titles) != 1 or not times:
+            raise ValueError("Reviewed customer article boundary changed")
+        paragraphs = list(articles[0].find({"p"}))
+        starts = [i for i, n in enumerate(paragraphs) if n.text() == "Check Point Customers"]
+        ends = [i for i, n in enumerate(paragraphs) if n.text() == "Resources"]
+        if len(starts) != 1 or len(ends) != 1 or ends[0] <= starts[0]:
+            raise ValueError("Reviewed customer applicability section changed")
+        nodes = titles + times[:1] + paragraphs[starts[0] : ends[0] + 1]
     else:
         raise ValueError("Unknown reviewed evidence-section scheme")
     return hashlib.sha256(
