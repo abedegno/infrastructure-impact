@@ -26,6 +26,7 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 - Separates affectedness from planned fixes, partial mitigation and reported fixes.
 - Retains raw bytes, source URLs, hashes, capture times and normalized revisions.
 - Distinguishes parser reinterpretation from changes to publisher content.
+- Logs [retrieval checks separately from source revisions](docs/SOURCE_OBSERVATIONS.md), including unchanged checks and HTTP 304 cache validation.
 - Supports external vendor plugins without core, database or frontend changes.
 - Publishes immutable, sanitized datasets for a separate read-only reader.
 - Groups comparable product roles while exposing unmapped labels and coverage gaps.

@@ -11,6 +11,15 @@ def audit():
     with closing(connect(read_only=True)) as db:
         if db.execute("PRAGMA quick_check").fetchone()[0] != "ok":
             raise ValueError("SQLite integrity check failed")
+        if db.execute("PRAGMA foreign_key_check").fetchone():
+            raise ValueError("Evidence relationship integrity check failed")
+        observation_count = 0
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='source_observations'").fetchone():
+            if db.execute(
+                "SELECT 1 FROM source_observations o JOIN evidence e ON e.id=o.evidence_id WHERE o.source_url<>e.source_url LIMIT 1"
+            ).fetchone():
+                raise ValueError("Retrieval observation evidence URL mismatch")
+            observation_count = db.execute("SELECT count(*) FROM source_observations").fetchone()[0]
         records = latest(db)
         for record in records:
             validate_advisory(record)
@@ -34,5 +43,6 @@ def audit():
             "release_assets": len(assets),
             "browser_captures": len(browser),
             "evidence_snapshots": count,
+            "source_observations": observation_count,
             "fingerprints": "ok",
         }

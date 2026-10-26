@@ -747,6 +747,32 @@ function renderReadiness() {
       .join('')}`;
 }
 
+function renderComponentSource(source) {
+  const history = source.retrieval_history;
+  const references =
+    Object.entries(source.components)
+      .map(([component, versions]) => `${esc(component)}: ${versions.map(esc).join(', ')}`)
+      .join('; ') || 'No explicit component-version references in reviewed sections.';
+  const alignment =
+    source.latest_retrieval_matches_analyzed_snapshot === null
+      ? 'no logged check'
+      : source.latest_retrieval_matches_analyzed_snapshot
+        ? 'yes'
+        : 'no; review collection health';
+  const checks =
+    history && history.logged_checks > 0
+      ? `<p>${history.logged_checks} successful checks logged; ${history.distinct_fingerprints} raw fingerprint${history.distinct_fingerprints === 1 ? '' : 's'}; ${history.same_as_previous_checks} same as previous; ${history.http_304_checks} HTTP 304.</p>
+       <p><small>Logging began ${date(history.first_logged_check_at)}; latest ${date(history.last_logged_check_at)}. Latest logged retrieval matches this analyzed snapshot: ${alignment}.</small></p>
+       <details><summary>Inspect retrieval checks</summary>${history.checks.map((check) => `<p>${date(check.checked_at)} · HTTP ${check.http_status} · ${esc(check.content_state.replaceAll('_', ' '))}<small>${esc(check.source_sha256)}</small></p>`).join('')}${history.checks_truncated ? '<p>Latest twelve checks shown.</p>' : ''}<p>${esc(history.method)}</p></details>`
+      : '<p><small>No retrieval checks have been logged for this source; earlier checks remain unknown.</small></p>';
+  return `<article class="change"><h4>${esc(name(source.vendor))} · ${esc(source.product)}</h4>
+    <p>${source.snapshots} retained revision${source.snapshots === 1 ? '' : 's'} shown (up to two) · ${esc(source.analysis_state.replaceAll('_', ' '))}</p>
+    <p>${esc(source.component_scope || 'Patch and deployment scope unverified.')}</p>
+    <p>${references}</p>${checks}
+    <p>${link(source.source_url, 'Component/release source')} · analyzed capture ${date(source.current_evidence.observed_at)}</p>
+    <code>${esc(source.current_evidence.source_sha256)}</code></article>`;
+}
+
 function renderFixLeads() {
   const report = data.fix_leads;
   if (!report) {
@@ -754,16 +780,5 @@ function renderFixLeads() {
     return;
   }
   $('#view').innerHTML =
-    `<h2>Potential security-fix investigation leads</h2><div class="notice">${esc(report.method)}</div><p>${link('/fix-leads.json', 'Download dated leads and analysis gaps')}</p>${report.leads.map((l) => `<article class="change"><div class="eyebrow">${esc(name(l.vendor))} · ${esc(l.kind.replaceAll('_', ' '))}</div><h3>${esc(l.product)}</h3>${badge(l.state.replaceAll('_', ' '))}<p>${esc(l.details)}</p><p>${l.cve_ids.map(esc).join(', ') || 'No CVE linkage established'}${l.component ? ` · ${esc(l.component)}` : ''}</p><h4>Dated retained evidence</h4>${l.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')}<small>Local observation ${date(e.observed_at)}; publisher date claim ${date(e.publisher_date_claim)}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}<h4>Alternative explanations</h4><ul>${l.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Evidence still needed</h4><ul>${l.missing_evidence.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment: not established. No prior product exposure or public fix availability inferred.</p></article>`).join('') || '<p>No leads established from the currently eligible sources. This does not establish absence of security fixes.</p>'}<h3>Component references and source gaps</h3><p>Distinct retained content revisions are counted below. Repeated unchanged checks do not create a new revision. Different product branches are never treated as before/after snapshots.</p>${report.sources
-      .map(
-        (s) =>
-          `<p>${esc(name(s.vendor))} · ${esc(s.product)} · ${s.snapshots} distinct retained revisions · ${esc(s.analysis_state.replaceAll('_', ' '))}<small>${esc(s.component_scope || 'Patch and deployment scope unverified.')}</small><small>${
-            Object.entries(s.components)
-              .map(([c, v]) => `${esc(c)}: ${v.map(esc).join(', ')}`)
-              .join('; ') || 'No explicit component-version references in reviewed sections.'
-          }</small><small>${link(s.source_url, 'Component/release source')} · captured ${date(s.current_evidence.observed_at)}</small><code>${esc(s.current_evidence.source_sha256)}</code></p>`,
-      )
-      .join(
-        '',
-      )}<details><summary>${report.analysis_gaps.length} analysis gaps</summary>${report.analysis_gaps.map((g) => `<p>${esc(name(g.vendor))} · ${link(g.source_url, 'Source')} · ${esc(g.reason.replaceAll('_', ' '))}</p>`).join('')}</details>`;
+    `<h2>Potential security-fix investigation leads</h2><div class="notice">${esc(report.method)}</div><p>${link('/fix-leads.json', 'Download dated leads and analysis gaps')}</p>${report.leads.map((l) => `<article class="change"><div class="eyebrow">${esc(name(l.vendor))} · ${esc(l.kind.replaceAll('_', ' '))}</div><h3>${esc(l.product)}</h3>${badge(l.state.replaceAll('_', ' '))}<p>${esc(l.details)}</p><p>${l.cve_ids.map(esc).join(', ') || 'No CVE linkage established'}${l.component ? ` · ${esc(l.component)}` : ''}</p><h4>Dated retained evidence</h4>${l.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')}<small>Local observation ${date(e.observed_at)}; publisher date claim ${date(e.publisher_date_claim)}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}<h4>Alternative explanations</h4><ul>${l.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Evidence still needed</h4><ul>${l.missing_evidence.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment: not established. No prior product exposure or public fix availability inferred.</p></article>`).join('') || '<p>No leads established from the currently eligible sources. This does not establish absence of security fixes.</p>'}<h3>Component references and source gaps</h3><p>Distinct retained content revisions are counted below. Repeated unchanged checks do not create a new revision. Different product branches are never treated as before/after snapshots. Successful HTTP checks are logged separately from content revisions; logging does not reconstruct earlier availability or establish parser validity.</p>${report.sources.map(renderComponentSource).join('')}<details><summary>${report.analysis_gaps.length} analysis gaps</summary>${report.analysis_gaps.map((g) => `<p>${esc(name(g.vendor))} · ${link(g.source_url, 'Source')} · ${esc(g.reason.replaceAll('_', ' '))}</p>`).join('')}</details>`;
 }

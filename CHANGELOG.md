@@ -1,5 +1,9 @@
 # Changelog
 
+- Record successful HTTP checks separately from evidence revisions, including
+  cache validations, unchanged bodies and content reversions; expose bounded
+  check history and analyzed-source alignment without reconstructing earlier dates.
+
 - Add release-scoped Juniper OpenSSH and HPE iLO OpenSSL references, with explicit
   product/platform limits and destination-version extraction.
 - Recognize HPE browser session-check shells as access gaps rather than content.

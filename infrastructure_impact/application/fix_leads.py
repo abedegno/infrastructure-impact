@@ -8,6 +8,7 @@ from collections import defaultdict
 from ..adapters.common import HTML, cves
 from ..collection.transport import allowed
 from ..plugins.registry import default_registry
+from ..storage.observations import history as retrieval_history
 from .disclosure import latest_documents
 
 SECTIONS = {
@@ -192,7 +193,13 @@ def evidence_inputs(db):
         )
     return dict(
         release_sources=[
-            dict(vendor=k[0], product=k[1], source_url=k[2], snapshots=v)
+            dict(
+                vendor=k[0],
+                product=k[1],
+                source_url=k[2],
+                snapshots=v,
+                retrieval_history=retrieval_history(db, k[0], k[2]),
+            )
             for k, v in snapshots.items()
         ],
         advisory_changes=advisory,
@@ -202,6 +209,32 @@ def evidence_inputs(db):
         ).fetchone()[0]
         > 400,
     )
+
+
+def public_retrieval_history(value):
+    if value is None:
+        return None
+    # Public metadata only. No cache headers, response bodies, local IDs or
+    # operator fields may cross this boundary, even from an installed plugin.
+    summary = {
+        key: value[key]
+        for key in (
+            "logged_checks",
+            "distinct_fingerprints",
+            "same_as_previous_checks",
+            "http_304_checks",
+            "first_logged_check_at",
+            "last_logged_check_at",
+            "checks_truncated",
+            "method",
+        )
+    }
+    summary["checks"] = [
+        {key: check[key] for key in ("checked_at", "source_sha256", "http_status", "content_state")}
+        for check in value["checks"][:12]
+    ]
+    summary["checks_truncated"] = bool(value["checks_truncated"] or len(value["checks"]) > 12)
+    return summary
 
 
 def public_inputs(inputs, urls, records):
@@ -236,6 +269,7 @@ def public_inputs(inputs, urls, records):
                 product=source["product"],
                 source_url=source["source_url"],
                 snapshots=snapshots,
+                retrieval_history=public_retrieval_history(source.get("retrieval_history")),
             )
         )
     changes = []
@@ -301,6 +335,8 @@ def leads(data):
         current = snapshots[0]
         previous = snapshots[1] if len(snapshots) > 1 else None
         analysis = current["analysis"]
+        checks = source.get("retrieval_history") or {}
+        last_check = next(iter(checks.get("checks", [])), None)
         source_rows.append(
             dict(
                 vendor=source["vendor"],
@@ -311,6 +347,10 @@ def leads(data):
                 components=analysis["components"],
                 component_scope=analysis.get("component_scope", SECTION_SCOPE),
                 current_evidence=evidence(current),
+                retrieval_history=public_retrieval_history(source.get("retrieval_history")),
+                latest_retrieval_matches_analyzed_snapshot=None
+                if last_check is None
+                else last_check["source_sha256"] == current["source_sha256"],
             )
         )
         if not analysis["components"]:

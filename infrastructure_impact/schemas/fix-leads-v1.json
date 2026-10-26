@@ -205,6 +205,115 @@
           },
           "component_scope": {
             "type": "string"
+          },
+          "retrieval_history": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "logged_checks",
+                  "distinct_fingerprints",
+                  "same_as_previous_checks",
+                  "http_304_checks",
+                  "first_logged_check_at",
+                  "last_logged_check_at",
+                  "checks_truncated",
+                  "method",
+                  "checks"
+                ],
+                "properties": {
+                  "logged_checks": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "distinct_fingerprints": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "same_as_previous_checks": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "http_304_checks": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "first_logged_check_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "last_logged_check_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "checks_truncated": {
+                    "type": "boolean"
+                  },
+                  "method": {
+                    "type": "string"
+                  },
+                  "checks": {
+                    "type": "array",
+                    "maxItems": 12,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checked_at",
+                        "source_sha256",
+                        "http_status",
+                        "content_state"
+                      ],
+                      "properties": {
+                        "checked_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "source_sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "http_status": {
+                          "type": "integer",
+                          "anyOf": [
+                            {
+                              "minimum": 200,
+                              "maximum": 299
+                            },
+                            {
+                              "const": 304
+                            }
+                          ]
+                        },
+                        "content_state": {
+                          "enum": [
+                            "first_logged_capture",
+                            "same_as_previous_capture",
+                            "different_from_previous_capture"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "latest_retrieval_matches_analyzed_snapshot": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       }

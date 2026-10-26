@@ -71,6 +71,9 @@ def fetch(db, url, vendor):
                         ),
                     )
                 check_access_response(raw)
+                from ..storage.observations import observe
+
+                observe(db, vendor, url, ev["id"], response.status)
                 return raw
         except HTTPError as e:
             if e.code == 304 and cached:
@@ -78,6 +81,9 @@ def fetch(db, url, vendor):
                     "SELECT raw FROM evidence WHERE id=?", (cached["evidence_id"],)
                 ).fetchone()["raw"]
                 check_access_response(raw)
+                from ..storage.observations import observe
+
+                observe(db, vendor, url, cached["evidence_id"], 304)
                 return raw
             if attempt or e.code not in (429, 500, 502, 503, 504):
                 raise SourceHTTPError(e, url, e.read(15000)) from e

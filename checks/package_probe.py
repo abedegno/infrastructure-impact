@@ -26,6 +26,7 @@ def main():
         assert (package / "schemas" / name).is_file()
     assert (package / "migrations/004_browser_captures.sql").is_file()
     assert (package / "migrations/006_archive_scope.sql").is_file()
+    assert (package / "migrations/007_source_observations.sql").is_file()
     assert (package / "resources/archive-source-review.json").is_file()
     assert (package / "schemas/comparison-eligibility-v1.json").is_file()
     assert not Path(infrastructure_impact.__file__).resolve().is_relative_to(Path.cwd())

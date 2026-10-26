@@ -11,6 +11,11 @@ documents the Arista 0105 adapter, remaining access gaps and three scheduled OSS
 reference tables. Component references carry explicit patch/deployment limits;
 different branches never form a before/after pair.
 
+[Retrieval checks](SOURCE_OBSERVATIONS.md) are now logged separately from content
+revisions, including unchanged HTTP 200 and cached HTTP 304 observations. Earlier
+unlogged checks remain unknown. The component view displays the logging window,
+bounded check history and alignment with the analyzed source fingerprint.
+
 ## 1. Product families
 
 The versioned `product-families.json` catalogue selects 33 infrastructure families
