@@ -17,7 +17,9 @@ configuration scope, source hashes and evidence locators can be inspected. Produ
 labels are publisher labels, not normalized fleet inventory or unique devices.
 
 Source-health counts use distinct configured URLs for that vendor. Historical
-checks for sources no longer configured do not inflate that denominator. Failed,
+checks for sources no longer configured do not inflate that denominator. Errors
+for discovered or historical URLs outside it are shown separately, so configured
+feed success cannot hide a failed advisory fetch. Failed,
 partial, stale and unattempted sources remain visible alongside coverage profiles
 and known gaps. Stale check counts can overlap error counts. A fresh successful
 feed check does not establish comprehensive product coverage or a recent review

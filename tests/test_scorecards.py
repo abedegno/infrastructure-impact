@@ -54,6 +54,7 @@ def test_missing_vendor_statement_cannot_become_unaffected_or_better_coverage():
             error_code="access_denied",
         )
     ]
+    checks.append({**checks[0], "source_url": URL + "/discovered"})
     cards = scorecards(
         [r],
         [],
@@ -67,6 +68,7 @@ def test_missing_vendor_statement_cannot_become_unaffected_or_better_coverage():
     assert cards[0]["status_counts"]["fixed"] == 1
     assert cards[0]["explicit_unknown"] == 1
     assert cards[0]["source_outcomes"] == {"error": 1}
+    assert len(cards[0]["additional_source_errors"]) == 1
     assert cards[0]["stale_sources"] == 1
     assert cards[1]["without_statement"] == 2
     assert cards[1]["explicit_unknown"] == 0

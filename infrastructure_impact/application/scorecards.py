@@ -98,6 +98,17 @@ def scorecards(records, coverage, catalogue, health, cohort, vendors, at):
                 known_gaps=profile.get("known_gaps", []),
                 history_scope=profile.get("history_scope", "Not declared"),
                 configured_sources=sources,
+                additional_source_errors=[
+                    {
+                        "source_url": h["source_url"],
+                        "checked_at": h["checked_at"],
+                        "error_code": h.get("error_code"),
+                    }
+                    for h in health
+                    if h["vendor"] == vendor
+                    and h["source_url"] not in seen
+                    and h["outcome"] == "error"
+                ],
                 source_outcomes=dict(Counter(s["outcome"] for s in sources)),
                 stale_sources=sum(s["stale"] for s in sources),
                 cases=cases,
