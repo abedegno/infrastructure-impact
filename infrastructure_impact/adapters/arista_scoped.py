@@ -233,7 +233,7 @@ SECTION_NAMES = {
 }
 
 
-def reviewed_sections(a):
+def reviewed_sections(a, extra_names=()):
     """Bound sibling sections, retaining exclusion labels and nested lists in order."""
     sections = {}
     current = None
@@ -249,7 +249,7 @@ def reviewed_sections(a):
         )
         if (
             node.tag in {"h2", "h3", "h4"}
-            and node.text() in SECTION_NAMES
+            and node.text() in SECTION_NAMES | set(extra_names)
             and not nested_context_heading
         ):
             current = node.text()

@@ -12,6 +12,15 @@ per-CVE configuration/mitigation context. A CVE named only in acknowledgments do
 not become an impact assessment. No fixed version or blanket hardware exposure is
 inferred. Synthetic tests cover nesting, acknowledgment scope and range exceptions.
 
+A subsequent bounded 32-document preflight exposed four older boundaries, now
+reviewed separately: 0101 keeps RADIUS/RadSec and non-EAP prerequisites; 0094 binds
+HTTP/2 product lists to their local CVE headings rather than all nine announced
+references; 0095 retains an explicit publisher-wide xz exclusion; 0092 is retained
+as a non-CVE notice for restricted cloud offerings, preserving standard-product
+exclusions and the publisher's unreleased-image statement. No CVE is invented for
+0092 and resolution prose does not become an available fixed version. Preflight
+parser outcomes are not independent human validation or exhaustive archive coverage.
+
 ## Remaining access gaps
 
 The advertised [Cisco NX-OS PDF](https://www.cisco.com/c/en/us/td/docs/dcn/nx-os/nexus9000/104x/release-notes/cisco-nexus-9000-nxos-release-notes-1042.pdf)

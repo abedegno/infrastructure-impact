@@ -307,6 +307,22 @@
     {
       "vendor": "arista",
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/20454-security-advisory-0105"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19905-security-advisory-0101"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19222-security-advisory-0095"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19221-security-advisory-0094"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19025-security-advisory-0092"
     }
   ],
   "release_documents": [

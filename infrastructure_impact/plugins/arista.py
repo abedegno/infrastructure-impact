@@ -1,6 +1,12 @@
 """Arista reviewed historical and current HTML layouts."""
 
 from ..adapters.arista import arista_aggregate_notice, arista_software
+from ..adapters.arista_boundaries import (
+    continuation,
+    radius,
+    restricted_cloud_notice,
+    xz_unaffected,
+)
 from ..adapters.arista_history import arista_release_history
 from ..adapters.arista_scoped import (
     airsnitch_notice,
@@ -18,6 +24,14 @@ from .shared import is_json, structured
 def parse(raw, url, vendor):
     if is_json(raw):
         return structured(raw, url, vendor)
+    for slug, parser in {
+        "/19905-security-advisory-0101": radius,
+        "/19222-security-advisory-0095": xz_unaffected,
+        "/19221-security-advisory-0094": continuation,
+        "/19025-security-advisory-0092": restricted_cloud_notice,
+    }.items():
+        if url.rstrip("/").endswith(slug):
+            return parser(raw, url, vendor)
     if url.rstrip("/").endswith("/24500-security-advisory-0146"):
         return non_cve_security_notice(raw, url, vendor)
     if url.rstrip("/").endswith("/24515-security-advisory-0147"):
@@ -65,7 +79,11 @@ def plugin():
         retain_unlinked_notice=lambda document: (
             document.get("source_format") == "Arista security notice without CVE"
             and document.get("advisory_id")
-            in {"24500-security-advisory-0146", "24108-security-advisory-0141"}
+            in {
+                "24500-security-advisory-0146",
+                "24108-security-advisory-0141",
+                "19025-security-advisory-0092",
+            }
             and document.get("source_url")
             == "https://www.arista.com/en/support/advisories-notices/security-advisory/"
             + document["advisory_id"]

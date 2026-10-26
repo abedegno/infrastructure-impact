@@ -207,6 +207,93 @@ def test_nested_ngfw_0105_uses_numbered_descriptions_not_acknowledgment_cves():
         )
 
 
+def test_radius_scope_keeps_prerequisites_and_does_not_promote_resolution():
+    body = "<p>The CVE-ID tracking this issue: CVE-2024-3596</p><h2>Description</h2><p>RADIUS issue.</p><h3>Affected Software and Platforms</h3><h4>EOS Products</h4><ul><li>The following EOS products running versions 4.34.0F and older are affected:<ul><li>Example EOS model</li></ul></li></ul>"
+    for heading, product in [
+        ("WI-FI Access Points", "Arista Wireless Access Points"),
+        ("Cloudvision Products", "CloudVision Portal, virtual appliance or physical appliance"),
+        ("Arista 7130 Systems running MOS", "Arista 7130 Systems running MOS"),
+        (
+            "DMF/CCF/MCD",
+            "Arista Converged Cloud Fabric, DANZ Monitoring Fabric, and Multi-Cloud Director",
+        ),
+        (
+            "Arista Edge Threat Management - Arista NG Firewall",
+            "Arista Edge Threat Management - Arista NG Firewall",
+        ),
+    ]:
+        body += f"<h4>{heading}</h4><div>All versions of the following products are affected if they are running the affected configuration.</div><ul><li>{product}</li></ul>"
+    body += "<h3>Unaffected Platforms</h3><p>Cloud service exclusion.</p><h3>Required Configuration for Exploitation</h3><ol><li>RADIUS is configured.</li><li>RADIUS is configured without using RadSec</li><li>RADIUS is used for non-EAP authentication</li></ol><h2>Resolution</h2><p>Fixed in a later release.</p>"
+    raw = article("0101", body)
+    result = validate_advisory(arista(raw, ARISTA + "19905-security-advisory-0101", "arista"))
+    assert len(result["assessments"]) == 6 and all(
+        a["status"] == "affected" and not a["remediations"] for a in result["assessments"]
+    )
+    eos = next(a for a in result["assessments"] if a["product"] == "Arista EOS")
+    assert eos["platforms"] == ["Example EOS model"] and "non-EAP" in json.dumps(eos["exposure"])
+    with pytest.raises(ValueError):
+        arista(
+            raw.replace("RADIUS is used for non-EAP authentication", "Changed prerequisite"),
+            ARISTA + "19905-security-advisory-0101",
+            "arista",
+        )
+
+
+def test_continuation_groups_do_not_cross_assign_other_announced_cves():
+    ids = ["CVE-2023-45288", "CVE-2024-28182"] + ["CVE-2026-" + str(60000 + i) for i in range(7)]
+    body = "<h2>Description</h2><p>" + " ".join(ids) + "</p><h3>Affected Software</h3>"
+    for cid, products in [
+        (
+            ids[0],
+            [
+                "Streaming Telemetry Agent (TerminAttr) versions:",
+                "EOS release version:",
+                "WI-FI Access Points versions:",
+            ],
+        ),
+        (ids[1], ["Awake Security versions"]),
+    ]:
+        body += f"<h4>The following product releases are affected by {cid}:</h4>"
+        body += "".join(f"<div>{p}</div><ul><li>1.0 and prior</li></ul>" for p in products)
+    body += "<h3>Affected Platforms</h3><p>Product-specific exceptions.</p><h2>Required Configuration for Exploitation</h2><p>Only specific enabled services.</p>"
+    raw = article("0094", body)
+    result = validate_advisory(arista(raw, ARISTA + "19221-security-advisory-0094", "arista"))
+    assert len(result["cves"]) == 9 and len(result["assessments"]) == 4
+    assert {a["cve_id"] for a in result["assessments"] if a["product"] == "Arista EOS"} == {ids[0]}
+    assert all(a["scope"] == "cve_specific" for a in result["assessments"])
+
+
+def test_explicit_xz_exclusion_is_not_upstream_component_exposure():
+    raw = article(
+        "0095",
+        "<p>The CVE-ID tracking this issue: CVE-2024-3094</p><h2>Description</h2><p>Upstream issue.</p><h2>Vulnerability Assessment</h2><p>No Arista products are affected. Individual products are listed below.</p><h3>Affected Platforms</h3><p>The following product versions and platforms are NOT affected by this vulnerability:</p><ul><li>Example products</li></ul>",
+    )
+    result = validate_advisory(arista(raw, ARISTA + "19222-security-advisory-0095", "arista"))
+    assert len(result["assessments"]) == 1 and result["assessments"][0]["status"] == "unaffected"
+    with pytest.raises(ValueError):
+        arista(
+            raw.replace("No Arista products are affected.", "Review pending."),
+            ARISTA + "19222-security-advisory-0095",
+            "arista",
+        )
+
+
+def test_restricted_cloud_notice_keeps_no_cve_and_excludes_standard_offerings():
+    raw = article(
+        "0092",
+        "<p>BUG 880654</p><h2>Description</h2><p>This issue is NOT present in the standard offerings; GCP image never released.</p><h3>Affected Software</h3><ul><li>CVP on AWS<ul><li>AMIs with CentOS version 7.9.2009</li></ul></li><li>CVP on GCP<ul><li>GCP image with CentOS version 7.9.2009 (crc32c hash: Rvd78A==)</li></ul></li></ul><h3>Affected Platforms</h3><p>Restricted deployments only.</p><h3>Required Configuration for Exploitation</h3><p>Private key required.</p><h2>Mitigation</h2><p>Publisher instructions.</p><h2>Resolution</h2><p>Publisher instructions.</p>",
+    )
+    result = validate_advisory(arista(raw, ARISTA + "19025-security-advisory-0092", "arista"))
+    assert result["cves"] == result["assessments"] == []
+    assert "standard offerings" in json.dumps(result["notes"])
+    with pytest.raises(ValueError):
+        arista(
+            raw.replace("BUG 880654", "BUG 880654 CVE-2026-12345"),
+            ARISTA + "19025-security-advisory-0092",
+            "arista",
+        )
+
+
 def test_cisco_feed_follows_bounded_author_verified_records_and_keeps_primary_urls():
     from infrastructure_impact.plugins.cisco import parse_feed
 

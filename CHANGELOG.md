@@ -1,5 +1,8 @@
 # Changelog
 
+- Preserve older Arista RADIUS prerequisites, local HTTP/2 CVE groups, explicit xz
+  exclusions and restricted-cloud non-CVE scope found by bounded archive preflight.
+
 - Support Arista 0105 nested NGFW scope without promoting acknowledgment-only CVEs.
 - Schedule three reviewed PAN-OS/Panorama OSS reference sources through an optional
   component parser hook; retain patch/deployment qualifications and source hashes.
