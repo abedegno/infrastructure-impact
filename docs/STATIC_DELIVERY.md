@@ -10,7 +10,7 @@ parts. The normalized advisory schema and comparison policy are unchanged.
 bootstrap descriptor, per-CVE part descriptors, deferred change-history parts and
 a full-archive descriptor. Each descriptor carries a relative path, SHA-256 and
 exact byte count. Parts wrap their data with schema version, publication and time.
-No vendor requests occur in the browser.
+No vendor requests occur in the browser. Integrity verification requires HTTPS or a loopback development origin with Web Crypto support.
 
 Shared metadata includes the complete retained vendor roster and product-label
 catalogue. Fetching a narrow CVE cohort must not narrow the available exact-product
