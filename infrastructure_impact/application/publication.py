@@ -16,6 +16,7 @@ from ..settings import PACKAGE, Paths
 from ..storage.repository import connect
 from .cohort import COHORT, coverage
 from .query import state
+from .release_assets import validate_asset
 
 
 def public_projection(data, public_release_urls=()):
@@ -30,9 +31,22 @@ def public_projection(data, public_release_urls=()):
         for assessment in record["assessments"]:
             assessment.pop("extensions", None)
     data["research"]["fix_candidates"] = []
+    data["research"]["release_assets"] = [
+        r
+        for r in data["research"].get("release_assets", [])
+        if r["source_url"] in public_release_urls
+    ]
     data["research"]["release_documents"] = [
         d for d in data["research"]["release_documents"] if d["source_url"] in public_release_urls
     ]
+    for asset in data["research"]["release_assets"]:
+        validate_asset(
+            {
+                k: v
+                for k, v in asset.items()
+                if k not in ("evidence_id", "source_sha256", "observed_at")
+            }
+        )
     data["signals"] = [
         s
         for s in data["signals"]
@@ -52,6 +66,9 @@ def write_bundle(destination, data):
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "snapshot.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
     (destination / "impact.csv").write_text(csv_export(data))
+    (destination / "release-assets.json").write_text(
+        json.dumps(data["research"].get("release_assets", []))
+    )
     (destination / "catalogue.json").write_text(json.dumps(data.get("catalogue", {})))
     (destination / "benchmark.json").write_text(json.dumps(data.get("benchmark", {})))
     for record in data["records"]:
@@ -106,6 +123,9 @@ def write_bundle(destination, data):
     schema = destination / "schemas/advisory-v2.json"
     schema.parent.mkdir(exist_ok=True)
     shutil.copyfile(PACKAGE / "schemas/advisory-v2.json", schema)
+    shutil.copyfile(
+        PACKAGE / "schemas/release-asset-v1.json", destination / "schemas/release-asset-v1.json"
+    )
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")
     (destination / "_headers").write_text(
         "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'\n"

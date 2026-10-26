@@ -186,6 +186,18 @@
       "vendor": "fortinet",
       "product": "FortiProxy 7.2.8",
       "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://support.checkpoint.com/results/download/134275",
+      "product": "Spark Firewall: 1500 and 1570R",
+      "kind": "release_listing"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://support.checkpoint.com/results/download/134302",
+      "product": "Spark Firewall: 1600/1800/1900/2000",
+      "kind": "release_listing"
     }
   ]
 }

@@ -7,6 +7,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from ..plugins.registry import default_registry
 from ..storage.repository import evidence
+from .errors import check_access_response
 
 
 def allowed(url, vendor):
@@ -68,12 +69,15 @@ def fetch(db, url, vendor):
                             ev["id"],
                         ),
                     )
+                check_access_response(raw)
                 return raw
         except HTTPError as e:
             if e.code == 304 and cached:
-                return db.execute(
+                raw = db.execute(
                     "SELECT raw FROM evidence WHERE id=?", (cached["evidence_id"],)
                 ).fetchone()["raw"]
+                check_access_response(raw)
+                return raw
             if attempt or e.code not in (429, 500, 502, 503, 504):
                 raise
         except (OSError, TimeoutError):

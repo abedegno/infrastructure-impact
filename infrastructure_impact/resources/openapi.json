@@ -297,6 +297,16 @@
           }
         }
       }
+    },
+    "/release-assets.json": {
+      "get": {
+        "summary": "Dated public release-listing metadata, not CVE assessments",
+        "responses": {
+          "200": {
+            "description": "Publisher build/platform/date/checksum fields with source provenance; firmware not downloaded."
+          }
+        }
+      }
     }
   }
 }

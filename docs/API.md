@@ -44,3 +44,9 @@ production reader. Operators inspect the private vault through local tooling.
 `catalogue.json` and `benchmark.json` are also included in static publications.
 The public GitHub Pages service supports static exports and browser filtering;
 the query-string REST routes require the Python reader.
+
+`release-assets.json` exposes configured, schema-validated release-listing metadata.
+Publisher artifact checksums differ from source-page fingerprints. No firmware is
+downloaded and no CVE applicability is inferred from a listing. The corresponding
+contract is `schemas/release-asset-v1.json`. Source health includes an `error_code`
+when a failure is classified (for example, `access_verification_required`).

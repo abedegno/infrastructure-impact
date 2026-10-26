@@ -35,3 +35,4 @@ class VendorPlugin:
     non_cve_notice: Callable[[Advisory], bool] = lambda document: False
     reference_filter: Callable[[str], bool] = lambda url: True
     capabilities: tuple[str, ...] = field(default_factory=tuple)
+    parse_release: DocumentParser | None = None

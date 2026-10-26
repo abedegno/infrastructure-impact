@@ -169,3 +169,34 @@ def checkpoint_article(raw, url, vendor):
         "Public article solution only; internal CMS fields are excluded. dateCreated is not assumed to be first public disclosure. Background CVEs do not expand the advisory scope."
     )
     return out
+
+
+def checkpoint_release_listing(raw, url, vendor):
+    """Public metadata only; never retrieve entitlement-controlled firmware."""
+    if urlsplit(url).hostname != "support.checkpoint.com" or not re.fullmatch(
+        r"/results/download/\d+", urlsplit(url).path
+    ):
+        raise ValueError("Expected official public download metadata page")
+    text = raw.decode() if isinstance(raw, bytes) else raw
+    match = re.search(r'<script\b[^>]*\bid=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>', text, re.S)
+    if not match:
+        raise ValueError("Public download metadata unavailable")
+    data = json.loads(match[1])["props"]["pageProps"]["data"]
+    identity = re.fullmatch(r"(.+?) [Bb]uild (\d+) for .+", data["title"])
+    if not identity:
+        raise ValueError("Unsupported firmware title/version scope")
+    return {
+        "schema_version": 1,
+        "vendor": vendor,
+        "source_url": url,
+        "title": data["title"],
+        "product": data["product"],
+        "version": identity[1] + " Build " + identity[2],
+        "platforms": [m.strip() for m in data["models"].split(",")],
+        "reported_published_at": data["datePublished"],
+        "artifact_filename": data["fileName"],
+        "artifact_sha256": data["sha256"].lower(),
+        "availability_basis": "publisher_dated_listing",
+        "evidence_locator": "props.pageProps.data / public title, models, datePublished, fileName, sha256",
+        "limitations": "Public listing metadata only. File access may require entitlement. Historical availability and CVE/product linkage are not independently verified.",
+    }

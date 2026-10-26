@@ -6,6 +6,7 @@ on:
     - cron: '17 */6 * * *'
 permissions:
   contents: read
+  actions: read
 jobs:
   monitor:
     runs-on: ubuntu-latest
@@ -20,3 +21,8 @@ jobs:
         env:
           PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: python3 checks/public_health.py "$PUBLIC_URL"
+      - name: Summarize the seven-day observation window and storage budget
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY"

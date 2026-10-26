@@ -6,6 +6,7 @@ from xml.etree import ElementTree as ET
 
 from ..adapters.compat import HTML, auto, cves
 from ..application.cohort import COHORT
+from ..collection.errors import failure_code
 from ..plugins.registry import default_registry
 from ..storage.repository import collection_result, connect, evidence, ingest, now
 from .discovery import discovery
@@ -127,7 +128,7 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 )
             except Exception as e:
                 failed += 1
-                collection_result(db, feed["vendor"], feed["url"], "error", str(e))
+                collection_result(db, feed["vendor"], feed["url"], "error", str(e), failure_code(e))
                 print(f"ERROR {feed['vendor']} feed: {e}", flush=True)
         seen = set()
         for target in targets:
@@ -161,22 +162,29 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 )
             except Exception as e:
                 failed += 1
-                collection_result(db, target["vendor"], target["url"], "error", str(e))
+                collection_result(
+                    db, target["vendor"], target["url"], "error", str(e), failure_code(e)
+                )
                 print(f"ERROR {target['vendor']} {target['url']}: {e}", flush=True)
         for doc in config.get("release_documents", []):
             try:
                 from ..application.disclosure import import_release_note
 
                 raw = fetch(db, doc["url"], doc["vendor"])
-                import_release_note(
-                    db, raw, doc["url"], doc["vendor"], doc["product"], doc.get("published_at")
-                )
+                if doc.get("kind") == "release_listing":
+                    from ..application.release_assets import ingest_listing
+
+                    ingest_listing(db, raw, doc["url"], doc["vendor"])
+                else:
+                    import_release_note(
+                        db, raw, doc["url"], doc["vendor"], doc["product"], doc.get("published_at")
+                    )
                 collection_result(
-                    db, doc["vendor"], doc["url"], "ok", "Release-note evidence collected"
+                    db, doc["vendor"], doc["url"], "ok", "Configured release evidence collected"
                 )
             except Exception as e:
                 failed += 1
-                collection_result(db, doc["vendor"], doc["url"], "error", str(e))
+                collection_result(db, doc["vendor"], doc["url"], "error", str(e), failure_code(e))
     if upstream_limit:
         from ..storage.repository import latest
 
@@ -203,7 +211,7 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 )
             except Exception as e:
                 failed += 1
-                collection_result(db, "upstream", url, "error", str(e))
+                collection_result(db, "upstream", url, "error", str(e), failure_code(e))
                 print(f"ERROR upstream {cid}: {e}", flush=True)
     db.close()
     return imported, failed

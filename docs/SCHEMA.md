@@ -67,3 +67,17 @@ fields require schema/documentation updates and consumer checks. Breaking meanin
 renames or required-field changes need a new major and explicit migration.
 Publisher layout changes need regression fixtures, a parser version/code change,
 replay and audit. Never silently rewrite historical evidence.
+
+## Release listing metadata
+
+`schemas/release-asset-v1.json` is a separate strict contract for public firmware
+metadata. It preserves vendor/product/build, platforms, publisher date, filename,
+publisher artifact checksum and adapter fingerprint. It has no CVE-assessment
+fields. Captured source fingerprints and local evidence IDs are attached by the
+repository, separately from publisher artifact checksums. Evidence IDs are local
+to a vault; use the source fingerprint when resolving a record across vaults.
+
+Listing metadata does not prove file entitlement, historical public availability
+or a CVE/product association. Repeating a state is idempotent; returning to an
+earlier metadata state creates a new observation rather than leaving the newer
+state current.

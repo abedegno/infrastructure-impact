@@ -1,6 +1,6 @@
 """Public product index and detailed SK article precedence."""
 
-from ..adapters.checkpoint import checkpoint_article, checkpoint_records
+from ..adapters.checkpoint import checkpoint_article, checkpoint_records, checkpoint_release_listing
 from .contracts import FeedBatch, VendorPlugin
 
 
@@ -21,6 +21,7 @@ def plugin():
         ("checkpoint.com",),
         checkpoint_article,
         parse_feed=parse_feed,
+        parse_release=checkpoint_release_listing,
         prefer_existing=lambda old, new: (
             old.get("source_format") == "Public SK article embedded JSON"
         ),

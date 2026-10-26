@@ -48,6 +48,7 @@ and evidence locators. Unknown layouts must fail explicitly.
 
 | Optional hook | Purpose |
 | --- | --- |
+| `parse_release(raw, url, vendor)` | Return release-asset metadata under schema v1; no CVE claims or firmware fetches. |
 | `parse_feed(raw, url, limit, cohort)` | Return `FeedBatch`: selected records, all referenced CVEs, exact inspected scope, outcome. |
 | `canonicalize(url)` | Map known official URL forms to a canonical official source. |
 | `resolve(raw, url, fetch)` | Locate another representation using the supplied allowlisted fetch callback. |

@@ -71,3 +71,13 @@ interpret that alternative as the active service.
 
 The Mac research schedule retains its own local vault and remains independent.
 Existing private Sites previews are separate and unchanged.
+
+## Initial reliability observation
+
+The six-hour monitor also writes an Actions job summary covering the last seven
+days of collection/monitor workflow outcomes, scheduled versus manual runs,
+elapsed observation time and repository storage budget. Workflow success is not
+continuous uptime and may include partial source failures. The initial review
+cannot be completed until seven real days have elapsed; its due time is reported
+by `checks/operations_report.py`. A 512 MiB repository-size budget triggers operator
+review without deleting history automatically.

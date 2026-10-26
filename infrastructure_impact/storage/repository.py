@@ -189,11 +189,11 @@ def history(db, full=True):
     return result
 
 
-def collection_result(db, vendor, url, outcome, details):
+def collection_result(db, vendor, url, outcome, details, error_code=None):
     with db:
         db.execute(
-            "INSERT INTO collection_runs(vendor,source_url,checked_at,outcome,details) VALUES(?,?,?,?,?)",
-            (vendor, url, now(), outcome, details),
+            "INSERT INTO collection_runs(vendor,source_url,checked_at,outcome,details,error_code) VALUES(?,?,?,?,?,?)",
+            (vendor, url, now(), outcome, details, error_code),
         )
 
 

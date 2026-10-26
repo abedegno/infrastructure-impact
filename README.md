@@ -122,8 +122,8 @@ no public write, raw-evidence or collection-trigger endpoints.
 uv sync --frozen --group build --group hosted
 npm ci --ignore-scripts
 uv run pytest -q
-uv run ruff check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py ops
-uv run ruff format --check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py ops
+uv run ruff check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py tests/test_release_sources.py ops
+uv run ruff format --check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py tests/test_release_sources.py ops
 npm run format:check
 uv run --group build python -m build --wheel --no-isolation
 uv run python checks/distribution.py

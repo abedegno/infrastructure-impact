@@ -14,6 +14,11 @@ def audit():
         records = latest(db)
         for record in records:
             validate_advisory(record)
+        assets = []
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='release_assets'").fetchone():
+            from ..application.release_assets import listings
+
+            assets = listings(db)
         count = 0
         for row in db.execute("SELECT raw,sha256 FROM evidence"):
             if sha256(row["raw"]).hexdigest() != row["sha256"]:
@@ -23,6 +28,7 @@ def audit():
             "database": "ok",
             "schema_version": 2,
             "records": len(records),
+            "release_assets": len(assets),
             "evidence_snapshots": count,
             "fingerprints": "ok",
         }

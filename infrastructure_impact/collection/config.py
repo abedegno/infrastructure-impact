@@ -30,7 +30,7 @@ def validate_config(config):
             keys = {"vendor", "url"} | (
                 {"kind", "limit", "order"}
                 if section == "vendors"
-                else {"product", "published_at"}
+                else {"product", "published_at", "kind"}
                 if section == "release_documents"
                 else set()
             )
@@ -52,6 +52,17 @@ def validate_config(config):
                     raise ValueError("Source limit must be an integer from 0 to 1000")
                 if entry["kind"] in ("advisory_index", "checkpoint") and not plugin.parse_feed:
                     raise ValueError("Advisory index requires a plugin feed parser")
+            if section == "release_documents" and entry.get("kind", "release_notes") not in (
+                "release_notes",
+                "release_listing",
+            ):
+                raise ValueError("Unsupported release document kind")
+            if (
+                section == "release_documents"
+                and entry.get("kind") == "release_listing"
+                and not plugin.parse_release
+            ):
+                raise ValueError("Release listing requires a reviewed vendor parser")
             if section == "release_documents" and not entry.get("product", "").strip():
                 raise ValueError("Release documents require a product label")
     return config

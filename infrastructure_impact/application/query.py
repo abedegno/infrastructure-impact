@@ -11,6 +11,7 @@ from .cohort import COHORT, coverage
 from .comparison import advisory_delays, compare
 from .disclosure import latest_documents, signals
 from .evaluation import evaluate
+from .release_assets import listings
 
 ROOT = Paths.from_env().home
 
@@ -22,6 +23,7 @@ def state(db, cohort=None):
     selection = set(comparison["cohort"])
     review_signals = signals(db)
     research = {
+        "release_assets": listings(db),
         "release_documents": [
             {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}
             for r in latest_documents(db)

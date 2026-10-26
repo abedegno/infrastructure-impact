@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 
 from ..adapters.compat import auto
 from ..collection.config import load_config
+from ..collection.errors import failure_code
 from ..collection.service import allowed, fetch, resolve_document
 from ..plugins.registry import default_registry
 from ..settings import Paths
@@ -73,7 +74,7 @@ def run(aruba_limit=200):
             print("UPSTREAM", cid, len(refs), "references", flush=True)
         except Exception as e:
             failures += 1
-            collection_result(db, "upstream", url, "error", str(e))
+            collection_result(db, "upstream", url, "error", str(e), failure_code(e))
             print("ERROR", cid, str(e), flush=True)
     # Official index filenames are not CVE-searchable; inspect each document within
     # a declared cap and preserve the inspected count so a partial scan is explicit.
@@ -116,7 +117,7 @@ def run(aruba_limit=200):
                 except Exception as e:
                     errors += 1
                     failures += 1
-                    collection_result(db, vendor, source, "error", str(e))
+                    collection_result(db, vendor, source, "error", str(e), failure_code(e))
             with db:
                 ev = evidence(db, raw, url)
                 for cid in COHORT:
@@ -139,7 +140,7 @@ def run(aruba_limit=200):
             print(vendor.upper() + " SCAN", inspected, "/", len(urls), "errors", errors, flush=True)
         except Exception as e:
             failures += 1
-            collection_result(db, vendor, url, "error", str(e))
+            collection_result(db, vendor, url, "error", str(e), failure_code(e))
             print(vendor.upper() + " ERROR", str(e), flush=True)
     # Explicit curated historical cases supplement current feed windows.
     for vendor, url in list(targets)[:60]:
@@ -150,7 +151,7 @@ def run(aruba_limit=200):
             print("IMPORTED", vendor, resolved, flush=True)
         except Exception as e:
             failures += 1
-            collection_result(db, vendor, url, "error", str(e))
+            collection_result(db, vendor, url, "error", str(e), failure_code(e))
             print("ERROR", vendor, url, str(e), flush=True)
     with db:
         result = coverage(db, latest(db))
