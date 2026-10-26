@@ -1,0 +1,266 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "leads",
+    "sources",
+    "leads_truncated",
+    "analysis_gaps",
+    "observation_scan_truncated",
+    "independent_human_review_completed",
+    "method"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "leads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "vendor",
+          "product",
+          "component",
+          "details",
+          "cve_ids",
+          "evidence",
+          "state",
+          "concealment",
+          "alternative_explanations",
+          "missing_evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{24}$"
+          },
+          "kind": {
+            "enum": [
+              "component_version_changed",
+              "security_statement_without_cve",
+              "release_note_cve_reference_added",
+              "advisory_cve_reference_added",
+              "publisher_reported_chronology"
+            ]
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "product": {
+            "type": "string"
+          },
+          "component": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "details": {
+            "type": "string"
+          },
+          "cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-\\d{4}-\\d{4,}$"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_url",
+                "source_sha256",
+                "observed_at",
+                "publisher_date_claim"
+              ],
+              "properties": {
+                "source_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "observed_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "publisher_date_claim": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "state": {
+            "enum": [
+              "investigation_required"
+            ]
+          },
+          "concealment": {
+            "enum": [
+              "not_established"
+            ]
+          },
+          "alternative_explanations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missing_evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "product",
+          "source_url",
+          "snapshots",
+          "analysis_state",
+          "components",
+          "current_evidence"
+        ],
+        "properties": {
+          "vendor": {
+            "type": "string"
+          },
+          "product": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "snapshots": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "analysis_state": {
+            "type": "string"
+          },
+          "components": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "current_evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_url",
+              "source_sha256",
+              "observed_at",
+              "publisher_date_claim"
+            ],
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "observed_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "publisher_date_claim": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "leads_truncated": {
+      "type": "boolean"
+    },
+    "analysis_gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "source_url",
+          "reason"
+        ],
+        "properties": {
+          "vendor": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "observation_scan_truncated": {
+      "type": "boolean"
+    },
+    "independent_human_review_completed": {
+      "const": false
+    },
+    "method": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      }
+    },
+    "generated_at": {
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

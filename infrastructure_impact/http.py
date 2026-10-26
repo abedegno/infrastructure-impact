@@ -112,6 +112,21 @@ class Application:
                 },
                 status=503 if stale else 200,
             )
+        if path in {
+            "/api/v1/family-completeness",
+            "/api/v1/comparison-readiness",
+            "/api/v1/fix-leads",
+        }:
+            key = path.rsplit("/", 1)[-1].replace("-", "_")
+            if key not in data:
+                return self.json({"error": "Report unavailable for this generation"}, status=404)
+            return self.json(
+                {
+                    **data[key],
+                    "publication": data["publication"],
+                    "generated_at": data["generated_at"],
+                }
+            )
         if path == "/api/v1/vendor-gaps":
             report = data["vendor_gaps"]
             values = parse_qs(environ.get("QUERY_STRING", "")).get("vendor", [])
@@ -135,6 +150,8 @@ class Application:
             "/api/v1/publisher-history",
         ):
             key = path.rsplit("/", 1)[-1].replace("-", "_")
+            if key not in data:
+                return self.json({"error": "Report unavailable for this generation"}, status=404)
             return self.json(
                 {
                     **data.get(key, {}),
@@ -277,6 +294,9 @@ class Application:
             "/scorecards.json",
             "/source-audit.json",
             "/vendor-gaps.json",
+            "/family-completeness.json",
+            "/comparison-readiness.json",
+            "/fix-leads.json",
             "/comparison-eligibility.json",
             "/product-groups.json",
             "/extraction-validation.json",
@@ -296,6 +316,9 @@ class Application:
             "/schemas/review-submission-v1.json",
             "/schemas/static-index-v1.json",
             "/schemas/vendor-gaps-v1.json",
+            "/schemas/family-completeness-v1.json",
+            "/schemas/comparison-readiness-v1.json",
+            "/schemas/fix-leads-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",

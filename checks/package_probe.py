@@ -98,6 +98,9 @@ def main():
             "review-submission-v1.json",
             "static-index-v1.json",
             "vendor-gaps-v1.json",
+            "family-completeness-v1.json",
+            "comparison-readiness-v1.json",
+            "fix-leads-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         groups = json.loads((root / "current/product-groups.json").read_text())

@@ -633,6 +633,60 @@
           }
         }
       }
+    },
+    "/api/v1/family-completeness": {
+      "get": {
+        "summary": "Curated family and release-line reference evidence; not inventory completeness",
+        "description": "Whole-publication report, independent of the selected browser CVE cohort. Read only. Static Pages serves /family-completeness.json.",
+        "responses": {
+          "200": {
+            "description": "Generation-bound report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/family-completeness-v1.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/comparison-readiness": {
+      "get": {
+        "summary": "Predeclared reference cohorts and blockers; no rates",
+        "description": "Whole-publication report, independent of the selected browser CVE cohort. Read only. Static Pages serves /comparison-readiness.json.",
+        "responses": {
+          "200": {
+            "description": "Generation-bound report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/comparison-readiness-v1.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/fix-leads": {
+      "get": {
+        "summary": "Dated research leads, alternative explanations and analysis gaps",
+        "description": "Whole-publication report, independent of the selected browser CVE cohort. Read only. Static Pages serves /fix-leads.json.",
+        "responses": {
+          "200": {
+            "description": "Generation-bound report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/fix-leads-v1.json"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

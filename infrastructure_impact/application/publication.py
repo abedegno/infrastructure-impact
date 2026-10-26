@@ -18,10 +18,13 @@ from .casefiles import casefiles
 from .cohort import COHORT, coverage
 from .eligibility import eligibility, report_validator
 from .extraction_validation import review_packet, validation_report
+from .families import completeness
+from .fix_leads import leads, public_inputs
 from .product_groups import product_groups
 from .product_groups import validate_report as validate_groups
 from .publisher_history import public_history
 from .query import state
+from .readiness import readiness
 from .release_assets import validate_asset
 
 
@@ -82,6 +85,12 @@ def public_projection(data, public_release_urls=()):
     data["vendor_gaps"] = vendor_gaps(data)
     data["review_packet"] = review_packet(data["records"])
     data["comparison_eligibility"] = eligibility(data, data["comparison"]["cohort"])
+    data["family_completeness"] = completeness(data)
+    data["comparison_readiness"] = readiness(data)
+    inputs = public_inputs(
+        data["research"].pop("lead_inputs", {}), public_release_urls, data["records"]
+    )
+    data["fix_leads"] = leads({**data, "research": {**data["research"], "lead_inputs": inputs}})
     data["delays"] = []
     data["snapshot_notice"] = (
         "Dated public-source evidence; not a representative vendor security ranking. No finding of intentional concealment."
@@ -90,6 +99,9 @@ def public_projection(data, public_release_urls=()):
 
 
 def write_bundle(destination, data):
+    from .research_reports import validate
+
+    validate(data)
     report_validator().validate(data["comparison_eligibility"])
     validate_groups(data["product_groups"])
     destination = Path(destination)
@@ -111,6 +123,9 @@ def write_bundle(destination, data):
         "extraction_validation",
         "review_packet",
         "publisher_history",
+        "family_completeness",
+        "comparison_readiness",
+        "fix_leads",
     ):
         (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
@@ -206,6 +221,9 @@ def write_bundle(destination, data):
         "review-submission-v1.json",
         "static-index-v1.json",
         "vendor-gaps-v1.json",
+        "family-completeness-v1.json",
+        "comparison-readiness-v1.json",
+        "fix-leads-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

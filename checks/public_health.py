@@ -79,7 +79,11 @@ def check(origin, expected=None):
             "publisher_history",
             "comparison_eligibility",
         )
-        for key in report_keys + (("vendor_gaps",) if data.get("vendor_gaps") else ()):
+        for key in report_keys + tuple(
+            k
+            for k in ("vendor_gaps", "family_completeness", "comparison_readiness", "fix_leads")
+            if data.get(k)
+        ):
             filename = key.replace("_", "-") + ".json"
             with urlopen(origin + filename, timeout=20) as response:
                 report_raw = response.read(15_000_001)

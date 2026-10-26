@@ -15,8 +15,11 @@ from .eligibility import eligibility
 from .evaluation import evaluate
 from .extraction_validation import definition as review_definition
 from .extraction_validation import review_packet, validation_report
+from .families import completeness
+from .fix_leads import evidence_inputs, leads
 from .product_groups import product_groups
 from .publisher_history import publisher_history
+from .readiness import readiness
 from .release_assets import listings
 from .scorecards import scorecards
 from .source_audit import source_audit
@@ -50,6 +53,7 @@ def state(db, cohort=None):
             {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}
             for r in latest_documents(db)
         ],
+        "lead_inputs": evidence_inputs(db),
         "fix_candidates": [
             dict(r) for r in db.execute("SELECT * FROM fix_evidence ORDER BY id DESC")
         ],
@@ -112,4 +116,7 @@ def state(db, cohort=None):
     result["casefiles"] = casefiles(result)
     result["product_groups"] = product_groups(result)
     result["comparison_eligibility"] = eligibility(result, comparison["cohort"])
+    result["family_completeness"] = completeness(result)
+    result["comparison_readiness"] = readiness(result)
+    result["fix_leads"] = leads(result)
     return result

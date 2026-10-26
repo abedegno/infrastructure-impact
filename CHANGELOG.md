@@ -3,6 +3,13 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Research foundations — 2026-10-26
+
+- Add 33 curated product families, selected release-line reference checks, source fingerprints and explicit inventory gaps.
+- Add predeclared comparison cohorts with common CVE cells, readiness requirements and suppressed rates.
+- Add dated fix leads from scoped release sections, component-version observations and publisher chronology, retaining alternative explanations and counter-evidence.
+- Publish strict schemas, JSON reports, read-only endpoints and three dashboard views; keep private intermediate evidence outside the public projection.
+
 ## Historical batches and infrastructure expansion — 2026-10-26
 
 - Add bounded retained-evidence/network triage with explicit layout groups, sampling bounds and no queue ingestion.

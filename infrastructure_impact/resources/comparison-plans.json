@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "plan_version": "2026-10-26.1",
+  "cohort_design": "Predeclared reference dependency cohort inherited from the benchmark; purposive, not statistically representative or selected from each vendor's observed outcomes.",
+  "period_start": "2021-01-01",
+  "plans": [
+    {"id":"security-gateways","name":"Security gateway evidence cohort","families":["cisco-asa-ftd","paloalto-panos","juniper-srx","checkpoint-quantum-gateway","fortinet-fortios"]},
+    {"id":"switching","name":"Switching software evidence cohort","families":["cisco-nxos","aruba-aoscx","arista-eos","juniper-switches"]},
+    {"id":"management","name":"Infrastructure management evidence cohort","families":["arista-cvp","paloalto-panorama","checkpoint-quantum-management","fortinet-fortimanager","hpe-oneview"]}
+  ]
+}

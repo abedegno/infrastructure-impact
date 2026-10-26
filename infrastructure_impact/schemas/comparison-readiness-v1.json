@@ -1,0 +1,243 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan_version",
+    "scope",
+    "cohort_design",
+    "plans",
+    "eligible_comparisons",
+    "method"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "plan_version": {
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "predeclared_reference_cohort"
+      ]
+    },
+    "cohort_design": {
+      "type": "string"
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "families",
+          "state",
+          "cohort",
+          "period",
+          "members",
+          "rate_comparison",
+          "requirements"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "families": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "state": {
+            "enum": [
+              "blocked"
+            ]
+          },
+          "cohort": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-\\d{4}-\\d{4,}$"
+            }
+          },
+          "period": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "start",
+              "end",
+              "basis"
+            ],
+            "properties": {
+              "start": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              },
+              "basis": {
+                "type": "string"
+              }
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "family_id",
+                "vendor",
+                "name",
+                "state",
+                "reason_codes",
+                "cases",
+                "explicit_cases",
+                "unknown_or_unresolved_cases",
+                "undated_statements_excluded",
+                "comparison_rate"
+              ],
+              "properties": {
+                "family_id": {
+                  "type": "string"
+                },
+                "vendor": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "state": {
+                  "enum": [
+                    "blocked"
+                  ]
+                },
+                "reason_codes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "cve_id",
+                      "state",
+                      "statuses",
+                      "statement_count"
+                    ],
+                    "properties": {
+                      "cve_id": {
+                        "type": "string",
+                        "pattern": "^CVE-\\d{4}-\\d{4,}$"
+                      },
+                      "state": {
+                        "enum": [
+                          "explicit_assessment",
+                          "shared_only",
+                          "unknown",
+                          "unresolved"
+                        ]
+                      },
+                      "statuses": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "statement_count": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "explicit_cases": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "unknown_or_unresolved_cases": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "undated_statements_excluded": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "comparison_rate": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "rate_comparison": {
+            "enum": [
+              "suppressed"
+            ]
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "state"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "state": {
+                  "enum": [
+                    "met",
+                    "incomplete",
+                    "missing",
+                    "unverified",
+                    "pending"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "eligible_comparisons": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "method": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      }
+    },
+    "generated_at": {
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

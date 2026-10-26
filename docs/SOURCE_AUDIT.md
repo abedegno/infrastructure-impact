@@ -98,3 +98,7 @@ The [historical-batch and expansion review](research/history-expansion-20261026.
 covers three further Arista gaps, a batch-discovered CloudVision layout and
 publisher-verified infrastructure CNA scopes. Automated triage outcomes are kept
 separate from independent human review and archive completeness.
+
+The [research foundations](RESEARCH_FOUNDATIONS.md) separate curated family evidence
+from inventories, comparison readiness from rates, and dated fix leads from
+verified public availability or concealment findings.

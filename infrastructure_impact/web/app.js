@@ -126,6 +126,9 @@ function render() {
     catalogue: renderCatalogue,
     gaps: renderVendorGaps,
     casefiles: renderCasefiles,
+    families: renderFamilies,
+    readiness: renderReadiness,
+    fixleads: renderFixLeads,
     scorecards: renderScorecards,
     timeline: renderTimeline,
     correction: renderCorrection,
@@ -665,4 +668,86 @@ function renderCoverageMatrix(rows) {
       return `<tr><td><strong>${esc(v.name)}</strong><small>${esc(c.declared_history_scope)}</small><details><summary>Products and declared limits</summary><p>${c.declared_product_families.map(esc).join('; ')}</p>${c.declared_gaps.map((g) => `<p>${esc(g)}</p>`).join('')}</details></td><td><details><summary>${c.configured_sources.length} configured routes</summary>${c.configured_sources.map((s) => `<p>${link(s.source_url, s.kind)} · ${esc(s.role.replaceAll('_', ' '))}${s.per_pass_limit === null ? '' : ` · ${s.per_pass_limit} documents per pass`}</p>`).join('')}</details><small>Capabilities: ${c.capabilities.map(esc).join(', ') || 'Not declared'}</small></td><td>${c.archives.map((a) => `<p>${link(a.source_url, a.kind)}<small>${a.pages.done} pages processed; ${a.pages.pending} pages pending; ${a.pages.error} pages failed; ${a.documents.done} documents retained; ${a.documents.pending} pending; ${a.documents.error} failed</small><small>Budget: ${a.page_limit} pages / ${a.document_limit} documents per pass. Known queue ${a.known_queue_exhausted ? 'exhausted' : 'not exhausted'}; portfolio completeness not established.</small></p>`).join('') || '<p>No enabled archive source.</p>'}</td><td>${c.observed_formats.map((f) => `<small>${esc(f.format)}: ${f.advisories}</small>`).join('') || 'No normalized documents'}<small>Publisher dates: ${date(c.publisher_date_range.earliest)} to ${date(c.publisher_date_range.latest)}</small><small>${c.documents_without_publisher_date} without a usable publisher date</small></td><td>${c.unsupported_sources} unsupported or invalid source URLs<small>${c.access_blocked_sources} access-blocked source URLs; ${c.other_error_sources} other or unclassified errors</small><small>Latest retained checks; successful layouts do not establish all layouts are supported.</small></td></tr>`;
     })
     .join('')}</tbody></table></div>`;
+}
+
+let familyVendor = '',
+  familyUnknown = false;
+function renderFamilies() {
+  const report = data.family_completeness;
+  if (!report) {
+    $('#view').innerHTML = '<p>Family evidence report unavailable.</p>';
+    return;
+  }
+  const rows = report.families.filter(
+    (f) =>
+      (!familyVendor || f.vendor === familyVendor) &&
+      (!familyUnknown ||
+        f.state === 'unknown' ||
+        f.train_references.some((t) => t.state === 'unknown')),
+  );
+  $('#view').innerHTML =
+    `<h2>Product-family evidence completeness</h2><div class="notice">${esc(report.method)}</div><div class="matrix-filters"><label>Vendor<select id="family-vendor"><option value="">All vendors</option>${Object.entries(
+      data.vendors,
+    )
+      .map(
+        ([v, n]) =>
+          `<option value="${esc(v)}" ${v === familyVendor ? 'selected' : ''}>${esc(n)}</option>`,
+      )
+      .join(
+        '',
+      )}</select></label><label><input id="family-unknown" type="checkbox" ${familyUnknown ? 'checked' : ''}> Show unknown families or selected train references</label></div><p>${link('/family-completeness.json', 'Download family evidence report')}</p><div class="table-wrap"><table><thead><tr><th>Family</th><th>Retained statements</th><th>Selected release-line references</th><th>Evidence and unresolved scope</th></tr></thead><tbody>${rows
+      .map(
+        (f) =>
+          `<tr><td><strong>${esc(name(f.vendor))} · ${esc(f.name)}</strong>${badge(f.state.replaceAll('_', ' '))}<small>Inventory completeness not established</small></td><td>${f.advisories} advisories; ${f.cves} CVEs<small>${f.explicit_statements} CVE-specific; ${f.shared_statements} shared-scope statements</small><small>${Object.entries(
+            f.statuses,
+          )
+            .map(([s, n]) => `${esc(s)}: ${n}`)
+            .join(
+              '; ',
+            )}</small></td><td>${f.train_references.map((t) => `<small>${esc(t.train)}: ${esc(t.state)} (${t.statements} statements)</small>`).join('') || 'No selected train expectations declared'}<small>A reference does not establish full train coverage.</small></td><td>${f.version_scope_unresolved} statements without usable version scope<small>${f.vendor_source_errors} vendor-wide source errors; family attribution unresolved</small><details><summary>Retained publisher sources</summary>${f.evidence.map((e) => `<p>${link(e.source_url, 'Source')}<small>Publisher ${date(e.publisher_date)}; captured ${date(e.observed_at)}</small><code>${esc(e.source_sha256)}</code></p>`).join('') || '<p>No matching retained family evidence. This does not mean unaffected.</p>'}</details></td></tr>`,
+      )
+      .join('')}</tbody></table></div><p>Unmapped statements: ${Object.entries(
+      report.unmapped_statements,
+    )
+      .map(([v, n]) => `${esc(name(v))}: ${n}`)
+      .join('; ')}. Mixed platform classes and unreviewed product names remain unresolved.</p>`;
+  $('#family-vendor').addEventListener('change', (e) => {
+    familyVendor = e.target.value;
+    renderFamilies();
+  });
+  $('#family-unknown').addEventListener('change', (e) => {
+    familyUnknown = e.target.checked;
+    renderFamilies();
+  });
+}
+
+function renderReadiness() {
+  const report = data.comparison_readiness;
+  if (!report) {
+    $('#view').innerHTML = '<p>Comparison readiness unavailable.</p>';
+    return;
+  }
+  $('#view').innerHTML =
+    `<h2>Vendor comparison readiness</h2><div class="notice">${esc(report.method)}</div><p>${esc(report.cohort_design)} These plans use their predeclared cohort regardless of the browser cohort selector.</p><p>${link('/comparison-readiness.json', 'Download predeclared cohort plans')}</p>${report.plans.map((p) => `<article class="change"><h3>${esc(p.name)}</h3>${badge(p.state)}<p>${p.cohort.length} common CVEs; ${esc(p.period.start)} to ${esc(p.period.end)}. Latest retained statements grouped by initial advisory date; not an as-of history.</p><p>${p.requirements.map((r) => `${esc(r.code.replaceAll('_', ' '))}: ${esc(r.state)}`).join(' · ')}</p><div class="table-wrap"><table><thead><tr><th>Family</th><th>Explicit case assessments</th><th>Gaps</th><th>Readiness blockers</th></tr></thead><tbody>${p.members.map((m) => `<tr><td>${esc(name(m.vendor))} · ${esc(m.name)}</td><td>${m.explicit_cases} of ${p.cohort.length} reference cases<small>Evidence cells, not a vulnerability rate.</small></td><td>${m.unknown_or_unresolved_cases} unknown, shared-only or unresolved<small>${m.undated_statements_excluded} undated statements excluded</small></td><td>${m.reason_codes.map((r) => `<small>${esc(r.replaceAll('_', ' '))}</small>`).join('')}<details><summary>Inspect common CVE cells</summary>${m.cases.map((c) => `<p>${esc(c.cve_id)} · ${esc(c.state.replaceAll('_', ' '))} · ${c.statuses.map(esc).join(', ') || 'No statement'}</p>`).join('')}</details></td></tr>`).join('')}</tbody></table></div></article>`).join('')}`;
+}
+
+function renderFixLeads() {
+  const report = data.fix_leads;
+  if (!report) {
+    $('#view').innerHTML = '<p>Fix-lead report unavailable.</p>';
+    return;
+  }
+  $('#view').innerHTML =
+    `<h2>Potential security-fix investigation leads</h2><div class="notice">${esc(report.method)}</div><p>${link('/fix-leads.json', 'Download dated leads and analysis gaps')}</p>${report.leads.map((l) => `<article class="change"><div class="eyebrow">${esc(name(l.vendor))} · ${esc(l.kind.replaceAll('_', ' '))}</div><h3>${esc(l.product)}</h3>${badge(l.state.replaceAll('_', ' '))}<p>${esc(l.details)}</p><p>${l.cve_ids.map(esc).join(', ') || 'No CVE linkage established'}${l.component ? ` · ${esc(l.component)}` : ''}</p><h4>Dated retained evidence</h4>${l.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')}<small>Local observation ${date(e.observed_at)}; publisher date claim ${date(e.publisher_date_claim)}</small><code>${esc(e.source_sha256)}</code></p>`).join('')}<h4>Alternative explanations</h4><ul>${l.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><h4>Evidence still needed</h4><ul>${l.missing_evidence.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment: not established. No prior product exposure or public fix availability inferred.</p></article>`).join('') || '<p>No leads established from the currently eligible sources. This does not establish absence of security fixes.</p>'}<h3>Component tracking and source gaps</h3>${report.sources
+      .map(
+        (s) =>
+          `<p>${esc(name(s.vendor))} · ${esc(s.product)} · ${s.snapshots} retained snapshots · ${esc(s.analysis_state.replaceAll('_', ' '))}<small>${
+            Object.entries(s.components)
+              .map(([c, v]) => `${esc(c)}: ${v.map(esc).join(', ')}`)
+              .join('; ') || 'No explicit component-version references in reviewed sections.'
+          }</small></p>`,
+      )
+      .join(
+        '',
+      )}<details><summary>${report.analysis_gaps.length} analysis gaps</summary>${report.analysis_gaps.map((g) => `<p>${esc(name(g.vendor))} · ${link(g.source_url, 'Source')} · ${esc(g.reason.replaceAll('_', ' '))}</p>`).join('')}</details>`;
 }

@@ -1,0 +1,218 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "catalogue_version",
+    "scope",
+    "families",
+    "unmapped_statements",
+    "method"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "catalogue_version": {
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "whole_publication"
+      ]
+    },
+    "families": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "vendor",
+          "name",
+          "state",
+          "statements",
+          "advisories",
+          "cves",
+          "statuses",
+          "explicit_statements",
+          "shared_statements",
+          "product_labels",
+          "train_references",
+          "version_scope_unresolved",
+          "vendor_source_errors",
+          "evidence",
+          "evidence_truncated",
+          "inventory_completeness",
+          "source_url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "unknown",
+              "evidence_present"
+            ]
+          },
+          "statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "advisories": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cves": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "statuses": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "explicit_statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "shared_statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "product_labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "train_references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "train",
+                "state",
+                "statements",
+                "meaning"
+              ],
+              "properties": {
+                "train": {
+                  "type": "string"
+                },
+                "state": {
+                  "enum": [
+                    "referenced",
+                    "unknown"
+                  ]
+                },
+                "statements": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "meaning": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "version_scope_unresolved": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "vendor_source_errors": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_url",
+                "source_sha256",
+                "publisher_date",
+                "observed_at"
+              ],
+              "properties": {
+                "source_url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "publisher_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "observed_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "evidence_truncated": {
+            "type": "boolean"
+          },
+          "inventory_completeness": {
+            "enum": [
+              "not_established"
+            ]
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "unmapped_statements": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "method": {
+      "type": "string"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      }
+    },
+    "generated_at": {
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

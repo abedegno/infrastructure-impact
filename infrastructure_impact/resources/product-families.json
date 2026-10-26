@@ -1,0 +1,468 @@
+{
+  "schema_version": 1,
+  "catalogue_version": "2026-10-26.1",
+  "scope": "Curated infrastructure families and selected release-line reference checks, not an exhaustive inventory or support lifecycle catalogue.",
+  "families": [
+    {
+      "id": "cisco-iosxe",
+      "vendor": "cisco",
+      "name": "IOS XE",
+      "prefixes": [
+        "Cisco IOS XE",
+        "IOS XE"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/publicationListing.x",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "cisco-nxos",
+      "vendor": "cisco",
+      "name": "NX-OS",
+      "prefixes": [
+        "Cisco NX-OS",
+        "NX-OS"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [
+        "9.3",
+        "10.4"
+      ],
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/publicationListing.x",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "cisco-asa-ftd",
+      "vendor": "cisco",
+      "name": "ASA / Secure Firewall",
+      "prefixes": [
+        "Cisco ASA",
+        "Cisco Adaptive Security",
+        "Cisco Firepower",
+        "Cisco Secure Firewall"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/publicationListing.x",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "cisco-ise",
+      "vendor": "cisco",
+      "name": "Identity Services Engine",
+      "prefixes": [
+        "Cisco Identity Services",
+        "Identity Services Engine"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/publicationListing.x",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "aruba-aoscx",
+      "vendor": "aruba",
+      "name": "AOS-CX",
+      "prefixes": [
+        "AOS-CX",
+        "Aruba AOS-CX"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [
+        "10.13",
+        "10.14"
+      ],
+      "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "aruba-aosswitch",
+      "vendor": "aruba",
+      "name": "AOS-Switch",
+      "prefixes": [
+        "AOS-Switch",
+        "ArubaOS-Switch"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "aruba-wireless",
+      "vendor": "aruba",
+      "name": "Wireless controllers and APs",
+      "prefixes": [
+        "ArubaOS",
+        "Aruba InstantOS",
+        "InstantOS",
+        "AOS 8",
+        "AOS-8",
+        "AOS 10",
+        "AOS-10",
+        "Access Points running"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "aruba-clearpass",
+      "vendor": "aruba",
+      "name": "ClearPass",
+      "prefixes": [
+        "ClearPass",
+        "Aruba ClearPass"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "aruba-edgeconnect",
+      "vendor": "aruba",
+      "name": "EdgeConnect",
+      "prefixes": [
+        "Aruba EdgeConnect",
+        "EdgeConnect"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "arista-eos",
+      "vendor": "arista",
+      "name": "EOS",
+      "prefixes": [
+        "Arista EOS",
+        "EOS"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [
+        "4.34",
+        "4.35"
+      ],
+      "source_url": "https://www.arista.com/en/support/advisories-notices",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "arista-mos",
+      "vendor": "arista",
+      "name": "7130 MOS",
+      "prefixes": [
+        "Arista 7130",
+        "7130 MOS"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.arista.com/en/support/advisories-notices",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "arista-cvp",
+      "vendor": "arista",
+      "name": "CloudVision Portal",
+      "prefixes": [
+        "CloudVision Portal",
+        "CloudVision (CVP)",
+        "CVP"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.arista.com/en/support/advisories-notices",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "arista-ngfw",
+      "vendor": "arista",
+      "name": "Edge Threat Management NGFW",
+      "prefixes": [
+        "Arista Edge Threat Management",
+        "Arista Next Generation"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.arista.com/en/support/advisories-notices",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "arista-dmf",
+      "vendor": "arista",
+      "name": "DANZ Monitoring Fabric",
+      "prefixes": [
+        "DANZ Monitoring Fabric",
+        "Arista DANZ"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.arista.com/en/support/advisories-notices",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "paloalto-panos",
+      "vendor": "paloalto",
+      "name": "PAN-OS",
+      "prefixes": [
+        "PAN-OS",
+        "Palo Alto Networks PAN-OS"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [
+        "10.2",
+        "11.1",
+        "11.2"
+      ],
+      "source_url": "https://security.paloaltonetworks.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "paloalto-panorama",
+      "vendor": "paloalto",
+      "name": "Panorama",
+      "prefixes": [
+        "Panorama",
+        "Palo Alto Networks Panorama"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://security.paloaltonetworks.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "paloalto-prisma-sdwan",
+      "vendor": "paloalto",
+      "name": "Prisma SD-WAN ION",
+      "prefixes": [
+        "Prisma SD-WAN ION",
+        "Palo Alto Networks Prisma SD-WAN ION"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://security.paloaltonetworks.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "juniper-srx",
+      "vendor": "juniper",
+      "name": "Junos on SRX",
+      "prefixes": [
+        "Junos OS"
+      ],
+      "platform_prefixes": [
+        "SRX"
+      ],
+      "expected_train_references": [
+        "23.2",
+        "23.4",
+        "24.2"
+      ],
+      "source_url": "https://supportportal.juniper.net/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "juniper-switches",
+      "vendor": "juniper",
+      "name": "Junos on EX/QFX",
+      "prefixes": [
+        "Junos OS"
+      ],
+      "platform_prefixes": [
+        "EX",
+        "QFX"
+      ],
+      "expected_train_references": [],
+      "source_url": "https://supportportal.juniper.net/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "juniper-routers",
+      "vendor": "juniper",
+      "name": "Junos on MX/PTX/ACX",
+      "prefixes": [
+        "Junos OS"
+      ],
+      "platform_prefixes": [
+        "MX",
+        "PTX",
+        "ACX"
+      ],
+      "expected_train_references": [],
+      "source_url": "https://www.juniper.net/us/en/products/routers.html",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "juniper-ssr",
+      "vendor": "juniper",
+      "name": "Session Smart Router",
+      "prefixes": [
+        "Session Smart Router",
+        "Juniper Session Smart"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://supportportal.juniper.net/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "checkpoint-quantum-gateway",
+      "vendor": "checkpoint",
+      "name": "Quantum Security Gateway",
+      "prefixes": [
+        "Quantum Security Gateway",
+        "Security Gateway",
+        "Quantum Force"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://support.checkpoint.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "checkpoint-quantum-management",
+      "vendor": "checkpoint",
+      "name": "Quantum Security Management",
+      "prefixes": [
+        "Quantum Security Management",
+        "Security Management",
+        "Multi-Domain Security Management"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://support.checkpoint.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "checkpoint-spark",
+      "vendor": "checkpoint",
+      "name": "Quantum Spark",
+      "prefixes": [
+        "Quantum Spark",
+        "Check Point Spark",
+        "Spark Firewall"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://support.checkpoint.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "fortinet-fortios",
+      "vendor": "fortinet",
+      "name": "FortiOS",
+      "prefixes": [
+        "FortiOS",
+        "FortiGate"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [
+        "7.0",
+        "7.2",
+        "7.4"
+      ],
+      "source_url": "https://www.fortiguard.com/psirt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "fortinet-fortiproxy",
+      "vendor": "fortinet",
+      "name": "FortiProxy",
+      "prefixes": [
+        "FortiProxy"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.fortiguard.com/psirt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "fortinet-fortiswitch",
+      "vendor": "fortinet",
+      "name": "FortiSwitch",
+      "prefixes": [
+        "FortiSwitch"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.fortiguard.com/psirt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "fortinet-fortimanager",
+      "vendor": "fortinet",
+      "name": "FortiManager",
+      "prefixes": [
+        "FortiManager"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.fortiguard.com/psirt",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "hpe-ilo",
+      "vendor": "hpe",
+      "name": "Integrated Lights-Out",
+      "prefixes": [
+        "HPE Integrated Lights-Out"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://support.hpe.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "hpe-proliant",
+      "vendor": "hpe",
+      "name": "ProLiant",
+      "prefixes": [
+        "HPE ProLiant"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://support.hpe.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "hpe-oneview",
+      "vendor": "hpe",
+      "name": "OneView",
+      "prefixes": [
+        "HPE OneView"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://support.hpe.com/",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "hpe-msa",
+      "vendor": "hpe",
+      "name": "MSA storage",
+      "prefixes": [
+        "HPE MSA",
+        "HPE Modular Smart Array"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://buy.hpe.com/us/en/storage/disk-storage-systems/msa-storage/c/241493",
+      "reviewed_at": "2026-10-26"
+    },
+    {
+      "id": "hpe-alletra",
+      "vendor": "hpe",
+      "name": "Alletra storage",
+      "prefixes": [
+        "HPE Alletra"
+      ],
+      "platform_prefixes": [],
+      "expected_train_references": [],
+      "source_url": "https://www.hpe.com/us/en/products/storage/alletra.html",
+      "reviewed_at": "2026-10-26"
+    }
+  ]
+}
