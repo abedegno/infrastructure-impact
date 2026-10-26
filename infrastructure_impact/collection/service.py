@@ -66,7 +66,9 @@ def resolve_document(db, url, vendor):
             if not any(v.get("product_status") for v in parsed.get("vulnerabilities", [])):
                 try:
                     fallback = registry.normalize(raw, url, vendor)
-                    if fallback["assessments"]:
+                    if fallback["assessments"] or (
+                        not fallback["cves"] and plugin.retain_unlinked_notice(fallback)
+                    ):
                         return url, raw
                 except (ValueError, KeyError):
                     pass

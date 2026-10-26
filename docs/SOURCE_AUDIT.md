@@ -84,3 +84,8 @@ security notice without CVE identifiers, explicit CVE-grouped software ranges an
 a reference-only informational index. These are retained without treating the
 notice or index as appliance exposure. See [Vendor gaps](VENDOR_GAPS.md) for the
 global collection and source-review view.
+
+The [five-advisory follow-up](research/advisory-gaps-20261026.md) covers nested
+VeloCloud versions, MCS/CVX and Secure Boot prerequisites, the AirSnitch notice
+and exactly repeated Palo Alto CSAF entries. It preserves configuration and
+platform scope without guessing CVE mappings or silently resolving differences.

@@ -166,3 +166,204 @@ def grouped_software(raw, url, vendor):
         "Only explicit Affected Software lists and their local CVE groups are normalized. An unclosed publisher div does not carry a prior product or CVE group across headings. Hardware/configuration context must be reviewed against the original source; no version arithmetic or inventory matching is performed. Description/bug references do not override software-list CVE bindings. Unlisted-product exclusions and resolution blocks are not independently normalized or verified."
     ]
     return out
+
+
+REVIEWED_SOFTWARE = {
+    "0138": {
+        "VeloCloud Orchestrator (Formerly VeloCloud Orchestrator by Broadcom)": "VeloCloud Orchestrator",
+        "VeloCloud Gateway (Formerly VeloCloud Gateway by Broadcom)": "VeloCloud Gateway",
+    },
+    "0139": {
+        "EOS Versions": "Media Control Service (MCS) on CloudVision eXchange (CVX)",
+        "DMF Versions": "DANZ Monitoring Fabric (DMF)",
+    },
+    "0140": {"EOS Versions": "Arista EOS"},
+}
+SECTION_NAMES = {
+    "Description",
+    "Vulnerability Assessment",
+    "Affected Software",
+    "Affected Platforms",
+    "Required Configuration for Exploitation",
+    "Indicators of Compromise",
+    "Mitigation",
+    "Resolution",
+    "Detection using CloudVision",
+    "For More Information",
+    "Open a Service Request",
+}
+
+
+def reviewed_sections(a):
+    """Bound sibling sections, retaining exclusion labels and nested lists in order."""
+    sections = {}
+    current = None
+    for node in a.children:
+        if not isinstance(node, Node):
+            continue
+        if node.tag in {"h2", "h3", "h4"} and node.text() in SECTION_NAMES:
+            current = node.text()
+            if current in sections:
+                raise ValueError("Repeated Arista section requires review")
+            sections[current] = []
+        elif current and node.text():
+            sections[current].append(node)
+    return sections
+
+
+def section_context(sections):
+    return [
+        dict(
+            category="publisher_" + name.lower().replace(" ", "_"),
+            details="\n".join(n.text() for n in sections.get(name, [])),
+            source_scope="advisory_context_requires_product_configuration_review",
+            source_locator=name,
+        )
+        for name in ("Description", "Affected Platforms", "Required Configuration for Exploitation")
+        if sections.get(name)
+    ]
+
+
+def reviewed_software(raw, url, vendor):
+    number = urlsplit(url).path.rsplit("-", 1)[-1]
+    if vendor != "arista" or number not in REVIEWED_SOFTWARE:
+        raise ValueError("Unreviewed Arista software layout")
+    a, out = article(raw, url, number)
+    headers = [
+        n.text()
+        for n in a.children
+        if isinstance(n, Node) and n.tag == "p" and "tracking this issue:" in n.text()
+    ]
+    if len(headers) != 1 or not (ids := cves(headers[0])):
+        raise ValueError("Explicit Arista tracking CVEs missing")
+    sections = reviewed_sections(a)
+    context = section_context(sections)
+    if not sections.get("Affected Platforms") or not sections.get("Description"):
+        raise ValueError("Arista applicability context missing")
+    if number in {"0139", "0140"} and not sections.get("Required Configuration for Exploitation"):
+        raise ValueError("Arista exploitation prerequisites missing")
+    groups = {}
+    product = None
+    for node in sections.get("Affected Software", []):
+        if number == "0138" and node.tag == "ul":
+            for item in node.children:
+                if not isinstance(item, Node) or item.tag != "li":
+                    continue
+                product = REVIEWED_SOFTWARE[number].get(leading_inline(item))
+                lists = [n for n in item.children if isinstance(n, Node) and n.tag == "ul"]
+                if not product or len(lists) != 1 or product in groups:
+                    raise ValueError("Unreviewed Arista nested product list")
+                groups[product] = version_expressions(lists[0])
+        elif node.tag == "h4":
+            product = REVIEWED_SOFTWARE[number].get(node.text())
+            if not product:
+                raise ValueError("Unreviewed Arista product heading")
+        elif node.tag == "ul":
+            if not product or product in groups:
+                raise ValueError("Unbound or repeated Arista version list")
+            groups[product] = version_expressions(node)
+        elif node.tag == "div" and number == "0139":
+            # Keep the local MCS-only restriction as well as advisory-wide context.
+            if node.text():
+                context.append(
+                    dict(
+                        category="publisher_software_restriction",
+                        details=node.text(),
+                        source_scope="Affected Software",
+                        source_locator="Affected Software / " + str(product),
+                    )
+                )
+        else:
+            raise ValueError("Unreviewed content in Arista affected software section")
+    if set(groups) != set(REVIEWED_SOFTWARE[number].values()):
+        raise ValueError("Reviewed Arista software groups missing")
+    out.update(
+        cves=ids,
+        document_status="published",
+        source_format="Arista reviewed sibling software sections HTML",
+    )
+    for product, versions in groups.items():
+        for cid in ids:
+            claim = assessment(
+                cid,
+                product,
+                "affected",
+                "Affected Software / " + product,
+                versions,
+                scope="bulletin_shared" if len(ids) > 1 else "cve_specific",
+            )
+            claim["exposure"] = context
+            out["assessments"].append(claim)
+    for name in ("Mitigation", "Resolution"):
+        if sections.get(name):
+            out["notes"].append(
+                dict(
+                    category="publisher_" + name.lower(),
+                    text="\n".join(n.text() for n in sections[name]),
+                    source_locator=name,
+                )
+            )
+    out["warnings"] = [
+        "Only explicit affected software lists are normalized. Publisher platform exclusions, triage and configuration prerequisites remain ordered advisory context; they do not establish blanket product exposure. Resolution and mitigation remain advisory notes, including planned releases; no available fixed firmware or automatic inventory match is inferred."
+    ]
+    return out
+
+
+def version_expressions(node):
+    values = [n.text() for n in node.children if isinstance(n, Node) and n.tag == "li"]
+    if not values or any(
+        not v
+        or cves(v)
+        or re.search(
+            r"\b(not affected|not vulnerable|not impacted|unaffected|fixed|except|excluding|unless)\b",
+            v,
+            re.I,
+        )
+        for v in values
+    ):
+        raise ValueError("Unreviewed Arista affected range")
+    if any(
+        any(isinstance(c, Node) and c.tag in {"ul", "ol"} for c in n.children)
+        for n in node.children
+        if isinstance(n, Node)
+    ):
+        raise ValueError("Nested version conditions require review")
+    return [dict(expression=v) for v in values]
+
+
+def airsnitch_notice(raw, url, vendor):
+    a, out = article(raw, url, "0141")
+    sections = reviewed_sections(a)
+    if (
+        vendor != "arista"
+        or cves(a.text())
+        or "AirSnitch" not in a.text()
+        or "BUG 1787021" not in a.text()
+        or [n.text() for n in sections.get("Affected Software", [])]
+        != [
+            "None",
+            "Note: this is an architectural configuration dependency rather than an issue with the product itself.",
+        ]
+    ):
+        raise ValueError("Reviewed Arista AirSnitch notice changed")
+    out.update(document_status="published", source_format="Arista security notice without CVE")
+    for name in (
+        "Description",
+        "Affected Software",
+        "Affected Platforms",
+        "Required Configuration for Exploitation",
+        "Mitigation",
+    ):
+        if not sections.get(name):
+            raise ValueError("AirSnitch applicability context missing")
+        out["notes"].append(
+            dict(
+                category="publisher_context",
+                text="\n".join(n.text() for n in sections[name]),
+                source_locator=name,
+            )
+        )
+    out["warnings"] = [
+        "Publisher describes a configuration-dependent AirSnitch risk with no CVE identifier. At the dated source review, the linked CSAF was a draft envelope without vulnerability entries. Retained as a security notice with context; no CVE mapping, blanket unaffectedness, software fix or concealment is inferred."
+    ]
+    return out

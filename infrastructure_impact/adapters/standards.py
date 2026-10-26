@@ -55,7 +55,17 @@ def csaf(raw, url, vendor):
         "first_fixed": "fixed",
         "recommended": "recommended",
     }
-    for v in d.get("vulnerabilities", []):
+    seen_entries = {}
+    for entry_index, v in enumerate(d.get("vulnerabilities", [])):
+        # Exact repeated source entries add no new scope. Different dispositions,
+        # ranges or rationale still reach validation and fail closed on identity.
+        fingerprint = json.dumps(v, sort_keys=True, separators=(",", ":"))
+        if fingerprint in seen_entries:
+            out["warnings"].append(
+                f"Exact duplicate CSAF vulnerability entry vulnerabilities[{entry_index}] equals vulnerabilities[{seen_entries[fingerprint]}]; normalized once. Original source bytes retain both entries."
+            )
+            continue
+        seen_entries[fingerprint] = entry_index
         if not v.get("cve"):
             continue
         cid = v["cve"].upper()

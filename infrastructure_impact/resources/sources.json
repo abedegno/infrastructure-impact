@@ -195,6 +195,26 @@
     {
       "vendor": "arista",
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24019-security-advisory-0138"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24029-security-advisory-0139"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24074-security-advisory-0140"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24108-security-advisory-0141"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/PAN-SA-2026-0009"
     }
   ],
   "release_documents": [

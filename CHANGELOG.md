@@ -3,6 +3,13 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Scoped advisory parser follow-up — 2026-10-26
+
+- Support three further reviewed Arista software layouts with platform and configuration context.
+- Retain the no-CVE AirSnitch advisory as a notice with prerequisites and mitigation context.
+- Normalize exact repeated CSAF vulnerability entries once with explicit source-index warnings; differing entries still fail closed.
+- Pin the five reviewed sources and add synthetic scope and conflicting-repeat regression tests.
+
 ## Vendor gap visibility and Arista review — 2026-10-26
 
 - Add whole-publication vendor gap reports, filters, schema and read-only endpoint.
