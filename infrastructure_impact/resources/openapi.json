@@ -464,6 +464,96 @@
           }
         }
       }
+    },
+    "/api/v1/comparison-eligibility": {
+      "get": {
+        "summary": "Recompute comparison eligibility for a shared period and product scope",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated CVE identifiers; omitted selects all retained CVEs."
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclusive initial advisory publication calendar date; defaults to end minus 364 days."
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclusive end, no later than publication date; defaults to that date."
+          },
+          {
+            "name": "products",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "JSON object of vendor IDs to exact retained product-label arrays, at most 20 labels per vendor and 4096 UTF-8 bytes. Missing key includes all retained labels; empty array selects none."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Qualified scoped evidence counts, source gaps and explicit timing/rate suppression. Paired offsets describe document metadata only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/comparison-eligibility-v1.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid date, cohort, vendor or exact product selection."
+          }
+        }
+      }
+    },
+    "/comparison-eligibility.json": {
+      "get": {
+        "summary": "Default-window comparison report for the immutable static publication",
+        "responses": {
+          "200": {
+            "description": "Qualified scoped evidence counts, source gaps and explicit timing/rate suppression. Paired offsets describe document metadata only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/comparison-eligibility-v1.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemas/comparison-eligibility-v1.json": {
+      "get": {
+        "summary": "Comparison eligibility v1 JSON Schema",
+        "responses": {
+          "200": {
+            "description": "Strict schema for qualified counts and currently suppressed rates/timing."
+          }
+        }
+      }
     }
   }
 }

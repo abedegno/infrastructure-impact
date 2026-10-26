@@ -27,6 +27,7 @@ def main():
     assert (package / "migrations/004_browser_captures.sql").is_file()
     assert (package / "migrations/006_archive_scope.sql").is_file()
     assert (package / "resources/archive-source-review.json").is_file()
+    assert (package / "schemas/comparison-eligibility-v1.json").is_file()
     assert not Path(infrastructure_impact.__file__).resolve().is_relative_to(Path.cwd())
     url = "https://security.acme.example/advisory.json"
     validate_config(
@@ -82,9 +83,24 @@ def main():
         assert json.loads(body)["items"][0]["vendor"] == "acme"
         assert (root / "current/schemas/advisory-v2.json").exists()
         assert (root / "current/scorecards.json").exists()
+        assert (root / "current/comparison-eligibility.json").exists()
+        status, _, report_body = app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/comparison-eligibility",
+                "QUERY_STRING": "vendor=acme",
+            }
+        )
+        assert status == 200
+        assert len(json.loads(report_body)["vendors"]) == 1
+        assert json.loads(report_body)["vendors"][0]["vendor"] == "acme"
         assert (root / "current/timeline.json").exists()
         assert (root / "current/source-audit.json").exists()
         assert len(json.loads((root / "current/casefiles.json").read_text())["cases"]) == 3
+    # Selection for external vendors uses the same pure policy as bundled vendors.
+    from infrastructure_impact.application.eligibility import eligibility
+
+    assert any(row["vendor"] == "acme" for row in eligibility(data)["vendors"])
     db.close()
     archive_url = "https://security.acme.example/archive"
     config = {

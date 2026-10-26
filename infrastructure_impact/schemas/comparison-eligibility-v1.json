@@ -1,0 +1,680 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "cohort": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/cve"
+      }
+    },
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        },
+        "basis": {
+          "const": "initial_advisory_publication_calendar_date"
+        },
+        "inclusive": {
+          "const": true
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "basis",
+        "inclusive"
+      ]
+    },
+    "product_selection": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 20,
+        "uniqueItems": true
+      }
+    },
+    "vendors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "product_scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "enum": [
+                  "explicit_labels",
+                  "all_retained_labels"
+                ]
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "declared_families": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "mode",
+              "labels",
+              "declared_families"
+            ]
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cohort_size": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "advisories_in_period": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cves_with_statement": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "no_statement": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "explicit_affected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "shared_affected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "explicit_unaffected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "no_cve_specific_exposure_assessment": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "affected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "partially_mitigated": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unaffected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "fixed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "investigating": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unknown": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "recommended": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "conflicting": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "cohort_size",
+              "advisories_in_period",
+              "cves_with_statement",
+              "no_statement",
+              "explicit_affected",
+              "shared_affected",
+              "explicit_unaffected",
+              "no_cve_specific_exposure_assessment",
+              "affected",
+              "partially_mitigated",
+              "unaffected",
+              "fixed",
+              "investigating",
+              "unknown",
+              "recommended",
+              "conflicting"
+            ]
+          },
+          "excluded_advisories": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "draft": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "outside_period": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unusable_publication_date": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "future_timestamp": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "draft",
+              "outside_period",
+              "unusable_publication_date",
+              "future_timestamp"
+            ]
+          },
+          "eligibility": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "descriptive_counts_usable": {
+                "type": "boolean"
+              },
+              "rate_comparison": {
+                "const": "suppressed"
+              },
+              "first_disclosure_comparison": {
+                "const": "suppressed"
+              },
+              "fix_timing_comparison": {
+                "const": "suppressed"
+              },
+              "reason_codes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "descriptive_counts_usable",
+              "rate_comparison",
+              "first_disclosure_comparison",
+              "fix_timing_comparison",
+              "reason_codes"
+            ]
+          },
+          "source_coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "configured_urls": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "stale_or_unchecked_urls": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "checked_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "error_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "checked_at",
+                    "error_code"
+                  ]
+                }
+              },
+              "history_scope": {
+                "type": "string"
+              },
+              "known_gaps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "archive_review": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "status": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "source_url": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "scope": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "configured": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "source_url",
+                      "scope",
+                      "configured"
+                    ]
+                  }
+                ]
+              },
+              "archives": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "pages": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "done": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_applicable": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "error": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "pending",
+                        "done",
+                        "not_applicable",
+                        "error"
+                      ]
+                    },
+                    "documents": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "pending": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "done": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "not_applicable": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "error": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "pending",
+                        "done",
+                        "not_applicable",
+                        "error"
+                      ]
+                    },
+                    "known_queue_exhausted": {
+                      "type": "boolean"
+                    },
+                    "discovery_link_gaps": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "observed_scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "kind",
+                    "pages",
+                    "documents",
+                    "known_queue_exhausted",
+                    "discovery_link_gaps",
+                    "observed_scopes"
+                  ]
+                }
+              },
+              "backfill_pending": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "backfill_failed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "portfolio_completeness": {
+                "const": "not_established"
+              }
+            },
+            "required": [
+              "configured_urls",
+              "stale_or_unchecked_urls",
+              "errors",
+              "history_scope",
+              "known_gaps",
+              "archive_review",
+              "archives",
+              "backfill_pending",
+              "backfill_failed",
+              "portfolio_completeness"
+            ]
+          },
+          "cases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "cve_id": {
+                  "$ref": "#/$defs/cve"
+                },
+                "statuses": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "affected",
+                      "partially_mitigated",
+                      "unaffected",
+                      "fixed",
+                      "investigating",
+                      "unknown",
+                      "recommended",
+                      "conflicting"
+                    ]
+                  }
+                },
+                "explicit_statuses": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "affected",
+                      "partially_mitigated",
+                      "unaffected",
+                      "fixed",
+                      "investigating",
+                      "unknown",
+                      "recommended",
+                      "conflicting"
+                    ]
+                  }
+                },
+                "shared_statuses": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "affected",
+                      "partially_mitigated",
+                      "unaffected",
+                      "fixed",
+                      "investigating",
+                      "unknown",
+                      "recommended",
+                      "conflicting"
+                    ]
+                  }
+                },
+                "product_labels": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "statement_count": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "publication_observations": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/observation"
+                  }
+                },
+                "timing_reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "first_disclosure_days": {
+                  "const": null
+                },
+                "verified_fix_delay_days": {
+                  "const": null
+                }
+              },
+              "required": [
+                "cve_id",
+                "statuses",
+                "explicit_statuses",
+                "shared_statuses",
+                "product_labels",
+                "statement_count",
+                "publication_observations",
+                "timing_reasons",
+                "first_disclosure_days",
+                "verified_fix_delay_days"
+              ]
+            }
+          }
+        },
+        "required": [
+          "vendor",
+          "name",
+          "product_scope",
+          "counts",
+          "excluded_advisories",
+          "eligibility",
+          "source_coverage",
+          "cases"
+        ]
+      }
+    },
+    "method": {
+      "type": "string"
+    },
+    "metric_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sample_counts": {
+          "const": "qualified_descriptive_evidence"
+        },
+        "vendor_rates": {
+          "const": "suppressed_without_comparable_portfolio_denominators"
+        },
+        "first_disclosure": {
+          "const": "suppressed_without_verified_cve_statement_dates_and_history"
+        },
+        "fix_delay": {
+          "const": "suppressed_without_independent_fix_availability_and_product_cve_linkage"
+        },
+        "publication_offsets": {
+          "const": "paired_document_metadata_only_not_disclosure_response_time"
+        }
+      },
+      "required": [
+        "sample_counts",
+        "vendor_rates",
+        "first_disclosure",
+        "fix_delay",
+        "publication_offsets"
+      ]
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      },
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "cohort",
+    "period",
+    "product_selection",
+    "vendors",
+    "method",
+    "metric_policy"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:comparison-eligibility:1",
+  "title": "Infrastructure Impact comparison eligibility v1",
+  "$defs": {
+    "cve": {
+      "type": "string",
+      "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "advisory_id": {
+          "type": "string"
+        },
+        "advisory_source": {
+          "type": "string"
+        },
+        "advisory_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "advisory_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "upstream_source": {
+          "type": "string"
+        },
+        "upstream_sha256": {
+          "$ref": "#/$defs/hash"
+        },
+        "upstream_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "offset_seconds": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "advisory_id",
+        "advisory_source",
+        "advisory_sha256",
+        "advisory_date",
+        "upstream_source",
+        "upstream_sha256",
+        "upstream_date",
+        "offset_seconds"
+      ]
+    }
+  }
+}

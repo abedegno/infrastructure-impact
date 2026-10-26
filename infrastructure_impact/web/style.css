@@ -519,3 +519,39 @@ textarea {
 .change code {
   overflow-wrap: anywhere;
 }
+
+/* Keep eligibility and collection limits beside the scoped counts. */
+.comparison-table {
+  table-layout: fixed;
+  min-width: 1050px;
+}
+.comparison-table th,
+.comparison-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding: 12px;
+}
+.comparison-table th:nth-child(1) {
+  width: 17%;
+}
+.comparison-table th:nth-child(2) {
+  width: 13%;
+}
+.comparison-table th:nth-child(3) {
+  width: 6%;
+}
+.comparison-table th:nth-child(4) {
+  width: 7%;
+}
+.comparison-table th:nth-child(5) {
+  width: 7%;
+}
+.comparison-table th:nth-child(6) {
+  width: 6%;
+}
+.comparison-table th:nth-child(7) {
+  width: 21%;
+}
+.comparison-table th:nth-child(8) {
+  width: 23%;
+}

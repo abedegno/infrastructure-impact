@@ -9,8 +9,9 @@ from ..storage.repository import VENDORS, health, history, latest, now
 from .casefiles import casefiles
 from .catalogue import catalogue
 from .cohort import COHORT, coverage
-from .comparison import advisory_delays, compare
+from .comparison import compare
 from .disclosure import latest_documents, signals
+from .eligibility import eligibility
 from .evaluation import evaluate
 from .release_assets import listings
 from .scorecards import scorecards
@@ -22,7 +23,12 @@ ROOT = Paths.from_env().home
 
 def state(db, cohort=None):
     records = latest(db)
-    upstream = {r["cve_id"]: dict(r) for r in db.execute("SELECT * FROM vulnerabilities")}
+    upstream = {
+        r["cve_id"]: dict(r)
+        for r in db.execute(
+            "SELECT v.*, e.sha256 FROM vulnerabilities v LEFT JOIN evidence e ON e.id=v.evidence_id"
+        )
+    }
     generated = now()
     comparison = compare(records, cohort)
     all_scope = sorted(
@@ -31,7 +37,6 @@ def state(db, cohort=None):
     all_coverage = coverage(db, records, all_scope)
     profiles = catalogue(db, records)
     checks = health(db)
-    selection = set(comparison["cohort"])
     review_signals = signals(db)
     research = {
         "release_assets": listings(db),
@@ -83,7 +88,7 @@ def state(db, cohort=None):
         "research": research,
         "health": checks,
         "upstream": upstream,
-        "delays": [d for d in advisory_delays(records, upstream) if d["cve_id"] in selection],
+        "delays": [],  # Deprecated unscoped aggregate; use eligible paired metadata instead.
         "all_cves": sorted({c for r in records for c in r["cves"]}),
         "counts": {
             "advisories": len(records),
@@ -92,4 +97,5 @@ def state(db, cohort=None):
     }
 
     result["casefiles"] = casefiles(result)
+    result["comparison_eligibility"] = eligibility(result, comparison["cohort"])
     return result

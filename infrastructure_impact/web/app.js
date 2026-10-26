@@ -39,6 +39,8 @@ let data,
   matrixQuery = '';
 let benchmark = [];
 let selectedCves = null;
+let comparisonSelection = {},
+  comparisonScopeVendor = '';
 function selected() {
   return new Set(data.comparison.cohort);
 }
@@ -65,7 +67,13 @@ function stats() {
 async function load() {
   $('#feedback').textContent = 'Loading evidence…';
   try {
-    const suffix = selectedCves ? '?cves=' + encodeURIComponent(selectedCves.join(',')) : '';
+    const params = new URLSearchParams();
+    if (selectedCves) params.set('cves', selectedCves.join(','));
+    if (comparisonSelection.start) params.set('start', comparisonSelection.start);
+    if (comparisonSelection.end) params.set('end', comparisonSelection.end);
+    if (comparisonSelection.products)
+      params.set('products', JSON.stringify(comparisonSelection.products));
+    const suffix = params.size ? '?' + params.toString() : '';
     const response = await fetch('/api/state' + suffix);
     if (!response.ok) throw Error('Could not load the evidence store');
     data = await response.json();
@@ -196,11 +204,111 @@ function detail({ a, r }) {
     `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(JSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(JSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(JSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
   $('#detail').showModal();
 }
-function renderComparison() {
-  const c = data.comparison;
-  $('#view').innerHTML =
-    `<h2>Compare the same CVE cohort</h2><p>These counts describe imported evidence. They cannot establish which vendor is inherently more secure.</p><div class="notice">${esc(c.method)} ${c.draft_advisories_excluded} draft advisory documents excluded.</div><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Assessed / selected CVEs</th><th>Any affected / partially mitigated product</th><th>Any unaffected product</th><th>Investigating</th><th>Fixed versions reported</th><th>No assessment in dataset</th></tr></thead><tbody>${c.vendors.map((v) => `<tr><td><strong>${esc(v.name)}</strong>${v.has_imported_advisories ? '' : '<small>No imported advisory</small>'}</td><td>${v.assessed_cves} / ${v.cohort_size}</td><td><strong class="amber">${v.affected_cves}</strong><small>${v.explicit_affected_cves} CVE-specific · ${v.shared_bulletin_affected_cves} shared-bulletin (may overlap)</small></td><td>${v.unaffected_cves}</td><td>${v.investigating_cves}</td><td>${v.fixed_cves}</td><td>${v.no_assessment_in_dataset}</td></tr>`).join('')}</tbody></table></div><details class="method" open><summary>How to interpret vendor comparisons</summary><ul>${c.limitations.map((l) => `<li>${esc(l)}</li>`).join('')}</ul><p>These are overlapping CVE counts, not product totals or percentages of a vendor’s estate. A vendor can have affected and unaffected products for the same CVE. Missing sources remain missing data.</p></details><h3>Dated advisory observations</h3><p>Earliest dated advisory in this sample relative to upstream CVE publication. This is not vendor response time from private notification, and earlier disclosures may exist.</p><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>CVE</th><th>Calendar-day difference</th><th>Evidence</th></tr></thead><tbody>${data.delays.map((d) => `<tr><td>${esc(name(d.vendor))}</td><td><code>${esc(d.cve_id)}</code></td><td>${d.days}</td><td>${link(d.advisory_source, 'Vendor')} · ${link(d.upstream_source, 'Upstream')}</td></tr>`).join('')}</tbody></table></div>${!data.delays.length ? '<p class="empty">No comparable upstream publication dates have been collected for this cohort.</p>' : ''}`;
+function comparisonCoverage(v) {
+  const s = v.source_coverage;
+  return `<details><summary>Product scope and evidence gaps</summary><p>Scope: ${esc(v.product_scope.mode.replaceAll('_', ' '))}. ${esc(v.product_scope.labels.join('; ') || 'No products selected')}.</p><p>Declared families are context, not a verified inventory: ${esc(v.product_scope.declared_families.join('; ') || 'Not declared')}.</p><p>${esc(s.history_scope)}</p>${s.archives.map((a) => `<p>${link(a.source_url, 'Archive source')} · ${a.documents.done} processed documents; ${a.documents.pending} pending; ${a.documents.error} failed. ${esc((a.observed_scopes || []).join('; '))}</p>`).join('')}${s.errors.map((e) => `<p>${link(e.source_url, 'Source gap')} · ${esc(e.error_code || 'collection error')} · checked ${date(e.checked_at)}</p>`).join('')}<ul>${s.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><p>Rate and timing blockers: ${esc(v.eligibility.reason_codes.map((r) => r.replaceAll('_', ' ')).join('; '))}.</p></details>`;
 }
+function renderComparison() {
+  const c = data.comparison_eligibility;
+  if (!c?.period) {
+    $('#view').innerHTML = '<p>Comparison eligibility is unavailable for this publication.</p>';
+    return;
+  }
+  const vendor = comparisonScopeVendor || Object.keys(data.vendors)[0];
+  const available = [
+    ...new Set(
+      data.records
+        .filter((r) => r.vendor === vendor && r.document_status !== 'draft')
+        .flatMap((r) => r.assessments.map((a) => a.product)),
+    ),
+  ].sort();
+  const labels = Object.hasOwn(c.product_selection, vendor) ? c.product_selection[vendor] : [];
+  const paired = c.vendors.flatMap((v) =>
+    v.cases.flatMap((row) =>
+      row.publication_observations.map((p) => ({ ...p, vendor: v.name, cve_id: row.cve_id })),
+    ),
+  );
+  const sampleNumber = (v, key) =>
+    v.eligibility.descriptive_counts_usable ? v.counts[key] : 'Unavailable';
+  $('#view').innerHTML =
+    `<h2>Scoped vendor evidence comparison</h2><p>One reporting period and CVE cohort, with an explicit product scope and collection limits for every vendor.</p><div class="notice">${esc(c.method)}</div><div class="matrix-filters"><label>Published from<input type="date" id="comparison-start" value="${esc(c.period.start)}" min="1900-01-01" max="${esc(data.generated_at.slice(0, 10))}"></label><label>Published through<input type="date" id="comparison-end" value="${esc(c.period.end)}" min="1900-01-01" max="${esc(data.generated_at.slice(0, 10))}"></label><button id="comparison-period">Apply period</button><button id="comparison-download">Download scoped comparison JSON</button></div><details id="comparison-product-scope"><summary>Choose exact products per vendor</summary><p>Unset vendors include all retained product labels. These labels do not establish equivalent product portfolios. Select up to 20 labels for a vendor; an empty selection gives no usable sample.</p><label>Scope vendor<select id="comparison-scope-vendor">${Object.entries(
+      data.vendors,
+    )
+      .map(
+        ([id, name]) =>
+          `<option value="${esc(id)}" ${id === vendor ? 'selected' : ''}>${esc(name)}</option>`,
+      )
+      .join(
+        '',
+      )}</select></label><label>Publisher product labels<select id="comparison-products" multiple size="6">${available.map((label) => `<option value="${esc(label)}" ${labels.includes(label) ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label><p>Current scope: ${Object.hasOwn(c.product_selection, vendor) ? labels.length + ' selected labels' : 'All retained labels'}.</p><button id="comparison-scope-apply">Use selected labels</button><button id="comparison-scope-clear">Use all retained labels for this vendor</button></details><p><strong>Shared period: ${esc(c.period.start)} through ${esc(c.period.end)}, inclusive.</strong> ${c.cohort.length} selected CVEs. Explicit means CVE-specific; affected includes partial mitigation. Counts overlap across products. Fixed statements do not establish earlier affectedness.</p><div class="table-wrap"><table class="comparison-table"><thead><tr><th>Vendor / scope</th><th>CVEs with a statement</th><th>Explicit affected</th><th>Shared affected</th><th>Explicit unaffected</th><th>Fixed</th><th>Unknown / missing evidence</th><th>Eligibility and collection</th></tr></thead><tbody>${c.vendors.map((v) => `<tr><td><strong>${esc(v.name)}</strong><small>${v.product_scope.labels.length} retained labels · ${esc(v.product_scope.mode.replaceAll('_', ' '))}</small>${comparisonCoverage(v)}</td><td>${v.counts.cves_with_statement} / ${v.counts.cohort_size}<small>${v.counts.advisories_in_period} advisories in period</small><small>Excluded: ${v.excluded_advisories.outside_period} outside period; ${v.excluded_advisories.unusable_publication_date} undated or timezone unspecified; ${v.excluded_advisories.draft} draft; ${v.excluded_advisories.future_timestamp} future timestamps.</small></td><td>${sampleNumber(v, 'explicit_affected')}</td><td>${sampleNumber(v, 'shared_affected')}</td><td>${sampleNumber(v, 'explicit_unaffected')}</td><td>${sampleNumber(v, 'fixed')}<small>Prior affectedness not inferred</small></td><td>${v.counts.unknown} explicit unknown<small>${v.counts.no_statement} no product statement in period/scope</small><small>${v.counts.no_cve_specific_exposure_assessment} without a CVE-specific affected/unaffected assessment</small></td><td>${v.eligibility.descriptive_counts_usable ? 'Qualified sample counts' : 'No usable sample'}<small>Vendor rates, first-disclosure and fix timing suppressed</small><small>${v.source_coverage.errors.length} retained source errors; ${v.source_coverage.configured_urls} configured URLs; ${v.source_coverage.stale_or_unchecked_urls} stale/unchecked</small><small>${v.source_coverage.backfill_pending} pending queue items; ${v.source_coverage.backfill_failed} failed queue items</small></td></tr>`).join('')}</tbody></table></div><h3>Timing eligibility</h3><p>First-disclosure and fix-delay metrics are unavailable. Individual CVE statement dates, complete disclosure history, independent fix availability and exact product/CVE linkage have not been verified. A planned release, fixed-only statement or release listing cannot supply those missing facts.</p><details><summary>Inspect paired publication metadata (${paired.length} observations)</summary><p>Each offset compares the publisher's initial document timestamp with upstream CVE publication. It does not date the CVE statement, establish first disclosure, measure response time, or date a fix. Date-only values and timestamps without a timezone produce no numeric offset. Conflicting statements and missing source fingerprints suppress paired observations. Showing up to 200 rows.</p><div class="table-wrap"><table><thead><tr><th>Vendor / CVE</th><th>Advisory date</th><th>Upstream date</th><th>Metadata offset</th><th>Sources and fingerprints</th></tr></thead><tbody>${paired
+      .slice(0, 200)
+      .map(
+        (p) =>
+          `<tr><td>${esc(p.vendor)}<small>${esc(p.cve_id)}</small></td><td>${date(p.advisory_date)}</td><td>${date(p.upstream_date)}</td><td>≈ ${(p.offset_seconds / 86400).toFixed(2)} days</td><td>${link(p.advisory_source, 'Advisory')} · ${link(p.upstream_source, 'Upstream')}<small>${esc(p.advisory_sha256 || 'Advisory fingerprint unavailable')}</small><small>${esc(p.upstream_sha256 || 'Upstream fingerprint unavailable')}</small></td></tr>`,
+      )
+      .join(
+        '',
+      )}</tbody></table></div></details><details><summary>Inspect CVE states and missing timing inputs</summary>${c.vendors.map((v) => `<h4>${esc(v.name)}</h4>${v.cases.map((row) => `<p><code>${esc(row.cve_id)}</code> · ${esc(row.statuses.join(', ') || 'No product statement in period/scope')} · ${esc(row.timing_reasons.map((r) => r.replaceAll('_', ' ')).join('; ') || 'Paired document metadata only; disclosure and fix timing suppressed')}.</p>`).join('')}`).join('')}</details>`;
+  $('#comparison-period').addEventListener('click', () => {
+    const start = $('#comparison-start'),
+      end = $('#comparison-end');
+    if (
+      !start.value ||
+      !end.value ||
+      !start.reportValidity() ||
+      !end.reportValidity() ||
+      start.value > end.value
+    ) {
+      $('#feedback').textContent =
+        'Choose an ordered reporting period no later than this publication.';
+      return;
+    }
+    comparisonSelection = { ...comparisonSelection, start: start.value, end: end.value };
+    load();
+  });
+  $('#comparison-scope-vendor').addEventListener('change', (e) => {
+    comparisonScopeVendor = e.target.value;
+    renderComparison();
+    $('#comparison-product-scope').open = true;
+  });
+  $('#comparison-scope-apply').addEventListener('click', () => {
+    const selected = [...$('#comparison-products').selectedOptions].map((o) => o.value);
+    const products = { ...c.product_selection, [vendor]: selected };
+    if (selected.length > 20 || new Blob([JSON.stringify(products)]).size > 4096) {
+      $('#feedback').textContent =
+        'Select up to 20 labels per vendor and keep the full selection below 4 KB.';
+      return;
+    }
+    comparisonSelection = { ...comparisonSelection, products };
+    load();
+  });
+  $('#comparison-scope-clear').addEventListener('click', () => {
+    const products = { ...c.product_selection };
+    delete products[vendor];
+    comparisonSelection = { ...comparisonSelection, products };
+    load();
+  });
+  $('#comparison-download').addEventListener('click', () => {
+    const url = URL.createObjectURL(
+      new Blob(
+        [
+          JSON.stringify(
+            { ...c, publication: data.publication, generated_at: data.generated_at },
+            null,
+            2,
+          ),
+        ],
+        { type: 'application/json' },
+      ),
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comparison-eligibility.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+}
+
 function renderReview() {
   const reviewSignals = data.signals.filter(
     (s) => !s.cve_id || s.cve_id.split(/[,\s]+/).some((c) => selected().has(c)),

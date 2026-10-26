@@ -89,17 +89,19 @@ def parse_date(value):
 
 def advisory_delays(records, upstream):
     from ..plugins.registry import default_registry
+    from .eligibility import timestamp
 
     results = []
+    records = [r for r in records if r.get("document_status") != "draft"]
     for cid, info in upstream.items():
-        start = parse_date(info.get("published_at"))
+        start = timestamp(info.get("published_at"))
         if not start:
             continue
         for vendor in default_registry().names():
             matches = [
                 r
                 for r in records
-                if r["vendor"] == vendor and cid in r["cves"] and parse_date(r.get("published_at"))
+                if r["vendor"] == vendor and cid in r["cves"] and timestamp(r.get("published_at"))
             ]
             if not matches:
                 continue

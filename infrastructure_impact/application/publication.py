@@ -16,6 +16,7 @@ from ..settings import PACKAGE, Paths
 from ..storage.repository import connect
 from .casefiles import casefiles
 from .cohort import COHORT, coverage
+from .eligibility import eligibility, report_validator
 from .query import state
 from .release_assets import validate_asset
 
@@ -58,6 +59,8 @@ def public_projection(data, public_release_urls=()):
     for signal in data["signals"]:
         signal.pop("basis", None)
     data["casefiles"] = casefiles(data)
+    data["comparison_eligibility"] = eligibility(data, data["comparison"]["cohort"])
+    data["delays"] = []
     data["snapshot_notice"] = (
         "Dated public-source evidence; not a representative vendor security ranking. No finding of intentional concealment."
     )
@@ -65,6 +68,7 @@ def public_projection(data, public_release_urls=()):
 
 
 def write_bundle(destination, data):
+    report_validator().validate(data["comparison_eligibility"])
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "snapshot.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
@@ -73,7 +77,7 @@ def write_bundle(destination, data):
         json.dumps(data["research"].get("release_assets", []))
     )
     (destination / "catalogue.json").write_text(json.dumps(data.get("catalogue", {})))
-    for name in ("scorecards", "timeline", "source_audit", "casefiles"):
+    for name in ("scorecards", "timeline", "source_audit", "casefiles", "comparison_eligibility"):
         (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
                 {
@@ -138,6 +142,10 @@ def write_bundle(destination, data):
     shutil.copyfile(PACKAGE / "schemas/advisory-v2.json", schema)
     shutil.copyfile(
         PACKAGE / "schemas/release-asset-v1.json", destination / "schemas/release-asset-v1.json"
+    )
+    shutil.copyfile(
+        PACKAGE / "schemas/comparison-eligibility-v1.json",
+        destination / "schemas/comparison-eligibility-v1.json",
     )
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")
     (destination / "_headers").write_text(

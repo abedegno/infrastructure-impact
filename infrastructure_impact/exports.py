@@ -6,6 +6,7 @@ import json
 
 from .application.casefiles import select_casefiles
 from .application.comparison import compare
+from .application.eligibility import eligibility
 from .application.scorecards import select_scorecards
 from .application.timeline import select_timeline
 
@@ -24,12 +25,14 @@ FIELDS = [
 ]
 
 
-def select(data, cohort=None):
+def select(data, cohort=None, *, start=None, end=None, products=None):
     cohort = sorted(set(cohort if cohort is not None else data["all_cves"]))
-    selected = set(cohort)
     return {
         **data,
         "comparison": compare(data["records"], cohort, vendors=data["vendors"]),
+        "comparison_eligibility": eligibility(data, cohort, start=start, end=end, products=products)
+        if data.get("generated_at")
+        else {},
         "scorecards": select_scorecards(data.get("scorecards", {}), cohort),
         "timeline": select_timeline(data.get("timeline", {}), cohort),
         "casefiles": select_casefiles(data.get("casefiles", {}), cohort),
@@ -47,7 +50,7 @@ def select(data, cohort=None):
             for cid in cohort
             for vendor in data["vendors"]
         ],
-        "delays": [d for d in data["delays"] if d["cve_id"] in selected],
+        "delays": [],
     }
 
 

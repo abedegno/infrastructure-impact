@@ -128,22 +128,41 @@ class Application:
             "/api/export.csv",
             "/api/assessments",
             "/api/v1/scorecards",
+            "/api/v1/comparison-eligibility",
             "/api/v1/casefiles",
             "/api/v1/timeline",
             "/api/v1/advisories",
             "/api/v1/assessments",
         ):
-            selected = select(data, ids)
+            try:
+                for key in ("start", "end", "products"):
+                    if key in query and len(query[key]) != 1:
+                        raise ValueError("Duplicate comparison control")
+                products = json.loads(query["products"][0]) if "products" in query else None
+                selected = select(
+                    data,
+                    ids,
+                    start=query.get("start", [None])[0],
+                    end=query.get("end", [None])[0],
+                    products=products,
+                )
+            except (ValueError, TypeError) as error:
+                raise BadRequest("Invalid comparison selection") from error
             if path == "/api/state":
                 return self.json(selected)
-            if path in ("/api/v1/scorecards", "/api/v1/timeline", "/api/v1/casefiles"):
-                key = path.rsplit("/", 1)[-1]
+            if path in (
+                "/api/v1/scorecards",
+                "/api/v1/timeline",
+                "/api/v1/casefiles",
+                "/api/v1/comparison-eligibility",
+            ):
+                key = path.rsplit("/", 1)[-1].replace("-", "_")
                 result = selected[key]
                 if query.get("vendor"):
                     vendor = query["vendor"][0]
                     if vendor not in data["vendors"]:
                         raise BadRequest("Unknown vendor")
-                    if key == "scorecards":
+                    if key in ("scorecards", "comparison_eligibility"):
                         result = {
                             **result,
                             "vendors": [
@@ -227,6 +246,7 @@ class Application:
             "/benchmark.json",
             "/scorecards.json",
             "/source-audit.json",
+            "/comparison-eligibility.json",
             "/casefiles.json",
             "/timeline.json",
             "/release-assets.json",
@@ -234,6 +254,7 @@ class Application:
             "/manifest.json",
             "/schemas/advisory-v2.json",
             "/schemas/release-asset-v1.json",
+            "/schemas/comparison-eligibility-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",

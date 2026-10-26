@@ -181,3 +181,7 @@ Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
 and Fortinet. The [source review](docs/research/vendor-archives.md) documents
 product filters, access gaps and why Cisco archive backfill remains disabled. See [Archive collection](docs/ARCHIVE_COLLECTION.md)
 for queue progress, retry policy, additional sources and coverage limits.
+
+Vendor comparison now uses a shared reporting window and exact product scopes,
+with source gaps and explicit suppression of unsupported rates and timing. See
+[Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md).

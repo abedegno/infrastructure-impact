@@ -72,3 +72,13 @@ review of the official endpoint, primary-response hashes and limits. Its
 `configured` flag describes this deployment. Archive rows also include
 `observed_scopes`, retained from the actual visited listing pages. Static review
 counts and historical bounds are not live totals or complete coverage claims.
+
+`/api/v1/comparison-eligibility` accepts `cves`, `vendor`, inclusive `start`/`end`
+dates and a URL-encoded JSON `products` mapping of vendor IDs to exact retained
+product-label arrays. It returns qualified sample counts, source/backfill limits
+and explicit timing/rate suppression under
+`/schemas/comparison-eligibility-v1.json`. The static default-window counterpart
+is `comparison-eligibility.json`; Pages provides equivalent local filtering.
+See [Comparison eligibility](COMPARISON_ELIGIBILITY.md) for date precision, scope,
+limits and export semantics. The deprecated `delays` array is empty. Legacy
+`comparison` counts and global record exports retain their cohort-only scope.

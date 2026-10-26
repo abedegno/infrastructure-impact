@@ -23,11 +23,18 @@ overlap across products. Shared-bulletin applicability is labelled separately.
 Draft sources are excluded from comparison. Missing-in-dataset, checked-no-match,
 unparsed discovery and failed collection are different conditions.
 
-The default eleven-CVE/six-component benchmark is purposive, not representative.
+The default 24-CVE/13-component benchmark is purposive, not representative.
 It has no installed-base, full portfolio or tested-dependency denominator. It
 cannot establish which vendor is inherently more secure. Source breadth and
 disclosure practice affect the counts. HTTP availability and schema conformance
 do not establish comprehensive coverage or truth.
+
+The scoped comparison report uses an adjustable common publication-date window
+and exact retained product labels. It shows collection gaps beside each metric
+and suppresses unsupported rates and disclosure/fix timing. Its period groups
+latest retained statements by initial advisory publication date; it does not
+reconstruct historical exposure or establish when an individual CVE was added.
+See [Comparison eligibility](COMPARISON_ELIGIBILITY.md).
 
 ## Disclosure evidence
 
