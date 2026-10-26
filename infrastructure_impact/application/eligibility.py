@@ -91,7 +91,9 @@ def controls(data, start=None, end=None, products=None):
 
 def eligibility(data, cohort=None, *, start=None, end=None, products=None, group=None):
     as_at, start, end, products = controls(data, start, end, products)
-    taxonomy = definition()
+    # Reproduce the rules retained with this immutable generation, even when
+    # the installed reader package carries a newer taxonomy.
+    taxonomy = data.get("product_groups") or definition()
     if group is not None and (
         not isinstance(group, str) or group not in {g["id"] for g in taxonomy["groups"]}
     ):

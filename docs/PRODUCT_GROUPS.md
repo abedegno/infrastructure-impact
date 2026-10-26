@@ -40,3 +40,8 @@ vendor plugins work immediately with the common schema and receive unmapped
 classification until their role rules are reviewed. Rules are data; new groups do
 not require new parser dispatch or database tables. Independent human review of
 the initial taxonomy remains pending.
+
+Readers apply the taxonomy retained with their immutable publication, so an
+installed-code upgrade does not retroactively reclassify that generation. A new
+collection/publication can adopt newly reviewed rules and records its taxonomy
+version explicitly.

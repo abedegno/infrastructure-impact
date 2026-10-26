@@ -10,6 +10,7 @@ import pytest
 from infrastructure_impact.adapters.common import assessment, base
 from infrastructure_impact.adapters.fortinet import document_history, investigation_advisory
 from infrastructure_impact.application.casefiles import casefiles, select_casefiles
+from infrastructure_impact.application.eligibility import eligibility
 from infrastructure_impact.application.extraction_validation import definition as review_definition
 from infrastructure_impact.application.extraction_validation import review_packet, validation_report
 from infrastructure_impact.application.product_groups import classify, definition, product_groups
@@ -241,3 +242,50 @@ def test_informational_summary_never_creates_product_impact_claims():
         classify("cisco", {"product": "Secure Firewall Management Center"})["group"] == "management"
     )
     assert classify("cisco", {"product": "Secure Firewall Threat Defense"})["group"] == "firewalls"
+
+
+def test_reader_uses_the_taxonomy_pinned_to_its_publication():
+    # Simulate a retained generation whose role rules differ from the installed package.
+    taxonomy = copy.deepcopy(definition())
+    taxonomy["taxonomy_version"] = "synthetic-retained-generation"
+    taxonomy["rules"] = [
+        dict(
+            id="retained-rule",
+            vendor="arista",
+            group="routing",
+            prefix="Synthetic router",
+            source_url="https://www.arista.com/synthetic",
+            reviewed_at="2026-10-26",
+            rationale="Synthetic retained family",
+        )
+    ]
+    claim = assessment(CID, "Synthetic router", "affected", "synthetic")
+    data = dict(
+        generated_at="2026-10-26T00:00:00Z",
+        vendors={"arista": "Arista"},
+        all_cves=[CID],
+        product_groups=taxonomy,
+        records=[
+            dict(
+                vendor="arista",
+                advisory_id="SYNTHETIC",
+                source_url="https://www.arista.com/synthetic",
+                sha256="a" * 64,
+                published_at="2026-01-01",
+                document_status="final",
+                assessments=[claim],
+            )
+        ],
+    )
+    result = eligibility(data, [CID], group="routing")
+    assert result["taxonomy_version"] == "synthetic-retained-generation"
+    assert result["vendors"][0]["counts"]["explicit_affected"] == 1
+    assert classify("arista", claim)["state"] == "unmapped"
+    assert result["vendors"][0]["eligibility"]["rate_comparison"] == "suppressed"
+    node = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,Map,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),c);const d=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.comparisonEligibility(d,d.all_cves,{group:'routing'})));"
+    js = json.loads(
+        subprocess.check_output(
+            ["node", "-e", node, str(PACKAGE / "web/snapshot.js")], input=json.dumps(data).encode()
+        )
+    )
+    assert js == result
