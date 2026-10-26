@@ -19,6 +19,7 @@ def source_audit(db, records, config=None):
     from ..collection.archive import progress
 
     archives = progress(db, records, config)
+    reviews = json.loads((PACKAGE / "resources/archive-source-review.json").read_text())["vendors"]
     audits = []
     for vendor, name in default_registry().names().items():
         feeds = []
@@ -131,6 +132,15 @@ def source_audit(db, records, config=None):
                 release_documents=sum(
                     p["vendor"] == vendor for p in config.get("release_documents", [])
                 ),
+                archive_source_review={
+                    **reviews[vendor],
+                    "configured": any(
+                        a["vendor"] == vendor and a["source_url"] == reviews[vendor]["source_url"]
+                        for a in archives
+                    ),
+                }
+                if vendor in reviews
+                else None,
                 archives=[a for a in archives if a["vendor"] == vendor],
                 enumeration="bounded_feeds_and_pins" if feeds else "pinned_only",
                 archive_enumerated=any(

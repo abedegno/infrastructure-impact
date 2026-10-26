@@ -1,0 +1,1 @@
+ALTER TABLE archive_items ADD COLUMN scope TEXT NOT NULL DEFAULT '';

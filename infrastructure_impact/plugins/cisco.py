@@ -1,5 +1,6 @@
 """Cisco source routing and informational-advisory policy."""
 
+import re
 from urllib.parse import urlsplit
 
 from ..adapters.legacy_html import html_advisory
@@ -14,6 +15,8 @@ def parse(raw, url, vendor):
 def canonicalize(url):
     if "/security/center/content/" in url:
         return "https://sec.cloudapps.cisco.com" + urlsplit(url).path
+    if re.fullmatch(r"/\.well-known/csaf/20\d{2}/[^/]+\.json", urlsplit(url).path):
+        return url  # Keep the advertised archive filename; lower-case IDs cannot reconstruct mixed-case API routes.
     if "/.well-known/csaf/" in url and url.endswith(".json"):
         name = urlsplit(url).path.rsplit("/", 1)[-1]
         return f"https://sec.cloudapps.cisco.com/security/center/contentjson/CiscoSecurityAdvisory/{name[:-5]}/csaf/{name}"

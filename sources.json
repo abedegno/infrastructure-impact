@@ -207,6 +207,27 @@
       "url": "https://csaf.arubanetworking.hpe.com/index.txt",
       "page_limit": 2,
       "document_limit": 8
+    },
+    {
+      "vendor": "arista",
+      "kind": "listing",
+      "url": "https://www.arista.com/en/support/advisories-notices",
+      "page_limit": 2,
+      "document_limit": 4
+    },
+    {
+      "vendor": "paloalto",
+      "kind": "listing",
+      "url": "https://security.paloaltonetworks.com/",
+      "page_limit": 2,
+      "document_limit": 4
+    },
+    {
+      "vendor": "fortinet",
+      "kind": "listing",
+      "url": "https://www.fortiguard.com/psirt",
+      "page_limit": 2,
+      "document_limit": 4
     }
   ]
 }

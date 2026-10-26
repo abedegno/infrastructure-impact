@@ -2,15 +2,17 @@
 
 Each source has its own bounded page/document budget. Only official HTTPS links
 are queued. Every item commits independently; a crash replays at most that item.
-The root is refreshed every pass. Previously visited non-root pages are revisited
+The root is queued for refresh every pass (reserved first with a page budget of at least two). Previously visited non-root pages are revisited
 only with refresh_pages=True; this is not a historical availability measurement.
 """
 
 from contextlib import closing
+from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urldefrag
 
 from ..adapters.compat import auto
+from ..plugins.contracts import ArchivePage
 from ..plugins.registry import default_registry
 from ..storage.repository import collection_result, connect, evidence, ingest, now
 from .config import validate_config
@@ -44,20 +46,30 @@ def fail(db, source, item, error):
         )
 
 
-def ready(db, source_id, kind, limit):
+def ready(db, source_id, kind, limit, root_url=None):
     return list(
         db.execute(
             "SELECT * FROM archive_items WHERE source_id=? AND kind=? AND "
             "(state='pending' OR (state='error' AND attempts<? AND retry_after<=?)) "
-            "ORDER BY CASE state WHEN 'pending' THEN 0 ELSE 1 END,(checked_at IS NOT NULL),checked_at,id LIMIT ?",
-            (source_id, kind, MAX_ATTEMPTS, now(), limit),
+            "ORDER BY (url=?) DESC, CASE state WHEN 'pending' THEN 0 ELSE 1 END,(checked_at IS NOT NULL),checked_at,id LIMIT ?",
+            (source_id, kind, MAX_ATTEMPTS, now(), root_url or "", limit),
         )
     )
 
 
 def page(db, source, item):
     raw = fetch(db, item["url"], source["vendor"])
-    found = inventory(raw, item["url"], source["kind"])
+    if source["kind"] == "listing":
+        found_page = (
+            default_registry()
+            .get(source["vendor"])
+            .parse_archive(raw, item["url"], source["vendor"])
+        )
+        if not isinstance(found_page, ArchivePage):
+            raise ValueError("Archive parser must return ArchivePage")
+        found = asdict(found_page)
+    else:
+        found = inventory(raw, item["url"], source["kind"])
     rejected = 0
     with db:
         ev = evidence(db, raw, item["url"])
@@ -78,13 +90,14 @@ def page(db, source, item):
                     rejected += 1
         db.execute(
             "UPDATE archive_items SET state='done',checked_at=?,attempts=0,retry_after=NULL,"
-            "evidence_id=?,entry_count=?,missing_links=?,rejected_links=?,error_code=NULL WHERE id=?",
+            "evidence_id=?,entry_count=?,missing_links=?,rejected_links=?,scope=?,error_code=NULL WHERE id=?",
             (
                 now(),
                 ev["id"],
                 found["entry_count"],
                 found["entries_without_links"],
                 rejected,
+                found.get("scope", ""),
                 item["id"],
             ),
         )
@@ -173,7 +186,15 @@ def run(
             visited = set()
             while len(visited) < budget:
                 items = [
-                    i for i in ready(db, source["id"], "page", budget) if i["id"] not in visited
+                    i
+                    for i in ready(
+                        db,
+                        source["id"],
+                        "page",
+                        budget,
+                        seed["url"] if budget >= 2 and not visited else None,
+                    )
+                    if i["id"] not in visited
                 ]
                 if not items:
                     break
@@ -273,6 +294,9 @@ def progress(db, records, config):
                 ]
                 if source
                 else [],
+                observed_scopes=sorted(
+                    {i["scope"] for i in items if i["kind"] == "page" and i["scope"]}
+                ),
                 page_evidence_limit=20,
                 portfolio_completeness="not_established",
             )

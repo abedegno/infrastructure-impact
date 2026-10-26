@@ -66,3 +66,9 @@ counts, discovery gaps, exhausted retries, retained page fingerprints and the
 publisher date range of current matched records. `known_queue_exhausted` does not
 establish portfolio completeness or historical document availability. See
 [Archive collection](ARCHIVE_COLLECTION.md).
+
+Each vendor source-audit row may include `archive_source_review`, a dated bundled
+review of the official endpoint, primary-response hashes and limits. Its
+`configured` flag describes this deployment. Archive rows also include
+`observed_scopes`, retained from the actual visited listing pages. Static review
+counts and historical bounds are not live totals or complete coverage claims.

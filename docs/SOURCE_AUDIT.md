@@ -32,13 +32,13 @@ not empty archives or evidence of no vendor disclosure.
 
 | Vendor | Discovery scope | Historical/product boundary |
 | --- | --- | --- |
-| Cisco | Current security RSS, normal sample 4 | Pinned advisories, upstream references; no exhaustive IOS/IOS XE/NX-OS archive traversal; some release-note requests denied |
+| Cisco | Current security RSS, normal sample 4 | Pinned advisories, upstream references; CSAF archive index reviewed (2,888 links); backfill disabled because sampled exact document URLs returned 403; some release-note requests denied |
 | HPE Aruba Networking | CSAF text index; normal sample 4; benchmark cap 200 | 110 listed documents; resumable normalization at 8 documents per daily pass; raw retention does not establish complete product/configuration qualification |
-| Arista | Current security RSS, normal sample 4 | Curated EOS/CloudVision/other supported layouts; no exhaustive archive traversal; lifecycle browser capture is separate |
-| Palo Alto Networks | Current RSS, normal sample 4 | Pinned CVE JSON and OSS bulletin cases; shared product tables remain scoped; no portfolio denominator |
+| Arista | Current security RSS, normal sample 4 | Curated EOS/CloudVision/other supported layouts; reviewed HTML archive pagination enabled; sampled terminal listing reaches 2008; lifecycle browser capture is separate |
+| Palo Alto Networks | Current RSS, normal sample 4 | Pinned CVE JSON and OSS bulletin cases; public historical GET-form listing enabled; CSV is page-limited; shared product tables remain scoped; no portfolio denominator |
 | Juniper | Current RSS metadata, normal sample 4 | Scoped SSR/Apstra documents; article shells and metadata do not establish product applicability |
 | Check Point | Single active-index API response | Retained local response had 157 rows; server-side completeness and historical archive coverage are not established; gated SK/listing bodies remain gaps |
-| Fortinet | Current PSIRT RSS, normal sample 4 | Structured exports and selected release notes; empty product-status envelopes and fixed-only statements remain qualified |
+| Fortinet | Current PSIRT RSS, normal sample 4 | Structured exports and selected release notes; historical PSIRT listing enabled for its default infrastructure product filter; empty product-status envelopes and fixed-only statements remain qualified |
 | HPE other products | Two pinned bulletins; no general feed | Selected Cray/NonStop coverage, not an HPE-wide product search |
 
 The retained RSS windows contained 25–50 entries in this pass. These observations
@@ -47,3 +47,7 @@ The table is a code/configuration and primary-response audit by an automated
 assistant, not independent human certification or a statement that vendors lack
 other feeds or APIs. Contributions can add supported pagination/archive sources
 with explicit scope, bounded retrieval, fixtures and evidence provenance.
+
+See the [archive-source review](research/vendor-archives.md) for dated access
+findings. These decisions are published with the source audit; they are distinct
+from current queue progress and per-page observed scope.

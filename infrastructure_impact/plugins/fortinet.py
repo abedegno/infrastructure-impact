@@ -1,6 +1,7 @@
 """Fortinet CSAF and scoped product release notes."""
 
 from ..adapters.fortinet import fortinet_release
+from .archive_listings import fortinet as archive_listing
 from .contracts import VendorPlugin
 from .shared import structured
 
@@ -17,5 +18,6 @@ def plugin():
         "Fortinet",
         ("fortinet.com", "fortiguard.com"),
         parse,
+        parse_archive=archive_listing,
         capabilities=("csaf", "release-notes-html"),
     )

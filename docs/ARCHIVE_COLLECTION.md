@@ -1,9 +1,11 @@
 # Resumable historical collection
 
 The scheduled collector runs an additional bounded backfill after normal feed
-collection. The first enabled source is the official HPE Aruba Networking CSAF
-text index, which listed 110 links across 2022–2026 directories when reviewed on
-2026-10-26. This is an index of publisher documents, not an inventory of every
+collection. Configured sources include the official HPE Aruba Networking CSAF
+text index (110 listed links across 2022–2026 directories at review), Arista
+Security Advisories, Palo Alto’s public advisory form and Fortinet’s default
+infrastructure product-filtered PSIRT listing. See the
+[dated source review](research/vendor-archives.md) for access and historical limits. This is an index of publisher documents, not an inventory of every
 product, every affected release or every historical disclosure.
 
 ## Operator commands
@@ -23,8 +25,10 @@ is refreshed on every invocation when eligible; links removed from a later index
 never delete retained documents or normalized revisions.
 
 Each configured source has independent page and document budgets. Defaults are
-2 pages and 8 documents per pass; valid ranges are 1–20 and 1–200 respectively.
-The root counts against the page budget. An unvisited continuation page takes
+2 pages and 8 documents per pass; bundled new listing sources use 4 documents; valid ranges are 1–20 and 1–200 respectively.
+The root counts against the page budget and gets a reserved first slot when the
+page budget is at least two. With a one-page budget, refresh can be deferred while
+unvisited continuation pages remain. An unvisited continuation page takes
 priority over refreshing an already visited root, so a one-page budget can still
 make progress. Documents discovered on a page are queued before retrieval.
 
@@ -75,16 +79,18 @@ links and entries missing a document link are counted as discovery gaps.
 
 Plugins with a `parse_feed` metadata/record API are deliberately excluded from
 this document-link mechanism. Juniper's RSS metadata and Check Point's active
-record API need a separately reviewed historical enumeration path. HTML listing
-scrapers, guessed page parameters and CSAF provider-directory discovery are not
-implemented. Enabling another vendor requires reviewing the official endpoint,
+record API need a separately reviewed historical enumeration path. Reviewed pure `parse_archive` hooks support `kind: "listing"` for Arista, Palo Alto
+and Fortinet. They return the shared `ArchivePage` contract and record observed
+product filters. Guessed page parameters and automatic CSAF provider-directory
+discovery are not implemented. Enabling another vendor requires reviewing the official endpoint,
 its historical scope and access constraints, then adding synthetic regression
 coverage for its supported layout. Do not treat an ordinary RSS window as a full
 archive merely because its listed links have been processed.
 
 ## Evidence, recovery and public reporting
 
-Migration 005 adds sources, queued items and discovery edges. Every discovered
+Migration 005 adds sources, queued items and discovery edges. Migration 006 adds
+per-page scope strings. Every discovered
 item links to the exact retained page evidence that advertised it, including old
 page revisions. Page queue updates and discovery edges commit together. Each
 document uses the normal resolver, schema validator, revision store and vendor
@@ -96,6 +102,7 @@ The source audit and Vendor catalogue show:
 
 - Discovered documents, successful normalization, non-CVE notices, pending work and failures.
 - Page traversal, link gaps, exhausted retries and latest retained page fingerprints (up to 20).
+- Observed listing scopes and dated review decisions, including disabled candidates and access limits.
 - The earliest/latest usable publisher dates among current normalized records matched to processed resolved URLs, and a count without usable dates.
 - Whether all currently known pages and documents have been processed without link gaps.
 

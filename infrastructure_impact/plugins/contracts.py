@@ -37,3 +37,27 @@ class VendorPlugin:
     capabilities: tuple[str, ...] = field(default_factory=tuple)
     parse_release: DocumentParser | None = None
     parse_release_history: DocumentParser | None = None
+    parse_archive: Callable[[bytes, str, str], "ArchivePage"] | None = None
+
+
+@dataclass(frozen=True)
+class ArchivePage:
+    """Pure discovery result; listing entries never establish product exposure."""
+
+    urls: tuple[str, ...]
+    entry_count: int
+    entries_without_links: int = 0
+    next_pages: tuple[str, ...] = ()
+    scope: str = ""
+
+    def __post_init__(self):
+        if not isinstance(self.scope, str):
+            raise ValueError("Archive scope must be a string")
+        for value in (self.entry_count, self.entries_without_links):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError("Archive counts must be nonnegative integers")
+        if len(set(self.urls)) + self.entries_without_links > self.entry_count:
+            raise ValueError("Archive entries do not account for discovery results")
+        for links in (self.urls, self.next_pages):
+            if not isinstance(links, tuple) or any(not isinstance(u, str) or not u for u in links):
+                raise ValueError("Archive URLs must be tuples of nonempty strings")

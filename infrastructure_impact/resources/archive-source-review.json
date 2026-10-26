@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "vendors": {
+    "cisco": {
+      "status": "not_enabled_access_gap",
+      "source_url": "https://www.cisco.com/.well-known/csaf/index.txt",
+      "scope": "Advertised CSAF index: 2,888 links in 2017\u20132026 directories at review time.",
+      "limitations": [
+        "Five sampled exact document URLs returned HTTP 403 to the anonymous local collector. Hosted document access has not been established.",
+        "The index is readable; that does not establish document availability or complete extraction.",
+        "Year-directory archive URLs are preserved; lower-case filenames cannot reconstruct mixed-case content API routes.",
+        "Provider metadata permits listing but disables raw mirroring; original vendor documents are not redistributed."
+      ],
+      "reviewed_at": "2026-10-26",
+      "review_method": "Automated assistant review of primary sources and bounded anonymous collector probes; not independent human certification.",
+      "evidence": [
+        {
+          "source_url": "https://www.cisco.com/.well-known/csaf/index.txt",
+          "sha256": "8af89d00cc38145516cdcfd6ed0187b9e231554f57170d6ed759444b096b76cb",
+          "first_retained_at": "2026-10-26T17:31:27.192444+00:00"
+        }
+      ]
+    },
+    "arista": {
+      "status": "enabled_bounded",
+      "source_url": "https://www.arista.com/en/support/advisories-notices",
+      "scope": "Public Security Advisories HTML listing; advertised Next links; last advertised page included a June 2008 advisory.",
+      "limitations": [
+        "Current RSS and CSAF RSS feeds are bounded windows; the HTML listing supplies historical enumeration.",
+        "Listing dates do not establish historical availability. Only reviewed advisory headings are queued.",
+        "Some historical document layouts may remain unsupported; failures stay visible."
+      ],
+      "reviewed_at": "2026-10-26",
+      "review_method": "Automated assistant review of primary sources and bounded anonymous collector probes; not independent human certification.",
+      "evidence": [
+        {
+          "source_url": "https://www.arista.com/en/support/advisories-notices",
+          "sha256": "ceda4bdb5fe6828b8e28b916973474089023e4d2efabe5634b6cc8ff1dae502f",
+          "first_retained_at": "2026-10-26T17:31:28.242640+00:00"
+        }
+      ]
+    },
+    "paloalto": {
+      "status": "enabled_bounded",
+      "source_url": "https://security.paloaltonetworks.com/",
+      "scope": "Public unauthenticated advisory listing; no query filters. Landing page advertised 587 records at review time.",
+      "limitations": [
+        "The advertised CSV export returned only the current 25-row page; it is not a full archive export.",
+        "The pure parser recognizes the exact published GET form page+1 control. Changed controls fail without executing source JavaScript.",
+        "Reviewed OSS HTML tables retain their per-CVE qualifications; other PAN-SA bulletins use an explicitly advertised CSAF representation."
+      ],
+      "reviewed_at": "2026-10-26",
+      "review_method": "Automated assistant review of primary sources and bounded anonymous collector probes; not independent human certification.",
+      "evidence": [
+        {
+          "source_url": "https://security.paloaltonetworks.com/",
+          "sha256": "bcb1e6d2ecb39214e21173f28a1a77eed263c750ca0a4239083fa5617ae645b1",
+          "first_retained_at": "2026-10-26T17:31:29.237547+00:00"
+        }
+      ]
+    },
+    "fortinet": {
+      "status": "enabled_bounded",
+      "source_url": "https://www.fortiguard.com/psirt",
+      "scope": "Publisher default infrastructure product filter (19 product identifiers at review time); advertised Next links preserve it. Last advertised page included 2016 advisories.",
+      "limitations": [
+        "This selection is not the full Fortinet portfolio: FortiProxy, FortiMail and other products are not independently selected, though a multi-product advisory may mention them.",
+        "Observed product selections are retained per page; any continuation that changes the filter is rejected.",
+        "The review tool received HTTP 403 while the direct anonymous collector retrieved these pages. Hosted access is checked separately during collection.",
+        "IR identifiers discover official canonical document routes; listing product text is not normalized as an impact assessment.",
+        "The sampled CSAF publication timestamps have no timezone. UTC is not inferred; unusable publisher dates are counted and excluded from the archive date range."
+      ],
+      "reviewed_at": "2026-10-26",
+      "review_method": "Automated assistant review of primary sources and bounded anonymous collector probes; not independent human certification.",
+      "evidence": [
+        {
+          "source_url": "https://www.fortiguard.com/psirt",
+          "sha256": "8a9c34b50cb6f269903f4cc42a3966c2e00f2cd88ebc175a51e3d76340b54e43",
+          "first_retained_at": "2026-10-26T17:31:31.655978+00:00"
+        }
+      ]
+    }
+  }
+}

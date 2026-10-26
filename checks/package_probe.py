@@ -3,10 +3,13 @@
 import json
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import infrastructure_impact
 from infrastructure_impact.application.publication import publish
 from infrastructure_impact.application.query import state
+from infrastructure_impact.collection.archive import progress
+from infrastructure_impact.collection.archive import run as backfill
 from infrastructure_impact.collection.config import validate_config
 from infrastructure_impact.http import Application
 from infrastructure_impact.plugins import default_registry
@@ -22,6 +25,8 @@ def main():
     for name in ("browser-capture-v1.json", "release-history-v1.json"):
         assert (package / "schemas" / name).is_file()
     assert (package / "migrations/004_browser_captures.sql").is_file()
+    assert (package / "migrations/006_archive_scope.sql").is_file()
+    assert (package / "resources/archive-source-review.json").is_file()
     assert not Path(infrastructure_impact.__file__).resolve().is_relative_to(Path.cwd())
     url = "https://security.acme.example/advisory.json"
     validate_config(
@@ -81,11 +86,31 @@ def main():
         assert (root / "current/source-audit.json").exists()
         assert len(json.loads((root / "current/casefiles.json").read_text())["cases"]) == 3
     db.close()
+    archive_url = "https://security.acme.example/archive"
+    config = {
+        "vendors": [],
+        "archives": [{"vendor": "acme", "url": archive_url, "kind": "listing"}],
+    }
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / "vault.sqlite3"
+        with (
+            patch(
+                "infrastructure_impact.collection.archive.fetch",
+                return_value=json.dumps({"advisory_urls": [url]}).encode(),
+            ),
+            patch(
+                "infrastructure_impact.collection.archive.resolve_document", return_value=(url, raw)
+            ),
+        ):
+            assert backfill(config, path) == (1, 0)
+        with connect(path) as vault:
+            assert progress(vault, [], config)[0]["known_queue_exhausted"]
     print(
         json.dumps(
             {
                 "installed_package": True,
                 "entry_point_plugin": True,
+                "external_archive_hook": True,
                 "vendors": 9,
                 "schema_validated": True,
                 "database_and_publication": True,

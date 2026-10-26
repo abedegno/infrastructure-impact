@@ -91,3 +91,14 @@ Plugins without a metadata/record `parse_feed` hook can configure reviewed offic
 RSS/Atom or CSAF index seeds without changing core dispatch. See
 [Archive collection](ARCHIVE_COLLECTION.md) for budgets, pagination, provenance and
 unsupported historical enumeration paths.
+
+`parse_archive(raw, url, vendor)` is an optional pure discovery hook for reviewed
+HTML listings. Return the immutable `ArchivePage(urls, entry_count,
+entries_without_links=0, next_pages=(), scope="")` contract, using tuples of URLs.
+Use `kind: "listing"` in the archive configuration. The orchestrator enforces the
+same official-domain, page/document budgets, retries and evidence edges as RSS
+and text-index sources; the hook must not fetch or execute JavaScript. Missing or
+changed pagination controls must fail, rather than pretend the archive ended.
+`scope` records any publisher product filters in the source audit. Listing text
+never becomes a product assessment. The separately installed example plugin and
+wheel probe exercise this extension boundary.

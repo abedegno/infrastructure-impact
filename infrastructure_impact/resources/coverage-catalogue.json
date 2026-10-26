@@ -10,10 +10,11 @@
       "product_families": [
         "IOS/IOS XE, NX-OS and infrastructure products explicitly listed in advisories"
       ],
-      "history_scope": "Current RSS window plus pinned historical advisories and upstream CVE references",
+      "history_scope": "Current RSS and curated advisories; advertised CSAF archive index reviewed but backfill disabled pending supported document access",
       "known_gaps": [
         "Feed window is bounded; arbitrary historical advisories are not exhaustively enumerated.",
-        "Some release-note requests return HTTP 403."
+        "Some release-note requests return HTTP 403.",
+        "Archive index is readable, but five sampled exact document URLs returned 403 to the anonymous collector; hosted access is not established."
       ]
     },
     "aruba": {
@@ -35,9 +36,10 @@
         "DANZ/Converged Cloud Fabric",
         "Selected cloud-service statements"
       ],
-      "history_scope": "Current RSS plus curated historical HTML and structured advisories",
+      "history_scope": "Current RSS and curated advisories; paginated public historical listing at four documents per scheduled pass",
       "known_gaps": [
-        "Only reviewed layouts are supported; affected platforms and deployment scope require consulting the source."
+        "Only reviewed layouts are supported; affected platforms and deployment scope require consulting the source.",
+        "Historical enumeration follows advertised pages; unsupported document layouts remain explicit gaps."
       ]
     },
     "paloalto": {
@@ -47,10 +49,11 @@
         "Prisma products",
         "GlobalProtect and other explicitly named product rows"
       ],
-      "history_scope": "Current RSS, CVE JSON and curated OSS bulletin tables",
+      "history_scope": "Current RSS and curated JSON/HTML; public historical GET-form listing at four documents per scheduled pass",
       "known_gaps": [
         "Shared multi-CVE tables remain shared unless a scoped exception is explicitly encoded.",
-        "Component presence alone does not establish exploitable exposure."
+        "Component presence alone does not establish exploitable exposure.",
+        "CSV export is page-limited; historical enumeration follows the reviewed public form, with no authenticated advisories included."
       ]
     },
     "juniper": {
@@ -86,10 +89,11 @@
         "FortiNAC-F on FortiNAC-OS",
         "Structured PSIRT products when encoded"
       ],
-      "history_scope": "Current PSIRT RSS/CSAF plus curated product release-note pages",
+      "history_scope": "Current RSS and curated release notes; filtered historical PSIRT listing at four documents per scheduled pass",
       "known_gaps": [
         "Some structured exports contain discovery metadata without product assessments.",
-        "Fixed release statements do not establish affected ranges in older firmware."
+        "Fixed release statements do not establish affected ranges in older firmware.",
+        "Historical listing uses the publisher default infrastructure product selection, not the entire Fortinet portfolio; observed filters are reported."
       ]
     },
     "hpe": {

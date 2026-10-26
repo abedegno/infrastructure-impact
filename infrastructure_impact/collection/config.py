@@ -47,10 +47,14 @@ def validate_config(config):
             ):
                 raise ValueError(f"Source URL outside {plugin.id} official domains")
             if section == "archives":
-                if entry.get("kind") not in ("rss", "index") or plugin.parse_feed:
+                if entry.get("kind") not in ("rss", "index", "listing") or (
+                    entry.get("kind") != "listing" and plugin.parse_feed
+                ):
                     raise ValueError(
                         "Archive requires a document-link RSS/Atom or CSAF index source"
                     )
+                if entry["kind"] == "listing" and not plugin.parse_archive:
+                    raise ValueError("Archive listing requires a reviewed plugin parser")
                 for key, default, maximum in (("page_limit", 2, 20), ("document_limit", 8, 200)):
                     value = entry.get(key, default)
                     if (
