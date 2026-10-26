@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import shutil
 import tempfile
 from contextlib import closing
@@ -51,6 +52,8 @@ def write_bundle(destination, data):
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "snapshot.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
     (destination / "impact.csv").write_text(csv_export(data))
+    (destination / "catalogue.json").write_text(json.dumps(data.get("catalogue", {})))
+    (destination / "benchmark.json").write_text(json.dumps(data.get("benchmark", {})))
     for record in data["records"]:
         path = destination / "evidence" / f"{record['evidence_id']}.json"
         path.parent.mkdir(exist_ok=True)
@@ -86,9 +89,13 @@ def write_bundle(destination, data):
     html = html.replace("LOCAL RESEARCH PILOT", "EVIDENCE PUBLICATION")
     notice = '<div class="notice">Evidence publication generated ' + data["generated_at"][:10]
     notice += ". Review source dates and coverage. Collection status is shown under Collection health.</div>"
-    (destination / "index.html").write_text(
-        html.replace('<div id="summary"', notice + '<div id="summary"')
-    )
+    base_path = os.environ.get("IMPACT_BASE_PATH", "/")
+    if not re.fullmatch(r"/(?:[A-Za-z0-9_-]+/)*", base_path):
+        raise ValueError("Base path must be a safe absolute directory path")
+    html = html.replace('<div id="summary"', notice + '<div id="summary"')
+    html = html.replace('href="/', 'href="' + base_path).replace('src="/', 'src="' + base_path)
+    (destination / "index.html").write_text(html)
+    (destination / ".nojekyll").touch()
     (destination / "research").mkdir(exist_ok=True)
     for name in ("cohort-report.txt", "hpe-timing-investigation.txt"):
         source = Paths.from_env().home / "benchmark" / name

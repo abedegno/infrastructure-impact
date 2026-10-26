@@ -8,7 +8,13 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from .adapters.compat import cves
-from .application.disclosure import add_fix_evidence, import_release_note, signals
+from .application.disclosure import (
+    add_fix_evidence,
+    import_release_note,
+    register_observation,
+    signals,
+    verify_candidate,
+)
 from .storage.repository import VENDORS, connect, now
 
 
@@ -30,6 +36,12 @@ def main(argv=None):
     review.add_argument("id", type=int)
     review.add_argument("--status", choices=["verified", "rejected", "unreviewed"], required=True)
     review.add_argument("--note", required=True)
+    review.add_argument("--observation-id", type=int)
+    review.add_argument("--earlier-disclosure-search")
+    observation = sub.add_parser("release-observation")
+    observation.add_argument("--evidence-id", required=True, type=int)
+    for field in ("vendor", "product", "version", "released-at", "kind", "locator"):
+        observation.add_argument("--" + field, required=True)
     correction = sub.add_parser(
         "import-correction",
         help="Queue a downloaded proposal for review without altering assessments",
@@ -41,6 +53,18 @@ def main(argv=None):
             import_release_note(
                 db, args.file.read_bytes(), args.url, args.vendor, args.product, args.published_at
             )
+        elif args.command == "release-observation":
+            observation_id = register_observation(
+                db,
+                args.evidence_id,
+                args.vendor,
+                args.product,
+                args.version,
+                args.released_at,
+                args.kind,
+                args.locator,
+            )
+            print(json.dumps({"release_observation_id": observation_id}))
         elif args.command == "fix-candidate":
             add_fix_evidence(
                 db,
@@ -83,7 +107,18 @@ def main(argv=None):
                 parser.error("Candidate does not exist")
             if not args.note.strip():
                 parser.error("Review explanation required")
-            db.execute("UPDATE fix_evidence SET review_status=? WHERE id=?", (args.status, args.id))
+            if args.status == "verified":
+                verify_candidate(
+                    db,
+                    args.id,
+                    args.observation_id,
+                    args.earlier_disclosure_search or "",
+                    args.note,
+                )
+            else:
+                db.execute(
+                    "UPDATE fix_evidence SET review_status=? WHERE id=?", (args.status, args.id)
+                )
             db.execute(
                 "INSERT INTO research_reviews(fix_id,note,status,reviewed_at) VALUES(?,?,?,?)",
                 (args.id, args.note, args.status, now()),

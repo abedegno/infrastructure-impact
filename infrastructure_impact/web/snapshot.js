@@ -94,7 +94,8 @@ function snapshotCSV(source) {
 }
 if (typeof document !== 'undefined') {
   const originalFetch = window.fetch.bind(window);
-  const snapshot = originalFetch('/snapshot.json').then((r) => {
+  const siteBase = new URL('.', document.baseURI).pathname;
+  const snapshot = originalFetch(siteBase + 'snapshot.json').then((r) => {
     if (!r.ok) throw Error('Snapshot unavailable');
     return r.json();
   });

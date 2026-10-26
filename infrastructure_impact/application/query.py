@@ -6,9 +6,11 @@ import os
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import VENDORS, health, history, latest, now
+from .catalogue import catalogue
 from .cohort import COHORT, coverage
 from .comparison import advisory_delays, compare
-from .disclosure import signals
+from .disclosure import latest_documents, signals
+from .evaluation import evaluate
 
 ROOT = Paths.from_env().home
 
@@ -21,10 +23,8 @@ def state(db, cohort=None):
     review_signals = signals(db)
     research = {
         "release_documents": [
-            dict(r)
-            for r in db.execute(
-                "SELECT vendor,product,source_url,published_at,evidence_id FROM documents WHERE id IN (SELECT MAX(id) FROM documents GROUP BY vendor,product,source_url)"
-            )
+            {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}
+            for r in latest_documents(db)
         ],
         "fix_candidates": [
             dict(r) for r in db.execute("SELECT * FROM fix_evidence ORDER BY id DESC")
@@ -53,9 +53,12 @@ def state(db, cohort=None):
         "collector": {
             "last_run": run,
             "schedule": schedule,
-            "hosted_auto_publication": os.environ.get("IMPACT_DELIVERY_MODE") == "live_reader",
+            "hosted_auto_publication": os.environ.get("IMPACT_DELIVERY_MODE")
+            in ("live_reader", "scheduled_static"),
         },
         "benchmark_cohort": COHORT,
+        "catalogue": catalogue(db, records),
+        "benchmark": evaluate(records),
         "coverage": coverage(db, records, comparison["cohort"]),
         "changes": history(db, full=False),
         "signals": review_signals,

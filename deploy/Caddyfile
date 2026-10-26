@@ -1,0 +1,4 @@
+{$IMPACT_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy reader:8080
+}

@@ -68,13 +68,13 @@ def html_advisory(raw, url, vendor):
     for n in content:
         t = n.text()
         if n.tag in {"h1", "h2", "h3", "h4"}:
-            if (
-                vendor == "arista"
-                and section == "Vulnerability Assessment"
-                and n.tag == "h4"
-                and "NOT affected" in t
-            ):
-                state = "unaffected"
+            if vendor == "arista" and section == "Vulnerability Assessment" and n.tag == "h4":
+                if "NOT affected" in t:
+                    state = "unaffected"
+                elif "following products are affected by" in t:
+                    state, ids = "affected", cves(t)
+                else:
+                    state = None
                 continue
             section = t
             if vendor == "cisco":
@@ -153,7 +153,7 @@ def html_advisory(raw, url, vendor):
                     state = "affected"
                 elif "following cloud services were affected" in t:
                     state = "fixed"
-                elif "following products are" in t:
+                elif "following products" in t:
                     state = None
             if n.tag == "li" and state:
                 ancestor = n.parent

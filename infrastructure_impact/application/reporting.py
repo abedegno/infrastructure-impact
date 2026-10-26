@@ -49,7 +49,7 @@ def report():
         f"Collected {len(records)} advisory/release-note records and {len({c for r in records for c in r['cves']})} distinct CVEs.",
         "Coverage: " + json.dumps(dict(Counter(p["state"] for p in pairs))),
         "",
-        "Vendor\tAssessed/11\tAny affected\tAny unaffected\tFixed release reported",
+        f"Vendor\tAssessed/{len(COHORT)}\tAny affected\tAny unaffected\tFixed release reported",
     ]
     lines += [
         "\t".join(

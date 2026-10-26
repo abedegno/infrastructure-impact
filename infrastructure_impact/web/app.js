@@ -17,6 +17,8 @@ const date = (v) => {
 const link = (url, label) => {
   try {
     if (window.snapshotMode) url = url.replace(/^\/api\/(evidence|changes)\/(\d+)$/, '/$1/$2.json');
+    if (window.snapshotMode && url.startsWith('/'))
+      url = new URL('.', document.baseURI).pathname + url.slice(1);
     const u = new URL(url, location.origin);
     if (!['https:', 'http:'].includes(u.protocol)) return esc(label);
     return `<a href="${esc(u.href)}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`;
@@ -34,20 +36,8 @@ let data,
   matrixVendor = '',
   matrixStatus = '',
   matrixQuery = '';
-const benchmark = [
-  'CVE-2021-44228',
-  'CVE-2022-3602',
-  'CVE-2022-3786',
-  'CVE-2023-48795',
-  'CVE-2024-6387',
-  'CVE-2023-38545',
-  'CVE-2023-38546',
-  'CVE-2022-0847',
-  'CVE-2024-1086',
-  'CVE-2026-109618',
-  'CVE-2026-109619',
-];
-let selectedCves = benchmark;
+let benchmark = [];
+let selectedCves = null;
 function selected() {
   return new Set(data.comparison.cohort);
 }
@@ -78,10 +68,24 @@ async function load() {
     const response = await fetch('/api/state' + suffix);
     if (!response.ok) throw Error('Could not load the evidence store');
     data = await response.json();
+    benchmark = Object.keys(data.benchmark_cohort);
+    if (selectedCves === null && $('#cohort').value === 'benchmark') {
+      selectedCves = benchmark;
+      return load();
+    }
+    const option = document.querySelector('#cohort option[value="benchmark"]');
+    option.textContent = `Benchmark · ${benchmark.length} CVEs / ${new Set(Object.values(data.benchmark_cohort)).size} components`;
+    const ageHours = (Date.now() - new Date(data.generated_at).getTime()) / 3600000;
+    if (ageHours > 36)
+      $('#feedback').textContent = 'Stale publication: collection needs attention.';
     stats();
     render();
-    $('#json-export').href = window.snapshotMode ? '/snapshot.json' : '/api/export.json' + suffix;
-    $('#csv-export').href = window.snapshotMode ? '/impact.csv' : '/api/export.csv' + suffix;
+    $('#json-export').href = window.snapshotMode
+      ? new URL('snapshot.json', document.baseURI).href
+      : '/api/export.json' + suffix;
+    $('#csv-export').href = window.snapshotMode
+      ? new URL('impact.csv', document.baseURI).href
+      : '/api/export.csv' + suffix;
   } catch (e) {
     $('#feedback').textContent = e.message;
   }
@@ -92,7 +96,7 @@ function render() {
     else b.removeAttribute('aria-current');
   });
   $('#feedback').textContent =
-    `${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
+    `${Date.now() - new Date(data.generated_at).getTime() > 36 * 3600000 ? 'STALE DATA · ' : ''}${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
   ({
     matrix: renderMatrix,
     compare: renderComparison,
@@ -100,6 +104,7 @@ function render() {
     review: renderReview,
     changes: renderChanges,
     sources: renderSources,
+    catalogue: renderCatalogue,
     correction: renderCorrection,
   })[view]();
 }
@@ -211,7 +216,7 @@ function renderSources() {
     ? 'Data publications update this service automatically; code deployment is separate.'
     : 'This hosted static copy requires a separate publishing step.';
   const scheduleText = schedule.installed
-    ? `${schedule.kind === 'container_worker' ? 'Service collection' : 'Local collection'}: ${esc(schedule.local_time)} (${esc(schedule.timezone)}). ${schedule.kind === 'container_worker' ? 'Runs in the collector service.' : 'Requires this Mac and user session; sleeping runs may be deferred.'}`
+    ? `${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Service collection' : 'Local collection'}: ${esc(schedule.local_time)} (${esc(schedule.timezone)}). ${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Runs in the collector service.' : 'Requires this Mac and user session; sleeping runs may be deferred.'}`
     : 'No installed collection schedule recorded.';
   const collectorSummary = `<div class="notice">${scheduleText} ${delivery} ${run ? `Last pass: ${esc(run.outcome)} · finished ${date(run.finished_at)} · ${run.failures} failed source checks.` : 'No completed pipeline receipt collected.'}</div>`;
   $('#view').innerHTML =
@@ -277,7 +282,7 @@ function renderCoverage() {
       )
       .join(
         '',
-      )}</tbody></table></div><p class="notice">● Product assessment · ◐ Advisory/reference without resolved assessment · — No match in checked scope · ! Check incomplete · ? Not checked. The eleven-CVE benchmark is a purposive sample across six components, not a representative security ranking.</p>`;
+      )}</tbody></table></div><p class="notice">● Product assessment · ◐ Advisory/reference without resolved assessment · — No match in checked scope · ! Check incomplete · ? Not checked. The declared benchmark is a purposive sample, not a representative security ranking.</p>`;
   document.querySelectorAll('[data-coverage]').forEach((b) =>
     b.addEventListener('click', () => {
       const c = data.coverage[Number(b.dataset.coverage)];
@@ -321,4 +326,10 @@ function renderCorrection() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     $('#correction-status').textContent = 'Proposal downloaded. No submission has been made.';
   });
+}
+
+function renderCatalogue() {
+  const catalogue = data.catalogue;
+  $('#view').innerHTML =
+    `<h2>Vendor coverage catalogue</h2><p>Product families and exact source boundaries. Freshness describes successful collection checks, not the date a vendor last updated an advisory.</p>${(catalogue?.vendors || []).map((v) => `<article><h3>${esc(v.name)} · ${badge(v.freshness)}</h3><p>${esc(v.product_families.join('; '))}</p><p>${esc(v.history_scope)}</p><p>Expected cadence: ${v.cadence_hours} hours · Stale after ${v.stale_after_hours} hours · Last successful check: ${date(v.last_successful_check)} · ${v.current_source_errors} source errors</p><ul>${v.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><details><summary>${v.sources.length} configured sources</summary>${v.sources.map((s) => `<p>${esc(s.role)} · ${link(s.url, 'Official source')}</p>`).join('')}</details></article>`).join('')}`;
 }

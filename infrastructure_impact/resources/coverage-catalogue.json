@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "cadence_hours": 24,
+    "stale_after_hours": 36,
+    "meaning": "Operational source coverage, not a claim of complete product or vulnerability coverage."
+  },
+  "vendors": {
+    "cisco": {
+      "product_families": [
+        "IOS/IOS XE, NX-OS and infrastructure products explicitly listed in advisories"
+      ],
+      "history_scope": "Current RSS window plus pinned historical advisories and upstream CVE references",
+      "known_gaps": [
+        "Feed window is bounded; arbitrary historical advisories are not exhaustively enumerated.",
+        "Some release-note requests return HTTP 403."
+      ]
+    },
+    "aruba": {
+      "product_families": [
+        "ClearPass",
+        "ArubaOS and networking products encoded in the CSAF index"
+      ],
+      "history_scope": "Current CSAF index, inspected up to 200 documents per benchmark pass",
+      "known_gaps": [
+        "Index cap and exact inspected count are recorded; hardware/configuration qualifications remain source-defined."
+      ]
+    },
+    "arista": {
+      "product_families": [
+        "EOS",
+        "7130/MOS",
+        "CloudVision",
+        "DANZ/Converged Cloud Fabric",
+        "Selected cloud-service statements"
+      ],
+      "history_scope": "Current RSS plus curated historical HTML and structured advisories",
+      "known_gaps": [
+        "Only reviewed layouts are supported; affected platforms and deployment scope require consulting the source."
+      ]
+    },
+    "paloalto": {
+      "product_families": [
+        "PAN-OS firewalls",
+        "Panorama",
+        "Prisma products",
+        "GlobalProtect and other explicitly named product rows"
+      ],
+      "history_scope": "Current RSS, CVE JSON and curated OSS bulletin tables",
+      "known_gaps": [
+        "Shared multi-CVE tables remain shared unless a scoped exception is explicitly encoded.",
+        "Component presence alone does not establish exploitable exposure."
+      ]
+    },
+    "juniper": {
+      "product_families": [
+        "Session Smart Router",
+        "Apstra",
+        "RSS advisory discovery"
+      ],
+      "history_scope": "Current security RSS metadata and two scoped PDF release documents",
+      "known_gaps": [
+        "Application shells can prevent article extraction.",
+        "RSS discovery is not resolved product applicability; PDF adapters are deliberately narrow."
+      ]
+    },
+    "checkpoint": {
+      "product_families": [
+        "Quantum Spark",
+        "Gaia OS",
+        "Scalable Platforms",
+        "Products listed by the active advisory index"
+      ],
+      "history_scope": "Active product index plus two reviewed public SK articles",
+      "known_gaps": [
+        "Active index is not a complete archive.",
+        "Details-in-SK rows remain unknown; IPS signatures do not establish affectedness."
+      ]
+    },
+    "fortinet": {
+      "product_families": [
+        "FortiOS",
+        "FortiProxy",
+        "FortiNAC-F on FortiNAC-OS",
+        "Structured PSIRT products when encoded"
+      ],
+      "history_scope": "Current PSIRT RSS/CSAF plus curated product release-note pages",
+      "known_gaps": [
+        "Some structured exports contain discovery metadata without product assessments.",
+        "Fixed release statements do not establish affected ranges in older firmware."
+      ]
+    },
+    "hpe": {
+      "product_families": [
+        "Selected Cray EX products",
+        "Selected NonStop products"
+      ],
+      "history_scope": "Two pinned historical bulletins; no general HPE advisory discovery feed",
+      "known_gaps": [
+        "This profile is a curated sample, not HPE-wide coverage.",
+        "Reported firmware dates are not independently verified public availability."
+      ]
+    }
+  }
+}

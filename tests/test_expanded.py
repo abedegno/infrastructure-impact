@@ -187,7 +187,7 @@ class ExpandedSources(unittest.TestCase):
         cp=next(p for p in pairs if p['vendor']=='checkpoint')
         self.assertEqual(cp['state'],'index_checked_no_match')
         self.assertFalse(cp['advisory_sources'])
-        self.assertEqual(len(COHORT),11)
+        self.assertEqual(len(COHORT),24)
         db.close()
 
 

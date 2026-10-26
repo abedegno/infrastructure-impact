@@ -1,0 +1,22 @@
+# Install alongside github-service.yaml in the PRIVATE service repository.
+name: Public service health
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: read
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/infrastructure-impact
+          ref: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          persist-credentials: false
+      - name: Check public HTML, dataset age and fingerprints
+        env:
+          PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: python3 checks/public_health.py "$PUBLIC_URL"

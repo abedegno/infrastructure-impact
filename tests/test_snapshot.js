@@ -9,8 +9,8 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify(compared)),state.comparison);
 for(const ids of [['CVE-2024-1086'],Object.keys(state.benchmark_cohort),['CVE-1999-999999']]){
  const selected=context.selectSnapshot(state,ids);
  assert.equal(selected.comparison.cohort.length,ids.length);
- assert.equal(selected.coverage.length,ids.length*8);
- if(ids.length===11)assert(selected.coverage.every(p=>p.checks.length>0), 'Benchmark checks must survive even when a CVE has no imported advisory');
+ assert.equal(selected.coverage.length,ids.length*Object.keys(state.vendors).length);
+ if(ids.length===Object.keys(state.benchmark_cohort).length)assert(selected.coverage.every(p=>p.checks.length>0), 'Benchmark checks must survive even when a CVE has no imported advisory');
  const exported=context.exportSnapshot(selected);
  assert(exported.records.every(r=>r.assessments.every(a=>ids.includes(a.cve_id))));
  const csv=context.snapshotCSV(selected);

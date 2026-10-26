@@ -1,18 +1,10 @@
 """Purposive cross-component benchmark. Missing evidence is never unaffectedness."""
 
-COHORT = {
-    "CVE-2021-44228": "Log4j",
-    "CVE-2022-3602": "OpenSSL",
-    "CVE-2022-3786": "OpenSSL",
-    "CVE-2023-48795": "OpenSSH",
-    "CVE-2024-6387": "OpenSSH",
-    "CVE-2023-38545": "curl",
-    "CVE-2023-38546": "curl",
-    "CVE-2022-0847": "Linux",
-    "CVE-2024-1086": "Linux",
-    "CVE-2026-109618": "PHP",
-    "CVE-2026-109619": "PHP",
-}
+import json
+
+from ..settings import PACKAGE
+
+COHORT = json.loads((PACKAGE / "resources/benchmark-cohort.json").read_text())
 
 
 def coverage(db, records, cohort=None):

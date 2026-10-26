@@ -52,8 +52,9 @@ FILES = (
     "sync.py",
     "verify_pilot.py",
     "ops/manage_schedule.py",
+    "ops/hosted_job.py",
 )
-DIRECTORIES = ("infrastructure_impact", "docs", ".github", "checks", "tests", "examples")
+DIRECTORIES = ("infrastructure_impact", "docs", ".github", "checks", "tests", "examples", "deploy")
 IGNORED_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".venv", "dist", "node_modules"}
 # Match concrete leak forms; do not print matched contents.
 LEAKS = re.compile(

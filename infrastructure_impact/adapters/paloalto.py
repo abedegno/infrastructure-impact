@@ -8,7 +8,7 @@ from .common import HTML, assessment, base, cves
 def pan_oss_bulletin(raw, url, vendor):
     tree = HTML(raw).root
     text = tree.text()
-    if "OSS CVEs Fixed in PAN-OS" not in text:
+    if "oss cves fixed in pan-os" not in text.lower():
         raise ValueError("Unknown PAN-SA HTML layout")
     identity = re.search(r"PAN-SA-\d{4}-\d+", url)[0]
     out = base(vendor, url, identity, "Informational Bulletin: OSS CVEs Fixed in PAN-OS")

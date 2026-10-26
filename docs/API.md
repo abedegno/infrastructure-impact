@@ -39,3 +39,8 @@ whole-vendor outage; inspect source-level coverage.
 
 The pilot's old loopback raw-evidence response is intentionally not part of the
 production reader. Operators inspect the private vault through local tooling.
+
+`/api/v1/catalogue` returns operational vendor coverage and freshness profiles.
+`catalogue.json` and `benchmark.json` are also included in static publications.
+The public GitHub Pages service supports static exports and browser filtering;
+the query-string REST routes require the Python reader.

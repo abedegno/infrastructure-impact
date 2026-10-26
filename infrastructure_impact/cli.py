@@ -36,6 +36,10 @@ def main(argv=None):
     sync.add_argument("--upstream-limit", type=int, default=0)
     bench = sub.add_parser("benchmark", help="Refresh the declared benchmark")
     bench.add_argument("--aruba-limit", type=int, default=200)
+    evaluation = sub.add_parser(
+        "evaluate", help="Evaluate primary-source-reviewed benchmark expectations"
+    )
+    evaluation.add_argument("--fail-on-disagreement", action="store_true")
     sub.add_parser("report", help="Regenerate coverage reports")
     research = sub.add_parser("research", help="Release evidence and correction review workflow")
     research.add_argument("arguments", nargs=argparse.REMAINDER)
@@ -130,6 +134,15 @@ def main(argv=None):
         from .application.benchmark import run
 
         print(run(args.aruba_limit))
+    elif args.command == "evaluate":
+        from .application.evaluation import evaluate
+        from .storage.repository import latest
+
+        with closing(connect(read_only=True)) as db:
+            result = evaluate(latest(db))
+        print(json.dumps(result, indent=2))
+        if args.fail_on_disagreement and result["passed"] != result["total"]:
+            raise SystemExit(1)
     elif args.command == "report":
         from .application.reporting import report
 

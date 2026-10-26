@@ -277,6 +277,26 @@
           }
         }
       }
+    },
+    "/api/v1/catalogue": {
+      "get": {
+        "summary": "Operational source coverage and collection freshness",
+        "responses": {
+          "200": {
+            "description": "Coverage profiles; successful checks do not establish comprehensive vendor coverage."
+          }
+        }
+      }
+    },
+    "/benchmark.json": {
+      "get": {
+        "summary": "Declared mapping case evaluation for this publication",
+        "responses": {
+          "200": {
+            "description": "Case results and source hashes; global precision is not estimated."
+          }
+        }
+      }
     }
   }
 }

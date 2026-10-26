@@ -33,6 +33,11 @@ specific source/layout limits; this is not a complete inventory of those vendors
 The benchmark spans multiple components, including PHP, OpenSSL, OpenSSH, curl,
 Log4j and Linux. Custom CVE cohorts are supported.
 
+**[Open the public dashboard](https://abedegno.github.io/infrastructure-impact-service/)** · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
+
+The hosted static reader refreshes through a private scheduled collector; see
+[hosting and recovery](docs/HOSTED_SERVICE.md) for cadence, monitoring and limits.
+
 ## Quick start with Docker
 
 Requirements: Docker Engine/Desktop and Docker Compose v2.
@@ -117,8 +122,8 @@ no public write, raw-evidence or collection-trigger endpoints.
 uv sync --frozen --group build
 npm ci --ignore-scripts
 uv run pytest -q
-uv run ruff check infrastructure_impact checks tests/test_architecture.py ops/manage_schedule.py
-uv run ruff format --check infrastructure_impact checks tests/test_architecture.py ops/manage_schedule.py
+uv run ruff check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py ops
+uv run ruff format --check infrastructure_impact checks tests/test_architecture.py tests/test_expansion.py ops
 npm run format:check
 uv run --group build python -m build --wheel --no-isolation
 uv run python checks/distribution.py
@@ -146,6 +151,8 @@ only after those dependencies have been cached.
 | [Contributing](CONTRIBUTING.md) | Changes, regression tests and review expectations |
 | [Security](SECURITY.md) | Reporting vulnerabilities in this project |
 | [Releasing](docs/RELEASING.md) | Prepare a clean public source tree and release |
+| [Hosted service](docs/HOSTED_SERVICE.md) | Public deployment, monitoring and private backups |
+| [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Release revision and availability evidence gates |
 | [Roadmap](docs/ROADMAP.md) | Current boundaries and planned capabilities |
 
 ## License and data

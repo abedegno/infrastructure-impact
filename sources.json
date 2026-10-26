@@ -139,6 +139,26 @@
     {
       "vendor": "checkpoint",
       "url": "https://support.checkpoint.com/results/sk/sk181833"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/15438-security-advisory-0075"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2024-3094"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2023-4863"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/json/CVE-2023-44487"
+    },
+    {
+      "vendor": "paloalto",
+      "url": "https://security.paloaltonetworks.com/PAN-SA-2024-0012"
     }
   ],
   "release_documents": [

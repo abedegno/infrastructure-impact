@@ -20,7 +20,10 @@ def cves(text):
 def iso_date(value):
     if not value:
         return None
+    value = re.sub(r"(\d)\s*(?:st|nd|rd|th)\b", r"\1", value.strip())
     for fmt in (
+        "%B %d %Y",
+        "%b %d %Y",
         "%b %d, %Y",
         "%B %d, %Y",
         "%B %dth, %Y",

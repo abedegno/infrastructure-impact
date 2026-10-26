@@ -11,9 +11,13 @@ priorities, not delivery commitments or claims of complete vendor coverage.
 - Immutable publication, read-only API, dashboard, Docker/Compose and backup tooling.
 - Offline synthetic regression tests and installed-wheel extension checks.
 
+## Coverage and deployment expansion
+
+The source now includes a coverage catalogue, a 24-CVE benchmark, declared primary-source mapping evaluations, release-note revision history and stricter availability review gates. A separate private scheduled collector publishes the public static dashboard, with private recovery copies and freshness monitoring. See the corresponding guides for current limits.
+
 ## Next priorities
 
-- Expand vendor/product families and historical collection; publish source-specific
+- Continue expanding vendor/product families and historical collection; publish source-specific
   coverage and freshness expectations rather than a blanket supported-vendor claim.
 - Add vendor parser regression cases from reviewed layouts, with redistributable
   synthetic fixtures and explicit unresolved states.

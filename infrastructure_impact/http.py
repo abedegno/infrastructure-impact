@@ -112,6 +112,8 @@ class Application:
                 },
                 status=503 if stale else 200,
             )
+        if path == "/api/v1/catalogue":
+            return self.json(data.get("catalogue", {}))
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
         ids = None
         if "cves" in query or "cve" in query:
@@ -183,6 +185,8 @@ class Application:
             "/style.css",
             "/snapshot.js",
             "/snapshot.json",
+            "/catalogue.json",
+            "/benchmark.json",
             "/impact.csv",
             "/manifest.json",
             "/schemas/advisory-v2.json",
