@@ -10,6 +10,18 @@ class AccessVerificationRequired(ValueError):
 def check_access_response(raw):
     prefix = raw[:15000].lower()
     html = prefix.lstrip().startswith((b"<!doctype html", b"<html"))
+    if html and all(
+        marker in prefix
+        for marker in (
+            b"function checksession(",
+            b"function syncnothing(",
+            b"https://auth.hpe.com/api/v1/sessions/me",
+            b'<body onload="main();">',
+        )
+    ):
+        raise AccessVerificationRequired(
+            "Source returned a browser session-check shell, not document content. No login synchronization or product inference performed."
+        )
     if (
         html
         and b"<title>client challenge</title>" in prefix

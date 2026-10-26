@@ -385,6 +385,18 @@
       "product": "Panorama 11.2 feature-release OSS reference (patch applicability unverified)",
       "kind": "component_inventory",
       "url": "https://docs.paloaltonetworks.com/oss-listings/panorama-oss-listings/panorama-11-2-open-source-software-oss-listing"
+    },
+    {
+      "vendor": "juniper",
+      "product": "Junos OS Evolved 24.2R1 OpenSSH upgrade reference (listed ACX/PTX models)",
+      "kind": "component_inventory",
+      "url": "https://www.juniper.net/documentation/us/en/software/junos/release-notes/24.2/junos-evo-release-notes-24.2r1/topics/new-features/feature-descriptions/authentication-access-control.html"
+    },
+    {
+      "vendor": "hpe",
+      "product": "HPE iLO 6 1.57 OpenSSL enhancement reference",
+      "kind": "component_inventory",
+      "url": "https://support.hpe.com/hpesc/public/api/document/sd00004028en_us?page=GUID-C4AB7B5A-16C4-4C37-9C86-17365FE3B258.html"
     }
   ],
   "archives": [

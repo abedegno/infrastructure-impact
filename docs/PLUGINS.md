@@ -10,6 +10,12 @@ validates the hook before storing a baseline. The public projection accepts only
 configured official routes and the six reviewed component names; it strips other
 analysis fields. Ambiguous versions and changed scope cannot establish a fix.
 
+Reviewed release upgrade statements can use the same hook when their product,
+release and platform boundaries are explicit. Select only the destination version;
+retain deployment limits in `component_scope`. A prior version or upstream affected
+range in the same document is not another current component version. See the
+Juniper/HPE implementations and synthetic tests for examples.
+
 A CSAF/CVE JSON vendor can use the existing shared parser. The complete example is
 in `examples/vendor-plugin`; its `.example` domain is synthetic and must not be
 used as a real feed.

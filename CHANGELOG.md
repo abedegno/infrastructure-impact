@@ -1,5 +1,9 @@
 # Changelog
 
+- Add release-scoped Juniper OpenSSH and HPE iLO OpenSSL references, with explicit
+  product/platform limits and destination-version extraction.
+- Recognize HPE browser session-check shells as access gaps rather than content.
+
 - Preserve older Arista RADIUS prerequisites, local HTTP/2 CVE groups, explicit xz
   exclusions and restricted-cloud non-CVE scope found by bounded archive preflight.
 

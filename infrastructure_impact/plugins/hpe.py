@@ -2,6 +2,7 @@
 
 from urllib.parse import parse_qs, urlsplit
 
+from ..adapters.component_statements import hpe_component_statement
 from ..adapters.hpe import hpe_bulletin
 from ..adapters.vendor_cna import registry_route, vendor_cna
 from .contracts import VendorPlugin
@@ -36,5 +37,6 @@ def plugin():
             or (urlsplit(url).hostname or "").endswith(".hpe.com")
             or registry_route(url)
         ),
-        capabilities=("verified-vendor-cna", "csaf", "html"),
+        capabilities=("verified-vendor-cna", "csaf", "html", "component-reference"),
+        parse_component_inventory=hpe_component_statement,
     )

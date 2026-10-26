@@ -5,6 +5,7 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 from ..adapters.common import base, cves
+from ..adapters.component_statements import juniper_component_statement
 from ..adapters.juniper import juniper_pdf
 from ..adapters.vendor_cna import juniper_cna, registry_route
 from .contracts import FeedBatch, VendorPlugin
@@ -72,7 +73,8 @@ def plugin():
         ("juniper.net", "cveawg.mitre.org"),
         parse,
         parse_feed=parse_feed,
-        capabilities=("rss-discovery", "scoped-pdf", "verified-vendor-cna"),
+        capabilities=("rss-discovery", "scoped-pdf", "verified-vendor-cna", "component-reference"),
+        parse_component_inventory=juniper_component_statement,
         url_filter=lambda url: (
             (urlsplit(url).hostname or "").endswith(".juniper.net")
             or urlsplit(url).hostname == "juniper.net"
