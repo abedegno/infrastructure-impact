@@ -1,12 +1,12 @@
 {
-  "archive": "vault-20261026T210641814573Z.sqlite3.gz.fernet",
-  "sha256": "4c0cd2ff8d24dad62f3f6c77288ee51c2b56367f1165eed6373189a11a99628e",
-  "checked_at": "2026-10-26T21:06:43.854225+00:00",
-  "source_commit": "00ec9f2a8815a9432b8071b22755e08173d8441e",
+  "archive": "vault-20261026T213418490316Z.sqlite3.gz.fernet",
+  "sha256": "6696f6148d2df1ac7766c00e4f09b668ccd08d40988328a9dc2dea06aae307b8",
+  "checked_at": "2026-10-26T21:34:21.831314+00:00",
+  "source_commit": "9073318eda17d639c5c678060a5057d6873d9d65",
   "private": true,
-  "database_bytes": 112521216,
-  "compressed_bytes": 11888736,
-  "archive_bytes": 15851748,
+  "database_bytes": 122908672,
+  "compressed_bytes": 12947988,
+  "archive_bytes": 17264076,
   "retention": {
     "current_directory_copy_target": 3,
     "git_history_pruned": false
