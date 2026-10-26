@@ -93,3 +93,8 @@ platform scope without guessing CVE mappings or silently resolving differences.
 The [shared-layout follow-up](research/shared-layouts-20261026.md) covers five
 Arista layouts, two Palo Alto release-branch records and a Fortinet explicit
 version list, preserving repost provenance and ambiguous solution scope.
+
+The [historical-batch and expansion review](research/history-expansion-20261026.md)
+covers three further Arista gaps, a batch-discovered CloudVision layout and
+publisher-verified infrastructure CNA scopes. Automated triage outcomes are kept
+separate from independent human review and archive completeness.

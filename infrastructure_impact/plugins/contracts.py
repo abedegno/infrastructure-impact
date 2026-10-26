@@ -73,3 +73,7 @@ class ArchivePage:
         for links in (self.urls, self.next_pages):
             if not isinstance(links, tuple) or any(not isinstance(u, str) or not u for u in links):
                 raise ValueError("Archive URLs must be tuples of nonempty strings")
+
+
+class SourceNotApplicable(ValueError):
+    """Retained source is explicitly outside the requested vendor evidence scope."""

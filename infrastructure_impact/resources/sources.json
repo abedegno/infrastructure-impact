@@ -247,6 +247,62 @@
     {
       "vendor": "paloalto",
       "url": "https://security.paloaltonetworks.com/CVE-2026-0250"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/22535-security-advisory-0123"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/22538-security-advisory-0124"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/23117-security-advisory-0129"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-76471"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-76485"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-102059"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-102084"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-102081"
+    },
+    {
+      "vendor": "hpe",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-76719"
+    },
+    {
+      "vendor": "hpe",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2025-37164"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-85102"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-85103"
+    },
+    {
+      "vendor": "checkpoint",
+      "url": "https://cveawg.mitre.org/api/cve/CVE-2026-93616"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/21316-security-advisory-0116"
     }
   ],
   "release_documents": [

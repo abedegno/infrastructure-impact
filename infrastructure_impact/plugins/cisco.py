@@ -2,13 +2,18 @@
 
 import re
 from urllib.parse import urlsplit
+from xml.etree import ElementTree as ET
 
+from ..adapters.common import cves
 from ..adapters.legacy_html import html_advisory
-from .contracts import VendorPlugin
+from ..adapters.vendor_cna import registry_route, vendor_cna
+from .contracts import FeedBatch, VendorPlugin
 from .shared import is_json, structured
 
 
 def parse(raw, url, vendor):
+    if urlsplit(url).hostname == "cveawg.mitre.org":
+        return vendor_cna(raw, url, vendor)
     return structured(raw, url, vendor) if is_json(raw) else html_advisory(raw, url, vendor)
 
 
@@ -23,13 +28,45 @@ def canonicalize(url):
     return url
 
 
+def parse_feed(raw, url, limit, cohort):
+    items = ET.fromstring(raw).findall(".//item")
+    selected = [
+        item
+        for i, item in enumerate(items)
+        if i < limit or set(cves(" ".join(item.itertext()))) & cohort
+    ]
+    links = list(
+        dict.fromkeys(
+            canonicalize(item.findtext("link")) for item in selected if item.findtext("link")
+        )
+    )[:12]
+    ids = list(dict.fromkeys(cid for item in selected for cid in cves(" ".join(item.itertext()))))[
+        :8
+    ]
+    if not links and not ids:
+        raise ValueError("No Cisco advisory or CVE links in selected RSS window")
+    return FeedBatch(
+        (),
+        frozenset(cid for item in items for cid in cves(" ".join(item.itertext()))),
+        f"Current Cisco RSS window ({len(items)} entries); up to twelve selected publisher URLs and eight CVE registry follow-ups require separate document extraction and Cisco CNA verification; no complete archive implied",
+        "ok",
+        tuple(links + ["https://cveawg.mitre.org/api/cve/" + cid for cid in ids]),
+    )
+
+
 def plugin():
     return VendorPlugin(
         "cisco",
         "Cisco",
-        ("cisco.com",),
+        ("cisco.com", "cveawg.mitre.org"),
         parse,
         canonicalize=canonicalize,
+        parse_feed=parse_feed,
         non_cve_notice=lambda d: not d["cves"] and d["title"].startswith("Cisco Informational"),
-        capabilities=("csaf", "cve-json", "html"),
+        url_filter=lambda url: (
+            (urlsplit(url).hostname or "") == "cisco.com"
+            or (urlsplit(url).hostname or "").endswith(".cisco.com")
+            or registry_route(url)
+        ),
+        capabilities=("verified-vendor-cna", "csaf", "cve-json", "html"),
     )

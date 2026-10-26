@@ -157,3 +157,25 @@ change points, CPEs and contributing row indices. Conflicting scope, defaults,
 statuses or same-start range expressions fail closed. A warning records that
 version overlap and ordering were not inferred. This does not turn release branches
 into independently verified inventory applicability.
+
+## Vendor-authored registry delivery
+
+Cisco, Juniper, HPE and Check Point plugins accept only exact HTTPS CVE registry
+record routes on `cveawg.mitre.org`. The shared adapter checks the requested CVE,
+publication state, pinned assigner/provider organization IDs, product-vendor names
+and an official publisher reference. It retains the English descriptions,
+configuration, solutions and workarounds as attributed context. Title references
+and ADP containers cannot broaden product/CVE scope.
+
+A published record consistently authored by another CNA raises
+`SourceNotApplicable`. The normal collector records this exclusion without
+creating a vendor advisory or counting a failed fetch. Missing or contradictory
+identity metadata remains an error. The source is not proof that the requested
+vendor is unaffected. This exception is part of the plugin contract; it is distinct
+from retaining a no-CVE security notice.
+
+Cisco RSS retains its selected primary advisory URLs and adds up to eight registry
+follow-ups. Check Point's selected active-index records similarly add up to eight.
+Every follow-up needs independent publisher verification. HPE's new OneView sources
+are curated pins; a general HPE discovery feed is still absent. Existing blocked
+SK and Cisco archive/release checks remain separate gaps.

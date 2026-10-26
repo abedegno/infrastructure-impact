@@ -9,6 +9,7 @@ import json
 import re
 from urllib.parse import urlsplit
 
+from ..plugins.contracts import SourceNotApplicable
 from .standards import cna
 
 JUNIPER_CNA = "8cbe9d5a-a066-4c94-8978-4b15efeae968"
@@ -17,45 +18,81 @@ JUNIPER_CNA = "8cbe9d5a-a066-4c94-8978-4b15efeae968"
 def registry_route(url):
     parsed = urlsplit(url)
     return (
-        parsed.hostname == "cveawg.mitre.org"
+        parsed.scheme == "https"
+        and not parsed.username
+        and not parsed.password
+        and parsed.port in (None, 443)
+        and parsed.hostname == "cveawg.mitre.org"
         and bool(re.fullmatch(r"/api/cve/CVE-\d{4}-\d{4,}", parsed.path))
         and not parsed.query
         and not parsed.fragment
     )
 
 
-def juniper_cna(raw, url, vendor):
-    if vendor != "juniper" or not registry_route(url):
-        raise ValueError("Expected exact CVE registry record route")
+PROFILES = {
+    "juniper": (JUNIPER_CNA, {"Juniper Networks"}, ("juniper.net",)),
+    "cisco": ("d1c1063e-7a18-46af-9102-31f8928bc633", {"Cisco"}, ("cisco.com",)),
+    "hpe": (
+        "eb103674-0d28-4225-80f8-39fb86215de0",
+        {"Hewlett Packard Enterprise", "Hewlett Packard Enterprise (HPE)"},
+        ("hpe.com",),
+    ),
+    "checkpoint": (
+        "897c38be-0345-43cd-b6cf-fe179e0c4f45",
+        {"checkpoint", "Check Point"},
+        ("checkpoint.com",),
+    ),
+}
+
+
+def vendor_cna(raw, url, vendor):
+    if vendor not in PROFILES or not registry_route(url):
+        raise ValueError("Expected configured vendor and exact CVE registry record route")
+    organization, product_vendors, domains = PROFILES[vendor]
     data = json.loads(raw)
     meta = data["cveMetadata"]
     container = data["containers"]["cna"]
     if (
+        meta.get("cveId") == urlsplit(url).path.rsplit("/", 1)[-1]
+        and meta.get("state") == "PUBLISHED"
+        and bool(meta.get("assignerOrgId"))
+        and meta.get("assignerOrgId") == container.get("providerMetadata", {}).get("orgId")
+        and meta.get("assignerOrgId") != organization
+    ):
+        raise SourceNotApplicable(
+            "Registry record is authored by another CNA; retained as a source check without attributing product impact to the requested vendor."
+        )
+    if (
         meta.get("cveId") != urlsplit(url).path.rsplit("/", 1)[-1]
         or meta.get("state") != "PUBLISHED"
-        or meta.get("assignerOrgId") != JUNIPER_CNA
-        or container.get("providerMetadata", {}).get("orgId") != JUNIPER_CNA
-        or any(p.get("vendor") != "Juniper Networks" for p in container.get("affected", []))
+        or meta.get("assignerOrgId") != organization
+        or container.get("providerMetadata", {}).get("orgId") != organization
+        or any(p.get("vendor") not in product_vendors for p in container.get("affected", []))
         or not container.get("affected")
     ):
-        raise ValueError("Record is not a published, Juniper-authored product assessment")
-    # Title/background references must not broaden this registry record's CVE scope.
+        raise ValueError("Record is not a published, configured vendor-authored product assessment")
+    references = [r.get("url", "") for r in container.get("references", [])]
+    official = [
+        u
+        for u in references
+        if urlsplit(u).scheme == "https"
+        and any(
+            (urlsplit(u).hostname or "") == d or (urlsplit(u).hostname or "").endswith("." + d)
+            for d in domains
+        )
+    ]
+    if not official:
+        raise ValueError("Vendor CNA lacks an official publisher reference")
+    # A background CVE in a title cannot broaden the registry record's identity.
     scoped = json.loads(json.dumps(data))
-    scoped["containers"]["cna"]["title"] = container.get("title", meta["cveId"])
+    scoped["containers"]["cna"]["title"] = meta["cveId"]
     result = cna(json.dumps(scoped), url, vendor)
+    result["title"] = container.get("title", meta["cveId"])
     result["cves"] = [meta["cveId"]]
     result["assessments"] = [a for a in result["assessments"] if a["cve_id"] == meta["cveId"]]
     result["source_format"] = "Vendor-authored CVE registry JSON"
     result["updated_at"] = container["providerMetadata"].get("dateUpdated")
-    result["advisory_url"] = next(
-        (
-            r["url"]
-            for r in container.get("references", [])
-            if "vendor-advisory" in r.get("tags", [])
-            and (urlsplit(r.get("url", "")).hostname or "").endswith(".juniper.net")
-        ),
-        None,
-    )
+    result["advisory_url"] = official[0]
     context = []
     for field in ("descriptions", "configurations", "solutions", "workarounds"):
         for index, item in enumerate(container.get(field, [])):
@@ -77,9 +114,15 @@ def juniper_cna(raw, url, vendor):
     for claim in result["assessments"]:
         claim["scope"] = "cve_specific"
         claim["exposure"] = context
-    result["warnings"] = [
-        "Publisher identity verified against the configured Juniper CNA organization ID. The CVE registry is the delivery source; this is a vendor-authored container, not generic upstream or ADP inference.",
-        "Version expressions, platforms and advisory configuration context remain publisher assertions. Default status is not expanded into blanket unaffectedness. No version arithmetic or hardware inventory equivalence is inferred.",
-        "Unmapped solutions and workarounds remain advisory context. They do not independently establish a product-specific fix, public release availability or first disclosure.",
+    result["warnings"] += [
+        "Publisher identity verified against the configured vendor CNA organization ID and product-vendor names, with an official publisher reference. The registry delivers the vendor-authored container; generic upstream and ADP content do not supply product-impact claims.",
+        "Version expressions, platforms and configuration context remain publisher assertions. Default status is not expanded into blanket unaffectedness. No version arithmetic, inventory equivalence or completeness is inferred.",
+        "Unmapped solutions and workarounds remain context; they do not independently establish product-specific fixes, public availability or first disclosure.",
     ]
     return result
+
+
+def juniper_cna(raw, url, vendor):
+    if vendor != "juniper":
+        raise ValueError("Expected Juniper vendor")
+    return vendor_cna(raw, url, vendor)

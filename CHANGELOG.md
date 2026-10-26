@@ -3,6 +3,14 @@
 Changes are recorded here for release preparation. Version 0.3.0 is the current
 source version; this file does not imply a package or GitHub release was published.
 
+## Historical batches and infrastructure expansion — 2026-10-26
+
+- Add bounded retained-evidence/network triage with explicit layout groups, sampling bounds and no queue ingestion.
+- Support reviewed Arista NGFW, DMF/CCF/CVA/MCD, reposted VeloCloud and on-premises CloudVision layouts while preserving nested prerequisites.
+- Share publisher-verified CNA delivery across Cisco, Juniper, HPE and Check Point; exclude upstream-authored follow-ups without inventing vendor impact.
+- Add curated infrastructure records, bounded Cisco/Check Point feed follow-ups and source-linked role aliases.
+- Describe Aruba product families observed in retained structured advisories.
+
 ## Shared layouts and coverage matrix — 2026-10-26
 
 - Add configured routes, archive progress, observed formats, publisher-date ranges and classified source gaps to the vendor coverage view and report.

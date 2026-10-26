@@ -8,9 +8,10 @@
   "vendors": {
     "cisco": {
       "product_families": [
-        "IOS/IOS XE, NX-OS and infrastructure products explicitly listed in advisories"
+        "IOS/IOS XE, NX-OS and infrastructure products explicitly listed in advisories",
+        "Selected Nexus NX-OS feature-specific vendor CNA records"
       ],
-      "history_scope": "Current RSS and curated advisories; advertised CSAF archive index reviewed but backfill disabled pending supported document access",
+      "history_scope": "Current RSS and curated advisories; advertised CSAF archive index reviewed but backfill disabled pending supported document access; bounded RSS-to-vendor-CNA follow-ups and pinned NX-OS records",
       "known_gaps": [
         "Feed window is bounded; arbitrary historical advisories are not exhaustively enumerated.",
         "Some release-note requests return HTTP 403.",
@@ -20,7 +21,11 @@
     "aruba": {
       "product_families": [
         "ClearPass",
-        "ArubaOS and networking products encoded in the CSAF index"
+        "AOS-CX and AOS-Switch",
+        "ArubaOS/InstantOS controllers and access points",
+        "EdgeConnect and Orchestrator",
+        "AirWave, Central and Fabric Composer",
+        "Instant On switches and APs explicitly encoded in retained CSAF"
       ],
       "history_scope": "Current CSAF index, benchmark search up to 200 documents; historical normalization resumes at 16 documents per scheduled pass",
       "known_gaps": [
@@ -61,7 +66,8 @@
         "Session Smart Router",
         "Apstra",
         "RSS advisory discovery",
-        "Selected Junos OS and Junos OS Evolved CNA rows with platform/configuration context"
+        "Selected Junos OS and Junos OS Evolved CNA rows with platform/configuration context",
+        "Selected SRX ADVPN, EX/QFX phone-home and SRX/MX services CNA scopes"
       ],
       "history_scope": "Current RSS discovery and bounded verified Juniper CNA follow-ups; pinned SSR/Apstra documents and selected Junos records; not a historical portfolio census",
       "known_gaps": [
@@ -77,12 +83,13 @@
         "Products listed by the active advisory index",
         "Explicit Quantum Force, CloudGuard Network and Quantum Spark customer statements in a curated vendor blog"
       ],
-      "history_scope": "Active product index plus two reviewed public SK articles",
+      "history_scope": "Active product index plus two reviewed public SK articles and bounded active-index-to-verified-CNA follow-ups",
       "known_gaps": [
         "Active index is not a complete archive.",
         "Details-in-SK rows remain unknown; IPS signatures do not establish affectedness.",
         "Cloud requests to some support pages receive interactive bot-verification pages. These are classified as access gaps, never solved or treated as advisory content.",
-        "The curated regreSSHion blog does not replace detailed SK platform/version exceptions or Terrapin scope."
+        "The curated regreSSHion blog does not replace detailed SK platform/version exceptions or Terrapin scope.",
+        "Vendor-authored CNA scope supplements blocked SK bodies; it does not establish every SK exception or complete release history."
       ]
     },
     "fortinet": {
@@ -105,9 +112,10 @@
         "Selected Cray EX products",
         "Selected NonStop products",
         "Selected iLO 5/6/7 firmware",
-        "Selected ProLiant AMD server BIOS"
+        "Selected ProLiant AMD server BIOS",
+        "Selected HPE OneView infrastructure management records"
       ],
-      "history_scope": "Four pinned bulletins for Cray, NonStop, iLO and ProLiant; no general HPE advisory discovery feed",
+      "history_scope": "Pinned Cray, NonStop, iLO and ProLiant bulletins plus verified HPE OneView CNA records; no general HPE discovery feed",
       "known_gaps": [
         "This profile is a curated sample, not HPE-wide coverage.",
         "Reported firmware dates are not independently verified public availability."

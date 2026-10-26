@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urldefrag
 
 from ..adapters.compat import auto
-from ..plugins.contracts import ArchivePage
+from ..plugins.contracts import ArchivePage, SourceNotApplicable
 from ..plugins.registry import default_registry
 from ..storage.repository import collection_result, connect, evidence, ingest, now
 from .config import validate_config
@@ -124,8 +124,11 @@ def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
 
 def document(db, source, item):
     url, raw = resolve_document(db, item["url"], source["vendor"])
-    parsed = auto(raw, url, source["vendor"])
-    ignored = default_registry().get(source["vendor"]).non_cve_notice(parsed)
+    try:
+        parsed = auto(raw, url, source["vendor"])
+    except SourceNotApplicable:
+        parsed = None
+    ignored = parsed is None or default_registry().get(source["vendor"]).non_cve_notice(parsed)
     changed = False if ignored else ingest(db, raw, url, lambda *_: parsed, source["vendor"])
     with db:
         ev = evidence(db, raw, url)

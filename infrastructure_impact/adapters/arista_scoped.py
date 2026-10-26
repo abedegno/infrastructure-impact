@@ -169,6 +169,19 @@ def grouped_software(raw, url, vendor):
 
 
 REVIEWED_SOFTWARE = {
+    "0116": {"CVP Versions": "CloudVision Portal (on-premises)"},
+    "0123": {
+        "Arista Edge Threat Management - Arista Next Generation Firewall (NGFW) Versions": "Arista Edge Threat Management - Arista Next Generation Firewall (NGFW)"
+    },
+    "0124": {
+        "Danz Monitoring Fabric": "DANZ Monitoring Fabric (DMF)",
+        "Converged Cloud Fabric": "Arista Converged Cloud Fabric (CCF)",
+        "CloudVision Appliance software": "CloudVision Appliance Software (CVA)",
+        "Multi-Cloud Director": "Arista Multi Cloud Director (MCD)",
+    },
+    "0129": {
+        "VMware SD-WAN Edge by VeloCloud (SD-WAN Edge)": "VMware SD-WAN Edge by VeloCloud (SD-WAN Edge)"
+    },
     "0130": {
         "VMware SD-WAN by VeloCloud (VeloCloud)": "VMware SD-WAN by VeloCloud (publisher Orchestrator context)"
     },
@@ -221,11 +234,23 @@ def reviewed_sections(a):
     """Bound sibling sections, retaining exclusion labels and nested lists in order."""
     sections = {}
     current = None
+    depth = 0
     for node in a.children:
         if not isinstance(node, Node):
             continue
-        if node.tag in {"h2", "h3", "h4"} and node.text() in SECTION_NAMES:
+        nested_context_heading = (
+            current
+            == "Required Configuration for Exploitation, Indicators of Compromise and Mitigation Options"
+            and node.tag in {"h2", "h3", "h4"}
+            and int(node.tag[1]) > depth
+        )
+        if (
+            node.tag in {"h2", "h3", "h4"}
+            and node.text() in SECTION_NAMES
+            and not nested_context_heading
+        ):
             current = node.text()
+            depth = int(node.tag[1])
             if current in sections:
                 raise ValueError("Repeated Arista section requires review")
             sections[current] = []
@@ -264,22 +289,42 @@ def reviewed_software(raw, url, vendor):
     ]
     sections = reviewed_sections(a)
     ids = cves(" ".join(headers))
-    if number == "0133":
+    if number in {"0123", "0133"}:
         descriptions = [
-            n.text() for n in sections.get("Description", []) if n.tag == "p" and "CVE:" in n.text()
+            n.text()
+            for n in sections.get("Description", [])
+            if n.tag == "p" and re.search(r"\bCVE\s*:", n.text())
         ]
-        if len(descriptions) != 6 or any(len(cves(t)) != 1 for t in descriptions):
+        expected = 3 if number == "0123" else 6
+        if len(descriptions) != expected or any(len(cves(t)) != 1 for t in descriptions):
             raise ValueError("NGFW per-CVE descriptions changed")
         ids = cves(" ".join(descriptions))
+    if number == "0124":
+        ids = cves(a.text().split("Description", 1)[0])
+        if len(ids) != 5 or set(ids) != set(
+            cves(" ".join(n.text() for n in sections.get("Description", [])))
+        ):
+            raise ValueError("Arista suite CVE scope changed")
     if not ids:
         raise ValueError("Explicit Arista tracking CVEs missing")
     context = section_context(sections)
     if not sections.get("Affected Platforms") or not sections.get("Description"):
         raise ValueError("Arista applicability context missing")
-    if number in {"0135", "0136", "0139", "0140"} and not sections.get(
+    if number in {"0116", "0124", "0135", "0136", "0139", "0140"} and not sections.get(
         "Required Configuration for Exploitation"
     ):
         raise ValueError("Arista exploitation prerequisites missing")
+    if number == "0116":
+        if not sections.get("Mitigation"):
+            raise ValueError("CVP onboarding-token context missing")
+        context.append(
+            dict(
+                category="publisher_mitigation_context",
+                details="\n".join(n.text() for n in sections["Mitigation"]),
+                source_scope="advisory_context_requires_product_configuration_review",
+                source_locator="Mitigation",
+            )
+        )
     groups = {}
     product = None
     for node in sections.get("Affected Software", []):
@@ -306,7 +351,7 @@ def reviewed_software(raw, url, vendor):
             else:
                 groups[product] = version_expressions(node)
         elif (
-            number in {"0130", "0131"}
+            number in {"0129", "0130", "0131"}
             and node.tag == "div"
             and node.text() == "Versions"
             and product

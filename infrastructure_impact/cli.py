@@ -41,6 +41,17 @@ def main(argv=None):
     archive.add_argument("--document-limit", type=int)
     archive.add_argument("--refresh-pages", action="store_true")
     archive.add_argument("--retry-errors", action="store_true")
+    triage = sub.add_parser(
+        "triage", help="Group a bounded pending/error archive sample by layout and parser outcome"
+    )
+    triage.add_argument("--vendor")
+    triage.add_argument("--limit", type=int, default=32)
+    triage.add_argument(
+        "--fetch",
+        action="store_true",
+        help="Retrieve and retain official sources without ingesting or changing queue state",
+    )
+    triage.add_argument("--output", type=Path)
     bench = sub.add_parser("benchmark", help="Refresh the declared benchmark")
     bench.add_argument("--aruba-limit", type=int, default=200)
     evaluation = sub.add_parser(
@@ -219,6 +230,29 @@ def main(argv=None):
         print(json.dumps(dict(imported=result[0], failed=result[1])))
         if result[1]:
             raise SystemExit(1)
+    elif args.command == "triage":
+        from .collection.triage import review_batch
+        from .worker import writer_lock
+
+        with writer_lock() as acquired:
+            if not acquired:
+                parser.error("Another collector holds the writer lock")
+            with closing(connect()) as db:
+                result = review_batch(db, vendor=args.vendor, limit=args.limit, retrieve=args.fetch)
+        raw = json.dumps(result, indent=2) + "\n"
+        if args.output:
+            args.output.write_text(raw)
+            print(
+                json.dumps(
+                    dict(
+                        selected=result["selected"],
+                        dispositions=result["dispositions"],
+                        output=str(args.output),
+                    )
+                )
+            )
+        else:
+            print(raw)
     elif args.command == "benchmark":
         from .application.benchmark import run
 

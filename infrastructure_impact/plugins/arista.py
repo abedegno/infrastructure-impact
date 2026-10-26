@@ -26,6 +26,10 @@ def parse(raw, url, vendor):
         return arista_aggregate_notice(raw, url, vendor)
     if url.rstrip("/").endswith(
         (
+            "/21316-security-advisory-0116",
+            "/22535-security-advisory-0123",
+            "/22538-security-advisory-0124",
+            "/23117-security-advisory-0129",
             "/23118-security-advisory-0130",
             "/23119-security-advisory-0131",
             "/23399-security-advisory-0133",

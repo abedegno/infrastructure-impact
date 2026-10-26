@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "taxonomy_version": "2026-10-26.3",
+  "taxonomy_version": "2026-10-26.4",
   "review_method": "Automated source-led role classification; independent human review pending",
   "groups": [
     {
@@ -808,6 +808,42 @@
       "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24515-security-advisory-0147",
       "reviewed_at": "2026-10-26",
       "rationale": "Explicit Wi-Fi access point product heading; preserves the advisory platform and configuration prerequisites."
+    },
+    {
+      "id": "hpe-oneview",
+      "vendor": "hpe",
+      "group": "management",
+      "prefix": "HPE OneView",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-76719",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Publisher identifies infrastructure management software; does not establish exposure of managed servers."
+    },
+    {
+      "id": "checkpoint-cna-gateway",
+      "vendor": "checkpoint",
+      "group": "firewalls",
+      "prefix": "Quantum Security Gateway",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-85102",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Vendor-authored product name for a security gateway; exact source scope applies."
+    },
+    {
+      "id": "checkpoint-cna-management",
+      "vendor": "checkpoint",
+      "group": "management",
+      "prefix": "Quantum Security Management",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-85103",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Security management is distinct from managed firewalls."
+    },
+    {
+      "id": "cisco-cna-nxos",
+      "vendor": "cisco",
+      "group": "switching",
+      "prefix": "Cisco NX-OS Software",
+      "source_url": "https://cveawg.mitre.org/api/cve/CVE-2026-76471",
+      "reviewed_at": "2026-10-26",
+      "rationale": "Publisher identifies Nexus switch software; encoded version and feature prerequisites remain intact."
     }
   ]
 }

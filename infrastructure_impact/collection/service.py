@@ -7,6 +7,7 @@ from xml.etree import ElementTree as ET
 from ..adapters.compat import HTML, auto, cves
 from ..application.cohort import COHORT
 from ..collection.errors import failure_code
+from ..plugins.contracts import SourceNotApplicable
 from ..plugins.registry import default_registry
 from ..storage.repository import collection_result, connect, evidence, ingest, now
 from .discovery import discovery
@@ -46,22 +47,23 @@ def index_checks(db, raw, feed):
     )
 
 
-def resolve_document(db, url, vendor):
+def resolve_document(db, url, vendor, *, fetcher=None):
+    retrieve = fetcher or fetch
     registry = default_registry()
     plugin = registry.get(vendor)
     u = urlsplit(url)
     params = [(k, v) for k, v in parse_qsl(u.query) if not k.startswith(("utm_", "vs_"))]
     url = plugin.canonicalize(urlunsplit((u.scheme, u.netloc, u.path, urlencode(params), "")))
-    raw = fetch(db, url, vendor)
+    raw = retrieve(db, url, vendor)
     if plugin.resolve:
-        url, raw = plugin.resolve(raw, url, lambda target: fetch(db, target, vendor))
+        url, raw = plugin.resolve(raw, url, lambda target: retrieve(db, target, vendor))
     if raw.lstrip().startswith(b"{"):
         return url, raw
     for link in HTML(raw).root.find({"a"}):
         href = link.attrs.get("href", "")
         if "csaf" in href.lower() and href.lower().endswith(".json"):
             target = plugin.canonicalize(urljoin(url, href))
-            structured = fetch(db, target, vendor)
+            structured = retrieve(db, target, vendor)
             parsed = json.loads(structured)
             if not any(v.get("product_status") for v in parsed.get("vulnerabilities", [])):
                 try:
@@ -170,6 +172,9 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 print(
                     f"{'IMPORTED' if changed else 'UNCHANGED'} {target['vendor']} {url}", flush=True
                 )
+            except SourceNotApplicable as e:
+                collection_result(db, target["vendor"], target["url"], "not_applicable", str(e))
+                print(f"OUTSIDE VENDOR SCOPE {target['vendor']} {target['url']}", flush=True)
             except Exception as e:
                 failed += 1
                 collection_result(

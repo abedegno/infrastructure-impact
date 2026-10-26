@@ -55,6 +55,7 @@ def cna():
                         ],
                     }
                 ],
+                "references": [{"url": "https://supportportal.juniper.net/s/article/SYNTHETIC"}],
                 "descriptions": [{"lang": "en", "value": "Only configured BGP deployments."}],
                 "configurations": [{"lang": "en", "value": "Synthetic configuration prerequisite"}],
                 "solutions": [{"lang": "en", "value": "Previously published release rebuilt."}],
