@@ -36,3 +36,4 @@ class VendorPlugin:
     reference_filter: Callable[[str], bool] = lambda url: True
     capabilities: tuple[str, ...] = field(default_factory=tuple)
     parse_release: DocumentParser | None = None
+    parse_release_history: DocumentParser | None = None

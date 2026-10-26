@@ -166,3 +166,7 @@ are excluded from the public source distribution.
 
 This is an independent project; the named vendors do not endorse it. Consult the
 linked primary advisory before taking operational action.
+
+Browser-visible public release histories can be retained through the private
+[browser-assisted evidence workflow](docs/BROWSER_CAPTURE.md), with capture
+provenance and completeness checks kept separate from scheduled HTTP collection.

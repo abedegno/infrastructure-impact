@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized publisher release history v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product", "platforms", "branch", "releases"],
+  "properties": {
+    "product": {"type": "string", "minLength": 1},
+    "platforms": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "branch": {"type": "string", "minLength": 1},
+    "releases": {
+      "type": "array", "minItems": 1, "maxItems": 5000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["version", "reported_released_at", "publisher_reports_posted"],
+        "properties": {
+          "version": {"type": "string", "minLength": 1},
+          "reported_released_at": {"type": "string", "format": "date"},
+          "publisher_reports_posted": {"const": true}
+        }
+      }
+    }
+  }
+}

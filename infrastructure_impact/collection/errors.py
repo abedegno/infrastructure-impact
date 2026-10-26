@@ -19,10 +19,29 @@ def check_access_response(raw):
         )
 
 
+class SourceHTTPError(HTTPError):
+    """Bounded response diagnostics without exporting headers, cookies or body."""
+
+    def __init__(self, error, requested_url, body):
+        super().__init__(error.url, error.code, error.reason, error.headers, None)
+        self.requested_url = requested_url
+        self.edge_denial = (error.headers or {}).get(
+            "Server", ""
+        ).lower() == "akamaighost" and b"access denied" in body.lower()
+
+
 def failure_code(error):
     if isinstance(error, AccessVerificationRequired):
         return "access_verification_required"
     if isinstance(error, HTTPError):
+        if error.code in (404, 410):
+            return (
+                "redirect_target_missing"
+                if getattr(error, "requested_url", error.url) != error.url
+                else "source_missing"
+            )
+        if error.code == 403 and getattr(error, "edge_denial", False):
+            return "edge_access_denied"
         return (
             "rate_limited"
             if error.code == 429

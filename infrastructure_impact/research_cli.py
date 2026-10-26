@@ -27,6 +27,13 @@ def main(argv=None):
     note.add_argument("--vendor", required=True)
     note.add_argument("--product", required=True)
     note.add_argument("--published-at")
+    browser = sub.add_parser(
+        "import-browser-capture",
+        help="Import labelled rendered-article evidence; does not mark HTTP collection healthy",
+    )
+    browser.add_argument("file", type=Path)
+    browser.add_argument("--expected-version")
+    sub.add_parser("browser-captures", help="List private browser capture summaries")
     fix = sub.add_parser("fix-candidate")
     for arg in ("vendor", "product", "cve-id", "version", "released-at", "basis"):
         fix.add_argument("--" + arg, required=True)
@@ -49,7 +56,21 @@ def main(argv=None):
     correction.add_argument("file", type=Path)
     args = parser.parse_args(argv)
     with closing(connect()) as db, db:
-        if args.command == "release-note":
+        if args.command == "import-browser-capture":
+            from .application.browser_capture import MAX_CAPTURE_BYTES, import_capture
+
+            with args.file.open("rb") as stream:
+                raw = stream.read(MAX_CAPTURE_BYTES + 1)
+            print(
+                json.dumps(
+                    import_capture(db, raw, expected_version=args.expected_version), indent=2
+                )
+            )
+        elif args.command == "browser-captures":
+            from .application.browser_capture import captures
+
+            print(json.dumps(captures(db), indent=2))
+        elif args.command == "release-note":
             import_release_note(
                 db, args.file.read_bytes(), args.url, args.vendor, args.product, args.published_at
             )
@@ -123,4 +144,5 @@ def main(argv=None):
                 "INSERT INTO research_reviews(fix_id,note,status,reviewed_at) VALUES(?,?,?,?)",
                 (args.id, args.note, args.status, now()),
             )
-    print("Evidence/review saved. A verified date gap does not establish intent.")
+    if args.command not in ("import-browser-capture", "browser-captures"):
+        print("Evidence/review saved. A verified date gap does not establish intent.")

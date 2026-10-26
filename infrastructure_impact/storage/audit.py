@@ -19,6 +19,9 @@ def audit():
             from ..application.release_assets import listings
 
             assets = listings(db)
+        from ..application.browser_capture import captures
+
+        browser = captures(db)
         count = 0
         for row in db.execute("SELECT raw,sha256 FROM evidence"):
             if sha256(row["raw"]).hexdigest() != row["sha256"]:
@@ -29,6 +32,7 @@ def audit():
             "schema_version": 2,
             "records": len(records),
             "release_assets": len(assets),
+            "browser_captures": len(browser),
             "evidence_snapshots": count,
             "fingerprints": "ok",
         }

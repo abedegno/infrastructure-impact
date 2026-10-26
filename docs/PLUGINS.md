@@ -77,3 +77,11 @@ vendor and exercises normalization, persistence, publication and HTTP without
 changing production data. For real deployments, lock the extension distribution
 and its dependencies in the writer image; do not rely on an untracked editable
 installation. Installed plugins are trusted application code, not sandboxed code.
+
+`parse_release_history(raw, url, vendor)` is an optional pure parser for reviewed
+browser-rendered release-history articles. It returns the strict
+`schemas/release-history-v1.json` contract. It must validate document, product and
+branch scope and reject changed or incomplete row layouts. Capture-envelope
+validation, evidence persistence, duplicate/conflicting date checks and the
+operator's expected-version query belong to the application layer. This hook
+does not enable scheduled browser retrieval. See [BROWSER_CAPTURE.md](BROWSER_CAPTURE.md).

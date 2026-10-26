@@ -7,7 +7,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from ..plugins.registry import default_registry
 from ..storage.repository import evidence
-from .errors import check_access_response
+from .errors import SourceHTTPError, check_access_response
 
 
 def allowed(url, vendor):
@@ -79,7 +79,7 @@ def fetch(db, url, vendor):
                 check_access_response(raw)
                 return raw
             if attempt or e.code not in (429, 500, 502, 503, 504):
-                raise
+                raise SourceHTTPError(e, url, e.read(15000)) from e
         except (OSError, TimeoutError):
             if attempt:
                 raise

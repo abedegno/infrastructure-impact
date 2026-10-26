@@ -16,6 +16,11 @@ from infrastructure_impact.storage.repository import connect, ingest
 def main():
     registry = default_registry()
     assert "acme" in registry.names()
+    assert registry.get("aruba").parse_release_history is not None
+    package = Path(infrastructure_impact.__file__).parent
+    for name in ("browser-capture-v1.json", "release-history-v1.json"):
+        assert (package / "schemas" / name).is_file()
+    assert (package / "migrations/004_browser_captures.sql").is_file()
     assert not Path(infrastructure_impact.__file__).resolve().is_relative_to(Path.cwd())
     url = "https://security.acme.example/advisory.json"
     validate_config(

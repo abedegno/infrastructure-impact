@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Browser-assisted public article capture v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "vendor", "source_url", "captured_at", "capture_method", "capture_scope", "browser_name", "rendered_html", "rendered_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "vendor": {"type": "string", "minLength": 1},
+    "source_url": {"type": "string", "format": "uri", "pattern": "^https://"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "capture_method": {"const": "browser_dom"},
+    "capture_scope": {"const": "visible_main_article"},
+    "browser_name": {"type": "string", "minLength": 1, "maxLength": 100},
+    "rendered_html": {"type": "string", "minLength": 1, "maxLength": 2000000},
+    "rendered_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

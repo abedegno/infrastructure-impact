@@ -98,3 +98,18 @@ Old immutable generations are retained for rollback. Monitor disk usage and
 archive/prune under an operator retention policy; automatic deletion is not
 enabled. Do not remove the active generation. This initial topology is one writer
 on one host, not a distributed database or high-availability deployment.
+
+## Source access diagnostics
+
+Collection-health error codes distinguish `source_missing` (404/410),
+`redirect_target_missing` (a followed redirect ended at 404/410),
+`edge_access_denied` (403 with an Akamai server header and Access Denied body),
+`access_denied` (other 401/403), and `access_verification_required` (a recognized
+interactive verification page). Generic HTTP/network/layout failures remain
+separate. These describe the observed response; none proves a particular bot
+rule, a permanent move, or product affectedness. A 403 does not establish that the
+requested document still exists behind the edge rule.
+
+For a source visible in a normal browser, use the private
+[browser-assisted capture workflow](BROWSER_CAPTURE.md). A manual capture does
+not clear an HTTP error or satisfy the scheduled collector's freshness check.

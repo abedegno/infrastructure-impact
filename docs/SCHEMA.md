@@ -81,3 +81,13 @@ Listing metadata does not prove file entitlement, historical public availability
 or a CVE/product association. Repeating a state is idempotent; returning to an
 earlier metadata state creates a new observation rather than leaving the newer
 state current.
+
+## Browser-assisted evidence and release histories
+
+`schemas/browser-capture-v1.json` describes an operator-supplied browser DOM
+capture envelope, including source URL, observed time, browser name, scope and
+rendered HTML hash. It is stored as capture-envelope evidence, never as an HTTP
+response. `schemas/release-history-v1.json` describes normalized dated publisher
+statements without CVE applicability or invented firmware checksums. Browser
+summaries remain private and separate from the release-asset/publication path.
+See [BROWSER_CAPTURE.md](BROWSER_CAPTURE.md) for provenance and completeness limits.

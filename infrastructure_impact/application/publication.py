@@ -30,6 +30,7 @@ def public_projection(data, public_release_urls=()):
         record.pop("extensions", None)
         for assessment in record["assessments"]:
             assessment.pop("extensions", None)
+    data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
     data["research"]["release_assets"] = [
         r

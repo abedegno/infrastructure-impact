@@ -58,3 +58,14 @@ labelled browser-assisted evidence capture. Browser-rendered HTML must carry its
 capture method and observation time, rather than masquerading as origin response
 bytes. A successful supported HTTP route or separately tested browser collector
 is required before enabling unattended collection of this source.
+
+## Captured evidence follow-up
+
+The browser-assisted path was exercised on 2026-10-26 against the current HTML
+article above. Its main article was captured to the private local vault using the
+browser-capture envelope, not as origin HTTP bytes. The reviewed parser retained
+eight table rows, reported one duplicate, and flagged selected version 10.13.1031
+as missing. No date was assigned to that release, no CVE assessment or fix
+candidate was created, and no manual capture was uploaded to the public runner.
+See [the operator workflow](../BROWSER_CAPTURE.md). Unattended browser collection
+remains disabled.
