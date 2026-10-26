@@ -1,4 +1,4 @@
-"""Audit configured source scope from retained bytes, without crawling archives."""
+"""Audit current source windows and durable historical collection progress."""
 
 import json
 from xml.etree.ElementTree import ParseError
@@ -16,6 +16,9 @@ def source_audit(db, records, config=None):
     config = config if config is not None else load_config()
     checks = {(r["vendor"], r["source_url"]): r for r in health(db)}
     profiles = json.loads((PACKAGE / "resources/coverage-catalogue.json").read_text())["vendors"]
+    from ..collection.archive import progress
+
+    archives = progress(db, records, config)
     audits = []
     for vendor, name in default_registry().names().items():
         feeds = []
@@ -93,6 +96,13 @@ def source_audit(db, records, config=None):
                     result.update(
                         evidence_state="unusable_retained_response", diagnostic=type(error).__name__
                     )
+            matching = [
+                a for a in archives if a["vendor"] == vendor and a["source_url"] == feed["url"]
+            ]
+            result["pagination_followed"] = any(a["pages"]["done"] > 1 for a in matching)
+            result["archive_enumerated"] = any(
+                a["kind"] == "index" and a["known_queue_exhausted"] for a in matching
+            )
             feeds.append(result)
         audits.append(
             dict(
@@ -121,9 +131,15 @@ def source_audit(db, records, config=None):
                 release_documents=sum(
                     p["vendor"] == vendor for p in config.get("release_documents", [])
                 ),
+                archives=[a for a in archives if a["vendor"] == vendor],
                 enumeration="bounded_feeds_and_pins" if feeds else "pinned_only",
-                archive_enumerated=False,
-                pagination_followed=False,
+                archive_enumerated=any(
+                    a["vendor"] == vendor and a["kind"] == "index" and a["known_queue_exhausted"]
+                    for a in archives
+                ),
+                pagination_followed=any(
+                    a["vendor"] == vendor and a["pages"]["done"] > 1 for a in archives
+                ),
                 portfolio_completeness="not_established",
             )
         )
@@ -131,5 +147,5 @@ def source_audit(db, records, config=None):
         schema_version=1,
         audited_at=now(),
         vendors=audits,
-        method="Code/configuration and retained primary-response audit. Counts describe the retained response, not the full publisher archive. Raw retention is not successful extraction or affectedness. No pagination or archive traversal is implemented. The benchmark index cap is the bundled default; retained checks record actual pass scope.",
+        method="Code/configuration and retained primary-response audit. Counts describe the retained response, not the full publisher archive. Raw retention is not successful extraction or affectedness. Configured archive queues follow official advertised next links within per-pass budgets. Known queue exhaustion is not portfolio completeness. Publisher date ranges do not establish historical availability. The benchmark index cap is the bundled default; retained checks record actual pass scope.",
     )

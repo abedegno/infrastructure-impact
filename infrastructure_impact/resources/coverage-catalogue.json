@@ -21,9 +21,10 @@
         "ClearPass",
         "ArubaOS and networking products encoded in the CSAF index"
       ],
-      "history_scope": "Current CSAF index, inspected up to 200 documents per benchmark pass",
+      "history_scope": "Current CSAF index, benchmark search up to 200 documents; historical normalization resumes at 8 documents per scheduled pass",
       "known_gaps": [
-        "Index cap and exact inspected count are recorded; hardware/configuration qualifications remain source-defined."
+        "Index cap and exact inspected count are recorded; hardware/configuration qualifications remain source-defined.",
+        "Historical queue progress is reported separately; the listed index does not establish every product or earlier disclosure."
       ]
     },
     "arista": {

@@ -15,9 +15,11 @@ Configured normal-feed limits and the bundled benchmark index cap are separate.
 Bundled Juniper and Check Point feed plugins also retain matching cohort records
 beyond the normal sample, so that limit is not a total record ceiling.
 Retained `coverage_checks` search-scope strings identify the actual benchmark pass.
-Advertised official next-page links are reported, but **not followed**. No archive
-traversal is implemented. These limits remain explicit even when the entire
-currently listed index has been inspected.
+Configured historical sources use a durable, bounded queue and follow official
+advertised next links. See [Archive collection](ARCHIVE_COLLECTION.md) for retry,
+refresh and scope semantics. Current response counts and accumulated queue
+progress are separate; exhausting a known index does not establish full portfolio
+coverage. Sources without configured historical collection remain bounded windows.
 
 Declared product families come from the reviewed coverage catalogue. Observed
 product-label counts are not a verified inventory of families, platforms or devices.
@@ -31,7 +33,7 @@ not empty archives or evidence of no vendor disclosure.
 | Vendor | Discovery scope | Historical/product boundary |
 | --- | --- | --- |
 | Cisco | Current security RSS, normal sample 4 | Pinned advisories, upstream references; no exhaustive IOS/IOS XE/NX-OS archive traversal; some release-note requests denied |
-| HPE Aruba Networking | CSAF text index; normal sample 4; benchmark cap 200 | Retained index listed 110 documents in the local audit; raw retention does not establish complete product/configuration qualification |
+| HPE Aruba Networking | CSAF text index; normal sample 4; benchmark cap 200 | 110 listed documents; resumable normalization at 8 documents per daily pass; raw retention does not establish complete product/configuration qualification |
 | Arista | Current security RSS, normal sample 4 | Curated EOS/CloudVision/other supported layouts; no exhaustive archive traversal; lifecycle browser capture is separate |
 | Palo Alto Networks | Current RSS, normal sample 4 | Pinned CVE JSON and OSS bulletin cases; shared product tables remain scoped; no portfolio denominator |
 | Juniper | Current RSS metadata, normal sample 4 | Scoped SSR/Apstra documents; article shells and metadata do not establish product applicability |

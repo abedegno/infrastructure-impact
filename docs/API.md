@@ -60,3 +60,9 @@ vault and do not assign vendor security scores.
 `/api/v1/casefiles` accepts optional `cves` and `vendor` filters; the static
 equivalents are `source-audit.json` and `casefiles.json`. See
 [SOURCE_AUDIT.md](SOURCE_AUDIT.md) and [CASE_FILES.md](CASE_FILES.md).
+
+The source audit includes per-vendor `archives` progress: page/document state
+counts, discovery gaps, exhausted retries, retained page fingerprints and the
+publisher date range of current matched records. `known_queue_exhausted` does not
+establish portfolio completeness or historical document availability. See
+[Archive collection](ARCHIVE_COLLECTION.md).

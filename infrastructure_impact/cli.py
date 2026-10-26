@@ -34,6 +34,13 @@ def main(argv=None):
     sync.add_argument("--config", type=Path)
     sync.add_argument("--limit", type=int, default=4)
     sync.add_argument("--upstream-limit", type=int, default=0)
+    archive = sub.add_parser("backfill", help="Resume bounded historical document collection")
+    archive.add_argument("--config", type=Path)
+    archive.add_argument("--vendor")
+    archive.add_argument("--page-limit", type=int)
+    archive.add_argument("--document-limit", type=int)
+    archive.add_argument("--refresh-pages", action="store_true")
+    archive.add_argument("--retry-errors", action="store_true")
     bench = sub.add_parser("benchmark", help="Refresh the declared benchmark")
     bench.add_argument("--aruba-limit", type=int, default=200)
     evaluation = sub.add_parser(
@@ -133,6 +140,28 @@ def main(argv=None):
         if args.limit < 0 or args.upstream_limit < 0:
             parser.error("Limits must be nonnegative")
         print(run(load_config(args.config), args.limit, upstream_limit=args.upstream_limit))
+    elif args.command == "backfill":
+        from .collection.archive import run as backfill
+        from .collection.config import load_config
+        from .worker import writer_lock
+
+        with writer_lock() as acquired:
+            if not acquired:
+                parser.error("Another collector holds the writer lock")
+            try:
+                result = backfill(
+                    load_config(args.config),
+                    vendor=args.vendor,
+                    page_limit=args.page_limit,
+                    document_limit=args.document_limit,
+                    refresh_pages=args.refresh_pages,
+                    retry_errors=args.retry_errors,
+                )
+            except ValueError as error:
+                parser.error(str(error))
+        print(json.dumps(dict(imported=result[0], failed=result[1])))
+        if result[1]:
+            raise SystemExit(1)
     elif args.command == "benchmark":
         from .application.benchmark import run
 

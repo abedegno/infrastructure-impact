@@ -53,9 +53,16 @@ def collect_once():
         if not acquired:
             LOG.info("Another writer holds the collection lock; skipping overlap")
             return {"outcome": "skipped"}
-        result = execute(
-            lambda: run(load_config(), limit=4), benchmark, report, build, status_fn=write_status
-        )
+
+        def collect_sources():
+            from .collection.archive import run as backfill
+
+            config = load_config()
+            imported, failed = run(config, limit=4)
+            added, errors = backfill(config)
+            return imported + added, failed + errors
+
+        result = execute(collect_sources, benchmark, report, build, status_fn=write_status)
         LOG.info("Collection result %s", json.dumps(result))
         return result
 

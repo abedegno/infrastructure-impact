@@ -29,7 +29,7 @@ def catalogue(db, records, config=None, at=None):
         )
         sources = [
             dict(item, role=section)
-            for section in ("vendors", "pinned", "release_documents")
+            for section in ("vendors", "pinned", "release_documents", "archives")
             for item in config.get(section, [])
             if item["vendor"] == plugin.id
         ]

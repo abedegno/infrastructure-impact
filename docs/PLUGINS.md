@@ -85,3 +85,9 @@ branch scope and reject changed or incomplete row layouts. Capture-envelope
 validation, evidence persistence, duplicate/conflicting date checks and the
 operator's expected-version query belong to the application layer. This hook
 does not enable scheduled browser retrieval. See [BROWSER_CAPTURE.md](BROWSER_CAPTURE.md).
+
+Document-link archives reuse the existing resolver and normalized advisory schema.
+Plugins without a metadata/record `parse_feed` hook can configure reviewed official
+RSS/Atom or CSAF index seeds without changing core dispatch. See
+[Archive collection](ARCHIVE_COLLECTION.md) for budgets, pagination, provenance and
+unsupported historical enumeration paths.

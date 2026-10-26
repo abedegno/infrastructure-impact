@@ -199,5 +199,14 @@
       "product": "Spark Firewall: 1600/1800/1900/2000",
       "kind": "release_listing"
     }
+  ],
+  "archives": [
+    {
+      "vendor": "aruba",
+      "kind": "index",
+      "url": "https://csaf.arubanetworking.hpe.com/index.txt",
+      "page_limit": 2,
+      "document_limit": 8
+    }
   ]
 }

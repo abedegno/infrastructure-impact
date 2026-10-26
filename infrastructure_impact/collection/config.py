@@ -12,11 +12,11 @@ from ..settings import PACKAGE, Paths
 def validate_config(config):
     if not isinstance(config, dict) or not isinstance(config.get("vendors"), list):
         raise ValueError("Sources configuration must contain a vendor feed list")
-    unknown = set(config) - {"vendors", "pinned", "release_documents"}
+    unknown = set(config) - {"vendors", "pinned", "release_documents", "archives"}
     if unknown:
         raise ValueError(f"Unknown sources configuration keys: {sorted(unknown)}")
     registry = default_registry()
-    for section in ("vendors", "pinned", "release_documents"):
+    for section in ("vendors", "pinned", "release_documents", "archives"):
         entries = config.get(section, [])
         if not isinstance(entries, list):
             raise ValueError(f"{section} must be a list")
@@ -30,6 +30,8 @@ def validate_config(config):
             keys = {"vendor", "url"} | (
                 {"kind", "limit", "order"}
                 if section == "vendors"
+                else {"kind", "page_limit", "document_limit"}
+                if section == "archives"
                 else {"product", "published_at", "kind"}
                 if section == "release_documents"
                 else set()
@@ -44,6 +46,19 @@ def validate_config(config):
                 url.hostname == d or (url.hostname or "").endswith("." + d) for d in plugin.domains
             ):
                 raise ValueError(f"Source URL outside {plugin.id} official domains")
+            if section == "archives":
+                if entry.get("kind") not in ("rss", "index") or plugin.parse_feed:
+                    raise ValueError(
+                        "Archive requires a document-link RSS/Atom or CSAF index source"
+                    )
+                for key, default, maximum in (("page_limit", 2, 20), ("document_limit", 8, 200)):
+                    value = entry.get(key, default)
+                    if (
+                        isinstance(value, bool)
+                        or not isinstance(value, int)
+                        or not 1 <= value <= maximum
+                    ):
+                        raise ValueError(f"Archive {key} must be an integer from 1 to {maximum}")
             if section == "vendors":
                 if entry.get("kind") not in ("rss", "index", "advisory_index", "checkpoint"):
                     raise ValueError("Unsupported feed discovery kind")
@@ -67,6 +82,9 @@ def validate_config(config):
                 raise ValueError("Release listing requires a reviewed vendor parser")
             if section == "release_documents" and not entry.get("product", "").strip():
                 raise ValueError("Release documents require a product label")
+    seeds = [(e["vendor"], e["url"], e["kind"]) for e in config.get("archives", [])]
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("Duplicate archive source")
     return config
 
 

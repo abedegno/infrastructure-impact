@@ -176,3 +176,7 @@ collection gaps, overlapping CVE states and publisher dates visible in the compa
 
 [Source-scope audits](docs/SOURCE_AUDIT.md) and [disclosure case files](docs/CASE_FILES.md)
 make collection limits and unresolved evidence questions reviewable.
+
+Historical collection resumes in bounded batches; the first enabled source is the
+HPE Aruba Networking CSAF index. See [Archive collection](docs/ARCHIVE_COLLECTION.md)
+for queue progress, retry policy, additional sources and coverage limits.

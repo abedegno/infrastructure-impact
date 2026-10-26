@@ -10,6 +10,7 @@ priorities, not delivery commitments or claims of complete vendor coverage.
 - Coverage-aware cohort comparisons and disclosure research review workflows.
 - Immutable publication, read-only API, dashboard, Docker/Compose and backup tooling.
 - Offline synthetic regression tests and installed-wheel extension checks.
+- Resumable historical document queues, advertised pagination and explicit coverage progress; Aruba CSAF index enabled first.
 
 ## Coverage and deployment expansion
 
