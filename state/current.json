@@ -1,16 +1,25 @@
 {
-  "archive": "vault-20261027T032548911751Z.sqlite3.xz.fernet",
-  "sha256": "e331b178e2759a50baac64fee3782d341d81bf96b1bd13e22e80faf1672d5b32",
-  "checked_at": "2026-10-27T03:26:20.366191+00:00",
-  "source_commit": "d522aec37daa8017a2618606b7b069e81207e1d5",
+  "archive": "vault-20261027T042158652309Z.sqlite3.xz.fernet",
+  "sha256": "157e016cea3095f347b6b3efcccc2c7e21608ae7bd0873cd53afdd67de32bb44",
+  "checked_at": "2026-10-27T04:22:35.736286+00:00",
+  "source_commit": "cc606a732b7445b394140ea139fb9708b33d3430",
   "private": true,
-  "database_bytes": 310562816,
-  "compressed_bytes": 10153856,
-  "archive_bytes": 13538572,
+  "database_bytes": 322551808,
+  "compressed_bytes": 10518724,
+  "archive_bytes": 14025060,
   "retention": {
-    "current_directory_copy_target": 3,
+    "legacy_git_copies_preserved": true,
+    "remote_assets": "append_only",
     "git_history_pruned": false
   },
   "encryption": "fernet-v1",
-  "compression": "xz"
+  "compression": "xz",
+  "storage_backend": "github-draft-release-v1",
+  "remote": {
+    "repository": "abedegno/infrastructure-impact",
+    "release_id": 425032143,
+    "asset_id": 680423826,
+    "tag": "collector-recovery-2026-10-27"
+  },
+  "remote_readback_verified_at": "2026-10-27T04:22:40.127577+00:00"
 }
