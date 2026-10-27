@@ -413,9 +413,11 @@ def test_monitor_runs_without_site_packages_or_application_imports(tmp_path):
 import io, json, runpy, sys, urllib.request
 from pathlib import Path
 folder = Path(sys.argv[2])
+class Response(io.BytesIO):
+    status = 200
 def get(url, timeout=None):
     relative = url.removeprefix('https://example.test/') or 'index.html'
-    return io.BytesIO((folder / relative).read_bytes())
+    return Response((folder / relative).read_bytes())
 urllib.request.urlopen = get
 module = runpy.run_path(sys.argv[1])
 result = module['check']('https://example.test')
