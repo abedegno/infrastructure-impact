@@ -355,3 +355,93 @@ def test_hosted_maintenance_runs_after_restore_and_before_collection(tmp_path, m
     assert lines[0]["normalization_maintenance"]["reparsed_revisions"] == 1
     assert lines[-1]["private_recovery"] == "verified"
     assert lines[-1]["normalization_maintenance"]["retrieval_observations_added"] == 0
+
+
+def test_unapproved_cve_free_parser_result_is_partial_before_storage(monkeypatch):
+    seed("A")
+    seed("B")
+    original = default_registry()
+    changed = PluginRegistry()
+
+    def parse(raw, url, vendor):
+        document = original.get(vendor).parse_document(raw, url, vendor)
+        if document["advisory_id"] == "A":
+            document.update(cves=[], assessments=[])
+        return document
+
+    for plugin in original.all():
+        changed.register(replace(plugin, parse_document=parse) if plugin.id == "aruba" else plugin)
+    monkeypatch.setattr(maintenance, "default_registry", lambda: changed)
+    before = counts()
+    report = maintenance.replay_report()
+    assert report["failed"] == 1 and report["reparsed_revisions"] == 1
+    assert report["failures"][0]["error_code"] == "unsupported_or_invalid_document"
+    after = counts()
+    assert after["revisions"] == before["revisions"] + 1
+    assert after["evidence"] == before["evidence"]
+    with closing(connect(read_only=True)) as db:
+        assert next(r for r in latest(db) if r["advisory_id"] == "A")["cves"]
+
+
+def test_approved_unlinked_notice_passes_reparse_preflight():
+    original = default_registry()
+    url = "https://www.arubanetworks.com/A.json"
+    document = original.normalize(source("A"), url, "aruba")
+    document.update(cves=[], assessments=[])
+    registry = PluginRegistry()
+    registry.register(
+        replace(
+            original.get("aruba"),
+            parse_document=lambda *args: document,
+            retain_unlinked_notice=lambda doc: doc["advisory_id"] == "A",
+        )
+    )
+    record = {"vendor": "aruba", "source_url": url, "advisory_id": "A", "source_format": "CSAF"}
+    assert maintenance.normalized_record(registry, record, b"synthetic")["cves"] == []
+
+
+def test_shared_feed_cache_preserves_identity_ambiguity_and_capture_boundaries():
+    original = default_registry()
+    url = "https://www.arubanetworks.com/index.json"
+    documents = [
+        original.normalize(source(identity), url, "aruba") for identity in ("A", "B", "D", "D")
+    ]
+    calls = []
+
+    def parse_feed(raw, source_url, limit, cohort):
+        calls.append((raw, source_url))
+        return FeedBatch(tuple(documents), frozenset(), "Synthetic shared index")
+
+    registry = PluginRegistry()
+    registry.register(replace(original.get("aruba"), parse_feed=parse_feed))
+    record = {
+        "vendor": "aruba",
+        "source_url": url,
+        "source_format": "RSS discovery metadata",
+        "evidence_id": 1,
+    }
+    cache = {}
+    for identity in ("A", "B"):
+        result = maintenance.normalized_record(
+            registry, dict(record, advisory_id=identity), b"one", feed_cache=cache
+        )
+        assert result["advisory_id"] == identity
+    assert len(calls) == 1
+    for identity in ("D", "missing"):
+        with pytest.raises(maintenance.ReparseIdentityError):
+            maintenance.normalized_record(
+                registry, dict(record, advisory_id=identity), b"one", feed_cache=cache
+            )
+    assert len(calls) == 1
+    maintenance.normalized_record(
+        registry, dict(record, advisory_id="A", evidence_id=2), b"two", feed_cache=cache
+    )
+    assert len(calls) == 2
+    with pytest.raises(ValueError, match="different source URL"):
+        maintenance.normalized_record(
+            registry,
+            dict(record, advisory_id="A", source_url=url + "?other"),
+            b"one",
+            feed_cache=cache,
+        )
+    assert len(calls) == 3

@@ -34,6 +34,12 @@ The tool never silently creates a differently named advisory or merges aliases.
 Storage read/write errors remain fatal rather than being mislabeled as source
 layout failures.
 
+Parser results without explicit CVEs must satisfy the vendor plugin's approved
+unlinked-notice policy before storage. An invalid result remains a per-record
+failure. Records backed by the same captured feed share one parsed index during
+the invocation; different captures and source URLs remain separate. Missing or
+duplicate advisory identities still require review.
+
 The CLI returns status 1 for partial work, remaining candidates or writer-lock
 contention, after printing its JSON report. This does not mean successful records
 were rolled back. An apply operation appends valid revisions individually. Repeat

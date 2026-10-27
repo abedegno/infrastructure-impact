@@ -1,7 +1,7 @@
 """One scheduled collection pass with process exclusion and a durable run receipt.
 
-Collects public evidence and rebuilds the local snapshot. Hosted publication uses
-the separate Sites workflow; no deployment credential is stored in this job.
+Collects public evidence and rebuilds the local snapshot. Deployment is separate
+from this durable collection receipt; deployment credentials are not stored here.
 """
 
 from contextlib import closing

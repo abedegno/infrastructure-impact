@@ -17,14 +17,24 @@ class MissingNormalizerError(ValueError):
     """A retained vendor's trusted parser is no longer installed."""
 
 
-def normalized_record(registry, record, raw):
+def normalized_record(registry, record, raw, *, feed_cache=None):
     vendor, url = record["vendor"], record["source_url"]
     plugin = registry.get(vendor)
     if record["source_format"] in ("RSS discovery metadata", "Check Point public advisory JSON"):
         if plugin.parse_feed is None:
             raise ValueError("Retained feed parser is unavailable")
-        batch = plugin.parse_feed(raw, url, 100000, frozenset(COHORT))
-        documents = [r for r in batch.records if r["advisory_id"] == record["advisory_id"]]
+        # A captured index can back many retained advisory identities. Cache only
+        # this invocation's parsed index, never across evidence or source URLs.
+        key = (vendor, record["evidence_id"], url)
+        index = feed_cache.get(key) if feed_cache is not None else None
+        if index is None:
+            batch = plugin.parse_feed(raw, url, 100000, frozenset(COHORT))
+            index = {}
+            for document in batch.records:
+                index.setdefault(document["advisory_id"], []).append(document)
+            if feed_cache is not None:
+                feed_cache[key] = index
+        documents = index.get(record["advisory_id"], [])
         if len(documents) != 1:
             raise ReparseIdentityError("Retained feed identity is missing or ambiguous")
         document = registry.finalize(documents[0], url, vendor)
@@ -36,6 +46,12 @@ def normalized_record(registry, record, raw):
         url,
     ):
         raise ReparseIdentityError("Reparse changed a stable record identity; review required")
+    if not document.get("cves") and not (
+        not document.get("assessments") and plugin.retain_unlinked_notice(document)
+    ):
+        # Reject parser output before the storage boundary, so the report can
+        # preserve this record and continue while genuine SQL errors stay fatal.
+        raise ValueError("Reparse requires explicit CVEs or an approved unlinked notice")
     return document
 
 
@@ -97,6 +113,7 @@ def replay_report(*, dry_run=False, vendor=None, limit=1000, force=False, db_pat
                 ),
                 remaining_candidates=max(0, len(candidates) - limit),
             )
+            feed_cache = {}
             for record in candidates[:limit]:
                 report["attempted"] += 1
                 # SQL failures are fatal; do not disguise database corruption as
@@ -124,7 +141,9 @@ def replay_report(*, dry_run=False, vendor=None, limit=1000, force=False, db_pat
                         raise MissingNormalizerError("Vendor normalizer is unavailable")
                     if row is None:
                         raise ValueError("Retained source evidence is unavailable")
-                    document = normalized_record(registry, record, row["raw"])
+                    document = normalized_record(
+                        registry, record, row["raw"], feed_cache=feed_cache
+                    )
                 except Exception as error:
                     # Installed parsers are trusted code, but one failed record
                     # must not prevent independent valid records from being checked.
@@ -183,11 +202,12 @@ def replay():
         if not acquired:
             raise RuntimeError("Another writer holds the collection lock")
         with closing(connect()) as db:
+            feed_cache = {}
             for record in latest(db):
                 raw = db.execute(
                     "SELECT raw FROM evidence WHERE id=?", (record["evidence_id"],)
                 ).fetchone()[0]
-                document = normalized_record(registry, record, raw)
+                document = normalized_record(registry, record, raw, feed_cache=feed_cache)
                 changed += ingest(
                     db,
                     raw,
