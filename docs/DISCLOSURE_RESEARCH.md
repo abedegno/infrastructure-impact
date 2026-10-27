@@ -52,6 +52,7 @@ cross the publication boundary. The common contract is
 ## Investigation queue
 
 The **Disclosure review** view turns eligible fix leads into source-linked tasks.
+The older **Disclosure signals** view retains the underlying revision signals.
 `/api/v1/disclosure-review` and static `/disclosure-review.json` use
 `schemas/disclosure-review-v1.json` and carry the publication generation. The
 public projection rebuilds them without copying private notes or review state.
