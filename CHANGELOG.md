@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 research preview — 2026-10-27
 
 - Add a ninth vendor plugin for two exact reviewed F5 PHP/OpenSSH article PDFs. Preserve shared-CVE tables, BIG-IP / BIG-IP Next distinctions, authentication, lifecycle limits and literal fix-column states; reject changed semantic scope and retain earlier evidence.
 - Validate F5 normalization on the Ubuntu source-access runner without a vault or response-body artifact. Treat PDF responses as documents, without scanning embedded bytes for HTML links.

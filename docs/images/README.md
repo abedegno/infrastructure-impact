@@ -1,9 +1,9 @@
 # Application screenshots
 
 `vendor-comparison.jpg` is an unaltered full-page browser capture of the public
-Infrastructure Impact web app, taken on 27 October 2026. It shows eight vendors,
-24 selected benchmark CVEs and 697 retained advisories in publication
-`9c1d338eb10a4b939f45bfe2f29d8b91` (generated 06:11 UTC).
+Infrastructure Impact web app, taken on 27 October 2026. It shows nine vendors,
+24 selected benchmark CVEs and 774 retained advisories in publication
+`1043641ebcf548a6994c1c47975d6fd0` (generated 13:44 UTC).
 
 The selected publication window is 28 October 2025 through 27 October 2026.
 The full screenshot includes source gaps, qualified sample counts, missing timing

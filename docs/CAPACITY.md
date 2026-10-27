@@ -78,6 +78,12 @@ raw captures were the largest selected payload in that corpus. Free-page bytes
 were zero. This is a checkpoint measurement, not a growth-rate forecast or an
 independent operator recovery exercise.
 
+The later nine-vendor checkpoint completed authenticated readback at 13:46:15 UTC
+on the same day: 492,957,696 database bytes and 20,120,164 encrypted archive bytes.
+It used 45.9% of the selected 1 GiB vault profile. Additional manual collection
+and archive work occurred between these checkpoints; their difference is not a
+measured daily growth rate. Repository-history warnings remain separate.
+
 The monitor continues to warn at 80% of the selected vault limit and tracks the
 repository and archive budgets separately. Growth from archive backfill and
 repeated current-source captures can differ; a few manual deployments cannot

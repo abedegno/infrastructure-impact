@@ -90,3 +90,10 @@ management. Broad BIG-IP/all-modules, APM, CNF, F5OS and service labels remain
 unmapped. They are not silently classified as firewalls, switches or routers.
 This supplies four mapped statements from these two documents; it does not enroll
 F5 in the frozen firewall study or create a comparative denominator.
+
+
+The [final Ubuntu source check](https://github.com/abedegno/infrastructure-impact/actions/runs/40513832665)
+passed both PDFs with parser fingerprint `8ba2d35b71721c2a`, including the complete
+following-guidance guard. The public acceptance check also verified date-only
+publisher fields, four management-role statements and no F5 numeric publication
+offsets. These software checks do not complete independent human adjudication.

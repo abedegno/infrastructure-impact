@@ -98,7 +98,8 @@ When a stricter monitor requires a newly deployed asset, stage that transition:
 publish the asset with compatible collector code, verify the public output, then
 activate the new monitor revision. Keep the runtime pin deliberate during rollout.
 
-For an explicitly needed normalization refresh, follow
+For an explicitly needed normalization refresh, prefer bounded vendor-scoped
+single-run workflow inputs and follow
 [Normalization maintenance](NORMALIZATION_MAINTENANCE.md), inspect its partial
 failures and interpretation changes, and reset `IMPACT_REPARSE_LIMIT` to `0` after
 the controlled run. An offline correction is not a new source retrieval or proof
