@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Retain a reviewed Palo Alto Clientless VPN configuration notice without inventing a CVE from its malformed CSAF identifier; keep notice-level product scope separate from CVE assessments.
+
 - Preserve three older Arista routing advisories with IS-IS/VxLAN/VLAN prerequisites, separate 7170 and X-Series version/fix branches, explicit model exclusions and distinct special-release fixes.
 
 - Make collection-health attention items visible first, with vendor/result filters, retained-total counts and explicit empty states; consolidate README research and operations links.

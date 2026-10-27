@@ -7,12 +7,18 @@ from urllib.parse import urljoin, urlsplit
 from ..adapters.common import HTML, cves
 from ..adapters.paloalto import pan_impact_bulletin, pan_oss_bulletin
 from ..adapters.pan_components import component_inventory
+from ..adapters.pan_notices import FORMAT as NOTICE_FORMAT
+from ..adapters.pan_notices import IDENTITY as NOTICE_ID
+from ..adapters.pan_notices import URL as NOTICE_URL
+from ..adapters.pan_notices import configuration_notice
 from .archive_listings import paloalto as archive_listing
 from .contracts import VendorPlugin
 from .shared import is_json, structured
 
 
 def parse(raw, url, vendor):
+    if url == NOTICE_URL and not is_json(raw):
+        return configuration_notice(raw, url, vendor)
     if is_json(raw):
         record = structured(raw, url, vendor)
         document = json.loads(raw)
@@ -39,6 +45,10 @@ def parse(raw, url, vendor):
 
 def resolve(raw, url, fetch):
     if is_json(raw):
+        return url, raw
+    if url == NOTICE_URL:
+        # This reviewed notice has no CVE. Do not reinterpret its PAN-SA ID as
+        # a CVE merely because the advertised export uses that field.
         return url, raw
     if "/PAN-SA-" in url:
         tree = HTML(raw).root
@@ -74,6 +84,18 @@ def plugin():
         parse,
         parse_archive=archive_listing,
         resolve=resolve,
-        capabilities=("cve-json", "html", "component-inventory"),
+        capabilities=(
+            "cve-json",
+            "html",
+            "component-inventory",
+            "reviewed-unlinked-security-notice",
+        ),
         parse_component_inventory=component_inventory,
+        retain_unlinked_notice=lambda document: (
+            document.get("advisory_id") == NOTICE_ID
+            and document.get("source_url") == NOTICE_URL
+            and document.get("source_format") == NOTICE_FORMAT
+            and not document.get("cves")
+            and not document.get("assessments")
+        ),
     )
