@@ -362,9 +362,19 @@ function renderSources() {
     ? 'Data publications update this service automatically; code deployment is separate.'
     : 'This hosted static copy requires a separate publishing step.';
   const scheduleText = schedule.installed
-    ? `${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Service collection' : 'Local collection'}: ${esc(schedule.local_time)} (${esc(schedule.timezone)}). ${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Runs in the collector service.' : 'Requires this Mac and user session; sleeping runs may be deferred.'}`
+    ? `${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Service collection configured' : 'Local collection'}: ${esc(schedule.local_time)} (${esc(schedule.timezone)}). ${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Runs in the collector service.' : 'Requires this Mac and user session; sleeping runs may be deferred.'}`
     : 'No installed collection schedule recorded.';
-  const collectorSummary = `<div class="notice">${scheduleText} ${delivery} ${run ? `Last pass: ${esc(run.outcome)} · finished ${date(run.finished_at)} · ${run.failures} failed source check${run.failures === 1 ? '' : 's'}.` : 'No completed pipeline receipt collected.'}</div>`;
+  const githubOwner = window.location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),
+    githubProject = window.location.pathname.split('/').filter(Boolean)[0];
+  const workflowLinks =
+    githubOwner && githubProject && /^[a-z0-9_.-]+$/i.test(githubProject)
+      ? `${link(`https://github.com/${githubOwner[1]}/${githubProject}/actions/workflows/collect.yaml?query=event%3Aschedule`, 'Scheduled collector runs')} · ${link(`https://github.com/${githubOwner[1]}/${githubProject}/actions/workflows/monitor.yaml?query=event%3Aschedule`, 'Scheduled health checks')}`
+      : 'Inspect actual schedule-event runs in the operator workflow history.';
+  const scheduleEvidence =
+    schedule.kind === 'github_actions'
+      ? `<p>A configured schedule does not confirm execution. Manual publications can keep data fresh while scheduled runs are missing. ${workflowLinks}</p>`
+      : '';
+  const collectorSummary = `<div class="notice">${scheduleText} ${delivery} ${run ? `Last pass: ${esc(run.outcome)} · finished ${date(run.finished_at)} · ${run.failures} failed source check${run.failures === 1 ? '' : 's'}.` : 'No completed pipeline receipt collected.'}</div>${scheduleEvidence}`;
   const checks = data.health || [];
   const attention = (h) =>
     Boolean(h.error_code) || !['ok', 'not_applicable', 'reprocessed'].includes(h.outcome);

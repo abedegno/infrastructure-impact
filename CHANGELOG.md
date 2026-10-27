@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Label the dashboard schedule as configured timing and link GitHub Pages deployments to actual scheduled-run history; fresh manual publication is not evidence that scheduling works.
+
 - Preserve two reviewed Fortinet single-CVE range lists, separate affected/unaffected branches and authentication/service prerequisites. Keep the contradictory FortiOS 6.4 solution text unresolved, without certifying either upgrade candidate.
 - Classify retrieved Fortinet envelopes without explicit CVE/product scope as visible publisher-scope gaps; do not invent CVEs or affected products.
 
