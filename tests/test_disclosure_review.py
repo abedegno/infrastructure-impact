@@ -95,3 +95,9 @@ def test_related_multicve_case_cannot_supply_counter_evidence_for_a_different_cv
     row = disclosure_review(d)["cases"][0]
     assert row["related_case_ids"] == ["counter"]
     assert row["earlier_document_counter_evidence"] == []
+
+
+def test_additive_detail_field_preserves_earlier_v1_reports():
+    report = disclosure_review(inputs())
+    report["cases"][0].pop("details")
+    validator("disclosure_review").validate(report)

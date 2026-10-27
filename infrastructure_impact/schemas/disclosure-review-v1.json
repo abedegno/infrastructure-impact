@@ -32,8 +32,7 @@
           "earlier_document_counter_evidence",
           "checklist",
           "alternative_explanations",
-          "concealment",
-          "details"
+          "concealment"
         ],
         "properties": {
           "id": {
