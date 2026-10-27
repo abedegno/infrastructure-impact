@@ -9,6 +9,7 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 from infrastructure_impact.adapters.common import assessment, base
+from infrastructure_impact.application.build_pilot import build_pilot
 from infrastructure_impact.application.publication import public_projection
 from infrastructure_impact.application.query import state
 from infrastructure_impact.application.research_dossiers import (
@@ -451,3 +452,389 @@ def test_both_claim_collections_retain_original_precision(
     claim = populated_contract["dossiers"][0]["chronology"][collection][0]
     claim.update(precision=precision, value=value)
     validate_report(populated_contract)
+
+
+def _openssh(data):
+    return research_dossiers(data)["dossiers"][0]
+
+
+def test_cray_context_cannot_become_a_switching_target(seed):
+    report = research_dossiers(seed)
+    dossier = report["dossiers"][0]
+    assert [t["vendor"] for t in dossier["comparison_targets"]] == ["arista", "aruba"]
+    assert "hpe-cray-openssh-timing" in dossier["scope"]["case_ids"]
+    assert [c["vendor"] for c in dossier["disclosure_context"]] == ["aruba", "hpe"]
+    assert report["limits"]["inventory_verified"] is False
+
+
+def test_exact_target_statement_and_source_identity_preserve_qualifications(seed):
+    record = seed["records"][0]
+    claim = record["assessments"][0]
+    claim.update(product_id="original-branch-id", product_family="EOS", platforms=["Switch"])
+    claim["remediations"] = [
+        {
+            "category": "vendor_fix",
+            "details": "Conditional fix",
+            "source_scope": "explicit_product_or_group",
+        }
+    ]
+    branch = deepcopy(claim)
+    branch.update(
+        status="conflicting", scope="bulletin_shared", source_statuses=["fixed", "affected"]
+    )
+    record["assessments"].append(branch)
+    dossier = _openssh(seed)
+    target = dossier["comparison_targets"][0]
+    assert [s["status"] for s in target["statements"]] == ["fixed", "conflicting"]
+    first = target["statements"][0]
+    assert first["product_id"] == "original-branch-id"
+    assert first["exposure"][0]["details"].endswith("SSH management enabled.")
+    assert first["remediations"][0]["source_scope"] == "explicit_product_or_group"
+    identity = sha256(
+        json.dumps(["arista", record["source_url"], "1" * 64], separators=(",", ":")).encode()
+    ).hexdigest()
+    assert first["source_id"] == identity
+    source = next(s for s in dossier["sources"] if s["id"] == identity)
+    assert source["observations"] == ["2026-10-27T00:00:00Z"]
+    assert claim["evidence_locator"] in source["locators"]
+    assert target["statements"][1]["scope"] == "bulletin_shared"
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda r: r.update(vendor="hpe"),
+        lambda r: r["assessments"][0].update(versions=[{"expression": "4.32.3F"}]),
+        lambda r: r["assessments"][0].update(cve_id="CVE-2023-38545"),
+        lambda r: r["assessments"][0].update(evidence_locator="Different locator"),
+    ],
+)
+def test_exact_reference_rejects_other_vendor_build_cve_and_locator(seed, mutation):
+    # The locator mutation changes the record after the reviewed pilot reference;
+    # rebuilding all other inputs exercises the pilot's existing exact selector.
+    pilot = deepcopy(seed["product_cohorts"]["build_pilot"])
+    mutation(seed["records"][0])
+    seed["product_cohorts"]["build_pilot"] = build_pilot(seed)
+    if seed["records"][0]["assessments"][0]["evidence_locator"] == "Different locator":
+        seed["product_cohorts"]["build_pilot"] = pilot
+    row = _openssh(seed)["comparison_targets"][0]
+    assert row["statements"] == []
+    assert row["fields"][0]["state"] == "unknown"
+
+
+def test_missing_source_preserves_target_as_unknown(seed):
+    seed["records"] = []
+    seed["product_cohorts"]["build_pilot"] = build_pilot(seed)
+    row = _openssh(seed)["comparison_targets"][0]
+    assert row["statements"] == []
+    assert any(f["state"] == "unknown" for f in row["fields"])
+    assert _openssh(seed)["evidence_gaps"]
+
+
+def test_stale_source_hash_cannot_supply_target_evidence(seed):
+    seed["records"][0]["sha256"] = "a" * 64
+    row = _openssh(seed)["comparison_targets"][0]
+    assert row["statements"] == []
+    assert row["fields"][0]["value"] is None
+
+
+def _timeline_event(record, **changes):
+    return dict(
+        event_id="revision-9-CVE-2024-6387",
+        revision_id=9,
+        evidence_id=9,
+        vendor=record["vendor"],
+        cve_id="CVE-2024-6387",
+        observed_at="2026-10-26T12:30:00+01:00",
+        kind="parser_reinterpretation",
+        source_url=record["source_url"],
+        source_sha256="a" * 64,
+        publisher_published_at="2024-07-08",
+        **changes,
+    )
+
+
+def test_date_claim_is_not_capture_or_first_disclosure(seed):
+    seed["timeline"].update(
+        history_truncated=True, events_truncated=True, events=[_timeline_event(seed["records"][0])]
+    )
+    dossier = _openssh(seed)
+    assert any(
+        c["field"] == "published_at" and c["value"] == "2024-07-08" and c["precision"] == "date"
+        for c in dossier["chronology"]["publisher_claims"]
+    )
+    observations = dossier["chronology"]["local_observations"]
+    assert any(
+        o["value"] == "2026-10-27T00:00:00Z" and o["kind"] == "source_capture" for o in observations
+    )
+    historical = next(o for o in observations if o["kind"] == "parser_reinterpretation")
+    assert historical["value"] == "2026-10-26T12:30:00+01:00"
+    assert historical["history_truncated"] is historical["events_truncated"] is True
+    source = next(s for s in dossier["sources"] if s["id"] == historical["source_id"])
+    assert source["source_sha256"] == "a" * 64
+    assert source["source_sha256"] != seed["records"][0]["sha256"]
+
+
+@pytest.mark.parametrize(
+    "value,precision",
+    [
+        ("2024-07-08", "date"),
+        ("2024-07-08T09:15:00Z", "instant"),
+        ("2024-07-08T09:15:00", "local_datetime"),
+        ("Publisher's original date label", "unparsed"),
+        (None, "unsupplied"),
+    ],
+)
+def test_derived_publisher_date_precision_preserves_original(seed, value, precision):
+    seed["records"][0]["published_at"] = value
+    dossier = _openssh(seed)
+    sid = dossier["comparison_targets"][0]["statements"][0]["source_id"]
+    row = next(
+        c
+        for c in dossier["chronology"]["publisher_claims"]
+        if c["source_id"] == sid and c["field"] == "published_at"
+    )
+    assert (row["value"], row["precision"]) == (value, precision)
+
+
+def test_timeline_excludes_wrong_vendor_cve_and_unbound_sources(seed):
+    good = _timeline_event(seed["records"][0])
+    seed["timeline"]["events"] = [
+        good,
+        {**good, "vendor": "hpe"},
+        {**good, "cve_id": "CVE-2023-38545"},
+        {**good, "source_url": "https://www.arista.com/unbound"},
+    ]
+    observations = _openssh(seed)["chronology"]["local_observations"]
+    assert sum(o["kind"] == "parser_reinterpretation" for o in observations) == 1
+
+
+def _curl_context(seed):
+    case = next(
+        c for c in seed["casefiles"]["cases"] if c["id"] == "fortiproxy-curl-documented-fix"
+    )
+    url = case["advisory_urls"][1]
+    case["earlier_dated_vendor_documents"] = [
+        dict(
+            source_url=url,
+            source_sha256="b" * 64,
+            publisher_published_at="2023-10-11",
+            date_basis="publisher_calendar_claim_timezone_unspecified",
+            cve_ids=["CVE-2023-38545"],
+            product_labels=["FortiProxy"],
+            interpretation="Earlier advisory counter-evidence; availability remains unverified.",
+        )
+    ]
+    case["publisher_document_histories"] = [
+        dict(
+            vendor="fortinet",
+            source_url=case["release_source_leads"][0],
+            source_sha256="c" * 64,
+            observed_at="2026-10-27T00:00:00Z",
+            events=[
+                dict(
+                    publisher_date="2023-12-01",
+                    kind="initial_document_release",
+                    cve_ids=[],
+                    source_locator="Initial history row",
+                ),
+                dict(
+                    publisher_date="2023-12-05",
+                    kind="cve_references_added",
+                    cve_ids=["CVE-2023-38545"],
+                    source_locator="Selected CVE row",
+                ),
+                dict(
+                    publisher_date="2023-12-06",
+                    kind="cve_references_added",
+                    cve_ids=["CVE-2023-38546"],
+                    source_locator="Other CVE detail",
+                ),
+            ],
+        )
+    ]
+    return case
+
+
+def test_curl_counter_evidence_and_documentation_stay_cve_scoped(seed):
+    _curl_context(seed)
+    report = research_dossiers(seed)
+    curl, other = report["dossiers"][1:]
+    context = curl["disclosure_context"][0]
+    assert context["earlier_documents"][0]["product_labels"] == ["FortiProxy"]
+    assert context["earlier_documents"][0]["publisher_published_at"] == "2023-10-11"
+    claims = curl["chronology"]["documentation_claims"]
+    assert [c["kind"] for c in claims] == ["initial_document_release", "cve_references_added"]
+    assert "Other CVE detail" not in json.dumps(curl)
+    assert other["disclosure_context"][0]["earlier_documents"] == []
+    assert "Selected CVE row" not in json.dumps(other)
+    assert report["limits"]["independent_release_availability_verified"] is False
+    assert report["limits"]["concealment_established"] is False
+
+
+def test_changed_source_set_recomputes_disposition_and_rejects_unrelated_reviews(seed):
+    case = next(c for c in seed["casefiles"]["cases"] if c["vendor"] == "hpe")
+    url = case["advisory_urls"][0]
+    ref = dict(source_url=url, source_sha256="d" * 64, observed_at="2026-10-27T00:00:00Z")
+    case["evidence"] = [ref]
+    review = dict(
+        vendor="hpe",
+        cve_ids=["CVE-2024-6387"],
+        related_case_ids=[case["id"]],
+        kind="publisher_reported_chronology",
+        details="Synthetic chronology",
+        evidence=[ref],
+        alternative_explanations=[],
+        investigation={"disposition": "release_availability_unresolved"},
+    )
+    seed["disclosure_review"]["cases"] = [review]
+    context = _openssh(seed)["disclosure_context"][1]
+    assert context["investigation"]["source_state"] == "source_changed_review_required"
+    assert context["investigation"]["disposition"] == "source_changed_review_required"
+    assert context["investigation"]["source_ids"] == context["source_ids"]
+    for key, value in [
+        ("vendor", "aruba"),
+        ("related_case_ids", ["unrelated"]),
+        ("cve_ids", ["CVE-2023-38546"]),
+    ]:
+        bad = deepcopy(review)
+        bad[key] = value
+        seed["disclosure_review"]["cases"] = [bad]
+        assert _openssh(seed)["disclosure_context"][1]["investigation"] is None
+
+
+def test_uncollected_leads_and_http_failures_are_gaps_not_sources(seed):
+    case = seed["casefiles"]["cases"][0]
+    url = case["release_source_leads"][0]
+    case["source_checks"] = [
+        dict(
+            source_url=url,
+            outcome="http_error",
+            error_code="HTTP_403",
+            checked_at="2026-10-27T00:00:00Z",
+        )
+    ]
+    dossier = _openssh(seed)
+    assert url not in {s["source_url"] for s in dossier["sources"]}
+    assert any(
+        g["evidence_sought"] == url and g["access_state"] == "http_error"
+        for g in dossier["evidence_gaps"]
+    )
+    assert any(g["access_state"] == "uncollected_lead" for g in dossier["evidence_gaps"])
+    assert (
+        next(c for c in dossier["disclosure_context"] if c["case_id"] == case["id"])[
+            "source_checks"
+        ][0]["error_code"]
+        == "HTTP_403"
+    )
+
+
+def test_projection_allowlists_every_nested_input_and_is_pure(seed):
+    _curl_context(seed)
+    seed["records"][0]["PRIVATE_SENTINEL"] = "PRIVATE_SENTINEL"
+    seed["records"][0]["assessments"][0]["PRIVATE_SENTINEL"] = "PRIVATE_SENTINEL"
+    seed["records"][0]["assessments"][0]["exposure"][0]["private"] = "PRIVATE_SENTINEL"
+    target = seed["product_cohorts"]["build_pilot"]["targets"][0]
+    target["private"] = "PRIVATE_SENTINEL"
+    target["fields"][0]["evidence"][0]["private"] = "PRIVATE_SENTINEL"
+    for case in seed["casefiles"]["cases"]:
+        case["private"] = "PRIVATE_SENTINEL"
+        for doc in case.get("earlier_dated_vendor_documents", []):
+            doc["private"] = "PRIVATE_SENTINEL"
+    original = deepcopy(seed)
+    report = research_dossiers(seed)
+    assert seed == original
+    assert "PRIVATE_SENTINEL" not in json.dumps(report)
+    assert report == research_dossiers(seed)
+    report["dossiers"][0]["comparison_targets"][0]["statements"][0]["exposure"].clear()
+    assert seed == original
+
+
+def test_definition_entry_and_target_order_are_preserved(seed):
+    spec = definition()
+    spec["entries"].reverse()
+    spec["entries"][-1]["build_target_ids"].reverse()
+    report = research_dossiers(seed, spec)
+    assert [d["cve_id"] for d in report["dossiers"]] == [
+        "CVE-2023-38546",
+        "CVE-2023-38545",
+        "CVE-2024-6387",
+    ]
+    assert [t["vendor"] for t in report["dossiers"][-1]["comparison_targets"]] == [
+        "aruba",
+        "arista",
+    ]
+
+
+def test_source_unions_exact_observations_and_sorted_locators(seed):
+    seed["records"][0]["assessments"][0]["exposure"].extend(
+        [
+            dict(
+                category="publisher_platform_scope", details="Z scope", source_locator="Z locator"
+            ),
+            dict(
+                category="publisher_platform_scope", details="A scope", source_locator="A locator"
+            ),
+        ]
+    )
+    seed["product_cohorts"]["build_pilot"] = build_pilot(seed)
+    ref = seed["product_cohorts"]["build_pilot"]["targets"][0]["fields"][0]["evidence"][0]
+    ref["observed_at"] = "2026-10-26T23:00:00+00:00"
+    dossier = _openssh(seed)
+    sid = dossier["comparison_targets"][0]["statements"][0]["source_id"]
+    source = next(s for s in dossier["sources"] if s["id"] == sid)
+    assert source["observations"] == ["2026-10-26T23:00:00+00:00", "2026-10-27T00:00:00Z"]
+    assert [s["id"] for s in dossier["sources"]] == sorted(s["id"] for s in dossier["sources"])
+    assert source["locators"] == ["A locator", "Synthetic exact target row 1", "Z locator"]
+
+
+def test_rejected_firmware_reference_cannot_leave_known_context_fields(seed):
+    claim = seed["records"][0]["assessments"][0]
+    claim["exposure"].append(
+        dict(
+            category="publisher_platform_scope",
+            details="Synthetic switch",
+            source_locator="Exact platform row",
+        )
+    )
+    seed["product_cohorts"]["build_pilot"] = build_pilot(seed)
+    claim["evidence_locator"] = "Changed normalization locator"
+    target = _openssh(seed)["comparison_targets"][0]
+    assert target["statements"] == []
+    assert all(f["state"] == "unknown" for f in target["fields"])
+
+
+def test_disposition_checks_current_retained_bytes_instead_of_stale_review(seed):
+    item = next(
+        i
+        for i in json.loads((PACKAGE / "resources/disclosure-investigations.json").read_text())[
+            "investigations"
+        ]
+        if i["id"] == "hpe-cray-openssh-timing"
+    )
+    case = next(c for c in seed["casefiles"]["cases"] if c["vendor"] == "hpe")
+    case["evidence"] = deepcopy(item["source_bindings"])
+    review = dict(
+        vendor="hpe",
+        cve_ids=["CVE-2024-6387"],
+        related_case_ids=[case["id"]],
+        kind="publisher_reported_chronology",
+        details="Synthetic chronology",
+        evidence=deepcopy(item["source_bindings"]),
+        alternative_explanations=[],
+    )
+    seed["disclosure_review"]["cases"] = [review]
+    assert _openssh(seed)["disclosure_context"][1]["investigation"]["disposition"] == (
+        "release_availability_unresolved"
+    )
+    case["evidence"][0]["source_sha256"] = "e" * 64
+    current = _openssh(seed)["disclosure_context"][1]["investigation"]
+    assert current is not None
+    assert current["disposition"] == "source_changed_review_required"
+    assert current["source_state"] == "source_changed_review_required"
+
+
+def test_unqualified_capture_is_rejected_without_inventing_timezone(seed):
+    seed["records"][0]["source_observed_at"] = "2026-10-27T00:00:00"
+    with pytest.raises(ValidationError):
+        research_dossiers(seed)
