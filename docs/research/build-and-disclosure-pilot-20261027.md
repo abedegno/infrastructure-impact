@@ -76,3 +76,13 @@ requires its exact bug token. Changed/added/missing source bytes suppress the
 current disposition and request re-review; a stale conclusion cannot silently
 apply. No gate is marked independently adjudicated, and original private human
 review materials are neither read nor changed.
+
+Two retained FortiProxy HTML captures were separately re-reviewed. Their complete
+84 reviewed release-section blocks, including bugs 968514 and 973351, are
+identical (scoped-analysis SHA-256
+`350b6ce0da23519a5dc0dee793e9f03b6bf169329781dab1c729299f087d20c0`).
+The additional reviewed response hash is
+`2cee5d66efaf3757e995617f967a0f10e481f8a3e469f6dbc73334f718588cc8`.
+The registry explicitly accepts both complete source sets. This is a dated
+re-review of those captures, not an automatic exemption for future template or
+content changes. Other hashes still require review.

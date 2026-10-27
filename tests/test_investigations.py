@@ -53,3 +53,15 @@ def test_unlinked_defect_requires_exact_bug_token_and_cve_cohort():
     row = lead(item)
     row["cve_ids"] = ["CVE-2024-6387"]
     assert investigation(row) is None
+
+
+def test_only_explicitly_rereviewed_capture_sets_can_refresh_a_disposition():
+    items = json.loads((PACKAGE / "resources/disclosure-investigations.json").read_text())[
+        "investigations"
+    ]
+    item = next(i for i in items if i.get("additional_reviewed_source_sets"))
+    row = lead(item)
+    row["evidence"] = deepcopy(item["additional_reviewed_source_sets"][0])
+    assert investigation(row)["source_state"] == "matches_reviewed_sources"
+    row["evidence"][0]["source_sha256"] = "f" * 64
+    assert investigation(row)["source_state"] == "source_changed_review_required"

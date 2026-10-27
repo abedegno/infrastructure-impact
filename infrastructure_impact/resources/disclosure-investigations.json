@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-27.1",
+  "version": "2026-10-27.2",
   "review_method": "Assistant review of primary sources; not independent human adjudication",
   "investigations": [
     {
@@ -25,6 +25,14 @@
       ],
       "uncollected_search_leads": [
         "https://docs.fortinet.com/document/fortigate/7.2.8/fortios-release-notes/289806/resolved-issues"
+      ],
+      "additional_reviewed_source_sets": [
+        [
+          {
+            "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+            "source_sha256": "2cee5d66efaf3757e995617f967a0f10e481f8a3e469f6dbc73334f718588cc8"
+          }
+        ]
       ]
     },
     {
@@ -87,6 +95,22 @@
       ],
       "uncollected_search_leads": [
         "https://www.fortiguard.com/psirt/FG-IR-23-385"
+      ],
+      "additional_reviewed_source_sets": [
+        [
+          {
+            "source_url": "https://www.fortiguard.com/psirt/csaf/FG-IR-23-385?csaf_url=https://filestore.fortinet.com/fortiguard/psirt/csaf_curl-and-libcurl-cve-2023-38545-and-cve-2023-38546-vulnerabilities_fg-ir-23-385.json",
+            "source_sha256": "e4eed2efd94bdedf2e15aa5e475c932d23a47694e7482d8eb6aa500116e44104"
+          },
+          {
+            "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+            "source_sha256": "2cee5d66efaf3757e995617f967a0f10e481f8a3e469f6dbc73334f718588cc8"
+          },
+          {
+            "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log",
+            "source_sha256": "8d2378a5c43d363b685a00672acec2dd2aa3465fbb50ab30983b330762a4cc61"
+          }
+        ]
       ]
     }
   ]
