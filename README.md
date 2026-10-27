@@ -20,12 +20,15 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 
 - Collects structured CSAF/CVE JSON, feeds and reviewed HTML/PDF layouts.
 - Adds [family evidence, comparison readiness and dated fix leads](docs/RESEARCH_FOUNDATIONS.md) with explicit coverage gaps and alternative explanations.
-- Supports [bounded archive layout triage](docs/ARCHIVE_TRIAGE.md) before historical ingestion.
+- Supports bounded historical collection, offline parser recovery and
+  [archive layout triage](docs/ARCHIVE_TRIAGE.md) before ingestion.
 - Shows a [vendor coverage matrix](docs/COVERAGE_MATRIX.md) with source routes, archive progress, retained formats and collection gaps.
 - Keeps product, platform, version and configuration scope attached to each claim.
 - Separates affectedness from planned fixes, partial mitigation and reported fixes.
 - Retains raw bytes, source URLs, hashes, capture times and normalized revisions.
 - Distinguishes parser reinterpretation from changes to publisher content.
+- Preserves [reviewed HTML and structured source choices](docs/SOURCE_SELECTION.md)
+  when publisher representations have different product scope.
 - Logs [retrieval checks separately from source revisions](docs/SOURCE_OBSERVATIONS.md), including unchanged checks and HTTP 304 cache validation.
 - Supports external vendor plugins without core, database or frontend changes.
 - Publishes immutable, sanitized datasets for a separate read-only reader.
@@ -44,6 +47,14 @@ Log4j and Linux. Custom CVE cohorts are supported.
 [Product grouping](docs/PRODUCT_GROUPS.md) · [Extraction validation](docs/EXTRACTION_VALIDATION.md) · [Disclosure pilot](docs/research/disclosure-pilot-20261026.md)
 
 **[Open the public dashboard](https://abedegno.github.io/infrastructure-impact/)** · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
+
+The [OpenSSH service study](docs/COMPONENT_STUDIES.md) uses a frozen CVE cohort
+across six selected firewall families. Unknown cells remain unknown; rates and
+rankings are suppressed pending defensible coverage and independent review.
+
+Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
+and Fortinet. [Archive source reviews](docs/research/vendor-archives.md) document
+product filters, access gaps and why Cisco archive backfill remains disabled.
 
 The hosted static reader refreshes through a scheduled collector with encrypted evidence backups; see
 [hosting and recovery](docs/HOSTED_SERVICE.md) for cadence, monitoring and limits.
@@ -97,6 +108,11 @@ flowchart LR
   Vault --> Publication[Sanitized immutable publication]
   Publication --> Reader[Read-only API and dashboard]
 ```
+
+The static browser loads selected CVE evidence in verified parts. Explicit JSON
+and compressed JSON downloads contain the whole publication, independent of the
+selected cohort. See [static delivery](docs/STATIC_DELIVERY.md) for integrity checks
+and transfer budgets.
 
 The supported topology is one writer with SQLite/WAL and one or more readers on
 shared POSIX storage. Data publication does not require reader restart or code
@@ -163,6 +179,18 @@ only after those dependencies have been cached.
 | [Releasing](docs/RELEASING.md) | Prepare a clean public source tree and release |
 | [Hosted service](docs/HOSTED_SERVICE.md) | Public deployment, monitoring and private backups |
 | [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Release revision and availability evidence gates |
+| [Source audit](docs/SOURCE_AUDIT.md) | Source scopes, fingerprints and unresolved collection limits |
+| [Source choices](docs/SOURCE_SELECTION.md) | Reviewed differences between HTML and structured representations |
+| [Archive collection](docs/ARCHIVE_COLLECTION.md) | Bounded queues, retry policy and retained-capture parser recovery |
+| [Retrieval history](docs/SOURCE_OBSERVATIONS.md) | Unchanged checks, cache validation and content revisions |
+| [Browser evidence](docs/BROWSER_CAPTURE.md) | Private browser-assisted capture and completeness checks |
+| [Static delivery](docs/STATIC_DELIVERY.md) | Verified cohort parts and full public archive downloads |
+| [Vendor gaps](docs/VENDOR_GAPS.md) | Collection, archive and source-review gaps |
+| [Scorecards](docs/SCORECARDS.md) | Evidence counts and dated revision timelines |
+| [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md) | Shared periods, exact product scopes and suppression rules |
+| [Component studies](docs/COMPONENT_STUDIES.md) | Frozen enrollment, reference drift and per-cell evidence |
+| [Research foundations](docs/RESEARCH_FOUNDATIONS.md) | Product families, readiness and alternative fix explanations |
+| [Case files](docs/CASE_FILES.md) | Source-linked disclosure questions and counter-evidence |
 | [Roadmap](docs/ROADMAP.md) | Current boundaries and planned capabilities |
 
 ## License and data
@@ -176,33 +204,3 @@ are excluded from the public source distribution.
 
 This is an independent project; the named vendors do not endorse it. Consult the
 linked primary advisory before taking operational action.
-
-Browser-visible public release histories can be retained through the private
-[browser-assisted evidence workflow](docs/BROWSER_CAPTURE.md), with capture
-provenance and completeness checks kept separate from scheduled HTTP collection.
-
-[Vendor evidence scorecards and revision timelines](docs/SCORECARDS.md) keep
-collection gaps, overlapping CVE states and publisher dates visible in the comparison.
-
-[Source-scope audits](docs/SOURCE_AUDIT.md) and [disclosure case files](docs/CASE_FILES.md)
-make collection limits and unresolved evidence questions reviewable.
-
-Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
-and Fortinet. The [source review](docs/research/vendor-archives.md) documents
-product filters, access gaps and why Cisco archive backfill remains disabled. See [Archive collection](docs/ARCHIVE_COLLECTION.md)
-for queue progress, retry policy, additional sources and coverage limits.
-
-Vendor comparison now uses a shared reporting window and exact product scopes,
-with source gaps and explicit suppression of unsupported rates and timing. See
-[Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md).
-
-Static browser delivery now loads selected CVE evidence in verified parts; the full
-archive remains available as JSON and compressed JSON for explicit downloads. Both
-downloads contain the whole publication, independent of the selected CVE cohort.
-See [delivery architecture](docs/STATIC_DELIVERY.md).
-
-The [Vendor gaps view](docs/VENDOR_GAPS.md) separates collection, archive and source-review gaps for each vendor.
-
-Component reference studies now include a frozen OpenSSH service cohort across six selected firewall families. See [the enrollment, drift and evidence rules](docs/COMPONENT_STUDIES.md). Unknown cells remain unknown; rates and rankings are suppressed pending defensible coverage and review.
-
-[Reviewed source selection](docs/SOURCE_SELECTION.md) preserves product scope when an HTML advisory and its structured download differ. Collection health shows the chosen representation and alternate-source provenance.

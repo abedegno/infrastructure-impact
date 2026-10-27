@@ -349,6 +349,8 @@ function renderChanges() {
   $('#view').innerHTML =
     `<h2>Observed source changes</h2><p>Changes are detected between local snapshots. Vendor-supplied historical timelines are retained in the evidence; they are not treated as observations made by this collector.</p>${data.changes.map((c) => `<article class="change"><div class="eyebrow">${date(c.observed_at)} · ${esc(name(c.vendor))}</div><h3>${esc(c.advisory_id)}</h3>${badge(c.kind)}<details><summary>Inspect changes</summary>${link('/api/changes/' + c.id, 'Complete archived diff')}<pre>${esc(JSON.stringify(c.details, null, 2))}</pre></details></article>`).join('') || '<p class="empty">No changes observed yet. Run the collector again after sources update.</p>'}`;
 }
+let healthVendor = '',
+  healthResult = 'attention';
 function renderSources() {
   const collector = data.collector || {},
     run = collector.last_run,
@@ -360,8 +362,36 @@ function renderSources() {
     ? `${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Service collection' : 'Local collection'}: ${esc(schedule.local_time)} (${esc(schedule.timezone)}). ${['container_worker', 'github_actions'].includes(schedule.kind) ? 'Runs in the collector service.' : 'Requires this Mac and user session; sleeping runs may be deferred.'}`
     : 'No installed collection schedule recorded.';
   const collectorSummary = `<div class="notice">${scheduleText} ${delivery} ${run ? `Last pass: ${esc(run.outcome)} · finished ${date(run.finished_at)} · ${run.failures} failed source check${run.failures === 1 ? '' : 's'}.` : 'No completed pipeline receipt collected.'}</div>`;
+  const checks = data.health || [];
+  const attention = (h) =>
+    Boolean(h.error_code) || !['ok', 'not_applicable', 'reprocessed'].includes(h.outcome);
+  const outcomes = [...new Set(checks.map((h) => h.outcome))].sort();
+  const vendors = [...new Set(checks.map((h) => h.vendor))].sort();
+  const visible = checks
+    .filter((h) => !healthVendor || h.vendor === healthVendor)
+    .filter((h) =>
+      healthResult === 'attention'
+        ? attention(h)
+        : healthResult === 'all' || h.outcome === healthResult,
+    )
+    .sort(
+      (a, b) =>
+        Number(attention(b)) - Number(attention(a)) ||
+        String(b.checked_at).localeCompare(String(a.checked_at)) ||
+        a.source_url.localeCompare(b.source_url),
+    );
+  const controls = `<div class="matrix-filters"><label>Vendor<select id="health-vendor"><option value="">All retained vendors and references</option>${vendors.map((v) => `<option value="${esc(v)}" ${healthVendor === v ? 'selected' : ''}>${esc(name(v))}</option>`).join('')}</select></label><label>Source result<select id="health-result"><option value="attention" ${healthResult === 'attention' ? 'selected' : ''}>Needs attention</option><option value="all" ${healthResult === 'all' ? 'selected' : ''}>All retained results</option>${outcomes.map((o) => `<option value="${esc(o)}" ${healthResult === o ? 'selected' : ''}>${esc(o.replaceAll('_', ' '))}</option>`).join('')}</select></label></div><p role="status">Showing ${visible.length} of ${checks.length} retained source URL checks. ${checks.filter(attention).length} need attention across all vendors and references. Filters affect this table only; counts describe latest retained attempts, not just the last pass.</p>`;
+
   $('#view').innerHTML =
-    `<h2>Collection history and coverage</h2>${collectorSummary}${sourceSelectionMarkup(data.source_audit || {})}<p>Latest attempt per source URL, including historical attempts from earlier configurations. A failed fetch does not imply a missing vendor disclosure.</p><div class="notice">${Object.keys(data.vendors).length} vendors are on the installed roster. Collection coverage varies by configured feeds, indexes, curated documents and plugin capabilities. Article shells, empty CSAF envelopes and parse failures remain gaps. This is not a complete portfolio scan.</div><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Result</th><th>Checked</th><th>Source / collection scope</th></tr></thead><tbody>${data.health.map((h) => `<tr><td>${esc(name(h.vendor))}</td><td>${badge(h.outcome)}${h.error_code ? `<small>${esc(h.error_code.replaceAll('_', ' '))}</small>` : ''}</td><td>${date(h.checked_at)}</td><td>${link(h.source_url, 'Source')}<small>${esc(h.details)}</small></td></tr>`).join('')}</tbody></table></div>`;
+    `<h2>Collection history and coverage</h2>${collectorSummary}<p>Latest attempt per source URL, including historical attempts from earlier configurations. A failed fetch does not imply a missing vendor disclosure.</p><div class="notice">${Object.keys(data.vendors).length} vendors are on the installed roster. Collection coverage varies by configured feeds, indexes, curated documents and plugin capabilities. Article shells, empty CSAF envelopes and parse failures remain gaps. This is not a complete portfolio scan. Reprocessed means retained bytes were parsed again; it is not a new successful HTTP check.</div>${controls}<div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Result</th><th>Checked</th><th>Source / collection scope</th></tr></thead><tbody>${visible.map((h) => `<tr><td>${esc(name(h.vendor))}</td><td>${badge(h.outcome)}${h.error_code ? `<small>${esc(h.error_code.replaceAll('_', ' '))}</small>` : ''}</td><td>${date(h.checked_at)}</td><td>${link(h.source_url, 'Source')}<small>${esc(h.details)}</small></td></tr>`).join('') || '<tr><td colspan="4">No retained checks match these filters. This does not establish complete collection or absence of vendor impact.</td></tr>'}</tbody></table></div>${sourceSelectionMarkup(data.source_audit || {})}`;
+  $('#health-vendor').addEventListener('change', (e) => {
+    healthVendor = e.target.value;
+    renderSources();
+  });
+  $('#health-result').addEventListener('change', (e) => {
+    healthResult = e.target.value;
+    renderSources();
+  });
 }
 document.querySelectorAll('[data-view]').forEach((b) =>
   b.addEventListener('click', () => {

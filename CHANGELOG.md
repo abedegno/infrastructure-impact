@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Make collection-health attention items visible first, with vendor/result filters, retained-total counts and explicit empty states; consolidate README research and operations links.
+
 - Add a deterministic compressed full public JSON archive with manifest fingerprints, an explicit whole-publication download and bounded monitoring of exact decompressed-byte equality.
 
 - Preserve Fortinet regreSSHion version rows and explicit not-impacted/investigation lists; keep disjoint ranges, planned upgrades and fixed-only statements distinct. Apply reviewed Cisco/Fortinet source policies to direct structured entry points to prevent later scope replacement.

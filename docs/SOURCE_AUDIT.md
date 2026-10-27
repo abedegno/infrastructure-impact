@@ -109,3 +109,14 @@ adds the nested Arista 0105 layout and three public OSS reference tables. The
 provenance, excluded evidence and the remaining equivalence/denominator gates.
 
 Reviewed [publisher representation choices](SOURCE_SELECTION.md) retain selected and alternate captures separately. Collection health displays their statement counts, parser fingerprints and source hashes; count differences do not establish equivalent product scope or intent.
+
+Collection health initially shows **Needs attention**: errors, partial results,
+checks with an error code, and unrecognized outcomes. Vendor and result filters
+apply only to the latest-attempt table. **All retained results** restores every
+retained URL check; filtered and overall counts stay visible, including a clear
+empty state. Historical attempts from older configurations remain represented by
+their latest retained result. These counts are different from failures in the
+last collector pass and do not establish complete source coverage.
+`reprocessed` identifies offline parsing of retained bytes, not a new successful
+HTTP retrieval. Reviewed source choices remain below the table and are not
+changed by its filters.
