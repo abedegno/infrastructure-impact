@@ -69,8 +69,8 @@ def labelled_list(node, marker, *, sibling=False):
     return one(children(nodes[0], {"ul"}), "local labelled list")
 
 
-def article(raw, url, vendor, number):
-    slug, expected_ids = ROUTES[number]
+def article(raw, url, vendor, number, *, routes=None):
+    slug, expected_ids = (ROUTES if routes is None else routes)[number]
     parsed = urlsplit(url)
     if (
         vendor != "arista"
@@ -128,7 +128,9 @@ def article(raw, url, vendor, number):
         source_format="Arista reviewed older product/model HTML",
         document_status="published",
     )
-    sections = reviewed_sections(a, ("Symptoms", "For More Information", "Open a Service Request:"))
+    sections = reviewed_sections(
+        a, ("Symptoms", "For More Information", "For More Information:", "Open a Service Request:")
+    )
     if number != "63":
         tracked = cves(
             " ".join(

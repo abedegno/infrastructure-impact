@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Preserve three older Arista routing advisories with IS-IS/VxLAN/VLAN prerequisites, separate 7170 and X-Series version/fix branches, explicit model exclusions and distinct special-release fixes.
+
 - Make collection-health attention items visible first, with vendor/result filters, retained-total counts and explicit empty states; consolidate README research and operations links.
 
 - Add a deterministic compressed full public JSON archive with manifest fingerprints, an explicit whole-publication download and bounded monitoring of exact decompressed-byte equality.
