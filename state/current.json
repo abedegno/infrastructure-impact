@@ -1,12 +1,12 @@
 {
-  "archive": "vault-20261027T052435277120Z.sqlite3.xz.fernet",
-  "sha256": "38d70a1ff043e804f901ffbc84815b32a7070fe823cb7d641013154969df77f6",
-  "checked_at": "2026-10-27T05:25:02.087950+00:00",
-  "source_commit": "f5b83a75eb76a11638edcf39aae54af470a13b05",
+  "archive": "vault-20261027T053115130422Z.sqlite3.xz.fernet",
+  "sha256": "f51df25a6e7d9f7352567cc9154454e31c6392ade0d5a0dc1dbafb3901c7b928",
+  "checked_at": "2026-10-27T05:31:54.609743+00:00",
+  "source_commit": "93a3c64e826d9d8430f40aa09d52cfd190b41c39",
   "private": true,
-  "database_bytes": 359493632,
-  "compressed_bytes": 11531304,
-  "archive_bytes": 15375160,
+  "database_bytes": 390320128,
+  "compressed_bytes": 12352244,
+  "archive_bytes": 16469752,
   "retention": {
     "legacy_git_copies_preserved": true,
     "remote_assets": "append_only",
@@ -18,8 +18,8 @@
   "remote": {
     "repository": "abedegno/infrastructure-impact",
     "release_id": 425032143,
-    "asset_id": 680555305,
+    "asset_id": 680570744,
     "tag": "collector-recovery-2026-10-27"
   },
-  "remote_readback_verified_at": "2026-10-27T05:25:06.007298+00:00"
+  "remote_readback_verified_at": "2026-10-27T05:31:58.754504+00:00"
 }
