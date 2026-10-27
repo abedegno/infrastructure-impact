@@ -335,6 +335,10 @@
     {
       "vendor": "juniper",
       "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIxcIAH"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/release/notes/b_release-notes-for-cisco-ucs-rack-server-software-release-4_2_3.pdf"
     }
   ],
   "release_documents": [

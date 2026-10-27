@@ -209,6 +209,14 @@ SK and Cisco archive/release checks remain separate gaps.
 
 `plugins.shared.resolve_reviewed_advisory` supports explicitly reviewed primary-source policies from HTML and known structured identities. It validates the primary and advertised counterpart, rejects contradictory CVE scope, and returns immutable selection metadata. Keep policies narrow; unknown advisory IDs must retain normal resolution.
 
+Cisco's reviewed [UCS PDF scopes](research/cisco-ucs-openssh-20261027.md)
+normalize two explicit release security-fix statements. Exact document route,
+nearest release heading, section context, defect boundaries and normalized-span
+hashes protect the extraction. PDF running headers must not truncate a continued
+defect paragraph. Upstream affected-version descriptions are not component
+inventory; whole-document cover dates are not CVE-specific disclosure dates.
+The remaining PDF content is outside this parser's reviewed scope.
+
 Juniper's reviewed [Apstra PDF scopes](research/juniper-apstra-openssh-20261027.md)
 use the same bounded issue for advisory normalization and the component-reference
 hook. Separate document editions retain separate identities. Neighbouring issue

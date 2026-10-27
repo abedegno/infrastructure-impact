@@ -15,6 +15,10 @@ the loader rejects a changed enrollment with a stale fingerprint.
 
 [Apstra server release-note references](research/juniper-apstra-openssh-20261027.md)
 can supply Juniper vendor evidence without supplying an SRX family assessment.
+Similarly, [Cisco UCS release security-fix statements](research/cisco-ucs-openssh-20261027.md)
+do not establish ASA/FTD exposure, prior affected builds or a shipped OpenSSH
+version. Their fixed release identifiers are firmware versions, not component
+inventory.
 The study does not add Apstra to its frozen family list or transfer its OpenSSH
 version, workaround or planned fix to SRX/Junos.
 

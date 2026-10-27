@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Add reviewed Cisco UCS firmware security-fix statements for regreSSHion and Terrapin, preserving separate releases, fixed-only scope and unknown CVE-specific disclosure dates.
+
 - Classify dated remediation claims against publisher dates rather than the replay clock; keep contradictory or imprecise date context unknown and record corrections as parser reinterpretations.
 
 - Scope built-in normalizer identities to declared code dependencies and shared validation/resources; preserve legacy extension behavior, avoid unrelated vendor revision/replay churn, and verify source/wheel fingerprint parity.

@@ -5,6 +5,7 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 from ..adapters.cisco_campaign import ADVISORY_ID, CVE, URL, parse_campaign, reviewed_route
+from ..adapters.cisco_ucs import security_fixes
 from ..adapters.common import cves
 from ..adapters.legacy_html import html_advisory
 from ..adapters.vendor_cna import registry_route, vendor_cna
@@ -17,6 +18,9 @@ def parse(raw, url, vendor):
         return vendor_cna(raw, url, vendor)
     if is_json(raw):
         return structured(raw, url, vendor)
+    release = security_fixes(raw, url, vendor)
+    if release is not None:
+        return release
     campaign = parse_campaign(raw, url, vendor)
     return campaign if campaign is not None else html_advisory(raw, url, vendor)
 
@@ -83,7 +87,13 @@ def plugin():
         canonicalize=canonicalize,
         parse_feed=parse_feed,
         resolve=resolve,
-        normalizer_dependencies=(parse_campaign, html_advisory, vendor_cna, structured),
+        normalizer_dependencies=(
+            parse_campaign,
+            security_fixes,
+            html_advisory,
+            vendor_cna,
+            structured,
+        ),
         non_cve_notice=lambda d: not d["cves"] and d["title"].startswith("Cisco Informational"),
         url_filter=lambda url: (
             (urlsplit(url).hostname or "") == "cisco.com"
@@ -96,5 +106,6 @@ def plugin():
             "cve-json",
             "html",
             "reviewed-source-selection",
+            "scoped-release-security-fixes",
         ),
     )
