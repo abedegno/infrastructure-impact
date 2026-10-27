@@ -35,6 +35,22 @@ def audit():
                 if spec.parse(row["raw"]) != json.loads(row["normalized"]):
                     raise ValueError("Reference normalization differs from retained source")
                 reference_count += 1
+        selection_count = 0
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='source_selections'").fetchone():
+            if db.execute(
+                "SELECT 1 FROM source_selections s WHERE NOT EXISTS (SELECT 1 FROM source_selection_views v WHERE v.selection_id=s.id AND v.evidence_id=s.selected_evidence_id)"
+            ).fetchone():
+                raise ValueError("Selected representation missing from retained source views")
+            from ..source_policy import allowed
+            from ..storage.source_selections import latest as selections
+
+            for selection in selections(db):
+                if not allowed(selection["requested_url"], selection["vendor"]) or any(
+                    not allowed(view["source_url"], selection["vendor"])
+                    for view in selection["views"] + selection["unavailable"]
+                ):
+                    raise ValueError("Source selection outside official reviewed routes")
+            selection_count = db.execute("SELECT COUNT(*) FROM source_selections").fetchone()[0]
         records = latest(db)
         for record in records:
             validate_advisory(record)
@@ -60,5 +76,6 @@ def audit():
             "evidence_snapshots": count,
             "source_observations": observation_count,
             "reference_documents": reference_count,
+            "source_selections": selection_count,
             "fingerprints": "ok",
         }

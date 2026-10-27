@@ -323,6 +323,14 @@
     {
       "vendor": "arista",
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19025-security-advisory-0092"
+    },
+    {
+      "vendor": "cisco",
+      "url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://fortiguard.fortinet.com/psirt/FG-IR-24-258"
     }
   ],
   "release_documents": [

@@ -123,7 +123,9 @@ def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
 
 
 def document(db, source, item):
-    url, raw = resolve_document(db, item["url"], source["vendor"])
+    resolved = resolve_document(db, item["url"], source["vendor"])
+    url, raw = resolved
+    alternate_failures = getattr(resolved, "source_failures", 0)
     try:
         parsed = auto(raw, url, source["vendor"])
     except SourceNotApplicable:
@@ -140,10 +142,10 @@ def document(db, source, item):
             db,
             source["vendor"],
             item["url"],
-            "not_applicable" if ignored else "ok",
+            "not_applicable" if ignored else "partial" if alternate_failures else "ok",
             "Archive document processed through reviewed vendor parser; publisher dates are not observed historical availability.",
         )
-    return int(changed)
+    return int(changed), alternate_failures
 
 
 def run(
@@ -224,7 +226,9 @@ def run(
                 db, source["id"], "document", document_limit or seed.get("document_limit", 8)
             ):
                 try:
-                    imported += document(db, source, item)
+                    changed, alternate_failures = document(db, source, item)
+                    imported += changed
+                    failed += alternate_failures
                 except Exception as error:
                     failed += 1
                     fail(db, source, item, error)

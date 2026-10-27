@@ -20,6 +20,7 @@ BLOCKERS = [
     "Comparable product, platform, enabled-service and release-build inventories are not established.",
     "Vendor archive coverage and the completeness of upstream registry mappings are not established.",
     "Backports and downstream patch variants require product-build evidence.",
+    "Product lifecycle, support windows and equivalent observation periods are not aligned.",
     "Current retained statements do not reconstruct historical exposure or first disclosure.",
 ]
 METHOD = (
@@ -212,7 +213,8 @@ def cell(data, family, cid):
 
 def component_studies(data):
     inputs = public_inputs(data.get("research", {}).get("study_inputs", []))
-    families = {f["id"]: f for f in family_definition()["families"]}
+    catalogue = family_definition()
+    families = {f["id"]: f for f in catalogue["families"]}
     studies = []
     for study in definitions():
         enrolled = [
@@ -228,6 +230,20 @@ def component_studies(data):
             {
                 **study,
                 "scope": "whole_publication_fixed_reference_cohort",
+                "family_catalogue_version": catalogue["catalogue_version"],
+                "family_scope_sha256": sha256(
+                    json.dumps(
+                        [
+                            {
+                                k: families[fid][k]
+                                for k in ("id", "vendor", "prefixes", "platform_prefixes")
+                            }
+                            for fid in study["families"]
+                        ],
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode()
+                ).hexdigest(),
                 "reference_status": reference_status(study, inputs),
                 "included_cves": enrolled,
                 "members": [

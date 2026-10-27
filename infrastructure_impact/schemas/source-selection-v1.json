@@ -1,0 +1,108 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vendor",
+    "requested_url",
+    "selected_at",
+    "reason",
+    "meaning",
+    "views",
+    "unavailable"
+  ],
+  "properties": {
+    "vendor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requested_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "selected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "meaning": {
+      "type": "string",
+      "minLength": 1
+    },
+    "views": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_url",
+          "source_sha256",
+          "source_observed_at",
+          "source_format",
+          "adapter_version",
+          "normalized_statements",
+          "selected"
+        ],
+        "properties": {
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "source_observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source_format": {
+            "type": "string",
+            "minLength": 1
+          },
+          "adapter_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "normalized_statements": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "selected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "unavailable": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_url", "error_code"],
+        "properties": {
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "error_code": {
+            "type": "string",
+            "pattern": "^[a-z][a-z_]{0,63}$"
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reviewed source representation selection v1"
+}

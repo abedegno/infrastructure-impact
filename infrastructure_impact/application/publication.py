@@ -49,6 +49,11 @@ def public_projection(data, public_release_urls=()):
     data["research"]["release_documents"] = [
         d for d in data["research"]["release_documents"] if d["source_url"] in public_release_urls
     ]
+    from .source_selections import public_selections
+
+    data["source_audit"]["source_selections"] = public_selections(
+        data["source_audit"].get("source_selections", []), data["records"]
+    )
     data["publisher_history"] = public_history(
         data.get("publisher_history", {}), public_release_urls
     )
@@ -233,6 +238,7 @@ def write_bundle(destination, data):
         "comparison-readiness-v1.json",
         "fix-leads-v1.json",
         "component-studies-v1.json",
+        "source-selection-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

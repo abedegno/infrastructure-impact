@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalogue_version": "2026-10-26.1",
+  "catalogue_version": "2026-10-27.1",
   "scope": "Curated infrastructure families and selected release-line reference checks, not an exhaustive inventory or support lifecycle catalogue.",
   "families": [
     {
@@ -40,7 +40,9 @@
         "Cisco ASA",
         "Cisco Adaptive Security",
         "Cisco Firepower",
-        "Cisco Secure Firewall"
+        "Cisco Secure Firewall",
+        "Adaptive Security Appliance (ASA) Software",
+        "Firepower Threat Defense (FTD) Software"
       ],
       "platform_prefixes": [],
       "expected_train_references": [],

@@ -121,3 +121,5 @@ pending. Inventory equivalence, coverage and build-variant checks remain blocker
 Synthetic tests exercise unknown cells, exclusions, fixed/shared states, branch
 conflicts, privacy projection, source drift and generation binding. They validate
 the software contract; they do not substitute for source-led human review.
+
+The report also carries the current family catalogue version and a digest of the selected matching rules. Reviewed literal product-label additions can change evidence cells without changing frozen CVE enrollment. [Source selection](SOURCE_SELECTION.md) explains the reviewed Cisco HTML/CSAF scope difference and the two ASA/FTD label additions. Product lifecycle, support windows and equivalent observation periods remain unaligned.

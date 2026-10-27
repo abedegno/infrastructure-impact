@@ -322,6 +322,7 @@ class Application:
             "/schemas/comparison-readiness-v1.json",
             "/schemas/fix-leads-v1.json",
             "/schemas/component-studies-v1.json",
+            "/schemas/source-selection-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",

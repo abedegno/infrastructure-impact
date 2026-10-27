@@ -67,7 +67,7 @@ and evidence locators. Unknown layouts must fail explicitly.
 | `parse_release(raw, url, vendor)` | Return release-asset metadata under schema v1; no CVE claims or firmware fetches. |
 | `parse_feed(raw, url, limit, cohort)` | Return `FeedBatch`: selected records, all referenced CVEs, exact inspected scope, outcome. |
 | `canonicalize(url)` | Map known official URL forms to a canonical official source. |
-| `resolve(raw, url, fetch)` | Locate another representation using the supplied allowlisted fetch callback. |
+| `resolve(raw, url, fetch)` | Locate another representation using the supplied allowlisted fetch callback; return a legacy tuple or a reviewed `SourceSelection` with separate provenance. |
 | `prefer_existing(old, new)` | Prevent a short index row from replacing a detailed article. |
 | `non_cve_notice(record)` | Recognize a valid informational notice outside CVE scope. |
 | `reference_filter(url)` | Disambiguate upstream references for vendors sharing official domains. |
@@ -195,3 +195,5 @@ follow-ups. Check Point's selected active-index records similarly add up to eigh
 Every follow-up needs independent publisher verification. HPE's new OneView sources
 are curated pins; a general HPE discovery feed is still absent. Existing blocked
 SK and Cisco archive/release checks remain separate gaps.
+
+[Reviewed source selection](SOURCE_SELECTION.md) documents `SourceView`, `SourceViewIssue` and `SourceSelection`, including alternate failure handling and the public audit. A structured download must not be assumed to enumerate the same products as an HTML article.

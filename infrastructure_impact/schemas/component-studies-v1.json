@@ -36,7 +36,9 @@
           "cell_states",
           "rate_comparison",
           "ranking_supported",
-          "blockers"
+          "blockers",
+          "family_catalogue_version",
+          "family_scope_sha256"
         ],
         "properties": {
           "id": {
@@ -489,6 +491,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "family_catalogue_version": {
+            "type": "string"
+          },
+          "family_scope_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
           }
         }
       }

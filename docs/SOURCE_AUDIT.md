@@ -107,3 +107,5 @@ The [source and component follow-up](research/source-and-component-followup-2026
 adds the nested Arista 0105 layout and three public OSS reference tables. The
 [comparison protocol](research/comparison-protocol.md) describes cell-level
 provenance, excluded evidence and the remaining equivalence/denominator gates.
+
+Reviewed [publisher representation choices](SOURCE_SELECTION.md) retain selected and alternate captures separately. Collection health displays their statement counts, parser fingerprints and source hashes; count differences do not establish equivalent product scope or intent.

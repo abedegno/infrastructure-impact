@@ -1,5 +1,12 @@
 # Changelog
 
+## Overnight source evidence — 2026-10-27
+
+- Add a frozen OpenSSH service study with explicit role exclusions, downstream variants, reference-source drift and unknown vendor cells; suppress rates and rankings.
+- Keep upstream reference collection separate from infrastructure vendor advisories through an exact-route registry and additive migration 008.
+- Preserve the reviewed Cisco regreSSHion HTML product scope while retaining its advertised CSAF separately; expose source-choice fingerprints and alternate failures in collection health through additive migration 009.
+- Keep dated planned fixes distinct from verified release availability, and expose family matcher version/scope fingerprints alongside the frozen CVE cohort.
+
 - Record successful HTTP checks separately from evidence revisions, including
   cache validations, unchanged bodies and content reversions; expose bounded
   check history and analyzed-source alignment without reconstructing earlier dates.
@@ -88,5 +95,3 @@ source version; this file does not imply a package or GitHub release was publish
 - Provide Docker/Compose, API documentation and deployment/recovery guidance.
 - Add synthetic parser fixtures, contribution/security policies and public-source
   release preparation tooling.
-
-- Add a frozen OpenSSH service reference study, reviewed NVD reference-source registry and separate append-only reference storage. Expose role exclusions, downstream variants, source drift, scoped vendor cells and explicit comparison blockers through a strict public report and dashboard.

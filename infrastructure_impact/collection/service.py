@@ -7,7 +7,7 @@ from xml.etree import ElementTree as ET
 from ..adapters.compat import HTML, auto, cves
 from ..application.cohort import COHORT
 from ..collection.errors import failure_code
-from ..plugins.contracts import SourceNotApplicable
+from ..plugins.contracts import SourceNotApplicable, SourceSelection
 from ..plugins.registry import default_registry
 from ..storage.repository import collection_result, connect, evidence, ingest, now
 from .discovery import discovery
@@ -47,6 +47,15 @@ def index_checks(db, raw, feed):
     )
 
 
+class ResolvedSource(tuple):
+    """Two-item tuple compatible with older callers, plus alternate failure count."""
+
+    def __new__(cls, url, raw, source_failures=0):
+        value = super().__new__(cls, (url, raw))
+        value.source_failures = source_failures
+        return value
+
+
 def resolve_document(db, url, vendor, *, fetcher=None):
     retrieve = fetcher or fetch
     registry = default_registry()
@@ -56,7 +65,17 @@ def resolve_document(db, url, vendor, *, fetcher=None):
     url = plugin.canonicalize(urlunsplit((u.scheme, u.netloc, u.path, urlencode(params), "")))
     raw = retrieve(db, url, vendor)
     if plugin.resolve:
-        url, raw = plugin.resolve(raw, url, lambda target: retrieve(db, target, vendor))
+        resolved = plugin.resolve(raw, url, lambda target: retrieve(db, target, vendor))
+        if isinstance(resolved, SourceSelection):
+            from ..storage.source_selections import retain
+
+            retain(db, vendor, url, resolved)
+            return ResolvedSource(
+                resolved.selected.url, resolved.selected.raw, len(resolved.unavailable)
+            )
+        url, raw = resolved
+        if not allowed(url, vendor):
+            raise ValueError("Resolved source outside reviewed vendor routes")
     if raw.lstrip().startswith(b"{"):
         return url, raw
     for link in HTML(raw).root.find({"a"}):
@@ -144,7 +163,10 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 continue
             seen.add(key)
             try:
-                url, raw = resolve_document(db, target["url"], target["vendor"])
+                resolved = resolve_document(db, target["url"], target["vendor"])
+                url, raw = resolved
+                alternate_failures = getattr(resolved, "source_failures", 0)
+                failed += alternate_failures
                 parsed = auto(raw, url, target["vendor"])
                 if registry.get(target["vendor"]).non_cve_notice(parsed):
                     collection_result(
@@ -166,7 +188,7 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                     db,
                     target["vendor"],
                     target["url"],
-                    "ok",
+                    "partial" if alternate_failures else "ok",
                     f"{'New revision' if changed else 'Unchanged'}; resolved source {url}",
                 )
                 print(

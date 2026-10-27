@@ -153,7 +153,10 @@ def source_audit(db, records, config=None):
                 portfolio_completeness="not_established",
             )
         )
+    from ..storage.source_selections import latest as selections
+
     return dict(
+        source_selections=selections(db),
         schema_version=1,
         audited_at=now(),
         vendors=audits,

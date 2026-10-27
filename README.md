@@ -202,3 +202,5 @@ archive remains available for explicit downloads. See [delivery architecture](do
 The [Vendor gaps view](docs/VENDOR_GAPS.md) separates collection, archive and source-review gaps for each vendor.
 
 Component reference studies now include a frozen OpenSSH service cohort across six selected firewall families. See [the enrollment, drift and evidence rules](docs/COMPONENT_STUDIES.md). Unknown cells remain unknown; rates and rankings are suppressed pending defensible coverage and review.
+
+[Reviewed source selection](docs/SOURCE_SELECTION.md) preserves product scope when an HTML advisory and its structured download differ. Collection health shows the chosen representation and alternate-source provenance.
