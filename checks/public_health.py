@@ -119,6 +119,11 @@ def check(origin, expected=None):
             cohorts = data["product_cohorts"]
             assert cohorts["ranking_supported"] is False
             assert cohorts["independent_human_review_completed"] is False
+            if cohorts.get("build_pilot"):
+                pilot = cohorts["build_pilot"]
+                assert pilot["independent_human_review_completed"] is False
+                assert pilot["build_denominator"] is None and pilot["rate_comparison"] is None
+                assert all(t["verified_inventory"] is False for t in pilot["targets"])
             assert all(
                 c["state"] == "blocked"
                 and c["confirmed_build_denominator"] is None

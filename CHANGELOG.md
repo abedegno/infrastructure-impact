@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a two-vendor exact-firmware evidence pilot with field-level provenance and explicit unverified package, image, hardware, configuration and lifecycle fields.
+- Preserve reviewed Arista 0100 EOS fix boundaries and backport context without inferring patch state from OpenSSH version strings.
+- Add three dated assistant disclosure dispositions, exact-source freshness guards and bounded official-source research, including restricted Cisco SBOM terms.
+
 - Add three product-scope cohorts with 15 targets, build/service/lifecycle gaps, exact component-source bindings and suppressed denominators.
 - Add a disclosure review queue with five evidence gates, CVE-specific counter-evidence and alternative explanations.
 - Serve both reports through generation-bound API, static files and dashboard views, with strict schemas and privacy-boundary rebuilding.

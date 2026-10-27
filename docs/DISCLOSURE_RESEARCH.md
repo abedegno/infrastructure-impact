@@ -76,3 +76,10 @@ A component-change task without established CVE linkage keeps an empty CVE list.
 No upstream version-range match invents that linkage. Alternative explanations
 remain visible. Absence of a task does not establish absence of undocumented
 security fixes, and the queue never labels an update as a concealed fix.
+
+Dated [pilot dispositions](research/build-and-disclosure-pilot-20261027.md) now
+appear in each matching task. They are assistant research results, not independent
+adjudication. The complete reviewed source URL/hash set must match the current
+lead. A changed source requests re-review and suppresses the earlier disposition;
+new sources, new CVEs or another bug number cannot inherit a prior result. The
+five independent evidence gates and concealment state remain unchanged.

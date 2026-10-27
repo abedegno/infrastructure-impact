@@ -656,6 +656,177 @@
     },
     "generated_at": {
       "type": "string"
+    },
+    "build_pilot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "version",
+        "role",
+        "component",
+        "cve_id",
+        "targets",
+        "independent_human_review_completed",
+        "build_denominator",
+        "rate_comparison",
+        "method",
+        "selection_sha256"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "component": {
+          "const": "OpenSSH"
+        },
+        "cve_id": {
+          "const": "CVE-2024-6387"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "vendor",
+              "product_literal",
+              "firmware_build",
+              "source_url",
+              "cve_id",
+              "selector",
+              "expression",
+              "fields",
+              "state",
+              "verified_inventory"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "vendor": {
+                "type": "string"
+              },
+              "product_literal": {
+                "type": "string"
+              },
+              "firmware_build": {
+                "type": "string"
+              },
+              "source_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "cve_id": {
+                "type": "string"
+              },
+              "selector": {
+                "enum": [
+                  "version_expression",
+                  "product_version_context"
+                ]
+              },
+              "expression": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "field",
+                    "state",
+                    "value",
+                    "evidence"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "enum": [
+                        "publisher_statement",
+                        "unknown"
+                      ]
+                    },
+                    "value": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "source_url",
+                          "source_sha256",
+                          "observed_at",
+                          "locator"
+                        ],
+                        "properties": {
+                          "source_url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "source_sha256": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          },
+                          "observed_at": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "locator": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "state": {
+                "const": "partial_public_evidence"
+              },
+              "verified_inventory": {
+                "const": false
+              }
+            }
+          }
+        },
+        "independent_human_review_completed": {
+          "const": false
+        },
+        "build_denominator": {
+          "type": "null"
+        },
+        "rate_comparison": {
+          "type": "null"
+        },
+        "method": {
+          "type": "string"
+        },
+        "selection_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
     }
   }
 }

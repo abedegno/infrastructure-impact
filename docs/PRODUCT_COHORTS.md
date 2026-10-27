@@ -62,3 +62,14 @@ to its target; a vendor-domain check alone cannot establish product equivalence.
 `schemas/product-cohorts-v1.json`. The public projection rebuilds the report from
 sanitized configured sources, excluding operator report fields and private notes.
 The report and browser bootstrap carry the same publication generation.
+
+## Exact firmware evidence pilot
+
+The report's optional `build_pilot` adds a separate, versioned two-vendor SSH
+management pilot. [Research and limits](research/build-and-disclosure-pilot-20261027.md)
+record why EOS 4.32.2F and AOS-CX 10.13.1031 were selected. Exact fixed-release
+references and qualified backport statements have field-level provenance.
+Package versions, image hashes, exact hardware compatibility, installed service
+configuration and historical support/availability remain unknown. These are
+partial public evidence profiles, not completed build inventories. Additive report
+fields preserve compatibility with earlier v1 publications.

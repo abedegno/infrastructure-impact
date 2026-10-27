@@ -22,3 +22,14 @@ instructions; Aruba's configured CSAF index and remediation guide; and the exact
 HPE HFP version and CcNc build. No public, redistributable exact-image SBOM route
 was established for the blocked sources. This bounded review cannot prove that
 other official channels or earlier customer notices do not exist.
+
+## Runner observations
+
+The [expanded runner probe](https://github.com/abedegno/infrastructure-impact/actions/runs/40483857329)
+on 27 October 2026 at approximately 09:50 UTC retrieved the Aruba index and Cisco
+SBOM instructions with HTTP 200. Cisco's provider/index, both UCS forms, NX-OS HTML
+and the Aruba remediation PDF returned 403. HPE's release-listing lead was rejected
+by the existing access/redirect checks. Source metadata and response hashes are in
+the workflow artifact; no source bodies, credentials or recovery material are in it.
+The accessible Aruba index is already configured, and accessible SBOM instructions
+do not make the SBOM itself public. No unsupported collector source was enabled.

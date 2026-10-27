@@ -12,6 +12,7 @@ from ..adapters.arista_legacy_scope import ROUTES as OLDER_ROUTES
 from ..adapters.arista_legacy_scope import older_scope
 from ..adapters.arista_management_scope import ROUTES as MANAGEMENT_ROUTES
 from ..adapters.arista_management_scope import management_scope
+from ..adapters.arista_openssh import openssh_scope
 from ..adapters.arista_routing_scope import ROUTES as ROUTING_ROUTES
 from ..adapters.arista_routing_scope import routing_scope
 from ..adapters.arista_scoped import (
@@ -37,6 +38,7 @@ def parse(raw, url, vendor):
     if any(url.rstrip("/").endswith("/" + value[0]) for value in MANAGEMENT_ROUTES.values()):
         return management_scope(raw, url, vendor)
     for slug, parser in {
+        "/19904-security-advisory-0100": openssh_scope,
         "/19905-security-advisory-0101": radius,
         "/19222-security-advisory-0095": xz_unaffected,
         "/19221-security-advisory-0094": continuation,
@@ -104,6 +106,7 @@ def plugin():
         normalizer_dependencies=(
             arista_aggregate_notice,
             arista_software,
+            openssh_scope,
             radius,
             older_scope,
             routing_scope,

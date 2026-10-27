@@ -1,0 +1,93 @@
+{
+  "version": "2026-10-27.1",
+  "review_method": "Assistant review of primary sources; not independent human adjudication",
+  "investigations": [
+    {
+      "id": "fortiproxy-968514-linkage",
+      "vendor": "fortinet",
+      "kind": "security_statement_without_cve",
+      "cve_ids": [],
+      "required_detail_token": "968514",
+      "source_bindings": [
+        {
+          "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+          "source_sha256": "7367acf38021a5cdb4ae663c3c53dd8f28fa0f1f9c13f7366c4e2fbbeea9ef09"
+        }
+      ],
+      "reviewed_at": "2026-10-27",
+      "disposition": "security_linkage_unresolved",
+      "summary": "Bug 968514 describes overflow-related WAD CPU/service impact, but the retained FortiProxy row names no CVE and supplies no attacker prerequisite or exploitability assessment. Treat it as an unlinked defect requiring investigation, not a confirmed vulnerability or a concealed security fix.",
+      "search_scope": "Reviewed the exact FortiProxy 7.2.8 resolved-issues row and searched official Fortinet PSIRT/documentation for bug 968514. A FortiOS 7.2.8 search result uses integer-overflow wording for the same bug number; cross-product identity and security impact remain unverified. No authoritative CVE linkage was located in this bounded search.",
+      "remaining_evidence": [
+        "Publisher bug-to-CVE or security-impact statement",
+        "Exact code/component/build and attacker prerequisite linkage",
+        "Independent release and historical disclosure evidence"
+      ],
+      "uncollected_search_leads": [
+        "https://docs.fortinet.com/document/fortigate/7.2.8/fortios-release-notes/289806/resolved-issues"
+      ]
+    },
+    {
+      "id": "hpe-cray-openssh-timing",
+      "vendor": "hpe",
+      "kind": "publisher_reported_chronology",
+      "cve_ids": [
+        "CVE-2024-6387"
+      ],
+      "required_detail_token": null,
+      "source_bindings": [
+        {
+          "source_url": "https://support.hpe.com/hpesc/public/api/document/hpesbcr04733en_us",
+          "source_sha256": "f0be647ad086633bda0dac7a135fa3d23ee6d3c8a4448cc32e7e890fbecab4a2"
+        }
+      ],
+      "reviewed_at": "2026-10-27",
+      "disposition": "release_availability_unresolved",
+      "summary": "The 70-day interval compares two publisher date claims in one bulletin. The HFP listing is a separate research lead, but no independently retained historical download or exact CcNc-to-bundle manifest establishes August availability. The chronology remains unresolved; it does not establish an undisclosed fix.",
+      "search_scope": "Reviewed the HPE Cray bulletin, exact CcNc 1.9.5-39 and HFP 24.8.1 references, official release listing and searches for earlier release notes and notices. The listing search index still reports 24.8.1 on 28 August 2024; indexed content is a lead, not a retained availability observation.",
+      "remaining_evidence": [
+        "Original HFP 24.8.1 manifest and exact platform/component linkage",
+        "Independent historical download availability and earlier notice search"
+      ],
+      "uncollected_search_leads": [
+        "https://support.hpe.com/connect/s/softwaredetails?collectionId=MTX-575acc2c0e334c3a&language=fr&softwareId=MTX_c65e615117944819bcdc6219e0"
+      ]
+    },
+    {
+      "id": "fortiproxy-curl-documentation",
+      "vendor": "fortinet",
+      "kind": "publisher_reported_chronology",
+      "cve_ids": [
+        "CVE-2023-38545",
+        "CVE-2023-38546"
+      ],
+      "required_detail_token": null,
+      "source_bindings": [
+        {
+          "source_url": "https://www.fortiguard.com/psirt/csaf/FG-IR-23-385?csaf_url=https://filestore.fortinet.com/fortiguard/psirt/csaf_curl-and-libcurl-cve-2023-38545-and-cve-2023-38546-vulnerabilities_fg-ir-23-385.json",
+          "source_sha256": "e4eed2efd94bdedf2e15aa5e475c932d23a47694e7482d8eb6aa500116e44104"
+        },
+        {
+          "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+          "source_sha256": "7367acf38021a5cdb4ae663c3c53dd8f28fa0f1f9c13f7366c4e2fbbeea9ef09"
+        },
+        {
+          "source_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/4/change-log",
+          "source_sha256": "8d2378a5c43d363b685a00672acec2dd2aa3465fbb50ab30983b330762a4cc61"
+        }
+      ],
+      "reviewed_at": "2026-10-27",
+      "disposition": "counter_evidence_to_nondisclosure",
+      "summary": "The four-day interval is a publisher-reported documentation edit, not a measured firmware-to-disclosure delay. An earlier-dated vendor curl advisory covers both CVEs and supplies counter-evidence to inferring nondisclosure from the December edit. Its differing HTML/CSAF date claims remain unresolved; first disclosure and binary availability are not established.",
+      "search_scope": "Re-reviewed retained FortiProxy resolved issues, the documentation change log and FG-IR-23-385 structured advisory. Official PSIRT and document searches were checked for the curl CVEs; no exhaustive customer-notice or historical archive search is claimed.",
+      "remaining_evidence": [
+        "Historical captures resolving the HTML/CSAF date discrepancy",
+        "Independent firmware availability and exact VM/platform linkage",
+        "Independent chronology adjudication"
+      ],
+      "uncollected_search_leads": [
+        "https://www.fortiguard.com/psirt/FG-IR-23-385"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 """Source-linked investigation queue; all conclusions require separate review."""
 
+from .investigations import investigation
+
 QUESTIONS = (
     (
         "exact_product_build_and_cve_link",
@@ -52,6 +54,7 @@ def disclosure_review(data):
             dict(
                 id="review-" + lead["id"],
                 lead_id=lead["id"],
+                investigation=investigation(lead),
                 vendor=lead["vendor"],
                 product=lead["product"],
                 kind=lead["kind"],

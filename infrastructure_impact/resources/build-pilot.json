@@ -1,0 +1,8 @@
+{
+  "version": "2026-10-27.1",
+  "role": "SSH management on switching platforms",
+  "targets": [
+    {"id":"arista-eos-4-32-2f", "vendor":"arista", "product_literal":"Arista EOS", "firmware_build":"4.32.2F", "source_url":"https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100", "cve_id":"CVE-2024-6387", "selector":"version_expression", "expression":"4.32.2F and later releases in the 4.32.x train"},
+    {"id":"aruba-aoscx-10-13-1031", "vendor":"aruba", "product_literal":"AOS-CX", "firmware_build":"10.13.1031", "source_url":"https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json", "cve_id":"CVE-2024-6387", "selector":"product_version_context", "expression":null}
+  ]
+}

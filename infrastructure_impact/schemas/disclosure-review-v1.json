@@ -208,6 +208,85 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 16384
+          },
+          "investigation": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "version",
+                  "reviewed_at",
+                  "review_method",
+                  "source_state",
+                  "disposition",
+                  "summary",
+                  "search_scope",
+                  "remaining_evidence",
+                  "uncollected_search_leads",
+                  "independent_human_review_completed",
+                  "concealment"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "reviewed_at": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "review_method": {
+                    "type": "string"
+                  },
+                  "source_state": {
+                    "enum": [
+                      "matches_reviewed_sources",
+                      "source_changed_review_required"
+                    ]
+                  },
+                  "disposition": {
+                    "enum": [
+                      "release_availability_unresolved",
+                      "security_linkage_unresolved",
+                      "counter_evidence_to_nondisclosure",
+                      "source_changed_review_required"
+                    ]
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "search_scope": {
+                    "type": "string"
+                  },
+                  "remaining_evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "uncollected_search_leads": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  },
+                  "independent_human_review_completed": {
+                    "const": false
+                  },
+                  "concealment": {
+                    "const": "not_established"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         }
       }

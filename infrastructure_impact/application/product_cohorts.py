@@ -7,6 +7,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from ..settings import PACKAGE
 from ..source_policy import allowed
+from .build_pilot import build_pilot
 from .families import definition as family_definition
 
 
@@ -160,6 +161,7 @@ def product_cohorts(data, spec=None):
         )
     return dict(
         schema_version=1,
+        build_pilot=build_pilot(data),
         definition=spec,
         cohorts=cohorts,
         component_source_coverage=coverage,
