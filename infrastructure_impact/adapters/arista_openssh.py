@@ -84,6 +84,11 @@ def openssh_scope(raw, url, vendor):
                 "source_scope": "advisory_context_requires_product_configuration_review",
                 "source_locator": "Mitigation",
             },
+            {
+                "category": "publisher_platform_scope",
+                "details": platform_scope,
+                "source_locator": "Affected Platforms / Arista EOS-based products",
+            },
         ]
         out["assessments"].append(claim)
     out["warnings"].append(

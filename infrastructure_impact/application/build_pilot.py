@@ -73,29 +73,35 @@ def build_pilot(data):
         ]
         for name in UNKNOWN_FIELDS:
             fields.append(dict(field=name, state="unknown", value=None, evidence=[]))
-        platforms = list(dict.fromkeys(p for _, a in found for p in a.get("platforms", [])))
-        fields.append(
-            dict(
-                field="platform_applicability_context",
-                state="publisher_statement" if platforms else "unknown",
-                value=" ".join(platforms) if platforms else None,
-                evidence=evidence if platforms else [],
+        for field, category in (
+            ("platform_applicability_context", "publisher_platform_scope"),
+            ("backport_statement", "publisher_backport_statement"),
+        ):
+            contexts = [
+                (r, a, e)
+                for r, a in found
+                for e in a.get("exposure", [])
+                if e["category"] == category
+            ]
+            references = [
+                dict(
+                    source_url=r["source_url"],
+                    source_sha256=r["sha256"],
+                    observed_at=r.get("source_observed_at"),
+                    locator=e.get("source_locator") or a["evidence_locator"],
+                )
+                for r, a, e in contexts
+            ]
+            fields.append(
+                dict(
+                    field=field,
+                    state="publisher_statement" if contexts else "unknown",
+                    value=" ".join(dict.fromkeys(e["details"] for _, _, e in contexts))
+                    if contexts
+                    else None,
+                    evidence=references,
+                )
             )
-        )
-        backports = [
-            e["details"]
-            for _, a in found
-            for e in a.get("exposure", [])
-            if e["category"] == "publisher_backport_statement"
-        ]
-        fields.append(
-            dict(
-                field="backport_statement",
-                state="publisher_statement" if backports else "unknown",
-                value=" ".join(dict.fromkeys(backports)) if backports else None,
-                evidence=evidence if backports else [],
-            )
-        )
         rows.append(
             dict(**target, fields=fields, state="partial_public_evidence", verified_inventory=False)
         )

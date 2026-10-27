@@ -143,3 +143,22 @@ def test_another_vendor_or_source_cannot_supply_exact_build_reference():
         d = dataset()
         d["records"][0][key] = value
         assert build_pilot(d)["targets"][0]["fields"][0]["state"] == "unknown"
+
+
+def test_context_fields_use_their_own_source_section_locators():
+    d = dataset()
+    claim = d["records"][0]["assessments"][0]
+    claim["exposure"][0]["source_locator"] = "Resolution / Scanner advisory"
+    claim["exposure"].append(
+        {
+            "category": "publisher_platform_scope",
+            "details": "Synthetic platform applicability",
+            "source_locator": "Affected Platforms",
+        }
+    )
+    fields = {f["field"]: f for f in build_pilot(d)["targets"][0]["fields"]}
+    assert fields["backport_statement"]["evidence"][0]["locator"] == "Resolution / Scanner advisory"
+    assert (
+        fields["platform_applicability_context"]["evidence"][0]["locator"] == "Affected Platforms"
+    )
+    assert fields["hardware_model"]["value"] is None
