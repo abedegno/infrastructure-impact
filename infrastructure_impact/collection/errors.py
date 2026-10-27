@@ -3,6 +3,10 @@
 from urllib.error import HTTPError
 
 
+class PublisherScopeUnavailable(ValueError):
+    """A retrieved publisher envelope has no explicit CVE/product scope."""
+
+
 class AccessVerificationRequired(ValueError):
     """The source returned an access challenge, not an advisory."""
 
@@ -53,6 +57,8 @@ class SourceHTTPError(HTTPError):
 
 
 def failure_code(error):
+    if isinstance(error, PublisherScopeUnavailable):
+        return "publisher_scope_unavailable"
     if isinstance(error, SourceNotRetained):
         return "retained_source_missing"
     if isinstance(error, AccessVerificationRequired):

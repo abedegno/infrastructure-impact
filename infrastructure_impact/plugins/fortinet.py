@@ -11,6 +11,9 @@ from ..adapters.fortinet import (
     investigation_advisory,
 )
 from ..adapters.fortinet_openssh import CVE, ID, openssh_advisory, reviewed_route
+from ..adapters.fortinet_ranges import ROUTES as RANGE_ROUTES
+from ..adapters.fortinet_ranges import range_advisory
+from ..collection.errors import PublisherScopeUnavailable
 from .archive_listings import fortinet as archive_listing
 from .contracts import VendorPlugin
 from .shared import is_json, resolve_reviewed_advisory, structured
@@ -30,13 +33,20 @@ def canonicalize(url):
 def parse(raw, url, vendor):
     if "docs.fortinet.com/" in url:
         return fortinet_release(raw, url, vendor)
+    if not is_json(raw) and urlsplit(url).path.rsplit("/", 1)[-1] in RANGE_ROUTES:
+        return range_advisory(raw, url, vendor)
     if not is_json(raw) and reviewed_route(url):
         return openssh_advisory(raw, url, vendor)
     if not is_json(raw) and url.rstrip("/").endswith("/psirt/FG-IR-23-494"):
         return affected_products_advisory(raw, url, vendor)
     if not is_json(raw):
         return investigation_advisory(raw, url, vendor)
-    return structured(raw, url, vendor)
+    record = structured(raw, url, vendor)
+    if not record["cves"] and not record["assessments"]:
+        raise PublisherScopeUnavailable(
+            "Retrieved publisher document has no explicit CVE/product scope; no impact inferred"
+        )
+    return record
 
 
 def resolve(raw, url, fetch):
@@ -62,7 +72,8 @@ def resolve(raw, url, fetch):
             html = fetch(target)
             # Only a fully reviewed, identity-matching layout can replace the empty envelope.
             try:
-                investigation_advisory(html, target, "fortinet")
+                parser = range_advisory if identity in RANGE_ROUTES else investigation_advisory
+                parser(html, target, "fortinet")
             except ValueError:
                 # Preserve a valid title-scoped structured record with unknown
                 # applicability when the optional HTML layout is unsupported.
@@ -87,6 +98,7 @@ def plugin():
             fortinet_release,
             investigation_advisory,
             openssh_advisory,
+            range_advisory,
             structured,
         ),
         capabilities=("csaf", "release-notes-html", "investigation-html"),

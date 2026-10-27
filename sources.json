@@ -351,6 +351,14 @@
     {
       "vendor": "arista",
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/11758-security-advisory-52"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://www.fortiguard.com/psirt/FG-IR-23-165"
+    },
+    {
+      "vendor": "fortinet",
+      "url": "https://www.fortiguard.com/psirt/FG-IR-23-261"
     }
   ],
   "release_documents": [
