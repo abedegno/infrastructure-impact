@@ -32,7 +32,8 @@
           "earlier_document_counter_evidence",
           "checklist",
           "alternative_explanations",
-          "concealment"
+          "concealment",
+          "details"
         ],
         "properties": {
           "id": {
@@ -203,6 +204,11 @@
           },
           "concealment": {
             "const": "not_established"
+          },
+          "details": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 16384
           }
         }
       }

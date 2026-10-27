@@ -21,6 +21,7 @@ def inputs():
         vendor="fortinet",
         product="FortiProxy 7.2.8",
         kind="publisher_reported_chronology",
+        details="Synthetic publisher date discrepancy, not verified availability.",
         cve_ids=[CID],
         evidence=[evidence],
         alternative_explanations=["Earlier advisory may exist."],

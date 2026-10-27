@@ -55,6 +55,7 @@ def disclosure_review(data):
                 vendor=lead["vendor"],
                 product=lead["product"],
                 kind=lead["kind"],
+                details=lead["details"],
                 cve_ids=lead["cve_ids"],
                 state="review_required",
                 next_action="review_counter_evidence"
