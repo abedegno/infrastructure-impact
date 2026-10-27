@@ -2,8 +2,9 @@
 
 Use the **Product cohorts** view for current component-reference coverage across
 all collected vendors. A source with component references is not a complete SBOM;
-a vendor with none remains unknown. Vendor source-error counts cover all that
-vendor's configured sources and must not be attributed to a particular family.
+a vendor with none remains unknown. Source-error counts use the latest retained
+status per vendor URL, including archive items; they are not the failure count
+from the most recent collection pass and cannot be attributed to one family.
 Exact cohort source bindings keep Panorama, PAN-OS and unrelated products separate.
 
 ## Compare retrieval environments
