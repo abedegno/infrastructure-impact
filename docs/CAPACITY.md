@@ -70,6 +70,14 @@ compression or external source-object storage needs a separate migration design,
 backward-reader handling and byte-equality recovery tests. No historical data or
 Git objects are deleted to make the current budget pass.
 
+The first hosted run using `large` completed authenticated recovery readback at
+11:55:52 UTC on 27 October 2026. Its database was 465,190,912 bytes (43.3% of
+1 GiB), and its encrypted archive was 18,891,044 bytes. Hosted payload accounting
+measured 266,845,605 raw-capture bytes and 179,411,489 normalized-revision bytes;
+raw captures were the largest selected payload in that corpus. Free-page bytes
+were zero. This is a checkpoint measurement, not a growth-rate forecast or an
+independent operator recovery exercise.
+
 The monitor continues to warn at 80% of the selected vault limit and tracks the
 repository and archive budgets separately. Growth from archive backfill and
 repeated current-source captures can differ; a few manual deployments cannot

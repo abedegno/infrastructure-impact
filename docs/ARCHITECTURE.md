@@ -106,3 +106,12 @@ request. Neither declared field completeness nor matching bytes certifies
 authenticity, semantic scope, redistribution rights or comparison eligibility.
 The public projection generates blank templates from the bundled pilot targets,
 without accepting operator proposals. See [Build inventory](BUILD_INVENTORY.md).
+
+
+The separate [SBOM observation reader](SBOM_OBSERVATIONS.md) accepts bounded local
+CycloneDX/SPDX JSON and preserves selected literal fields and their source
+locators. It shares strict JSON parsing with inventory proposals, but has its own
+versioned private observation contract. It opens no vault, resolves no external
+references and does not create or enroll an inventory proposal. Detailed and
+summary outputs have separate schema discriminators; neither is part of public
+projection or the HTTP API.

@@ -46,6 +46,17 @@ audits validate scope structure and local byte identity while leaving all semant
 independence and comparison gates unverified. Official EOS source and AOS-CX
 source-request leads are documented; no exact-image inventory has been certified.
 
+The offline [SBOM reader](SBOM_OBSERVATIONS.md) now normalizes selected
+CycloneDX/SPDX JSON fields into private component observations with literal
+versions, source hashes and exact locators. It does not establish image binding,
+patch state or CVE applicability. Proposal audits and SBOM inspection share a
+bounded, duplicate-key and finite-number input boundary.
+
+Recovery has explicit 512 MiB and 1 GiB profiles with unchanged archive and decoder
+bounds, plus read-only payload accounting. Scheduled-run observations are tracked
+separately from fresh manual publications. The elapsed service observation and
+independent human review remain incomplete.
+
 ## Next priorities
 
 - Continue expanding vendor/product families and historical collection; publish source-specific

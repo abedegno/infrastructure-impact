@@ -1,19 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 research preview — 2026-10-27
 
 - Add private bounded SPDX/CycloneDX JSON component observations with a common schema, literal versions, exact locators, scope and package-hash provenance. Open no vault, fetch no external references and create no CVE or image-inventory claims.
 - Share strict duplicate-key and finite-number JSON input checks across inventory proposals and SBOM inspection, including numeric overflow rejection.
-
 - Label the dashboard schedule as configured timing and link GitHub Pages deployments to actual scheduled-run history; fresh manual publication is not evidence that scheduling works.
-
 - Preserve two reviewed Fortinet single-CVE range lists, separate affected/unaffected branches and authentication/service prerequisites. Keep the contradictory FortiOS 6.4 solution text unresolved, without certifying either upgrade candidate.
 - Classify retrieved Fortinet envelopes without explicit CVE/product scope as visible publisher-scope gaps; do not invent CVEs or affected products.
-
 - Add read-only aggregate vault profiling and record the breakdown with hosted recovery metadata, without exposing source or review contents.
 - Add explicit standard (512 MiB) and large (1 GiB) recovery profiles. Preserve archive, decoder-memory and repository budgets, atomic recovery and all historical evidence.
 - Detect missing successful scheduled runs independently of fresh manual publications, with a separate cadence activation anchor, bounded history timestamps and a declared grace period.
-
 
 ## 0.4.1 research preview — 2026-10-27
 
