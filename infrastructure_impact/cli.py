@@ -16,8 +16,14 @@ def main(argv=None):
     sub.add_parser("plugins", help="List installed vendor plugins and capabilities")
     sub.add_parser("migrate", help="Apply additive database migrations")
     sub.add_parser("audit", help="Verify database, normalized records and retained source hashes")
-    sub.add_parser(
+    reparse = sub.add_parser(
         "reparse", help="Replay retained evidence through current schema-validated plugins"
+    )
+    reparse.add_argument("--dry-run", action="store_true")
+    reparse.add_argument("--vendor")
+    reparse.add_argument("--limit", type=int, default=1000)
+    reparse.add_argument(
+        "--force", action="store_true", help="Also check records using current code identities"
     )
     check = sub.add_parser("validate", help="Validate a normalized advisory JSON file")
     check.add_argument("file", type=Path)
@@ -158,9 +164,17 @@ def main(argv=None):
         with closing(connect()) as db:
             print(json.dumps([dict(row) for row in db.execute("SELECT * FROM schema_migrations")]))
     elif args.command == "reparse":
-        from .application.replay import replay
+        from .application.replay import replay_report
 
-        print(json.dumps({"reparsed_revisions": replay()}))
+        try:
+            result = replay_report(
+                dry_run=args.dry_run, vendor=args.vendor, limit=args.limit, force=args.force
+            )
+        except ValueError as error:
+            parser.error(str(error))
+        print(json.dumps(result))
+        if result["outcome"] != "ok":
+            raise SystemExit(1)
     elif args.command == "audit":
         from .storage.audit import audit
 

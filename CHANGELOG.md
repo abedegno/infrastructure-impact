@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Add bounded offline normalization maintenance with a read-only preview, shared writer exclusion, per-record failure reports, stable-identity guards and opt-in hosted replay; preserve source capture times and distinguish parser reinterpretations from publisher changes.
+
 - Add append-only encrypted recovery in unpublished draft release assets, with bounded authenticated readback before pointer updates, preserved legacy Git copies, metadata-only monitoring and compatible Git-mode rollback.
 
 - Validate component-reference hooks through a shared versioned schema and registry boundary before baseline storage or research analysis; add CLI validation, typed plugin contracts and an installed external component-hook example.

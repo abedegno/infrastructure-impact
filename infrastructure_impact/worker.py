@@ -1,11 +1,9 @@
 """Single writer process with a timezone-aware daily schedule."""
 
-import fcntl
 import json
 import logging
 import os
 import threading
-from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -16,6 +14,7 @@ from .application.reporting import report
 from .collection.config import load_config
 from .collection.service import run
 from .settings import Paths
+from .storage.locking import writer_lock
 
 LOG = logging.getLogger(__name__)
 
@@ -27,22 +26,6 @@ def next_daily(current, hour=8, minute=15, zone="Europe/London"):
         tomorrow = local.date() + timedelta(days=1)
         candidate = datetime.combine(tomorrow, candidate.timetz(), tzinfo=ZoneInfo(zone))
     return candidate.astimezone(timezone.utc)
-
-
-@contextmanager
-def writer_lock():
-    path = Paths.from_env().home / "data/collector.lock"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a") as handle:
-        try:
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            yield False
-            return
-        try:
-            yield True
-        finally:
-            fcntl.flock(handle, fcntl.LOCK_UN)
 
 
 def collect_once():

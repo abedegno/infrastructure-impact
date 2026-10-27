@@ -93,6 +93,9 @@ Before an upgrade: backup, run deterministic tests and build a wheel/container.
 Apply append-only migrations, run `impact reparse` when parsers/schema require
 it, audit, then publish. Roll back code only when compatible with applied schema;
 otherwise recover into a separate restored vault. Never edit an applied migration.
+Use the [bounded maintenance preview](NORMALIZATION_MAINTENANCE.md) to inspect
+changes and unsupported records first. A partial replay preserves failed records;
+it does not manufacture HTTP freshness or publisher changes.
 
 Old immutable generations are retained for rollback. Monitor disk usage and
 archive/prune under an operator retention policy; automatic deletion is not

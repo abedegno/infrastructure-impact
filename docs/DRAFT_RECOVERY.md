@@ -88,3 +88,7 @@ routine cleanup.
 The old encrypted Git history is not reclaimed by this change. Its storage warning
 can remain visible after new Git blob growth stops. Raw vault and per-archive
 limits still require monitoring and an explicit future capacity decision.
+
+An optional [normalization-maintenance pass](NORMALIZATION_MAINTENANCE.md) can run
+after recovery and before collection. Its corrections belong in the next verified
+checkpoint; it must not be confused with new publisher retrievals or disclosures.

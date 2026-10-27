@@ -330,7 +330,12 @@ def main():
     mode.add_argument("--restore-only", type=Path, metavar="DATABASE")
     parser.add_argument("--recovery-storage", choices=("git", "github-draft"), default="git")
     parser.add_argument("--recovery-repository")
+    parser.add_argument("--reparse-limit", type=int, default=0)
     args = parser.parse_args()
+    if not 0 <= args.reparse_limit <= 10000:
+        parser.error("Reparse limit must be between 0 and 10000")
+    if args.reparse_limit and (args.validate_encrypted_state or args.restore_only is not None):
+        parser.error("Normalization maintenance requires collection mode")
     encryption_key = os.environ.get("IMPACT_STATE_KEY") if args.encrypted_state else None
     if args.encrypted_state and not encryption_key:
         parser.error("Encrypted public-runner state requires IMPACT_STATE_KEY")
@@ -390,7 +395,17 @@ def main():
         from infrastructure_impact.storage.audit import audit
         from infrastructure_impact.worker import collect_once
 
+        maintenance = None
         try:
+            if args.reparse_limit:
+                from infrastructure_impact.application.replay import replay_report
+
+                maintenance = replay_report(limit=args.reparse_limit)
+                print(json.dumps({"normalization_maintenance": maintenance}))
+                if maintenance["outcome"] == "skipped_writer_lock":
+                    raise RuntimeError(
+                        "Normalization maintenance could not acquire the writer lock"
+                    )
             result = collect_once()
             if result["outcome"] not in ("ok", "partial"):
                 raise RuntimeError(
@@ -423,6 +438,11 @@ def main():
                     "public_output": str(output),
                     "private_backup": "saved",
                     "private_recovery": "verified",
+                    **(
+                        {"normalization_maintenance": maintenance}
+                        if maintenance is not None
+                        else {}
+                    ),
                     "recovery_storage": "github-draft-release-v1"
                     if args.recovery_storage == "github-draft"
                     else "git",

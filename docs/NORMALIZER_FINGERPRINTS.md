@@ -67,6 +67,10 @@ Unsupported captures may be replayed once under the new identity, within the
 existing archive budget. HTTP failures remain ineligible for parser replay.
 Subsequent unrelated vendor edits no longer spend that vendor's replay budget.
 
+[Explicit normalization maintenance](NORMALIZATION_MAINTENANCE.md) can preview and
+refresh latest retained advisories in bounded batches. It is separate from the
+archive queue's retry mechanism and preserves unsupported records and capture times.
+
 Tests cover vendor/shared-module changes, unchanged scoped identities when the
 legacy package hash changes, duplicate/order handling, module relocation, schema
 and cohort-resource changes, rejected declarations and legacy extension behavior.
