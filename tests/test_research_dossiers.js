@@ -66,14 +66,18 @@ assert.strictEqual(
 assert.strictEqual(JSON.stringify(input.report), original);
 
 // Minimal browser surface: exercise real mount handlers and selected-generation downloads.
+const ownerDocument = { activeElement: null };
 class Element {
   constructor() {
     this.value = '';
     this.dataset = {};
     this.listeners = {};
     this.nodes = {};
+    this.ownerDocument = ownerDocument;
   }
   set innerHTML(html) {
+    if (Object.values(this.nodes).includes(this.ownerDocument.activeElement))
+      this.ownerDocument.activeElement = null;
     this.html = html;
     this.nodes = {};
     for (const id of ['dossier-select', 'dossier-download'])
@@ -88,13 +92,23 @@ class Element {
   addEventListener(type, fn) {
     this.listeners[type] = fn;
   }
+  focus() {
+    this.ownerDocument.activeElement = this;
+  }
 }
 const container = new Element(),
   downloads = [];
 const options = { ...helpers, onDownload: (p) => downloads.push(plain(p)) };
 api.mount(container, input.report, options);
+container.querySelector('#dossier-select').focus();
 container.querySelector('#dossier-select').value = 'fortiproxy-curl-38546';
 container.querySelector('#dossier-select').listeners.change();
+assert.strictEqual(ownerDocument.activeElement, container.querySelector('#dossier-select'));
+assert.strictEqual(ownerDocument.activeElement.value, 'fortiproxy-curl-38546');
+const otherControl = new Element();
+otherControl.focus();
+container.querySelector('#dossier-select').listeners.change();
+assert.strictEqual(ownerDocument.activeElement, otherControl);
 container.querySelector('#dossier-download').listeners.click();
 assert.strictEqual(downloads.at(-1).dossiers[0].id, 'fortiproxy-curl-38546');
 api.mount(container, input.report, options);

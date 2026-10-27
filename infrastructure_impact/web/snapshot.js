@@ -625,7 +625,9 @@ if (typeof document !== 'undefined') {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
     if (url.origin === location.origin && url.pathname === '/api/state') {
       const ids = url.searchParams.has('cves') ? url.searchParams.get('cves').split(',') : null;
+      const vendors = url.searchParams.getAll('vendor');
       const options = {
+        vendor: vendors.length ? vendors[0] : undefined,
         start: url.searchParams.get('start') ?? undefined,
         end: url.searchParams.get('end') ?? undefined,
         group: url.searchParams.get('group') ?? undefined,
@@ -635,6 +637,12 @@ if (typeof document !== 'undefined') {
       };
       const sequence = ++requestSequence;
       const source = await (await delivery)(ids, url.searchParams.get('view') === 'changes');
+      if (vendors.length && (vendors.length !== 1 || !Object.hasOwn(source.vendors, vendors[0]))) {
+        return new Response(JSON.stringify({ error: 'Invalid request' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
       const chosen = selectSnapshot(source, ids ?? Object.keys(source.benchmark_cohort), options);
       if (sequence === requestSequence) current = chosen;
       return new Response(JSON.stringify(chosen), {

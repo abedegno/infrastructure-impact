@@ -115,8 +115,10 @@
       if (selector) {
         selector.value = id;
         selector.addEventListener('change', () => {
+          const focused = selector.ownerDocument.activeElement === selector;
           if (report.dossiers.some((r) => r.id === selector.value)) id = selector.value;
           draw();
+          if (focused) container.querySelector('#dossier-select')?.focus();
         });
       }
       container

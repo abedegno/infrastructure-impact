@@ -500,6 +500,99 @@ def test_exact_target_statement_and_source_identity_preserve_qualifications(seed
     assert target["statements"][1]["scope"] == "bulletin_shared"
 
 
+@pytest.mark.parametrize("scope", ["cve_specific", "bulletin_shared"])
+def test_publication_preserves_distinct_locator_exact_build_branches(writer_seed, scope):
+    record = writer_seed["records"][0]
+    branch = deepcopy(record["assessments"][0])
+    branch.update(
+        product_id="separate-contrary-branch",
+        status="affected",
+        scope=scope,
+        platforms=["Separate switching platform"],
+        evidence_locator="Separate retained contradictory row",
+    )
+    record["assessments"].append(branch)
+    dossier = public_projection(writer_seed)["research_dossiers"]["dossiers"][0]
+    target = dossier["comparison_targets"][0]
+    assert [s["status"] for s in target["statements"]] == ["fixed", "affected"]
+    retained = target["statements"][1]
+    assert retained["product_id"] == "separate-contrary-branch"
+    assert retained["scope"] == scope
+    assert retained["platforms"] == ["Separate switching platform"]
+    assert retained["evidence_locator"] == "Separate retained contradictory row"
+    source = next(s for s in dossier["sources"] if s["id"] == retained["source_id"])
+    assert source["source_sha256"] == record["sha256"]
+    assert source["source_url"] == record["source_url"]
+    assert "Separate retained contradictory row" in source["locators"]
+    assert target["fields"][0]["evidence"][0]["locator"] == "Synthetic exact target row 1"
+
+
+@pytest.mark.parametrize(
+    "first_product,expected_first",
+    [("FortiOS", []), ("FortiProxy first branch", ["FortiProxy first branch"])],
+)
+def test_publication_scopes_earlier_document_products_by_cve(
+    writer_seed, first_product, expected_first
+):
+    case = next(
+        c
+        for c in json.loads((PACKAGE / "resources/disclosure-cases.json").read_text())["cases"]
+        if c["id"] == "fortiproxy-curl-documented-fix"
+    )
+    record = base(
+        "fortinet", case["advisory_urls"][1], "synthetic-shared-curl", "Synthetic", "2023-10-11"
+    )
+    record.update(
+        document_status="published",
+        cves=["CVE-2023-38545", "CVE-2023-38546"],
+        assessments=[
+            assessment("CVE-2023-38545", first_product, "affected", "First CVE row"),
+            assessment("CVE-2023-38546", "FortiProxy second branch", "affected", "Second CVE row"),
+        ],
+        evidence_id=3,
+        sha256="b" * 64,
+        source_observed_at="2026-10-27T00:00:00Z",
+        observed_at="2026-10-27T00:00:00Z",
+    )
+    writer_seed["records"].append(record)
+    history_url = case["release_source_leads"][0]
+    writer_seed["publisher_history"]["documents"] = [
+        dict(
+            vendor="fortinet",
+            source_url=history_url,
+            source_sha256="c" * 64,
+            observed_at="2026-10-27T00:00:00Z",
+            product="FortiProxy",
+            version=None,
+            state="parsed",
+            events=[
+                dict(
+                    publisher_date="2023-12-01",
+                    kind="initial_document_release",
+                    cve_ids=[],
+                    source_locator="Initial history row",
+                )
+            ],
+        )
+    ]
+    projected = public_projection(writer_seed, [history_url])
+    first, second = projected["research_dossiers"]["dossiers"][1:]
+    earlier_first = first["disclosure_context"][0]["earlier_documents"]
+    assert [label for d in earlier_first for label in d["product_labels"]] == expected_first
+    earlier_second = second["disclosure_context"][0]["earlier_documents"]
+    assert len(earlier_second) == 1
+    assert earlier_second[0]["product_labels"] == ["FortiProxy second branch"]
+    assert earlier_second[0]["publisher_published_at"] == "2023-10-11"
+    if earlier_first:
+        assert earlier_first[0]["source_id"] == earlier_second[0]["source_id"]
+    else:
+        assert earlier_first == []
+    for dossier in (first, second):
+        sources = [s for s in dossier["sources"] if s["source_url"] == record["source_url"]]
+        assert len(sources) == 1
+        assert sources[0]["source_sha256"] == "b" * 64
+
+
 @pytest.mark.parametrize(
     "mutation",
     [

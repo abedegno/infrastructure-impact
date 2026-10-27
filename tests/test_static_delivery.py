@@ -315,6 +315,67 @@ vm.createContext(c);for(const f of ['research-dossiers.js','delivery.js','snapsh
         assert result["exported"]["changes"] == d["changes"] and not result["error"]
 
 
+@pytest.mark.parametrize(
+    "control,status",
+    [
+        ("vendor=hpe", 200),
+        ("vendor=unknown", 400),
+        ("vendor=constructor", 400),
+        ("vendor=", 400),
+        ("vendor=hpe&vendor=hpe", 400),
+        ("vendor=hpe&vendor=aruba", 400),
+    ],
+)
+def test_intercepted_state_fetch_validates_vendor_and_preserves_download_scope(
+    tmp_path, control, status
+):
+    generation = publish(dataset(), tmp_path)
+    query = "cves=CVE-2024-6387&" + control
+    replies = []
+    native_body = b"".join(
+        Application(tmp_path)(
+            dict(REQUEST_METHOD="GET", PATH_INFO="/api/state", QUERY_STRING=query),
+            lambda status, headers: replies.append(status),
+        )
+    )
+    assert int(replies[0].split()[0]) == status
+    script = r"""
+const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
+const x=JSON.parse(fs.readFileSync(0,'utf8')), handlers={},blobs=[];
+URL.createObjectURL=b=>{blobs.push(b);return 'blob:synthetic'};URL.revokeObjectURL=()=>{};
+const fetch=async(path)=>new Response(fs.readFileSync(x.root+'/'+path.replace('/site/','')));
+const c={window:{fetch},document:{baseURI:'https://example.test/site/',addEventListener:(n,fn)=>handlers[n]=fn,querySelector:()=>({textContent:''}),createElement:()=>({click(){}})},location:{origin:'https://example.test'},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,setTimeout:fn=>fn()};
+vm.createContext(c);for(const f of ['research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+(async()=>{
+ const response=await c.window.fetch('/api/state?'+x.query),body=await response.json();
+ if(response.ok)await handlers.click({target:{closest:()=>({id:'json-export'})},preventDefault(){}});
+ process.stdout.write(JSON.stringify({status:response.status,body,download:blobs.length?JSON.parse(await blobs[0].text()):null}));
+})().catch(e=>{console.error(e);process.exitCode=1});
+"""
+    result = json.loads(
+        subprocess.check_output(
+            ["node", "-e", script],
+            input=json.dumps(
+                dict(root=str(generation), web=str(PACKAGE / "web"), query=query)
+            ).encode(),
+        )
+    )
+    assert result["status"] == status
+    native = json.loads(native_body)
+    if status == 400:
+        assert result["body"] == native == {"error": "Invalid request"}
+        assert result["download"] is None
+    else:
+        report = result["body"]["research_dossiers"]
+        assert report == native["research_dossiers"]
+        dossier = report["dossiers"][0]
+        assert dossier["scope"]["selected_vendor"] == "hpe"
+        assert dossier["comparison_targets"] == []
+        assert [c["vendor"] for c in dossier["disclosure_context"]] == ["hpe"]
+        assert result["download"]["research_dossiers"] == report
+        assert result["download"]["publication"] == result["body"]["publication"]
+
+
 def test_product_label_context_keeps_shared_scope_and_global_cohort_parity(tmp_path):
     from infrastructure_impact.application.static_delivery import product_label_context
 

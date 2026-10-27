@@ -266,6 +266,21 @@ def _target(data, target, pilot, cve_id, evidence, gaps):
         for record, claim in _resolve(data, target, reference, cve_id)
         if claim.get("evidence_locator") == reference.get("locator")
     }
+    # A resolved pilot anchor binds the retained document, not every statement's
+    # locator. Enumerate its exact-build branches independently of fixed-field
+    # derivation so contrary/shared statements keep their own real locators.
+    anchored_records = {record_id for record_id, _ in anchors}
+    for record in data.get("records", []):
+        if id(record) not in anchored_records:
+            continue
+        for claim in record.get("assessments", []):
+            if claim["cve_id"] == cve_id and matches_target_reference(record, claim, target):
+                statements.append(
+                    _statement(
+                        claim,
+                        evidence.record(target["vendor"], record, claim.get("evidence_locator")),
+                    )
+                )
     for field in pilot["fields"]:
         references = []
         for reference in field["evidence"]:
@@ -287,17 +302,6 @@ def _target(data, target, pilot, cve_id, evidence, gaps):
                     observed_at=reference.get("observed_at"),
                 )
             )
-            if field["field"] == "firmware_reference":
-                for record, claim in matches:
-                    if claim.get("evidence_locator") == reference.get("locator"):
-                        statements.append(
-                            _statement(
-                                claim,
-                                evidence.record(
-                                    target["vendor"], record, claim.get("evidence_locator")
-                                ),
-                            )
-                        )
         # Aggregated text can contain a distinct contribution from each pilot
         # reference. Never retain it when any contributing reference is missing.
         known = (
