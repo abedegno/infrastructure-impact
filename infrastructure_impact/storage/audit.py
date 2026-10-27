@@ -51,6 +51,13 @@ def audit():
                 ):
                     raise ValueError("Source selection outside official reviewed routes")
             selection_count = db.execute("SELECT COUNT(*) FROM source_selections").fetchone()[0]
+        replay_count = 0
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='archive_parser_replays'").fetchone():
+            if db.execute(
+                "SELECT 1 FROM archive_parser_replays WHERE outcome IN ('recovered','not_applicable') AND evidence_id IS NULL LIMIT 1"
+            ).fetchone():
+                raise ValueError("Successful parser replay lacks retained evidence")
+            replay_count = db.execute("SELECT COUNT(*) FROM archive_parser_replays").fetchone()[0]
         records = latest(db)
         for record in records:
             validate_advisory(record)
@@ -77,5 +84,6 @@ def audit():
             "source_observations": observation_count,
             "reference_documents": reference_count,
             "source_selections": selection_count,
+            "archive_parser_replays": replay_count,
             "fingerprints": "ok",
         }

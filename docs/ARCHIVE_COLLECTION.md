@@ -121,3 +121,5 @@ public progress metadata. Limits still apply to individual retrievals (15 MB,
 hosted job's 40-minute limit and encrypted-state storage limits.
 
 The [older Arista source review](research/arista-legacy-applicability-20261027.md) documents five additional reviewed layouts, including model-scoped exclusions and a per-CVE Wi-Fi matrix. It does not imply all remaining historical layouts are supported.
+
+[Retained parser recovery](ARCHIVE_PARSER_RECOVERY.md) reprocesses previously unsupported captures once after a normalizer change, within the existing document budget. It preserves HTTP retry limits and reports analysis separately from retrieval.

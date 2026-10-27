@@ -119,3 +119,5 @@ backward-compatible tuple resolution, partial-run accounting and public privacy.
 Independent human adjudication of the new product statements remains pending.
 
 Resolution returns the selected bytes and bounded metadata without persisting a choice. Collection writers retain that metadata after validated ingestion. Retained-source triage works through a read-only vault connection and cannot create successful collection checks, selection history or advisory revisions. A missing retained alternate is reported separately from a failed live retrieval.
+
+An archive writer may record a source selection while reprocessing retained captures. That analysis does not clear an alternate representation's latest live HTTP error or create retrieval observations. See [archive parser recovery](ARCHIVE_PARSER_RECOVERY.md).

@@ -4,7 +4,7 @@ from ..source_policy import allowed
 from .repository import evidence, now
 
 
-def retain(db, vendor, requested_url, selection):
+def retain(db, vendor, requested_url, selection, *, record_health=True):
     views = (selection.selected,) + selection.alternatives
     if not allowed(requested_url, vendor) or any(
         not allowed(v.url, vendor) for v in views + selection.unavailable
@@ -21,7 +21,7 @@ def retain(db, vendor, requested_url, selection):
                 "INSERT INTO source_selection_views(selection_id,evidence_id,source_format,adapter_version,assessments) VALUES(?,?,?,?,?)",
                 (cursor.lastrowid, ev["id"], view.format, view.adapter_version, view.assessments),
             )
-        for view in selection.alternatives:
+        for view in selection.alternatives if record_health else ():
             db.execute(
                 "INSERT INTO collection_runs(vendor,source_url,checked_at,outcome,details,error_code) VALUES(?,?,?,?,?,?)",
                 (
@@ -38,17 +38,18 @@ def retain(db, vendor, requested_url, selection):
                 "INSERT INTO source_selection_issues(selection_id,source_url,error_code) VALUES(?,?,?)",
                 (cursor.lastrowid, issue.url, issue.error_code),
             )
-            db.execute(
-                "INSERT INTO collection_runs(vendor,source_url,checked_at,outcome,details,error_code) VALUES(?,?,?,?,?,?)",
-                (
-                    vendor,
-                    issue.url,
-                    now(),
-                    "error",
-                    "Alternative representation unavailable; reviewed selected source retained",
-                    issue.error_code,
-                ),
-            )
+            if record_health:
+                db.execute(
+                    "INSERT INTO collection_runs(vendor,source_url,checked_at,outcome,details,error_code) VALUES(?,?,?,?,?,?)",
+                    (
+                        vendor,
+                        issue.url,
+                        now(),
+                        "error",
+                        "Alternative representation unavailable; reviewed selected source retained",
+                        issue.error_code,
+                    ),
+                )
 
 
 def latest(db):

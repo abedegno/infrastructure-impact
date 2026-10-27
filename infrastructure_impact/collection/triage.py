@@ -9,9 +9,9 @@ from ..adapters.common import HTML
 from ..plugins.contracts import SourceNotApplicable
 from ..plugins.registry import default_registry
 from ..storage.repository import now
-from .errors import SourceNotRetained, check_access_response, failure_code
+from .errors import SourceNotRetained, failure_code
+from .retained import retained_fetch
 from .service import resolve_document
-from .transport import allowed
 
 
 def layout_key(raw):
@@ -146,19 +146,3 @@ def review_batch(db, *, vendor=None, limit=32, retrieve=False):
         documents=rows,
         method="Bounded pending/error archive sample. Optional retrieval retains source bytes in the private vault. No ingestion, queue state changes, independent review or applicability inference from layout similarity. Normalized means current schema-validated parser output, not manual certification.",
     )
-
-
-def retained_fetch(db, url, vendor):
-    if not allowed(url, vendor):
-        raise ValueError("Retained triage source outside vendor routes")
-    row = db.execute(
-        "SELECT e.raw FROM http_cache h JOIN evidence e ON e.id=h.evidence_id WHERE h.url=?", (url,)
-    ).fetchone()
-    if row is None:
-        row = db.execute(
-            "SELECT raw FROM evidence WHERE source_url=? ORDER BY id DESC LIMIT 1", (url,)
-        ).fetchone()
-    if row is None:
-        raise SourceNotRetained("Source bytes are not retained")
-    check_access_response(row["raw"])
-    return row["raw"]

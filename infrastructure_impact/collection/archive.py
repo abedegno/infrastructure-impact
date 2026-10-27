@@ -36,10 +36,15 @@ def fail(db, source, item, error):
     retry = (
         datetime.now(timezone.utc) + timedelta(hours=min(24 * 2 ** (attempted - 1), 168))
     ).isoformat()
+    version = (
+        default_registry().fingerprint(source["vendor"])
+        if item["kind"] == "document" and failure_code(error) == "unsupported_or_invalid_document"
+        else None
+    )
     with db:
         db.execute(
-            "UPDATE archive_items SET state='error',checked_at=?,attempts=?,retry_after=?,error_code=? WHERE id=?",
-            (now(), attempted, retry, failure_code(error), item["id"]),
+            "UPDATE archive_items SET state='error',checked_at=?,attempts=?,retry_after=?,error_code=?,parser_version=? WHERE id=?",
+            (now(), attempted, retry, failure_code(error), version, item["id"]),
         )
         collection_result(
             db, source["vendor"], item["url"], "error", str(error), failure_code(error)
@@ -122,8 +127,12 @@ def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
     )
 
 
-def document(db, source, item):
-    resolved = resolve_document(db, item["url"], source["vendor"])
+def document(db, source, item, *, fetcher=None, reprocessed=False):
+    resolved = (
+        resolve_document(db, item["url"], source["vendor"])
+        if fetcher is None
+        else resolve_document(db, item["url"], source["vendor"], fetcher=fetcher)
+    )
     url, raw = resolved
     alternate_failures = getattr(resolved, "source_failures", 0)
     try:
@@ -133,19 +142,47 @@ def document(db, source, item):
     ignored = parsed is None or default_registry().get(source["vendor"]).non_cve_notice(parsed)
     changed = False if ignored else ingest(db, raw, url, lambda *_: parsed, source["vendor"])
     if parsed is not None:
-        retain_resolution(db, source["vendor"], item["url"], resolved)
+        retain_resolution(
+            db, source["vendor"], item["url"], resolved, record_health=not reprocessed
+        )
     with db:
         ev = evidence(db, raw, url)
         db.execute(
-            "UPDATE archive_items SET state=?,checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL WHERE id=?",
-            ("not_applicable" if ignored else "done", now(), ev["id"], url, item["id"]),
+            "UPDATE archive_items SET state=?,checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL,parser_version=? WHERE id=?",
+            (
+                "not_applicable" if ignored else "done",
+                now(),
+                ev["id"],
+                url,
+                default_registry().fingerprint(source["vendor"]),
+                item["id"],
+            ),
         )
+        if reprocessed:
+            from ..storage.archive_replays import record
+
+            record(
+                db,
+                item["id"],
+                default_registry().fingerprint(source["vendor"]),
+                "not_applicable" if ignored else "recovered",
+                evidence_id=ev["id"],
+                alternate_issues=alternate_failures,
+            )
         collection_result(
             db,
             source["vendor"],
             item["url"],
-            "not_applicable" if ignored else "partial" if alternate_failures else "ok",
-            "Archive document processed through reviewed vendor parser; publisher dates are not observed historical availability.",
+            "reprocessed"
+            if reprocessed
+            else "not_applicable"
+            if ignored
+            else "partial"
+            if alternate_failures
+            else "ok",
+            "Retained capture normalized under an updated parser; no network retrieval or historical availability inferred."
+            if reprocessed
+            else "Archive document processed through reviewed vendor parser; publisher dates are not observed historical availability.",
         )
     return int(changed), alternate_failures
 
@@ -224,8 +261,14 @@ def run(
                 except Exception as error:
                     failed += 1
                     fail(db, source, item, error)
+            from .archive_replay import reprocess_errors
+
+            document_budget = document_limit or seed.get("document_limit", 8)
+            replayed = reprocess_errors(db, source, document_budget)
+            imported += replayed["imported"]
+            failed += replayed["still_unsupported"]
             for item in ready(
-                db, source["id"], "document", document_limit or seed.get("document_limit", 8)
+                db, source["id"], "document", document_budget - replayed["attempted"]
             ):
                 try:
                     changed, alternate_failures = document(db, source, item)
@@ -243,6 +286,8 @@ def run(
 
 def progress(db, records, config):
     """Public counts and date ranges; no raw response, error body or private state."""
+    from ..storage.archive_replays import summary as replay_summary
+
     result = []
     for seed in config.get("archives", []):
         source = db.execute(
@@ -287,6 +332,7 @@ def progress(db, records, config):
                 pages=counts["page"],
                 documents=counts["document"],
                 discovered_documents=sum(counts["document"].values()),
+                parser_replays=replay_summary(db, source["id"] if source else None),
                 discovery_link_gaps=gaps,
                 exhausted_errors=sum(
                     i["state"] == "error" and i["attempts"] >= MAX_ATTEMPTS for i in items

@@ -42,19 +42,22 @@ class PluginRegistry:
         plugin = self.get(vendor)
         return self.finalize(plugin.parse_document(raw, url, vendor), url, vendor)
 
+    def fingerprint(self, vendor):
+        """The same code identity used in normalized advisory revisions."""
+        from ..adapters.common import ADAPTER_VERSION
+
+        plugin = self.get(vendor)
+        source = inspect.getsourcefile(plugin.parse_document)
+        code = Path(source).read_bytes() if source else plugin.version.encode()
+        return sha256(ADAPTER_VERSION.encode() + plugin.version.encode() + code).hexdigest()[:16]
+
     def finalize(self, document, url, vendor):
         import json
 
-        from ..adapters.common import ADAPTER_VERSION
         from ..domain import validate_advisory
 
-        plugin = self.get(vendor)
         document = json.loads(json.dumps(document))
-        source = inspect.getsourcefile(plugin.parse_document)
-        code = Path(source).read_bytes() if source else plugin.version.encode()
-        document["adapter_version"] = sha256(
-            ADAPTER_VERSION.encode() + plugin.version.encode() + code
-        ).hexdigest()[:16]
+        document["adapter_version"] = self.fingerprint(vendor)
         for field in ("published_at", "updated_at"):
             value = document.get(field)
             if value and "T" in value:

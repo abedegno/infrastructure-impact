@@ -29,6 +29,7 @@ def main():
     assert (package / "migrations/007_source_observations.sql").is_file()
     assert (package / "migrations/008_reference_documents.sql").is_file()
     assert (package / "migrations/009_source_selections.sql").is_file()
+    assert (package / "migrations/010_archive_parser_replay.sql").is_file()
     assert (package / "resources/studies/openssh-service-2023-2026.json").is_file()
     assert (package / "resources/archive-source-review.json").is_file()
     assert (package / "schemas/comparison-eligibility-v1.json").is_file()

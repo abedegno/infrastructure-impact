@@ -52,7 +52,9 @@ class ResolvedSource(tuple):
 
     def __new__(cls, url, raw, source_failures=0, *, selection=None, requested_url=None):
         value = super().__new__(cls, (url, raw))
-        value.source_failures = source_failures
+        value.source_failures = (
+            len(selection.unavailable) if selection is not None else source_failures
+        )
         value.selection = selection
         value.requested_url = requested_url
         return value
@@ -105,7 +107,7 @@ def resolve_document(db, url, vendor, *, fetcher=None):
     return url, raw
 
 
-def retain_resolution(db, vendor, requested_url, resolved):
+def retain_resolution(db, vendor, requested_url, resolved, *, record_health=True):
     """Persist selection metadata only in a writer processing validated records.
 
     Retained-source triage can resolve through a read-only connection without
@@ -115,7 +117,13 @@ def retain_resolution(db, vendor, requested_url, resolved):
     if selection is not None:
         from ..storage.source_selections import retain
 
-        retain(db, vendor, getattr(resolved, "requested_url", None) or requested_url, selection)
+        retain(
+            db,
+            vendor,
+            getattr(resolved, "requested_url", None) or requested_url,
+            selection,
+            record_health=record_health,
+        )
 
 
 def run(config, limit=None, db_path=None, upstream_limit=0):

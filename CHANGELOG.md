@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Recover unsupported retained archive captures after parser changes without new HTTP requests, preserving backoff and shared processing budgets; publish distinct replay provenance through additive migration 010.
+
 - Add reviewed older Arista software/model boundaries and a local FragAttacks CVE/model matrix, preserving nested exclusions, DNS/TLS prerequisites, reference-only CVEs and dated lifecycle limits.
 - Keep retained-source triage read-only; collection writers persist source choices only after validated ingestion.
 

@@ -44,7 +44,10 @@ def execute(sync_fn, cohort_fn, report_fn, build_fn, db_path=None, status_fn=Non
             all_failed = (
                 bool(checks)
                 and failures
-                and not any(r["outcome"] in ("ok", "partial", "not_applicable") for r in checks)
+                and not any(
+                    r["outcome"] in ("ok", "partial", "not_applicable", "reprocessed")
+                    for r in checks
+                )
             )
             if all_failed:
                 outcome = "error"
