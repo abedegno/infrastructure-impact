@@ -11,6 +11,24 @@ from urllib.error import HTTPError
 from urllib.request import urlopen
 
 
+def validate_dossier_limits(report: dict) -> None:
+    """Enforce this increment's public gates without installed application imports."""
+    assert isinstance(report, dict) and isinstance(report.get("limits"), dict), (
+        "Malformed research dossier report"
+    )
+    limits = report["limits"]
+    for field in (
+        "inventory_verified",
+        "independent_human_review_completed",
+        "independent_release_availability_verified",
+        "earliest_disclosure_established",
+        "concealment_established",
+    ):
+        assert limits.get(field) is False, f"Research dossier limit changed: {field}"
+    for field in ("vendor_rate", "verified_fix_delay_days"):
+        assert field in limits and limits[field] is None, f"Research dossier limit changed: {field}"
+
+
 def check(origin, expected=None):
     origin = origin.rstrip("/") + "/"
     with urlopen(origin, timeout=20) as response:
@@ -80,6 +98,12 @@ def check(origin, expected=None):
     assert age_seconds < 36 * 3600, "Publication is stale"
     assert not expected or data["publication"]["id"] == expected, "Old deployment still served"
     assert data["records"], "Empty public dataset"
+    if "research_dossiers" in data:
+        validate_dossier_limits(data["research_dossiers"])
+        report = json.loads(verified("research-dossiers.json", 15_000_000))
+        validate_dossier_limits(report)
+        assert report.get("publication") == data["publication"], "Mixed report generations"
+        assert report.get("generated_at") == data["generated_at"], "Mixed report dates"
     if data.get("product_groups"):
         report_keys = (
             "product_groups",

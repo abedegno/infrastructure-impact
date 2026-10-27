@@ -133,6 +133,8 @@ def test_publication_rebuilds_reports_and_serves_generation_bound_api_and_static
         assert report == json.loads((root / "current" / f"{name}.json").read_text())
         assert report["publication"]["id"]
     assert (root / "current/schemas/product-cohort-definition-v1.json").exists()
+    assert (root / "current/schemas/research-dossiers-v1.json").exists()
+    assert (root / "current/schemas/research-dossier-definition-v1.json").exists()
     # Every contract exported by the writer must be reachable from the Python
     # reader as well as a static host; an omitted allowlist entry is a regression.
     for schema_path in (root / "current/schemas").glob("*.json"):

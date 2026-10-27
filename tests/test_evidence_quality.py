@@ -133,7 +133,7 @@ def test_group_filter_does_not_leak_shared_numeric_labels_between_families(tmp_p
                     "QUERY_STRING": query,
                 }
             )
-    node = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,Map,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),c);const d=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.comparisonEligibility(d,[process.argv[2],process.argv[3]],{start:'2025-01-01',end:'2025-12-31',group:'switching'})));"
+    node = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,Map,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync(require('path').join(require('path').dirname(process.argv[1]),'research-dossiers.js'),'utf8'),c);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),c);const d=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.comparisonEligibility(d,[process.argv[2],process.argv[3]],{start:'2025-01-01',end:'2025-12-31',group:'switching'})));"
     output = subprocess.check_output(
         ["node", "-e", node, str(PACKAGE / "web/snapshot.js"), CID, OTHER],
         input=json.dumps(data).encode(),
@@ -282,7 +282,7 @@ def test_reader_uses_the_taxonomy_pinned_to_its_publication():
     assert result["vendors"][0]["counts"]["explicit_affected"] == 1
     assert classify("arista", claim)["state"] == "unmapped"
     assert result["vendors"][0]["eligibility"]["rate_comparison"] == "suppressed"
-    node = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,Map,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),c);const d=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.comparisonEligibility(d,d.all_cves,{group:'routing'})));"
+    node = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,Map,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync(require('path').join(require('path').dirname(process.argv[1]),'research-dossiers.js'),'utf8'),c);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),c);const d=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.comparisonEligibility(d,d.all_cves,{group:'routing'})));"
     js = json.loads(
         subprocess.check_output(
             ["node", "-e", node, str(PACKAGE / "web/snapshot.js")], input=json.dumps(data).encode()

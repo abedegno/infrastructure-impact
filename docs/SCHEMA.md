@@ -158,3 +158,7 @@ or component-reference v1. The additive optional pilot proposal templates in
 `product-cohorts-v1.json` embed the same contract for standalone offline validation.
 Only blank templates are publicly generated; private proposals are not imported
 or projected. See [Build inventory](BUILD_INVENTORY.md).
+
+See [CVE research dossiers](RESEARCH_DOSSIERS.md) for the initial curated scope,
+strict report and definition schemas, selected JSON downloads, chronology meanings
+and fixed research limits.
