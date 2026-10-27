@@ -154,7 +154,7 @@ def test_static_and_python_selection_have_identical_scorecards_and_timelines():
         data = state(db)
     ids = [CID, "CVE-1999-999999"]
     expected = select(copy.deepcopy(data), ids)
-    script = """const fs=require('fs'),vm=require('vm');const c={window:{},Set,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync('infrastructure_impact/web/snapshot.js','utf8'),c);const input=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.selectSnapshot(input.data,input.ids)));"""
+    script = """const fs=require('fs'),vm=require('vm');const c={window:{},Set,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync('infrastructure_impact/web/research-dossiers.js','utf8'),c);vm.runInContext(fs.readFileSync('infrastructure_impact/web/snapshot.js','utf8'),c);const input=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.selectSnapshot(input.data,input.ids)));"""
     result = subprocess.run(
         ["node", "-e", script],
         input=json.dumps(dict(data=data, ids=ids)),

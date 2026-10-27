@@ -2,6 +2,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const context={window:{},Set,URL,Response,Blob};
 vm.createContext(context);
+vm.runInContext(fs.readFileSync('web/research-dossiers.js','utf8'),context);
 vm.runInContext(fs.readFileSync('web/snapshot.js','utf8'),context);
 const state=JSON.parse(fs.readFileSync('site/dist/snapshot.json','utf8'));
 const compared=context.snapshotCompare(state.records,state.comparison.cohort,state.vendors,state.comparison);

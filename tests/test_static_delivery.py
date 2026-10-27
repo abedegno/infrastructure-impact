@@ -69,7 +69,7 @@ const x=JSON.parse(fs.readFileSync(0,'utf8'));
 const requests=[];let active=0,peak=0;
 const c={window:{},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
 vm.createContext(c);
-for(const f of ['delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+for(const f of ['research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
 const fetch=async(path)=>{
  requests.push(path);active++;peak=Math.max(peak,active);
  try {
@@ -298,7 +298,7 @@ const changes=new Set(JSON.parse(fs.readFileSync(x.root+'/data/index.json','utf8
 URL.createObjectURL=b=>{blobs.push(b);return 'blob:synthetic'};URL.revokeObjectURL=()=>{};
 const fetch=async(path)=>{const file=path.replace('/site/','');if(x.fault&&changes.has(file))return new Response('',{status:404});return new Response(fs.readFileSync(x.root+'/'+file));};
 const c={window:{fetch},document:{baseURI:'https://example.test/site/',addEventListener:(n,fn)=>handlers[n]=fn,querySelector:()=>feedback,createElement:()=>({click(){}})},location:{origin:'https://example.test'},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,setTimeout:fn=>fn()};
-vm.createContext(c);for(const f of ['delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+vm.createContext(c);for(const f of ['research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
 (async()=>{await c.window.fetch('/api/state?cves=CVE-2025-12345');await handlers.click({target:{closest:()=>({id:'json-export'})},preventDefault(){}});process.stdout.write(JSON.stringify({exported:blobs.length?JSON.parse(await blobs[0].text()):null,error:feedback.textContent}));})();
 """
     result = json.loads(
@@ -508,10 +508,16 @@ def test_content_addressed_common_metadata_preserves_generation_dossiers(tmp_pat
     assert "research_dossiers" in snapshot
     assert common["data"]["research_dossiers"] == snapshot["research_dossiers"]
     assert common["publication"] == snapshot["publication"]
-    # Snapshot selection is integrated separately; transport must preserve the report.
+    # Transport retains the complete report; the browser applies current selection.
     result = run(generation, ids=ids)
     assert result["transportReport"] == snapshot["research_dossiers"]
     assert result["selected"]["publication"] == snapshot["publication"]
+    assert (
+        result["selected"]["research_dossiers"]
+        == select(snapshot, ids if ids is not None else list(snapshot["benchmark_cohort"]))[
+            "research_dossiers"
+        ]
+    )
 
 
 def test_old_static_metadata_never_falls_back_to_another_dossier_generation(tmp_path):
@@ -530,3 +536,27 @@ def test_old_static_metadata_never_falls_back_to_another_dossier_generation(tmp_
     assert "research_dossiers" not in result["selected"]
     assert not any("research-dossiers.json" in path for path in result["requests"])
     assert result["selected"]["publication"] == data["publication"]
+
+
+def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
+    generation = publish(dataset(), tmp_path)
+    html = (generation / "index.html").read_text()
+    scripts = re.findall(r'<script defer src="([^"]+)"', html)
+    expected = ["research-dossiers.js", "delivery.js", "snapshot.js", "app.js"]
+    paths = []
+    manifest = json.loads((generation / "manifest.json").read_text())
+    app = Application(tmp_path)
+    for name in expected:
+        raw = (PACKAGE / "web" / name).read_bytes()
+        path = "assets/" + hashlib.sha256(raw).hexdigest() + ".js"
+        paths.append("/" + path)
+        assert (generation / path).read_bytes() == raw
+        assert manifest["sha256"][path] == hashlib.sha256(raw).hexdigest()
+        code, _, body = app.route(dict(REQUEST_METHOD="GET", PATH_INFO="/" + name))
+        assert (code, body) == (200, raw)
+    assert scripts == paths
+    native = (PACKAGE / "web/index.html").read_text()
+    assert re.findall(r'<script defer src="([^"]+)"', native) == [
+        "/research-dossiers.js",
+        "/app.js",
+    ]

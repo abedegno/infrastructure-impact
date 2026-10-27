@@ -1146,3 +1146,27 @@ def test_registered_dossier_validator_enforces_local_datetime_format(seed):
     claim.update(precision="local_datetime", value="not-a-date")
     with pytest.raises(ValidationError):
         validator("research_dossiers").validate(report)
+
+
+def test_browser_dossiers_match_python_selection_render_and_generation(writer_seed, tmp_path):
+    import subprocess
+
+    from infrastructure_impact.application.publication import publish
+
+    generation = publish(writer_seed, tmp_path)
+    report = json.loads((generation / "research-dossiers.json").read_text())
+    snapshot = json.loads((generation / "snapshot.json").read_text())
+    cves = ["CVE-2024-6387", "CVE-2023-38545", "CVE-2023-38546"]
+    matrix = [
+        dict(ids=ids, vendor=vendor, expected=select_research_dossiers(report, ids, vendor))
+        for ids in [cves, *[[cid] for cid in cves], [], ["CVE-1999-999999"]]
+        for vendor in [None, "arista", "hpe", "fortinet"]
+    ]
+    result = subprocess.run(
+        ["node", "tests/test_research_dossiers.js"],
+        input=json.dumps(dict(report=report, state=snapshot, matrix=matrix)),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

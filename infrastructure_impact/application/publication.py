@@ -190,7 +190,7 @@ def write_bundle(destination, data):
         path = destination / "changes" / f"{change['id']}.json"
         path.parent.mkdir(exist_ok=True)
         path.write_text(json.dumps(change))
-    for name in ("app.js", "style.css", "snapshot.js", "delivery.js"):
+    for name in ("app.js", "style.css", "research-dossiers.js", "snapshot.js", "delivery.js"):
         shutil.copyfile(PACKAGE / "web" / name, destination / name)
     html = (
         (PACKAGE / "web/index.html")
@@ -203,7 +203,7 @@ def write_bundle(destination, data):
     # Immutable script/style paths avoid mixing old cached readers with a new
     # delivery contract. Root names remain available for existing integrations.
     (destination / "assets").mkdir(exist_ok=True)
-    for name in ("app.js", "snapshot.js", "delivery.js", "style.css"):
+    for name in ("app.js", "research-dossiers.js", "snapshot.js", "delivery.js", "style.css"):
         raw = (destination / name).read_bytes()
         asset = "assets/" + sha256(raw).hexdigest() + Path(name).suffix
         (destination / asset).write_bytes(raw)

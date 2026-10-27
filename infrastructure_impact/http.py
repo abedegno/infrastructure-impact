@@ -309,6 +309,7 @@ class Application:
             "/",
             "/index.html",
             "/app.js",
+            "/research-dossiers.js",
             "/style.css",
             "/snapshot.js",
             "/delivery.js",

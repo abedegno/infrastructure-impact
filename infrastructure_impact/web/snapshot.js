@@ -512,6 +512,15 @@ function selectSnapshot(source, ids, options = {}) {
   );
   return {
     ...source,
+    ...(Object.hasOwn(source, 'research_dossiers')
+      ? {
+          research_dossiers: window.ResearchDossiers.select(
+            source.research_dossiers,
+            cohort,
+            options.vendor ?? null,
+          ),
+        }
+      : {}),
     comparison: snapshotCompare(
       source.records,
       cohort,
