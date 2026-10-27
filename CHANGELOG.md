@@ -2,7 +2,7 @@
 
 ## Overnight source evidence — 2026-10-27
 
-- Pin direct workflow actions to verified upstream commits, check that policy in CI, review action dependency updates weekly, and keep the collector deployment template synchronized.
+- Pin direct workflow actions to verified upstream commits, review action updates weekly, synchronize the deployment template, update Pages actions to Node 24, and verify that the declared static marker is actually published.
 
 - Preserve all explicit CVE rows sharing a Check Point SK identity, retaining row-specific product branches and conflicting-date unknowns; reject duplicate document identities at the common feed writer before any advisory write.
 

@@ -25,6 +25,11 @@ def check(origin, expected=None):
         assert hashlib.sha256(raw).hexdigest() == manifest["sha256"][path], "Fingerprint mismatch"
         return raw
 
+    marker_verified = False
+    if ".nojekyll" in manifest["sha256"]:
+        verified(".nojekyll", 1024)
+        marker_verified = True
+
     try:
         index = json.loads(verified("data/index.json", 2_000_000))
     except HTTPError as error:
@@ -126,6 +131,7 @@ def check(origin, expected=None):
         compressed_verified = True
     return {
         "status": "fresh",
+        "static_marker_verified": marker_verified,
         "publication": data["publication"]["id"],
         "generated_at": data["generated_at"],
         "advisories": data.get("counts", {}).get("advisories", len(data["records"])),

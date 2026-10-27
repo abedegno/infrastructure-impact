@@ -249,6 +249,7 @@ def test_monitor_checks_cohort_parts_without_full_archive_download(tmp_path, mon
     assert result["delivery"] == "cohort_parts_v1" and not result["full_archive_download_verified"]
     assert result["checked_default_bytes"] < 8_000_000
     assert result["compressed_archive_verified"]
+    assert result["static_marker_verified"] and ".nojekyll" in seen
     assert (
         result["checked_compressed_archive_bytes"]
         == (generation / "snapshot.json.gz").stat().st_size
@@ -372,3 +373,28 @@ process.stdout.write(JSON.stringify({a,b,display:c.productLabelDisplay('16.x',b)
         result["display"]
         == "16.x — Synthetic <family A> / Synthetic family B (shared publisher label) (some statements lack family context)"
     )
+
+
+@pytest.mark.parametrize("fault", ["missing", "changed"])
+def test_monitor_rejects_missing_or_changed_declared_static_marker(tmp_path, monkeypatch, fault):
+    import io
+    from urllib.error import HTTPError
+
+    import checks.public_health as health
+
+    generation = publish(dataset(), tmp_path)
+
+    class Response(io.BytesIO):
+        status = 200
+
+    def get(url, timeout=None):
+        path = url.removeprefix("https://example.test/") or "index.html"
+        if path == ".nojekyll":
+            if fault == "missing":
+                raise HTTPError(url, 404, "Missing", {}, None)
+            return Response(b"unexpected marker contents")
+        return Response((generation / path).read_bytes())
+
+    monkeypatch.setattr(health, "urlopen", get)
+    with pytest.raises((HTTPError, AssertionError)):
+        health.check("https://example.test")

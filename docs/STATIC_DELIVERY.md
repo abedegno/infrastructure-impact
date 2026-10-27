@@ -55,6 +55,11 @@ has a different archive size and is measured separately.
 
 The public monitor verifies the index, bootstrap, default cohort parts and linked
 quality reports against the manifest, with a 20 MB default-part budget. Its receipt
+also reports `static_marker_verified` when the declared `.nojekyll` file is fetched
+and matches its manifest hash. The Pages uploader includes hidden files only from
+the generated public bundle, so this marker is delivered with the other declared
+assets. A missing or changed declared marker fails monitoring.
+The receipt
 states `full_archive_download_verified: false` for cohort delivery. When a compressed
 archive is listed in the manifest, it also verifies that file's fingerprint and
 that its decompressed SHA-256 equals the full JSON fingerprint. This extra check
