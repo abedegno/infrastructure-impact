@@ -523,7 +523,7 @@ textarea {
 /* Keep eligibility and collection limits beside the scoped counts. */
 .comparison-table {
   table-layout: fixed;
-  min-width: 1050px;
+  min-width: 1280px;
 }
 .comparison-table th,
 .comparison-table td {
@@ -532,25 +532,19 @@ textarea {
   padding: 12px;
 }
 .comparison-table th:nth-child(1) {
-  width: 17%;
+  width: 15%;
 }
 .comparison-table th:nth-child(2) {
-  width: 13%;
+  width: 12%;
 }
-.comparison-table th:nth-child(3) {
-  width: 6%;
-}
-.comparison-table th:nth-child(4) {
-  width: 7%;
-}
-.comparison-table th:nth-child(5) {
-  width: 7%;
-}
+.comparison-table th:nth-child(3),
+.comparison-table th:nth-child(4),
+.comparison-table th:nth-child(5),
 .comparison-table th:nth-child(6) {
-  width: 6%;
+  width: 8%;
 }
 .comparison-table th:nth-child(7) {
-  width: 21%;
+  width: 18%;
 }
 .comparison-table th:nth-child(8) {
   width: 23%;

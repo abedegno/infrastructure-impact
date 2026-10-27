@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Show retained publisher family context beside exact product labels, flag shared labels without changing filter identities, and give comparison counts room to remain readable.
+
 - Add bounded offline normalization maintenance with a read-only preview, shared writer exclusion, per-record failure reports, stable-identity guards and opt-in hosted replay; preserve source capture times and distinguish parser reinterpretations from publisher changes.
 
 - Add append-only encrypted recovery in unpublished draft release assets, with bounded authenticated readback before pointer updates, preserved legacy Git copies, metadata-only monitoring and compatible Git-mode rollback.
