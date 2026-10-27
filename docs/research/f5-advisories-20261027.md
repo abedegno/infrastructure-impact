@@ -79,3 +79,11 @@ There is no enabled F5 RSS discovery or historical enumeration. Coverage is two
 curated documents across three CVEs, with 38 PHP and 13 OpenSSH product/CVE/branch
 statements. These are statement counts, not independent products, installations,
 a portfolio denominator or a comparative security rate.
+
+
+Product-role taxonomy `2026-10-27.1` maps only the explicitly named BIG-IP Next
+Central Manager and BIG-IQ Centralized Management labels to infrastructure
+management. Broad BIG-IP/all-modules, APM, CNF, F5OS and service labels remain
+unmapped. They are not silently classified as firewalls, switches or routers.
+This supplies four mapped statements from these two documents; it does not enroll
+F5 in the frozen firewall study or create a comparative denominator.

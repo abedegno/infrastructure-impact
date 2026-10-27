@@ -4,7 +4,8 @@
 
 - Add a ninth vendor plugin for two exact reviewed F5 PHP/OpenSSH article PDFs. Preserve shared-CVE tables, BIG-IP / BIG-IP Next distinctions, authentication, lifecycle limits and literal fix-column states; reject changed semantic scope and retain earlier evidence.
 - Validate F5 normalization on the Ubuntu source-access runner without a vault or response-body artifact. Treat PDF responses as documents, without scanning embedded bytes for HTML links.
-- Add vendor-scoped hosted normalization maintenance, with early scope validation, a bounded attempt budget and preserved default behavior.
+- Map only the two explicit F5 central-management labels into the existing role taxonomy; broad multi-role product labels remain unmapped.
+- Add vendor-scoped hosted normalization maintenance, with early scope validation, a bounded attempt budget, single-run workflow inputs and preserved default behavior.
 - Preserve F5 publisher dates as date-only claims; do not manufacture midnight timestamps or numeric publication offsets.
 - Keep F5 outside the frozen extraction-review sample. Document the advertised RSS failure and differing HTML/PDF date claims without inferring concealment or feed completeness.
 

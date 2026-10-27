@@ -4,6 +4,15 @@
 name: Collect and publish
 on:
   workflow_dispatch:
+    inputs:
+      reparse_limit:
+        description: 'Optional single-run replay budget; blank uses the repository variable'
+        required: false
+        type: string
+      reparse_vendor:
+        description: 'Optional single-run installed vendor scope; requires a positive budget'
+        required: false
+        type: string
   schedule:
     - cron: '43 12 * * *'
 permissions:
@@ -54,8 +63,8 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
           GH_TOKEN: ${{ github.token }}
           RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
-          REPARSE_LIMIT: ${{ vars.IMPACT_REPARSE_LIMIT || '0' }}
-          REPARSE_VENDOR: ${{ vars.IMPACT_REPARSE_VENDOR || '' }}
+          REPARSE_LIMIT: ${{ inputs.reparse_limit || vars.IMPACT_REPARSE_LIMIT || '0' }}
+          REPARSE_VENDOR: ${{ inputs.reparse_vendor || vars.IMPACT_REPARSE_VENDOR || '' }}
           VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
         run: |
           set -euo pipefail

@@ -79,7 +79,21 @@ It prints the partial/full report and
 includes it in the final recovery receipt. Independently valid records can proceed
 to collection and audit while unresolved records remain retained for review.
 
-The public workflow appends that flag only when repository variable
+For one controlled dispatch, the workflow accepts `reparse_limit` and
+`reparse_vendor` string inputs. Nonempty inputs override the corresponding
+repository variables for that run only:
+
+```sh
+gh workflow run collect.yaml --repo OWNER/REPO --ref main \
+  -f reparse_limit=20 -f reparse_vendor=aruba
+```
+
+The helper validates the budget and installed vendor before opening recovery
+state. Use a reviewed source pin that supports both controls. Single-run inputs
+leave repository variables unchanged.
+
+For default or deliberately recurring maintenance, the workflow appends the
+budget flag only when repository variable
 `IMPACT_REPARSE_LIMIT` is positive; its default is `0`. Optional variable
 `IMPACT_REPARSE_VENDOR` adds the vendor scope. Both workflow copies pass quoted
 array arguments; an unbudgeted vendor scope is rejected rather than ignored.

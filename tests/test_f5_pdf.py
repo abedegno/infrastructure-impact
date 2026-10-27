@@ -265,3 +265,28 @@ def test_date_only_publisher_claims_cannot_create_numeric_timing_offsets():
         "vendor_timestamp_not_precise" in case["timing_reasons"]
         for case in report["vendors"][0]["cases"]
     )
+
+
+@pytest.mark.parametrize("label", ["BIG-IP Next Central Manager", "BIG-IQ Centralized Management"])
+def test_only_explicit_central_management_labels_gain_a_product_role(label):
+    from infrastructure_impact.application.product_groups import classify
+
+    assert classify("f5", dict(product=label))["group"] == "management"
+
+
+@pytest.mark.parametrize(
+    "label",
+    [
+        "BIG-IP (all modules)",
+        "BIG-IP Next (all modules)",
+        "BIG-IP APM",
+        "BIG-IP Next CNF",
+        "F5OS",
+        "F5 Distributed Cloud",
+        "BIG-IP Next Central ManagerPretender",
+    ],
+)
+def test_broad_or_unreviewed_f5_labels_remain_unmapped(label):
+    from infrastructure_impact.application.product_groups import classify
+
+    assert classify("f5", dict(product=label)) == dict(state="unmapped", group=None, rule_ids=[])
