@@ -398,3 +398,37 @@ def test_monitor_rejects_missing_or_changed_declared_static_marker(tmp_path, mon
     monkeypatch.setattr(health, "urlopen", get)
     with pytest.raises((HTTPError, AssertionError)):
         health.check("https://example.test")
+
+
+def test_monitor_runs_without_site_packages_or_application_imports(tmp_path):
+    import os
+    import sys
+    from pathlib import Path
+
+    generation = publish(dataset(), tmp_path / "publications")
+    script = Path(__file__).resolve().parent.parent / "checks/public_health.py"
+    environment = dict(os.environ)
+    environment.pop("PYTHONPATH", None)
+    probe = """
+import io, json, runpy, sys, urllib.request
+from pathlib import Path
+folder = Path(sys.argv[2])
+def get(url, timeout=None):
+    relative = url.removeprefix('https://example.test/') or 'index.html'
+    return io.BytesIO((folder / relative).read_bytes())
+urllib.request.urlopen = get
+module = runpy.run_path(sys.argv[1])
+result = module['check']('https://example.test')
+assert result['status'] == 'fresh'
+assert not any(n == 'infrastructure_impact' or n.startswith('infrastructure_impact.') for n in sys.modules)
+print(json.dumps(result))
+"""
+    result = subprocess.run(
+        [sys.executable, "-S", "-c", probe, str(script), str(generation)],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(result.stdout)["static_marker_verified"]

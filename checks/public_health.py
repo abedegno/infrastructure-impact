@@ -112,11 +112,33 @@ def check(origin, expected=None):
             if key in ("comparison_eligibility", "product_cohorts", "disclosure_review"):
                 data[key] = report
         assert data["extraction_validation"]["independent_human_review_completed"] is False
-        for key in ("product_cohorts", "disclosure_review"):
-            if data.get(key):
-                from infrastructure_impact.application.research_reports import validator
-
-                validator(key).validate(data[key])
+        # This monitor is deliberately runnable with standard-library Python,
+        # outside an installed application. The writer validates full schemas;
+        # check generation hashes and the published safety gates here.
+        if data.get("product_cohorts"):
+            cohorts = data["product_cohorts"]
+            assert cohorts["ranking_supported"] is False
+            assert cohorts["independent_human_review_completed"] is False
+            assert all(
+                c["state"] == "blocked"
+                and c["confirmed_build_denominator"] is None
+                and all(
+                    u["state"] == "blocked"
+                    and u["comparison_rate"] is None
+                    and u["build_inventory_denominator"] is None
+                    for u in c["units"]
+                )
+                for c in cohorts["cohorts"]
+            ), "Product cohort comparison gates changed"
+        if data.get("disclosure_review"):
+            review = data["disclosure_review"]
+            assert review["independent_human_review_completed"] is False
+            assert all(
+                c["concealment"] == "not_established"
+                and c["state"] == "review_required"
+                and all(g["state"] == "not_established" for g in c["checklist"])
+                for c in review["cases"]
+            ), "Disclosure investigation gates changed"
         assert all(
             v["eligibility"]["rate_comparison"] == "suppressed"
             for v in data["comparison_eligibility"]["vendors"]
