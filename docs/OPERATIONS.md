@@ -192,8 +192,8 @@ guarantee. No evidence was removed or uploaded for that benchmark. Compression
 reduces new archive growth; it does not reclaim encrypted Git history.
 
 The metadata-only monitor also reports the current compression format and
-uncompressed database size, with an 80% warning and the existing 512 MiB vault
-limit. An old manifest without a database-size field reports that measurement as
+uncompressed database size, with an 80% warning against the selected bounded vault profile
+(default 512 MiB). An old manifest without a database-size field reports that measurement as
 unknown. Restore bounds, private staging and rollback/export compatibility are
 documented in [hosted recovery](HOSTED_SERVICE.md#encrypted-backups-and-recovery).
 
@@ -225,3 +225,8 @@ The writer and monitor share `IMPACT_VAULT_PROFILE`. See [Capacity](CAPACITY.md)
 for measurement, activation and downgrade limits. The public workflow cadence and
 separate activation anchor are documented in [Scheduled reliability](SCHEDULE_RELIABILITY.md).
 Current observations must not be replaced by manually generated success.
+
+The public-health monitor bounds the publication manifest to 2 MB and rejects
+publication timestamps more than five minutes ahead of its clock. It also rejects
+publications aged 36 hours or more. Clock tolerance does not verify publisher dates,
+source retrieval success or uninterrupted service availability.

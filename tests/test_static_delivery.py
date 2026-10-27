@@ -434,3 +434,66 @@ print(json.dumps(result))
         check=True,
     )
     assert json.loads(result.stdout)["static_marker_verified"]
+
+
+@pytest.mark.parametrize(
+    ("elapsed_seconds", "error"),
+    [(0, None), (-240, None), (-360, "clock tolerance"), (35 * 3600, None), (36 * 3600, "stale")],
+)
+def test_monitor_bounds_publication_age_in_both_directions(
+    tmp_path, monkeypatch, elapsed_seconds, error
+):
+    import io
+    from datetime import datetime, timedelta
+
+    import checks.public_health as health
+
+    data = dataset()
+    published = datetime.fromisoformat(data["generated_at"])
+    generation = publish(data, tmp_path)
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return (published + timedelta(seconds=elapsed_seconds)).astimezone(tz)
+
+    class Response(io.BytesIO):
+        status = 200
+
+    monkeypatch.setattr(health, "datetime", Clock)
+    monkeypatch.setattr(
+        health,
+        "urlopen",
+        lambda url, timeout=None: Response(
+            (generation / (url.removeprefix("https://example.test/") or "index.html")).read_bytes()
+        ),
+    )
+    if error:
+        with pytest.raises(AssertionError, match=error):
+            health.check("https://example.test")
+    else:
+        assert health.check("https://example.test")["status"] == "fresh"
+
+
+def test_monitor_reads_manifest_with_a_fixed_byte_budget(monkeypatch):
+    import io
+
+    import checks.public_health as health
+
+    reads = []
+
+    class Response(io.BytesIO):
+        status = 200
+
+        def read(self, size=-1):
+            reads.append(size)
+            return super().read(size)
+
+    monkeypatch.setattr(
+        health,
+        "urlopen",
+        lambda url, timeout=None: Response(b" " * 2_000_001),
+    )
+    with pytest.raises(AssertionError, match="manifest exceeds monitor budget"):
+        health.check("https://example.test")
+    assert reads == [2_000_001]

@@ -16,7 +16,9 @@ def check(origin, expected=None):
     with urlopen(origin, timeout=20) as response:
         assert response.status == 200, "Dashboard unavailable"
     with urlopen(origin + "manifest.json", timeout=20) as response:
-        manifest = json.load(response)
+        manifest_raw = response.read(2_000_001)
+    assert len(manifest_raw) <= 2_000_000, "Publication manifest exceeds monitor budget"
+    manifest = json.loads(manifest_raw)
 
     def verified(path, budget):
         with urlopen(origin + path, timeout=30) as response:
@@ -73,9 +75,9 @@ def check(origin, expected=None):
         rows = [r for descriptor in descriptors.values() for r in part(descriptor)]
         data["records"] = [r["record"] for r in rows if r["kind"] == "record"]
     published = datetime.fromisoformat(data["generated_at"].replace("Z", "+00:00"))
-    assert (datetime.now(timezone.utc) - published).total_seconds() < 36 * 3600, (
-        "Publication is stale"
-    )
+    age_seconds = (datetime.now(timezone.utc) - published).total_seconds()
+    assert age_seconds >= -300, "Publication timestamp exceeds five-minute clock tolerance"
+    assert age_seconds < 36 * 3600, "Publication is stale"
     assert not expected or data["publication"]["id"] == expected, "Old deployment still served"
     assert data["records"], "Empty public dataset"
     if data.get("product_groups"):

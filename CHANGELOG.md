@@ -9,6 +9,7 @@
 - Classify retrieved Fortinet envelopes without explicit CVE/product scope as visible publisher-scope gaps; do not invent CVEs or affected products.
 - Add read-only aggregate vault profiling and record the breakdown with hosted recovery metadata, without exposing source or review contents.
 - Add explicit standard (512 MiB) and large (1 GiB) recovery profiles. Preserve archive, decoder-memory and repository budgets, atomic recovery and all historical evidence.
+- Bound public-monitor manifest reads and reject publication timestamps beyond a five-minute clock tolerance; retain the 36-hour freshness limit.
 - Detect missing successful scheduled runs independently of fresh manual publications, with a separate cadence activation anchor, bounded history timestamps and a declared grace period.
 
 ## 0.4.1 research preview — 2026-10-27
