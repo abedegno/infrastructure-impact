@@ -56,11 +56,15 @@ jobs:
       - name: Retain only encrypted recovery copies
         if: always()
         working-directory: service
+        env:
+          IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
+          PRIVATE_STATE: ${{ github.workspace }}/service/state
         run: |
+          set -euo pipefail
           if test -f state/current.json; then
             git config user.name 'Infrastructure Impact collector'
             git config user.email 'collector@users.noreply.github.com'
-            python3 -c 'import json,pathlib; d=pathlib.Path("state"); m=json.loads((d/"current.json").read_text()); assert m["encryption"]=="fernet-v1"; assert all(p.name=="current.json" or p.name.endswith(".fernet") for p in d.iterdir())'
+            "$GITHUB_WORKSPACE/source/.venv/bin/python" "$GITHUB_WORKSPACE/source/ops/hosted_job.py" --state-dir "$PRIVATE_STATE" --encrypted-state --validate-encrypted-state
             git add state
             if ! git diff --cached --quiet; then
               git commit -m 'Retain collected evidence and recovery copies'

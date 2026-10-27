@@ -10,6 +10,7 @@ from pathlib import Path
 
 BUDGET = 512 * 1024 * 1024
 ARCHIVE_LIMIT = 50 * 1024 * 1024
+VAULT_LIMIT = 512 * 1024 * 1024
 
 
 def summarize(trees, repository_size_kib, manifest, history_limit=100, checked_at=None):
@@ -34,6 +35,12 @@ def summarize(trees, repository_size_kib, manifest, history_limit=100, checked_a
             "Current encrypted backup is missing or manifest encryption is unsupported"
         )
     reported = repository_size_kib * 1024
+    compression = manifest.get("compression", "gzip")
+    if compression not in ("gzip", "xz"):
+        raise ValueError("Unsupported private backup compression in manifest")
+    database_bytes = manifest.get("database_bytes")
+    if database_bytes is not None and (type(database_bytes) is not int or database_bytes < 0):
+        raise ValueError("Invalid uncompressed vault size in manifest")
     findings = []
     if len(current) != 3:
         findings.append("Current tree does not yet contain exactly three encrypted recovery copies")
@@ -47,7 +54,13 @@ def summarize(trees, repository_size_kib, manifest, history_limit=100, checked_a
         )
     if latest["size"] >= ARCHIVE_LIMIT * 0.8:
         findings.append("Latest encrypted archive has reached 80 percent of its per-file limit")
-    required = reported >= BUDGET or latest["size"] >= ARCHIVE_LIMIT
+    if database_bytes is not None and database_bytes >= VAULT_LIMIT * 0.8:
+        findings.append("Uncompressed vault has reached 80 percent of its supported size")
+    required = (
+        reported >= BUDGET
+        or latest["size"] >= ARCHIVE_LIMIT
+        or (database_bytes is not None and database_bytes >= VAULT_LIMIT)
+    )
     if required:
         findings.append(
             "Storage limits require operator review; no history or recovery data was deleted"
@@ -70,6 +83,9 @@ def summarize(trees, repository_size_kib, manifest, history_limit=100, checked_a
             logical_backup_blob_bytes=sum(unique.values()),
         ),
         latest_archive_bytes=latest["size"],
+        compression=compression,
+        latest_database_bytes=database_bytes,
+        uncompressed_vault_limit_bytes=VAULT_LIMIT,
         reported_repository_bytes=reported,
         repository_review_budget_bytes=BUDGET,
         per_archive_limit_bytes=ARCHIVE_LIMIT,

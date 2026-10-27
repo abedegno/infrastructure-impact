@@ -173,8 +173,21 @@ requests bound metadata retrieval. The manifest is read at the inspected commit.
 remain in Git history. The helper reports current-tree bytes, logical historical
 bytes, the latest archive size and storage-budget findings. It never rewrites
 history or deletes recovery data. The collector manifest also records consistent
-database, gzip and encrypted-archive sizes; its retention statement applies to the
+database, compression format, compressed and encrypted-archive sizes; its retention statement applies to the
 current directory, not historical Git objects.
+
+Backups now use XZ before Fernet encryption; legacy gzip manifests remain readable.
+On a consistent local 180,408,320-byte native snapshot measured 27 October 2026,
+gzip produced 15,319,427 bytes in 2.085 seconds and XZ produced 4,523,196 bytes in
+12.533 seconds. This is a dated local measurement, not a hosted-size or latency
+guarantee. No evidence was removed or uploaded for that benchmark. Compression
+reduces new archive growth; it does not reclaim encrypted Git history.
+
+The metadata-only monitor also reports the current compression format and
+uncompressed database size, with an 80% warning and the existing 512 MiB vault
+limit. An old manifest without a database-size field reports that measurement as
+unknown. Restore bounds, private staging and rollback/export compatibility are
+documented in [hosted recovery](HOSTED_SERVICE.md#encrypted-backups-and-recovery).
 
 At the 26 October 20:45 UTC check, the latest archive was 14,424,908 bytes. Three
 current files used 39,925,864 bytes; 16 unique historical backup blobs represented

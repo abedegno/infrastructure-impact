@@ -44,6 +44,39 @@ A failed collection keeps its evidence encrypted and does not replace the public
 site when all source checks failed. Corrupt or missing recovery metadata requires
 manual recovery; it is not silently replaced with an empty vault.
 
+New backups use XZ compression before the same Fernet encryption. The public
+manifest records `compression: "xz"`; older manifests without that field use
+gzip and remain readable. XZ decoding has a 64 MiB memory limit, bounded output
+blocks and the same 512 MiB expanded-vault limit. Truncated, concatenated or
+trailing XZ streams are rejected. Recovery stages and checks a database privately
+before linking it to a new target path; failed recovery leaves no partial target
+and never overwrites an existing database.
+
+Compression/encryption staging stays outside the tracked state tree. The workflow
+authenticates all current ciphertext copies and checks the manifest before its
+Git commit; filenames alone are insufficient. Each collection also restores its
+new backup to a temporary private database and checks integrity before reporting
+`private_recovery: verified`. This exercises the written format on that runner.
+Earlier encrypted history remains
+retained. The three-current-copy policy and key custody are unchanged.
+
+The validation-only CLI is:
+
+```sh
+python ops/hosted_job.py --state-dir state --encrypted-state --validate-encrypted-state
+```
+
+It reads the dedicated key from
+the approved environment, performs no collection or publication, and reports only
+authentication status. The workflow runs it before committing recovery files.
+
+For compatibility export or a deliberate rollback to a pre-XZ collector, use the
+current helper with `--backup-compression gzip`, or call
+`backup(state, database, encryption_key, compression="gzip")` in an approved
+private recovery environment. Older collector code cannot read XZ backups.
+Restore and audit with the current helper first; retain a known-good compatible
+copy before changing the source pin. Never put the key in command arguments.
+
 Restore a prior encrypted archive using the protected key and the hosted restore
 helper, audit it, then test a collection before replacing the current state manifest.
 Never paste the key in an issue, shell argument, log or source file. The repository
