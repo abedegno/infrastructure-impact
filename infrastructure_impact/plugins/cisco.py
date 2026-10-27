@@ -1,17 +1,15 @@
 """Cisco source routing and informational-advisory policy."""
 
 import re
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
-from ..adapters.cisco_campaign import ADVISORY_ID, CVE, parse_campaign, reviewed_route
-from ..adapters.common import HTML, cves
+from ..adapters.cisco_campaign import ADVISORY_ID, CVE, URL, parse_campaign, reviewed_route
+from ..adapters.common import cves
 from ..adapters.legacy_html import html_advisory
 from ..adapters.vendor_cna import registry_route, vendor_cna
-from ..collection.errors import failure_code
-from ..domain import validate_advisory
-from .contracts import FeedBatch, SourceSelection, SourceView, SourceViewIssue, VendorPlugin
-from .shared import is_json, structured
+from .contracts import FeedBatch, VendorPlugin
+from .shared import is_json, resolve_reviewed_advisory, structured
 
 
 def parse(raw, url, vendor):
@@ -24,53 +22,19 @@ def parse(raw, url, vendor):
 
 
 def resolve(raw, url, fetch):
-    if not reviewed_route(url):
-        return url, raw
-    from .registry import default_registry
-
-    primary = default_registry().finalize(parse_campaign(raw, url, "cisco"), url, "cisco")
-    validate_advisory(primary)
-    links = list(
-        dict.fromkeys(
-            urljoin(url, node.attrs.get("href", ""))
-            for node in HTML(raw).root.find({"a"})
-            if "csaf" in node.attrs.get("href", "").lower()
-            and node.attrs.get("href", "").lower().endswith(".json")
-        )
+    selected = resolve_reviewed_advisory(
+        raw,
+        url,
+        fetch,
+        vendor="cisco",
+        advisory_id=ADVISORY_ID,
+        cve_ids=[CVE],
+        primary_url=URL,
+        html_route=reviewed_route,
+        parse_primary=parse_campaign,
+        reason="Reviewed single-CVE HTML retains explicit product rows. The advertised structured representation is retained when available; statement counts do not prove equivalent scope or intent.",
     )
-    if len(links) != 1:
-        raise ValueError("Reviewed Cisco campaign requires one advertised CSAF representation")
-    target = links[0]
-    alternatives, unavailable = (), ()
-    try:
-        other_raw = fetch(target)
-        other = default_registry().finalize(structured(other_raw, target, "cisco"), target, "cisco")
-        validate_advisory(other)
-        if other["advisory_id"] != ADVISORY_ID or other["cves"] != [CVE]:
-            raise ValueError("Cisco advertised CSAF identity or CVE scope changed")
-        alternatives = (
-            SourceView(
-                target,
-                other_raw,
-                other["source_format"],
-                len(other["assessments"]),
-                other["adapter_version"],
-            ),
-        )
-    except Exception as error:
-        unavailable = (SourceViewIssue(target, failure_code(error)),)
-    return SourceSelection(
-        SourceView(
-            url,
-            raw,
-            primary["source_format"],
-            len(primary["assessments"]),
-            primary["adapter_version"],
-        ),
-        alternatives,
-        "Reviewed single-CVE HTML retains explicit product rows. The advertised structured representation is retained when available; statement counts do not prove equivalent scope or intent.",
-        unavailable,
-    )
+    return selected if selected is not None else (url, raw)
 
 
 def canonicalize(url):

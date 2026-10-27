@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Preserve Fortinet regreSSHion version rows and explicit not-impacted/investigation lists; keep disjoint ranges, planned upgrades and fixed-only statements distinct. Apply reviewed Cisco/Fortinet source policies to direct structured entry points to prevent later scope replacement.
+
 - Recover unsupported retained archive captures after parser changes without new HTTP requests, preserving backoff and shared processing budgets; publish distinct replay provenance through additive migration 010.
 
 - Add reviewed older Arista software/model boundaries and a local FragAttacks CVE/model matrix, preserving nested exclusions, DNS/TLS prerequisites, reference-only CVEs and dated lifecycle limits.

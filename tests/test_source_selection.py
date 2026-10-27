@@ -278,3 +278,20 @@ def test_retained_triage_is_read_only_and_does_not_manufacture_health_or_selecti
         assert not db.execute("SELECT 1 FROM source_observations").fetchone()
         assert not db.execute("SELECT 1 FROM revisions").fetchone()
         assert db.execute("SELECT state FROM archive_items").fetchone()[0] == "pending"
+
+
+def test_direct_reviewed_csaf_does_not_replace_the_selected_html_with_narrower_scope(tmp_path):
+    path = tmp_path / "direct-csaf.sqlite"
+    with patch("infrastructure_impact.collection.service.fetch", side_effect=fetcher):
+        assert run(
+            {
+                "vendors": [],
+                "pinned": [{"vendor": "cisco", "url": URL}, {"vendor": "cisco", "url": CSAF_URL}],
+            },
+            db_path=path,
+        ) == (1, 0)
+    with connect(path) as db:
+        record = latest(db)[0]
+        assert record["source_url"] == URL and len(record["assessments"]) == 3
+        assert db.execute("SELECT COUNT(*) FROM revisions").fetchone()[0] == 1
+        assert len(choices(db)) == 2

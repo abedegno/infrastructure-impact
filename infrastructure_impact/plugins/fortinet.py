@@ -2,6 +2,7 @@
 
 import json
 import re
+from urllib.parse import urlsplit
 
 from ..adapters.fortinet import (
     affected_products_advisory,
@@ -9,14 +10,28 @@ from ..adapters.fortinet import (
     fortinet_release,
     investigation_advisory,
 )
+from ..adapters.fortinet_openssh import CVE, ID, openssh_advisory, reviewed_route
 from .archive_listings import fortinet as archive_listing
 from .contracts import VendorPlugin
-from .shared import is_json, structured
+from .shared import is_json, resolve_reviewed_advisory, structured
+
+
+def canonicalize(url):
+    parsed = urlsplit(url)
+    if (
+        parsed.hostname in {"www.fortiguard.com", "fortiguard.fortinet.com"}
+        and parsed.path.rstrip("/") == "/psirt/" + ID
+        and not parsed.query
+    ):
+        return "https://www.fortiguard.com/psirt/" + ID
+    return url
 
 
 def parse(raw, url, vendor):
     if "docs.fortinet.com/" in url:
         return fortinet_release(raw, url, vendor)
+    if not is_json(raw) and reviewed_route(url):
+        return openssh_advisory(raw, url, vendor)
     if not is_json(raw) and url.rstrip("/").endswith("/psirt/FG-IR-23-494"):
         return affected_products_advisory(raw, url, vendor)
     if not is_json(raw):
@@ -25,6 +40,20 @@ def parse(raw, url, vendor):
 
 
 def resolve(raw, url, fetch):
+    selected = resolve_reviewed_advisory(
+        raw,
+        url,
+        fetch,
+        vendor="fortinet",
+        advisory_id=ID,
+        cve_ids=[CVE],
+        primary_url="https://www.fortiguard.com/psirt/" + ID,
+        html_route=reviewed_route,
+        parse_primary=openssh_advisory,
+        reason="Reviewed single-CVE HTML preserves the version table and explicit unaffected/investigation lists. Its structured counterpart remains separate; statement counts do not decide which view is selected or establish equivalent scope.",
+    )
+    if selected is not None:
+        return selected
     if is_json(raw):
         document = json.loads(raw)
         identity = document.get("document", {}).get("tracking", {}).get("id", "")
@@ -49,6 +78,7 @@ def plugin():
         "Fortinet",
         ("fortinet.com", "fortiguard.com"),
         parse,
+        canonicalize=canonicalize,
         resolve=resolve,
         parse_document_history=document_history,
         parse_archive=archive_listing,

@@ -197,3 +197,5 @@ are curated pins; a general HPE discovery feed is still absent. Existing blocked
 SK and Cisco archive/release checks remain separate gaps.
 
 [Reviewed source selection](SOURCE_SELECTION.md) documents `SourceView`, `SourceViewIssue` and `SourceSelection`, including alternate failure handling and the public audit. A structured download must not be assumed to enumerate the same products as an HTML article.
+
+`plugins.shared.resolve_reviewed_advisory` supports explicitly reviewed primary-source policies from HTML and known structured identities. It validates the primary and advertised counterpart, rejects contradictory CVE scope, and returns immutable selection metadata. Keep policies narrow; unknown advisory IDs must retain normal resolution.

@@ -121,3 +121,5 @@ Independent human adjudication of the new product statements remains pending.
 Resolution returns the selected bytes and bounded metadata without persisting a choice. Collection writers retain that metadata after validated ingestion. Retained-source triage works through a read-only vault connection and cannot create successful collection checks, selection history or advisory revisions. A missing retained alternate is reported separately from a failed live retrieval.
 
 An archive writer may record a source selection while reprocessing retained captures. That analysis does not clear an alternate representation's latest live HTTP error or create retrieval observations. See [archive parser recovery](ARCHIVE_PARSER_RECOVERY.md).
+
+A second reviewed policy covers [Fortinet FG-IR-24-258](research/fortinet-openssh-scope-20261027.md), preserving its version table and explicit assessment lists. Both reviewed policies apply to known direct structured entry points as well as HTML, preventing later scope replacement. The shared helper validates identities and retains alternatives; it never chooses a representation merely because it has more statements.
