@@ -6,11 +6,13 @@ priorities, not delivery commitments or claims of complete vendor coverage.
 ## Implemented foundation
 
 - Eight bundled vendor plugins and external Python entry-point discovery.
-- Schema v2 with semantic validation, provenance and source revision history.
+- Advisory schema v2 and component-reference schema v1, with semantic and finite-JSON validation, provenance and source revision history.
 - Coverage-aware cohort comparisons and disclosure research review workflows.
 - Immutable publication, read-only API, dashboard, Docker/Compose and backup tooling.
 - Offline synthetic regression tests and installed-wheel extension checks.
-- Resumable historical document queues, advertised pagination and explicit coverage progress; Aruba CSAF index enabled first.
+- Resumable historical queues for Aruba, Arista, Palo Alto and Fortinet, with advertised pagination, explicit coverage progress and bounded offline parser recovery.
+- Offline normalization previews and partial-failure reports that preserve capture times and distinguish parser reinterpretation from publisher changes.
+- Encrypted draft-asset recovery with authenticated readback and preserved legacy copies, plus separately monitored public publication.
 
 ## Coverage and deployment expansion
 
@@ -18,11 +20,18 @@ The source now includes a coverage catalogue, a 24-CVE benchmark, declared prima
 
 ## Evidence-quality expansion — 26 October 2026
 
-Versioned product-role filtering, a 16-assertion source-led spot check across all eight
+Versioned product-role filtering, source-led spot checks across all eight
 vendors, blind review packets and publisher documentation histories are implemented.
 Three disclosure investigations include earlier-advisory counter-evidence and
 explicit unresolved availability/access gaps. Independent human adjudication,
 portfolio denominators and verified fix timing remain outstanding.
+
+The frozen OpenSSH service study now enrolls 21 reference CVEs across six selected
+firewall families, producing 126 cells with explicit unknowns and source scope.
+Its rates and rankings remain suppressed. Reviewed component references and
+appliance-specific release statements retain patch, platform and role limits.
+Multi-row Check Point SK advisories preserve each explicit CVE/product association;
+the common feed writer rejects duplicate advisory identities before its first write.
 
 ## Next priorities
 
@@ -31,8 +40,8 @@ portfolio denominators and verified fix timing remain outstanding.
 - Add vendor parser regression cases from reviewed layouts, with redistributable
   synthetic fixtures and explicit unresolved states.
 - Validate independent release availability and product/CVE linkage for timing leads.
-- Run a maintained public service with monitoring, retention and recovery practice.
-- Establish a reviewed dataset redistribution policy and versioned releases.
+- Complete the scheduled-service observation window, independently exercise operator recovery and review capacity as the retained vault grows.
+- Continue per-source data-redistribution review before broadening published datasets; source releases and evidence publications have separate identities.
 
 ## Capabilities requiring separate design
 

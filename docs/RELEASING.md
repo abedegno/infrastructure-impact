@@ -94,6 +94,10 @@ Check the resulting public manifest, source failures, recovery readback receipt 
 monitor report. The hosted runner collects its own public sources; do not seed it
 with an existing private native vault.
 
+When a stricter monitor requires a newly deployed asset, stage that transition:
+publish the asset with compatible collector code, verify the public output, then
+activate the new monitor revision. Keep the runtime pin deliberate during rollout.
+
 For an explicitly needed normalization refresh, follow
 [Normalization maintenance](NORMALIZATION_MAINTENANCE.md), inspect its partial
 failures and interpretation changes, and reset `IMPACT_REPARSE_LIMIT` to `0` after

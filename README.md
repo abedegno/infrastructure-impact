@@ -48,7 +48,7 @@ Log4j and Linux. Custom CVE cohorts are supported.
 
 [Product grouping](docs/PRODUCT_GROUPS.md) · [Extraction validation](docs/EXTRACTION_VALIDATION.md) · [Disclosure pilot](docs/research/disclosure-pilot-20261026.md)
 
-**[Open the public dashboard](https://abedegno.github.io/infrastructure-impact/)** · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
+**[Open the public dashboard](https://abedegno.github.io/infrastructure-impact/)** · [Source releases](https://github.com/abedegno/infrastructure-impact/releases) · [Coverage catalogue](docs/COVERAGE.md) · [Benchmark methodology](docs/BENCHMARK.md)
 
 The [OpenSSH service study](docs/COMPONENT_STUDIES.md) uses a frozen CVE cohort
 across six selected firewall families. Unknown cells remain unknown; rates and
