@@ -86,7 +86,7 @@ def resolve_document(db, url, vendor, *, fetcher=None):
         url, raw = resolved
         if not allowed(url, vendor):
             raise ValueError("Resolved source outside reviewed vendor routes")
-    if raw.lstrip().startswith(b"{"):
+    if raw.lstrip().startswith((b"{", b"%PDF")):
         return url, raw
     for link in HTML(raw).root.find({"a"}):
         href = link.attrs.get("href", "")

@@ -42,8 +42,11 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
   exposes comparison protocols and source provenance for each common-CVE cell.
 
 Bundled vendor plugins cover **Cisco, HPE Aruba Networking, Arista, Palo Alto
-Networks, Juniper, Check Point, Fortinet and other HPE products**. Juniper also verifies vendor-authored CNA records; HPE coverage includes curated iLO and ProLiant bulletins. These remain bounded sources, not whole-portfolio coverage. Each plugin has
-specific source/layout limits; this is not a complete inventory of those vendors.
+Networks, Juniper, Check Point, Fortinet, other HPE products and F5**. F5 starts
+with two reviewed PHP/OpenSSH article PDFs; it has no automatic feed or archive
+coverage. Juniper also verifies vendor-authored CNA records; HPE coverage includes
+curated iLO and ProLiant bulletins. These remain bounded sources, not whole-portfolio
+coverage. Each plugin has specific source/layout limits; this is not a complete inventory of those vendors.
 The benchmark spans multiple components, including PHP, OpenSSL, OpenSSH, curl,
 Log4j and Linux. Custom CVE cohorts are supported.
 

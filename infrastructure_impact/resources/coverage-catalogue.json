@@ -120,6 +120,19 @@
         "This profile is a curated sample, not HPE-wide coverage.",
         "Reported firmware dates are not independently verified public availability."
       ]
+    },
+    "f5": {
+      "product_families": [
+        "Selected BIG-IP / BIG-IP Next product, branch and service statements in two reviewed PHP/OpenSSH advisory PDFs",
+        "Other F5, F5OS and NGINX products explicitly marked not vulnerable in those tables"
+      ],
+      "history_scope": "Two curated public article PDFs; no automatic RSS discovery or historical enumeration",
+      "known_gaps": [
+        "Changed evaluated-product lists, descriptions, impact, status tables or footnotes require review and are rejected by their scope fingerprints.",
+        "The evaluated-products list does not establish affectedness. All branch labels retain supported-lifecycle limits, rather than certifying every historical release.",
+        "HTML and PDF publisher date claims may differ. The PDF source is recorded separately; no historical availability or representation sequence is inferred.",
+        "F5 is outside the original frozen eight-vendor extraction-review sample. Independent human adjudication remains pending."
+      ]
     }
   }
 }

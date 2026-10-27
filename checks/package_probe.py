@@ -40,7 +40,7 @@ def main():
     )
     assert observation["returned_components"] == 1 and observation["inventory_verified"] is False
     registry = default_registry()
-    assert "acme" in registry.names()
+    assert "acme" in registry.names() and "f5" in registry.names()
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
@@ -119,7 +119,7 @@ def main():
     db = connect(":memory:")
     ingest(db, raw, url, lambda *_: document, "acme")
     data = state(db, ["CVE-2025-12345"])
-    assert len(data["vendors"]) == 9
+    assert set(data["vendors"]) == set(registry.names())
     assert any(
         row["vendor"] == "acme" and row["affected_cves"] == 1
         for row in data["comparison"]["vendors"]
@@ -228,7 +228,7 @@ def main():
                 "entry_point_plugin": True,
                 "external_archive_hook": True,
                 "external_component_hook": True,
-                "vendors": 9,
+                "vendors": len(registry.names()),
                 "schema_validated": True,
                 "database_and_publication": True,
                 "public_api": True,

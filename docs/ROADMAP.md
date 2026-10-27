@@ -5,7 +5,7 @@ priorities, not delivery commitments or claims of complete vendor coverage.
 
 ## Implemented foundation
 
-- Eight bundled vendor plugins and external Python entry-point discovery.
+- Nine bundled vendor plugins and external Python entry-point discovery.
 - Advisory schema v2 and component-reference schema v1, with semantic and finite-JSON validation, provenance and source revision history.
 - Coverage-aware cohort comparisons and disclosure research review workflows.
 - Immutable publication, read-only API, dashboard, Docker/Compose and backup tooling.

@@ -13,5 +13,6 @@ def builtin_plugins():
         "checkpoint",
         "fortinet",
         "hpe",
+        "f5",
     ):
         yield import_module(f"{__package__}.{name}").plugin()

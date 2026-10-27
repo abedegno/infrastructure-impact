@@ -9,10 +9,11 @@ Exact cohort source bindings keep Panorama, PAN-OS and unrelated products separa
 
 ## Compare retrieval environments
 
-The manual **Reviewed source access** GitHub workflow tests nine exact, reviewed
+The manual **Reviewed source access** GitHub workflow tests eleven exact, reviewed
 public URLs from an Ubuntu runner: Cisco UCS Rack HTML and PDF, the existing NX-OS
 HTML release notes, and the Aruba EdgeConnect Orchestrator remediation PDF on the
-current HPE documentation host. It also checks Cisco provider/index and SBOM
+current HPE documentation host. It includes the two reviewed F5 article PDFs,
+and also checks Cisco provider/index and SBOM
 instructions, the existing Aruba index, and the HPE HFP release-listing lead.
 [Source-role review](research/official-source-alternatives-20261027.md) records
 which gaps these can and cannot fill. It requires no evidence-vault key and never opens
@@ -61,3 +62,21 @@ check product, build, service and date scope, implement a bounded parser with
 layout-change rejection, then add a scheduled source. Keep earlier failures and
 first capture time intact. Never upload an operator's existing private captures
 as a substitute for runner collection.
+
+
+## F5 parser check on the runner
+
+The workflow installs Poppler and adds `--verify-f5` to the same bounded probe.
+This additionally normalizes only the two reviewed F5 PDFs in memory, validates
+the common advisory contract, and retains fixed counts and a parser fingerprint.
+It opens no evidence database and retains no document bodies or normalized claim
+values. An inaccessible PDF or rejected scope fails this optional check; the
+metadata artifact is uploaded even on failure. Other sources still report access
+observations without claiming parser validation.
+
+```sh
+python -m checks.source_access --verify-f5 --output /tmp/source-access.json
+```
+
+The [dated F5 review](research/f5-advisories-20261027.md) separates these PDF routes
+from the rejected generated RSS link and the browser article representation.

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add a ninth vendor plugin for two exact reviewed F5 PHP/OpenSSH article PDFs. Preserve shared-CVE tables, BIG-IP / BIG-IP Next distinctions, authentication, lifecycle limits and literal fix-column states; reject changed semantic scope and retain earlier evidence.
+- Validate F5 normalization on the Ubuntu source-access runner without a vault or response-body artifact. Treat PDF responses as documents, without scanning embedded bytes for HTML links.
+- Keep F5 outside the frozen extraction-review sample. Document the advertised RSS failure and differing HTML/PDF date claims without inferring concealment or feed completeness.
+
 ## 0.5.0 research preview — 2026-10-27
 
 - Add private bounded SPDX/CycloneDX JSON component observations with a common schema, literal versions, exact locators, scope and package-hash provenance. Open no vault, fetch no external references and create no CVE or image-inventory claims.

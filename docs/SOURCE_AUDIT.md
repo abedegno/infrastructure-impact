@@ -120,3 +120,13 @@ last collector pass and do not establish complete source coverage.
 `reprocessed` identifies offline parsing of retained bytes, not a new successful
 HTTP retrieval. Reviewed source choices remain below the table and are not
 changed by its filters.
+
+
+## Curated F5 article PDFs
+
+The F5 plugin accepts two exact reviewed anonymous PDF routes for PHP and
+regreSSHion. It has no feed or archive enumerator. The evaluated-product list,
+description, impact, tables and footnotes are fingerprint-bound; changed scope
+remains a failed check with earlier evidence retained. This source is outside the
+original frozen extraction-review sample. See the
+[dated F5 source review](research/f5-advisories-20261027.md).

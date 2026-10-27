@@ -241,3 +241,21 @@ Juniper's reviewed [Apstra PDF scopes](research/juniper-apstra-openssh-20261027.
 use the same bounded issue for advisory normalization and the component-reference
 hook. Separate document editions retain separate identities. Neighbouring issue
 fixes and document-title versions cannot broaden a CVE or component statement.
+
+
+## F5 reviewed PDF plugin
+
+`f5` uses the ordinary document-parser interface and shared advisory-v2 contract;
+it adds no database or frontend special case. Its policy permits only two
+reviewed article/PDF identities on `my.f5.com`. The configured source is each
+article's advertised public PDF, not its browser application shell. There is no
+RSS, archive, firmware-version evaluator, component inventory or release-history
+hook. The public source-access workflow checks the same exact PDF routes and
+normalizes them in memory, retaining only counts and a parser fingerprint, without
+a vault key or response-body retention.
+
+Reviewed table rows are bound to the complete evaluated-product list and semantic
+article block by separate fingerprints. A source change fails for review even if
+an old product/version still appears. Publisher date changes remain day-precision
+claims. This deliberate narrowness is documented in the
+[F5 source review](research/f5-advisories-20261027.md); it is not general F5 support.

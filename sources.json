@@ -359,6 +359,14 @@
     {
       "vendor": "fortinet",
       "url": "https://www.fortiguard.com/psirt/FG-IR-23-261"
+    },
+    {
+      "vendor": "f5",
+      "url": "https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000163821"
+    },
+    {
+      "vendor": "f5",
+      "url": "https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000140222"
     }
   ],
   "release_documents": [

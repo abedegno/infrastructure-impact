@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from adapters import auto,checkpoint_records
 from cohort import coverage,COHORT
-from intel import connect,ingest,latest
+from intel import connect,ingest,latest,VENDORS
 from review import signals
 from sync import discovery
 
@@ -183,7 +183,7 @@ class ExpandedSources(unittest.TestCase):
         db=connect(':memory:');coverage(db,[],[])
         db.execute('INSERT INTO coverage_checks VALUES(?,?,?,?,?,?,?)',('checkpoint','CVE-2024-6387','2026-10-25','https://example.test','current feed only','no_match',None))
         pairs=coverage(db,[],['CVE-2024-6387'])
-        self.assertEqual(len(pairs),8)
+        self.assertEqual(len(pairs),len(VENDORS))
         cp=next(p for p in pairs if p['vendor']=='checkpoint')
         self.assertEqual(cp['state'],'index_checked_no_match')
         self.assertFalse(cp['advisory_sources'])
