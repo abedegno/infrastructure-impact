@@ -197,7 +197,9 @@ with source gaps and explicit suppression of unsupported rates and timing. See
 [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md).
 
 Static browser delivery now loads selected CVE evidence in verified parts; the full
-archive remains available for explicit downloads. See [delivery architecture](docs/STATIC_DELIVERY.md).
+archive remains available as JSON and compressed JSON for explicit downloads. Both
+downloads contain the whole publication, independent of the selected CVE cohort.
+See [delivery architecture](docs/STATIC_DELIVERY.md).
 
 The [Vendor gaps view](docs/VENDOR_GAPS.md) separates collection, archive and source-review gaps for each vendor.
 

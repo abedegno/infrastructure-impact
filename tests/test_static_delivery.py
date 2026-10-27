@@ -1,6 +1,9 @@
 """Cohort delivery parity and failure isolation using original synthetic records."""
 
+import gzip
+import hashlib
 import json
+import re
 import subprocess
 
 import pytest
@@ -138,6 +141,30 @@ def test_default_cohort_and_explicit_all_archive(tmp_path):
     assert len(full["selected"]["records"]) == 3
 
 
+def test_compressed_archive_is_exact_public_projection_and_reproducible(tmp_path):
+    d = dataset()
+    d["records"][0]["notes"] = [{"text": "PRIVATE-NOTE-MUST-NOT-PUBLISH"}]
+    generation = publish(d, tmp_path)
+    raw = (generation / "snapshot.json").read_bytes()
+    compressed = (generation / "snapshot.json.gz").read_bytes()
+    assert gzip.decompress(compressed) == raw
+    assert b"PRIVATE-NOTE-MUST-NOT-PUBLISH" not in raw
+    assert len(compressed) < len(raw)
+    manifest = json.loads((generation / "manifest.json").read_text())
+    assert manifest["sha256"]["snapshot.json.gz"] == hashlib.sha256(compressed).hexdigest()
+    from infrastructure_impact.application.publication import write_bundle
+
+    write_bundle(tmp_path / "repeat", json.loads(raw))
+    assert (tmp_path / "repeat/snapshot.json.gz").read_bytes() == compressed
+    code, content_type, body = Application(tmp_path).route(
+        dict(REQUEST_METHOD="GET", PATH_INFO="/snapshot.json.gz")
+    )
+    assert (code, content_type, body) == (200, "application/gzip", compressed)
+    html = (generation / "index.html").read_text()
+    assert not re.search(r'id="archive-export"\s+hidden\b', html)
+    assert 'href="/snapshot.json.gz"' in html
+
+
 @pytest.mark.parametrize("fault", ["digest", "missing", "generation"])
 def test_partial_or_changed_parts_never_produce_a_successful_empty_cohort(tmp_path, fault):
     generation = publish(dataset(), tmp_path)
@@ -221,6 +248,41 @@ def test_monitor_checks_cohort_parts_without_full_archive_download(tmp_path, mon
     assert result["status"] == "fresh" and result["advisories"] == 3
     assert result["delivery"] == "cohort_parts_v1" and not result["full_archive_download_verified"]
     assert result["checked_default_bytes"] < 8_000_000
+    assert result["compressed_archive_verified"]
+    assert (
+        result["checked_compressed_archive_bytes"]
+        == (generation / "snapshot.json.gz").stat().st_size
+    )
+
+
+@pytest.mark.parametrize("fault", ["digest", "contents", "truncated"])
+def test_monitor_rejects_invalid_compressed_archive(tmp_path, monkeypatch, fault):
+    import io
+
+    import checks.public_health as health
+
+    generation = publish(dataset(), tmp_path)
+    path = generation / "snapshot.json.gz"
+    path.write_bytes(
+        gzip.compress(b"wrong snapshot") if fault == "contents" else path.read_bytes()[:-5]
+    )
+    if fault != "digest":
+        manifest = json.loads((generation / "manifest.json").read_text())
+        manifest["sha256"]["snapshot.json.gz"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        (generation / "manifest.json").write_text(json.dumps(manifest))
+
+    class Response(io.BytesIO):
+        status = 200
+
+    monkeypatch.setattr(
+        health,
+        "urlopen",
+        lambda url, timeout=None: Response(
+            (generation / (url.removeprefix("https://example.test/") or "index.html")).read_bytes()
+        ),
+    )
+    with pytest.raises((AssertionError, EOFError)):
+        health.check("https://example.test")
 
 
 @pytest.mark.parametrize("fault", [False, True])

@@ -4,6 +4,14 @@ The full `snapshot.json` remains available for exports, integrations and the Pyt
 reader. The static browser uses `data/index.json` and content-addressed evidence
 parts. The normalized advisory schema and comparison policy are unchanged.
 
+Published bundles also contain `snapshot.json.gz`, linked as **Full archive
+JSON.gz**. It decompresses to the exact UTF-8 bytes of `snapshot.json`, including
+all published records regardless of the selected browser cohort. Compression
+happens after public projection; private evidence and review notes are excluded.
+An empty gzip filename and fixed timestamp make identical public bytes produce
+identical compressed bytes. Both files have SHA-256 entries in `manifest.json`.
+The Python reader serves the download as `application/gzip`.
+
 ## Publication contract
 
 `schemas/static-index-v1.json` defines the index: publication ID, generated time,
@@ -47,8 +55,13 @@ has a different archive size and is measured separately.
 
 The public monitor verifies the index, bootstrap, default cohort parts and linked
 quality reports against the manifest, with a 20 MB default-part budget. Its receipt
-states `full_archive_download_verified: false`; it does not claim to have downloaded
-all historical parts. Collection-side schema audits and publication manifests
+states `full_archive_download_verified: false` for cohort delivery. When a compressed
+archive is listed in the manifest, it also verifies that file's fingerprint and
+that its decompressed SHA-256 equals the full JSON fingerprint. This extra check
+has separate 8 MB compressed and 128 MB expanded budgets and receipt fields
+`compressed_archive_verified` and `checked_compressed_archive_bytes`; it does not
+inflate the default browser-transfer measurement or claim per-record privacy review.
+Older publications without the gzip file remain supported. Collection-side schema audits and publication manifests
 continue to cover generated output. Reports remain dated and vendor rates and
 fix-timing metrics remain suppressed.
 

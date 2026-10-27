@@ -1,7 +1,9 @@
 """Monitor a static public publication without access to its private evidence vault."""
 
 import argparse
+import gzip
 import hashlib
+import io
 import json
 import re
 from datetime import datetime, timezone
@@ -110,6 +112,18 @@ def check(origin, expected=None):
     assert all(not r.get("notes") and not r.get("metrics") for r in data["records"]), (
         "Private projection failed"
     )
+    compressed_bytes = 0
+    compressed_verified = False
+    if "snapshot.json.gz" in manifest["sha256"]:
+        compressed = verified("snapshot.json.gz", 8_000_000)
+        compressed_bytes = len(compressed)
+        with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as archive:
+            expanded = archive.read(128_000_001)
+        assert len(expanded) <= 128_000_000, "Expanded archive exceeds monitor budget"
+        assert hashlib.sha256(expanded).hexdigest() == manifest["sha256"]["snapshot.json"], (
+            "Compressed archive differs from full JSON"
+        )
+        compressed_verified = True
     return {
         "status": "fresh",
         "publication": data["publication"]["id"],
@@ -119,6 +133,8 @@ def check(origin, expected=None):
         "checked_default_bytes": checked_bytes,
         "checked_parts": checked_parts,
         "full_archive_download_verified": index is None,
+        "compressed_archive_verified": compressed_verified,
+        "checked_compressed_archive_bytes": compressed_bytes,
         "source_failures": (data.get("collector", {}).get("last_run") or {}).get("failures"),
         "benchmark_passed": data.get("benchmark", {}).get("passed"),
         "benchmark_total": data.get("benchmark", {}).get("total"),

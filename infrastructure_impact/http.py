@@ -290,6 +290,7 @@ class Application:
             "/snapshot.js",
             "/delivery.js",
             "/snapshot.json",
+            "/snapshot.json.gz",
             "/catalogue.json",
             "/benchmark.json",
             "/scorecards.json",
@@ -343,7 +344,9 @@ class Application:
             return 404, "application/json", b'{"error":"Not found"}'
         return (
             200,
-            mimetypes.guess_type(target)[0] or "application/octet-stream",
+            "application/gzip"
+            if path == "/snapshot.json.gz"
+            else mimetypes.guess_type(target)[0] or "application/octet-stream",
             target.read_bytes(),
         )
 

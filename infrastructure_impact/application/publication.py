@@ -1,5 +1,7 @@
 """Validated, immutable public generations with an atomic current pointer."""
 
+import gzip
+import io
 import json
 import os
 import re
@@ -118,7 +120,13 @@ def write_bundle(destination, data):
     validate_groups(data["product_groups"])
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
-    (destination / "snapshot.json").write_text(json.dumps(data, separators=(",", ":")) + "\n")
+    snapshot = (json.dumps(data, separators=(",", ":")) + "\n").encode("utf-8")
+    (destination / "snapshot.json").write_bytes(snapshot)
+    compressed = io.BytesIO()
+    # Empty filename and fixed time make the same public bytes reproducible.
+    with gzip.GzipFile(fileobj=compressed, mode="wb", filename="", mtime=0) as archive:
+        archive.write(snapshot)
+    (destination / "snapshot.json.gz").write_bytes(compressed.getvalue())
     (destination / "impact.csv").write_text(csv_export(data))
     (destination / "release-assets.json").write_text(
         json.dumps(data["research"].get("release_assets", []))
@@ -191,6 +199,7 @@ def write_bundle(destination, data):
         (destination / asset).write_bytes(raw)
         html = html.replace('"/' + name + '"', '"/' + asset + '"')
     html = html.replace("LOCAL RESEARCH PILOT", "EVIDENCE PUBLICATION")
+    html = re.sub(r'(id="archive-export")\s+hidden\b', r"\1", html)
     notice = '<div class="notice">Evidence publication generated ' + data["generated_at"][:10]
     notice += ". Review source dates and coverage. Collection status is shown under Collection health.</div>"
     base_path = os.environ.get("IMPACT_BASE_PATH", "/")
