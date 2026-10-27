@@ -36,6 +36,19 @@ SOURCES = (
         "orchestrator-remediation",
         "https://arubanetworking.hpe.com/techdocs/sdwan-PDFs/docs/advisories/orch_resolution_to_cve-2024-6387_latest.pdf",
     ),
+    ("cisco", "csaf-provider", "https://www.cisco.com/.well-known/csaf/provider-metadata.json"),
+    ("cisco", "csaf-index", "https://www.cisco.com/.well-known/csaf/index.txt"),
+    ("aruba", "csaf-index", "https://csaf.arubanetworking.hpe.com/index.txt"),
+    (
+        "cisco",
+        "sbom-instructions",
+        "https://sec.cloudapps.cisco.com/security/center/resources/sbom-form-instructions",
+    ),
+    (
+        "hpe",
+        "hfp-release-listing",
+        "https://support.hpe.com/connect/s/softwaredetails?collectionId=MTX-575acc2c0e334c3a&language=fr&softwareId=MTX_c65e615117944819bcdc6219e0",
+    ),
 )
 MAX_BYTES = 3_000_000
 

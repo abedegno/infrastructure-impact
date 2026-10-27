@@ -9,10 +9,13 @@ Exact cohort source bindings keep Panorama, PAN-OS and unrelated products separa
 
 ## Compare retrieval environments
 
-The manual **Reviewed source access** GitHub workflow tests four exact, reviewed
+The manual **Reviewed source access** GitHub workflow tests nine exact, reviewed
 public URLs from an Ubuntu runner: Cisco UCS Rack HTML and PDF, the existing NX-OS
 HTML release notes, and the Aruba EdgeConnect Orchestrator remediation PDF on the
-current HPE documentation host. It requires no evidence-vault key and never opens
+current HPE documentation host. It also checks Cisco provider/index and SBOM
+instructions, the existing Aruba index, and the HPE HFP release-listing lead.
+[Source-role review](research/official-source-alternatives-20261027.md) records
+which gaps these can and cannot fill. It requires no evidence-vault key and never opens
 or restores the collector's database. Only bounded response metadata is retained.
 
 ```sh
