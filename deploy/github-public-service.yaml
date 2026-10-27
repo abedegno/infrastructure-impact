@@ -55,6 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
           REPARSE_LIMIT: ${{ vars.IMPACT_REPARSE_LIMIT || '0' }}
+          REPARSE_VENDOR: ${{ vars.IMPACT_REPARSE_VENDOR || '' }}
           VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
         run: |
           set -euo pipefail
@@ -67,6 +68,9 @@ jobs:
           [[ "$REPARSE_LIMIT" =~ ^[0-9]+$ ]]
           if test "$REPARSE_LIMIT" -gt 0; then
             recovery_args+=(--reparse-limit "$REPARSE_LIMIT")
+          fi
+          if test -n "$REPARSE_VENDOR"; then
+            recovery_args+=(--reparse-vendor "$REPARSE_VENDOR")
           fi
           uv run --no-dev python ops/hosted_job.py --state-dir "$PRIVATE_STATE" --output "$PUBLIC_OUTPUT" --base-path "$BASE_PATH" --encrypted-state "${recovery_args[@]}"
       - name: Retain only encrypted recovery copies

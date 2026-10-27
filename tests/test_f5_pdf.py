@@ -238,9 +238,9 @@ def test_changed_pdf_bytes_with_identical_claims_create_no_disclosure_signal():
 
 def test_date_only_publisher_claims_cannot_create_numeric_timing_offsets():
     from infrastructure_impact.application.comparison import advisory_delays
-    from infrastructure_impact.application.eligibility import timestamp
+    from infrastructure_impact.application.eligibility import eligibility, timestamp
 
-    doc = normalize(PHP)
+    doc = normalize(SSH)
     assert doc["published_at"] == "2025-01-01" and doc["updated_at"] == "2025-01-02"
     assert timestamp(doc["published_at"]) is None
     upstream = {
@@ -248,3 +248,20 @@ def test_date_only_publisher_claims_cannot_create_numeric_timing_offsets():
         for cid in doc["cves"]
     }
     assert advisory_delays([doc], upstream) == []
+    doc["sha256"] = "a" * 64
+    for reference in upstream.values():
+        reference["sha256"] = "b" * 64
+    report = eligibility(
+        dict(
+            generated_at="2025-06-01T12:00:00Z",
+            vendors={"f5": "F5"},
+            records=[doc],
+            all_cves=doc["cves"],
+            upstream=upstream,
+        )
+    )
+    assert all(case["publication_observations"] == [] for case in report["vendors"][0]["cases"])
+    assert all(
+        "vendor_timestamp_not_precise" in case["timing_reasons"]
+        for case in report["vendors"][0]["cases"]
+    )

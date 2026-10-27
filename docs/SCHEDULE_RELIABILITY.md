@@ -48,3 +48,17 @@ After activation, inspect actual schedule events and their source commit,
 publication, source failures and recovery receipt. Keep the seven-day review
 pending until real elapsed time and sufficiently complete run history permit it.
 A green manual smoke test cannot substitute for that observation.
+
+
+## Shared scheduler boundary
+
+Collection and its six-hour monitor both use GitHub Actions. A missing monitor
+cannot emit its own failure, so this is not an independent alerting service. The
+read-only checks can also be run from another authorized environment without a
+vault key. Inspect `schedule` events explicitly; repository activity and fresh
+manual deployments cannot substitute for them.
+
+The dashboard marks stale publications when loaded or rendered, but that requires
+someone to view it. An external alert service or another host would need its own
+operator setup and observation. No independent notification service is claimed
+or silently enabled by this deployment.

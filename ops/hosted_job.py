@@ -365,6 +365,10 @@ def main():
     parser.add_argument("--recovery-storage", choices=("git", "github-draft"), default="git")
     parser.add_argument("--recovery-repository")
     parser.add_argument("--reparse-limit", type=int, default=0)
+    parser.add_argument(
+        "--reparse-vendor",
+        help="Limit maintenance to one installed vendor; requires a positive budget",
+    )
     parser.add_argument("--vault-profile", choices=tuple(VAULT_PROFILES), default=DEFAULT_PROFILE)
     parser.add_argument(
         "--schedule-utc", default="08:37", help="Declared daily schedule, HH:MM UTC"
@@ -377,6 +381,15 @@ def main():
         parser.error("Reparse limit must be between 0 and 10000")
     if args.reparse_limit and (args.validate_encrypted_state or args.restore_only is not None):
         parser.error("Normalization maintenance requires collection mode")
+    if args.reparse_vendor is not None:
+        if not args.reparse_limit:
+            parser.error("Vendor-scoped maintenance requires a positive reparse limit")
+        from infrastructure_impact.plugins.registry import default_registry
+
+        try:
+            default_registry().get(args.reparse_vendor)
+        except ValueError:
+            parser.error("Reparse vendor must name an installed plugin")
     encryption_key = os.environ.get("IMPACT_STATE_KEY") if args.encrypted_state else None
     if args.encrypted_state and not encryption_key:
         parser.error("Encrypted public-runner state requires IMPACT_STATE_KEY")
@@ -441,7 +454,7 @@ def main():
             if args.reparse_limit:
                 from infrastructure_impact.application.replay import replay_report
 
-                maintenance = replay_report(limit=args.reparse_limit)
+                maintenance = replay_report(limit=args.reparse_limit, vendor=args.reparse_vendor)
                 print(json.dumps({"normalization_maintenance": maintenance}))
                 if maintenance["outcome"] == "skipped_writer_lock":
                     raise RuntimeError(

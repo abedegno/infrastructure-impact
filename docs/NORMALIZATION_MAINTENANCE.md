@@ -71,16 +71,23 @@ they are not relabeled as fresh counterpart analysis without parsing those bytes
 ## Hosted maintenance
 
 `ops/hosted_job.py --reparse-limit N` optionally runs bounded maintenance after
-recovery and before ordinary collection. It prints the partial/full report and
+recovery and before ordinary collection. Add `--reparse-vendor VENDOR` to restrict
+selection to one installed vendor before applying that attempt budget. An unknown
+vendor, or a vendor scope without a positive budget, fails before recovery state
+is opened. Omitting the scope preserves the existing all-vendor selection.
+It prints the partial/full report and
 includes it in the final recovery receipt. Independently valid records can proceed
 to collection and audit while unresolved records remain retained for review.
 
 The public workflow appends that flag only when repository variable
-`IMPACT_REPARSE_LIMIT` is positive; its default is `0`. First pin a CI-verified
+`IMPACT_REPARSE_LIMIT` is positive; its default is `0`. Optional variable
+`IMPACT_REPARSE_VENDOR` adds the vendor scope. Both workflow copies pass quoted
+array arguments; an unbudgeted vendor scope is rejected rather than ignored.
+First pin a CI-verified
 source commit that supports the option, then set a controlled budget and dispatch
 collection. Inspect the report, benchmark, audit, recovery and public output.
-Reset the variable to `0` after the maintenance pass unless recurring replay is
-deliberate. The reusable workflow template has the same gate.
+Reset the limit to `0` and clear the vendor variable after the maintenance pass
+unless recurring replay is deliberate. The reusable workflow template has the same gate.
 
 Hosted maintenance operates only on the runner's existing public-source vault.
 Do not upload a private native vault or review worksheet to perform it. Keep the

@@ -445,3 +445,79 @@ def test_shared_feed_cache_preserves_identity_ambiguity_and_capture_boundaries()
             feed_cache=cache,
         )
     assert len(calls) == 3
+
+
+def test_hosted_vendor_scope_preserves_unselected_vendor_and_capture_times(
+    tmp_path, monkeypatch, capsys
+):
+    from cryptography.fernet import Fernet
+
+    import infrastructure_impact.worker as worker
+    from ops import hosted_job as hosted
+
+    seed("A", vendor="aruba")
+    seed("J", vendor="juniper")
+    key = Fernet.generate_key()
+    state = tmp_path / "state"
+    hosted.backup(state, tmp_path / "evidence.sqlite3", key)
+
+    def collect():
+        with closing(connect(read_only=True)) as db:
+            records = {r["vendor"]: r for r in latest(db)}
+        assert records["aruba"]["adapter_version"] == default_registry().fingerprint("aruba")
+        assert records["juniper"]["adapter_version"] == "synthetic-earlier-code"
+        assert all(r["source_observed_at"] == "2020-01-01T00:00:00Z" for r in records.values())
+        return dict(outcome="partial", failures=0)
+
+    monkeypatch.setattr(worker, "collect_once", collect)
+    monkeypatch.setenv("IMPACT_STATE_KEY", key.decode())
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "hosted_job.py",
+            "--state-dir",
+            str(state),
+            "--output",
+            str(tmp_path / "public"),
+            "--encrypted-state",
+            "--reparse-limit",
+            "1",
+            "--reparse-vendor",
+            "aruba",
+        ],
+    )
+    hosted.main()
+    reports = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    report = reports[0]["normalization_maintenance"]
+    assert report["vendor"] == "aruba" and report["selected_records"] == 1
+    assert report["reparsed_revisions"] == 1 and report["network_requests"] == 0
+    assert report["retrieval_observations_added"] == 0
+
+
+@pytest.mark.parametrize("scope,budget", [("aruba", "0"), ("uninstalled", "1"), ("", "1")])
+def test_invalid_hosted_vendor_scope_fails_before_recovery(tmp_path, monkeypatch, scope, budget):
+    from ops import hosted_job as hosted
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Invalid maintenance scope must not open recovery state")
+
+    monkeypatch.setattr(hosted, "state_backend", forbidden)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "hosted_job.py",
+            "--state-dir",
+            str(tmp_path / "state"),
+            "--output",
+            str(tmp_path / "public"),
+            "--reparse-limit",
+            budget,
+            "--reparse-vendor",
+            scope,
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        hosted.main()
+    assert error.value.code == 2 and not (tmp_path / "state").exists()
