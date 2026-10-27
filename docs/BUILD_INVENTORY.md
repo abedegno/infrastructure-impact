@@ -3,8 +3,9 @@
 A firmware release reference is not an inventory. A vendor-neutral, offline
 proposal workflow now records the evidence needed to investigate an exact build.
 It uses installed vendor plugins for official-source policy and accepts any
-component and service role. It does not parse arbitrary SPDX/CycloneDX files,
-extract firmware, connect to devices or infer vulnerable versions.
+component and service role. A separate [offline SBOM reader](SBOM_OBSERVATIONS.md) can prepare literal
+SPDX/CycloneDX JSON observations. Neither workflow performs full standards
+validation, extracts firmware, connects to devices or infers vulnerable versions.
 
 The two-vendor **Product cohorts** pilot provides a blank JSON proposal for each
 selected build. The download contains only research target labels and unknown

@@ -1,0 +1,397 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "source_sha256",
+    "source_bytes",
+    "format",
+    "spec_version",
+    "observed_components",
+    "returned_components",
+    "full_standards_validation_performed",
+    "inventory_verified",
+    "cve_assessments_created",
+    "metric_eligibility_changed",
+    "evidence_published",
+    "method"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "private_sbom_observations",
+        "private_sbom_summary"
+      ]
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "source_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 15000000
+    },
+    "format": {
+      "enum": [
+        "CycloneDX",
+        "SPDX"
+      ]
+    },
+    "spec_version": {
+      "enum": [
+        "1.5",
+        "1.6",
+        "1.7",
+        "SPDX-2.2",
+        "SPDX-2.3"
+      ]
+    },
+    "document_created_at_claim": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "\\S"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "selected_component_name": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "\\S"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_components": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20000
+    },
+    "returned_components": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20000
+    },
+    "components": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "locator",
+          "parent_locator",
+          "declared_reference",
+          "role",
+          "name",
+          "literal_version",
+          "declared_version_range",
+          "declared_type",
+          "declared_group",
+          "declared_scope",
+          "declared_is_external",
+          "purls",
+          "cpes",
+          "package_hashes",
+          "hash_algorithms_not_normalized"
+        ],
+        "properties": {
+          "locator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "pattern": "\\S"
+          },
+          "parent_locator": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "enum": [
+              "listed_component",
+              "declared_document_subject"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024,
+            "pattern": "\\S"
+          },
+          "literal_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_version_range": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_group": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_is_external": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "purls": {
+            "type": "array",
+            "maxItems": 20000,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "\\S"
+            }
+          },
+          "cpes": {
+            "type": "array",
+            "maxItems": 20000,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "\\S"
+            }
+          },
+          "package_hashes": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "algorithm",
+                "value",
+                "locator"
+              ],
+              "properties": {
+                "algorithm": {
+                  "enum": [
+                    "sha256",
+                    "sha512"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^(?:[a-f0-9]{64}|[a-f0-9]{128})$"
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          },
+          "hash_algorithms_not_normalized": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20000
+          }
+        }
+      }
+    },
+    "full_standards_validation_performed": {
+      "const": false
+    },
+    "inventory_verified": {
+      "const": false
+    },
+    "cve_assessments_created": {
+      "const": false
+    },
+    "metric_eligibility_changed": {
+      "const": false
+    },
+    "evidence_published": {
+      "const": false
+    },
+    "method": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "\\S"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:sbom-observations:1",
+  "title": "Private literal SBOM observations and summaries, version 1",
+  "description": "Subset field observations from a caller-supplied artifact. Not a full format validator, firmware inventory, CVE assessment, signature or redistribution-rights verification.",
+  "oneOf": [
+    {
+      "properties": {
+        "kind": {
+          "const": "private_sbom_observations"
+        }
+      },
+      "required": [
+        "components",
+        "selected_component_name",
+        "document_created_at_claim"
+      ]
+    },
+    {
+      "properties": {
+        "kind": {
+          "const": "private_sbom_summary"
+        }
+      },
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "components"
+            ]
+          },
+          {
+            "required": [
+              "selected_component_name"
+            ]
+          },
+          {
+            "required": [
+              "document_created_at_claim"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "CycloneDX"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec_version": {
+            "enum": [
+              "1.5",
+              "1.6",
+              "1.7"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "format": {
+            "const": "SPDX"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec_version": {
+            "enum": [
+              "SPDX-2.2",
+              "SPDX-2.3"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

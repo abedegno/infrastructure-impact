@@ -183,6 +183,7 @@ only after those dependencies have been cached.
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
 | [Security](SECURITY.md)                                  | Reporting vulnerabilities in this project                         |
+| [SBOM observations](docs/SBOM_OBSERVATIONS.md) | Private SPDX/CycloneDX field normalization and provenance |
 | [Build inventory](docs/BUILD_INVENTORY.md) | Private evidence proposals, byte checks and review boundaries |
 | [Product cohorts](docs/PRODUCT_COHORTS.md) | Product/build scope and denominator gaps |
 | [Source access](docs/SOURCE_ACCESS.md) | Runner checks for reviewed source alternatives |

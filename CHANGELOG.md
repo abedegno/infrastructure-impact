@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add private bounded SPDX/CycloneDX JSON component observations with a common schema, literal versions, exact locators, scope and package-hash provenance. Open no vault, fetch no external references and create no CVE or image-inventory claims.
+- Share strict duplicate-key and finite-number JSON input checks across inventory proposals and SBOM inspection, including numeric overflow rejection.
+
 - Label the dashboard schedule as configured timing and link GitHub Pages deployments to actual scheduled-run history; fresh manual publication is not evidence that scheduling works.
 
 - Preserve two reviewed Fortinet single-CVE range lists, separate affected/unaffected branches and authentication/service prerequisites. Keep the contradictory FortiOS 6.4 solution text unresolved, without certifying either upgrade candidate.

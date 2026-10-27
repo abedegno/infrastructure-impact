@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from ..settings import PACKAGE
 from ..source_policy import allowed
 from .eligibility import timestamp
+from .strict_json import loads as strict_loads
 
 FIELDS = (
     "firmware_reference",
@@ -58,25 +59,8 @@ def validator():
 
 
 def loads(raw):
-    """Reject ambiguous duplicate keys and non-finite JSON before schema checks."""
-    if len(raw) > MAX_PROPOSAL_BYTES:
-        raise ValueError("Inventory proposal exceeds 250 KB")
-
-    def pairs(items):
-        result = {}
-        for key, value in items:
-            if key in result:
-                raise ValueError("Duplicate JSON key in inventory proposal")
-            result[key] = value
-        return result
-
-    def invalid(_):
-        raise ValueError("Inventory proposal requires finite JSON")
-
-    try:
-        return json.loads(raw, object_pairs_hook=pairs, parse_constant=invalid)
-    except (RecursionError, UnicodeError, json.JSONDecodeError):
-        raise ValueError("Invalid inventory proposal JSON") from None
+    """Reject ambiguous keys and non-finite numbers before proposal validation."""
+    return strict_loads(raw, budget=MAX_PROPOSAL_BYTES, label="Inventory proposal")
 
 
 def validate(value, now=None):

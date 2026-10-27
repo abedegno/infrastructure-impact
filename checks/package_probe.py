@@ -27,6 +27,18 @@ def main():
     assert vault_limit("large") == 1024 * 1024 * 1024
     with connect(":memory:") as profiled:
         assert storage_profile(profiled)["schema_version"] == 1
+    from infrastructure_impact.application.sbom import inspect as inspect_sbom
+
+    observation = inspect_sbom(
+        json.dumps(
+            dict(
+                bomFormat="CycloneDX",
+                specVersion="1.7",
+                components=[dict(name="synthetic-library", version="1.0")],
+            )
+        ).encode()
+    )
+    assert observation["returned_components"] == 1 and observation["inventory_verified"] is False
     registry = default_registry()
     assert "acme" in registry.names()
     assert registry.get("aruba").parse_release_history is not None

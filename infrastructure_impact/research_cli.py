@@ -37,6 +37,15 @@ def main(argv=None):
     )
     inventory_audit.add_argument("file", type=Path)
     inventory_audit.add_argument("--evidence-dir", type=Path)
+    sbom = sub.add_parser(
+        "sbom-inspect",
+        help="Inspect literal SBOM package observations privately; no CVE or image inference",
+    )
+    sbom.add_argument("file", type=Path)
+    sbom.add_argument("--component", help="Exact case-sensitive name; no alias or fuzzy matching")
+    sbom.add_argument(
+        "--summary", action="store_true", help="Exclude component names and values from the output"
+    )
     note = sub.add_parser("release-note")
     note.add_argument("file", type=Path)
     note.add_argument("--url", required=True)
@@ -71,6 +80,19 @@ def main(argv=None):
     )
     correction.add_argument("file", type=Path)
     args = parser.parse_args(argv)
+    if args.command == "sbom-inspect":
+        from .application.sbom import inspect, read_local, summary
+
+        try:
+            result = inspect(read_local(args.file), component=args.component)
+        except OSError:
+            parser.error("SBOM input must be a readable regular local file without a symbolic link")
+        except ValueError as error:
+            parser.error(str(error))
+        if args.summary:
+            result = summary(result)
+        print(json.dumps(result, indent=2))
+        return
     if args.command in ("inventory-template", "inventory-audit"):
         from .application.build_inventory import MAX_PROPOSAL_BYTES, audit, loads, template
 
