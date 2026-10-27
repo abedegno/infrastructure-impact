@@ -400,8 +400,11 @@ def test_local_observations_require_offset_qualified_time(populated_contract):
         ("unsupplied", "2024-07-08"),
     ],
 )
-def test_publisher_precision_cannot_mislabel_original_value(populated_contract, precision, value):
-    claim = populated_contract["dossiers"][0]["chronology"]["publisher_claims"][0]
+@pytest.mark.parametrize("collection", ["publisher_claims", "documentation_claims"])
+def test_publisher_precision_cannot_mislabel_original_value(
+    populated_contract, collection, precision, value
+):
+    claim = populated_contract["dossiers"][0]["chronology"][collection][0]
     claim.update(precision=precision, value=value)
     with pytest.raises(ValidationError):
         validate_report(populated_contract)
@@ -428,4 +431,23 @@ def test_qualified_remediation_preserves_scoped_publisher_branch(populated_contr
         "remediations"
     ][0]
     remediation["source_scope"] = "explicit_product_or_group"
+    validate_report(populated_contract)
+
+
+@pytest.mark.parametrize("collection", ["publisher_claims", "documentation_claims"])
+@pytest.mark.parametrize(
+    "precision,value",
+    [
+        ("date", "2024-07-08"),
+        ("instant", "2024-07-08T00:00:00Z"),
+        ("local_datetime", "2024-07-08T00:00:00"),
+        ("unparsed", "Original publisher date label"),
+        ("unsupplied", None),
+    ],
+)
+def test_both_claim_collections_retain_original_precision(
+    populated_contract, collection, precision, value
+):
+    claim = populated_contract["dossiers"][0]["chronology"][collection][0]
+    claim.update(precision=precision, value=value)
     validate_report(populated_contract)

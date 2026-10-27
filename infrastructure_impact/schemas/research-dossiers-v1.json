@@ -755,88 +755,7 @@
       },
       "allOf": [
         {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "date"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "format": "date"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "instant"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "local_datetime"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "format": "local-date-time"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "unparsed"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "unsupplied"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "null"
-              }
-            }
-          }
+          "$ref": "#/$defs/claim_precision_value"
         }
       ]
     },
@@ -899,88 +818,7 @@
       },
       "allOf": [
         {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "date"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "format": "date"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "instant"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "format": "date-time"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "local_datetime"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "format": "local-date-time"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "unparsed"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "precision": {
-                "const": "unsupplied"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "value": {
-                "type": "null"
-              }
-            }
-          }
+          "$ref": "#/$defs/claim_precision_value"
         }
       ]
     },
@@ -1495,6 +1333,94 @@
           }
         }
       }
+    },
+    "claim_precision_value": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "date"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "instant"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "local_datetime"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "format": "local-date-time"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "unparsed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "precision": {
+                "const": "unsupplied"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }
