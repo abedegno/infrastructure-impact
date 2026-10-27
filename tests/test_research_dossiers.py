@@ -838,3 +838,57 @@ def test_unqualified_capture_is_rejected_without_inventing_timezone(seed):
     seed["records"][0]["source_observed_at"] = "2026-10-27T00:00:00"
     with pytest.raises(ValidationError):
         research_dossiers(seed)
+
+
+@pytest.mark.parametrize("record_index", [0, 1], ids=["version-expression", "product-context"])
+def test_same_locator_cannot_transfer_another_build_branch(seed, record_index):
+    record = seed["records"][record_index]
+    exact = record["assessments"][0]
+    other = deepcopy(exact)
+    other["product_id"] = "unrelated-build-branch"
+    if record_index == 0:
+        other["versions"] = [{"expression": "4.32.3F"}]
+    else:
+        other["product_context"] = [["product_version", "10.13.1040"]]
+    record["assessments"].append(other)
+    seed["product_cohorts"]["build_pilot"] = build_pilot(seed)
+    firmware = seed["product_cohorts"]["build_pilot"]["targets"][record_index]["fields"][0]
+    assert len(firmware["evidence"]) == 1
+    statements = _openssh(seed)["comparison_targets"][record_index]["statements"]
+    assert [claim["product_id"] for claim in statements] == [exact["product_id"]]
+    assert statements[0]["versions"] == exact["versions"]
+    assert statements[0]["product_context"] == exact["product_context"]
+
+
+def test_partially_missing_aggregate_provenance_cannot_retain_unsupported_text(seed):
+    retained = seed["records"][0]
+    retained["assessments"][0]["exposure"].append(
+        dict(
+            category="publisher_platform_scope",
+            details="Retained platform A",
+            source_locator="Platform section",
+        )
+    )
+    missing = deepcopy(retained)
+    missing["sha256"] = "f" * 64
+    missing["assessments"][0]["exposure"][-1]["details"] = "Missing source platform B"
+    seed["records"].append(missing)
+    seed["product_cohorts"]["build_pilot"] = build_pilot(seed)
+    pilot_fields = seed["product_cohorts"]["build_pilot"]["targets"][0]["fields"]
+    aggregate = next(f for f in pilot_fields if f["field"] == "platform_applicability_context")
+    assert aggregate["value"] == "Retained platform A Missing source platform B"
+    assert len(aggregate["evidence"]) == 2
+    seed["records"].remove(missing)
+    dossier = _openssh(seed)
+    target = dossier["comparison_targets"][0]
+    field = next(f for f in target["fields"] if f["field"] == "platform_applicability_context")
+    assert field == dict(
+        field="platform_applicability_context", state="unknown", value=None, evidence=[]
+    )
+    assert "Missing source platform B" not in json.dumps(dossier)
+    assert len(target["statements"]) == 1
+    assert any(
+        g["owner_id"] == target["target_id"]
+        and g["field_or_question"] == "platform_applicability_context"
+        for g in dossier["evidence_gaps"]
+    )

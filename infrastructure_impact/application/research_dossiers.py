@@ -10,6 +10,7 @@ from jsonschema import Draft202012Validator
 
 from ..domain import validator as advisory_validator
 from ..settings import PACKAGE
+from .build_pilot import matches_target_reference
 
 LIMITS = {
     "inventory_verified": False,
@@ -197,11 +198,8 @@ class _Evidence:
 def _resolve(data, target, reference, cve_id):
     for record in data.get("records", []):
         if (
-            record["vendor"] != target["vendor"]
-            or record["source_url"] != target["source_url"]
-            or record["source_url"] != reference["source_url"]
+            record["source_url"] != reference["source_url"]
             or record["sha256"] != reference["source_sha256"]
-            or record.get("document_status") == "draft"
         ):
             continue
         for claim in record.get("assessments", []):
@@ -211,7 +209,7 @@ def _resolve(data, target, reference, cve_id):
             ]
             if (
                 claim["cve_id"] == cve_id
-                and claim["product"] == target["product_literal"]
+                and matches_target_reference(record, claim, target)
                 and reference.get("locator") in locators
             ):
                 yield record, claim
@@ -300,7 +298,13 @@ def _target(data, target, pilot, cve_id, evidence, gaps):
                                 ),
                             )
                         )
-        known = field["state"] == "publisher_statement" and bool(references)
+        # Aggregated text can contain a distinct contribution from each pilot
+        # reference. Never retain it when any contributing reference is missing.
+        known = (
+            field["state"] == "publisher_statement"
+            and bool(references)
+            and len(references) == len(field["evidence"])
+        )
         fields.append(
             dict(
                 field=field["field"],
