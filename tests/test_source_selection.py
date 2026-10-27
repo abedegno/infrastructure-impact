@@ -17,7 +17,7 @@ from infrastructure_impact.adapters.cisco_campaign import (
 )
 from infrastructure_impact.application.publication import public_projection
 from infrastructure_impact.application.query import state
-from infrastructure_impact.collection.service import resolve_document, run
+from infrastructure_impact.collection.service import resolve_document, retain_resolution, run
 from infrastructure_impact.plugins import SourceSelection, SourceView, SourceViewIssue
 from infrastructure_impact.storage.repository import connect, health, latest
 from infrastructure_impact.storage.source_selections import latest as choices
@@ -62,6 +62,12 @@ def fetcher(db, target, vendor):
     return {URL: html(), CSAF_URL: csaf()}[target]
 
 
+def collected_resolution(db, url, vendor, *, fetcher):
+    resolution = resolve_document(db, url, vendor, fetcher=fetcher)
+    retain_resolution(db, vendor, url, resolution)
+    return resolution
+
+
 def test_campaign_has_one_cve_explicit_products_and_source_dated_remediation_limits():
     document = parse_campaign(html(), URL)
     assert document["cves"] == [CVE]
@@ -99,7 +105,7 @@ def test_changed_identity_columns_cve_scope_categories_or_nested_lists_fail_clos
 
 def test_resolver_preserves_both_sources_and_retains_choice_without_merging_claims():
     with connect(":memory:") as db:
-        selected_url, selected_raw = resolve_document(db, URL, "cisco", fetcher=fetcher)
+        selected_url, selected_raw = collected_resolution(db, URL, "cisco", fetcher=fetcher)
         assert selected_url == URL and selected_raw == html()
         report = choices(db)[0]
         assert [(v["selected"], v["normalized_statements"]) for v in report["views"]] == [
@@ -109,7 +115,7 @@ def test_resolver_preserves_both_sources_and_retains_choice_without_merging_clai
         assert all(v["adapter_version"] for v in report["views"])
         assert not report["unavailable"]
         assert db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0] == 2
-        resolve_document(db, URL, "cisco", fetcher=fetcher)
+        collected_resolution(db, URL, "cisco", fetcher=fetcher)
         assert db.execute("SELECT COUNT(*) FROM source_selections").fetchone()[0] == 2
         assert db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0] == 2
         assert not db.execute("SELECT 1 FROM revisions").fetchone()
@@ -127,14 +133,14 @@ def test_failed_or_identity_mismatched_alternate_stays_visible_and_recovery_clea
             return csaf().replace(ADVISORY_ID.encode(), b"unrelated-advisory")
 
         with connect(path) as db:
-            url, body = resolve_document(db, URL, "cisco", fetcher=retrieve)
+            url, body = collected_resolution(db, URL, "cisco", fetcher=retrieve)
             assert url == URL and body == html()
             selected = choices(db)[0]
             assert len(selected["views"]) == 1 and len(selected["unavailable"]) == 1
             assert "PRIVATE_DIAGNOSTIC_SENTINEL" not in json.dumps(selected)
             assert next(r for r in health(db) if r["source_url"] == CSAF_URL)["outcome"] == "error"
     with connect(path) as db:
-        resolve_document(db, URL, "cisco", fetcher=fetcher)
+        collected_resolution(db, URL, "cisco", fetcher=fetcher)
         assert choices(db)[0]["unavailable"] == []
         assert next(r for r in health(db) if r["source_url"] == CSAF_URL)["outcome"] == "ok"
 
@@ -202,7 +208,7 @@ def test_alternate_failures_count_as_partial_collection_without_losing_valid_htm
     with connect(path) as db:
         assert len(latest(db)[0]["assessments"]) == 3
         assert next(row for row in health(db) if row["source_url"] == URL)["outcome"] == "partial"
-        resolved = resolve_document(db, URL, "cisco", fetcher=retrieve)
+        resolved = collected_resolution(db, URL, "cisco", fetcher=retrieve)
         assert resolved == (URL, html()) and isinstance(resolved, tuple)
         assert resolved.source_failures == 1
 
@@ -234,3 +240,41 @@ def test_integrity_audit_detects_a_selected_capture_outside_the_view_graph(tmp_p
         db.execute("UPDATE source_selections SET selected_evidence_id=?", (other["id"],))
     with pytest.raises(ValueError, match="missing"):
         audit()
+
+
+@pytest.mark.parametrize("retain_alternate", [False, True])
+def test_retained_triage_is_read_only_and_does_not_manufacture_health_or_selections(
+    tmp_path, retain_alternate
+):
+    from infrastructure_impact.collection.archive import enqueue
+    from infrastructure_impact.collection.triage import review_batch
+    from infrastructure_impact.storage.repository import evidence, now
+
+    path = tmp_path / "triage.sqlite"
+    with connect(path) as db:
+        evidence(db, html(), URL)
+        if retain_alternate:
+            evidence(db, csaf(), CSAF_URL)
+        cursor = db.execute(
+            "INSERT INTO archive_sources(vendor,source_url,kind,started_at) VALUES(?,?,?,?)",
+            ("cisco", URL, "index", now()),
+        )
+        enqueue(db, cursor.lastrowid, "document", URL)
+    with connect(path, read_only=True) as db:
+        with patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("Offline triage must not request network access"),
+        ):
+            report = review_batch(db, vendor="cisco", limit=1)
+        item = report["documents"][0]
+        assert item["outcome"] == "normalized" and item["assessments"] == 3
+        assert item["alternate_issues"] == (
+            []
+            if retain_alternate
+            else [{"source_url": CSAF_URL, "error_code": "retained_source_missing"}]
+        )
+        assert not choices(db)
+        assert not db.execute("SELECT 1 FROM collection_runs").fetchone()
+        assert not db.execute("SELECT 1 FROM source_observations").fetchone()
+        assert not db.execute("SELECT 1 FROM revisions").fetchone()
+        assert db.execute("SELECT state FROM archive_items").fetchone()[0] == "pending"

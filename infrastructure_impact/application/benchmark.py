@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 from ..adapters.compat import auto
 from ..collection.config import load_config
 from ..collection.errors import failure_code
-from ..collection.service import allowed, fetch, resolve_document
+from ..collection.service import allowed, fetch, resolve_document, retain_resolution
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import collection_result, connect, evidence, ingest, latest, now
@@ -141,9 +141,19 @@ def run(aruba_limit=200):
     # Explicit curated historical cases supplement current feed windows.
     for vendor, url in list(targets)[:60]:
         try:
-            resolved, raw = resolve_document(db, url, vendor)
+            resolution = resolve_document(db, url, vendor)
+            resolved, raw = resolution
+            alternate_failures = getattr(resolution, "source_failures", 0)
+            failures += alternate_failures
             imported += ingest(db, raw, resolved, auto, vendor)
-            collection_result(db, vendor, url, "ok", "Benchmark reference document imported")
+            retain_resolution(db, vendor, url, resolution)
+            collection_result(
+                db,
+                vendor,
+                url,
+                "partial" if alternate_failures else "ok",
+                "Benchmark reference document imported",
+            )
             print("IMPORTED", vendor, resolved, flush=True)
         except Exception as e:
             failures += 1

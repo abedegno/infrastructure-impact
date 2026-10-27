@@ -53,6 +53,8 @@ class SourceHTTPError(HTTPError):
 
 
 def failure_code(error):
+    if isinstance(error, SourceNotRetained):
+        return "retained_source_missing"
     if isinstance(error, AccessVerificationRequired):
         return "access_verification_required"
     if isinstance(error, HTTPError):
@@ -76,3 +78,7 @@ def failure_code(error):
     if isinstance(error, (ValueError, KeyError)):
         return "unsupported_or_invalid_document"
     return "collection_error"
+
+
+class SourceNotRetained(ValueError):
+    """An offline resolution dependency has no retained source bytes."""

@@ -50,9 +50,11 @@ def index_checks(db, raw, feed):
 class ResolvedSource(tuple):
     """Two-item tuple compatible with older callers, plus alternate failure count."""
 
-    def __new__(cls, url, raw, source_failures=0):
+    def __new__(cls, url, raw, source_failures=0, *, selection=None, requested_url=None):
         value = super().__new__(cls, (url, raw))
         value.source_failures = source_failures
+        value.selection = selection
+        value.requested_url = requested_url
         return value
 
 
@@ -67,11 +69,17 @@ def resolve_document(db, url, vendor, *, fetcher=None):
     if plugin.resolve:
         resolved = plugin.resolve(raw, url, lambda target: retrieve(db, target, vendor))
         if isinstance(resolved, SourceSelection):
-            from ..storage.source_selections import retain
-
-            retain(db, vendor, url, resolved)
+            if any(
+                not allowed(view.url, vendor)
+                for view in (resolved.selected,) + resolved.alternatives + resolved.unavailable
+            ):
+                raise ValueError("Resolved selection outside reviewed vendor routes")
             return ResolvedSource(
-                resolved.selected.url, resolved.selected.raw, len(resolved.unavailable)
+                resolved.selected.url,
+                resolved.selected.raw,
+                len(resolved.unavailable),
+                selection=resolved,
+                requested_url=url,
             )
         url, raw = resolved
         if not allowed(url, vendor):
@@ -95,6 +103,19 @@ def resolve_document(db, url, vendor, *, fetcher=None):
                     pass
             return target, structured
     return url, raw
+
+
+def retain_resolution(db, vendor, requested_url, resolved):
+    """Persist selection metadata only in a writer processing validated records.
+
+    Retained-source triage can resolve through a read-only connection without
+    manufacturing new collection checks or source-choice history.
+    """
+    selection = getattr(resolved, "selection", None)
+    if selection is not None:
+        from ..storage.source_selections import retain
+
+        retain(db, vendor, getattr(resolved, "requested_url", None) or requested_url, selection)
 
 
 def run(config, limit=None, db_path=None, upstream_limit=0):
@@ -178,6 +199,7 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                     )
                     continue
                 changed = ingest(db, raw, url, lambda *args: parsed, target["vendor"])
+                retain_resolution(db, target["vendor"], target["url"], resolved)
                 from .archive import acknowledge_retained
 
                 acknowledge_retained(

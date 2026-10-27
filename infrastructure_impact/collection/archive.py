@@ -18,7 +18,7 @@ from ..storage.repository import collection_result, connect, evidence, ingest, n
 from .config import validate_config
 from .discovery import inventory
 from .errors import failure_code
-from .service import resolve_document
+from .service import resolve_document, retain_resolution
 from .transport import allowed, fetch
 
 MAX_ATTEMPTS = 5
@@ -132,6 +132,8 @@ def document(db, source, item):
         parsed = None
     ignored = parsed is None or default_registry().get(source["vendor"]).non_cve_notice(parsed)
     changed = False if ignored else ingest(db, raw, url, lambda *_: parsed, source["vendor"])
+    if parsed is not None:
+        retain_resolution(db, source["vendor"], item["url"], resolved)
     with db:
         ev = evidence(db, raw, url)
         db.execute(

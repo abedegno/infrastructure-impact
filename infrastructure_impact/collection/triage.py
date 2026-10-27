@@ -9,7 +9,7 @@ from ..adapters.common import HTML
 from ..plugins.contracts import SourceNotApplicable
 from ..plugins.registry import default_registry
 from ..storage.repository import now
-from .errors import check_access_response, failure_code
+from .errors import SourceNotRetained, check_access_response, failure_code
 from .service import resolve_document
 from .transport import allowed
 
@@ -73,12 +73,20 @@ def review_batch(db, *, vendor=None, limit=32, retrieve=False):
             outcome="not_retained",
             error_code=None,
             diagnostic=None,
+            alternate_issues=[],
         )
         try:
             if retrieve:
-                resolved, raw = resolve_document(db, url, name)
+                resolution = resolve_document(db, url, name)
             else:
-                resolved, raw = resolve_document(db, url, name, fetcher=retained_fetch)
+                resolution = resolve_document(db, url, name, fetcher=retained_fetch)
+            resolved, raw = resolution
+            selection = getattr(resolution, "selection", None)
+            if selection is not None:
+                row["alternate_issues"] = [
+                    {"source_url": issue.url, "error_code": issue.error_code}
+                    for issue in selection.unavailable
+                ]
             row.update(
                 resolved_url=resolved,
                 source_sha256=hashlib.sha256(raw).hexdigest(),
@@ -138,10 +146,6 @@ def review_batch(db, *, vendor=None, limit=32, retrieve=False):
         documents=rows,
         method="Bounded pending/error archive sample. Optional retrieval retains source bytes in the private vault. No ingestion, queue state changes, independent review or applicability inference from layout similarity. Normalized means current schema-validated parser output, not manual certification.",
     )
-
-
-class SourceNotRetained(ValueError):
-    """A dependency of the normal resolution path has no retained bytes."""
 
 
 def retained_fetch(db, url, vendor):
