@@ -212,3 +212,15 @@ def test_cli_component_validation_uses_the_same_contract(tmp_path, capsys):
     path.write_text(json.dumps(document))
     with pytest.raises(NormalizationError):
         main(["validate", str(path), "--schema", "component-inventory"])
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_direct_component_validation_rejects_nonfinite_extensions(value):
+    from infrastructure_impact.domain import validate_component_inventory
+
+    document = reference()
+    document["schema_version"] = 1
+    document["extensions"]["PRIVATE_EXTENSION_SENTINEL"] = value
+    with pytest.raises(NormalizationError, match="finite numbers") as error:
+        validate_component_inventory(document)
+    assert "PRIVATE_EXTENSION_SENTINEL" not in str(error.value)

@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Reject non-finite numeric values at advisory/component validation and publication boundaries, preserving the last valid public generation if malformed source or report data is supplied.
+
 - Show retained publisher family context beside exact product labels, flag shared labels without changing filter identities, and give comparison counts room to remain readable.
 
 - Add bounded offline normalization maintenance with a read-only preview, shared writer exclusion, per-record failure reports, stable-identity guards and opt-in hosted replay; preserve source capture times and distinguish parser reinterpretations from publisher changes.

@@ -4,6 +4,12 @@
 2020-12 contract. It is served at `/schemas/advisory-v2.json`.
 `impact validate advisory.json` performs local validation. Runtime checks also
 enforce CVE scope, source/vendor identity and unique CVE/product identities.
+Both advisory and component-reference validation require JSON values with finite
+numbers, including open publisher fields and private extension objects. Numeric
+`NaN` and infinities are rejected rather than being emitted into a publication
+that browser JSON readers cannot load. Literal publisher strings remain intact.
+Publication also checks the complete input before replacing its current pointer,
+so a malformed report leaves the last valid generation available.
 
 ## Record fields
 

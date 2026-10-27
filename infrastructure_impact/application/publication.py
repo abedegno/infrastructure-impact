@@ -32,7 +32,7 @@ from .release_assets import validate_asset
 
 def public_projection(data, public_release_urls=()):
     """The publication boundary never copies raw evidence or private review notes."""
-    data = json.loads(json.dumps(data))
+    data = json.loads(json.dumps(data, allow_nan=False))
     for record in data["records"]:
         validate_advisory(record)
         record["notes"] = []

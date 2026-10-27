@@ -14,7 +14,9 @@ MAX_INDEX_BYTES = 2_000_000
 
 
 def encode(value):
-    return (json.dumps(value, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
+    return (
+        json.dumps(value, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n"
+    ).encode()
 
 
 def product_label_context(records, vendor):

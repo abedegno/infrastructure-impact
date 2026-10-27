@@ -15,6 +15,16 @@ class NormalizationError(ValueError):
     """A source adapter violated a shared normalization contract."""
 
 
+def _validate_json(document, label):
+    # Python's JSON encoder otherwise permits NaN and Infinity, which browser
+    # readers reject. Schema validation alone does not reject these values in
+    # open source fields or extension objects. Never echo private values here.
+    try:
+        json.dumps(document, allow_nan=False)
+    except (TypeError, ValueError, RecursionError) as error:
+        raise NormalizationError(f"{label} must contain JSON values and finite numbers") from error
+
+
 @lru_cache(maxsize=1)
 def validator():
     schema = json.loads(SCHEMA_PATH.read_text())
@@ -43,6 +53,7 @@ def validator():
 
 
 def validate_advisory(document, *, vendor=None, source_url=None):
+    _validate_json(document, "Normalized advisory")
     error = next(validator().iter_errors(document), None)
     if error:
         location = "/" + "/".join(str(part) for part in error.absolute_path)
@@ -75,6 +86,7 @@ def component_inventory_validator():
 
 
 def validate_component_inventory(document):
+    _validate_json(document, "Component reference")
     error = next(component_inventory_validator().iter_errors(document), None)
     if error:
         location = "/" + "/".join(str(part) for part in error.absolute_path)

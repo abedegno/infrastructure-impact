@@ -376,5 +376,75 @@ class StorageAndScheduling(unittest.TestCase):
                     load_config(Path(directory) / "sources.json")
 
 
+class StrictJsonContract(unittest.TestCase):
+    def test_nonfinite_values_are_rejected_in_open_advisory_fields(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            for field in ("remediation", "exposure", "version", "extension"):
+                with self.subTest(value=str(value), field=field):
+                    document = normalized()
+                    claim = document["assessments"][0]
+                    if field == "remediation":
+                        claim["remediations"] = [{"details": "Synthetic", "date": value}]
+                    elif field == "exposure":
+                        claim["exposure"] = [{"PRIVATE_SENTINEL": value}]
+                    elif field == "version":
+                        claim["versions"] = [{"expression": "1.x", "publisher_extra": value}]
+                    else:
+                        document["extensions"] = {"PRIVATE_SENTINEL": value}
+                    with self.assertRaises(NormalizationError) as error:
+                        validate_advisory(document)
+                    self.assertIn("finite numbers", str(error.exception))
+                    self.assertNotIn("PRIVATE_SENTINEL", str(error.exception))
+                    registry = PluginRegistry()
+                    registry.register(VendorPlugin("acme", "Acme", ("acme.example",), structured))
+                    with self.assertRaises(NormalizationError):
+                        registry.finalize(document, URL, "acme")
+
+    def test_malformed_source_is_rejected_before_any_storage_write(self):
+        raw = source()
+        raw["vulnerabilities"][0]["remediations"] = [
+            {"category": "vendor_fix", "details": "Synthetic", "date": float("nan")}
+        ]
+        registry = PluginRegistry()
+        registry.register(VendorPlugin("acme", "Acme", ("acme.example",), structured))
+        with connect(":memory:") as db:
+            with self.assertRaises(NormalizationError):
+                ingest(db, json.dumps(raw), URL, registry.normalize, "acme")
+            self.assertEqual(db.execute("SELECT count(*) FROM evidence").fetchone()[0], 0)
+            self.assertEqual(db.execute("SELECT count(*) FROM revisions").fetchone()[0], 0)
+
+    def test_bad_publication_preserves_last_good_generation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            generation = publish(dataset(), root)
+            for location in ("report", "advisory"):
+                data = dataset()
+                if location == "report":
+                    data["counts"]["PRIVATE_SENTINEL"] = float("inf")
+                else:
+                    data["records"][0]["assessments"][0]["remediations"] = [
+                        {"details": "Synthetic", "date": float("nan")}
+                    ]
+                with self.assertRaises(ValueError):
+                    publish(data, root)
+                self.assertEqual((root / "current").resolve(), generation.resolve())
+                self.assertEqual(len(list((root / "generations").iterdir())), 1)
+
+    def test_cli_uses_the_same_guard_and_preserves_finite_values_and_literal_text(self):
+        from infrastructure_impact.cli import main
+
+        document = normalized()
+        document["extensions"] = {"literal": "NaN / Infinity", "finite": 1.25e100}
+        self.assertIs(validate_advisory(document), document)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "advisory.json"
+            document["assessments"][0]["remediations"] = [
+                {"details": "Synthetic", "date": float("inf")}
+            ]
+            path.write_text(json.dumps(document))
+            with self.assertRaises(NormalizationError):
+                main(["validate", str(path)])
+
+
 if __name__ == "__main__":
     unittest.main()
