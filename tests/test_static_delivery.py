@@ -562,7 +562,23 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
     ]
 
 
-@pytest.mark.parametrize("fault", ["generation", "concealment", "digest", "old_generation"])
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "generation",
+        "concealment",
+        "digest",
+        "old_generation",
+        "marker_object",
+        "marker_array",
+        "marker_false",
+        "marker_null",
+        "report_object",
+        "report_array",
+        "report_false",
+        "report_null",
+    ],
+)
 def test_monitor_checks_additive_dossier_report(tmp_path, monkeypatch, fault):
     import io
 
@@ -578,6 +594,9 @@ def test_monitor_checks_additive_dossier_report(tmp_path, monkeypatch, fault):
         assert report["publication"]["id"] != selected_generation["id"]
     elif fault == "concealment":
         report["limits"]["concealment_established"] = True
+    malformed = {"object": {}, "array": [], "false": False, "null": None}
+    if fault.startswith("report_"):
+        report = malformed[fault.removeprefix("report_")]
     report_raw = json.dumps(report).encode()
     manifest = json.loads((generation / "manifest.json").read_text())
     manifest["sha256"]["research-dossiers.json"] = hashlib.sha256(report_raw).hexdigest()
@@ -596,18 +615,22 @@ def test_monitor_checks_additive_dossier_report(tmp_path, monkeypatch, fault):
             return Response(report_raw + (b" " if fault == "digest" else b""))
         return Response((generation / path).read_bytes())
 
-    if fault == "old_generation":
-        # Build a valid older generation, rather than serving changed bytes under old hashes.
+    if fault == "old_generation" or fault.startswith("marker_"):
+        # Build valid content-addressed parts so the malformed marker reaches dispatch.
         from infrastructure_impact.application.static_delivery import write_static_delivery
 
         data = json.loads((generation / "snapshot.json").read_text())
-        data.pop("research_dossiers")
+        if fault == "old_generation":
+            data.pop("research_dossiers")
+        else:
+            data["research_dossiers"] = malformed[fault.removeprefix("marker_")]
         write_static_delivery(generation, data)
         manifest["sha256"] = {
             path.relative_to(generation).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in generation.rglob("*")
             if path.is_file() and path.name != "manifest.json"
         }
+        manifest["sha256"]["research-dossiers.json"] = hashlib.sha256(report_raw).hexdigest()
         assert original["publication"] == selected_generation
     monkeypatch.setattr(health, "urlopen", get)
     if fault == "old_generation":

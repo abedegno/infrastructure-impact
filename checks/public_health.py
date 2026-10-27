@@ -13,6 +13,9 @@ from urllib.request import urlopen
 
 def validate_dossier_limits(report: dict) -> None:
     """Enforce this increment's public gates without installed application imports."""
+    assert isinstance(report, dict) and isinstance(report.get("limits"), dict), (
+        "Malformed research dossier report"
+    )
     limits = report["limits"]
     for field in (
         "inventory_verified",
@@ -21,9 +24,9 @@ def validate_dossier_limits(report: dict) -> None:
         "earliest_disclosure_established",
         "concealment_established",
     ):
-        assert limits[field] is False, f"Research dossier limit changed: {field}"
+        assert limits.get(field) is False, f"Research dossier limit changed: {field}"
     for field in ("vendor_rate", "verified_fix_delay_days"):
-        assert limits[field] is None, f"Research dossier limit changed: {field}"
+        assert field in limits and limits[field] is None, f"Research dossier limit changed: {field}"
 
 
 def check(origin, expected=None):
@@ -95,6 +98,12 @@ def check(origin, expected=None):
     assert age_seconds < 36 * 3600, "Publication is stale"
     assert not expected or data["publication"]["id"] == expected, "Old deployment still served"
     assert data["records"], "Empty public dataset"
+    if "research_dossiers" in data:
+        validate_dossier_limits(data["research_dossiers"])
+        report = json.loads(verified("research-dossiers.json", 15_000_000))
+        validate_dossier_limits(report)
+        assert report.get("publication") == data["publication"], "Mixed report generations"
+        assert report.get("generated_at") == data["generated_at"], "Mixed report dates"
     if data.get("product_groups"):
         report_keys = (
             "product_groups",
@@ -113,7 +122,6 @@ def check(origin, expected=None):
                 "component_studies",
                 "product_cohorts",
                 "disclosure_review",
-                "research_dossiers",
             )
             if data.get(k)
         ):
@@ -127,8 +135,6 @@ def check(origin, expected=None):
             report = json.loads(report_raw)
             assert report["publication"] == data["publication"], "Mixed report generations"
             assert report["generated_at"] == data["generated_at"], "Mixed report dates"
-            if key == "research_dossiers":
-                validate_dossier_limits(report)
             if key in ("comparison_eligibility", "product_cohorts", "disclosure_review"):
                 data[key] = report
         assert data["extraction_validation"]["independent_human_review_completed"] is False
