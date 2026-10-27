@@ -97,4 +97,14 @@ def plugin():
             + document["advisory_id"]
         ),
         parse_release_history=arista_release_history,
+        normalizer_dependencies=(
+            arista_aggregate_notice,
+            arista_software,
+            radius,
+            older_scope,
+            routing_scope,
+            grouped_software,
+            html_advisory,
+            structured,
+        ),
     )

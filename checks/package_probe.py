@@ -1,6 +1,7 @@
 """Executed outside the checkout against installed wheels, including an extension."""
 
 import json
+import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -22,6 +23,14 @@ def main():
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
+    if os.environ.get("IMPACT_DISTRIBUTION_SOURCE_ROOT"):
+        assert not package.resolve().is_relative_to(
+            Path(os.environ["IMPACT_DISTRIBUTION_SOURCE_ROOT"]).resolve()
+        )
+    if os.environ.get("IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"):
+        expected = json.loads(os.environ["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"])
+        assert {vendor: registry.fingerprint(vendor) for vendor in expected} == expected
+    assert registry.fingerprint_scheme("acme") == "legacy-package-v1"
     for name in ("browser-capture-v1.json", "release-history-v1.json"):
         assert (package / "schemas" / name).is_file()
     assert (package / "migrations/004_browser_captures.sql").is_file()

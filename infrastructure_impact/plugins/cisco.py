@@ -83,6 +83,7 @@ def plugin():
         canonicalize=canonicalize,
         parse_feed=parse_feed,
         resolve=resolve,
+        normalizer_dependencies=(parse_campaign, html_advisory, vendor_cna, structured),
         non_cve_notice=lambda d: not d["cves"] and d["title"].startswith("Cisco Informational"),
         url_filter=lambda url: (
             (urlsplit(url).hostname or "") == "cisco.com"

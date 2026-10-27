@@ -39,4 +39,5 @@ def plugin():
         ),
         capabilities=("verified-vendor-cna", "csaf", "html", "component-reference"),
         parse_component_inventory=hpe_component_statement,
+        normalizer_dependencies=(hpe_bulletin, vendor_cna, structured),
     )

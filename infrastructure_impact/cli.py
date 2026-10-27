@@ -96,6 +96,10 @@ def main(argv=None):
                         "domains": p.domains,
                         "version": p.version,
                         "capabilities": p.capabilities,
+                        "normalizer_fingerprint_scheme": default_registry().fingerprint_scheme(
+                            p.id
+                        ),
+                        "current_normalizer_fingerprint": default_registry().fingerprint(p.id),
                     }
                     for p in default_registry().all()
                 ],

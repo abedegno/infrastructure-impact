@@ -81,6 +81,13 @@ def plugin():
         parse_feed=parse_feed,
         capabilities=("rss-discovery", "scoped-pdf", "verified-vendor-cna", "component-reference"),
         parse_component_inventory=component_reference,
+        normalizer_dependencies=(
+            juniper_pdf,
+            apstra_component_reference,
+            juniper_component_statement,
+            juniper_cna,
+            structured,
+        ),
         url_filter=lambda url: (
             (urlsplit(url).hostname or "").endswith(".juniper.net")
             or urlsplit(url).hostname == "juniper.net"

@@ -133,6 +133,9 @@ class VendorPlugin:
     url_filter: Callable[[str], bool] = lambda url: True
     retain_unlinked_notice: Callable[[Advisory], bool] = lambda document: False
     parse_component_inventory: Callable[[bytes, str, str], dict | None] | None = None
+    # None preserves the legacy package fingerprint. A tuple opts into scoped
+    # hook/shared-source hashing and declares additional Python helper modules.
+    normalizer_dependencies: tuple[Callable, ...] | None = None
 
 
 @dataclass(frozen=True)

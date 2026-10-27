@@ -14,4 +14,5 @@ def plugin():
         reference_filter=lambda url: "aruba" in url.lower(),
         capabilities=("csaf", "browser-release-history"),
         parse_release_history=aruba_release_history,
+        normalizer_dependencies=(),
     )

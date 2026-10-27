@@ -47,7 +47,12 @@ and assessments, so a reader need not install normalization plugins.
 ```json
 {
   "vendors": [
-    {"vendor":"acme","kind":"index","url":"https://security.acme.example/csaf/index.txt","limit":4}
+    {
+      "vendor": "acme",
+      "kind": "index",
+      "url": "https://security.acme.example/csaf/index.txt",
+      "limit": 4
+    }
   ],
   "pinned": [],
   "release_documents": []
@@ -58,19 +63,23 @@ and assessments, so a reader need not install normalization plugins.
 
 `parse_document(raw, url, vendor)` returns a fresh normalized advisory dictionary.
 The registry canonicalizes JSON, assigns an adapter fingerprint and validates it.
+Built-ins use [scoped normalizer fingerprints](NORMALIZER_FINGERPRINTS.md).
+External plugins retain the legacy calculation unless they opt in through
+`normalizer_dependencies`; declare helper modules and version runtime dependencies
+deliberately. Source config and feeds cannot choose those dependencies.
 Parsers must not fetch URLs, write databases, send messages or execute source
 JavaScript. Preserve publisher expressions, platform/configuration qualifiers
 and evidence locators. Unknown layouts must fail explicitly.
 
-| Optional hook | Purpose |
-| --- | --- |
-| `parse_release(raw, url, vendor)` | Return release-asset metadata under schema v1; no CVE claims or firmware fetches. |
-| `parse_feed(raw, url, limit, cohort)` | Return `FeedBatch`: selected records, all referenced CVEs, exact inspected scope, outcome. |
-| `canonicalize(url)` | Map known official URL forms to a canonical official source. |
-| `resolve(raw, url, fetch)` | Locate another representation using the supplied allowlisted fetch callback; return a legacy tuple or a reviewed `SourceSelection` with separate provenance. |
-| `prefer_existing(old, new)` | Prevent a short index row from replacing a detailed article. |
-| `non_cve_notice(record)` | Recognize a valid informational notice outside CVE scope. |
-| `reference_filter(url)` | Disambiguate upstream references for vendors sharing official domains. |
+| Optional hook                         | Purpose                                                                                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `parse_release(raw, url, vendor)`     | Return release-asset metadata under schema v1; no CVE claims or firmware fetches.                                                                            |
+| `parse_feed(raw, url, limit, cohort)` | Return `FeedBatch`: selected records, all referenced CVEs, exact inspected scope, outcome.                                                                   |
+| `canonicalize(url)`                   | Map known official URL forms to a canonical official source.                                                                                                 |
+| `resolve(raw, url, fetch)`            | Locate another representation using the supplied allowlisted fetch callback; return a legacy tuple or a reviewed `SourceSelection` with separate provenance. |
+| `prefer_existing(old, new)`           | Prevent a short index row from replacing a detailed article.                                                                                                 |
+| `non_cve_notice(record)`              | Recognize a valid informational notice outside CVE scope.                                                                                                    |
+| `reference_filter(url)`               | Disambiguate upstream references for vendors sharing official domains.                                                                                       |
 
 Generic discovery supports RSS/Atom and newline-separated CSAF indexes. Special
 feed semantics belong in the plugin. Feed kinds are `rss`, `index` and

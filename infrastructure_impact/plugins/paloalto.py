@@ -91,6 +91,12 @@ def plugin():
             "reviewed-unlinked-security-notice",
         ),
         parse_component_inventory=component_inventory,
+        normalizer_dependencies=(
+            pan_impact_bulletin,
+            pan_oss_bulletin,
+            configuration_notice,
+            structured,
+        ),
         retain_unlinked_notice=lambda document: (
             document.get("advisory_id") == NOTICE_ID
             and document.get("source_url") == NOTICE_URL

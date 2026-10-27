@@ -82,5 +82,12 @@ def plugin():
         resolve=resolve,
         parse_document_history=document_history,
         parse_archive=archive_listing,
+        normalizer_dependencies=(
+            affected_products_advisory,
+            fortinet_release,
+            investigation_advisory,
+            openssh_advisory,
+            structured,
+        ),
         capabilities=("csaf", "release-notes-html", "investigation-html"),
     )

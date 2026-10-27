@@ -24,6 +24,10 @@ class PluginRegistry:
         for domain in plugin.domains:
             if not re.fullmatch(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?", domain) or "." not in domain:
                 raise ValueError(f"Invalid official domain: {domain}")
+        if plugin.normalizer_dependencies is not None:
+            from .fingerprints import sources
+
+            sources(plugin)  # Fail early if an opted-in dependency cannot be tracked.
         self._plugins[plugin.id] = plugin
 
     def get(self, vendor: str) -> VendorPlugin:
@@ -44,12 +48,23 @@ class PluginRegistry:
 
     def fingerprint(self, vendor):
         """The same code identity used in normalized advisory revisions."""
+        plugin = self.get(vendor)
+        if plugin.normalizer_dependencies is not None:
+            from .fingerprints import fingerprint
+
+            return fingerprint(plugin)
         from ..adapters.common import ADAPTER_VERSION
 
-        plugin = self.get(vendor)
         source = inspect.getsourcefile(plugin.parse_document)
         code = Path(source).read_bytes() if source else plugin.version.encode()
         return sha256(ADAPTER_VERSION.encode() + plugin.version.encode() + code).hexdigest()[:16]
+
+    def fingerprint_scheme(self, vendor):
+        if self.get(vendor).normalizer_dependencies is None:
+            return "legacy-package-v1"
+        from .fingerprints import SCHEME
+
+        return SCHEME
 
     def finalize(self, document, url, vendor):
         import json

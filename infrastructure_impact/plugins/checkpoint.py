@@ -40,6 +40,12 @@ def plugin():
         parse,
         parse_feed=parse_feed,
         parse_release=checkpoint_release_listing,
+        normalizer_dependencies=(
+            checkpoint_article,
+            checkpoint_records,
+            checkpoint_blog,
+            vendor_cna,
+        ),
         prefer_existing=lambda old, new: (
             old.get("source_format") == "Public SK article embedded JSON"
         ),
