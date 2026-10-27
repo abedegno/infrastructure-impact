@@ -17,6 +17,25 @@ def encode(value):
     return (json.dumps(value, separators=(",", ":"), ensure_ascii=False) + "\n").encode()
 
 
+def product_label_context(records, vendor):
+    """Publisher family context for display; literal label identities stay intact."""
+    labels = {}
+    for record in records:
+        if record["vendor"] != vendor or record.get("document_status") == "draft":
+            continue
+        for claim in record["assessments"]:
+            entry = labels.setdefault(claim["product"], dict(families=set(), unscoped=False))
+            family = claim.get("product_family")
+            if family:
+                entry["families"].add(family)
+            else:
+                entry["unscoped"] = True
+    return {
+        label: dict(families=sorted(entry["families"]), unscoped=entry["unscoped"])
+        for label, entry in sorted(labels.items())
+    }
+
+
 def write_static_delivery(destination, data):
     folder = destination / "data"
     folder.mkdir(exist_ok=True)
@@ -94,6 +113,7 @@ def write_static_delivery(destination, data):
     )
     common["product_label_index"] = {
         vendor: dict(
+            context=product_label_context(data["records"], vendor),
             all=sorted(
                 {
                     a["product"]

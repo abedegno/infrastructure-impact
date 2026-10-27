@@ -312,3 +312,63 @@ vm.createContext(c);for(const f of ['delivery.js','snapshot.js'])vm.runInContext
         assert result["exported"] is None and result["error"].startswith("Export failed:")
     else:
         assert result["exported"]["changes"] == d["changes"] and not result["error"]
+
+
+def test_product_label_context_keeps_shared_scope_and_global_cohort_parity(tmp_path):
+    from infrastructure_impact.application.static_delivery import product_label_context
+
+    data = dataset()
+    for record in data["records"]:
+        for claim in record["assessments"]:
+            claim["product"] = "16.x"
+            if record["vendor"] == "juniper":
+                claim["product_family"] = (
+                    "Synthetic <family A>" if claim["cve_id"] == CID else "Synthetic family B"
+                )
+            elif record["document_status"] == "draft":
+                claim["product_family"] = "DRAFT MUST NOT APPEAR"
+            else:
+                claim.pop("product_family", None)
+    # The same literal label also has a statement without publisher family context.
+    juniper = next(r for r in data["records"] if r["vendor"] == "juniper")
+    juniper["assessments"].append(dict(juniper["assessments"][0]))
+    juniper["assessments"][-1]["product_id"] = "synthetic-unscoped-branch"
+    juniper["assessments"][-1].pop("product_family", None)
+    expected = product_label_context(data["records"], "juniper")
+    assert expected == {
+        "16.x": {"families": ["Synthetic <family A>", "Synthetic family B"], "unscoped": True}
+    }
+    generation = publish(data, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    bootstrap = json.loads((generation / index["bootstrap"]["path"]).read_text())["data"]
+    assert bootstrap["product_label_index"]["juniper"]["context"] == expected
+    assert bootstrap["product_label_index"]["juniper"]["all"] == ["16.x"]
+    assert bootstrap["product_label_index"]["hpe"]["context"] == {
+        "16.x": {"families": [], "unscoped": True}
+    }
+    assert "DRAFT MUST NOT APPEAR" not in json.dumps(bootstrap["product_label_index"])
+    script = r"""
+const fs=require('fs'),vm=require('vm');const c={window:{},Set,URL};vm.createContext(c);
+const x=JSON.parse(fs.readFileSync(0,'utf8'));
+vm.runInContext(fs.readFileSync(x.web+'/snapshot.js','utf8'),c);
+const a=c.productLabelContext(x.full,'juniper'), b=c.productLabelContext(x.partial,'juniper');
+process.stdout.write(JSON.stringify({a,b,display:c.productLabelDisplay('16.x',b),labels:c.productLabels(x.partial,'juniper'),unknown:c.productLabelDisplay('__proto__',{})}));
+"""
+    result = json.loads(
+        subprocess.check_output(
+            ["node", "-e", script],
+            input=json.dumps(
+                dict(
+                    web=str(PACKAGE / "web"),
+                    full=data,
+                    partial=dict(records=[], product_label_index=bootstrap["product_label_index"]),
+                )
+            ).encode(),
+        )
+    )
+    assert result["a"] == result["b"] == expected
+    assert result["labels"] == ["16.x"] and result["unknown"] == "__proto__"
+    assert (
+        result["display"]
+        == "16.x — Synthetic <family A> / Synthetic family B (shared publisher label) (some statements lack family context)"
+    )

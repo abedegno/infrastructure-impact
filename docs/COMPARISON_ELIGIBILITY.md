@@ -30,6 +30,14 @@ configuration qualifications stay attached to the underlying normalized evidence
 a label selection is not automatic appliance applicability or a full inventory.
 Declared product families are context, not certified portfolio denominators.
 
+The web selector displays publisher family context beside literal labels, which
+can otherwise be only a version number. Labels used by multiple families are
+marked as shared; missing family context remains explicit. These display names
+do not split or merge filter identities: selecting one label still includes its
+matching statements across those families. Static cohort delivery builds this
+context from the whole public publication, so narrowing the CVE selection does
+not hide a label's other retained family contexts. Draft statements are excluded.
+
 ## Eligible observations and suppressed conclusions
 
 Distinct CVE counts describe the selected retained evidence. A CVE may have

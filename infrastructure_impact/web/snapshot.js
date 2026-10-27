@@ -113,6 +113,34 @@ function classifyProduct(vendor, assessment, taxonomy) {
 }
 
 /* Pure comparison policy shared with the Python reader through parity tests. */
+function productLabelContext(source, vendor) {
+  if (source.product_label_index?.[vendor]?.context)
+    return source.product_label_index[vendor].context;
+  const labels = Object.create(null);
+  for (const record of source.records) {
+    if (record.vendor !== vendor || record.document_status === 'draft') continue;
+    for (const claim of record.assessments) {
+      const entry = (labels[claim.product] ||= { families: new Set(), unscoped: false });
+      if (claim.product_family) entry.families.add(claim.product_family);
+      else entry.unscoped = true;
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(labels).map(([label, entry]) => [
+      label,
+      { families: [...entry.families].sort(), unscoped: entry.unscoped },
+    ]),
+  );
+}
+function productLabelDisplay(label, context) {
+  if (!Object.hasOwn(context, label)) return label;
+  const entry = context[label];
+  const parents = entry.families.filter((family) => family.trim() !== label.trim());
+  let text = parents.length ? `${label} — ${parents.join(' / ')}` : label;
+  if (entry.families.length > 1) text += ' (shared publisher label)';
+  if (entry.unscoped && entry.families.length) text += ' (some statements lack family context)';
+  return text;
+}
 function productLabels(source, vendor, group = null) {
   if (source.product_label_index)
     return group
