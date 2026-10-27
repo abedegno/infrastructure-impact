@@ -85,7 +85,7 @@ const fetch=async(path)=>{
   let source=await load(x.ids,x.changes);
   const selected=c.selectSnapshot(source,x.ids||Object.keys(source.benchmark_cohort),x.options||{});
   if(x.again)await load(x.ids,x.changes);
-  process.stdout.write(JSON.stringify({selected,exported:c.exportSnapshot(selected),requests,peak}));
+  process.stdout.write(JSON.stringify({selected,exported:c.exportSnapshot(selected),transportReport:source.research_dossiers,requests,peak}));
  }catch(error){process.stdout.write(JSON.stringify({error:error.message,requests}));}
 })();
 """
@@ -497,3 +497,36 @@ def test_monitor_reads_manifest_with_a_fixed_byte_budget(monkeypatch):
     with pytest.raises(AssertionError, match="manifest exceeds monitor budget"):
         health.check("https://example.test")
     assert reads == [2_000_001]
+
+
+@pytest.mark.parametrize("ids", [None, [CID], ["CVE-2024-6387"], []])
+def test_content_addressed_common_metadata_preserves_generation_dossiers(tmp_path, ids):
+    generation = publish(dataset(), tmp_path)
+    snapshot = json.loads((generation / "snapshot.json").read_text())
+    index = json.loads((generation / "data/index.json").read_text())
+    common = json.loads((generation / index["bootstrap"]["path"]).read_text())
+    assert "research_dossiers" in snapshot
+    assert common["data"]["research_dossiers"] == snapshot["research_dossiers"]
+    assert common["publication"] == snapshot["publication"]
+    # Snapshot selection is integrated separately; transport must preserve the report.
+    result = run(generation, ids=ids)
+    assert result["transportReport"] == snapshot["research_dossiers"]
+    assert result["selected"]["publication"] == snapshot["publication"]
+
+
+def test_old_static_metadata_never_falls_back_to_another_dossier_generation(tmp_path):
+    from infrastructure_impact.application.publication import public_projection
+    from infrastructure_impact.application.static_delivery import write_static_delivery
+
+    # Isolated old-generation transport fixture: no published generation is modified.
+    data = public_projection(dataset())
+    data.pop("research_dossiers", None)
+    data["publication"] = {"id": "b" * 32, "advisory_schema_version": 2}
+    (tmp_path / "snapshot.json").write_text(json.dumps(data))
+    write_static_delivery(tmp_path, data)
+    # A loose later report must never be requested by the generation-bound loader.
+    (tmp_path / "research-dossiers.json").write_text(json.dumps({"PRIVATE_SENTINEL": "later"}))
+    result = run(tmp_path, ids=[CID])
+    assert "research_dossiers" not in result["selected"]
+    assert not any("research-dossiers.json" in path for path in result["requests"])
+    assert result["selected"]["publication"] == data["publication"]

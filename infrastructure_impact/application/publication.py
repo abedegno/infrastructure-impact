@@ -107,9 +107,11 @@ def public_projection(data, public_release_urls=()):
     )
     from .disclosure_review import disclosure_review
     from .product_cohorts import product_cohorts
+    from .research_dossiers import research_dossiers
 
     data["product_cohorts"] = product_cohorts(data)
     data["disclosure_review"] = disclosure_review(data)
+    data["research_dossiers"] = research_dossiers(data)
     data["delays"] = []
     data["snapshot_notice"] = (
         "Dated public-source evidence; not a representative vendor security ranking. No finding of intentional concealment."
@@ -154,6 +156,7 @@ def write_bundle(destination, data):
         "component_studies",
         "product_cohorts",
         "disclosure_review",
+        "research_dossiers",
     ):
         (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
@@ -260,6 +263,8 @@ def write_bundle(destination, data):
         "build-inventory-submission-v1.json",
         "product-cohorts-v1.json",
         "disclosure-review-v1.json",
+        "research-dossiers-v1.json",
+        "research-dossier-definition-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

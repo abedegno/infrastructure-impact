@@ -892,3 +892,257 @@ def test_partially_missing_aggregate_provenance_cannot_retain_unsupported_text(s
         and g["field_or_question"] == "platform_applicability_context"
         for g in dossier["evidence_gaps"]
     )
+
+
+def test_projection_ignores_injected_dossier(writer_seed):
+    writer_seed["research_dossiers"] = {"PRIVATE_SENTINEL": "private review"}
+    projected = public_projection(writer_seed)
+    assert "PRIVATE_SENTINEL" not in json.dumps(projected["research_dossiers"])
+    assert len(projected["research_dossiers"]["dossiers"]) == 3
+    assert projected["research_dossiers"] == research_dossiers(projected)
+
+
+def test_empty_selection_does_not_become_default_cohort(seed):
+    report = research_dossiers(seed)
+    assert select_research_dossiers(report, [])["dossiers"] == []
+    assert select_research_dossiers(None, []) is None
+    assert select_research_dossiers(report, ["CVE-1999-999999"])["dossiers"] == []
+
+
+def test_vendor_selection_preserves_declared_scope_and_prunes_nested_evidence(seed):
+    report = research_dossiers(seed)
+    before = deepcopy(report)
+    selected = select_research_dossiers(report, ["CVE-2024-6387"], "hpe")
+    validate_report(selected)
+    dossier = selected["dossiers"][0]
+    assert dossier["comparison_targets"] == []
+    assert [c["vendor"] for c in dossier["disclosure_context"]] == ["hpe"]
+    assert dossier["scope"]["build_target_ids"] == ["arista-eos-4-32-2f", "aruba-aoscx-10-13-1031"]
+    assert dossier["scope"]["case_ids"] == ["aruba-cx-release-date-gap", "hpe-cray-openssh-timing"]
+    assert dossier["scope"]["selected_vendor"] == "hpe"
+    assert selected["vendors"] == {"hpe": report["vendors"]["hpe"]}
+    assert dossier["sources"] == []
+    assert all(not rows for rows in dossier["chronology"].values())
+    assert {g["owner_id"] for g in dossier["evidence_gaps"]} == {"hpe-cray-openssh-timing"}
+    assert "Synthetic exact target row" not in json.dumps(dossier)
+    assert selected["definition_sha256"] == report["definition_sha256"]
+    assert selected["limits"] == report["limits"]
+    dossier["disclosure_context"][0]["missing_evidence"].clear()
+    assert report == before
+
+
+def test_selection_retains_shared_literal_urls_and_only_referenced_sources(seed):
+    _curl_context(seed)
+    report = research_dossiers(seed)
+    # A retained-looking row without any projected reference must not survive selection.
+    report["dossiers"][1]["sources"].append(
+        dict(
+            id="f" * 64,
+            vendor="fortinet",
+            source_url="https://www.fortiguard.com/orphan",
+            source_sha256="f" * 64,
+            locators=[],
+            observations=[],
+        )
+    )
+    selected = select_research_dossiers(report, ["CVE-2023-38545"], "fortinet")
+    validate_report(selected)
+    assert [d["cve_id"] for d in selected["dossiers"]] == ["CVE-2023-38545"]
+    dossier = selected["dossiers"][0]
+    assert len(dossier["sources"]) == 2
+    assert "Other CVE detail" not in json.dumps(dossier)
+    assert "Selected CVE row" in json.dumps(dossier)
+    assert any("cve-2023-38545-and-cve-2023-38546" in s["source_url"] for s in dossier["sources"])
+    assert "https://www.fortiguard.com/orphan" not in json.dumps(dossier)
+    references = {c["source_id"] for rows in dossier["chronology"].values() for c in rows}
+    assert {s["id"] for s in dossier["sources"]} == references
+    assert selected["vendors"] == {"fortinet": report["vendors"]["fortinet"]}
+
+
+def _request(app, path, query=""):
+    replies = []
+    body = b"".join(
+        app(
+            dict(REQUEST_METHOD="GET", PATH_INFO=path, QUERY_STRING=query),
+            lambda status, headers: replies.append(status),
+        )
+    )
+    return replies[0], json.loads(body)
+
+
+def test_publication_exports_generation_bound_dossiers_schemas_and_openapi(writer_seed, tmp_path):
+    from infrastructure_impact.application.publication import publish
+    from infrastructure_impact.http import Application
+
+    generation = publish(writer_seed, tmp_path / "publications")
+    app = Application(tmp_path / "publications")
+    status, report = _request(app, "/api/v1/research-dossiers")
+    assert status == "200 OK"
+    assert report == json.loads((generation / "research-dossiers.json").read_text())
+    validate_report(report)
+    snapshot = json.loads((generation / "snapshot.json").read_text())
+    assert report["publication"] == snapshot["publication"]
+    assert report["generated_at"] == snapshot["generated_at"]
+    manifest = json.loads((generation / "manifest.json").read_text())
+    for path in [
+        "research-dossiers.json",
+        "schemas/research-dossiers-v1.json",
+        "schemas/research-dossier-definition-v1.json",
+    ]:
+        assert manifest["sha256"][path] == sha256((generation / path).read_bytes()).hexdigest()
+        code, _, body = app.route(dict(REQUEST_METHOD="GET", PATH_INFO="/" + path))
+        assert code == 200
+        assert body == (generation / path).read_bytes()
+    api = json.loads((generation / "openapi.json").read_text())["paths"]
+    route = api["/api/v1/research-dossiers"]["get"]
+    assert {p["name"] for p in route["parameters"]} >= {"cves", "vendor"}
+    assert {"200", "400", "404", "503"} <= route["responses"].keys()
+    assert "/research-dossiers.json" in api
+    assert "/schemas/research-dossiers-v1.json" in api
+    assert "/schemas/research-dossier-definition-v1.json" in api
+
+
+def test_api_filters_cves_and_vendor_with_original_vendor_catalogue(writer_seed, tmp_path):
+    from infrastructure_impact.application.publication import publish
+    from infrastructure_impact.http import Application
+
+    publish(writer_seed, tmp_path)
+    app = Application(tmp_path)
+    status, report = _request(
+        app, "/api/v1/research-dossiers", "cves=CVE-2023-38545&vendor=fortinet"
+    )
+    assert status == "200 OK"
+    assert [d["cve_id"] for d in report["dossiers"]] == ["CVE-2023-38545"]
+    assert [c["vendor"] for c in report["dossiers"][0]["disclosure_context"]] == ["fortinet"]
+    assert report["vendors"] == {"fortinet": writer_seed["vendors"]["fortinet"]}
+    _, hpe = _request(app, "/api/v1/research-dossiers", "cves=CVE-2024-6387&vendor=hpe")
+    assert hpe["dossiers"][0]["comparison_targets"] == []
+    assert [c["vendor"] for c in hpe["dossiers"][0]["disclosure_context"]] == ["hpe"]
+    _, empty = _request(app, "/api/v1/research-dossiers", "cves=CVE-1999-999999&vendor=hpe")
+    assert empty["dossiers"] == []
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "vendor=unknown",
+        "vendor=hpe&vendor=hpe",
+        "vendor=hpe&vendor=aruba",
+        "vendor=",
+        "cves=not-a-cve",
+        "cves=",
+    ],
+)
+def test_api_rejects_invalid_dossier_controls(writer_seed, tmp_path, query):
+    from infrastructure_impact.application.publication import publish
+    from infrastructure_impact.http import Application
+
+    publish(writer_seed, tmp_path)
+    status, body = _request(Application(tmp_path), "/api/v1/research-dossiers", query)
+    assert status == "400 Bad Request"
+    assert body == {"error": "Invalid request"}
+
+
+def test_exports_select_dossiers_without_fabricating_old_generation_reports(seed):
+    from infrastructure_impact.exports import select
+
+    seed["research_dossiers"] = research_dossiers(seed)
+    selected = select(seed, ["CVE-2023-38546"], vendor="fortinet")
+    assert [d["cve_id"] for d in selected["research_dossiers"]["dossiers"]] == ["CVE-2023-38546"]
+    assert selected["research_dossiers"]["vendors"] == {"fortinet": seed["vendors"]["fortinet"]}
+    seed.pop("research_dossiers")
+    assert "research_dossiers" not in select(seed, ["CVE-2024-6387"])
+
+
+def test_old_snapshot_keeps_existing_routes_and_dossier_is_unavailable(seed, tmp_path):
+    from infrastructure_impact.http import Application
+
+    # Build a standalone old-format fixture, never edit an immutable generation.
+    seed.pop("research_dossiers", None)
+    seed["publication"] = {"id": "a" * 32, "advisory_schema_version": 2}
+    generation = tmp_path / "generations" / ("a" * 32)
+    generation.mkdir(parents=True)
+    (generation / "snapshot.json").write_text(json.dumps(seed))
+    (tmp_path / "current").symlink_to(generation, target_is_directory=True)
+    app = Application(tmp_path)
+    assert _request(app, "/api/state")[0] == "200 OK"
+    assert "research_dossiers" not in _request(app, "/api/state")[1]
+    assert _request(app, "/api/v1/product-cohorts")[0] == "200 OK"
+    assert _request(app, "/api/v1/research-dossiers") == (
+        "404 Not Found",
+        {"error": "Report unavailable for this generation"},
+    )
+
+
+def test_invalid_derived_dossier_cannot_replace_current_generation(
+    writer_seed, tmp_path, monkeypatch
+):
+    import infrastructure_impact.application.research_dossiers as dossiers_module
+    from infrastructure_impact.application.publication import publish
+
+    previous = publish(writer_seed, tmp_path)
+    invalid = research_dossiers(public_projection(writer_seed))
+    invalid["limits"]["inventory_verified"] = True
+    monkeypatch.setattr(dossiers_module, "research_dossiers", lambda data: invalid)
+    with pytest.raises(ValidationError):
+        publish(writer_seed, tmp_path)
+    assert (tmp_path / "current").resolve() == previous
+    assert not list((tmp_path / "generations").glob(".staging-*"))
+
+
+def test_publication_retains_evidence_after_latest_source_check_failure(writer_seed, tmp_path):
+    from infrastructure_impact.application.publication import publish
+
+    record = writer_seed["records"][0]
+    writer_seed["health"].append(
+        dict(
+            vendor=record["vendor"],
+            source_url=record["source_url"],
+            outcome="error",
+            error_code="HTTP_503",
+            checked_at="2026-10-27T01:00:00Z",
+        )
+    )
+    generation = publish(writer_seed, tmp_path)
+    report = json.loads((generation / "research-dossiers.json").read_text())
+    target = report["dossiers"][0]["comparison_targets"][0]
+    assert target["source_check"]["outcome"] == "error"
+    assert target["statements"][0]["status"] == "fixed"
+    assert any(s["source_sha256"] == record["sha256"] for s in report["dossiers"][0]["sources"])
+
+
+def test_vendor_outside_declared_dossier_members_has_no_dossier(seed):
+    report = research_dossiers(seed)
+    assert select_research_dossiers(report, ["CVE-2024-6387"], "fortinet")["dossiers"] == []
+    assert select_research_dossiers(report, ["CVE-2023-38545"], "hpe")["dossiers"] == []
+
+
+@pytest.mark.parametrize("path", ["/api/state", "/api/export.json"])
+def test_selected_state_and_download_apply_dossier_vendor_control(writer_seed, tmp_path, path):
+    from infrastructure_impact.application.publication import publish
+    from infrastructure_impact.http import Application
+
+    publish(writer_seed, tmp_path)
+    app = Application(tmp_path)
+    status, data = _request(app, path, "cves=CVE-2024-6387&vendor=hpe")
+    assert status == "200 OK"
+    report = data["research_dossiers"]
+    assert report["vendors"] == {"hpe": writer_seed["vendors"]["hpe"]}
+    assert report["dossiers"][0]["comparison_targets"] == []
+    assert [c["vendor"] for c in report["dossiers"][0]["disclosure_context"]] == ["hpe"]
+    # The previous selection must not replace the original cached vendor catalogue.
+    status, data = _request(app, path, "cves=CVE-2023-38545&vendor=fortinet")
+    assert status == "200 OK"
+    assert data["research_dossiers"]["vendors"] == {"fortinet": writer_seed["vendors"]["fortinet"]}
+    assert _request(app, path, "vendor=hpe&vendor=hpe")[0] == "400 Bad Request"
+    assert _request(app, path, "vendor=unknown")[0] == "400 Bad Request"
+
+
+def test_registered_dossier_validator_enforces_local_datetime_format(seed):
+    from infrastructure_impact.application.research_reports import validator
+
+    report = research_dossiers(seed)
+    claim = report["dossiers"][0]["chronology"]["publisher_claims"][0]
+    claim.update(precision="local_datetime", value="not-a-date")
+    with pytest.raises(ValidationError):
+        validator("research_dossiers").validate(report)

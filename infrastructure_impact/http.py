@@ -168,6 +168,23 @@ class Application:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
             if len(ids) > 200 or not all(CVE.fullmatch(cid) for cid in ids):
                 raise BadRequest("Invalid CVE cohort")
+        if path == "/api/v1/research-dossiers":
+            from .application.research_dossiers import select_research_dossiers
+
+            values = query.get("vendor", [])
+            if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                raise BadRequest("Unknown or repeated vendor")
+            if "research_dossiers" not in data:
+                return self.json({"error": "Report unavailable for this generation"}, status=404)
+            report = data["research_dossiers"]
+            cohort = ids if ids is not None else [d["cve_id"] for d in report["dossiers"]]
+            return self.json(
+                {
+                    **select_research_dossiers(report, cohort, values[0] if values else None),
+                    "publication": data["publication"],
+                    "generated_at": data["generated_at"],
+                }
+            )
         if path in (
             "/api/state",
             "/api/export.json",
@@ -182,6 +199,9 @@ class Application:
             "/api/v1/assessments",
         ):
             try:
+                values = query.get("vendor", [])
+                if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                    raise ValueError("Unknown or repeated vendor")
                 for key in ("start", "end", "products", "group"):
                     if key in query and len(query[key]) != 1:
                         raise ValueError("Duplicate comparison control")
@@ -193,6 +213,7 @@ class Application:
                     end=query.get("end", [None])[0],
                     products=products,
                     group=query.get("group", [None])[0],
+                    vendor=values[0] if values else None,
                 )
             except (ValueError, TypeError) as error:
                 raise BadRequest("Invalid comparison selection") from error
@@ -304,6 +325,7 @@ class Application:
             "/component-studies.json",
             "/product-cohorts.json",
             "/disclosure-review.json",
+            "/research-dossiers.json",
             "/comparison-eligibility.json",
             "/product-groups.json",
             "/extraction-validation.json",
@@ -330,6 +352,8 @@ class Application:
             "/schemas/product-cohort-definition-v1.json",
             "/schemas/product-cohorts-v1.json",
             "/schemas/disclosure-review-v1.json",
+            "/schemas/research-dossiers-v1.json",
+            "/schemas/research-dossier-definition-v1.json",
             "/schemas/source-selection-v1.json",
             "/schemas/component-inventory-v1.json",
             "/schemas/build-inventory-submission-v1.json",

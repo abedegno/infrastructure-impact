@@ -623,7 +623,67 @@ def research_dossiers(data: dict, definition: dict | None = None) -> dict:
 def select_research_dossiers(
     report: dict | None, cohort: Iterable[str], vendor: str | None = None
 ) -> dict | None:
-    """Preserve absent old-generation reports; selection is integrated separately."""
+    """Select retained CVE/vendor associations, preserving declared scope and identity."""
     if report is None:
         return None
-    raise NotImplementedError("Research dossier selection is not integrated yet")
+    if vendor is not None and vendor not in report["vendors"]:
+        raise ValueError("Unknown dossier vendor")
+    selected = deepcopy(report)
+    selected["vendors"] = (
+        {vendor: selected["vendors"][vendor]} if vendor is not None else selected["vendors"]
+    )
+    cohort = set(cohort)
+    dossiers = []
+    for dossier in selected["dossiers"]:
+        if dossier["cve_id"] not in cohort:
+            continue
+        targets = [
+            row
+            for row in dossier["comparison_targets"]
+            if vendor is None or row["vendor"] == vendor
+        ]
+        contexts = [
+            row
+            for row in dossier["disclosure_context"]
+            if vendor is None or row["vendor"] == vendor
+        ]
+        # Even unknown-evidence declared members remain selectable. A vendor
+        # outside this dossier's declared members has no dossier for this CVE.
+        if vendor is not None and not targets and not contexts:
+            continue
+        dossier["scope"]["selected_vendor"] = vendor
+        dossier["comparison_targets"] = targets
+        dossier["disclosure_context"] = contexts
+        owners = {
+            *(("target", row["target_id"]) for row in targets),
+            *(("case", row["case_id"]) for row in contexts),
+        }
+        dossier["evidence_gaps"] = [
+            row
+            for row in dossier["evidence_gaps"]
+            if (row["owner_kind"], row["owner_id"]) in owners
+        ]
+        sources = [row for row in dossier["sources"] if vendor is None or row["vendor"] == vendor]
+        source_ids = {row["id"] for row in sources}
+        dossier["chronology"] = {
+            key: [row for row in rows if row["source_id"] in source_ids]
+            for key, rows in dossier["chronology"].items()
+        }
+        # References in the retained structural sections, including chronology,
+        # determine the source table. URLs are literal provenance, never CVE filters.
+        references = set()
+        for target in targets:
+            references.update(row["source_id"] for row in target["statements"])
+            for field in target["fields"]:
+                references.update(row["source_id"] for row in field["evidence"])
+        for context in contexts:
+            references.update(context["source_ids"])
+            references.update(row["source_id"] for row in context["earlier_documents"])
+            if context["investigation"]:
+                references.update(context["investigation"]["source_ids"])
+        for rows in dossier["chronology"].values():
+            references.update(row["source_id"] for row in rows)
+        dossier["sources"] = [row for row in sources if row["id"] in references]
+        dossiers.append(dossier)
+    selected["dossiers"] = dossiers
+    return selected
