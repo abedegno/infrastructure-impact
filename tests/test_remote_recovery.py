@@ -440,9 +440,9 @@ def test_missing_local_or_remote_readback_cannot_advance_pointer(
     original = hosted.restore
     calls = []
 
-    def incomplete(*args):
+    def incomplete(*args, **kwargs):
         calls.append(True)
-        return False if len(calls) == failed_check else original(*args)
+        return False if len(calls) == failed_check else original(*args, **kwargs)
 
     monkeypatch.setattr(hosted, "restore", incomplete)
     with pytest.raises(RuntimeError, match="not available for recovery verification"):

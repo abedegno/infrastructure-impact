@@ -3,6 +3,7 @@
 import json
 import os
 import tempfile
+from importlib.metadata import version
 from pathlib import Path
 from unittest.mock import patch
 
@@ -18,6 +19,14 @@ from infrastructure_impact.storage.repository import connect, ingest
 
 
 def main():
+    if os.environ.get("IMPACT_EXPECTED_PACKAGE_VERSION"):
+        assert version("infrastructure-impact") == os.environ["IMPACT_EXPECTED_PACKAGE_VERSION"]
+    from infrastructure_impact.recovery_policy import vault_limit
+    from infrastructure_impact.storage.profiling import storage_profile
+
+    assert vault_limit("large") == 1024 * 1024 * 1024
+    with connect(":memory:") as profiled:
+        assert storage_profile(profiled)["schema_version"] == 1
     registry = default_registry()
     assert "acme" in registry.names()
     assert registry.get("aruba").parse_release_history is not None

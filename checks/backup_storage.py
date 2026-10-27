@@ -4,18 +4,38 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
+# This checkout-local policy module uses only the standard library. Operational
+# monitoring needs neither an installed package nor its runtime dependencies.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from infrastructure_impact.recovery_policy import (  # noqa: E402
+    ARCHIVE_LIMIT,
+    DEFAULT_PROFILE,
+    VAULT_PROFILES,
+    vault_limit,
+)
+
 BUDGET = 512 * 1024 * 1024
-ARCHIVE_LIMIT = 50 * 1024 * 1024
-VAULT_LIMIT = 512 * 1024 * 1024
+VAULT_LIMIT = vault_limit()
 
 
 def summarize(
-    trees, repository_size_kib, manifest, history_limit=100, checked_at=None, repository=None
+    trees,
+    repository_size_kib,
+    manifest,
+    history_limit=100,
+    checked_at=None,
+    repository=None,
+    vault_profile=DEFAULT_PROFILE,
 ):
+    configured_limit = vault_limit(vault_profile)
+    declared_limit = manifest.get("vault_limit_bytes", VAULT_LIMIT)
+    if type(declared_limit) is not int or declared_limit not in VAULT_PROFILES.values():
+        raise ValueError("Unsupported recovery vault limit in manifest")
     if not trees:
         raise ValueError("No backup branch history available")
     unique = {
@@ -89,12 +109,12 @@ def summarize(
         )
     if latest["size"] >= ARCHIVE_LIMIT * 0.8:
         findings.append("Latest encrypted archive has reached 80 percent of its per-file limit")
-    if database_bytes is not None and database_bytes >= VAULT_LIMIT * 0.8:
+    if database_bytes is not None and database_bytes >= configured_limit * 0.8:
         findings.append("Uncompressed vault has reached 80 percent of its supported size")
     required = (
         reported >= BUDGET
         or latest["size"] >= ARCHIVE_LIMIT
-        or (database_bytes is not None and database_bytes >= VAULT_LIMIT)
+        or (database_bytes is not None and database_bytes >= configured_limit)
     )
     if required:
         findings.append(
@@ -131,7 +151,9 @@ def summarize(
         remote_readback_verified_at=manifest.get("remote_readback_verified_at") if remote else None,
         compression=compression,
         latest_database_bytes=database_bytes,
-        uncompressed_vault_limit_bytes=VAULT_LIMIT,
+        uncompressed_vault_limit_bytes=configured_limit,
+        configured_vault_profile=vault_profile,
+        manifest_vault_limit_bytes=declared_limit,
         reported_repository_bytes=reported,
         repository_review_budget_bytes=BUDGET,
         per_archive_limit_bytes=ARCHIVE_LIMIT,
@@ -152,6 +174,7 @@ def main():
     parser.add_argument("--repository", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--summary", type=Path)
+    parser.add_argument("--vault-profile", choices=tuple(VAULT_PROFILES), default=DEFAULT_PROFILE)
     args = parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repository):
         parser.error("Expected owner/repository")
@@ -177,7 +200,9 @@ def main():
         trees = list(pool.map(tree, commits))
     # Bind the manifest to the inspected head commit, avoiding a moving-branch race.
     manifest = get("contents/state/current.json?ref=" + commits[0]["sha"], True)
-    report = summarize(trees, meta["size"], manifest, repository=args.repository)
+    report = summarize(
+        trees, meta["size"], manifest, repository=args.repository, vault_profile=args.vault_profile
+    )
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     if args.summary:
         with args.summary.open("a") as stream:

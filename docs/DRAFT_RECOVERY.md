@@ -8,7 +8,8 @@ untouched; no asset is overwritten, published or automatically deleted.
 GitHub documents [draft release visibility and API permissions](https://docs.github.com/en/rest/releases/releases)
 and [release asset limits](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
 A daily managed draft holds up to 1,000 assets. The application retains its stricter
-50 MiB encrypted-archive, 512 MiB expanded-vault and 64 MiB XZ-decoder limits.
+50 MiB encrypted-archive and 64 MiB XZ-decoder limits. The standard expanded-vault
+profile is 512 MiB; the explicit large profile is 1 GiB, as described in [Capacity](CAPACITY.md).
 Drafts are not software releases and must remain unpublished. The recovery key is
 still required even for an operator who can access a draft asset.
 
@@ -92,3 +93,12 @@ limits still require monitoring and an explicit future capacity decision.
 An optional [normalization-maintenance pass](NORMALIZATION_MAINTENANCE.md) can run
 after recovery and before collection. Its corrections belong in the next verified
 checkpoint; it must not be confused with new publisher retrievals or disclosures.
+
+## Capacity and cadence follow-up
+
+The standard expanded-vault limit remains 512 MiB; an explicitly selected
+`large` recovery profile supports 1 GiB with the same archive and decoder bounds.
+The writer and monitor share `IMPACT_VAULT_PROFILE`. See [Capacity](CAPACITY.md)
+for measurement, activation and downgrade limits. The public workflow cadence and
+separate activation anchor are documented in [Scheduled reliability](SCHEDULE_RELIABILITY.md).
+Current observations must not be replaced by manually generated success.

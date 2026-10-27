@@ -15,7 +15,14 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("plugins", help="List installed vendor plugins and capabilities")
     sub.add_parser("migrate", help="Apply additive database migrations")
-    sub.add_parser("audit", help="Verify database, normalized records and retained source hashes")
+    audit_parser = sub.add_parser(
+        "audit", help="Verify database, normalized records and retained source hashes"
+    )
+    audit_parser.add_argument(
+        "--storage",
+        action="store_true",
+        help="Read-only aggregate storage accounting without returning source content",
+    )
     reparse = sub.add_parser(
         "reparse", help="Replay retained evidence through current schema-validated plugins"
     )
@@ -178,7 +185,13 @@ def main(argv=None):
     elif args.command == "audit":
         from .storage.audit import audit
 
-        print(json.dumps(audit()))
+        if args.storage:
+            from .storage.profiling import storage_profile
+
+            with closing(connect(read_only=True)) as db:
+                print(json.dumps(storage_profile(db)))
+        else:
+            print(json.dumps(audit()))
     elif args.command == "validate":
         from .domain import validate_advisory, validate_component_inventory
 

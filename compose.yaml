@@ -1,7 +1,7 @@
 name: infrastructure-impact
 services:
   reader:
-    image: infrastructure-impact:0.4.1
+    image: infrastructure-impact:0.5.0
     build: .
     command: [serve, --host, 0.0.0.0, --port, "8080"]
     ports: ["127.0.0.1:8080:8080"]
@@ -20,7 +20,7 @@ services:
       start_period: 5m
       retries: 3
   collector:
-    image: infrastructure-impact:0.4.1
+    image: infrastructure-impact:0.5.0
     build: .
     command: [collect, --watch, --at, "08:15", --timezone, Europe/London]
     environment:

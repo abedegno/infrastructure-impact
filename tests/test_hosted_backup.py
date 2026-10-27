@@ -352,7 +352,7 @@ def test_missing_readback_cannot_report_verified_recovery(tmp_path, monkeypatch,
         return {"outcome": "partial", "failures": 1}
 
     monkeypatch.setattr(worker, "collect_once", collect)
-    monkeypatch.setattr(hosted, "restore", lambda *_: False)
+    monkeypatch.setattr(hosted, "restore", lambda *_, **__: False)
     monkeypatch.setattr(
         sys,
         "argv",

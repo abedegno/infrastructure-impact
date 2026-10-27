@@ -20,9 +20,19 @@ from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
-MAX_VAULT_BYTES = 512 * 1024 * 1024
-MAX_ARCHIVE_BYTES = 50 * 1024 * 1024
-MAX_DECODER_MEMORY = 64 * 1024 * 1024
+from infrastructure_impact.recovery_policy import (
+    ARCHIVE_LIMIT,
+    DECODER_MEMORY_LIMIT,
+    DEFAULT_PROFILE,
+    VAULT_PROFILES,
+    checked_limit,
+    vault_limit,
+)
+from infrastructure_impact.storage.profiling import storage_profile
+
+MAX_VAULT_BYTES = vault_limit()
+MAX_ARCHIVE_BYTES = ARCHIVE_LIMIT
+MAX_DECODER_MEMORY = DECODER_MEMORY_LIMIT
 BLOCK_BYTES = 1024 * 1024
 
 
@@ -112,7 +122,8 @@ def validate_encrypted_state(state, encryption_key, *, recovery_archive=None):
     return True
 
 
-def restore(state, database, encryption_key=None):
+def restore(state, database, encryption_key=None, *, vault_limit_bytes=None):
+    limit = checked_limit(MAX_VAULT_BYTES if vault_limit_bytes is None else vault_limit_bytes)
     receipt = state / "current.json"
     if not receipt.exists():
         if list(state.glob("vault-*")):
@@ -156,7 +167,7 @@ def restore(state, database, encryption_key=None):
             count = 0
             for block in expanded_chunks(compressed, compression):
                 count += len(block)
-                if count > MAX_VAULT_BYTES:
+                if count > limit:
                     raise ValueError(
                         "Restored vault exceeds supported size; manual migration required"
                     )
@@ -175,7 +186,8 @@ def restore(state, database, encryption_key=None):
     return True
 
 
-def backup(state, database, encryption_key=None, *, compression="xz"):
+def backup(state, database, encryption_key=None, *, compression="xz", vault_limit_bytes=None):
+    limit = checked_limit(MAX_VAULT_BYTES if vault_limit_bytes is None else vault_limit_bytes)
     if compression not in ("gzip", "xz"):
         raise ValueError("Unsupported private backup compression")
     state.mkdir(parents=True, exist_ok=True)
@@ -190,8 +202,10 @@ def backup(state, database, encryption_key=None, *, compression="xz"):
         ):
             source.backup(target)
         database_bytes = copy.stat().st_size
-        if database_bytes > MAX_VAULT_BYTES:
+        if database_bytes > limit:
             raise ValueError("Vault size limit reached; move to persistent-host deployment")
+        with closing(sqlite3.connect(copy.resolve().as_uri() + "?mode=ro", uri=True)) as inspected:
+            profile = storage_profile(inspected)
         # Compression and encryption happen outside the tracked state tree.
         # Abrupt termination must never leave a plaintext file named *.fernet
         # where an always-run workflow step could accidentally commit it.
@@ -227,6 +241,8 @@ def backup(state, database, encryption_key=None, *, compression="xz"):
         "source_commit": os.environ.get("IMPACT_SOURCE_COMMIT", "local"),
         "private": True,
         "database_bytes": database_bytes,
+        "vault_limit_bytes": limit,
+        "storage_profile": profile,
         "compressed_bytes": compressed_bytes,
         "archive_bytes": (state / name).stat().st_size,
         "retention": {"current_directory_copy_target": 3, "git_history_pruned": False},
@@ -259,9 +275,9 @@ def state_backend(state):
     return manifest.get("storage_backend", "git")
 
 
-def restore_current(state, database, encryption_key=None, *, store=None):
+def restore_current(state, database, encryption_key=None, *, store=None, vault_limit_bytes=None):
     if state_backend(state) == "git":
-        return restore(state, database, encryption_key)
+        return restore(state, database, encryption_key, vault_limit_bytes=vault_limit_bytes)
     if not encryption_key or store is None:
         raise ValueError("Remote recovery requires the key and an authenticated repository store")
     manifest = json.loads((state / "current.json").read_text())
@@ -269,7 +285,7 @@ def restore_current(state, database, encryption_key=None, *, store=None):
         private = Path(directory)
         store.download(manifest, private / manifest["archive"])
         (private / "current.json").write_text(json.dumps(manifest))
-        return restore(private, database, encryption_key)
+        return restore(private, database, encryption_key, vault_limit_bytes=vault_limit_bytes)
 
 
 def validate_current(state, encryption_key, *, store=None):
@@ -284,23 +300,41 @@ def validate_current(state, encryption_key, *, store=None):
         return validate_encrypted_state(state, encryption_key, recovery_archive=archive)
 
 
-def backup_remote(state, database, encryption_key, *, store, compression="xz"):
+def backup_remote(
+    state, database, encryption_key, *, store, compression="xz", vault_limit_bytes=None
+):
     """Upload/read back privately before changing the small tracked pointer."""
     if not encryption_key:
         raise ValueError("Remote recovery requires authenticated encryption")
     with tempfile.TemporaryDirectory(prefix="impact-remote-backup-") as directory:
         private = Path(directory)
         local = private / "local"
-        manifest = backup(local, database, encryption_key, compression=compression)
+        manifest = backup(
+            local,
+            database,
+            encryption_key,
+            compression=compression,
+            vault_limit_bytes=vault_limit_bytes,
+        )
         validate_encrypted_state(local, encryption_key)
-        if not restore(local, private / "local-check.sqlite3", encryption_key):
+        if not restore(
+            local,
+            private / "local-check.sqlite3",
+            encryption_key,
+            vault_limit_bytes=vault_limit_bytes,
+        ):
             raise RuntimeError("New local backup was not available for recovery verification")
         uploaded = store.publish(local / manifest["archive"], manifest)
         downloaded = private / "download"
         downloaded.mkdir()
         store.download(uploaded, downloaded / uploaded["archive"])
         (downloaded / "current.json").write_text(json.dumps(uploaded))
-        if not restore(downloaded, private / "remote-check.sqlite3", encryption_key):
+        if not restore(
+            downloaded,
+            private / "remote-check.sqlite3",
+            encryption_key,
+            vault_limit_bytes=vault_limit_bytes,
+        ):
             raise RuntimeError("New remote backup was not available for recovery verification")
         uploaded["remote_readback_verified_at"] = datetime.now(timezone.utc).isoformat()
         uploaded["retention"] = {
@@ -331,7 +365,14 @@ def main():
     parser.add_argument("--recovery-storage", choices=("git", "github-draft"), default="git")
     parser.add_argument("--recovery-repository")
     parser.add_argument("--reparse-limit", type=int, default=0)
+    parser.add_argument("--vault-profile", choices=tuple(VAULT_PROFILES), default=DEFAULT_PROFILE)
+    parser.add_argument(
+        "--schedule-utc", default="08:37", help="Declared daily schedule, HH:MM UTC"
+    )
     args = parser.parse_args()
+    limit = vault_limit(args.vault_profile)
+    if not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", args.schedule_utc):
+        parser.error("Schedule must use HH:MM UTC")
     if not 0 <= args.reparse_limit <= 10000:
         parser.error("Reparse limit must be between 0 and 10000")
     if args.reparse_limit and (args.validate_encrypted_state or args.restore_only is not None):
@@ -360,7 +401,7 @@ def main():
             parser.error(
                 "Restore-only requires a new database path outside tracked recovery state and no public output"
             )
-        if not restore_current(state, target, encryption_key, store=store):
+        if not restore_current(state, target, encryption_key, store=store, vault_limit_bytes=limit):
             raise RuntimeError("Recovery checkpoint is not available")
         print(json.dumps({"restored": True, "storage_backend": state_backend(state)}))
         return
@@ -372,7 +413,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="impact-writer-") as directory:
         home = Path(directory)
         database = home / "data/intel.sqlite3"
-        restore_current(state, database, encryption_key, store=store)
+        restore_current(state, database, encryption_key, store=store, vault_limit_bytes=limit)
         os.environ.update(
             IMPACT_HOME=str(home),
             IMPACT_DATABASE=str(database),
@@ -386,9 +427,9 @@ def main():
                 {
                     "installed": True,
                     "kind": "github_actions",
-                    "local_time": "08:37",
+                    "local_time": args.schedule_utc,
                     "timezone": "UTC",
-                    "cron_utc": "37 8 * * *",
+                    "cron_utc": f"{int(args.schedule_utc[3:])} {int(args.schedule_utc[:2])} * * *",
                 }
             )
         )
@@ -421,12 +462,24 @@ def main():
                         encryption_key,
                         store=store,
                         compression=args.backup_compression,
+                        vault_limit_bytes=limit,
                     )
                 else:
-                    backup(state, database, encryption_key, compression=args.backup_compression)
+                    backup(
+                        state,
+                        database,
+                        encryption_key,
+                        compression=args.backup_compression,
+                        vault_limit_bytes=limit,
+                    )
                     # Exercise the just-written format on this runner, including
                     # authentication, bounded decoding and SQLite integrity.
-                    if not restore(state, home / "recovery-check.sqlite3", encryption_key):
+                    if not restore(
+                        state,
+                        home / "recovery-check.sqlite3",
+                        encryption_key,
+                        vault_limit_bytes=limit,
+                    ):
                         raise RuntimeError(
                             "New private backup was not available for recovery verification"
                         )
@@ -438,6 +491,8 @@ def main():
                     "public_output": str(output),
                     "private_backup": "saved",
                     "private_recovery": "verified",
+                    "vault_profile": args.vault_profile,
+                    "vault_limit_bytes": limit,
                     **(
                         {"normalization_maintenance": maintenance}
                         if maintenance is not None

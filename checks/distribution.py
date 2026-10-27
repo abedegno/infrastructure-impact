@@ -6,7 +6,18 @@ import os
 import subprocess
 import sys
 import tempfile
+import tomllib
 from pathlib import Path
+
+
+def release_wheel(root):
+    version = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
+    wheels = sorted((root / "dist").glob("infrastructure_impact-" + version + "-*.whl"))
+    if len(wheels) != 1:
+        raise ValueError(
+            "Build exactly one wheel for the declared package version before distribution checks"
+        )
+    return wheels[0]
 
 
 def main():
@@ -16,7 +27,7 @@ def main():
     )
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
-    wheel = next((root / "dist").glob("infrastructure_impact-*.whl"))
+    wheel = release_wheel(root)
     from infrastructure_impact.plugins.builtin import builtin_plugins
     from infrastructure_impact.plugins.registry import default_registry
 
@@ -25,6 +36,9 @@ def main():
     environment.pop("PYTHONPATH", None)
     environment.pop("PYTHONHOME", None)
     environment["IMPACT_DISTRIBUTION_SOURCE_ROOT"] = str(root)
+    environment["IMPACT_EXPECTED_PACKAGE_VERSION"] = tomllib.loads(
+        (root / "pyproject.toml").read_text()
+    )["project"]["version"]
     environment["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"] = json.dumps(expected)
     with tempfile.TemporaryDirectory() as directory:
         subprocess.run(

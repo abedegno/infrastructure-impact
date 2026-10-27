@@ -50,7 +50,7 @@ manual recovery; it is not silently replaced with an empty vault.
 New backups use XZ compression before the same Fernet encryption. The public
 manifest records `compression: "xz"`; older manifests without that field use
 gzip and remain readable. XZ decoding has a 64 MiB memory limit, bounded output
-blocks and the same 512 MiB expanded-vault limit. Truncated, concatenated or
+blocks and the selected bounded expanded-vault profile (512 MiB by default). Truncated, concatenated or
 trailing XZ streams are rejected. Recovery stages and checks a database privately
 before linking it to a new target path; failed recovery leaves no partial target
 and never overwrites an existing database.
@@ -96,7 +96,8 @@ Never paste the key in an issue, shell argument, log or source file. The reposit
 state is not an off-provider disaster-recovery copy; retain an independent protected
 copy of the key and required archives using the operator's approved backup storage.
 
-Storage limits are 512 MiB uncompressed and 50 MiB per archive. Monitor branch/repo
+The standard profile allows 512 MiB uncompressed; an explicit large profile allows
+1 GiB. Both keep the 50 MiB per-archive limit. Monitor branch/repo
 size and use draft assets or a persistent-host/object-store deployment before
 continued Git snapshots approach the review budget. Removing old working-tree copies does not erase public Git history;
 previous ciphertext remains retrievable and key rotation must account for it.
@@ -127,3 +128,12 @@ continuous uptime and may include partial source failures. The initial review
 cannot be completed until seven real days have elapsed; its due time is reported
 by `checks/operations_report.py`. A 512 MiB repository-size budget triggers operator
 review without deleting history automatically.
+
+## Capacity and cadence follow-up
+
+The standard expanded-vault limit remains 512 MiB; an explicitly selected
+`large` recovery profile supports 1 GiB with the same archive and decoder bounds.
+The writer and monitor share `IMPACT_VAULT_PROFILE`. See [Capacity](CAPACITY.md)
+for measurement, activation and downgrade limits. The public workflow cadence and
+separate activation anchor are documented in [Scheduled reliability](SCHEDULE_RELIABILITY.md).
+Current observations must not be replaced by manually generated success.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add read-only aggregate vault profiling and record the breakdown with hosted recovery metadata, without exposing source or review contents.
+- Add explicit standard (512 MiB) and large (1 GiB) recovery profiles. Preserve archive, decoder-memory and repository budgets, atomic recovery and all historical evidence.
+- Detect missing successful scheduled runs independently of fresh manual publications, with a separate cadence activation anchor, bounded history timestamps and a declared grace period.
+
+
 ## 0.4.1 research preview — 2026-10-27
 
 - Serve the inventory proposal schema through the Python reader, matching static publication. Check every exported schema route in source and installed-wheel acceptance tests.

@@ -188,6 +188,8 @@ only after those dependencies have been cached.
 | [Source access](docs/SOURCE_ACCESS.md) | Runner checks for reviewed source alternatives |
 | [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Evidence gates and investigation queue |
 | [Releasing](docs/RELEASING.md)                           | Prepare a clean public source tree and release                    |
+| [Capacity](docs/CAPACITY.md) | Storage profiling and explicit bounded recovery profiles |
+| [Scheduled reliability](docs/SCHEDULE_RELIABILITY.md) | Actual scheduled-run observations and missing-trigger checks |
 | [Hosted service](docs/HOSTED_SERVICE.md)                 | Public deployment, monitoring and private backups                 |
 | [Source audit](docs/SOURCE_AUDIT.md)                     | Source scopes, fingerprints and unresolved collection limits      |
 | [Source choices](docs/SOURCE_SELECTION.md)               | Reviewed differences between HTML and structured representations  |

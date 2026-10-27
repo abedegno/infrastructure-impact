@@ -216,3 +216,12 @@ before advancing the pointer. It does not reclaim historical Git space or replac
 an independent off-provider recovery plan. Do not force-push, expire backups or
 migrate key custody as routine cleanup. A storage-limit finding requires operator
 review; no data is deleted.
+
+## Capacity and cadence follow-up
+
+The standard expanded-vault limit remains 512 MiB; an explicitly selected
+`large` recovery profile supports 1 GiB with the same archive and decoder bounds.
+The writer and monitor share `IMPACT_VAULT_PROFILE`. See [Capacity](CAPACITY.md)
+for measurement, activation and downgrade limits. The public workflow cadence and
+separate activation anchor are documented in [Scheduled reliability](SCHEDULE_RELIABILITY.md).
+Current observations must not be replaced by manually generated success.

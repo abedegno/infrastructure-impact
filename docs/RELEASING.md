@@ -109,3 +109,8 @@ Read [Hosted service](HOSTED_SERVICE.md), [Draft recovery](DRAFT_RECOVERY.md) an
 [Operations](OPERATIONS.md) for capacity bounds, schedules and reliability-review
 requirements. Manual workflow success does not satisfy an elapsed observation
 window or independent human review.
+
+The distribution checker selects exactly one wheel matching the declared package
+version and verifies the installed distribution version. Older files in `dist/`
+cannot silently substitute for a newly declared release. Ambiguous current-version
+wheels require an explicit clean build directory.
