@@ -14,7 +14,7 @@ def parse_feed(raw, url, limit, cohort):
     return FeedBatch(
         selected,
         frozenset(c for r in records for c in r["cves"]),
-        "All active entries returned by public product advisory API; historical/archive coverage unknown; up to eight selected CVE registry follow-ups require separate Check Point CNA verification",
+        "All active entries returned by public product advisory API, grouped by exact SK identity with row-specific CVE/product scope; historical/archive coverage unknown; up to eight selected CVE registry follow-ups require separate Check Point CNA verification",
         document_urls=tuple(
             "https://cveawg.mitre.org/api/cve/" + cid
             for cid in sorted({cid for row in selected for cid in row["cves"]})[:8]

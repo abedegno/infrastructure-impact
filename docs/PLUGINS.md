@@ -155,6 +155,16 @@ dispatch or database changes.
 
 ## Bounded feed follow-ups and route guards
 
+`FeedBatch.records` must contain at most one document for each exact vendor and
+advisory identity. The collector rejects duplicate identities before writing any
+advisory from that batch. When several explicit source rows belong to one advisory,
+the plugin must preserve their CVE/product associations within one document or
+fail for review; successive writes must not discard earlier rows. Check Point's
+public index uses this pattern for several CVEs under one SK identifier. Distinct
+row conditions remain separate assessment identities, and conflicting row dates
+remain unknown at advisory level. This does not authorize grouping unrelated
+advisory IDs or transferring product scope between source rows.
+
 `FeedBatch.document_urls` optionally supplies up to 20 document URLs (an immutable
 tuple, empty by default). The collector checks each against the plugin allowlist
 and runs the normal document fetch, resolver, normalization, schema and evidence

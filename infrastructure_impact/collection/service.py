@@ -144,6 +144,11 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 plugin = registry.get(feed["vendor"])
                 if plugin.parse_feed:
                     batch = plugin.parse_feed(raw, feed["url"], count, frozenset(COHORT))
+                    identities = [(r["vendor"], r["advisory_id"]) for r in batch.records]
+                    if len(set(identities)) != len(identities):
+                        raise ValueError(
+                            "Vendor feed emitted duplicate advisory identities; normalize related source rows together"
+                        )
                     if any(not allowed(u, feed["vendor"]) for u in batch.document_urls):
                         raise ValueError("Feed target outside reviewed vendor routes")
                     targets += [{"vendor": feed["vendor"], "url": u} for u in batch.document_urls]

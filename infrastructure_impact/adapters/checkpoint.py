@@ -23,11 +23,16 @@ def checkpoint_records(raw, url):
             else None
         )
 
-    result = []
+    grouped = {}
+    seen_rows = set()
     for row in records:
         ids = cves(row.get("cveId", ""))
         if not ids or not row.get("enable", True):
             continue
+        row_id = str(row["id"])
+        if row_id in seen_rows:
+            raise ValueError("Duplicate Check Point index-row identity requires review")
+        seen_rows.add(row_id)
         out = base(
             "checkpoint",
             url,
@@ -66,8 +71,54 @@ def checkpoint_records(raw, url):
         out["warnings"].append(
             "Affected release expressions are retained verbatim; numeric take thresholds do not establish fix availability. Active index does not enumerate all historical advisories."
         )
-        result.append(out)
-    return result
+        grouped.setdefault(out["advisory_id"], []).append((row_id, out))
+    return [_combine_index_rows(identity, rows) for identity, rows in grouped.items()]
+
+
+def _combine_index_rows(identity, rows):
+    """One explicit SK can index several CVEs; never let the last row replace it."""
+    if len(rows) == 1:
+        return rows[0][1]
+    if not re.fullmatch(r"sk[0-9]+", identity):
+        raise ValueError("Repeated Check Point identity is not a reviewed SK identifier")
+    rows = sorted(rows, key=lambda item: item[0])
+    documents = [document for _, document in rows]
+    if len({document.get("advisory_url") or None for document in documents}) != 1:
+        raise ValueError("Check Point SK rows disagree on advisory URL; review required")
+    out = dict(documents[0])
+    out["title"] = f"Check Point public advisory {identity}: {len(rows)} indexed CVE entries"
+    out["cves"] = sorted({cid for document in documents for cid in document["cves"]})
+    out["assessments"] = []
+    out["warnings"] = list(documents[0]["warnings"]) + [
+        "Multiple public-index rows share this SK identity. Each CVE/product statement retains its own row locator; no product or status is cross-joined onto other rows."
+    ]
+    for field in ("published_at", "updated_at"):
+        values = {document[field] for document in documents}
+        out[field] = next(iter(values)) if len(values) == 1 else None
+        if len(values) > 1:
+            out["warnings"].append(
+                f"Index rows disagree on {field}; the advisory date is unknown. Row dates do not establish first CVE disclosure."
+            )
+    out["extensions"] = {
+        "checkpoint_index_rows": [
+            {
+                "row_id": row_id,
+                "cves": document["cves"],
+                "title": document["title"],
+                "published_at": document["published_at"],
+                "updated_at": document["updated_at"],
+            }
+            for row_id, document in rows
+        ]
+    }
+    for row_id, document in rows:
+        for claim in document["assessments"]:
+            claim = dict(claim)
+            # Distinct rows can use the same product label with different
+            # conditions. Preserve those branches rather than picking one.
+            claim["product_id"] += ":index-row:" + row_id
+            out["assessments"].append(claim)
+    return out
 
 
 def checkpoint_article(raw, url, vendor):

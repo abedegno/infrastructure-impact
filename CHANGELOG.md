@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Preserve all explicit CVE rows sharing a Check Point SK identity, retaining row-specific product branches and conflicting-date unknowns; reject duplicate document identities at the common feed writer before any advisory write.
+
 - Add three reviewed CloudVision management-appliance advisories, preserving TACACS+ shell-login prerequisites, custom-role-only mitigation, a publisher release-cutoff discrepancy, and CVX server fixes distinct from excluded client switches.
 
 - Reject non-finite numeric values at advisory/component validation and publication boundaries, preserving the last valid public generation if malformed source or report data is supplied.
