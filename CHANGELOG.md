@@ -2,6 +2,9 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Add reviewed older Arista software/model boundaries and a local FragAttacks CVE/model matrix, preserving nested exclusions, DNS/TLS prerequisites, reference-only CVEs and dated lifecycle limits.
+- Keep retained-source triage read-only; collection writers persist source choices only after validated ingestion.
+
 - Add a frozen OpenSSH service study with explicit role exclusions, downstream variants, reference-source drift and unknown vendor cells; suppress rates and rankings.
 - Keep upstream reference collection separate from infrastructure vendor advisories through an exact-route registry and additive migration 008.
 - Preserve the reviewed Cisco regreSSHion HTML product scope while retaining its advertised CSAF separately; expose source-choice fingerprints and alternate failures in collection health through additive migration 009.

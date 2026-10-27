@@ -119,3 +119,5 @@ Raw responses, error bodies, credentials and private research are excluded from
 public progress metadata. Limits still apply to individual retrievals (15 MB,
 25-second requests, one bounded retry). Budget each additional source against the
 hosted job's 40-minute limit and encrypted-state storage limits.
+
+The [older Arista source review](research/arista-legacy-applicability-20261027.md) documents five additional reviewed layouts, including model-scoped exclusions and a per-CVE Wi-Fi matrix. It does not imply all remaining historical layouts are supported.

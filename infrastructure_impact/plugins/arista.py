@@ -8,6 +8,8 @@ from ..adapters.arista_boundaries import (
     xz_unaffected,
 )
 from ..adapters.arista_history import arista_release_history
+from ..adapters.arista_legacy_scope import ROUTES as OLDER_ROUTES
+from ..adapters.arista_legacy_scope import older_scope
 from ..adapters.arista_scoped import (
     airsnitch_notice,
     grouped_software,
@@ -24,6 +26,8 @@ from .shared import is_json, structured
 def parse(raw, url, vendor):
     if is_json(raw):
         return structured(raw, url, vendor)
+    if any(url.rstrip("/").endswith("/" + value[0]) for value in OLDER_ROUTES.values()):
+        return older_scope(raw, url, vendor)
     for slug, parser in {
         "/19905-security-advisory-0101": radius,
         "/19222-security-advisory-0095": xz_unaffected,
