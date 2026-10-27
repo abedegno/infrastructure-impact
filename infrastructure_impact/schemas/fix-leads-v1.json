@@ -314,6 +314,12 @@
               "boolean",
               "null"
             ]
+          },
+          "component_locators": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

@@ -124,6 +124,8 @@ def main():
             "extraction-validation.json",
             "review-packet.json",
             "publisher-history.json",
+            "product-cohorts.json",
+            "disclosure-review.json",
         ):
             assert (root / "current" / filename).exists()
         for filename in (
@@ -138,6 +140,9 @@ def main():
             "fix-leads-v1.json",
             "component-studies-v1.json",
             "source-selection-v1.json",
+            "product-cohort-definition-v1.json",
+            "product-cohorts-v1.json",
+            "disclosure-review-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         groups = json.loads((root / "current/product-groups.json").read_text())

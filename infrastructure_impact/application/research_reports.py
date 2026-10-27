@@ -7,10 +7,17 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from ..settings import PACKAGE
 
-REPORTS = ("family_completeness", "comparison_readiness", "fix_leads", "component_studies")
+REPORTS = (
+    "family_completeness",
+    "comparison_readiness",
+    "fix_leads",
+    "component_studies",
+    "product_cohorts",
+    "disclosure_review",
+)
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=6)
 def validator(name):
     if name not in REPORTS:
         raise ValueError("Unknown research report")

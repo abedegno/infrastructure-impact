@@ -48,3 +48,30 @@ revision diffs. The `parse_document_history` vendor hook is optional and pure;
 unsupported/changed layouts remain visible. Only configured public release sources
 cross the publication boundary. The common contract is
 `schemas/publisher-history-v1.json`.
+
+## Investigation queue
+
+The **Disclosure review** view turns eligible fix leads into source-linked tasks.
+`/api/v1/disclosure-review` and static `/disclosure-review.json` use
+`schemas/disclosure-review-v1.json` and carry the publication generation. The
+public projection rebuilds them without copying private notes or review state.
+
+Each task requests exact product/build/CVE linkage, independent release
+availability, an earlier-disclosure search including access gaps, historical
+document availability, and independent adjudication. All five gates remain
+unestablished by this queue. Reviewed availability decisions remain in the
+separate private candidate workflow above; this queue does not certify or alter
+them, or modify the original independent extraction-review packet.
+
+Related case files require the same vendor, overlapping CVE IDs and an exact
+source URL in common. Earlier documents must also reference a lead CVE. Their
+publisher dates remain claims, not verified historical availability. Tasks with
+counter-evidence direct the reviewer to inspect it first. Component changes and
+security wording without CVEs direct the reviewer to establish purpose and scope;
+other chronology leads request availability and disclosure evidence. These are
+review actions, not suspicion or severity scores.
+
+A component-change task without established CVE linkage keeps an empty CVE list.
+No upstream version-range match invents that linkage. Alternative explanations
+remain visible. Absence of a task does not establish absence of undocumented
+security fixes, and the queue never labels an update as a concealed fix.

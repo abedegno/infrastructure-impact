@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add three product-scope cohorts with 15 targets, build/service/lifecycle gaps, exact component-source bindings and suppressed denominators.
+- Add a disclosure review queue with five evidence gates, CVE-specific counter-evidence and alternative explanations.
+- Serve both reports through generation-bound API, static files and dashboard views, with strict schemas and privacy-boundary rebuilding.
+- Add a manual metadata-only runner probe for four reviewed Cisco/Aruba alternatives; all four first-run requests returned 403 and remain access gaps.
+
 ## 0.3.0 research preview — 2026-10-27
 
 First tagged source preview. Source coverage remains bounded, independent human

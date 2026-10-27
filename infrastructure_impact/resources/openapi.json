@@ -705,6 +705,44 @@
           }
         }
       }
+    },
+    "/api/v1/product-cohorts": {
+      "get": {
+        "summary": "Product scope and source coverage",
+        "description": "Whole-publication product-scope targets, bound component sources and missing build/service/lifecycle inventory. Rates and denominators remain null. Static Pages serves /product-cohorts.json.",
+        "responses": {
+          "200": {
+            "description": "Generation-bound product cohort report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/product-cohorts-v1.json"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getProductCohorts"
+      }
+    },
+    "/api/v1/disclosure-review": {
+      "get": {
+        "summary": "Disclosure investigation review queue",
+        "description": "Investigation tasks with CVE-specific counter-evidence and five unestablished evidence gates. No automatic verification or intent inference. Static Pages serves /disclosure-review.json.",
+        "responses": {
+          "200": {
+            "description": "Generation-bound disclosure review queue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/disclosure-review-v1.json"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getDisclosureReview"
+      }
     }
   }
 }

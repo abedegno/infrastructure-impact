@@ -132,4 +132,9 @@ def state(db, cohort=None):
     from .component_studies import component_studies
 
     result["component_studies"] = component_studies(result)
+    from .disclosure_review import disclosure_review
+    from .product_cohorts import product_cohorts
+
+    result["product_cohorts"] = product_cohorts(result)
+    result["disclosure_review"] = disclosure_review(result)
     return result

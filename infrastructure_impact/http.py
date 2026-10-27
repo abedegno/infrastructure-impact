@@ -117,6 +117,8 @@ class Application:
             "/api/v1/comparison-readiness",
             "/api/v1/fix-leads",
             "/api/v1/component-studies",
+            "/api/v1/product-cohorts",
+            "/api/v1/disclosure-review",
         }:
             key = path.rsplit("/", 1)[-1].replace("-", "_")
             if key not in data:
@@ -300,6 +302,8 @@ class Application:
             "/comparison-readiness.json",
             "/fix-leads.json",
             "/component-studies.json",
+            "/product-cohorts.json",
+            "/disclosure-review.json",
             "/comparison-eligibility.json",
             "/product-groups.json",
             "/extraction-validation.json",
@@ -323,6 +327,9 @@ class Application:
             "/schemas/comparison-readiness-v1.json",
             "/schemas/fix-leads-v1.json",
             "/schemas/component-studies-v1.json",
+            "/schemas/product-cohort-definition-v1.json",
+            "/schemas/product-cohorts-v1.json",
+            "/schemas/disclosure-review-v1.json",
             "/schemas/source-selection-v1.json",
             "/schemas/component-inventory-v1.json",
             "/openapi.json",

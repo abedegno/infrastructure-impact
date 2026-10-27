@@ -343,6 +343,7 @@ def leads(data):
                 snapshots=len(snapshots),
                 analysis_state=analysis["state"],
                 components=analysis["components"],
+                component_locators=[b["locator"] for b in analysis["blocks"]],
                 component_scope=analysis.get("component_scope", SECTION_SCOPE),
                 current_evidence=evidence(current),
                 retrieval_history=public_retrieval_history(source.get("retrieval_history")),

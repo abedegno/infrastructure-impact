@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "version": "2026-10-27.1",
+  "design": "Retrospective purposive product-scope planning registry. Selection inherits the three existing role groups, independent of their observed CVE outcomes. Units are research targets, not observed devices, complete product inventories or a representative sample. Null dimensions remain unknown. Separate branches of the same vendor are correlated and cannot be counted as independent vendors.",
+  "cohorts": [
+    {
+      "id": "security-gateways",
+      "name": "Security gateway product scope cohort",
+      "role": "security-gateways",
+      "period": {
+        "start": "2023-01-01",
+        "end": "2026-10-26"
+      },
+      "selection_rule": "All family IDs in the existing comparison plan; PAN feature-release reference branches are separate targets. No selection by affectedness, source success or number of CVEs. This is a research plan, not a preregistered historical study.",
+      "units": [
+        {
+          "id": "cisco-asa-ftd",
+          "family_id": "cisco-asa-ftd",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "paloalto-panos-11-1",
+          "family_id": "paloalto-panos",
+          "release_train": "11.1",
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": [
+            "https://docs.paloaltonetworks.com/oss-listings/pan-os-oss-listings/pan-os-11-1-open-source-software-oss-listing"
+          ]
+        },
+        {
+          "id": "paloalto-panos-11-2",
+          "family_id": "paloalto-panos",
+          "release_train": "11.2",
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": [
+            "https://docs.paloaltonetworks.com/oss-listings/pan-os-oss-listings/pan-os-11-2-open-source-software-oss-listing"
+          ]
+        },
+        {
+          "id": "juniper-srx",
+          "family_id": "juniper-srx",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "checkpoint-quantum-gateway",
+          "family_id": "checkpoint-quantum-gateway",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "fortinet-fortios",
+          "family_id": "fortinet-fortios",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        }
+      ]
+    },
+    {
+      "id": "switching",
+      "name": "Switching software product scope cohort",
+      "role": "switching",
+      "period": {
+        "start": "2023-01-01",
+        "end": "2026-10-26"
+      },
+      "selection_rule": "All family IDs in the existing comparison plan; PAN feature-release reference branches are separate targets. No selection by affectedness, source success or number of CVEs. This is a research plan, not a preregistered historical study.",
+      "units": [
+        {
+          "id": "cisco-nxos",
+          "family_id": "cisco-nxos",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "aruba-aoscx",
+          "family_id": "aruba-aoscx",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "arista-eos",
+          "family_id": "arista-eos",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "juniper-switches",
+          "family_id": "juniper-switches",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        }
+      ]
+    },
+    {
+      "id": "management",
+      "name": "Infrastructure management product scope cohort",
+      "role": "management",
+      "period": {
+        "start": "2023-01-01",
+        "end": "2026-10-26"
+      },
+      "selection_rule": "All family IDs in the existing comparison plan; PAN feature-release reference branches are separate targets. No selection by affectedness, source success or number of CVEs. This is a research plan, not a preregistered historical study.",
+      "units": [
+        {
+          "id": "arista-cvp",
+          "family_id": "arista-cvp",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "paloalto-panorama-11-2",
+          "family_id": "paloalto-panorama",
+          "release_train": "11.2",
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": [
+            "https://docs.paloaltonetworks.com/oss-listings/panorama-oss-listings/panorama-11-2-open-source-software-oss-listing"
+          ]
+        },
+        {
+          "id": "checkpoint-quantum-management",
+          "family_id": "checkpoint-quantum-management",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "fortinet-fortimanager",
+          "family_id": "fortinet-fortimanager",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        },
+        {
+          "id": "hpe-oneview",
+          "family_id": "hpe-oneview",
+          "release_train": null,
+          "firmware_build": null,
+          "hardware_model": null,
+          "deployment": null,
+          "service": {
+            "name": "administrative SSH",
+            "enabled": null
+          },
+          "support_window": null,
+          "component_sources": []
+        }
+      ]
+    }
+  ],
+  "definition_sha256": "5bea56991388e536e0257c74f474b9d0f26b77ece28fc9427aee9c2a6dbe6231"
+}

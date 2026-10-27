@@ -94,6 +94,8 @@ def check(origin, expected=None):
                 "comparison_readiness",
                 "fix_leads",
                 "component_studies",
+                "product_cohorts",
+                "disclosure_review",
             )
             if data.get(k)
         ):
@@ -107,9 +109,14 @@ def check(origin, expected=None):
             report = json.loads(report_raw)
             assert report["publication"] == data["publication"], "Mixed report generations"
             assert report["generated_at"] == data["generated_at"], "Mixed report dates"
-            if key == "comparison_eligibility":
+            if key in ("comparison_eligibility", "product_cohorts", "disclosure_review"):
                 data[key] = report
         assert data["extraction_validation"]["independent_human_review_completed"] is False
+        for key in ("product_cohorts", "disclosure_review"):
+            if data.get(key):
+                from infrastructure_impact.application.research_reports import validator
+
+                validator(key).validate(data[key])
         assert all(
             v["eligibility"]["rate_comparison"] == "suppressed"
             for v in data["comparison_eligibility"]["vendors"]

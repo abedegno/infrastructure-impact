@@ -182,9 +182,11 @@ only after those dependencies have been cached.
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
 | [Security](SECURITY.md)                                  | Reporting vulnerabilities in this project                         |
+| [Product cohorts](docs/PRODUCT_COHORTS.md) | Product/build scope and denominator gaps |
+| [Source access](docs/SOURCE_ACCESS.md) | Runner checks for reviewed source alternatives |
+| [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Evidence gates and investigation queue |
 | [Releasing](docs/RELEASING.md)                           | Prepare a clean public source tree and release                    |
 | [Hosted service](docs/HOSTED_SERVICE.md)                 | Public deployment, monitoring and private backups                 |
-| [Disclosure research](docs/DISCLOSURE_RESEARCH.md)       | Release revision and availability evidence gates                  |
 | [Source audit](docs/SOURCE_AUDIT.md)                     | Source scopes, fingerprints and unresolved collection limits      |
 | [Source choices](docs/SOURCE_SELECTION.md)               | Reviewed differences between HTML and structured representations  |
 | [Archive collection](docs/ARCHIVE_COLLECTION.md)         | Bounded queues, retry policy and retained-capture parser recovery |

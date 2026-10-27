@@ -33,6 +33,11 @@ appliance-specific release statements retain patch, platform and role limits.
 Multi-row Check Point SK advisories preserve each explicit CVE/product association;
 the common feed writer rejects duplicate advisory identities before its first write.
 
+Product/build planning and the investigation queue are documented in
+[Product cohorts](PRODUCT_COHORTS.md), [Source access](SOURCE_ACCESS.md) and
+[Disclosure research](DISCLOSURE_RESEARCH.md). Unknown inventories and independent
+review remain blockers to vendor rates.
+
 ## Next priorities
 
 - Continue expanding vendor/product families and historical collection; publish source-specific

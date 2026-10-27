@@ -21,6 +21,11 @@ from .storage.repository import VENDORS, connect, now
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+    cohort = sub.add_parser(
+        "cohort-validate",
+        help="Validate a frozen product-scope definition without opening the vault",
+    )
+    cohort.add_argument("file", type=Path)
     note = sub.add_parser("release-note")
     note.add_argument("file", type=Path)
     note.add_argument("--url", required=True)
@@ -55,6 +60,24 @@ def main(argv=None):
     )
     correction.add_argument("file", type=Path)
     args = parser.parse_args(argv)
+    if args.command == "cohort-validate":
+        from .application.product_cohorts import definition
+
+        with args.file.open("rb") as stream:
+            raw = stream.read(1_000_001)
+        if len(raw) > 1_000_000:
+            parser.error("Product cohort definition exceeds 1 MB")
+        value = definition(json.loads(raw))
+        print(
+            json.dumps(
+                {
+                    "valid": True,
+                    "definition_sha256": value["definition_sha256"],
+                    "cohorts": len(value["cohorts"]),
+                }
+            )
+        )
+        return
     with closing(connect()) as db, db:
         if args.command == "import-browser-capture":
             from .application.browser_capture import MAX_CAPTURE_BYTES, import_capture

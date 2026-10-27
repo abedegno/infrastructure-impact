@@ -128,6 +128,8 @@ function render() {
     casefiles: renderCasefiles,
     families: renderFamilies,
     readiness: renderReadiness,
+    productcohorts: renderProductCohorts,
+    disclosurereview: renderDisclosureReview,
     fixleads: renderFixLeads,
     studies: renderComponentStudies,
     scorecards: renderScorecards,
@@ -869,4 +871,34 @@ function sourceSelectionMarkup(audit) {
 function parserReplayMarkup(report) {
   if (!report || !report.attempts) return 'No parser replays logged; earlier activity unknown';
   return `${report.recovered} recovered; ${report.not_applicable} outside scope<small>${report.still_unsupported} still unsupported; ${report.not_retained} not retained</small><details><summary>${report.attempts} logged offline attempts</summary><p>${esc(report.method)}</p>${report.examples.map((item) => `<p>${link(item.requested_url, 'Retained source')} · ${esc(item.outcome.replaceAll('_', ' '))}<small>Processed ${date(item.checked_at)} · parser ${esc(item.parser_version)}</small></p>${item.source_sha256 ? `<p>Capture ${date(item.source_observed_at)}</p><code>${esc(item.source_sha256)}</code>` : '<p>Selected capture metadata unavailable for this attempt.</p>'}${item.error_code ? `<p>${esc(item.error_code)}</p>` : ''}`).join('')}${report.examples_truncated ? '<p>Latest ten attempts shown.</p>' : ''}</details>`;
+}
+
+function renderProductCohorts() {
+  const report = data.product_cohorts;
+  if (!report) {
+    $('#view').innerHTML = '<p>Product cohorts unavailable for this publication.</p>';
+    return;
+  }
+  $('#view').innerHTML =
+    `<h2>Product cohorts</h2><div class="notice">${esc(report.method)}</div><p>${link('/product-cohorts.json', 'Download product scopes and source coverage')}</p><p>${esc(report.definition.design)}</p><details><summary>Scope version and fingerprint</summary><p>${esc(report.definition.version)}</p><code>${esc(report.definition.definition_sha256)}</code></details><h3>Component evidence by vendor</h3><p>These counts describe retained source references. They do not measure component inventory completeness or vendor security.</p><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Sources with component references</th><th>Analyzed release sources</th><th>Vendor source errors</th></tr></thead><tbody>${report.component_source_coverage.map((r) => `<tr><td>${esc(name(r.vendor))}</td><td>${r.sources_with_component_references}</td><td>${r.analyzed_sources}</td><td>${r.source_errors}</td></tr>`).join('')}</tbody></table></div>${report.cohorts
+      .map(
+        (c) =>
+          `<article class="change"><h3>${esc(c.name)}</h3><p>Research period: ${esc(c.period.start)} to ${esc(c.period.end)}. ${c.selected_scope_units} selected product scopes; confirmed build denominator unavailable. Comparisons blocked.</p>${c.units
+            .map((r) => {
+              const t = r.target;
+              return `<details><summary>${esc(name(r.vendor))} · ${esc(r.name)}${t.release_train ? ` · ${esc(t.release_train)}` : ''}</summary><p>Targets: firmware build ${esc(t.firmware_build || 'unspecified')}; hardware ${esc(t.hardware_model || 'unspecified')}; deployment ${esc(t.deployment || 'unspecified')}. ${esc(t.service.name)} enabled: ${t.service.enabled === null ? 'unknown' : t.service.enabled ? 'targeted enabled' : 'targeted disabled'}. Support window: ${esc(t.support_window ? `${t.support_window.start} to ${t.support_window.end}` : 'unknown')}.</p><h4>Bound component references</h4>${r.component_evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')} · retained ${date(e.observed_at)}</p><p>${esc(e.component_scope)}</p><p>${esc(JSON.stringify(e.components))}</p><p>${esc(e.locators.join('; '))}</p><code>${esc(e.source_sha256)}</code><p>Latest successful retrieval matches analyzed snapshot: ${e.latest_retrieval_matches_analyzed_snapshot === null ? 'unknown' : e.latest_retrieval_matches_analyzed_snapshot ? 'yes' : 'no; source review needed'}.</p>`).join('') || '<p>No component reference is bound to this product scope. Other products from the same vendor cannot fill this gap.</p>'}${r.source_checks.map((s) => `<p>${link(s.source_url, 'Source check')} · ${esc(s.outcome)} · ${date(s.checked_at)}${s.error_code ? ` · ${esc(s.error_code)}` : ''}</p>`).join('')}<h4>Still needed</h4><ul>${r.missing_dimensions.map((m) => `<li>${esc(m.replaceAll('_', ' '))}</li>`).join('')}</ul><p>Targets define research scope; they are not verified product facts. No affectedness rate is calculated.</p></details>`;
+            })
+            .join('')}</article>`,
+      )
+      .join('')}`;
+}
+
+function renderDisclosureReview() {
+  const report = data.disclosure_review;
+  if (!report) {
+    $('#view').innerHTML = '<p>Disclosure review unavailable for this publication.</p>';
+    return;
+  }
+  $('#view').innerHTML =
+    `<h2>Disclosure review queue</h2><div class="notice">${esc(report.method)}</div><p>${link('/disclosure-review.json', 'Download investigation queue')}</p>${report.leads_truncated ? '<p>Lead list is bounded; additional candidates may be omitted.</p>' : ''}${report.cases.map((c) => `<article class="change"><div class="eyebrow">${esc(name(c.vendor))} · ${esc(c.kind.replaceAll('_', ' '))}</div><h3>${esc(c.product)}</h3><p>${esc(c.cve_ids.join(', ') || 'CVE linkage not established')}</p><p>Next: ${esc(c.next_action.replaceAll('_', ' '))}. Independent review pending.</p>${c.evidence.map((e) => `<p>${link(e.source_url, 'Retained source')} · captured ${date(e.observed_at)} · publisher date claim ${date(e.publisher_date_claim)}</p><code>${esc(e.source_sha256)}</code>`).join('')}<h4>Earlier-document counter-evidence</h4>${c.earlier_document_counter_evidence.map((e) => `<p>${link(e.source_url, 'Earlier-dated publisher document')} · publisher date claim ${date(e.publisher_date_claim)}</p><code>${esc(e.source_sha256)}</code><p>This date claim does not establish historical availability.</p>`).join('') || '<p>No related earlier document is linked here. This is not an exhaustive search for earlier disclosure.</p>'}<h4>Evidence gates</h4><ul>${c.checklist.map((q) => `<li>${esc(q.question)} <strong>Not established by this queue.</strong></li>`).join('')}</ul><h4>Alternative explanations</h4><ul>${c.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><p>Concealment is not established.</p></article>`).join('') || '<p>No eligible leads in this publication. This does not establish absence of undocumented security changes.</p>'}`;
 }

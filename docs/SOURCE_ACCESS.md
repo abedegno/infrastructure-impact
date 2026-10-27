@@ -25,6 +25,11 @@ vendor's HTTPS policy. A successful response requires content and parser review;
 it is not a historical availability observation or proof of an advisory's scope.
 The workflow does not modify the collector configuration or mark sources healthy.
 
+The first [runner probe](https://github.com/abedegno/infrastructure-impact/actions/runs/40479366882)
+on 27 October 2026 at 09:15 UTC returned HTTP 403 for all four routes. The HTML
+alternative therefore did not resolve the hosted Cisco gap. These are four
+point-in-time observations, not proof of their cause or historical access.
+
 A failed request from a restricted local environment may reflect that environment,
 not the publisher. Compare the runner receipt and normal collector health rather
 than inferring the cause of a 403 or transport error. The workflow job can succeed
