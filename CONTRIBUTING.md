@@ -33,6 +33,8 @@ publications, backups, private reviews or machine-specific configuration. A
 correction should cite an official source and describe the precise claim to amend;
 missing data is not an unaffected or concealment finding.
 
+For exact-build component evidence, start with the [inventory proposal workflow](docs/BUILD_INVENTORY.md). Keep the proposal and evidence local until rights and scope have been reviewed. A successful byte audit does not certify the proposed inventory.
+
 ## Contracts and migrations
 
 Core field changes need schema, API, documentation and compatibility review.

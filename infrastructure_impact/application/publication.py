@@ -257,6 +257,7 @@ def write_bundle(destination, data):
         "source-selection-v1.json",
         "component-inventory-v1.json",
         "product-cohort-definition-v1.json",
+        "build-inventory-submission-v1.json",
         "product-cohorts-v1.json",
         "disclosure-review-v1.json",
     ):

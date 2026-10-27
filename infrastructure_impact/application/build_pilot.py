@@ -5,6 +5,7 @@ from hashlib import sha256
 
 from ..settings import PACKAGE
 from ..source_policy import allowed
+from .build_inventory import template
 
 UNKNOWN_FIELDS = (
     "component_version",
@@ -14,6 +15,7 @@ UNKNOWN_FIELDS = (
     "service_configuration",
     "historical_support_window",
     "historical_download_availability",
+    "build_component_binding",
 )
 
 
@@ -103,7 +105,32 @@ def build_pilot(data):
                 )
             )
         rows.append(
-            dict(**target, fields=fields, state="partial_public_evidence", verified_inventory=False)
+            dict(
+                **target,
+                fields=fields,
+                state="partial_public_evidence",
+                verified_inventory=False,
+                inventory_proposal_template=template(
+                    target["vendor"],
+                    target["product_literal"],
+                    target["firmware_build"],
+                    "OpenSSH",
+                    spec["role"],
+                ),
+                source_check=next(
+                    (
+                        dict(
+                            outcome=c["outcome"],
+                            checked_at=c.get("checked_at"),
+                            error_code=c.get("error_code"),
+                        )
+                        for c in data.get("health", [])
+                        if c["vendor"] == target["vendor"]
+                        and c["source_url"] == target["source_url"]
+                    ),
+                    dict(outcome="not_checked", checked_at=None, error_code=None),
+                ),
+            )
         )
     return dict(
         schema_version=1,

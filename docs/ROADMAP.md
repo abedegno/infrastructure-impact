@@ -38,6 +38,14 @@ Product/build planning and the investigation queue are documented in
 [Disclosure research](DISCLOSURE_RESEARCH.md). Unknown inventories and independent
 review remain blockers to vendor rates.
 
+## Exact-build evidence preparation — 27 October 2026
+
+The two-vendor firmware pilot now shows a side-by-side evidence table, separate
+source-check status and blank vendor-neutral proposal downloads. Offline proposal
+audits validate scope structure and local byte identity while leaving all semantic,
+independence and comparison gates unverified. Official EOS source and AOS-CX
+source-request leads are documented; no exact-image inventory has been certified.
+
 ## Next priorities
 
 - Continue expanding vendor/product families and historical collection; publish source-specific

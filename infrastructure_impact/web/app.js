@@ -891,6 +891,21 @@ function renderProductCohorts() {
             .join('')}</article>`,
       )
       .join('')}`;
+  document.querySelectorAll('.inventory-template').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = report.build_pilot.targets[Number(button.dataset.index)];
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(target.inventory_proposal_template, null, 2)], {
+          type: 'application/json',
+        }),
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'inventory-proposal-' + target.id + '.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  });
 }
 
 function renderDisclosureReview() {
@@ -905,7 +920,12 @@ function renderDisclosureReview() {
 
 function renderBuildPilot(pilot) {
   if (!pilot) return '';
-  return `<h3>Exact firmware evidence pilot</h3><div class="notice">${esc(pilot.method)}</div><p>${esc(pilot.role)} · ${esc(pilot.component)} · ${esc(pilot.cve_id)}. Inventory verification and independent review remain pending.</p><details><summary>Pilot version and selection fingerprint</summary><p>${esc(pilot.version)}</p><code>${esc(pilot.selection_sha256)}</code></details>${pilot.targets.map((t) => `<article class="change"><h4>${esc(name(t.vendor))} · ${esc(t.product_literal)} · ${esc(t.firmware_build)}</h4><p>Partial public evidence; no verified build inventory or comparison denominator.</p><div class="table-wrap"><table><thead><tr><th>Inventory field</th><th>Evidence state</th><th>Value and provenance</th></tr></thead><tbody>${t.fields.map((f) => `<tr><td>${esc(f.field.replaceAll('_', ' '))}</td><td>${esc(f.state.replaceAll('_', ' '))}</td><td>${esc(f.value || 'Unknown')}${f.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')} · ${esc(e.locator)} · captured ${date(e.observed_at)}</p><code>${esc(e.source_sha256)}</code>`).join('')}</td></tr>`).join('')}</tbody></table></div></article>`).join('')}`;
+  return `<h3>Exact firmware evidence pilot</h3><div class="notice">${esc(pilot.method)}</div><p>${esc(pilot.role)} · ${esc(pilot.component)} · ${esc(pilot.cve_id)}. Inventory verification and independent review remain pending.</p><details><summary>Pilot version and selection fingerprint</summary><p>${esc(pilot.version)}</p><code>${esc(pilot.selection_sha256)}</code></details>${renderPilotComparison(pilot)}${pilot.targets.map((t, i) => `<article class="change"><h4>${esc(name(t.vendor))} · ${esc(t.product_literal)} · ${esc(t.firmware_build)}</h4><p>Partial public evidence; no verified build inventory or comparison denominator.</p>${t.inventory_proposal_template ? `<button class="inventory-template" data-index="${i}">Download blank inventory proposal for ${esc(t.firmware_build)}</button><p>The proposal is for local evidence preparation. Downloading it does not submit or publish evidence.</p>` : ''}<div class="table-wrap"><table><thead><tr><th>Inventory field</th><th>Evidence state</th><th>Value and provenance</th></tr></thead><tbody>${t.fields.map((f) => `<tr><td>${esc(f.field.replaceAll('_', ' '))}</td><td>${esc(f.state.replaceAll('_', ' '))}</td><td>${esc(f.value || 'Unknown')}${f.evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')} · ${esc(e.locator)} · captured ${date(e.observed_at)}</p><code>${esc(e.source_sha256)}</code>`).join('')}</td></tr>`).join('')}</tbody></table></div></article>`).join('')}`;
+}
+
+function renderPilotComparison(pilot) {
+  const fields = [...new Set(pilot.targets.flatMap((t) => t.fields.map((f) => f.field)))];
+  return `<h4>Pilot evidence comparison</h4><p>Both targets concern the same component, CVE and service role. The cells show evidence states rather than comparable exposure rates. Publisher backport statements do not replace exact-image evidence.</p><div class="table-wrap"><table><thead><tr><th>Evidence dimension</th>${pilot.targets.map((t) => `<th>${esc(name(t.vendor))}<small>${esc(t.firmware_build)}</small></th>`).join('')}</tr></thead><tbody><tr><th>Latest advisory check</th>${pilot.targets.map((t) => `<td>${esc(t.source_check?.outcome || 'not checked')}<small>${date(t.source_check?.checked_at)}${t.source_check?.error_code ? ` · ${esc(t.source_check.error_code)}` : ''}</small></td>`).join('')}</tr>${fields.map((field) => `<tr><th>${esc(field.replaceAll('_', ' '))}</th>${pilot.targets.map((t) => `<td>${esc((t.fields.find((f) => f.field === field)?.state || 'unknown').replaceAll('_', ' '))}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p>Still needed: exact build-to-component mapping, package and patch evidence, hardware and service scope, image identity, historical support and availability, and independent review. Detailed provenance follows.</p>`;
 }
 
 function renderInvestigation(result) {

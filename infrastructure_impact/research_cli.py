@@ -26,6 +26,17 @@ def main(argv=None):
         help="Validate a frozen product-scope definition without opening the vault",
     )
     cohort.add_argument("file", type=Path)
+    inventory_template = sub.add_parser(
+        "inventory-template", help="Print a blank private build-inventory evidence proposal"
+    )
+    for field in ("vendor", "product", "build", "component", "role"):
+        inventory_template.add_argument("--" + field, required=True)
+    inventory_audit = sub.add_parser(
+        "inventory-audit",
+        help="Audit a private inventory proposal offline without opening the vault",
+    )
+    inventory_audit.add_argument("file", type=Path)
+    inventory_audit.add_argument("--evidence-dir", type=Path)
     note = sub.add_parser("release-note")
     note.add_argument("file", type=Path)
     note.add_argument("--url", required=True)
@@ -60,6 +71,22 @@ def main(argv=None):
     )
     correction.add_argument("file", type=Path)
     args = parser.parse_args(argv)
+    if args.command in ("inventory-template", "inventory-audit"):
+        from .application.build_inventory import MAX_PROPOSAL_BYTES, audit, loads, template
+
+        try:
+            if args.command == "inventory-template":
+                result = template(args.vendor, args.product, args.build, args.component, args.role)
+            else:
+                with args.file.open("rb") as stream:
+                    proposal = loads(stream.read(MAX_PROPOSAL_BYTES + 1))
+                result = audit(proposal, args.evidence_dir)
+        except (ValueError, OSError):
+            parser.error(
+                "Inventory proposal or evidence rejected; check the documented contract and file bounds"
+            )
+        print(json.dumps(result, indent=2))
+        return
     if args.command == "cohort-validate":
         from .application.product_cohorts import definition
 

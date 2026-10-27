@@ -148,3 +148,13 @@ response. `schemas/release-history-v1.json` describes normalized dated publisher
 statements without CVE applicability or invented firmware checksums. Browser
 summaries remain private and separate from the release-asset/publication path.
 See [BROWSER_CAPTURE.md](BROWSER_CAPTURE.md) for provenance and completeness limits.
+
+## Private build evidence proposals
+
+`build-inventory-submission-v1.json` is a separate, bounded input contract for
+offline exact-build evidence preparation. It is served under `/schemas/` and
+validated by `impact research inventory-audit`. It does not replace advisory v2
+or component-reference v1. The additive optional pilot proposal templates in
+`product-cohorts-v1.json` embed the same contract for standalone offline validation.
+Only blank templates are publicly generated; private proposals are not imported
+or projected. See [Build inventory](BUILD_INVENTORY.md).

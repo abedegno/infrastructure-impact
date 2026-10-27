@@ -806,6 +806,250 @@
               },
               "verified_inventory": {
                 "const": false
+              },
+              "inventory_proposal_template": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema_version",
+                  "kind",
+                  "target",
+                  "artifacts",
+                  "claims"
+                ],
+                "properties": {
+                  "schema_version": {
+                    "const": 1
+                  },
+                  "kind": {
+                    "const": "build_inventory_proposal"
+                  },
+                  "target": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "vendor",
+                      "product",
+                      "firmware_build",
+                      "component",
+                      "role"
+                    ],
+                    "properties": {
+                      "vendor": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "pattern": "\\S"
+                      },
+                      "product": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "pattern": "\\S"
+                      },
+                      "firmware_build": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "pattern": "\\S"
+                      },
+                      "component": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "pattern": "\\S"
+                      },
+                      "role": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048,
+                        "pattern": "\\S"
+                      }
+                    }
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "maxItems": 32,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "file_name",
+                        "sha256",
+                        "source_url",
+                        "observed_at",
+                        "kind",
+                        "redistribution",
+                        "rights_basis"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                        },
+                        "file_name": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "source_url": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2048,
+                              "pattern": "\\S",
+                              "format": "uri"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "observed_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "kind": {
+                          "enum": [
+                            "publisher_manifest",
+                            "publisher_sbom",
+                            "publisher_advisory",
+                            "publisher_release_notes",
+                            "source_archive",
+                            "image_metadata",
+                            "device_export",
+                            "historical_capture"
+                          ]
+                        },
+                        "redistribution": {
+                          "enum": [
+                            "unknown",
+                            "restricted",
+                            "permission_confirmed"
+                          ]
+                        },
+                        "rights_basis": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2048,
+                              "pattern": "\\S"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "claims": {
+                    "type": "array",
+                    "minItems": 9,
+                    "maxItems": 9,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "field",
+                        "state",
+                        "value",
+                        "evidence"
+                      ],
+                      "properties": {
+                        "field": {
+                          "enum": [
+                            "firmware_reference",
+                            "component_version",
+                            "package_patch_id",
+                            "hardware_model",
+                            "image_digest",
+                            "service_configuration",
+                            "historical_support_window",
+                            "historical_download_availability",
+                            "build_component_binding"
+                          ]
+                        },
+                        "state": {
+                          "enum": [
+                            "unknown",
+                            "publisher_statement",
+                            "artifact_observation"
+                          ]
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2048,
+                              "pattern": "\\S"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "evidence": {
+                          "type": "array",
+                          "maxItems": 32,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "artifact_id",
+                              "locator"
+                            ],
+                            "properties": {
+                              "artifact_id": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+                              },
+                              "locator": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2048,
+                                "pattern": "\\S"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "source_check": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "outcome",
+                  "checked_at",
+                  "error_code"
+                ],
+                "properties": {
+                  "outcome": {
+                    "type": "string"
+                  },
+                  "checked_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "error_code": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
               }
             }
           }

@@ -124,6 +124,16 @@ def check(origin, expected=None):
                 assert pilot["independent_human_review_completed"] is False
                 assert pilot["build_denominator"] is None and pilot["rate_comparison"] is None
                 assert all(t["verified_inventory"] is False for t in pilot["targets"])
+                for target in pilot["targets"]:
+                    proposal = target.get("inventory_proposal_template")
+                    if proposal is not None:
+                        assert proposal["artifacts"] == [], (
+                            "Public inventory template contains artifacts"
+                        )
+                        assert all(
+                            c["state"] == "unknown" and c["value"] is None and c["evidence"] == []
+                            for c in proposal["claims"]
+                        ), "Public inventory template contains private claims"
             assert all(
                 c["state"] == "blocked"
                 and c["confirmed_build_denominator"] is None

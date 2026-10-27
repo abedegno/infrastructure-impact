@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.4.0 research preview — 2026-10-27
+
+- Add a vendor-neutral private build-inventory proposal contract and offline template/audit commands, with exact-byte checks, scoped evidence references, bounded input and no automatic certification or publication.
+- Compare the two firmware pilot targets side by side, show source checks separately, expose blank proposal downloads and track exact build-to-component binding as an explicit gap.
+- Document official EOS source archive and AOS-CX source-request leads, preserving access and historical-availability limits.
+
 - Add a two-vendor exact-firmware evidence pilot with field-level provenance and explicit unverified package, image, hardware, configuration and lifecycle fields.
 - Preserve reviewed Arista 0100 EOS fix boundaries and backport context without inferring patch state from OpenSSH version strings.
 - Add three dated assistant disclosure dispositions, exact-source freshness guards and bounded official-source research, including restricted Cisco SBOM terms.
@@ -79,8 +85,8 @@ review is pending, and vendor rates and rankings remain suppressed.
 - Add comparison protocols and per-cell provenance, including excluded evidence;
   distinguish fixed-only unresolved assessments from shared statements.
 
-Changes are recorded here for release preparation. Version 0.3.0 is the current
-source version; this file does not imply a package or GitHub release was published.
+Source releases and evidence publications have separate identities. Consult the
+GitHub release assets and live publication manifest for their exact versions.
 
 ## Research foundations — 2026-10-26
 

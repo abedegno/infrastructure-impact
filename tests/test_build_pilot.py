@@ -162,3 +162,22 @@ def test_context_fields_use_their_own_source_section_locators():
         fields["platform_applicability_context"]["evidence"][0]["locator"] == "Affected Platforms"
     )
     assert fields["hardware_model"]["value"] is None
+
+
+def test_latest_source_failure_does_not_erase_retained_fixed_reference():
+    d = dataset()
+    record = d["records"][0]
+    d["health"] = [
+        dict(
+            vendor=record["vendor"],
+            source_url=record["source_url"],
+            outcome="error",
+            checked_at="2026-10-27T11:00:00Z",
+            error_code="access_denied",
+        )
+    ]
+    row = build_pilot(d)["targets"][0]
+    assert row["source_check"]["outcome"] == "error"
+    assert row["fields"][0]["state"] == "publisher_statement"
+    assert row["fields"][0]["evidence"][0]["source_sha256"] == record["sha256"]
+    assert all(c["state"] == "unknown" for c in row["inventory_proposal_template"]["claims"])

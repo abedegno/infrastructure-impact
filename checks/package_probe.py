@@ -31,6 +31,11 @@ def main():
         expected = json.loads(os.environ["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"])
         assert {vendor: registry.fingerprint(vendor) for vendor in expected} == expected
     assert registry.fingerprint_scheme("acme") == "legacy-package-v1"
+    from infrastructure_impact.application.build_inventory import audit, template
+
+    inventory = template("acme", "Example Router", "1.0", "ExampleSSL", "routing")
+    assert audit(inventory)["inventory_verified"] is False
+    assert (package / "schemas/build-inventory-submission-v1.json").is_file()
     component_url = "https://security.acme.example/components.json"
     component_raw = json.dumps(
         {

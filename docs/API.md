@@ -99,3 +99,9 @@ schema with their publication. See [Product groups](PRODUCT_GROUPS.md).
 Pages serves the static files and runs comparison filtering in the browser; it
 does not host these REST routes. [Extraction validation](EXTRACTION_VALIDATION.md)
 and [disclosure pilot](research/disclosure-pilot-20261026.md) describe the limits.
+
+The Product cohorts pilot optionally includes blank `inventory_proposal_template`
+objects and separate `source_check` metadata for each exact firmware target. These
+additive fields are independent of the private proposal audit; no submission API
+is exposed. The input schema is available at
+`/schemas/build-inventory-submission-v1.json`. See [Build inventory](BUILD_INVENTORY.md).

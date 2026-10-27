@@ -73,3 +73,10 @@ Package versions, image hashes, exact hardware compatibility, installed service
 configuration and historical support/availability remain unknown. These are
 partial public evidence profiles, not completed build inventories. Additive report
 fields preserve compatibility with earlier v1 publications.
+
+The pilot includes a side-by-side evidence-state table and current advisory-check
+status without treating a successful check as inventory verification. Download a
+blank local proposal for either target, or generate one for any installed vendor
+and component with the [build inventory workflow](BUILD_INVENTORY.md). Source
+archives and SBOMs require an explicit exact-image binding; that gap is now tracked
+separately from literal package versions.
