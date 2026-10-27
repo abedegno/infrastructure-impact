@@ -62,8 +62,10 @@ Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
 and Fortinet. [Archive source reviews](docs/research/vendor-archives.md) document
 product filters, access gaps and why Cisco archive backfill remains disabled.
 
-The hosted static reader refreshes through a scheduled collector with encrypted evidence backups; see
-[hosting and recovery](docs/HOSTED_SERVICE.md) for cadence, monitoring and limits.
+The hosted static reader runs on GitHub Pages. Manual collection and encrypted
+recovery have been verified; scheduled delivery remains under observation. See
+[scheduled reliability](docs/SCHEDULE_RELIABILITY.md) and
+[hosting and recovery](docs/HOSTED_SERVICE.md) for results, cadence and limits.
 
 ## Quick start with Docker
 

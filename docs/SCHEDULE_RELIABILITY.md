@@ -50,6 +50,31 @@ pending until real elapsed time and sufficiently complete run history permit it.
 A green manual smoke test cannot substitute for that observation.
 
 
+## Dated activation follow-up — 27 October 2026
+
+The cadence anchor remained **11:50:45 UTC**, and the original service anchor
+remained **26 October at 11:53:57 UTC** throughout the deployment and release.
+A separate local, read-only observer checked the public reader and actual Actions
+history at the declared grace deadlines; it neither dispatched collection nor
+changed the observation anchors.
+
+| Observation | Result |
+| --- | --- |
+| Monitor, checked 14:23:16 UTC | No successful scheduled monitor after activation; the 12:23 trigger's two-hour grace period had elapsed. |
+| Collection, checked 14:43:15 UTC | No successful scheduled collection after activation; the 12:43 trigger's two-hour grace period had elapsed. |
+
+Both deadline public checks still verified fresh publication
+`1043641ebcf548a6994c1c47975d6fd0`, generated at 13:44 UTC, with 774 advisories.
+Fresh manual publication and passing software CI do not resolve the scheduling
+gap. The local operations checks returned nonzero for the overdue observations,
+while its separate public-health check passed. This identifies a missing
+successful-run observation, not the cause of a delayed or absent trigger.
+
+A subsequent [manual monitor run](https://github.com/abedegno/infrastructure-impact/actions/runs/40523871430)
+retains hosted operational checks after both deadlines. Its `workflow_dispatch`
+event is not a scheduled delivery or a replacement for either missing successful
+run. Keep the next actual schedule events and the seven-day review open.
+
 ## Shared scheduler boundary
 
 Collection and its six-hour monitor both use GitHub Actions. A missing monitor
