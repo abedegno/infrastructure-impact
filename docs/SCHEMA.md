@@ -7,22 +7,22 @@ enforce CVE scope, source/vendor identity and unique CVE/product identities.
 
 ## Record fields
 
-| Fields | Meaning |
-| --- | --- |
-| `schema_version` | Data-contract major, currently integer `2`. Unsupported majors fail. |
-| `vendor`, `advisory_id` | Registered vendor ID and stable publisher advisory identity. |
-| `title`, `source_url`, `source_format` | Source title and captured representation. |
-| `advisory_url` | Optional human-facing article when capture used an API or index. |
-| `adapter_version` | Code/parser fingerprint, distinct from publisher revisions. |
-| `published_at`, `updated_at` | Nullable publisher dates/times; never local collection time. |
-| `document_status` | Draft/interim/final/published/unknown/rejected source state. |
-| `cves` | Explicit advisory scope, excluding incidental/background references. |
-| `assessments` | Product assertions described below. |
-| `notes`, `metrics`, `timeline`, `warnings` | Scoped context and extraction limitations. |
+| Fields                                        | Meaning                                                                     |
+| --------------------------------------------- | --------------------------------------------------------------------------- |
+| `schema_version`                              | Data-contract major, currently integer `2`. Unsupported majors fail.        |
+| `vendor`, `advisory_id`                       | Registered vendor ID and stable publisher advisory identity.                |
+| `title`, `source_url`, `source_format`        | Source title and captured representation.                                   |
+| `advisory_url`                                | Optional human-facing article when capture used an API or index.            |
+| `adapter_version`                             | Code/parser fingerprint, distinct from publisher revisions.                 |
+| `published_at`, `updated_at`                  | Nullable publisher dates/times; never local collection time.                |
+| `document_status`                             | Draft/interim/final/published/unknown/rejected source state.                |
+| `cves`                                        | Explicit advisory scope, excluding incidental/background references.        |
+| `assessments`                                 | Product assertions described below.                                         |
+| `notes`, `metrics`, `timeline`, `warnings`    | Scoped context and extraction limitations.                                  |
 | `evidence_id`, `sha256`, `source_observed_at` | Storage-attached snapshot identity, raw-source hash and first capture time. |
-| `revision_id`, `observed_at` | Normalized revision identity and local creation time. |
-| `reported_fix_date` | Bulletin-reported date, not verified public availability. |
-| `extensions` | Optional plugin data; excluded from public projection by default. |
+| `revision_id`, `observed_at`                  | Normalized revision identity and local creation time.                       |
+| `reported_fix_date`                           | Bulletin-reported date, not verified public availability.                   |
+| `extensions`                                  | Optional plugin data; excluded from public projection by default.           |
 
 The core envelope rejects unknown fields. Storage metadata is attached by the
 repository. All assessment CVEs must be in `cves`; duplicate CVE/product identities
@@ -50,6 +50,24 @@ Junos and appliance take numbers are not ordered by generic semantic-version
 logic. Remediation availability distinguishes planned, vendor-reported fixed,
 partial mitigation, unavailable, no-fix-planned, not-a-fix and unknown. A claimed
 fixed version does not independently establish download availability.
+
+Remediation date classification is deterministic. The standards, HPE bulletin
+and legacy HTML adapters compare dated targets with the document's publisher
+update date, falling back to its initial date only when no update date is supplied.
+They never compare with the collection or replay clock. An invalid update date,
+or one preceding the initial date, cannot supply that context. A future target
+remains `planned` as of the document; missing date context and a month-only target
+overlapping the document month remain `unknown`. Existing explicit ETA, TBD,
+upcoming, scheduled and future-tense plan expressions remain planned even after
+their dates pass. Shared remediation text can contain several release options;
+consult those expressions rather than treating one availability label as a
+complete release inventory. Date comparisons use publisher calendar days, not
+inferred UTC instants or verified download timestamps.
+
+Older normalization revisions retain their original interpretation and parser
+identity until reprocessed. A correction based on the same retained bytes is a
+parser reinterpretation, not a publisher change or new disclosure. See the
+[retained-source review](research/remediation-date-replay-20261027.md).
 
 ## Time, provenance and compatibility
 

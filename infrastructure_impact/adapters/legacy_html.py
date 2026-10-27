@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from urllib.parse import urlsplit
 
-from .common import HTML, Node, availability, base, cves, iso_date
+from .common import HTML, Node, availability, base, cves, iso_date, remediation_reference
 
 
 def html_advisory(raw, url, vendor):
@@ -114,7 +114,11 @@ def html_advisory(raw, url, vendor):
                         {
                             "category": "vendor_fix",
                             "details": details,
-                            "availability": availability(details, "vendor_fix"),
+                            "availability": availability(
+                                details,
+                                "vendor_fix",
+                                as_of=remediation_reference(out),
+                            ),
                         }
                     ]
                     if state == "affected"

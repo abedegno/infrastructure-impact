@@ -2,7 +2,7 @@
 
 import json
 
-from .common import availability, base, cves
+from .common import availability, base, cves, remediation_reference
 
 
 def csaf(raw, url, vendor):
@@ -97,7 +97,10 @@ def csaf(raw, url, vendor):
                             else "advisory",
                             "source_locator": f"vulnerabilities[cve={cid}].remediations[{index}]",
                             "availability": availability(
-                                rem.get("details", ""), rem.get("category"), rem.get("date")
+                                rem.get("details", ""),
+                                rem.get("category"),
+                                rem.get("date"),
+                                as_of=remediation_reference(out),
                             ),
                         }
                     )
@@ -200,7 +203,9 @@ def cna(raw, url, vendor):
                     {
                         "category": "vendor_fix",
                         "details": details,
-                        "availability": availability(details, "vendor_fix"),
+                        "availability": availability(
+                            details, "vendor_fix", as_of=remediation_reference(out)
+                        ),
                         "scope": "explicit_product_heading",
                     }
                 )

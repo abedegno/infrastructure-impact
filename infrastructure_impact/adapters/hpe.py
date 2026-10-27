@@ -3,7 +3,7 @@
 import re
 from datetime import datetime
 
-from .common import HTML, assessment, availability, base, cves
+from .common import HTML, assessment, availability, base, cves, remediation_reference
 
 
 def hpe_bulletin(raw, url, vendor):
@@ -77,7 +77,11 @@ def hpe_bulletin(raw, url, vendor):
                         {
                             "category": "vendor_fix",
                             "details": resolution,
-                            "availability": availability(resolution, "vendor_fix"),
+                            "availability": availability(
+                                resolution,
+                                "vendor_fix",
+                                as_of=remediation_reference(out),
+                            ),
                             "source_scope": "bulletin",
                         }
                     ],

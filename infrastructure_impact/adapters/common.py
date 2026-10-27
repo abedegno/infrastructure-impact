@@ -2,7 +2,7 @@
 
 import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -38,7 +38,32 @@ def iso_date(value):
     return value
 
 
-def availability(details, category, date=None):
+def publisher_day(value):
+    """Read a source's calendar day, without inferring a timezone or using now."""
+    if not isinstance(value, str) or not re.match(r"^\d{4}-\d{2}-\d{2}(?:$|T)", value):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).date()
+    except ValueError:
+        return None
+
+
+def remediation_reference(document):
+    """A current publisher date is usable only without contradictory chronology."""
+    initial = document.get("published_at")
+    updated = document.get("updated_at")
+    first, current = publisher_day(initial), publisher_day(updated)
+    if updated and (not current or (first and current < first)):
+        return None
+    return updated or initial
+
+
+def availability(details, category, date=None, *, as_of=None):
+    """Classify publisher claims as of the document, never the collection clock.
+
+    A dated remediation needs publisher context. An elapsed target date alone
+    cannot establish release availability, even when replayed years later.
+    """
     if category == "no_fix_planned":
         return "no_fix_planned"
     if category == "none_available":
@@ -49,28 +74,33 @@ def availability(details, category, date=None):
         r"\b(partially mitigate|partial mitigation|partial fix|not fully fixed)\b", details, re.I
     ):
         return "partial_mitigation"
-    month = re.search(r"\b([A-Z][a-z]{2,8})\s+(20\d{2})\b", details)
-    if month:
+    if re.search(
+        r"\b(ETA|TBD|upcoming|scheduled|will be|future release)\b",
+        details,
+        re.I,
+    ):
+        return "planned"
+    reference = publisher_day(as_of)
+    months = []
+    for month in re.finditer(r"\b([A-Z][a-z]{2,8})\s+(20\d{2})\b", details, re.I):
         for fmt in ("%b %Y", "%B %Y"):
             try:
-                if (
-                    datetime.strptime(month.group(0), fmt).date()
-                    > datetime.now(timezone.utc).date()
-                ):
-                    return "planned"
+                target = datetime.strptime(month.group(0), fmt)
+                months.append((target.year, target.month))
+                break
             except ValueError:
                 pass
-    if date:
-        try:
-            if (
-                datetime.fromisoformat(date.replace("Z", "+00:00")).date()
-                > datetime.now(timezone.utc).date()
-            ):
-                return "planned"
-        except ValueError:
-            pass
-    if re.search(r"\b(ETA|TBD|upcoming|scheduled|will be|future release)\b", details, re.I):
+    target = publisher_day(date)
+    if reference and (
+        (target and target > reference)
+        or any(month > (reference.year, reference.month) for month in months)
+    ):
         return "planned"
+    if (date and (not target or not reference)) or (
+        months and (not reference or (reference.year, reference.month) in months)
+    ):
+        # A month-only target overlapping the document month has no known day.
+        return "unknown"
     return "vendor_reports_fixed"
 
 

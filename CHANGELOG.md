@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Classify dated remediation claims against publisher dates rather than the replay clock; keep contradictory or imprecise date context unknown and record corrections as parser reinterpretations.
+
 - Scope built-in normalizer identities to declared code dependencies and shared validation/resources; preserve legacy extension behavior, avoid unrelated vendor revision/replay churn, and verify source/wheel fingerprint parity.
 
 - Add a scoped Apstra 4.2.0 OpenSSH statement and component reference; strengthen the existing planned-fix PDF boundary, separate document identities, and prevent adjacent Terrapin/Python fixes or document-title versions from broadening scope.

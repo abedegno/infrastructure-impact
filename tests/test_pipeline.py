@@ -79,7 +79,8 @@ class CSAFScopes(unittest.TestCase):
 
     def test_fix_category_without_release_evidence_is_not_verified_released(self):
         self.assertEqual(availability('Fixed in 1.2','vendor_fix'),'vendor_reports_fixed')
-        self.assertEqual(availability('Fixed in 1.2','vendor_fix','2099-01-01T00:00:00Z'),'planned')
+        self.assertEqual(availability('Fixed in 1.2','vendor_fix','2099-01-01T00:00:00Z'),'unknown')
+        self.assertEqual(availability('Fixed in 1.2','vendor_fix','2099-01-01T00:00:00Z',as_of='2025-01-01'),'planned')
 
 
 class RevisionTests(unittest.TestCase):
