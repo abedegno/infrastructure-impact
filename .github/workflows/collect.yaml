@@ -5,7 +5,7 @@ name: Collect and publish
 on:
   workflow_dispatch:
   schedule:
-    - cron: '37 8 * * *'
+    - cron: '43 12 * * *'
 permissions:
   contents: write
   pages: write
@@ -55,12 +55,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
           REPARSE_LIMIT: ${{ vars.IMPACT_REPARSE_LIMIT || '0' }}
+          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
         run: |
           set -euo pipefail
-          recovery_args=()
+          recovery_args=(--vault-profile "$VAULT_PROFILE" --schedule-utc 12:43)
           case "$RECOVERY_STORAGE" in
             git) ;;
-            github-draft) recovery_args=(--recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY") ;;
+            github-draft) recovery_args+=(--recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY") ;;
             *) echo 'Unsupported recovery storage setting'; exit 1 ;;
           esac
           [[ "$REPARSE_LIMIT" =~ ^[0-9]+$ ]]

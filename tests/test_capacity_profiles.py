@@ -173,3 +173,17 @@ def test_distribution_probe_cannot_silently_select_an_older_wheel(tmp_path):
     (tmp_path / "dist/infrastructure_impact-0.5.0-py3-none-other.whl").touch()
     with pytest.raises(ValueError, match="exactly one"):
         release_wheel(tmp_path)
+
+
+def test_hosted_workflow_profiles_and_declared_schedule_stay_aligned():
+    collection = (ROOT / ".github/workflows/collect.yaml").read_text()
+    monitor = (ROOT / ".github/workflows/monitor.yaml").read_text()
+    assert collection == (ROOT / "deploy/github-public-service.yaml").read_text()
+    assert "cron: '43 12 * * *'" in collection
+    assert "--schedule-utc 12:43" in collection
+    assert "recovery_args+=(--recovery-storage" in collection
+    assert "VAULT_PROFILE" in collection and '--vault-profile "$VAULT_PROFILE"' in collection
+    assert "cron: '23 */6 * * *'" in monitor
+    assert '--vault-profile "$VAULT_PROFILE"' in monitor
+    assert "IMPACT_SCHEDULE_OBSERVATION_START" in monitor
+    assert "IMPACT_RELIABILITY_START" in monitor

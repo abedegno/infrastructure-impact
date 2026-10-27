@@ -12,7 +12,7 @@ uploaded or used to seed the hosted service.
 
 ## Scheduling and monitoring
 
-Collection runs daily at **08:37 UTC**, with manual dispatch available. GitHub can
+Collection runs daily at **12:43 UTC**, with manual dispatch available. GitHub can
 delay scheduled jobs; the cadence is not an availability SLA. A separate monitor
 checks public HTML, snapshot age (36-hour threshold) and the checksum manifest
 every six hours. Actions failures are visible to maintainers; notification delivery

@@ -3,7 +3,7 @@ name: Public service health
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '23 */6 * * *'
 permissions:
   contents: read
   actions: read
@@ -27,14 +27,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           OBSERVATION_START: ${{ vars.IMPACT_RELIABILITY_START }}
-        run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY" --observation-start "$OBSERVATION_START" --health-report "$RUNNER_TEMP/public-health.json"
+          SCHEDULE_START: ${{ vars.IMPACT_SCHEDULE_OBSERVATION_START }}
+        run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY" --observation-start "$OBSERVATION_START" --health-report "$RUNNER_TEMP/public-health.json" --schedule-observation-start "$SCHEDULE_START"
 
       - name: Assess encrypted backup growth without downloading evidence
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
-        run: python3 checks/backup_storage.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/backup-storage.json" --summary "$GITHUB_STEP_SUMMARY"
+          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
+        run: python3 checks/backup_storage.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/backup-storage.json" --summary "$GITHUB_STEP_SUMMARY" --vault-profile "$VAULT_PROFILE"
 
       - name: Retain operational review evidence
         if: always()
