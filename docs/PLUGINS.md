@@ -255,7 +255,7 @@ normalizes them in memory, retaining only counts and a parser fingerprint, witho
 a vault key or response-body retention.
 
 Reviewed table rows are bound to the complete evaluated-product list and semantic
-article block by separate fingerprints. A source change fails for review even if
+article block and following guidance by separate fingerprints. A source change fails for review even if
 an old product/version still appears. Publisher date changes remain day-precision
 claims. This deliberate narrowness is documented in the
 [F5 source review](research/f5-advisories-20261027.md); it is not general F5 support.

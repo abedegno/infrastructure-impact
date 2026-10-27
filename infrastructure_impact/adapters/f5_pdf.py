@@ -16,6 +16,7 @@ END = "Security Advisory Recommended Actions"
 # closed, even if a title or old version string still appears elsewhere.
 PROFILES = {
     "K000163821": {
+        "guidance_sha256": "fc93fd20fae798a2acaa4a4ef91585d29920cd7c7bde5ecd82602e91d742726e",
         "evaluated_sha256": "7cb03fe23b90bd7a28da49d7608a60e4a180a3a97cd97b7cbe2d52d37a35c7f9",
         "title": "PHP vulnerabilities CVE-2026-109618 and CVE-2026-109619",
         "cves": ("CVE-2026-109618", "CVE-2026-109619"),
@@ -63,6 +64,7 @@ PROFILES = {
         ),
     },
     "K000140222": {
+        "guidance_sha256": "517798e4e98563c6828b35b58c97fb278b281391b896f57696bf5db33519cef5",
         "evaluated_sha256": "774d457702e6430fed36705206cf8d001bc0b7fe85e58723c51618396cbd228f",
         "title": "OpenSSH server vulnerability CVE-2024-6387",
         "cves": ("CVE-2024-6387",),
@@ -131,8 +133,8 @@ def reviewed_scope(text):
     if text.count(START) != 1 or text.count(END) != 1 or lines.count("Evaluated products") != 1:
         raise ValueError("F5 PDF article boundaries changed; review required")
     before, tail = text.split(START, 1)
-    critical, _ = tail.split(END, 1)
-    return before, " ".join(critical.split())
+    critical, guidance = tail.split(END, 1)
+    return before, " ".join(critical.split()), " ".join(guidance.split())
 
 
 def remediation(value, locator):
@@ -158,7 +160,7 @@ def advisory(raw, url, vendor):
     if not isinstance(raw, bytes) or not raw.startswith(b"%PDF") or len(raw) > 3_000_000:
         raise ValueError("Reviewed F5 source must be a PDF within 3 MB")
     profile = PROFILES[identity]
-    before, critical = reviewed_scope(pdf_text(raw, layout=True))
+    before, critical, guidance = reviewed_scope(pdf_text(raw, layout=True))
     if before.count("Evaluated products") != 1:
         raise ValueError("F5 evaluated-product boundary changed")
     header, evaluated = before.split("Evaluated products", 1)
@@ -173,8 +175,13 @@ def advisory(raw, url, vendor):
     )
     if not match or tuple(cves(profile["title"])) != profile["cves"]:
         raise ValueError("F5 article identity or publisher date metadata changed")
-    if sha256(critical.encode()).hexdigest() != profile["scope_sha256"]:
-        raise ValueError("F5 PDF product, impact or table-footnote scope changed; review required")
+    if (
+        sha256(critical.encode()).hexdigest() != profile["scope_sha256"]
+        or sha256(guidance.encode()).hexdigest() != profile["guidance_sha256"]
+    ):
+        raise ValueError(
+            "F5 PDF product, impact, table-footnote or guidance scope changed; review required"
+        )
     dates = [datetime.strptime(value, "%b %d, %Y").date() for value in match.groups()]
     if dates[1] < dates[0]:
         raise ValueError("F5 publisher date claims are contradictory")
@@ -235,7 +242,7 @@ def advisory(raw, url, vendor):
                 )
             out["assessments"].append(claim)
     out["warnings"] = [
-        "Only two exact reviewed PDF routes are supported. Complete evaluated list, description, impact, status-table and footnote text is fingerprint-bound; changed scope requires review. RSS discovery and portfolio completeness are not implemented.",
+        "Only two exact reviewed PDF routes are supported. Complete evaluated list, description, impact, status tables, footnotes and following guidance text are fingerprint-bound; changed scope requires review. RSS discovery and portfolio completeness are not implemented.",
         "Publisher PDF date claims have day precision and remain date-only values. They do not establish CVE-specific first disclosure, historical download availability or a before/after sequence with other article representations.",
         "The article Final label does not make affected ranges fixed. Fix-column values remain publisher statements, without automatic firmware matching, independent availability verification or download access.",
         "A row can contain several vulnerable ranges and several fix candidates. Candidates are not applied across different minor branches. Engineering hotfixes are distinguished by their literal Hotfix names; the superscript footnote 4 is not part of a version.",

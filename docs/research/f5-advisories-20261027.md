@@ -66,7 +66,10 @@ version. No exact-image inventory or exploitable deployment is inferred.
 ## Review and update policy
 
 The adapter accepts only these two identities. It binds the evaluated list and
-complete description/impact/status/footnote block to reviewed text fingerprints.
+complete description/impact/status/footnote block, plus all following recommended
+actions and related-content text, to reviewed fingerprints. Guidance changes
+require review even when table values stay the same; mitigation commands are
+still excluded from public normalization.
 Unknown layouts and changed semantic text fail for review, preserving prior
 normalized evidence. Dates are checked separately and retain day precision.
 

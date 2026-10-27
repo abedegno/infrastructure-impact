@@ -36,8 +36,9 @@ def synthetic(identity=PHP):
 
 def reviewed(text, identity=PHP):
     profiles = deepcopy(f5_pdf.PROFILES)
-    before, critical = f5_pdf.reviewed_scope(text)
+    before, critical, guidance = f5_pdf.reviewed_scope(text)
     profiles[identity]["scope_sha256"] = sha256(critical.encode()).hexdigest()
+    profiles[identity]["guidance_sha256"] = sha256(guidance.encode()).hexdigest()
     evaluated = " ".join(before.split("Evaluated products", 1)[1].split())
     profiles[identity]["evaluated_sha256"] = sha256(evaluated.encode()).hexdigest()
     return patch.object(f5_pdf, "PROFILES", profiles)
@@ -113,6 +114,7 @@ def test_unaffected_all_is_lifecycle_limited_and_services_do_not_acquire_version
         "Synthetic authentication",
         "Synthetic reviewed table",
         "background CVE-2006-5051",
+        "Synthetic mitigation text",
     ],
 )
 def test_changed_evaluated_impact_table_or_description_text_requires_review(part):
