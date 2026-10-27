@@ -291,7 +291,7 @@ def publish(data, root=None, public_release_urls=()):
 
 
 def build(output=None):
-    """Publish from the evidence vault and optionally export the Sites artifact."""
+    """Publish from the evidence vault and export a static reader bundle."""
     from ..collection.config import load_config
 
     paths = Paths.from_env()
@@ -303,7 +303,7 @@ def build(output=None):
     public_urls = [d["url"] for d in load_config().get("release_documents", [])]
     generation = publish(data, public_release_urls=public_urls)
     destination = Path(output or paths.snapshot)
-    # Sites needs regular assets, not a symlink outside the deployment archive.
+    # Deployment archives need regular assets, not an external current symlink.
     destination.mkdir(parents=True, exist_ok=True)
     shutil.copytree(generation, destination, dirs_exist_ok=True)
     print(

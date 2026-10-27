@@ -446,5 +446,18 @@ class StrictJsonContract(unittest.TestCase):
                 main(["validate", str(path)])
 
 
+class WorkflowPolicy(unittest.TestCase):
+    def test_remote_workflow_actions_are_pinned(self):
+        import re
+
+        root = Path(__file__).resolve().parents[1]
+        template = root / "deploy/github-public-service.yaml"
+        for path in [*(root / ".github/workflows").glob("*.yaml"), template]:
+            for reference in re.findall(r"uses:\s*([^\s#]+)", path.read_text()):
+                self.assertRegex(
+                    reference, r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@[0-9a-f]{40}$", path.name
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

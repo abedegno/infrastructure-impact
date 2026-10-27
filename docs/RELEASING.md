@@ -1,42 +1,82 @@
-# Preparing a public source release
+# Source releases and evidence publications
 
-Use a clean source tree, not the maintainer's research workspace. The workspace may
-contain a private vault, captured vendor fixtures, Sites source history, local
-scheduler files, screenshots and deployment receipts. `.gitignore` is a safeguard,
-not evidence that an arbitrary archive is safe to publish.
+A source release identifies code, schemas, tests and bundled source configuration.
+An evidence publication has a separate generation ID and file hashes. Scheduled
+collection can update that dataset without changing the source release. Record
+both identities when reporting a result or an extraction problem.
 
-## Prepare and verify
+## Verify a candidate
 
-1. Run the README development checks. Rebuild synthetic fixtures if their generator
-   changed: `uv run python checks/generate_fixtures.py`.
-2. Run `uv run python checks/release.py`. It creates a new
-   `release/infrastructure-impact` directory from an explicit allowlist and refuses
-   to overwrite an existing destination. Use `--output PATH` for another location.
-3. Inspect its file manifest and rerun checks **from that clean tree** with a fresh
-   environment. The public tests must not depend on a research vault. Build the
-   wheel and container there; inspect the wheel's included license files.
-4. Check README links, the license/data policy, changelog, source configuration and
-   any release-specific limitations. The release checker catches selected artifact
-   and credential patterns; review is still required before publication.
-5. Initialize a new Git repository on `main` in the clean tree and review the staged
-   contents. Do not copy the nested private Sites Git history or push the research
-   workspace wholesale.
+Use a clean checkout rather than a private research workspace, and the locked
+development, build and hosted dependencies. Git ignore rules alone do not prove
+an arbitrary archive is safe to publish.
 
-No GitHub repository or package-registry account is assumed by the source. Choose
-the owner/organization and repository name before adding a remote. The current
-suggested repository name is `infrastructure-impact`.
+```sh
+uv sync --frozen --group build --group hosted
+uv run --frozen pytest -q
+npm ci --ignore-scripts
+npm run format:check
+uv run --frozen python checks/release.py --output ../infrastructure-impact-reviewed
+uv run --frozen --group build python -m build --wheel --no-isolation
+uv run --frozen python checks/distribution.py
+```
 
-## GitHub repository settings
+The export command requires a new output directory. It copies an explicit public
+source allowlist, verifies synthetic fixtures and checks for private artifacts.
+The distribution probe installs the wheel and an external vendor plugin outside
+the checkout, then exercises its schema, archive, component-reference, database,
+publication and API boundaries. CI additionally runs the declared lint/format
+checks, supported Python versions and the reader container.
 
-After creating the repository, enable private vulnerability reporting, dependency
-alerts and the quality workflow. Require a passing quality workflow and review on
-the default branch as appropriate for the maintainer team. Verify that security
-reports can be submitted through the channel documented in `SECURITY.md`.
-The checked-in workflow uses read-only repository permissions and does not publish
-packages, images or sites. Dependabot proposes dependency updates monthly.
+Inspect the export's manifest and repeat checks from that clean tree in a fresh
+environment before building distributable assets. Public tests must work without
+a research vault. If the synthetic-fixture generator changed, regenerate fixtures
+with `uv run --frozen python checks/generate_fixtures.py` and review their manifest.
+Check README links, the license/data policy, changelog, source configuration and
+release-specific limits. Inspect the wheel's license/notice files. The source
+checker covers selected artifact and credential patterns; review remains required.
 
-When updating Python dependencies, run `uv lock`, then regenerate both Docker
-exports and review their changes:
+Inspect the candidate's diff and the exact CI commit. Verify that root and installed
+source configurations agree. Preserve a locally customized `sources.json`; its
+private choices do not belong in a source release. Data interpretation changes
+need source-led examples and tests for the scope they claim to support. The
+original human-review packet remains frozen unless a new packet is deliberately
+created; green software checks do not complete that review.
+
+Direct remote workflow actions are pinned to full commits. Review dependency PRs
+against their upstream changes, and synchronize `deploy/github-public-service.yaml`
+with `.github/workflows/collect.yaml` when updating that workflow. Their byte-parity
+check prevents a deployment example from silently retaining older protections.
+
+## Publish the source release
+
+Tag the verified commit without moving an existing release tag. Use the package
+version from `pyproject.toml`, and state the research-preview status and known
+coverage limits in its release notes. A wheel and its SHA-256 checksum file may
+accompany the public source tag. A source release does not certify a complete
+vendor portfolio, comparative security rate, first disclosure or fix availability.
+
+Keep private vaults, captures, encryption keys, review submissions and operator
+receipts out of release assets. Recovery drafts have tags beginning
+`collector-recovery-`; leave them unpublished. Recovery deliberately requires
+that draft status and uses its own encrypted-asset manifest, independently of
+ordinary source releases.
+
+Keep package version, lock metadata, applicable image references and changelog
+consistent when changing a version. Build from the reviewed commit and retain
+checksums and any published image digests. A source tag does not imply a PyPI or
+container-registry publication.
+
+## Repository settings and dependency changes
+
+For a public repository, configure private vulnerability reporting and dependency
+alerts, and check that the contact route in `SECURITY.md` works. Apply passing-CI
+and review requirements appropriate to the maintainer team. The quality and
+monitor jobs use read-only repository permissions; collection has the separate
+write permissions needed for its reviewed recovery and Pages workflow.
+
+When changing Python dependencies, run `uv lock`, regenerate both Docker exports,
+and review their diffs:
 
 ```sh
 uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file requirements.lock
@@ -46,13 +86,22 @@ uv export --frozen --only-group build --no-emit-project --format requirements-tx
 CI checks those exports for drift. Dependency and base-image updates require the
 same compatibility checks as other code changes.
 
-## Versioned releases
+## Activate a collector revision
 
-Before tagging, update the package version, lock file, image references and
-changelog consistently. Build from the reviewed commit, record image digests and
-checksums, and preserve license/notice metadata. The included 0.3.0 source version
-is not a claim that a GitHub, PyPI or container-registry release already exists.
+After the exact source commit passes CI, set `IMPACT_SOURCE_COMMIT` to its full SHA.
+Use a controlled collection when runtime behavior or source configuration changes.
+Check the resulting public manifest, source failures, recovery readback receipt and
+monitor report. The hosted runner collects its own public sources; do not seed it
+with an existing private native vault.
 
-Public service/data publication is separate from source release. Do not publish a
-collected dataset, raw vendor material, private correction evidence or a previously
-private site merely because the source repository is public.
+For an explicitly needed normalization refresh, follow
+[Normalization maintenance](NORMALIZATION_MAINTENANCE.md), inspect its partial
+failures and interpretation changes, and reset `IMPACT_REPARSE_LIMIT` to `0` after
+the controlled run. An offline correction is not a new source retrieval or proof
+of a publisher's disclosure timing. A documentation-only release can keep the
+last verified runtime pin when its executable source and configuration are equal.
+
+Read [Hosted service](HOSTED_SERVICE.md), [Draft recovery](DRAFT_RECOVERY.md) and
+[Operations](OPERATIONS.md) for capacity bounds, schedules and reliability-review
+requirements. Manual workflow success does not satisfy an elapsed observation
+window or independent human review.

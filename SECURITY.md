@@ -33,3 +33,11 @@ reader is designed to serve sanitized public generations without the private vau
 There are no public write or collection-trigger endpoints. Run an instance behind
 appropriate access controls when its publication should remain private; the source
 code license does not make a deployment private or authenticate its users.
+
+## Workflow dependencies
+
+Direct remote GitHub Action references use full commit hashes, with version comments
+for review. Dependabot proposes action updates weekly. Review the upstream change
+before merging; collector workflow changes must also update its byte-identical
+deployment template. Runner images, system packages and fetched vendor content
+remain external inputs, with source-response provenance recorded separately.
