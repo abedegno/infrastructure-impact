@@ -193,6 +193,7 @@ only after those dependencies have been cached.
 | [Product cohorts](docs/PRODUCT_COHORTS.md) | Product/build scope and denominator gaps |
 | [Source access](docs/SOURCE_ACCESS.md) | Runner checks for reviewed source alternatives |
 | [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Evidence gates and investigation queue |
+| [CVE research dossiers](docs/RESEARCH_DOSSIERS.md) | Selected source-bound comparisons, chronology and JSON downloads |
 | [Releasing](docs/RELEASING.md)                           | Prepare a clean public source tree and release                    |
 | [Capacity](docs/CAPACITY.md) | Storage profiling and explicit bounded recovery profiles |
 | [Scheduled reliability](docs/SCHEDULE_RELIABILITY.md) | Actual scheduled-run observations and missing-trigger checks |

@@ -11,6 +11,21 @@ from urllib.error import HTTPError
 from urllib.request import urlopen
 
 
+def validate_dossier_limits(report: dict) -> None:
+    """Enforce this increment's public gates without installed application imports."""
+    limits = report["limits"]
+    for field in (
+        "inventory_verified",
+        "independent_human_review_completed",
+        "independent_release_availability_verified",
+        "earliest_disclosure_established",
+        "concealment_established",
+    ):
+        assert limits[field] is False, f"Research dossier limit changed: {field}"
+    for field in ("vendor_rate", "verified_fix_delay_days"):
+        assert limits[field] is None, f"Research dossier limit changed: {field}"
+
+
 def check(origin, expected=None):
     origin = origin.rstrip("/") + "/"
     with urlopen(origin, timeout=20) as response:
@@ -98,6 +113,7 @@ def check(origin, expected=None):
                 "component_studies",
                 "product_cohorts",
                 "disclosure_review",
+                "research_dossiers",
             )
             if data.get(k)
         ):
@@ -111,6 +127,8 @@ def check(origin, expected=None):
             report = json.loads(report_raw)
             assert report["publication"] == data["publication"], "Mixed report generations"
             assert report["generated_at"] == data["generated_at"], "Mixed report dates"
+            if key == "research_dossiers":
+                validate_dossier_limits(report)
             if key in ("comparison_eligibility", "product_cohorts", "disclosure_review"):
                 data[key] = report
         assert data["extraction_validation"]["independent_human_review_completed"] is False

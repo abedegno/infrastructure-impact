@@ -560,3 +560,59 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
         "/research-dossiers.js",
         "/app.js",
     ]
+
+
+@pytest.mark.parametrize("fault", ["generation", "concealment", "digest", "old_generation"])
+def test_monitor_checks_additive_dossier_report(tmp_path, monkeypatch, fault):
+    import io
+
+    import checks.public_health as health
+
+    generation = publish(dataset(), tmp_path)
+    report_path = generation / "research-dossiers.json"
+    original = json.loads(report_path.read_text())
+    selected_generation = json.loads((generation / "snapshot.json").read_text())["publication"]
+    report = json.loads(report_path.read_text())
+    if fault == "generation":
+        report["publication"]["id"] = "different-generation"
+        assert report["publication"]["id"] != selected_generation["id"]
+    elif fault == "concealment":
+        report["limits"]["concealment_established"] = True
+    report_raw = json.dumps(report).encode()
+    manifest = json.loads((generation / "manifest.json").read_text())
+    manifest["sha256"]["research-dossiers.json"] = hashlib.sha256(report_raw).hexdigest()
+    seen = []
+
+    class Response(io.BytesIO):
+        status = 200
+
+    def get(url, timeout=None):
+        path = url.removeprefix("https://example.test/") or "index.html"
+        seen.append(path)
+        if path == "manifest.json":
+            return Response(json.dumps(manifest).encode())
+        if path == "research-dossiers.json":
+            assert fault != "old_generation", "Absent additive report must not be fetched"
+            return Response(report_raw + (b" " if fault == "digest" else b""))
+        return Response((generation / path).read_bytes())
+
+    if fault == "old_generation":
+        # Build a valid older generation, rather than serving changed bytes under old hashes.
+        from infrastructure_impact.application.static_delivery import write_static_delivery
+
+        data = json.loads((generation / "snapshot.json").read_text())
+        data.pop("research_dossiers")
+        write_static_delivery(generation, data)
+        manifest["sha256"] = {
+            path.relative_to(generation).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in generation.rglob("*")
+            if path.is_file() and path.name != "manifest.json"
+        }
+        assert original["publication"] == selected_generation
+    monkeypatch.setattr(health, "urlopen", get)
+    if fault == "old_generation":
+        assert health.check("https://example.test")["status"] == "fresh"
+        assert "research-dossiers.json" not in seen
+    else:
+        with pytest.raises(AssertionError):
+            health.check("https://example.test")

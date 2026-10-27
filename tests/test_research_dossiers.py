@@ -1170,3 +1170,24 @@ def test_browser_dossiers_match_python_selection_render_and_generation(writer_se
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("inventory_verified", True),
+        ("independent_human_review_completed", True),
+        ("independent_release_availability_verified", True),
+        ("earliest_disclosure_established", True),
+        ("vendor_rate", 0),
+        ("verified_fix_delay_days", 70),
+        ("concealment_established", True),
+    ],
+)
+def test_standalone_monitor_rejects_unlocked_limits(seed, field, value):
+    from checks.public_health import validate_dossier_limits
+
+    report = research_dossiers(seed)
+    report["limits"][field] = value
+    with pytest.raises(AssertionError):
+        validate_dossier_limits(report)

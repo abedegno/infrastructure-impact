@@ -152,6 +152,7 @@ def main():
             "publisher-history.json",
             "product-cohorts.json",
             "disclosure-review.json",
+            "research-dossiers.json",
         ):
             assert (root / "current" / filename).exists()
         for filename in (
@@ -169,6 +170,8 @@ def main():
             "product-cohort-definition-v1.json",
             "product-cohorts-v1.json",
             "disclosure-review-v1.json",
+            "research-dossier-definition-v1.json",
+            "research-dossiers-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         for contract in (root / "current/schemas").glob("*.json"):
@@ -180,6 +183,44 @@ def main():
                 }
             )
             assert status == 200 and contract_body == contract.read_bytes(), contract.name
+        from infrastructure_impact.application.research_dossiers import research_dossiers
+
+        assert (package / "web/research-dossiers.js").is_file()
+        assert (package / "resources/research-dossiers.json").is_file()
+        for filename in ("research-dossier-definition-v1.json", "research-dossiers-v1.json"):
+            assert (package / "schemas" / filename).is_file()
+        derived = research_dossiers(data)
+        assert len(derived["dossiers"]) == 3
+        assert all(
+            not t["statements"] for d in derived["dossiers"] for t in d["comparison_targets"]
+        )
+        assert all(not d["sources"] for d in derived["dossiers"])
+        assert all(
+            t["vendor"] != "acme" for d in derived["dossiers"] for t in d["comparison_targets"]
+        )
+        exported = json.loads((root / "current/research-dossiers.json").read_text())
+        assert exported["definition_sha256"] == derived["definition_sha256"]
+        assert (
+            exported["publication"]
+            == json.loads((root / "current/snapshot.json").read_text())["publication"]
+        )
+        for path in ("/api/v1/research-dossiers", "/research-dossiers.json"):
+            status, _, dossier_body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": ""}
+            )
+            assert status == 200 and json.loads(dossier_body) == exported
+        status, _, dossier_body = app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/research-dossiers",
+                "QUERY_STRING": "vendor=acme",
+            }
+        )
+        assert status == 200 and json.loads(dossier_body)["dossiers"] == []
+        status, _, script_body = app.route(
+            {"REQUEST_METHOD": "GET", "PATH_INFO": "/research-dossiers.js", "QUERY_STRING": ""}
+        )
+        assert status == 200 and script_body == (package / "web/research-dossiers.js").read_bytes()
         groups = json.loads((root / "current/product-groups.json").read_text())
         assert (
             next(v for v in groups["vendors"] if v["vendor"] == "acme")["unmapped_statements"] == 1
