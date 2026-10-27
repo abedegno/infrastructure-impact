@@ -199,3 +199,8 @@ SK and Cisco archive/release checks remain separate gaps.
 [Reviewed source selection](SOURCE_SELECTION.md) documents `SourceView`, `SourceViewIssue` and `SourceSelection`, including alternate failure handling and the public audit. A structured download must not be assumed to enumerate the same products as an HTML article.
 
 `plugins.shared.resolve_reviewed_advisory` supports explicitly reviewed primary-source policies from HTML and known structured identities. It validates the primary and advertised counterpart, rejects contradictory CVE scope, and returns immutable selection metadata. Keep policies narrow; unknown advisory IDs must retain normal resolution.
+
+Juniper's reviewed [Apstra PDF scopes](research/juniper-apstra-openssh-20261027.md)
+use the same bounded issue for advisory normalization and the component-reference
+hook. Separate document editions retain separate identities. Neighbouring issue
+fixes and document-title versions cannot broaden a CVE or component statement.

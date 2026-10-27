@@ -3,44 +3,14 @@
 import re
 
 from .common import assessment, base, pdf_text
+from .juniper_apstra import apstra_advisory
 
 
 def juniper_pdf(raw, url, vendor):
+    apstra = apstra_advisory(raw, url, vendor)
+    if apstra is not None:
+        return apstra
     text = pdf_text(raw)
-    if "AOS-47640" in text and "OpenSSH Vulnerability CVE-2024-6387" in text:
-        block = text.split("OpenSSH Vulnerability CVE-2024-6387", 1)[1].split("USN-6891-1", 1)[0]
-        if "4.2.2.1 and 5.0.0 will include a fixed OpenSSH package" not in block:
-            raise ValueError("Apstra remediation wording changed; review source")
-        out = base(vendor, url, "Apstra-AOS-47640", "Apstra release notes: OpenSSH CVE-2024-6387")
-        out.update(
-            cves=["CVE-2024-6387"],
-            source_format="Vendor release notes PDF",
-            document_status="published",
-        )
-        out["assessments"] = [
-            assessment(
-                "CVE-2024-6387",
-                "Apstra Server 4.2.x (Ubuntu 22.04)",
-                "affected",
-                "AOS-47640 / OpenSSH vulnerability and Resolution",
-                [
-                    {
-                        "expression": "Apstra server 4.2.x, based on Ubuntu 22.04, includes OpenSSH 8.9p1"
-                    }
-                ],
-                [
-                    {
-                        "category": "vendor_fix",
-                        "details": "Apstra Server 4.2.2.1 and 5.0.0 will include a fixed OpenSSH package",
-                        "availability": "planned",
-                    }
-                ],
-            )
-        ]
-        out["warnings"] = [
-            "Historical future-tense release-note statement; current fix availability and original publication date are not established by this snapshot. PDF footer date is not assumed to be product release date."
-        ]
-        return out
     if "JSA103137" not in text or "Session Smart Router" not in text:
         raise ValueError("Unrecognised Juniper PDF; retained raw but requires scoped adapter")
     # Narrow table columns wrap IDs over several lines. Require complete digit-only

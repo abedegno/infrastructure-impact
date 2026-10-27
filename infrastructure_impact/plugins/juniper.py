@@ -7,6 +7,7 @@ from xml.etree import ElementTree as ET
 from ..adapters.common import base, cves
 from ..adapters.component_statements import juniper_component_statement
 from ..adapters.juniper import juniper_pdf
+from ..adapters.juniper_apstra import apstra_component_reference
 from ..adapters.vendor_cna import juniper_cna, registry_route
 from .contracts import FeedBatch, VendorPlugin
 from .shared import structured
@@ -66,6 +67,11 @@ def parse(raw, url, vendor):
     )
 
 
+def component_reference(raw, url, vendor):
+    apstra = apstra_component_reference(raw, url, vendor)
+    return apstra if apstra is not None else juniper_component_statement(raw, url, vendor)
+
+
 def plugin():
     return VendorPlugin(
         "juniper",
@@ -74,7 +80,7 @@ def plugin():
         parse,
         parse_feed=parse_feed,
         capabilities=("rss-discovery", "scoped-pdf", "verified-vendor-cna", "component-reference"),
-        parse_component_inventory=juniper_component_statement,
+        parse_component_inventory=component_reference,
         url_filter=lambda url: (
             (urlsplit(url).hostname or "").endswith(".juniper.net")
             or urlsplit(url).hostname == "juniper.net"

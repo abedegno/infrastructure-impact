@@ -13,6 +13,11 @@ the loader rejects a changed enrollment with a stale fingerprint.
 
 ## Enrollment and limits
 
+[Apstra server release-note references](research/juniper-apstra-openssh-20261027.md)
+can supply Juniper vendor evidence without supplying an SRX family assessment.
+The study does not add Apstra to its frozen family list or transfer its OpenSSH
+version, workaround or planned fix to SRX/Junos.
+
 The complete, single-page official NVD 2.0 OpenSSH CPE query returned 146 records
 on 26 October 2026. Forty have registry publication-date claims from 1 January
 2023 through 26 October 2026. The response fingerprint and every candidate's

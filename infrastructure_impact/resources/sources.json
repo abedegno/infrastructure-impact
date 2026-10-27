@@ -331,6 +331,10 @@
     {
       "vendor": "fortinet",
       "url": "https://fortiguard.fortinet.com/psirt/FG-IR-24-258"
+    },
+    {
+      "vendor": "juniper",
+      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIxcIAH"
     }
   ],
   "release_documents": [
@@ -347,7 +351,8 @@
     {
       "vendor": "juniper",
       "product": "Apstra release notes (document version as observed; date unverified)",
-      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIqkIAH"
+      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIqkIAH",
+      "kind": "component_inventory"
     },
     {
       "vendor": "fortinet",
@@ -405,6 +410,12 @@
       "product": "HPE iLO 6 1.57 OpenSSL enhancement reference",
       "kind": "component_inventory",
       "url": "https://support.hpe.com/hpesc/public/api/document/sd00004028en_us?page=GUID-C4AB7B5A-16C4-4C37-9C86-17365FE3B258.html"
+    },
+    {
+      "vendor": "juniper",
+      "product": "Juniper Apstra 4.2.0 release notes / AOS-47640 (4.2.x server scope; publication date unverified)",
+      "url": "https://supportportal.juniper.net/sfc/servlet.shepherd/document/download/069Dp00000FJIxcIAH",
+      "kind": "component_inventory"
     }
   ],
   "archives": [

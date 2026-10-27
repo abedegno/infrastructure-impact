@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Add a scoped Apstra 4.2.0 OpenSSH statement and component reference; strengthen the existing planned-fix PDF boundary, separate document identities, and prevent adjacent Terrapin/Python fixes or document-title versions from broadening scope.
+
 - Compress new hosted backups with XZ while retaining gzip recovery compatibility, unchanged authenticated encryption and size bounds. Make restore atomic, keep plaintext staging outside tracked state, authenticate recovery copies before commits, and monitor uncompressed capacity.
 
 - Retain a reviewed Palo Alto Clientless VPN configuration notice without inventing a CVE from its malformed CSAF identifier; keep notice-level product scope separate from CVE assessments.
