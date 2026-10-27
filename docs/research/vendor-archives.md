@@ -74,3 +74,10 @@ budgets for supervised acceleration within storage and retrieval limits.
 Read [Archive collection](../ARCHIVE_COLLECTION.md), [Source audit](../SOURCE_AUDIT.md)
 and [Vendor plugins](../PLUGINS.md) for operator and extension contracts. Archive
 coverage is not a vendor ranking or evidence of concealment.
+
+Later document-layout reviews are separate from this listing review. See the
+[older applicability matrices](arista-legacy-applicability-20261027.md),
+[routing qualifications](arista-routing-scope-20261027.md) and
+[CloudVision management-appliance scope](arista-management-appliances-20261027.md)
+for the exact Arista advisories subsequently normalized. Their successful
+layouts do not establish support for every older archive page.

@@ -10,6 +10,8 @@ from ..adapters.arista_boundaries import (
 from ..adapters.arista_history import arista_release_history
 from ..adapters.arista_legacy_scope import ROUTES as OLDER_ROUTES
 from ..adapters.arista_legacy_scope import older_scope
+from ..adapters.arista_management_scope import ROUTES as MANAGEMENT_ROUTES
+from ..adapters.arista_management_scope import management_scope
 from ..adapters.arista_routing_scope import ROUTES as ROUTING_ROUTES
 from ..adapters.arista_routing_scope import routing_scope
 from ..adapters.arista_scoped import (
@@ -32,6 +34,8 @@ def parse(raw, url, vendor):
         return older_scope(raw, url, vendor)
     if any(url.rstrip("/").endswith("/" + value[0]) for value in ROUTING_ROUTES.values()):
         return routing_scope(raw, url, vendor)
+    if any(url.rstrip("/").endswith("/" + value[0]) for value in MANAGEMENT_ROUTES.values()):
+        return management_scope(raw, url, vendor)
     for slug, parser in {
         "/19905-security-advisory-0101": radius,
         "/19222-security-advisory-0095": xz_unaffected,
@@ -103,6 +107,7 @@ def plugin():
             radius,
             older_scope,
             routing_scope,
+            management_scope,
             grouped_software,
             html_advisory,
             structured,

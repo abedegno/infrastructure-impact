@@ -2,6 +2,8 @@
 
 ## Overnight source evidence — 2026-10-27
 
+- Add three reviewed CloudVision management-appliance advisories, preserving TACACS+ shell-login prerequisites, custom-role-only mitigation, a publisher release-cutoff discrepancy, and CVX server fixes distinct from excluded client switches.
+
 - Reject non-finite numeric values at advisory/component validation and publication boundaries, preserving the last valid public generation if malformed source or report data is supplied.
 
 - Show retained publisher family context beside exact product labels, flag shared labels without changing filter identities, and give comparison counts room to remain readable.
