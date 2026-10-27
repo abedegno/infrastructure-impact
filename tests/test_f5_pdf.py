@@ -220,3 +220,17 @@ def test_pdf_resolution_does_not_interpret_embedded_bytes_as_html_links():
     with connect(":memory:") as db:
         assert resolve_document(db, url, "f5", fetcher=fetcher) == (url, raw)
     assert calls == [(url, "f5")]
+
+
+def test_changed_pdf_bytes_with_identical_claims_create_no_disclosure_signal():
+    from infrastructure_impact.storage.repository import ingest
+
+    text = synthetic()
+    url = f5_pdf.PDF_PREFIX + PHP
+    with connect(":memory:") as db:
+        with reviewed(text), patch.object(f5_pdf, "pdf_text", return_value=text):
+            for raw in (RAW, RAW + b"SYNTHETIC CHANGED PDF METADATA"):
+                assert ingest(db, raw, url, default_registry().normalize, "f5")
+        assert db.execute("SELECT count(*) FROM evidence").fetchone()[0] == 2
+        assert db.execute("SELECT count(*) FROM revisions").fetchone()[0] == 2
+        assert db.execute("SELECT count(*) FROM changes").fetchone()[0] == 0

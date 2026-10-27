@@ -23,7 +23,22 @@ returned HTTP 200 / `application/pdf` anonymously, within a 3 MB cap:
 | [K000163821](https://my.f5.com/manage/s/article/K000163821) / [PDF](https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000163821) | PHP CVE-2026-109618 / CVE-2026-109619 | 12:46:12 | 50,833 | `33e2520a4f28f49b54a2415cf4a24ab0e5e59563da92d54aa98d7ea8a471a78b` |
 | [K000140222](https://my.f5.com/manage/s/article/K000140222) / [PDF](https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000140222) | OpenSSH CVE-2024-6387 | 12:50:41 | 32,016 | `88e6a21b9b21485bdd4eb53fb7724c50e39a7017464177cb4cc95e3913eeb311` |
 
-These are local source-access observations, separate from hosted runner access.
+The [Ubuntu runner probe](https://github.com/abedegno/infrastructure-impact/actions/runs/40508630305)
+at 13:03 UTC independently retrieved both PDFs and passed the same normalization
+checks: 38 PHP statements and 13 OpenSSH statements with parser fingerprint
+`baf0ef19ceb9be67`. It retained only access metadata and normalization counts,
+without a vault, key, source-body artifact or publication. The other source
+probes retain their own successes and access gaps.
+
+These local capture hashes and runner hashes identify different retrieved bytes.
+A second local PHP download at 13:05:28 UTC had a different SHA-256 but identical
+complete extracted text and normalized claims. Its PDF CreationDate and ModDate
+changed from 12:46:12 to 13:05:28 UTC. Those generated-document metadata are not
+the advisory's publisher dates. The regression check retains both byte captures
+and revisions while generating no semantic-change or CVE-addition signal for
+identical normalized claims. A changed PDF hash alone is not a disclosure event.
+
+These are source-access observations, separate from independent human review.
 The collector must retrieve its own responses; local captures are not seeded
 into hosted recovery. Full PDFs and rendered browser content remain private.
 Public normalization contains scoped product/version facts, source locators and
