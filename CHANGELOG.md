@@ -1,6 +1,9 @@
 # Changelog
 
-## Overnight source evidence — 2026-10-27
+## 0.3.0 research preview — 2026-10-27
+
+First tagged source preview. Source coverage remains bounded, independent human
+review is pending, and vendor rates and rankings remain suppressed.
 
 - Pin direct workflow actions to verified upstream commits, review action updates weekly, synchronize the deployment template, update Pages actions to Node 24, and verify that the declared static marker is actually published.
 
