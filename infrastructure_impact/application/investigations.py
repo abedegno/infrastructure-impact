@@ -27,9 +27,11 @@ def investigation(lead):
             continue
         if any(not allowed(url, item["vendor"]) for url in item["uncollected_search_leads"]):
             raise ValueError("Investigation leads require official vendor sources")
-        matched = sources == {
-            (e["source_url"], e["source_sha256"]) for e in item["source_bindings"]
-        }
+        reviewed_sets = [item["source_bindings"], *item.get("additional_reviewed_source_sets", [])]
+        matched = any(
+            sources == {(e["source_url"], e["source_sha256"]) for e in group}
+            for group in reviewed_sets
+        )
         return dict(
             id=item["id"],
             version=spec["version"],
