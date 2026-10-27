@@ -27,9 +27,12 @@ or private review notes.
 
 ## Encrypted backups and recovery
 
-The public `publication-state` branch stores only encrypted backup archives and
-public manifests. Its three current compressed SQLite recovery copies use Fernet
-from the maintained `cryptography` library, providing authentication and encryption.
+The `publication-state` branch stores a recovery manifest and legacy encrypted
+archives. Fernet from the maintained `cryptography` library provides authentication
+and encryption. New deployments can set `IMPACT_RECOVERY_STORAGE=github-draft` to
+store new ciphertext in unpublished draft release assets, leaving a small pointer
+in Git. The default `git` mode remains compatible with earlier deployments.
+See [draft-asset recovery](DRAFT_RECOVERY.md) for activation and rollback.
 `IMPACT_STATE_KEY` is a dedicated Actions secret, never a committed file or Pages
 artifact. A local recovery copy is retained outside Git. Losing the key prevents
 recovery; compromise could expose encrypted history. Keep a protected recovery
@@ -57,8 +60,11 @@ authenticates all current ciphertext copies and checks the manifest before its
 Git commit; filenames alone are insufficient. Each collection also restores its
 new backup to a temporary private database and checks integrity before reporting
 `private_recovery: verified`. This exercises the written format on that runner.
-Earlier encrypted history remains
-retained. The three-current-copy policy and key custody are unchanged.
+Earlier encrypted history remains retained. In `git` mode the current directory
+keeps three copies; draft mode preserves those legacy files and retains new assets
+without automatic deletion. Key custody is unchanged. The draft path downloads and
+restores the newly uploaded object before advancing the manifest, rather than
+checking only the local pre-upload copy.
 
 The validation-only CLI is:
 
@@ -66,16 +72,23 @@ The validation-only CLI is:
 python ops/hosted_job.py --state-dir state --encrypted-state --validate-encrypted-state
 ```
 
-It reads the dedicated key from
-the approved environment, performs no collection or publication, and reports only
-authentication status. The workflow runs it before committing recovery files.
+It reads the dedicated key from the approved environment, performs no collection
+or publication, and reports only authentication status. Draft recovery also needs
+`GH_TOKEN` and an explicit `--recovery-repository OWNER/REPO` (or the runner's
+`GITHUB_REPOSITORY`); it downloads the current ciphertext privately to authenticate
+it alongside all retained legacy copies. The workflow runs it before committing
+the recovery manifest. Do not run it against hosted state from an unapproved
+local environment.
 
 For compatibility export or a deliberate rollback to a pre-XZ collector, use the
 current helper with `--backup-compression gzip`, or call
 `backup(state, database, encryption_key, compression="gzip")` in an approved
 private recovery environment. Older collector code cannot read XZ backups.
 Restore and audit with the current helper first; retain a known-good compatible
-copy before changing the source pin. Never put the key in command arguments.
+copy before changing the source pin. A pre-draft-storage helper cannot follow a
+remote pointer; use the current helper's `--recovery-storage git` to materialize a
+compatible local archive before rolling back code. Never put the key in command
+arguments.
 
 Restore a prior encrypted archive using the protected key and the hosted restore
 helper, audit it, then test a collection before replacing the current state manifest.
@@ -84,8 +97,8 @@ state is not an off-provider disaster-recovery copy; retain an independent prote
 copy of the key and required archives using the operator's approved backup storage.
 
 Storage limits are 512 MiB uncompressed and 50 MiB per archive. Monitor branch/repo
-size and migrate to persistent-host or object-storage backups before growth reaches
-platform limits. Removing old working-tree copies does not erase public Git history;
+size and use draft assets or a persistent-host/object-store deployment before
+continued Git snapshots approach the review budget. Removing old working-tree copies does not erase public Git history;
 previous ciphertext remains retrievable and key rotation must account for it.
 
 ## Operate and update

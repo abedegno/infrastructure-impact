@@ -1,4 +1,4 @@
-# Public-runner alternative: Pages and an encrypted publication-state branch.
+# Public runner: Pages, encrypted recovery and a small publication-state pointer.
 # Requires secret IMPACT_STATE_KEY; never seed it with an existing local vault.
 # Set repository variable IMPACT_SOURCE_COMMIT to a reviewed full source commit.
 name: Collect and publish
@@ -32,7 +32,7 @@ jobs:
           [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
       - uses: actions/checkout@v7
         with:
-          repository: ${{ github.repository_owner }}/infrastructure-impact
+          repository: ${{ github.repository }}
           ref: ${{ vars.IMPACT_SOURCE_COMMIT }}
           path: source
           persist-credentials: false
@@ -52,13 +52,24 @@ jobs:
           PRIVATE_STATE: ${{ github.workspace }}/service/state
           PUBLIC_OUTPUT: ${{ runner.temp }}/public-publication
           BASE_PATH: /${{ github.event.repository.name }}/
-        run: uv run --no-dev python ops/hosted_job.py --state-dir "$PRIVATE_STATE" --output "$PUBLIC_OUTPUT" --base-path "$BASE_PATH" --encrypted-state
+          GH_TOKEN: ${{ github.token }}
+          RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
+        run: |
+          set -euo pipefail
+          recovery_args=()
+          case "$RECOVERY_STORAGE" in
+            git) ;;
+            github-draft) recovery_args=(--recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY") ;;
+            *) echo 'Unsupported recovery storage setting'; exit 1 ;;
+          esac
+          uv run --no-dev python ops/hosted_job.py --state-dir "$PRIVATE_STATE" --output "$PUBLIC_OUTPUT" --base-path "$BASE_PATH" --encrypted-state "${recovery_args[@]}"
       - name: Retain only encrypted recovery copies
         if: always()
         working-directory: service
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
           PRIVATE_STATE: ${{ github.workspace }}/service/state
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if test -f state/current.json; then

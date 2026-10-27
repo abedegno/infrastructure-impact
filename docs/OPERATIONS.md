@@ -6,13 +6,13 @@ Use `uv sync --group build` and `uv run impact --help`. Configuration defaults t
 the working directory; packaged defaults are used only when no local source file
 exists. An explicit missing configuration path is an error.
 
-| Variable | Default / purpose |
-| --- | --- |
-| `IMPACT_HOME` | Working directory; private data, reports and native status. |
-| `IMPACT_DATABASE` | `$IMPACT_HOME/data/intel.sqlite3`. |
-| `IMPACT_SOURCES` | `$IMPACT_HOME/sources.json`; declared public vendor sources. |
-| `IMPACT_PUBLICATIONS` | `$IMPACT_HOME/publications`; immutable public generations. |
-| `IMPACT_SNAPSHOT` | `$IMPACT_HOME/site/dist`; separately exported static copy. |
+| Variable               | Default / purpose                                                          |
+| ---------------------- | -------------------------------------------------------------------------- |
+| `IMPACT_HOME`          | Working directory; private data, reports and native status.                |
+| `IMPACT_DATABASE`      | `$IMPACT_HOME/data/intel.sqlite3`.                                         |
+| `IMPACT_SOURCES`       | `$IMPACT_HOME/sources.json`; declared public vendor sources.               |
+| `IMPACT_PUBLICATIONS`  | `$IMPACT_HOME/publications`; immutable public generations.                 |
+| `IMPACT_SNAPSHOT`      | `$IMPACT_HOME/site/dist`; separately exported static copy.                 |
 | `IMPACT_DELIVERY_MODE` | `live_reader` in the service deployment; otherwise a static-copy workflow. |
 
 On macOS, an optional user LaunchAgent can run the native checkout at 08:15
@@ -174,7 +174,12 @@ remain in Git history. The helper reports current-tree bytes, logical historical
 bytes, the latest archive size and storage-budget findings. It never rewrites
 history or deletes recovery data. The collector manifest also records consistent
 database, compression format, compressed and encrypted-archive sizes; its retention statement applies to the
-current directory, not historical Git objects.
+current directory, not historical Git objects. In draft-asset mode, legacy Git
+archives remain unchanged and the latest ciphertext is outside Git history.
+The report labels those local files as legacy copies and disables the additional
+Git-backups remaining-runs scenario. Its remote verification field is the writer's
+download/restore receipt; the read-only monitor cannot independently authenticate
+ciphertext or inspect writer-only draft assets.
 
 Backups now use XZ before Fernet encryption; legacy gzip manifests remain readable.
 On a consistent local 180,408,320-byte native snapshot measured 27 October 2026,
@@ -201,9 +206,10 @@ new archive per run at the latest size, no compression savings and no other grow
 it is not a prediction of days remaining or a reason to manufacture scheduled
 reliability. At the dated check that scenario was 32 further backups.
 
-Before limits are approached, choose a bounded recovery store and test restore
-there, or plan an explicit Git-history maintenance operation with independently
-retained recovery copies. GitHub Actions artifacts with deliberate retention are
-one account-local option to assess; they are not implemented as the recovery
-backend here. Do not force-push, expire backups or migrate key custody as routine
-cleanup. A storage-limit finding requires operator review; no data is deleted.
+[Draft-asset recovery](DRAFT_RECOVERY.md) avoids adding a new ciphertext blob to
+Git history on every collection. It retains old archives and all new assets,
+uses the existing key and job token permissions, and verifies a remote readback
+before advancing the pointer. It does not reclaim historical Git space or replace
+an independent off-provider recovery plan. Do not force-push, expire backups or
+migrate key custody as routine cleanup. A storage-limit finding requires operator
+review; no data is deleted.
