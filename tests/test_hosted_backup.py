@@ -341,3 +341,31 @@ def test_state_validation_cli_needs_no_public_output_or_collection(tmp_path, mon
     with patch.dict(os.environ, {"IMPACT_STATE_KEY": key.decode()}):
         hosted.main()
     assert json.loads(capsys.readouterr().out) == {"encrypted_state": "authenticated"}
+
+
+def test_missing_readback_cannot_report_verified_recovery(tmp_path, monkeypatch, capsys):
+    import infrastructure_impact.worker as worker
+    from infrastructure_impact.storage.repository import connect
+
+    def collect():
+        connect().close()
+        return {"outcome": "partial", "failures": 1}
+
+    monkeypatch.setattr(worker, "collect_once", collect)
+    monkeypatch.setattr(hosted, "restore", lambda *_: False)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "hosted_job.py",
+            "--state-dir",
+            str(tmp_path / "state"),
+            "--output",
+            str(tmp_path / "public"),
+            "--encrypted-state",
+        ],
+    )
+    with patch.dict(os.environ, {"IMPACT_STATE_KEY": Fernet.generate_key().decode()}):
+        with pytest.raises(RuntimeError, match="not available for recovery verification"):
+            hosted.main()
+    assert "private_recovery" not in capsys.readouterr().out

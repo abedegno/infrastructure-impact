@@ -284,7 +284,10 @@ def main():
                 backup(state, database, encryption_key, compression=args.backup_compression)
                 # Exercise the just-written format on this runner, including
                 # authentication, bounded decoding and SQLite integrity.
-                restore(state, home / "recovery-check.sqlite3", encryption_key)
+                if not restore(state, home / "recovery-check.sqlite3", encryption_key):
+                    raise RuntimeError(
+                        "New private backup was not available for recovery verification"
+                    )
         print(
             json.dumps(
                 {
