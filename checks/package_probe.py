@@ -150,6 +150,15 @@ def main():
             "disclosure-review-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
+        for contract in (root / "current/schemas").glob("*.json"):
+            status, _, contract_body = app.route(
+                {
+                    "REQUEST_METHOD": "GET",
+                    "PATH_INFO": "/schemas/" + contract.name,
+                    "QUERY_STRING": "",
+                }
+            )
+            assert status == 200 and contract_body == contract.read_bytes(), contract.name
         groups = json.loads((root / "current/product-groups.json").read_text())
         assert (
             next(v for v in groups["vendors"] if v["vendor"] == "acme")["unmapped_statements"] == 1

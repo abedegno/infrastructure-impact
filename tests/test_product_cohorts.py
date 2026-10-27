@@ -133,6 +133,22 @@ def test_publication_rebuilds_reports_and_serves_generation_bound_api_and_static
         assert report == json.loads((root / "current" / f"{name}.json").read_text())
         assert report["publication"]["id"]
     assert (root / "current/schemas/product-cohort-definition-v1.json").exists()
+    # Every contract exported by the writer must be reachable from the Python
+    # reader as well as a static host; an omitted allowlist entry is a regression.
+    for schema_path in (root / "current/schemas").glob("*.json"):
+        replies = []
+        body = b"".join(
+            Application(root)(
+                {
+                    "REQUEST_METHOD": "GET",
+                    "PATH_INFO": "/schemas/" + schema_path.name,
+                    "QUERY_STRING": "",
+                },
+                lambda status, headers: replies.append(status),
+            )
+        )
+        assert replies == ["200 OK"], schema_path.name
+        assert body == schema_path.read_bytes(), schema_path.name
 
 
 def test_cohort_validation_cli_does_not_open_or_write_vault(tmp_path, capsys):

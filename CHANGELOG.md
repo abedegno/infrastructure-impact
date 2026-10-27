@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.4.1 research preview — 2026-10-27
+
+- Serve the inventory proposal schema through the Python reader, matching static publication. Check every exported schema route in source and installed-wheel acceptance tests.
+- Link pilot proposal downloads to evidence-preparation instructions and update the architecture guide to describe the public Pages deployment and offline proposal boundary.
+
 ## 0.4.0 research preview — 2026-10-27
 
 - Add a vendor-neutral private build-inventory proposal contract and offline template/audit commands, with exact-byte checks, scoped evidence references, bounded input and no automatic certification or publication.

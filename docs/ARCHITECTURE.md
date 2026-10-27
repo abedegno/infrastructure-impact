@@ -66,8 +66,10 @@ read-only. There are no public write or collection-trigger routes.
 
 The supported topology is one writer and one or more readers on one host with
 shared POSIX storage. The Compose production overlay adds HTTPS. Code deployment
-and data publication are separate operations. Sites currently serves an exported,
-private static copy; it does not run the Python writer.
+and data publication are separate operations. GitHub Pages serves the public
+static reader; a scheduled GitHub Actions job runs the collector using its own
+retained public-source evidence. Earlier private Sites previews are separate.
+Neither static host runs the Python writer.
 
 SQLite/WAL and complete generations suit the current research/community scale.
 This is not a multi-writer, multi-region or unlimited-corpus system. Larger scale
@@ -93,3 +95,14 @@ The public projection feeds a content-addressed static delivery layer. See
 behavior, integrity checks and parity tests. The Python reader and full snapshot
 retain their existing contracts; selected browser transfers preserve global
 product-label scope without loading unrelated assessment bodies.
+
+## Private build evidence proposals
+
+The inventory proposal contract is an offline input boundary. Vendor policy
+comes from installed plugins; target components and service roles are caller
+supplied. Audit reads only named bounded local files and checks exact byte
+identity. It opens no evidence database and makes no network or publication
+request. Neither declared field completeness nor matching bytes certifies
+authenticity, semantic scope, redistribution rights or comparison eligibility.
+The public projection generates blank templates from the bundled pilot targets,
+without accepting operator proposals. See [Build inventory](BUILD_INVENTORY.md).

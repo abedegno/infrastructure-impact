@@ -332,6 +332,7 @@ class Application:
             "/schemas/disclosure-review-v1.json",
             "/schemas/source-selection-v1.json",
             "/schemas/component-inventory-v1.json",
+            "/schemas/build-inventory-submission-v1.json",
             "/openapi.json",
             "/research/cohort-report.txt",
             "/research/hpe-timing-investigation.txt",
