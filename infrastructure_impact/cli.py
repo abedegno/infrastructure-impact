@@ -21,6 +21,7 @@ def main(argv=None):
     )
     check = sub.add_parser("validate", help="Validate a normalized advisory JSON file")
     check.add_argument("file", type=Path)
+    check.add_argument("--schema", choices=("advisory", "component-inventory"), default="advisory")
     snap = sub.add_parser(
         "snapshot", help="Publish a validated generation and export static assets"
     )
@@ -165,10 +166,15 @@ def main(argv=None):
 
         print(json.dumps(audit()))
     elif args.command == "validate":
-        from .domain import validate_advisory
+        from .domain import validate_advisory, validate_component_inventory
 
-        validate_advisory(json.loads(args.file.read_text()))
-        print("Normalized advisory is valid")
+        document = json.loads(args.file.read_text())
+        if args.schema == "component-inventory":
+            validate_component_inventory(document)
+            print("Normalized component reference is valid")
+        else:
+            validate_advisory(document)
+            print("Normalized advisory is valid")
     elif args.command == "snapshot":
         from .application.publication import build
 

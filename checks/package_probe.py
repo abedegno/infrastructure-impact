@@ -31,6 +31,25 @@ def main():
         expected = json.loads(os.environ["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"])
         assert {vendor: registry.fingerprint(vendor) for vendor in expected} == expected
     assert registry.fingerprint_scheme("acme") == "legacy-package-v1"
+    component_url = "https://security.acme.example/components.json"
+    component_raw = json.dumps(
+        {
+            "component_reference": {
+                "state": "scoped",
+                "blocks": [
+                    {
+                        "locator": "Example component row",
+                        "text": "Synthetic OpenSSH 9.4 reference",
+                        "cves": [],
+                    }
+                ],
+                "components": {"openssh": ["9.4"]},
+                "component_scope": "Synthetic example router release; no installed-device or CVE inference.",
+            }
+        }
+    ).encode()
+    component = registry.normalize_component_inventory(component_raw, component_url, "acme")
+    assert component["schema_version"] == 1 and component["components"] == {"openssh": ["9.4"]}
     for name in ("browser-capture-v1.json", "release-history-v1.json"):
         assert (package / "schemas" / name).is_file()
     assert (package / "migrations/004_browser_captures.sql").is_file()
@@ -42,6 +61,7 @@ def main():
     assert (package / "resources/studies/openssh-service-2023-2026.json").is_file()
     assert (package / "resources/archive-source-review.json").is_file()
     assert (package / "schemas/comparison-eligibility-v1.json").is_file()
+    assert (package / "schemas/component-inventory-v1.json").is_file()
     assert not Path(infrastructure_impact.__file__).resolve().is_relative_to(Path.cwd())
     url = "https://security.acme.example/advisory.json"
     validate_config(
@@ -96,6 +116,7 @@ def main():
         assert response == ["200 OK"]
         assert json.loads(body)["items"][0]["vendor"] == "acme"
         assert (root / "current/schemas/advisory-v2.json").exists()
+        assert (root / "current/schemas/component-inventory-v1.json").exists()
         assert (root / "current/scorecards.json").exists()
         assert (root / "current/comparison-eligibility.json").exists()
         for filename in (
@@ -166,6 +187,7 @@ def main():
                 "installed_package": True,
                 "entry_point_plugin": True,
                 "external_archive_hook": True,
+                "external_component_hook": True,
                 "vendors": 9,
                 "schema_validated": True,
                 "database_and_publication": True,

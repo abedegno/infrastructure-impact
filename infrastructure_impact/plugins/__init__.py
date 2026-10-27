@@ -2,6 +2,8 @@
 
 from .contracts import (
     ArchivePage,
+    ComponentBlock,
+    ComponentInventory,
     FeedBatch,
     SourceSelection,
     SourceView,
@@ -12,6 +14,8 @@ from .registry import PluginRegistry, default_registry
 
 __all__ = [
     "ArchivePage",
+    "ComponentBlock",
+    "ComponentInventory",
     "FeedBatch",
     "SourceSelection",
     "SourceView",

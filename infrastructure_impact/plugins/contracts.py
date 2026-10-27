@@ -3,9 +3,26 @@
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Literal, NotRequired, Protocol, TypedDict
 
 Advisory = dict[str, Any]
+
+
+class ComponentBlock(TypedDict):
+    locator: str
+    text: str
+    cves: list[str]
+
+
+class ComponentInventory(TypedDict):
+    """Literal version references, separate from CVE applicability assertions."""
+
+    state: Literal["scoped"]
+    blocks: list[ComponentBlock]
+    components: dict[str, list[str]]
+    component_scope: str
+    schema_version: NotRequired[int]  # Registry supplies v1 for existing hooks.
+    extensions: NotRequired[dict[str, Any]]
 
 
 class DocumentParser(Protocol):
@@ -132,7 +149,7 @@ class VendorPlugin:
     parse_document_history: Callable[[bytes, str, str], dict | None] | None = None
     url_filter: Callable[[str], bool] = lambda url: True
     retain_unlinked_notice: Callable[[Advisory], bool] = lambda document: False
-    parse_component_inventory: Callable[[bytes, str, str], dict | None] | None = None
+    parse_component_inventory: Callable[[bytes, str, str], ComponentInventory | None] | None = None
     # None preserves the legacy package fingerprint. A tuple opts into scoped
     # hook/shared-source hashing and declares additional Python helper modules.
     normalizer_dependencies: tuple[Callable, ...] | None = None

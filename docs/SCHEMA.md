@@ -86,6 +86,39 @@ renames or required-field changes need a new major and explicit migration.
 Publisher layout changes need regression fixtures, a parser version/code change,
 replay and audit. Never silently rewrite historical evidence.
 
+## Component-reference normalization
+
+`schemas/component-inventory-v1.json` is a separate strict writer contract, served
+at `/schemas/component-inventory-v1.json`. Validate a normalized result with:
+
+```sh
+impact validate component.json --schema component-inventory
+```
+
+The envelope contains `schema_version: 1`, `state: scoped`, `component_scope`,
+`components` and `blocks`. Components map lowercase names to nonempty, unique lists
+of literal version expressions. Every block has a nonempty `locator`, source
+`text` and a list of explicit CVE references. These references do not establish
+component or appliance affectedness. The contract does not compare version
+schemes, verify a shipped binary, resolve backports or represent an unversioned
+presence claim by inventing a version.
+
+The registry copies hook output, supplies the v1 major when omitted by an existing
+hook, rejects unsupported majors/unknown fields/non-JSON values, and validates
+before a configured component baseline is stored or research analysis consumes
+it. A failed new collection preserves the previous baseline. A rejected retained
+analysis becomes a scope-review gap. `None` retains its distinct meaning: the
+plugin does not recognize this route, so existing generic release-section
+analysis may apply.
+
+Optional `extensions` and raw block text remain writer data. Public fix-lead
+reports use their separate projection and schema; they expose configured source
+fingerprints, scope and the six reviewed component names rather than the raw
+normalization envelope. Additional component names can be retained by a trusted
+plugin but need projection review before public reporting. No database migration
+is needed: normalized component analysis is derived from retained document bytes,
+whose original fingerprints and capture dates remain authoritative.
+
 ## Release listing metadata
 
 `schemas/release-asset-v1.json` is a separate strict contract for public firmware

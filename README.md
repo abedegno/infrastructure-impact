@@ -13,10 +13,10 @@ measure documented exposure in a declared CVE cohort, not overall vendor securit
 
 ![Infrastructure Impact web app showing coverage-aware comparisons across eight vendors for a 24-CVE benchmark cohort](docs/images/vendor-comparison.jpg)
 
-*Vendor comparison view, captured 27 October 2026 from the bounded 24-CVE benchmark dataset.
+_Vendor comparison view, captured 27 October 2026 from the bounded 24-CVE benchmark dataset.
 The selected publication window is 28 October 2025 through 27 October 2026;
 source coverage and timing limits are visible, and vendor rates remain suppressed.
-The screenshot shows a dated research snapshot, not a live or comprehensive vendor ranking.*
+The screenshot shows a dated research snapshot, not a live or comprehensive vendor ranking._
 
 ## What it does
 
@@ -125,6 +125,10 @@ covers advisory identity, CVE scope, product identity, platforms, version
 expressions, assessments, remediations and provenance. Dates retain publisher
 precision; capture and normalization times are separate. Appliance versions are
 not compared with generic semantic-version rules.
+Component references use a separate
+[versioned schema](infrastructure_impact/schemas/component-inventory-v1.json),
+validated before baseline storage or research analysis; component presence and
+version references do not establish appliance affectedness.
 
 Vendor extensions register through the `infrastructure_impact.vendors` Python
 entry-point group. See the [plugin guide](docs/PLUGINS.md) and
@@ -169,31 +173,31 @@ only after those dependencies have been cached.
 
 ## Documentation
 
-| Guide | Contents |
-| --- | --- |
-| [Architecture](docs/ARCHITECTURE.md) | Modules, evidence flow, publication and trust boundaries |
-| [Plugins](docs/PLUGINS.md) | Add a vendor and package an extension |
-| [Schema](docs/SCHEMA.md) | Normalization semantics and invariants |
-| [Operations](docs/OPERATIONS.md) | Configuration, deployment, monitoring and recovery |
-| [Methodology](docs/METHODOLOGY.md) | Comparison bias, evidence standards and disclosure research |
-| [Contributing](CONTRIBUTING.md) | Changes, regression tests and review expectations |
-| [Security](SECURITY.md) | Reporting vulnerabilities in this project |
-| [Releasing](docs/RELEASING.md) | Prepare a clean public source tree and release |
-| [Hosted service](docs/HOSTED_SERVICE.md) | Public deployment, monitoring and private backups |
-| [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Release revision and availability evidence gates |
-| [Source audit](docs/SOURCE_AUDIT.md) | Source scopes, fingerprints and unresolved collection limits |
-| [Source choices](docs/SOURCE_SELECTION.md) | Reviewed differences between HTML and structured representations |
-| [Archive collection](docs/ARCHIVE_COLLECTION.md) | Bounded queues, retry policy and retained-capture parser recovery |
-| [Retrieval history](docs/SOURCE_OBSERVATIONS.md) | Unchanged checks, cache validation and content revisions |
-| [Browser evidence](docs/BROWSER_CAPTURE.md) | Private browser-assisted capture and completeness checks |
-| [Static delivery](docs/STATIC_DELIVERY.md) | Verified cohort parts and full public archive downloads |
-| [Vendor gaps](docs/VENDOR_GAPS.md) | Collection, archive and source-review gaps |
-| [Scorecards](docs/SCORECARDS.md) | Evidence counts and dated revision timelines |
-| [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md) | Shared periods, exact product scopes and suppression rules |
-| [Component studies](docs/COMPONENT_STUDIES.md) | Frozen enrollment, reference drift and per-cell evidence |
-| [Research foundations](docs/RESEARCH_FOUNDATIONS.md) | Product families, readiness and alternative fix explanations |
-| [Case files](docs/CASE_FILES.md) | Source-linked disclosure questions and counter-evidence |
-| [Roadmap](docs/ROADMAP.md) | Current boundaries and planned capabilities |
+| Guide                                                    | Contents                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------- |
+| [Architecture](docs/ARCHITECTURE.md)                     | Modules, evidence flow, publication and trust boundaries          |
+| [Plugins](docs/PLUGINS.md)                               | Add a vendor and package an extension                             |
+| [Schema](docs/SCHEMA.md)                                 | Normalization semantics and invariants                            |
+| [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
+| [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
+| [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
+| [Security](SECURITY.md)                                  | Reporting vulnerabilities in this project                         |
+| [Releasing](docs/RELEASING.md)                           | Prepare a clean public source tree and release                    |
+| [Hosted service](docs/HOSTED_SERVICE.md)                 | Public deployment, monitoring and private backups                 |
+| [Disclosure research](docs/DISCLOSURE_RESEARCH.md)       | Release revision and availability evidence gates                  |
+| [Source audit](docs/SOURCE_AUDIT.md)                     | Source scopes, fingerprints and unresolved collection limits      |
+| [Source choices](docs/SOURCE_SELECTION.md)               | Reviewed differences between HTML and structured representations  |
+| [Archive collection](docs/ARCHIVE_COLLECTION.md)         | Bounded queues, retry policy and retained-capture parser recovery |
+| [Retrieval history](docs/SOURCE_OBSERVATIONS.md)         | Unchanged checks, cache validation and content revisions          |
+| [Browser evidence](docs/BROWSER_CAPTURE.md)              | Private browser-assisted capture and completeness checks          |
+| [Static delivery](docs/STATIC_DELIVERY.md)               | Verified cohort parts and full public archive downloads           |
+| [Vendor gaps](docs/VENDOR_GAPS.md)                       | Collection, archive and source-review gaps                        |
+| [Scorecards](docs/SCORECARDS.md)                         | Evidence counts and dated revision timelines                      |
+| [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md) | Shared periods, exact product scopes and suppression rules        |
+| [Component studies](docs/COMPONENT_STUDIES.md)           | Frozen enrollment, reference drift and per-cell evidence          |
+| [Research foundations](docs/RESEARCH_FOUNDATIONS.md)     | Product families, readiness and alternative fix explanations      |
+| [Case files](docs/CASE_FILES.md)                         | Source-linked disclosure questions and counter-evidence           |
+| [Roadmap](docs/ROADMAP.md)                               | Current boundaries and planned capabilities                       |
 
 ## License and data
 

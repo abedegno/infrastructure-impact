@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:component-inventory:1",
+  "title": "Reviewed component reference normalization, version 1",
+  "description": "Writer contract for literal component versions in a bounded publisher section. No vulnerability, installed-device inventory or backport inference is implied. Raw block text is private writer data, not a public report contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "state", "blocks", "components", "component_scope"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "state": { "const": "scoped" },
+    "component_scope": { "$ref": "#/$defs/text" },
+    "components": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 200,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_+.-]{0,63}$" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 1000,
+        "uniqueItems": true,
+        "items": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S" }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locator", "text", "cves"],
+        "properties": {
+          "locator": { "$ref": "#/$defs/text" },
+          "text": { "$ref": "#/$defs/text" },
+          "cves": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$" }
+          }
+        }
+      }
+    },
+    "extensions": { "type": "object" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 32768, "pattern": "\\S" }
+  }
+}

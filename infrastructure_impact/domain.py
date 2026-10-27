@@ -12,7 +12,7 @@ SCHEMA_PATH = Path(__file__).parent / "schemas/advisory-v2.json"
 
 
 class NormalizationError(ValueError):
-    """A source adapter violated the shared advisory contract."""
+    """A source adapter violated a shared normalization contract."""
 
 
 @lru_cache(maxsize=1)
@@ -64,4 +64,20 @@ def validate_advisory(document, *, vendor=None, source_url=None):
                 "Duplicate CVE/product identity; resolve or retain a conflicting status"
             )
         seen.add(key)
+    return document
+
+
+@lru_cache(maxsize=1)
+def component_inventory_validator():
+    schema = json.loads((SCHEMA_PATH.parent / "component-inventory-v1.json").read_text())
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema)
+
+
+def validate_component_inventory(document):
+    error = next(component_inventory_validator().iter_errors(document), None)
+    if error:
+        location = "/" + "/".join(str(part) for part in error.absolute_path)
+        # Source text or private extension values must not enter collector logs.
+        raise NormalizationError(f"Component reference {location}: invalid {error.validator}")
     return document

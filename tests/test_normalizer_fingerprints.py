@@ -40,6 +40,10 @@ def versions():
             "resources/benchmark-cohort.json",
             {"cisco", "aruba", "arista", "paloalto", "juniper", "checkpoint", "fortinet", "hpe"},
         ),
+        (
+            "schemas/component-inventory-v1.json",
+            {"cisco", "aruba", "arista", "paloalto", "juniper", "checkpoint", "fortinet", "hpe"},
+        ),
     ],
 )
 def test_vendor_and_shared_source_changes_affect_only_their_dependents(

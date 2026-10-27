@@ -19,6 +19,7 @@ SHARED_SOURCES = tuple(
         "plugins/registry.py",
         "plugins/fingerprints.py",
         "schemas/advisory-v2.json",
+        "schemas/component-inventory-v1.json",
         "source_policy.py",
         # Two scoped PDF adapters use this public cohort in CVE extraction.
         "application/cohort.py",

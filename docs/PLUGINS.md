@@ -3,12 +3,22 @@
 For reviewed component references, plugins may provide the optional pure hook
 `parse_component_inventory(raw, url, vendor)`. Return `None` for unrelated routes;
 raise `ValueError` when a recognized source changes identity or layout. Return
-`state`, `blocks` (locator/text/CVEs), `components` (literal version lists) and
-`component_scope`. This is separate from CVE affectedness normalization. Add exact
+`state: scoped`, `blocks` (locator/text/CVEs), `components` (literal version lists)
+and `component_scope` under the
+[common component contract](../infrastructure_impact/schemas/component-inventory-v1.json).
+The registry supplies `schema_version: 1` for existing hooks, copies the result
+and validates it before collection or research use. Plugins can import the
+`ComponentInventory` and `ComponentBlock` type hints from `infrastructure_impact.plugins`.
+Unknown fields, malformed CVEs, empty version arrays and non-JSON values fail
+validation; optional `extensions` stay private. This is separate from CVE affectedness normalization. Add exact
 sources under `release_documents` with `kind: component_inventory`. Collection
 validates the hook before storing a baseline. The public projection accepts only
 configured official routes and the six reviewed component names; it strips other
 analysis fields. Ambiguous versions and changed scope cannot establish a fix.
+Core callers use `registry.normalize_component_inventory(raw, url, vendor)`;
+they must not call an installed hook directly and bypass validation. A rejected
+recognized source becomes a collection error or explicit research gap, not a
+generic section-parser fallback. See [SCHEMA.md](SCHEMA.md) for validation commands.
 
 Reviewed release upgrade statements can use the same hook when their product,
 release and platform boundaries are explicit. Select only the destination version;

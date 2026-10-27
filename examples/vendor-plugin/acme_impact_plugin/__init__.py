@@ -12,6 +12,19 @@ def archive(raw, url, vendor):
     return ArchivePage(urls, len(urls), scope="Example publisher JSON listing")
 
 
+def component_inventory(raw, url, vendor):
+    if url != "https://security.acme.example/components.json":
+        return None
+    if vendor != "acme":
+        raise ValueError("Example component source vendor mismatch")
+    # Synthetic source protocol only. The registry validates the returned JSON
+    # against the common contract; this is never a CVE affectedness parser.
+    document = json.loads(raw)
+    if not isinstance(document, dict) or document.get("component_reference") is None:
+        raise ValueError("Example component source layout changed")
+    return document["component_reference"]
+
+
 def plugin():
     return VendorPlugin(
         id="acme",
@@ -19,6 +32,7 @@ def plugin():
         domains=("acme.example",),
         parse_document=structured,
         parse_archive=archive,
-        version="0.1.1",
-        capabilities=("csaf", "cve-json"),
+        parse_component_inventory=component_inventory,
+        version="0.1.2",
+        capabilities=("csaf", "cve-json", "component-inventory"),
     )

@@ -248,6 +248,7 @@ def write_bundle(destination, data):
         "fix-leads-v1.json",
         "component-studies-v1.json",
         "source-selection-v1.json",
+        "component-inventory-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")

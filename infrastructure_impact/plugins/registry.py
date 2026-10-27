@@ -46,6 +46,27 @@ class PluginRegistry:
         plugin = self.get(vendor)
         return self.finalize(plugin.parse_document(raw, url, vendor), url, vendor)
 
+    def normalize_component_inventory(self, raw, url, vendor):
+        """Validate optional component hooks before storage or research use."""
+        import json
+
+        from ..domain import NormalizationError, validate_component_inventory
+
+        parser = self.get(vendor).parse_component_inventory
+        if parser is None:
+            return None
+        result = parser(raw, url, vendor)
+        if result is None:
+            return None
+        if not isinstance(result, dict):
+            raise NormalizationError("Component reference must be a JSON object")
+        try:
+            result = json.loads(json.dumps(result, allow_nan=False))
+        except (TypeError, ValueError) as error:
+            raise NormalizationError("Component reference must contain JSON values") from error
+        result.setdefault("schema_version", 1)
+        return validate_component_inventory(result)
+
     def fingerprint(self, vendor):
         """The same code identity used in normalized advisory revisions."""
         plugin = self.get(vendor)

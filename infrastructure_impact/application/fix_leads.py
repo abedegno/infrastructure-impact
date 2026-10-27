@@ -38,19 +38,17 @@ SECTION_SCOPE = "Literal references in reviewed document sections; exact applian
 
 
 def scoped_document(raw, url, vendor):
-    parser = default_registry().get(vendor).parse_component_inventory
-    if parser:
-        try:
-            result = parser(raw, url, vendor)
-        except ValueError:
-            return dict(
-                state="component_inventory_layout_requires_review",
-                blocks=[],
-                components={},
-                component_scope=SECTION_SCOPE,
-            )
-        if result is not None:
-            return result
+    try:
+        result = default_registry().normalize_component_inventory(raw, url, vendor)
+    except ValueError:
+        return dict(
+            state="component_inventory_layout_requires_review",
+            blocks=[],
+            components={},
+            component_scope=SECTION_SCOPE,
+        )
+    if result is not None:
+        return result
     return scoped_release(raw)
 
 
