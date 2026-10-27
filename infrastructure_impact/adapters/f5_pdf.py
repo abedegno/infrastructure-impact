@@ -1,7 +1,7 @@
 """Exact reviewed F5 PDF scopes; no generic table or appliance-version inference."""
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 from hashlib import sha256
 
 from .common import assessment, base, cves, pdf_text
@@ -175,10 +175,7 @@ def advisory(raw, url, vendor):
         raise ValueError("F5 article identity or publisher date metadata changed")
     if sha256(critical.encode()).hexdigest() != profile["scope_sha256"]:
         raise ValueError("F5 PDF product, impact or table-footnote scope changed; review required")
-    dates = [
-        datetime.strptime(value, "%b %d, %Y").replace(tzinfo=timezone.utc)
-        for value in match.groups()
-    ]
+    dates = [datetime.strptime(value, "%b %d, %Y").date() for value in match.groups()]
     if dates[1] < dates[0]:
         raise ValueError("F5 publisher date claims are contradictory")
     out = base("f5", url, identity, profile["title"], *(date.isoformat() for date in dates))
@@ -239,7 +236,7 @@ def advisory(raw, url, vendor):
             out["assessments"].append(claim)
     out["warnings"] = [
         "Only two exact reviewed PDF routes are supported. Complete evaluated list, description, impact, status-table and footnote text is fingerprint-bound; changed scope requires review. RSS discovery and portfolio completeness are not implemented.",
-        "Publisher PDF date claims have day precision and are represented at UTC midnight. They do not establish CVE-specific first disclosure, historical download availability or a before/after sequence with other article representations.",
+        "Publisher PDF date claims have day precision and remain date-only values. They do not establish CVE-specific first disclosure, historical download availability or a before/after sequence with other article representations.",
         "The article Final label does not make affected ranges fixed. Fix-column values remain publisher statements, without automatic firmware matching, independent availability verification or download access.",
         "A row can contain several vulnerable ranges and several fix candidates. Candidates are not applied across different minor branches. Engineering hotfixes are distinguished by their literal Hotfix names; the superscript footnote 4 is not part of a version.",
         "Mitigation commands and protection for backend pool members are not normalized as appliance fixes. Background CVE references do not expand the advisory title scope.",

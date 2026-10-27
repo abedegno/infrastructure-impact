@@ -69,7 +69,7 @@ def test_php_keeps_shared_table_roles_branch_ranges_and_literal_fix_candidates()
     assert all(
         "publisher_lifecycle_limit" in {e["category"] for e in a["exposure"]} for a in affected
     )
-    assert doc["published_at"] == "2025-01-01T00:00:00+00:00"
+    assert doc["published_at"] == "2025-01-01"
     assert "day precision" in " ".join(doc["warnings"])
 
 
@@ -234,3 +234,17 @@ def test_changed_pdf_bytes_with_identical_claims_create_no_disclosure_signal():
         assert db.execute("SELECT count(*) FROM evidence").fetchone()[0] == 2
         assert db.execute("SELECT count(*) FROM revisions").fetchone()[0] == 2
         assert db.execute("SELECT count(*) FROM changes").fetchone()[0] == 0
+
+
+def test_date_only_publisher_claims_cannot_create_numeric_timing_offsets():
+    from infrastructure_impact.application.comparison import advisory_delays
+    from infrastructure_impact.application.eligibility import timestamp
+
+    doc = normalize(PHP)
+    assert doc["published_at"] == "2025-01-01" and doc["updated_at"] == "2025-01-02"
+    assert timestamp(doc["published_at"]) is None
+    upstream = {
+        cid: dict(published_at="2024-12-31T12:00:00+00:00", source_url="https://example.test/cve")
+        for cid in doc["cves"]
+    }
+    assert advisory_delays([doc], upstream) == []
