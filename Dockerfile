@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS builder
+FROM python:3.15-slim AS builder
 WORKDIR /build
 COPY requirements-build.lock ./
 RUN pip install --no-cache-dir --require-hashes -r requirements-build.lock
@@ -6,7 +6,7 @@ COPY pyproject.toml README.md LICENSE NOTICE THIRD_PARTY.md ./
 COPY infrastructure_impact ./infrastructure_impact
 RUN python -m build --wheel --no-isolation
 
-FROM python:3.13-slim
+FROM python:3.15-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 IMPACT_HOME=/var/lib/impact IMPACT_PUBLICATIONS=/srv/publications
 RUN apt-get update && apt-get install -y --no-install-recommends poppler-utils ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
