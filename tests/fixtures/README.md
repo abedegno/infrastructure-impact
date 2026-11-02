@@ -16,3 +16,10 @@ It tests imported and outside-scope CVE membership, optional publisher fields,
 and raw-only extra fields. Its dates, products, actions and exploitation context
 are invented test data. It is maintained directly; the generator preserves it
 and includes its SHA-256 fingerprint when rebuilding the manifest.
+
+`kev-selection-cases.json` is a project-authored synthetic v1 KEV report and
+shared Python/JavaScript selection cases. Its publication identity, publisher
+metadata, times and membership claims are invented. Cases exercise retained
+historical context, legacy absence, strict CVE joins and verification freshness;
+they are not evidence of exploitation or product impact. It is maintained
+directly and fingerprinted by the fixture manifest generator.

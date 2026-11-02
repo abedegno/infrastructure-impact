@@ -95,6 +95,11 @@
     "sha256": "15e437b5479713bd7b6c2a1d3dcb4619b9fa38edeb146201257d251934fa564a"
   },
   {
+    "file": "kev-selection-cases.json",
+    "kind": "synthetic",
+    "sha256": "f7fb0c09da23894e8b6459e12c4abf0b367b163ba7c12486ac825a7f44d6f59e"
+  },
+  {
     "file": "kev-valid.json",
     "kind": "synthetic",
     "sha256": "dfcd41e85d271bec6866dba31e893b6f2b1489994cb09fa1ebfe1693c8aa34fa"
