@@ -29,6 +29,17 @@ the source-code license. Before redistributing a dataset, review the included
 source material and its terms. Keep private notes and correction evidence out of
 public exports. A schema-valid record does not establish truth or completeness.
 
+## CISA Known Exploited Vulnerabilities catalogue
+
+The default KEV source retrieves the [CISA-maintained JSON mirror](https://github.com/cisagov/kev-data)
+under its [CC0 1.0 dedication](https://github.com/cisagov/kev-data/blob/develop/LICENSE).
+Attribute catalogue fields to [CISA's KEV catalogue](https://www.cisa.gov/known-exploited-vulnerabilities-catalog).
+The mirror retrieval URL, retained raw-content SHA-256, source-observed and parsed
+times, latest check and catalogue version remain distinct provenance fields. The
+application retains a complete membership index and only scoped detailed entries
+in public reports; raw captures remain private. See [KEV semantics](docs/cisa-kev.md)
+for freshness, history and non-inference limits.
+
 ## Dependencies
 
 Python and JavaScript dependencies are declared and locked in the project. Their

@@ -1,6 +1,7 @@
 """Prove that a wheel plus an external plugin works without checkout imports."""
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -40,6 +41,12 @@ def main():
         (root / "pyproject.toml").read_text()
     )["project"]["version"]
     environment["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"] = json.dumps(expected)
+    environment["IMPACT_EXPECTED_KEV_RESOURCES"] = json.dumps(
+        {
+            name: hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
+            for name in ("web/kev.js", "schemas/kev-v1.json", "resources/sources.json")
+        }
+    )
     with tempfile.TemporaryDirectory() as directory:
         subprocess.run(
             [

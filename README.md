@@ -21,6 +21,8 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 ## What it does
 
 - Collects structured CSAF/CVE JSON, feeds and reviewed HTML/PDF layouts.
+- Adds [CISA KEV membership](docs/cisa-kev.md) with source freshness, retained history,
+  and an optional listed-only CVE filter; it does not infer product exposure.
 - Adds [family evidence, comparison readiness and dated fix leads](docs/RESEARCH_FOUNDATIONS.md) with explicit coverage gaps and alternative explanations.
 - Supports bounded historical collection, offline parser recovery and
   [archive layout triage](docs/ARCHIVE_TRIAGE.md) before ingestion.

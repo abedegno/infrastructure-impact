@@ -115,3 +115,21 @@ The distribution checker selects exactly one wheel matching the declared package
 version and verifies the installed distribution version. Older files in `dist/`
 cannot silently substitute for a newly declared release. Ambiguous current-version
 wheels require an explicit clean build directory.
+
+
+## KEV source release and runtime activation
+
+Follow [CISA KEV operating guidance](cisa-kev.md) when releasing this enrichment.
+A reviewed source release includes the matching root/bundled source config, schema,
+reader asset and synthetic validation. It does not activate a hosted runtime.
+After review and exact-commit Python 3.11/3.13 and container CI, prepare the release
+and deliberate runtime activation separately. Preserve existing schedules,
+observation anchors, recovery controls and the current runtime pin until activation
+is authorized. Do not replace a native custom source configuration.
+
+After authorized activation, perform one controlled hosted collection and record
+its actual generation, feed check outcome, retained content hash/version/count,
+source and membership counts, report fingerprint and health receipt. Verify reader
+controls and exports against that generation. A manual run proves that run only;
+it does not establish scheduled cadence. Synthetic browser acceptance is not live
+activation or evidence of current catalogue contents.
