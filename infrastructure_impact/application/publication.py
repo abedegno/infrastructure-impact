@@ -22,6 +22,8 @@ from .eligibility import eligibility, report_validator
 from .extraction_validation import review_packet, validation_report
 from .families import completeness
 from .fix_leads import leads, public_inputs
+from .kev import build_report, select_report
+from .kev import validate_report as validate_kev
 from .product_groups import product_groups
 from .product_groups import validate_report as validate_groups
 from .publisher_history import public_history
@@ -41,6 +43,17 @@ def public_projection(data, public_release_urls=()):
         record.pop("extensions", None)
         for assessment in record["assessments"]:
             assessment.pop("extensions", None)
+    kev_input = data["research"].pop("kev_input", None)
+    scope = sorted(set(data["all_cves"]) | set(data["benchmark_cohort"]))
+    data["kev"] = (
+        build_report(
+            kev_input, scope, publication=data.get("publication"), generated_at=data["generated_at"]
+        )
+        if kev_input is not None
+        else select_report(data.get("kev"), scope, evaluated_at=data["generated_at"])
+    )
+    data["kev"]["publication"] = data.get("publication")
+    data["kev"]["generated_at"] = data["generated_at"]
     data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
     data["research"]["release_assets"] = [
@@ -122,6 +135,13 @@ def public_projection(data, public_release_urls=()):
 def write_bundle(destination, data):
     from .research_reports import validate
 
+    validate_kev(data["kev"])
+    if (
+        data["kev"]["publication"] != data["publication"]
+        or data["kev"]["generated_at"] != data["generated_at"]
+        or data["kev"]["evaluated_at"] != data["generated_at"]
+    ):
+        raise ValueError("KEV report must match enclosing publication identity and time")
     validate(data)
     report_validator().validate(data["comparison_eligibility"])
     validate_groups(data["product_groups"])
@@ -157,6 +177,7 @@ def write_bundle(destination, data):
         "product_cohorts",
         "disclosure_review",
         "research_dossiers",
+        "kev",
     ):
         (destination / (name.replace("_", "-") + ".json")).write_text(
             json.dumps(
@@ -190,20 +211,34 @@ def write_bundle(destination, data):
         path = destination / "changes" / f"{change['id']}.json"
         path.parent.mkdir(exist_ok=True)
         path.write_text(json.dumps(change))
-    for name in ("app.js", "style.css", "research-dossiers.js", "snapshot.js", "delivery.js"):
+    for name in (
+        "app.js",
+        "style.css",
+        "research-dossiers.js",
+        "kev.js",
+        "snapshot.js",
+        "delivery.js",
+    ):
         shutil.copyfile(PACKAGE / "web" / name, destination / name)
     html = (
         (PACKAGE / "web/index.html")
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     # Immutable script/style paths avoid mixing old cached readers with a new
     # delivery contract. Root names remain available for existing integrations.
     (destination / "assets").mkdir(exist_ok=True)
-    for name in ("app.js", "research-dossiers.js", "snapshot.js", "delivery.js", "style.css"):
+    for name in (
+        "app.js",
+        "research-dossiers.js",
+        "kev.js",
+        "snapshot.js",
+        "delivery.js",
+        "style.css",
+    ):
         raw = (destination / name).read_bytes()
         asset = "assets/" + sha256(raw).hexdigest() + Path(name).suffix
         (destination / asset).write_bytes(raw)
@@ -263,6 +298,7 @@ def write_bundle(destination, data):
         "build-inventory-submission-v1.json",
         "product-cohorts-v1.json",
         "disclosure-review-v1.json",
+        "kev-v1.json",
         "research-dossiers-v1.json",
         "research-dossier-definition-v1.json",
     ):
@@ -291,6 +327,7 @@ def publish(data, root=None, public_release_urls=()):
     generation = uuid4().hex
     data = public_projection(data, public_release_urls)
     data["publication"] = {"id": generation, "advisory_schema_version": 2}
+    data["kev"]["publication"] = dict(data["publication"])
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:
         write_bundle(stage, data)

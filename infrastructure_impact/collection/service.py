@@ -264,10 +264,14 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 failed += 1
                 collection_result(db, doc["vendor"], doc["url"], "error", str(e), failure_code(e))
         for ref in config.get("reference_sources", []):
+            if not ref.get("enabled", True):
+                continue
             try:
+                from ..references.kev import MAX_BYTES
                 from ..references.storage import ingest as ingest_reference
 
-                raw = fetch(db, ref["url"], "upstream")
+                bounds = {"max_bytes": MAX_BYTES} if ref["source_id"] == "cisa-kev" else {}
+                raw = fetch(db, ref["url"], "upstream", **bounds)
                 changed = ingest_reference(db, raw, ref["source_id"])
                 collection_result(
                     db,

@@ -565,3 +565,34 @@ textarea {
 .research-dossier pre {
   white-space: pre-wrap;
 }
+
+.kev-filter {
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+}
+.kev-filter input {
+  width: auto;
+}
+.kev-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.kev-context {
+  margin-top: 8px;
+  font-size: 12px;
+  max-width: 38em;
+}
+.kev-context small {
+  display: block;
+}
+.badge.kev-listed {
+  color: var(--amber);
+}
+.badge.kev-unknown {
+  color: var(--muted);
+}

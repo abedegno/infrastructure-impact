@@ -126,10 +126,12 @@ assert(!container.querySelector('#dossier-download'));
 // Legacy snapshots are usable without the additive component script.
 const legacy = { window: {}, Set, URL, Response, Blob };
 vm.createContext(legacy);
+vm.runInContext(fs.readFileSync('infrastructure_impact/web/kev.js', 'utf8'), legacy);
 vm.runInContext(fs.readFileSync('infrastructure_impact/web/snapshot.js', 'utf8'), legacy);
 const old = plain(input.state);
 delete old.research_dossiers;
 assert(!Object.hasOwn(legacy.selectSnapshot(old, []), 'research_dossiers'));
+vm.runInContext(fs.readFileSync('infrastructure_impact/web/kev.js', 'utf8'), context);
 vm.runInContext(fs.readFileSync('infrastructure_impact/web/snapshot.js', 'utf8'), context);
 for (const test of input.matrix)
   assert.deepStrictEqual(
@@ -176,6 +178,7 @@ for (const test of input.matrix)
   };
   get('#cohort').value = 'all';
   vm.createContext(app);
+  vm.runInContext(fs.readFileSync('infrastructure_impact/web/kev.js', 'utf8'), app);
   vm.runInContext(fs.readFileSync('infrastructure_impact/web/app.js', 'utf8'), app);
   vm.runInContext("view = 'casefiles'; load()", app);
   assert.strictEqual(pending.length, 2);

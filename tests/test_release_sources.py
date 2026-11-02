@@ -3,6 +3,7 @@
 import json
 import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from urllib.error import HTTPError
 
 from checks.operations_report import summarize
@@ -108,6 +109,25 @@ class ReleaseSourceTests(unittest.TestCase):
         late = summarize([run], [], first + timedelta(days=7), 600000)
         self.assertTrue(late["seven_day_window_complete"])
         self.assertTrue(late["storage_review_required"])
+
+
+def test_public_default_kev_configuration_and_resources_match():
+    from infrastructure_impact.collection.config import validate_config
+    from infrastructure_impact.settings import PACKAGE
+
+    root = Path(__file__).resolve().parent.parent
+    public = json.loads((root / "sources.json").read_text())
+    bundled = json.loads((PACKAGE / "resources/sources.json").read_text())
+    assert public == bundled
+    validate_config(public)
+    assert next(s for s in public["reference_sources"] if s["source_id"] == "cisa-kev") == {
+        "source_id": "cisa-kev",
+        "url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+        "enabled": True,
+    }
+    assert (PACKAGE / "web/kev.js").is_file()
+    schema = json.loads((PACKAGE / "schemas/kev-v1.json").read_text())
+    assert "publication" in schema["required"]
 
 
 if __name__ == "__main__":

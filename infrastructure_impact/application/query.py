@@ -17,6 +17,7 @@ from .extraction_validation import definition as review_definition
 from .extraction_validation import review_packet, validation_report
 from .families import completeness
 from .fix_leads import evidence_inputs, leads
+from .kev import build_report
 from .product_groups import product_groups
 from .publisher_history import publisher_history
 from .readiness import readiness
@@ -47,10 +48,13 @@ def state(db, cohort=None):
     profiles = catalogue(db, records)
     checks = health(db)
     review_signals = signals(db)
+    from ..collection.config import load_config
+    from ..references.storage import enrichment_input
     from ..references.storage import latest as reference_inputs
 
     research = {
-        "study_inputs": reference_inputs(db),
+        "study_inputs": reference_inputs(db, purpose="component_study"),
+        "kev_input": enrichment_input(db, load_config(), "cisa-kev"),
         "release_assets": listings(db),
         "release_documents": [
             {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}
@@ -119,6 +123,13 @@ def state(db, cohort=None):
             "evidence_snapshots": db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0],
         },
     }
+
+    result["kev"] = build_report(
+        research["kev_input"],
+        all_scope,
+        publication=result.get("publication"),
+        generated_at=generated,
+    )
 
     from .vendor_gaps import vendor_gaps
 

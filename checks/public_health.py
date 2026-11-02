@@ -6,7 +6,7 @@ import hashlib
 import io
 import json
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
@@ -27,6 +27,164 @@ def validate_dossier_limits(report: dict) -> None:
         assert limits.get(field) is False, f"Research dossier limit changed: {field}"
     for field in ("vendor_rate", "verified_fix_delay_days"):
         assert field in limits and limits[field] is None, f"Research dossier limit changed: {field}"
+
+
+def validate_kev_report(report, publication, generated_at, scope):
+    """Check the KEV v1 contract using only stdlib, including publication scope.
+
+    Freshness here checks consistency at publication evaluation time. The reader's
+    shared selector alone decides current membership; stale upstream data is not
+    a site failure. Keep this gate aligned with schemas/kev-v1.json.
+    """
+
+    def obj(value, fields):
+        assert isinstance(value, dict) and set(value) == set(fields.split()), "Malformed KEV object"
+
+    def text(value):
+        assert isinstance(value, str) and value.strip(), "Invalid KEV text"
+
+    def timestamp(value):
+        assert isinstance(value, str) and re.fullmatch(
+            r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}"
+            r"(?:\.[0-9]+)?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])",
+            value,
+        ), "Invalid KEV timestamp"
+        try:
+            return datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
+        except ValueError as error:
+            raise AssertionError("Invalid KEV timestamp") from error
+
+    def ids(value):
+        assert isinstance(value, list) and all(
+            isinstance(cid, str) and re.fullmatch(r"CVE-[0-9]{4}-[0-9]{4,19}", cid) for cid in value
+        ), "Invalid KEV CVE identity"
+        assert value == sorted(set(value)), "Unsorted or duplicate KEV identities"
+
+    obj(
+        report,
+        "schema_version publication generated_at evaluated_at source catalogue policy "
+        "listed_cve_ids entries selection",
+    )
+    assert type(report["schema_version"]) is int and report["schema_version"] == 1
+    obj(report["publication"], "id advisory_schema_version")
+    text(report["publication"]["id"])
+    assert type(report["publication"]["advisory_schema_version"]) is int
+    assert report["publication"]["advisory_schema_version"] == 2
+    assert report["publication"] == publication, "Mixed KEV generations"
+    timestamp(report["generated_at"])
+    evaluated = timestamp(report["evaluated_at"])
+    assert report["generated_at"] == report["evaluated_at"] == generated_at, "Mixed KEV dates"
+    policy = report["policy"]
+    expected_policy = dict(
+        max_bytes=8000000, max_entries=20000, fresh_for_seconds=129600, future_tolerance_seconds=300
+    )
+    assert policy == expected_policy and all(type(v) is int for v in policy.values()), (
+        "KEV policy changed"
+    )
+    source = report["source"]
+    obj(
+        source,
+        "id retrieval_url catalogue_url configured enabled availability latest_attempt checked_at",
+    )
+    assert source["id"] == "cisa-kev", "Wrong KEV source"
+    assert source["retrieval_url"] == (
+        "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json"
+    ), "Wrong KEV mirror"
+    assert source["catalogue_url"] == "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+    configured, enabled = source["configured"], source["enabled"]
+    assert configured is None or type(configured) is bool
+    assert type(enabled) is bool if configured is not None else enabled is None
+    checked = timestamp(source["checked_at"]) if source["checked_at"] is not None else None
+    attempt = source["latest_attempt"]
+    if attempt is not None:
+        obj(attempt, "checked_at outcome error_code")
+        timestamp(attempt["checked_at"])
+        assert attempt["outcome"] in ("ok", "error")
+        assert attempt["error_code"] is None or isinstance(attempt["error_code"], str)
+    catalogue = report["catalogue"]
+    index = report["listed_cve_ids"]
+    ids(index)
+    assert len(index) <= 20000, "Oversized KEV index"
+    entries = report["entries"]
+    assert isinstance(entries, dict) and len(entries) <= 20000
+    assert set(entries) <= set(index) & set(scope), "Out-of-scope KEV details"
+    if catalogue is None:
+        assert not index and not entries, "KEV content without catalogue"
+    else:
+        obj(
+            catalogue,
+            "version released_at count sha256 revision_id source_observed_at parsed_at parser_version",
+        )
+        for field in ("version", "revision_id"):
+            text(catalogue[field])
+        for field in ("released_at", "source_observed_at", "parsed_at"):
+            timestamp(catalogue[field])
+        assert type(catalogue["count"]) is int and 1 <= catalogue["count"] == len(index) <= 20000
+        assert isinstance(catalogue["sha256"], str) and re.fullmatch(
+            r"[a-f0-9]{64}", catalogue["sha256"]
+        )
+        assert type(catalogue["parser_version"]) is int and catalogue["parser_version"] == 1
+    for cid, entry in entries.items():
+        obj(
+            entry,
+            "cveID vendorProject product vulnerabilityName shortDescription requiredAction "
+            "dateAdded dueDate knownRansomwareCampaignUse forensicTriage notes cwes",
+        )
+        assert entry["cveID"] == cid, "Mismatched KEV detail identity"
+        for field in (
+            "vendorProject",
+            "product",
+            "vulnerabilityName",
+            "shortDescription",
+            "requiredAction",
+        ):
+            text(entry[field])
+        for field in ("knownRansomwareCampaignUse", "forensicTriage", "notes"):
+            assert entry[field] is None or isinstance(entry[field], str)
+        assert isinstance(entry["cwes"], list) and all(isinstance(c, str) for c in entry["cwes"])
+        for field in ("dateAdded", "dueDate"):
+            value = entry[field]
+            assert isinstance(value, str) and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value)
+            try:
+                date.fromisoformat(value)
+            except ValueError as error:
+                raise AssertionError("Invalid KEV date") from error
+    if configured is None:
+        assert enabled is None and checked is None and attempt is None and catalogue is None
+        availability = "missing"
+    elif not configured:
+        availability = "not_configured"
+    elif not enabled:
+        availability = "disabled"
+    elif catalogue is None or checked is None or attempt is None:
+        availability = "missing"
+    elif attempt["outcome"] != "ok":
+        availability = "failed"
+    else:
+        age = (evaluated - checked).total_seconds()
+        availability = "future" if age < -300 else "stale" if age > 129600 else "available"
+    assert source["availability"] == availability, "Inconsistent KEV availability"
+    selection = report["selection"]
+    obj(selection, "requested_cve_ids effective_cve_ids kev_only membership")
+    requested, effective = selection["requested_cve_ids"], selection["effective_cve_ids"]
+    ids(requested)
+    ids(effective)
+    assert type(selection["kev_only"]) is bool
+    assert requested == sorted(set(scope)), "KEV selection differs from publication scope"
+    listed = set(index)
+    membership = {
+        cid: ("listed" if cid in listed else "not_listed")
+        if availability == "available"
+        else "unknown"
+        for cid in requested
+    }
+    assert selection["membership"] == membership, "Inconsistent KEV membership"
+    assert effective == (
+        [cid for cid in requested if membership[cid] == "listed"]
+        if selection["kev_only"]
+        else requested
+    ), "Inconsistent KEV selection"
+    assert not selection["kev_only"] or availability == "available"
 
 
 def check(origin, expected=None):
@@ -98,6 +256,13 @@ def check(origin, expected=None):
     assert age_seconds < 36 * 3600, "Publication is stale"
     assert not expected or data["publication"]["id"] == expected, "Old deployment still served"
     assert data["records"], "Empty public dataset"
+    kev_availability = None
+    if "kev" in data or "kev.json" in manifest["sha256"]:
+        report = json.loads(verified("kev.json", 8_000_000))
+        scope = set(data.get("all_cves", [])) | set(data.get("benchmark_cohort", {}))
+        validate_kev_report(report, data["publication"], data["generated_at"], scope)
+        assert report == data.get("kev"), "KEV report differs from bootstrap"
+        kev_availability = report["source"]["availability"]
     if "research_dossiers" in data:
         validate_dossier_limits(data["research_dossiers"])
         report = json.loads(verified("research-dossiers.json", 15_000_000))
@@ -201,6 +366,7 @@ def check(origin, expected=None):
         compressed_verified = True
     return {
         "status": "fresh",
+        "kev_availability": kev_availability,
         "static_marker_verified": marker_verified,
         "publication": data["publication"]["id"],
         "generated_at": data["generated_at"],

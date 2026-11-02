@@ -1,5 +1,6 @@
 """Executed outside the checkout against installed wheels, including an extension."""
 
+import hashlib
 import json
 import os
 import tempfile
@@ -44,6 +45,14 @@ def main():
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
+    for name, digest in json.loads(os.environ.get("IMPACT_EXPECTED_KEV_RESOURCES", "{}")).items():
+        assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest, name
+    configured = json.loads((package / "resources/sources.json").read_text())
+    assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
+        "source_id": "cisa-kev",
+        "url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+        "enabled": True,
+    }
     if os.environ.get("IMPACT_DISTRIBUTION_SOURCE_ROOT"):
         assert not package.resolve().is_relative_to(
             Path(os.environ["IMPACT_DISTRIBUTION_SOURCE_ROOT"]).resolve()
@@ -153,6 +162,7 @@ def main():
             "product-cohorts.json",
             "disclosure-review.json",
             "research-dossiers.json",
+            "kev.json",
         ):
             assert (root / "current" / filename).exists()
         for filename in (
@@ -172,6 +182,7 @@ def main():
             "disclosure-review-v1.json",
             "research-dossier-definition-v1.json",
             "research-dossiers-v1.json",
+            "kev-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         for contract in (root / "current/schemas").glob("*.json"):
@@ -183,6 +194,27 @@ def main():
                 }
             )
             assert status == 200 and contract_body == contract.read_bytes(), contract.name
+        from infrastructure_impact.application.kev import validate_report
+
+        kev = json.loads((root / "current/kev.json").read_text())
+        validate_report(kev)
+        assert (
+            kev["publication"]
+            == json.loads((root / "current/snapshot.json").read_text())["publication"]
+        )
+        assert kev["source"]["availability"] != "available"
+        for path in ("/api/v1/kev", "/kev.json"):
+            status, _, body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": ""}
+            )
+            assert status == 200
+            served = json.loads(body)
+            validate_report(served)
+            assert served["publication"] == kev["publication"]
+        status, _, body = app.route(
+            {"REQUEST_METHOD": "GET", "PATH_INFO": "/kev.js", "QUERY_STRING": ""}
+        )
+        assert status == 200 and body == (package / "web/kev.js").read_bytes()
         from infrastructure_impact.application.research_dossiers import research_dossiers
 
         assert (package / "web/research-dossiers.js").is_file()
@@ -273,6 +305,7 @@ def main():
                 "schema_validated": True,
                 "database_and_publication": True,
                 "public_api": True,
+                "kev_resources_and_api": True,
             }
         )
     )

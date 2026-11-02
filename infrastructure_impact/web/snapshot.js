@@ -497,7 +497,13 @@ function comparisonEligibility(source, ids, options = {}) {
 }
 
 function selectSnapshot(source, ids, options = {}) {
-  const cohort = [...new Set(ids || source.all_cves)].sort();
+  const requested = [...new Set(ids ?? source.all_cves)].sort();
+  const kev = window.InfrastructureKev.selectReport(source.kev ?? null, requested, options);
+  if (source.kev == null) {
+    kev.publication = source.publication ?? null;
+    kev.generated_at = source.generated_at ?? kev.generated_at;
+  }
+  const cohort = kev.selection.effective_cve_ids;
   const coverage = cohort.flatMap((cid) =>
     Object.keys(source.vendors).map(
       (v) =>
@@ -512,6 +518,7 @@ function selectSnapshot(source, ids, options = {}) {
   );
   return {
     ...source,
+    kev,
     ...(Object.hasOwn(source, 'research_dossiers')
       ? {
           research_dossiers: window.ResearchDossiers.select(
@@ -602,16 +609,48 @@ function snapshotCSV(source) {
     'source_url',
     'observed_at',
     'sha256',
+    'kev_status',
+    'kev_date_added',
+    'kev_due_date',
+    'kev_required_action',
+    'kev_ransomware_use',
+    'kev_forensic_triage',
+    'kev_source_url',
+    'kev_source_sha256',
+    'kev_checked_at',
+    'kev_evaluated_at',
+    'publication_id',
+    'publication_generated_at',
   ];
   const quote = (v) => {
-    v = typeof v === 'object' ? JSON.stringify(v) : String(v ?? '');
+    v = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
     if (/^[=+\-@]/.test(v)) v = "'" + v;
     return '"' + v.replaceAll('"', '""') + '"';
   };
   return [
     fields.join(','),
     ...exportSnapshot(source).records.flatMap((r) =>
-      r.assessments.map((a) => fields.map((f) => quote(a[f] ?? r[f])).join(',')),
+      r.assessments.map((a) => {
+        const report = source.kev,
+          entry = report?.entries?.[a.cve_id] ?? {};
+        const row = {
+          ...r,
+          ...a,
+          kev_status: report?.selection?.membership?.[a.cve_id] ?? 'unknown',
+          kev_date_added: entry.dateAdded,
+          kev_due_date: entry.dueDate,
+          kev_required_action: entry.requiredAction,
+          kev_ransomware_use: entry.knownRansomwareCampaignUse,
+          kev_forensic_triage: entry.forensicTriage,
+          kev_source_url: report?.source?.catalogue_url,
+          kev_source_sha256: report?.catalogue?.sha256,
+          kev_checked_at: report?.source?.checked_at,
+          kev_evaluated_at: report?.evaluated_at,
+          publication_id: source.publication?.id,
+          publication_generated_at: source.generated_at,
+        };
+        return fields.map((f) => quote(row[f])).join(',');
+      }),
     ),
   ].join('\r\n');
 }
@@ -620,60 +659,120 @@ if (typeof document !== 'undefined') {
   const siteBase = new URL('.', document.baseURI).pathname;
   const delivery = createStaticDelivery(originalFetch, siteBase);
   let current,
+    accepted,
+    acceptedReport,
+    appCommits = false,
     requestSequence = 0;
+  // The app accepts evidence, controls and downloads together after its own validation.
+  // Standalone adapter clients retain the latest-successful-fetch behavior.
+  window.InfrastructureSnapshot = {
+    commit(selected, report) {
+      appCommits = true;
+      accepted = selected;
+      acceptedReport = report;
+    },
+  };
   window.fetch = async (input, options) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
-    if (url.origin === location.origin && url.pathname === '/api/state') {
-      const ids = url.searchParams.has('cves') ? url.searchParams.get('cves').split(',') : null;
-      const vendors = url.searchParams.getAll('vendor');
-      const options = {
-        vendor: vendors.length ? vendors[0] : undefined,
-        start: url.searchParams.get('start') ?? undefined,
-        end: url.searchParams.get('end') ?? undefined,
-        group: url.searchParams.get('group') ?? undefined,
-        products: url.searchParams.has('products')
-          ? JSON.parse(url.searchParams.get('products'))
-          : undefined,
-      };
-      const sequence = ++requestSequence;
-      const source = await (await delivery)(ids, url.searchParams.get('view') === 'changes');
-      if (vendors.length && (vendors.length !== 1 || !Object.hasOwn(source.vendors, vendors[0]))) {
-        return new Response(JSON.stringify({ error: 'Invalid request' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
+    if (
+      url.origin === location.origin &&
+      ['/api/state', '/api/export.json', '/api/export.csv', '/api/v1/kev'].includes(url.pathname)
+    ) {
+      const reply = (value, status = 200, type = 'application/json') =>
+        new Response(type === 'application/json' ? JSON.stringify(value) : value, {
+          status,
+          headers: { 'Content-Type': type },
         });
+      const sequence = url.pathname === '/api/state' ? ++requestSequence : null;
+      let ids, selection;
+      try {
+        const rawIds = url.searchParams.has('cves')
+          ? url.searchParams.getAll('cves')
+          : url.searchParams.has('cve')
+            ? url.searchParams.getAll('cve')
+            : null;
+        ids =
+          rawIds === null ? null : [...new Set(rawIds.join(',').toUpperCase().split(','))].sort();
+        if (ids !== null && (ids.length > 200 || ids.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))))
+          throw Error('Invalid CVE cohort');
+        for (const key of ['start', 'end', 'products', 'group'])
+          if (url.searchParams.getAll(key).length > 1) throw Error('Duplicate comparison control');
+        selection = {
+          kevOnly: window.InfrastructureKev.validateQuery(url.searchParams.getAll('kev')),
+          start: url.searchParams.get('start') ?? undefined,
+          end: url.searchParams.get('end') ?? undefined,
+          group: url.searchParams.get('group') ?? undefined,
+          products: url.searchParams.has('products')
+            ? JSON.parse(url.searchParams.get('products'))
+            : undefined,
+        };
+      } catch {
+        return reply({ error: 'Invalid request' }, 400);
       }
-      const chosen = selectSnapshot(source, ids ?? Object.keys(source.benchmark_cohort), options);
+      const load = await delivery;
+      // Native selected endpoints default to the full imported CVE catalogue.
+      // Read shared metadata first so the transport hydrates that same scope.
+      if (ids === null && url.pathname !== '/api/v1/kev') ids = (await load([])).all_cves;
+      const source = await load(
+        ids,
+        url.searchParams.get('view') === 'changes' || url.pathname === '/api/export.json',
+      );
+      const vendors = url.searchParams.getAll('vendor');
+      if (vendors.length && (vendors.length !== 1 || !Object.hasOwn(source.vendors, vendors[0])))
+        return reply({ error: 'Invalid request' }, 400);
+      selection.vendor = vendors[0];
+      let chosen;
+      try {
+        chosen = selectSnapshot(
+          source,
+          ids ??
+            (url.pathname === '/api/v1/kev'
+              ? (source.kev?.selection?.requested_cve_ids ?? source.all_cves)
+              : source.all_cves),
+          selection,
+        );
+      } catch (error) {
+        return error.code === 'kev_unavailable'
+          ? reply({ error: 'kev_unavailable' }, 503)
+          : reply({ error: 'Invalid request' }, 400);
+      }
+      if (url.pathname === '/api/v1/kev') return reply(chosen.kev);
+      if (url.pathname === '/api/export.csv') return reply(snapshotCSV(chosen), 200, 'text/csv');
+      if (url.pathname === '/api/export.json') return reply(exportSnapshot(chosen));
       if (sequence === requestSequence) current = chosen;
-      return new Response(JSON.stringify(chosen), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return reply(chosen);
     }
     return originalFetch(input, options);
   };
   document.addEventListener('click', async (e) => {
-    const a = e.target.closest('#json-export,#csv-export');
+    const a = e.target.closest('#json-export,#csv-export,#kev-export');
     if (!a) return;
     e.preventDefault();
-    if (!current) return;
-    const chosen = current;
+    const chosen = appCommits ? accepted : current;
+    if (!chosen) return;
+    const report = acceptedReport;
     const csv = a.id === 'csv-export';
+    const kev = a.id === 'kev-export';
+    if (kev && !report) return;
     try {
-      const complete = csv
-        ? chosen
-        : {
-            ...chosen,
-            changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
-          };
-      const content = csv
-        ? snapshotCSV(complete)
-        : JSON.stringify(exportSnapshot(complete), null, 2);
+      const complete =
+        csv || kev
+          ? chosen
+          : {
+              ...chosen,
+              changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
+            };
+      const content = kev
+        ? JSON.stringify(report, null, 2)
+        : csv
+          ? snapshotCSV(complete)
+          : JSON.stringify(exportSnapshot(complete), null, 2);
       const url = URL.createObjectURL(
         new Blob([content], { type: csv ? 'text/csv' : 'application/json' }),
       );
       const out = document.createElement('a');
       out.href = url;
-      out.download = csv ? 'impact.csv' : 'impact.json';
+      out.download = kev ? 'kev.json' : csv ? 'impact.csv' : 'impact.json';
       out.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
