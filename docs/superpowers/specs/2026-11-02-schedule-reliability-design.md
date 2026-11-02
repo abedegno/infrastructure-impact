@@ -1,6 +1,6 @@
 # Separate website health from scheduled-service evidence
 
-Status: proposed design, awaiting maintainer review. No behavior is changed by this document.
+Status: approved by the maintainer on 2 November 2026. No behavior is changed by this document.
 
 ## Goal and observed problem
 
@@ -16,7 +16,7 @@ Today the health workflow also executes the cadence report. Its overall failed c
 2. **Only improve failure messages.** Smaller, but retains the shared outcome and feedback problem.
 3. **Independent fallback trigger.** An external scheduler could dispatch a collection when needed, but requires an identified host/account, credential custody and an independent freshness check. GitHub scheduling another GitHub workflow is redundancy on the same platform, not an independent fallback.
 
-The draft carries forward the maintainer's existing GitHub-only hosting preference. It does not treat the unanswered follow-up preference question as approval of this document.
+The selected approach carries forward the maintainer's existing GitHub-only hosting preference. The maintainer explicitly approved this written design after its builder check reported no important unanswered questions.
 
 ## Proposed behavior
 
