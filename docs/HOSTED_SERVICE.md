@@ -13,9 +13,15 @@ uploaded or used to seed the hosted service.
 ## Scheduling and monitoring
 
 Collection runs daily at **12:43 UTC**, with manual dispatch available. GitHub can
-delay scheduled jobs; the cadence is not an availability SLA. A separate monitor
-checks public HTML, snapshot age (36-hour threshold) and the checksum manifest
-every six hours. Actions failures are visible to maintainers; notification delivery
+delay scheduled jobs; the cadence is not an availability SLA. `Public service
+health` (`monitor.yaml`) checks public HTML, snapshot age (36-hour threshold) and
+the checksum manifest at `23 */6 * * *` UTC. The reviewed separation adds
+`Service operations` (`operations.yaml`) at `53 */6 * * *` UTC for cadence and
+storage findings. Activation is pending; the
+[rollout record](SCHEDULE_RELIABILITY.md#operational-separation--activation-pending)
+will identify deployment and independent manual verification. A healthy website
+can pass health while operations remains red for overdue scheduled observations.
+Actions failures are visible to maintainers; notification delivery
 uses their existing GitHub settings. No Slack or email integration is configured.
 
 The UI supports cohort filtering and JSON/CSV exports in the browser. It also serves
@@ -104,12 +110,26 @@ previous ciphertext remains retrievable and key rotation must account for it.
 
 ## Operate and update
 
-Active workflows are `.github/workflows/collect.yaml` and `monitor.yaml`, with the
-reusable public-runner template in `deploy/github-public-service.yaml`. Collection
+Collection and public health use `.github/workflows/collect.yaml` and
+`monitor.yaml`; the reviewed separation adds `operations.yaml`. The reusable
+collector template remains `deploy/github-public-service.yaml`. Collection
 triggers are schedule/manual dispatch, not pull requests. Only trusted maintainers
 should modify these workflows, the source pin or Actions secrets. Update the pin
 after source CI passes, manually dispatch collection, and verify public freshness.
 The workflow uses its built-in repository-scoped GitHub token, not a personal token.
+
+The collector runtime remains pinned to the reviewed 0.7.0 source
+`1716af9b37cddc7cf09d1059f7ebafb4c0898757` through `IMPACT_SOURCE_COMMIT`.
+Health checks out that pin at the workspace root for `checks/public_health.py`,
+then checks out the trusted default-branch event SHA separately at
+`operational-control` for the shared `checks/public_health_receipt.py` helper.
+Operations has one checkout at its reviewed default-branch event SHA and uses
+that checkout for all checks and the same receipt helper. These controls do not
+depend on installation or a helper existing at the old collector pin. Both jobs
+reject manual events selecting a non-default branch. Integration must precede
+default-branch smoke dispatch; candidate behavior is tested with local fixtures.
+The extra checkout is an infrastructure dependency and cannot supply missing
+health evidence. The collector pin and deployment template are unchanged.
 
 `deploy/github-service.yaml` remains a private-repository alternative. The separate
 private service repo was configured, but its jobs were blocked by account billing
@@ -121,8 +141,8 @@ Existing private Sites previews are separate and unchanged.
 
 ## Initial reliability observation
 
-The six-hour monitor also writes an Actions job summary covering the last seven
-days of collection/monitor workflow outcomes, scheduled versus manual runs,
+After activation, `Service operations` writes an Actions job summary covering
+the last seven days of collection/monitor workflow outcomes, scheduled versus manual runs,
 elapsed observation time and repository storage budget. Workflow success is not
 continuous uptime and may include partial source failures. The initial review
 cannot be completed until seven real days have elapsed; its due time is reported
@@ -133,7 +153,16 @@ review without deleting history automatically.
 
 The standard expanded-vault limit remains 512 MiB; an explicitly selected
 `large` recovery profile supports 1 GiB with the same archive and decoder bounds.
-The writer and monitor share `IMPACT_VAULT_PROFILE`. See [Capacity](CAPACITY.md)
+The writer and operational storage review share `IMPACT_VAULT_PROFILE`. See
+[Capacity](CAPACITY.md)
 for measurement, activation and downgrade limits. The public workflow cadence and
 separate activation anchor are documented in [Scheduled reliability](SCHEDULE_RELIABILITY.md).
 Current observations must not be replaced by manually generated success.
+
+Health retains `public-health-RUN_ID` with `public-health.json`; operations retains
+`reliability-review-RUN_ID` with `operations.json`, `backup-storage.json` and its
+own `public-health.json`. Both artifact sets have 30-day retention and always-run
+summary/upload steps. Both workflows have read-only contents/actions permissions,
+no evidence key and no private-state download. Missing evidence or infrastructure
+failures must be reported as such. Neither a green manual health check nor
+another GitHub workflow establishes scheduled cadence or continuous uptime.

@@ -125,11 +125,16 @@ repository variable `IMPACT_RELIABILITY_START` anchors that timestamp independen
 of the retrieved workflow-list window. For another deployment, set it to that
 service's evidenced first run; do not reuse this project's timestamp.
 
-The six-hour monitor retains `operations.json` as a `reliability-review-RUN_ID`
-GitHub Actions artifact for 30 days. It runs the operational report even if public
-health verification fails. The first normal monitor scheduled after this project's
-window is 2 November at 12:17 UTC, subject to GitHub scheduling delays. Until the
-window elapses, the report remains `waiting_for_window`.
+The reviewed separation assigns this report to `Service operations`
+(`operations.yaml`), scheduled at `53 */6 * * *` (UTC). Its
+`reliability-review-RUN_ID` artifact retains `operations.json`,
+`backup-storage.json` and its own `public-health.json` for 30 days. Operational
+and metadata-only backup checks run even when the public-health check fails.
+Until the window elapses, the report remains `waiting_for_window`. Deployment
+activation is pending; see the [rollout record](SCHEDULE_RELIABILITY.md#operational-separation--activation-pending).
+The health schedule remains `23 */6 * * *`, so the first declared health slot
+after this project's service window is 2 November at 12:23 UTC, subject to GitHub
+scheduling delays.
 
 At eligibility, the automated review checks up to 1,000 runs per workflow, flags
 truncation, distinguishes successful scheduled collections/monitors from manual
@@ -166,8 +171,9 @@ review threshold. These are a dated observation, not a week of scheduled reliabi
 
 `checks/backup_storage.py --repository OWNER/REPO --output backup-storage.json`
 reads GitHub repository, commit, tree and manifest metadata. It downloads neither
-ciphertext nor a recovery key. The six-hour monitor runs it and retains its report
-alongside `operations.json` for 30 days. It inspects up to 100 backup-branch commits,
+ciphertext nor a recovery key. After separation activation, the six-hour
+`Service operations` workflow runs it and retains its report alongside
+`operations.json` for 30 days. It inspects up to 100 backup-branch commits,
 flags truncation, deduplicates historical encrypted blobs and distinguishes their
 logical byte sizes from GitHub's reported repository storage. Four concurrent API
 requests bound metadata retrieval. The manifest is read at the inspected commit.
@@ -221,7 +227,8 @@ review; no data is deleted.
 
 The standard expanded-vault limit remains 512 MiB; an explicitly selected
 `large` recovery profile supports 1 GiB with the same archive and decoder bounds.
-The writer and monitor share `IMPACT_VAULT_PROFILE`. See [Capacity](CAPACITY.md)
+The writer and operational storage review share `IMPACT_VAULT_PROFILE`. See
+[Capacity](CAPACITY.md)
 for measurement, activation and downgrade limits. The public workflow cadence and
 separate activation anchor are documented in [Scheduled reliability](SCHEDULE_RELIABILITY.md).
 Current observations must not be replaced by manually generated success.
@@ -230,3 +237,43 @@ The public-health monitor bounds the publication manifest to 2 MB and rejects
 publication timestamps more than five minutes ahead of its clock. It also rejects
 publications aged 36 hours or more. Clock tolerance does not verify publisher dates,
 source retrieval success or uninterrupted service availability.
+
+## Independent health and operational outcomes
+
+`Public service health` (`monitor.yaml`) checks public HTML, dataset age and
+fingerprints at `23 */6 * * *` UTC. It retains `public-health.json` in
+`public-health-RUN_ID` for 30 days and writes an explanatory summary even after
+failure. Strict pipeline failure handling preserves the checker's nonzero exit
+when its output is piped through `tee`. A failed, absent or malformed receipt
+cannot establish successful health. An infrastructure or checkout failure can
+also prevent a verified result; inspect the steps and retained evidence.
+
+`Service operations` runs independently at `53 */6 * * *` UTC. A fresh website
+can pass health while operations fails for overdue successful scheduled collection
+or monitor observations, or exceeded storage budgets. Its own health receipt
+helps the review; it is never a scheduled `monitor.yaml` success. Manual dispatches
+of either workflow verify behavior only. The operational report still observes
+`collect.yaml` and `monitor.yaml`, including their historical failed conclusions.
+
+The `operational_failures` array adds stable diagnostics without removing the
+existing report or stdout fields:
+
+| Code | Workflow | Meaning |
+| --- | --- | --- |
+| `collection_schedule_overdue` | `collect.yaml` | No successful scheduled collection observation meeting the declared slot after its two-hour grace. |
+| `monitor_schedule_overdue` | `monitor.yaml` | No successful scheduled health observation meeting the declared slot after its two-hour grace. |
+| `repository_storage_budget_exceeded` | null | Reported repository storage meets or exceeds 512 MiB. |
+
+Cadence findings give `expected_trigger_at`, `latest_successful_scheduled_run_created_at`
+and `grace_deadline_at` as timezone-aware ISO timestamps; a missing latest success
+is null. Storage findings have null cadence fields. The CLI writes receipts and
+summaries before exiting nonzero with all operational findings. A successful
+public-health result does not clear them. Backup/storage findings remain visible
+in the separate metadata report, including the unchanged 50 MiB encrypted-file
+limit and 80% warnings. No automatic deletion is enabled.
+
+For source boundaries, safe manual checks and unresolved scheduler delivery, see
+[scheduled-service observations](SCHEDULE_RELIABILITY.md). Neither workflow has
+a vault key or downloads private state; both use read-only contents/actions
+permissions. This change requires no collector upgrade, package-version change,
+reparse or migration.
