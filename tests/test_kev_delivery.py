@@ -26,7 +26,7 @@ OUTSIDE = "CVE-2099-99999"
 
 
 @pytest.fixture
-def collected(tmp_path, monkeypatch):
+def collected(tmp_path, monkeypatch, request):
     path = tmp_path / "synthetic.sqlite"
     assert collect(path, RAW) == (0, 0)
     monkeypatch.setattr("infrastructure_impact.collection.config.load_config", lambda: CONFIG)
@@ -38,7 +38,7 @@ def collected(tmp_path, monkeypatch):
             "Synthetic",
             "2025-01-01T00:00:00Z",
         )
-        record["cves"] = [CID, OTHER]
+        record["cves"] = getattr(request, "param", [CID, OTHER])
         record["assessments"] = [
             assessment(cid, "Synthetic product", "affected", "Synthetic") for cid in record["cves"]
         ]
@@ -149,6 +149,8 @@ def test_native_and_installed_static_query_export_parity(collected, tmp_path, st
     generation = publish(collected, tmp_path / "public")
     app = Application(tmp_path / "public")
     queries = [
+        "",
+        "kev=listed",
         f"cves={CID},{OTHER}",
         f"cves={CID},{OTHER}&kev=listed",
         f"cves={CID}&kev=",
@@ -298,3 +300,55 @@ def test_non_state_fetch_does_not_cancel_committed_download(collected, tmp_path)
     assert downloaded["comparison"]["cohort"] == [CID]
     assert downloaded["kev"]["selection"]["requested_cve_ids"] == [CID]
     assert downloaded["kev"]["selection"]["kev_only"] is True
+
+
+@pytest.mark.parametrize("collected", [[CID, OTHER, OUTSIDE]], indirect=True)
+@pytest.mark.parametrize("kev_only", [False, True])
+def test_absent_cve_requests_hydrate_all_imported_scope(collected, tmp_path, kev_only):
+    # Both nonbenchmark imported CVEs must be loaded: OUTSIDE listed, OTHER not listed.
+    assert OTHER not in collected["benchmark_cohort"]
+    assert OUTSIDE not in collected["benchmark_cohort"]
+    generation = publish(collected, tmp_path)
+    query = "kev=listed" if kev_only else ""
+    paths = ["/api/state", "/api/export.json", "/api/export.csv"]
+    urls = [path + ("?" + query if query else "") for path in paths]
+    browser_responses = static_requests(generation, urls)
+    requested = sorted([CID, OTHER, OUTSIDE])
+    effective = sorted([CID, OUTSIDE]) if kev_only else requested
+    app = Application(tmp_path)
+    for path, browser in zip(paths, browser_responses):
+        status, body = request(app, path, query)
+        assert status == browser["status"] == 200
+        if path.endswith(".csv"):
+            native_rows = list(csv.DictReader(io.StringIO(body.decode())))
+            browser_rows = list(csv.DictReader(io.StringIO(browser["body"])))
+            assert sorted(row["cve_id"] for row in browser_rows) == effective
+            for row in [*native_rows, *browser_rows]:
+                row.pop("kev_evaluated_at")
+            assert browser_rows == native_rows
+        else:
+            native = json.loads(body)
+            selected = json.loads(browser["body"])
+            assert selected["kev"]["selection"] == native["kev"]["selection"]
+            assert selected["kev"]["selection"]["requested_cve_ids"] == requested
+            assert selected["kev"]["selection"]["effective_cve_ids"] == effective
+            for key in [
+                "records",
+                "comparison",
+                "comparison_eligibility",
+                "coverage",
+                "scorecards",
+                "timeline",
+                "casefiles",
+                "research_dossiers",
+                "all_cves",
+                "publication",
+            ]:
+                assert selected[key] == native[key], (path, key)
+            assert selected["comparison"]["cohort"] == effective
+            assert selected["kev"]["selection"]["membership"][OUTSIDE] == "listed"
+            assert selected["kev"]["selection"]["membership"][OTHER] == "not_listed"
+            assessment_ids = sorted(
+                a["cve_id"] for record in selected["records"] for a in record["assessments"]
+            )
+            assert assessment_ids == (effective if path.endswith(".json") else requested)

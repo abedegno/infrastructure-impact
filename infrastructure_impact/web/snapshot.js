@@ -697,9 +697,14 @@ if (typeof document !== 'undefined') {
         return reply({ error: 'Invalid request' }, 400);
       }
       const sequence = url.pathname === '/api/state' ? ++requestSequence : null;
-      const source = await (
-        await delivery
-      )(ids, url.searchParams.get('view') === 'changes' || url.pathname === '/api/export.json');
+      const load = await delivery;
+      // Native selected endpoints default to the full imported CVE catalogue.
+      // Read shared metadata first so the transport hydrates that same scope.
+      if (ids === null && url.pathname !== '/api/v1/kev') ids = (await load([])).all_cves;
+      const source = await load(
+        ids,
+        url.searchParams.get('view') === 'changes' || url.pathname === '/api/export.json',
+      );
       const vendors = url.searchParams.getAll('vendor');
       if (vendors.length && (vendors.length !== 1 || !Object.hasOwn(source.vendors, vendors[0])))
         return reply({ error: 'Invalid request' }, 400);
@@ -711,7 +716,7 @@ if (typeof document !== 'undefined') {
           ids ??
             (url.pathname === '/api/v1/kev'
               ? (source.kev?.selection?.requested_cve_ids ?? source.all_cves)
-              : Object.keys(source.benchmark_cohort)),
+              : source.all_cves),
           selection,
         );
       } catch (error) {
