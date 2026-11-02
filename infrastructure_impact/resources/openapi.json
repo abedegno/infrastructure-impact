@@ -743,6 +743,97 @@
         },
         "operationId": "getDisclosureReview"
       }
+    },
+    "/api/v1/research-dossiers": {
+      "get": {
+        "summary": "Source-bound CVE research dossiers",
+        "description": "Read-only generation-bound retained evidence. Omitted CVEs select the complete declared dossier scope. Vendor selection filters evidence while scope IDs remain declared identities. Unknown CVEs or vendors outside a dossier have no dossier; this does not establish unaffectedness. Older generations may lack this report.",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated CVE identifiers, at most 200. Malformed values return 400. Omit for all declared dossiers."
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "One registered vendor ID. Unknown, blank or repeated controls return 400. Metadata identifies the selected control, not evidence coverage."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Selected dossier report with publication identity and generation time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/research-dossiers-v1.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed CVE or unknown, blank or repeated vendor."
+          },
+          "404": {
+            "description": "Report unavailable for this generation."
+          },
+          "503": {
+            "description": "Publication unavailable."
+          }
+        }
+      }
+    },
+    "/research-dossiers.json": {
+      "get": {
+        "summary": "Complete generation-bound dossier report with publication envelope.",
+        "responses": {
+          "200": {
+            "description": "Complete generation-bound dossier report with publication envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/research-dossiers-v1.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Asset unavailable for this generation."
+          }
+        }
+      }
+    },
+    "/schemas/research-dossiers-v1.json": {
+      "get": {
+        "summary": "Strict research dossier report contract.",
+        "responses": {
+          "200": {
+            "description": "Strict research dossier report contract."
+          },
+          "404": {
+            "description": "Asset unavailable for this generation."
+          }
+        }
+      }
+    },
+    "/schemas/research-dossier-definition-v1.json": {
+      "get": {
+        "summary": "Strict declared dossier scope definition contract.",
+        "responses": {
+          "200": {
+            "description": "Strict declared dossier scope definition contract."
+          },
+          "404": {
+            "description": "Asset unavailable for this generation."
+          }
+        }
+      }
     }
   }
 }

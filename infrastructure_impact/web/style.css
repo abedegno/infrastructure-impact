@@ -549,3 +549,19 @@ textarea {
 .comparison-table th:nth-child(8) {
   width: 23%;
 }
+
+.dossier-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.dossier-targets > article {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+.research-dossier {
+  overflow-wrap: anywhere;
+}
+.research-dossier pre {
+  white-space: pre-wrap;
+}

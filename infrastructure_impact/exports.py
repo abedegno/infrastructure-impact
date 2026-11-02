@@ -7,6 +7,7 @@ import json
 from .application.casefiles import select_casefiles
 from .application.comparison import compare
 from .application.eligibility import eligibility
+from .application.research_dossiers import select_research_dossiers
 from .application.scorecards import select_scorecards
 from .application.timeline import select_timeline
 
@@ -25,9 +26,9 @@ FIELDS = [
 ]
 
 
-def select(data, cohort=None, *, start=None, end=None, products=None, group=None):
+def select(data, cohort=None, *, start=None, end=None, products=None, group=None, vendor=None):
     cohort = sorted(set(cohort if cohort is not None else data["all_cves"]))
-    return {
+    selected = {
         **data,
         "comparison": compare(data["records"], cohort, vendors=data["vendors"]),
         "comparison_eligibility": eligibility(
@@ -54,6 +55,12 @@ def select(data, cohort=None, *, start=None, end=None, products=None, group=None
         ],
         "delays": [],
     }
+
+    if "research_dossiers" in data:
+        selected["research_dossiers"] = select_research_dossiers(
+            data["research_dossiers"], cohort, vendor
+        )
+    return selected
 
 
 def assessment_export(data):

@@ -139,7 +139,7 @@ def test_browser_casefile_selection_matches_python_with_mixed_cve_states():
         delays=[],
     )
     ids = ["CVE-2023-38545"]
-    script = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync('infrastructure_impact/web/snapshot.js','utf8'),c);const x=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.selectSnapshot(x.data,x.ids).casefiles));"
+    script = "const fs=require('fs'),vm=require('vm');const c={window:{},Set,URL,Response,Blob};vm.createContext(c);vm.runInContext(fs.readFileSync('infrastructure_impact/web/research-dossiers.js','utf8'),c);vm.runInContext(fs.readFileSync('infrastructure_impact/web/snapshot.js','utf8'),c);const x=JSON.parse(fs.readFileSync(0,'utf8'));process.stdout.write(JSON.stringify(c.selectSnapshot(x.data,x.ids).casefiles));"
     result = subprocess.run(
         ["node", "-e", script],
         input=json.dumps(dict(data=data, ids=ids)),

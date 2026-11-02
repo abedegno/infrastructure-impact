@@ -69,7 +69,7 @@ const x=JSON.parse(fs.readFileSync(0,'utf8'));
 const requests=[];let active=0,peak=0;
 const c={window:{},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
 vm.createContext(c);
-for(const f of ['delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+for(const f of ['research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
 const fetch=async(path)=>{
  requests.push(path);active++;peak=Math.max(peak,active);
  try {
@@ -85,7 +85,7 @@ const fetch=async(path)=>{
   let source=await load(x.ids,x.changes);
   const selected=c.selectSnapshot(source,x.ids||Object.keys(source.benchmark_cohort),x.options||{});
   if(x.again)await load(x.ids,x.changes);
-  process.stdout.write(JSON.stringify({selected,exported:c.exportSnapshot(selected),requests,peak}));
+  process.stdout.write(JSON.stringify({selected,exported:c.exportSnapshot(selected),transportReport:source.research_dossiers,requests,peak}));
  }catch(error){process.stdout.write(JSON.stringify({error:error.message,requests}));}
 })();
 """
@@ -298,7 +298,7 @@ const changes=new Set(JSON.parse(fs.readFileSync(x.root+'/data/index.json','utf8
 URL.createObjectURL=b=>{blobs.push(b);return 'blob:synthetic'};URL.revokeObjectURL=()=>{};
 const fetch=async(path)=>{const file=path.replace('/site/','');if(x.fault&&changes.has(file))return new Response('',{status:404});return new Response(fs.readFileSync(x.root+'/'+file));};
 const c={window:{fetch},document:{baseURI:'https://example.test/site/',addEventListener:(n,fn)=>handlers[n]=fn,querySelector:()=>feedback,createElement:()=>({click(){}})},location:{origin:'https://example.test'},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,setTimeout:fn=>fn()};
-vm.createContext(c);for(const f of ['delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+vm.createContext(c);for(const f of ['research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
 (async()=>{await c.window.fetch('/api/state?cves=CVE-2025-12345');await handlers.click({target:{closest:()=>({id:'json-export'})},preventDefault(){}});process.stdout.write(JSON.stringify({exported:blobs.length?JSON.parse(await blobs[0].text()):null,error:feedback.textContent}));})();
 """
     result = json.loads(
@@ -313,6 +313,67 @@ vm.createContext(c);for(const f of ['delivery.js','snapshot.js'])vm.runInContext
         assert result["exported"] is None and result["error"].startswith("Export failed:")
     else:
         assert result["exported"]["changes"] == d["changes"] and not result["error"]
+
+
+@pytest.mark.parametrize(
+    "control,status",
+    [
+        ("vendor=hpe", 200),
+        ("vendor=unknown", 400),
+        ("vendor=constructor", 400),
+        ("vendor=", 400),
+        ("vendor=hpe&vendor=hpe", 400),
+        ("vendor=hpe&vendor=aruba", 400),
+    ],
+)
+def test_intercepted_state_fetch_validates_vendor_and_preserves_download_scope(
+    tmp_path, control, status
+):
+    generation = publish(dataset(), tmp_path)
+    query = "cves=CVE-2024-6387&" + control
+    replies = []
+    native_body = b"".join(
+        Application(tmp_path)(
+            dict(REQUEST_METHOD="GET", PATH_INFO="/api/state", QUERY_STRING=query),
+            lambda status, headers: replies.append(status),
+        )
+    )
+    assert int(replies[0].split()[0]) == status
+    script = r"""
+const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
+const x=JSON.parse(fs.readFileSync(0,'utf8')), handlers={},blobs=[];
+URL.createObjectURL=b=>{blobs.push(b);return 'blob:synthetic'};URL.revokeObjectURL=()=>{};
+const fetch=async(path)=>new Response(fs.readFileSync(x.root+'/'+path.replace('/site/','')));
+const c={window:{fetch},document:{baseURI:'https://example.test/site/',addEventListener:(n,fn)=>handlers[n]=fn,querySelector:()=>({textContent:''}),createElement:()=>({click(){}})},location:{origin:'https://example.test'},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto,setTimeout:fn=>fn()};
+vm.createContext(c);for(const f of ['research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+(async()=>{
+ const response=await c.window.fetch('/api/state?'+x.query),body=await response.json();
+ if(response.ok)await handlers.click({target:{closest:()=>({id:'json-export'})},preventDefault(){}});
+ process.stdout.write(JSON.stringify({status:response.status,body,download:blobs.length?JSON.parse(await blobs[0].text()):null}));
+})().catch(e=>{console.error(e);process.exitCode=1});
+"""
+    result = json.loads(
+        subprocess.check_output(
+            ["node", "-e", script],
+            input=json.dumps(
+                dict(root=str(generation), web=str(PACKAGE / "web"), query=query)
+            ).encode(),
+        )
+    )
+    assert result["status"] == status
+    native = json.loads(native_body)
+    if status == 400:
+        assert result["body"] == native == {"error": "Invalid request"}
+        assert result["download"] is None
+    else:
+        report = result["body"]["research_dossiers"]
+        assert report == native["research_dossiers"]
+        dossier = report["dossiers"][0]
+        assert dossier["scope"]["selected_vendor"] == "hpe"
+        assert dossier["comparison_targets"] == []
+        assert [c["vendor"] for c in dossier["disclosure_context"]] == ["hpe"]
+        assert result["download"]["research_dossiers"] == report
+        assert result["download"]["publication"] == result["body"]["publication"]
 
 
 def test_product_label_context_keeps_shared_scope_and_global_cohort_parity(tmp_path):
@@ -497,3 +558,145 @@ def test_monitor_reads_manifest_with_a_fixed_byte_budget(monkeypatch):
     with pytest.raises(AssertionError, match="manifest exceeds monitor budget"):
         health.check("https://example.test")
     assert reads == [2_000_001]
+
+
+@pytest.mark.parametrize("ids", [None, [CID], ["CVE-2024-6387"], []])
+def test_content_addressed_common_metadata_preserves_generation_dossiers(tmp_path, ids):
+    generation = publish(dataset(), tmp_path)
+    snapshot = json.loads((generation / "snapshot.json").read_text())
+    index = json.loads((generation / "data/index.json").read_text())
+    common = json.loads((generation / index["bootstrap"]["path"]).read_text())
+    assert "research_dossiers" in snapshot
+    assert common["data"]["research_dossiers"] == snapshot["research_dossiers"]
+    assert common["publication"] == snapshot["publication"]
+    # Transport retains the complete report; the browser applies current selection.
+    result = run(generation, ids=ids)
+    assert result["transportReport"] == snapshot["research_dossiers"]
+    assert result["selected"]["publication"] == snapshot["publication"]
+    assert (
+        result["selected"]["research_dossiers"]
+        == select(snapshot, ids if ids is not None else list(snapshot["benchmark_cohort"]))[
+            "research_dossiers"
+        ]
+    )
+
+
+def test_old_static_metadata_never_falls_back_to_another_dossier_generation(tmp_path):
+    from infrastructure_impact.application.publication import public_projection
+    from infrastructure_impact.application.static_delivery import write_static_delivery
+
+    # Isolated old-generation transport fixture: no published generation is modified.
+    data = public_projection(dataset())
+    data.pop("research_dossiers", None)
+    data["publication"] = {"id": "b" * 32, "advisory_schema_version": 2}
+    (tmp_path / "snapshot.json").write_text(json.dumps(data))
+    write_static_delivery(tmp_path, data)
+    # A loose later report must never be requested by the generation-bound loader.
+    (tmp_path / "research-dossiers.json").write_text(json.dumps({"PRIVATE_SENTINEL": "later"}))
+    result = run(tmp_path, ids=[CID])
+    assert "research_dossiers" not in result["selected"]
+    assert not any("research-dossiers.json" in path for path in result["requests"])
+    assert result["selected"]["publication"] == data["publication"]
+
+
+def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
+    generation = publish(dataset(), tmp_path)
+    html = (generation / "index.html").read_text()
+    scripts = re.findall(r'<script defer src="([^"]+)"', html)
+    expected = ["research-dossiers.js", "delivery.js", "snapshot.js", "app.js"]
+    paths = []
+    manifest = json.loads((generation / "manifest.json").read_text())
+    app = Application(tmp_path)
+    for name in expected:
+        raw = (PACKAGE / "web" / name).read_bytes()
+        path = "assets/" + hashlib.sha256(raw).hexdigest() + ".js"
+        paths.append("/" + path)
+        assert (generation / path).read_bytes() == raw
+        assert manifest["sha256"][path] == hashlib.sha256(raw).hexdigest()
+        code, _, body = app.route(dict(REQUEST_METHOD="GET", PATH_INFO="/" + name))
+        assert (code, body) == (200, raw)
+    assert scripts == paths
+    native = (PACKAGE / "web/index.html").read_text()
+    assert re.findall(r'<script defer src="([^"]+)"', native) == [
+        "/research-dossiers.js",
+        "/app.js",
+    ]
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "generation",
+        "concealment",
+        "digest",
+        "old_generation",
+        "marker_object",
+        "marker_array",
+        "marker_false",
+        "marker_null",
+        "report_object",
+        "report_array",
+        "report_false",
+        "report_null",
+    ],
+)
+def test_monitor_checks_additive_dossier_report(tmp_path, monkeypatch, fault):
+    import io
+
+    import checks.public_health as health
+
+    generation = publish(dataset(), tmp_path)
+    report_path = generation / "research-dossiers.json"
+    original = json.loads(report_path.read_text())
+    selected_generation = json.loads((generation / "snapshot.json").read_text())["publication"]
+    report = json.loads(report_path.read_text())
+    if fault == "generation":
+        report["publication"]["id"] = "different-generation"
+        assert report["publication"]["id"] != selected_generation["id"]
+    elif fault == "concealment":
+        report["limits"]["concealment_established"] = True
+    malformed = {"object": {}, "array": [], "false": False, "null": None}
+    if fault.startswith("report_"):
+        report = malformed[fault.removeprefix("report_")]
+    report_raw = json.dumps(report).encode()
+    manifest = json.loads((generation / "manifest.json").read_text())
+    manifest["sha256"]["research-dossiers.json"] = hashlib.sha256(report_raw).hexdigest()
+    seen = []
+
+    class Response(io.BytesIO):
+        status = 200
+
+    def get(url, timeout=None):
+        path = url.removeprefix("https://example.test/") or "index.html"
+        seen.append(path)
+        if path == "manifest.json":
+            return Response(json.dumps(manifest).encode())
+        if path == "research-dossiers.json":
+            assert fault != "old_generation", "Absent additive report must not be fetched"
+            return Response(report_raw + (b" " if fault == "digest" else b""))
+        return Response((generation / path).read_bytes())
+
+    if fault == "old_generation" or fault.startswith("marker_"):
+        # Build valid content-addressed parts so the malformed marker reaches dispatch.
+        from infrastructure_impact.application.static_delivery import write_static_delivery
+
+        data = json.loads((generation / "snapshot.json").read_text())
+        if fault == "old_generation":
+            data.pop("research_dossiers")
+        else:
+            data["research_dossiers"] = malformed[fault.removeprefix("marker_")]
+        write_static_delivery(generation, data)
+        manifest["sha256"] = {
+            path.relative_to(generation).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in generation.rglob("*")
+            if path.is_file() and path.name != "manifest.json"
+        }
+        manifest["sha256"]["research-dossiers.json"] = hashlib.sha256(report_raw).hexdigest()
+        assert original["publication"] == selected_generation
+    monkeypatch.setattr(health, "urlopen", get)
+    if fault == "old_generation":
+        assert health.check("https://example.test")["status"] == "fresh"
+        assert "research-dossiers.json" not in seen
+    else:
+        with pytest.raises(AssertionError):
+            health.check("https://example.test")

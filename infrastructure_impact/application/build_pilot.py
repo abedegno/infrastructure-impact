@@ -19,6 +19,30 @@ UNKNOWN_FIELDS = (
 )
 
 
+def matches_target_reference(record, claim, target):
+    """Match the pilot's exact source/product/CVE/build identity, retaining qualifications.
+
+    Statement status and scope remain the caller's policy: the pilot requires a
+    CVE-specific fixed claim, while a dossier preserves qualified or contradictory
+    branches that carry the same exact target build identity.
+    """
+    if (
+        record["vendor"] != target["vendor"]
+        or record["source_url"] != target["source_url"]
+        or record.get("document_status") == "draft"
+        or claim["product"] != target["product_literal"]
+        or claim["cve_id"] != target["cve_id"]
+    ):
+        return False
+    return (
+        target["selector"] == "version_expression"
+        and any(v.get("expression") == target["expression"] for v in claim.get("versions", []))
+    ) or (
+        target["selector"] == "product_version_context"
+        and ["product_version", target["firmware_build"]] in claim.get("product_context", [])
+    )
+
+
 def build_pilot(data):
     spec = json.loads((PACKAGE / "resources/build-pilot.json").read_text())
     if len({t["id"] for t in spec["targets"]}) != len(spec["targets"]):
@@ -27,35 +51,14 @@ def build_pilot(data):
     for target in spec["targets"]:
         if not allowed(target["source_url"], target["vendor"]):
             raise ValueError("Build pilot requires official vendor sources")
-        found = []
-        for record in data.get("records", []):
-            if (
-                record["vendor"] != target["vendor"]
-                or record["source_url"] != target["source_url"]
-                or record.get("document_status") == "draft"
-            ):
-                continue
-            for claim in record["assessments"]:
-                if (
-                    claim["product"] != target["product_literal"]
-                    or claim["cve_id"] != target["cve_id"]
-                    or claim["status"] != "fixed"
-                    or claim["scope"] != "cve_specific"
-                ):
-                    continue
-                exact = (
-                    target["selector"] == "version_expression"
-                    and any(
-                        v.get("expression") == target["expression"]
-                        for v in claim.get("versions", [])
-                    )
-                ) or (
-                    target["selector"] == "product_version_context"
-                    and ["product_version", target["firmware_build"]]
-                    in claim.get("product_context", [])
-                )
-                if exact:
-                    found.append((record, claim))
+        found = [
+            (record, claim)
+            for record in data.get("records", [])
+            for claim in record["assessments"]
+            if matches_target_reference(record, claim, target)
+            and claim["status"] == "fixed"
+            and claim["scope"] == "cve_specific"
+        ]
         evidence = [
             dict(
                 source_url=r["source_url"],
