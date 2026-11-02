@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0 research preview — 2026-11-02
+
+- Add generation-bound CVE research dossiers inside Case files, combining exact-build publisher statements, source fingerprints, qualified chronology, disclosure context and explicit evidence gaps.
+- Curate an OpenSSH switching comparison for Arista EOS 4.32.2F and Aruba AOS-CX 10.13.1031, plus separate FortiProxy dossiers for CVE-2023-38545 and CVE-2023-38546. HPE Cray remains disclosure context only.
+- Preserve distinct assessment branches and their own locators, per-CVE product associations and exact source/build binding. Fixed-only statements do not establish prior affectedness.
+- Add strict dossier schemas, native report/API routes, static publication delivery, vendor/CVE selection and same-generation single-dossier JSON downloads. Older generations remain readable.
+- Validate dossier identity, fingerprints and fixed research limits in the standalone public monitor and installed-wheel acceptance probes. Vendor rates, verified fix delays, earliest disclosure and intentional concealment remain unestablished.
+- Verify example vendor plugin 0.1.6 against the 0.7 release and extend its declared compatibility through the 0.7 series.
+- Synchronize the generated build requirements with the reviewed Hatchling 1.33.0 update.
+
 ## 0.6.0 research preview — 2026-10-27
 
 - Add a ninth vendor plugin for two exact reviewed F5 PHP/OpenSSH article PDFs. Preserve shared-CVE tables, BIG-IP / BIG-IP Next distinctions, authentication, lifecycle limits and literal fix-column states; reject changed semantic scope and retain earlier evidence.
