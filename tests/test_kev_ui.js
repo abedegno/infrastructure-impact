@@ -361,6 +361,101 @@ async function checkDownloads(b, id) {
   assert.strictEqual(b.evaluate('data.publication.id'), 'latest');
   await checkDownloads(b, 'latest');
 
+  // Catalogue membership remains visible for selected CVEs with no local evidence.
+  const withoutAssessment = browser();
+  await success(withoutAssessment, withoutAssessment.requests[0], state('context-initial'));
+  await success(withoutAssessment, withoutAssessment.requests.at(-1), state('context-initial'));
+  const applyWithoutAssessment = (cve, only) => {
+    withoutAssessment.nodes.get('#cohort').value = 'custom';
+    withoutAssessment.nodes.get('#custom-cves').value = cve;
+    withoutAssessment.nodes.get('#kev-only').checked = only;
+    withoutAssessment.nodes.get('#apply').fire('click');
+  };
+  const noEvidenceState = (id, cve, only = false) => {
+    const selectedState = state(id, [cve], only);
+    selectedState.comparison.cohort = [cve];
+    selectedState.records = [];
+    selectedState.counts.advisories = 0;
+    return selectedState;
+  };
+  applyWithoutAssessment(outside, true);
+  await success(
+    withoutAssessment,
+    withoutAssessment.requests.at(-1),
+    noEvidenceState('outside-listed', outside, true),
+  );
+  const outsideMarkup = withoutAssessment.nodes.get('#matrix-results').innerHTML;
+  assert(
+    outsideMarkup.includes(`<code>${outside}</code>`),
+    'matrix exposes selected CVE membership without an assessment row',
+  );
+  assert(outsideMarkup.includes('KEV listed'));
+  assert(
+    outsideMarkup.includes('href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"'),
+  );
+  assert(outsideMarkup.includes('2026-11-02T12:00:00Z'));
+  assert(outsideMarkup.includes('0 product/version statements'));
+  assert(/no local product assessment/i.test(outsideMarkup));
+  assert(!outsideMarkup.includes('Required action'));
+  assert(!outsideMarkup.includes('Synthetic service'));
+  assert(!outsideMarkup.includes('No KEV-listed CVEs match'));
+  assert(withoutAssessment.nodes.get('#feedback').textContent.includes('1 selected CVEs'));
+  await withoutAssessment.nodes.get('#json-export').click();
+  await withoutAssessment.settle();
+  const outsideExport = JSON.parse(await withoutAssessment.downloads.at(-1).blob.text());
+  assert.strictEqual(outsideExport.publication.id, 'outside-listed');
+  assert.deepStrictEqual(outsideExport.comparison.cohort, [outside]);
+  assert.deepStrictEqual(outsideExport.kev.selection.effective_cve_ids, [outside]);
+  assert.strictEqual(outsideExport.kev.selection.membership[outside], 'listed');
+  assert.deepStrictEqual(outsideExport.records, []);
+  await withoutAssessment.nodes.get('#csv-export').click();
+  assert.strictEqual(
+    (await withoutAssessment.downloads.at(-1).blob.text()).split('\r\n').length,
+    1,
+  );
+  await withoutAssessment.nodes.get('#kev-export').click();
+  const outsideReport = JSON.parse(await withoutAssessment.downloads.at(-1).blob.text());
+  assert.strictEqual(outsideReport.publication.id, 'outside-listed');
+  assert(outsideReport.listed_cve_ids.includes(outside));
+  assert(!Object.hasOwn(outsideReport.entries, outside), 'outside detailed metadata stays absent');
+  applyWithoutAssessment(other, false);
+  await success(
+    withoutAssessment,
+    withoutAssessment.requests.at(-1),
+    noEvidenceState('outside-not-listed', other),
+  );
+  const notListedMarkup = withoutAssessment.nodes.get('#matrix-results').innerHTML;
+  assert(notListedMarkup.includes(`<code>${other}</code>`));
+  assert(notListedMarkup.includes('KEV not listed'));
+  assert(!notListedMarkup.includes('Required action'));
+  assert.strictEqual(withoutAssessment.evaluate('data.publication.id'), 'outside-not-listed');
+  applyWithoutAssessment(outside, false);
+  await success(
+    withoutAssessment,
+    withoutAssessment.requests.at(-1),
+    noEvidenceState('outside-historical', outside),
+  );
+  withoutAssessment.advance(36 * 3600000 + 1);
+  withoutAssessment.evaluate('render()');
+  const historicalOutside = withoutAssessment.nodes.get('#matrix-results').innerHTML;
+  assert(historicalOutside.includes(`<code>${outside}</code>`));
+  assert(historicalOutside.includes('KEV unknown'));
+  assert(historicalOutside.includes('Retained listed membership is historical.'));
+  assert(!historicalOutside.includes('>KEV listed<'));
+  assert(!historicalOutside.includes('Required action'));
+  applyWithoutAssessment(outside, false);
+  const failedOutside = noEvidenceState('outside-unavailable', outside);
+  failedOutside.kev.source.latest_attempt.outcome = 'error';
+  failedOutside.kev.source.latest_attempt.error_code = 'HTTP_503';
+  await success(withoutAssessment, withoutAssessment.requests.at(-1), failedOutside);
+  assert(withoutAssessment.nodes.get('#matrix-results').innerHTML.includes('KEV unknown'));
+  assert(
+    withoutAssessment.nodes
+      .get('#matrix-results')
+      .innerHTML.includes('Retained listed membership is historical.'),
+  );
+  assert(withoutAssessment.nodes.get('#kev-status').innerHTML.includes('failed'));
+
   // A filtered matrix must reevaluate even when only its local product search renders.
   const m = browser();
   await success(m, m.requests[0], state('matrix'));

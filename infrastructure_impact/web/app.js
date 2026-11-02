@@ -274,7 +274,13 @@ function matrixRows() {
   render(drawMatrixRows);
 }
 function drawMatrixRows() {
-  rows = claims().filter(
+  const assessments = claims();
+  const assessedCves = new Set(assessments.map(({ a }) => a.cve_id));
+  const withoutAssessment = data.comparison.cohort.filter((id) => !assessedCves.has(id));
+  const membership = withoutAssessment.length
+    ? `<section aria-label="CVE membership without local assessments"><h3>Selected CVEs without local product assessments</h3><p>No local product assessment is retained for these CVEs. CISA membership does not establish product affectedness.</p>${withoutAssessment.map((id) => `<div><code>${esc(id)}</code>${kevContext(id)}</div>`).join('')}</section>`
+    : '';
+  rows = assessments.filter(
     ({ a, r }) =>
       (!matrixCve || a.cve_id === matrixCve) &&
       (!matrixVendor || r.vendor === matrixVendor) &&
@@ -284,7 +290,7 @@ function drawMatrixRows() {
         .includes(matrixQuery.toLowerCase()),
   );
   $('#matrix-results').innerHTML =
-    `<p class="count">${rows.length} product/version statements · showing ${Math.min(shown, rows.length)}</p><div class="table-wrap"><table><thead><tr><th>Vendor / CVE</th><th>Product & version scope</th><th>Assessment</th><th>Remediation evidence</th><th>Source</th></tr></thead><tbody>${rows
+    `${membership}<p class="count">${rows.length} product/version statements · showing ${Math.min(shown, rows.length)}</p><div class="table-wrap"><table><thead><tr><th>Vendor / CVE</th><th>Product & version scope</th><th>Assessment</th><th>Remediation evidence</th><th>Source</th></tr></thead><tbody>${rows
       .slice(0, shown)
       .map(
         ({ a, r }, i) =>
