@@ -146,11 +146,14 @@ def build_report(
     """Expose validated retained content, with details bounded by publication scope."""
     _timestamp(generated_at)
     configured = source_input.get("configured", False)
+    enabled = source_input.get("enabled", configured)
+    if type(configured) is not bool or type(enabled) is not bool:
+        raise ValueError("Collected KEV configured and enabled flags must be booleans")
     report = _empty(
         generated_at,
         publication,
         configured=configured,
-        enabled=source_input.get("enabled", configured),
+        enabled=enabled,
     )
     report["source"].update(
         checked_at=source_input.get("checked_at"),

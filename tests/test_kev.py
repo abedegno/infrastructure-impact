@@ -122,12 +122,30 @@ def test_builder_preserves_historical_retention_and_supports_unpublished_context
     assert report["entries"]
 
 
-def test_absent_source_input_is_not_configured():
-    report = build({})
+@pytest.mark.parametrize("publication", [BASE["publication"], None])
+def test_absent_source_input_is_not_configured(publication):
+    report = build({}, publication=publication)
     validate_report(report)
     assert report["source"]["availability"] == "not_configured"
     assert report["source"]["configured"] is False
     assert report["source"]["enabled"] is False
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        {"configured": None, "enabled": None},
+        {"configured": None},
+        {"enabled": None},
+        {"configured": 0},
+        {"enabled": 1},
+        {"configured": "false"},
+        {"enabled": "true"},
+    ],
+)
+def test_unpublished_builder_rejects_nonboolean_collected_flags(source):
+    with pytest.raises(ValueError):
+        build(source, [], publication=None)
 
 
 @pytest.mark.parametrize(
