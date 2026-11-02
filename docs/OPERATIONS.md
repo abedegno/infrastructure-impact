@@ -141,9 +141,11 @@ truncation, distinguishes successful scheduled collections/monitors from manual
 runs, includes the verified public-health receipt and source-failure count, and
 checks repository storage against 512 MiB. Fewer than seven successful scheduled
 collections or 24 successful scheduled monitors remains a finding. Failed,
-cancelled and timed-out runs remain visible. A missing health receipt or truncated
-history prevents automated review completion. A failed health receipt can complete
-a review **with findings**, never as a successful availability claim.
+cancelled and timed-out runs remain visible. Omitting the health-receipt input or
+having truncated history prevents automated review completion. With an eligible
+seven-day window and untruncated history, a supplied health path normalized to
+retained failed or unavailable evidence can complete an evidence review **with
+findings**. Such evidence never establishes successful health or uptime.
 
 `review_without_detected_operational_findings` is not a measurement of continuous
 uptime or a claim of complete vendor coverage. Existing partial source failures
