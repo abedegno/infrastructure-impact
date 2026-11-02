@@ -43,6 +43,15 @@
               "minimum": 0,
               "default": 0
             }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
           }
         ],
         "responses": {
@@ -91,7 +100,7 @@
             "description": "Invalid cohort, vendor or pagination"
           },
           "503": {
-            "description": "Publication unavailable"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           }
         }
       }
@@ -132,6 +141,15 @@
               "type": "integer",
               "minimum": 0,
               "default": 0
+            }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
             }
           }
         ],
@@ -182,7 +200,7 @@
             "description": "Invalid cohort, vendor or pagination"
           },
           "503": {
-            "description": "Publication unavailable"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           }
         }
       }
@@ -234,9 +252,23 @@
             "description": "Successful response"
           },
           "503": {
-            "description": "Publication unavailable or stale (readiness only)"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
+          },
+          "400": {
+            "description": "Invalid CVE, vendor, comparison, or KEV query controls"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
+          }
+        ]
       }
     },
     "/api/export.csv": {
@@ -247,9 +279,24 @@
             "description": "Successful response"
           },
           "503": {
-            "description": "Publication unavailable or stale (readiness only)"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
+          },
+          "400": {
+            "description": "Invalid CVE, vendor, comparison, or KEV query controls"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
+          }
+        ],
+        "description": "Selected assessment rows include kev_status, kev_date_added, kev_due_date, kev_required_action, kev_ransomware_use, kev_forensic_triage, kev_source_url, kev_source_sha256, kev_checked_at, kev_evaluated_at, publication_id, publication_generated_at after the existing columns. Missing fields are blank; Unknown is never converted to No. Historical source details retain provenance while effective status is unknown. Spreadsheet formula prefixes are escaped."
       }
     },
     "/snapshot.json": {
@@ -326,6 +373,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
           }
         ],
         "responses": {
@@ -336,7 +392,7 @@
             "description": "Invalid cohort or unknown vendor"
           },
           "503": {
-            "description": "Publication unavailable"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           }
         }
       }
@@ -369,6 +425,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
           }
         ],
         "responses": {
@@ -379,7 +444,7 @@
             "description": "Invalid cohort or unknown vendor"
           },
           "503": {
-            "description": "Publication unavailable"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           }
         }
       }
@@ -428,7 +493,7 @@
             "description": "Version 1 public metadata from an immutable publication; no intent inference"
           },
           "503": {
-            "description": "Publication unavailable"
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           },
           "400": {
             "description": "Invalid cohort or unknown vendor"
@@ -447,6 +512,15 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
             }
           }
         ]
@@ -517,6 +591,15 @@
               "type": "string"
             },
             "description": "Reviewed product-role group ID; intersects exact product selectors. Unknown or duplicate IDs return 400. Role membership does not establish equivalent portfolios."
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
           }
         ],
         "responses": {
@@ -532,6 +615,9 @@
           },
           "400": {
             "description": "Invalid date, cohort, vendor or exact product selection."
+          },
+          "503": {
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           }
         }
       }
@@ -569,6 +655,9 @@
         "responses": {
           "200": {
             "description": "All retained non-draft statement roles, unmapped labels and source-linked rules. Not a portfolio inventory."
+          },
+          "503": {
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
           }
         },
         "parameters": [
@@ -577,6 +666,15 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
             }
           }
         ]
@@ -831,6 +929,119 @@
           },
           "404": {
             "description": "Asset unavailable for this generation."
+          }
+        }
+      }
+    },
+    "/api/state": {
+      "get": {
+        "summary": "Selected publication state with evaluated KEV context and requested/effective CVE scope",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generation-bound state; all_cves remains the original source catalogue. kev.selection records requested_cve_ids and effective_cve_ids; evaluated_at is request time, generated_at and publication remain immutable."
+          },
+          "400": {
+            "description": "Invalid selection controls"
+          },
+          "503": {
+            "description": "Publication unavailable, or KEV-only selection unavailable. KEV unavailability returns JSON {\"error\":\"kev_unavailable\"}."
+          }
+        }
+      }
+    },
+    "/api/v1/kev": {
+      "get": {
+        "summary": "Read-only KEV membership report from this immutable publication, re-evaluated at request time",
+        "description": "Exact CVE membership only; no vendor/product inference. Older than 36 hours, failed latest attempt, missing verification, disabled/unconfigured source, or verification more than five minutes in the future makes effective membership unknown. Retained historical details and source provenance remain attributed. Legacy absent reports use the enclosing publication and time with missing availability. No automatic transport fallback.",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kev",
+            "in": "query",
+            "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
+            "schema": {
+              "type": "string",
+              "enum": ["listed"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evaluated KEV report, publication identity immutable; evaluated_at is separate from generated_at",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/kev-v1.json"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid CVE or KEV controls"
+          },
+          "503": {
+            "description": "Publication unavailable, or JSON {\"error\":\"kev_unavailable\"} for unreliable KEV-only selection"
+          }
+        }
+      }
+    },
+    "/kev.json": {
+      "get": {
+        "summary": "Complete KEV report evaluated at publication generation time",
+        "responses": {
+          "200": {
+            "description": "Immutable generation-bound report with complete sorted membership index and details limited to imported/benchmark CVE union",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/kev-v1.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Asset unavailable for this generation"
+          }
+        }
+      }
+    },
+    "/schemas/kev-v1.json": {
+      "get": {
+        "summary": "Strict KEV report schema",
+        "responses": {
+          "200": {
+            "description": "JSON Schema for generation-bound KEV reports"
           }
         }
       }

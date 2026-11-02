@@ -110,6 +110,12 @@
     };
     return selected;
   }
-  if (typeof window !== 'undefined') window.InfrastructureKev = { selectReport };
-  if (typeof module !== 'undefined' && module.exports) module.exports = { selectReport };
+  function validateQuery(values) {
+    if (values.length === 0) return false;
+    if (values.length === 1 && values[0] === 'listed') return true;
+    throw Error('Invalid KEV control');
+  }
+  if (typeof window !== 'undefined') window.InfrastructureKev = { selectReport, validateQuery };
+  if (typeof module !== 'undefined' && module.exports)
+    module.exports = { selectReport, validateQuery };
 })();

@@ -9,6 +9,7 @@ from pathlib import Path
 from threading import Lock
 from urllib.parse import parse_qs
 
+from .application.kev import KevUnavailable
 from .exports import assessment_export, csv_export, select
 
 LOG = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ class Application:
     def __call__(self, environ, start_response):
         try:
             status, content_type, body = self.route(environ)
+        except KevUnavailable:
+            status, content_type, body = 503, "application/json", b'{"error":"kev_unavailable"}'
         except BadRequest:
             status, content_type, body = 400, "application/json", b'{"error":"Invalid request"}'
         except Exception:
@@ -187,6 +190,7 @@ class Application:
             )
         if path in (
             "/api/state",
+            "/api/v1/kev",
             "/api/export.json",
             "/api/export.csv",
             "/api/assessments",
@@ -199,6 +203,9 @@ class Application:
             "/api/v1/assessments",
         ):
             try:
+                kev_values = query.get("kev", [])
+                if kev_values and kev_values != ["listed"]:
+                    raise ValueError("Invalid KEV control")
                 values = query.get("vendor", [])
                 if values and (len(values) != 1 or values[0] not in data["vendors"]):
                     raise ValueError("Unknown or repeated vendor")
@@ -208,15 +215,28 @@ class Application:
                 products = json.loads(query["products"][0]) if "products" in query else None
                 selected = select(
                     data,
-                    ids,
+                    (
+                        ids
+                        if ids is not None
+                        else (
+                            data.get("kev", {}).get("selection", {}).get("requested_cve_ids")
+                            if path == "/api/v1/kev"
+                            else None
+                        )
+                    ),
                     start=query.get("start", [None])[0],
                     end=query.get("end", [None])[0],
                     products=products,
                     group=query.get("group", [None])[0],
                     vendor=values[0] if values else None,
+                    kev_only=kev_values == ["listed"],
                 )
+            except KevUnavailable:
+                raise
             except (ValueError, TypeError) as error:
                 raise BadRequest("Invalid comparison selection") from error
+            if path == "/api/v1/kev":
+                return self.json(selected["kev"])
             if path == "/api/state":
                 return self.json(selected)
             if path in (
@@ -310,6 +330,9 @@ class Application:
             "/index.html",
             "/app.js",
             "/research-dossiers.js",
+            "/kev.js",
+            "/kev.json",
+            "/schemas/kev-v1.json",
             "/style.css",
             "/snapshot.js",
             "/delivery.js",

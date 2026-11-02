@@ -17,6 +17,7 @@ from .extraction_validation import definition as review_definition
 from .extraction_validation import review_packet, validation_report
 from .families import completeness
 from .fix_leads import evidence_inputs, leads
+from .kev import build_report
 from .product_groups import product_groups
 from .publisher_history import publisher_history
 from .readiness import readiness
@@ -122,6 +123,13 @@ def state(db, cohort=None):
             "evidence_snapshots": db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0],
         },
     }
+
+    result["kev"] = build_report(
+        research["kev_input"],
+        all_scope,
+        publication=result.get("publication"),
+        generated_at=generated,
+    )
 
     from .vendor_gaps import vendor_gaps
 

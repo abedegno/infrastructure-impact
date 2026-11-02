@@ -371,9 +371,6 @@
           },
           "catalogue": {
             "type": "null"
-          },
-          "publication": {
-            "type": "null"
           }
         }
       },
