@@ -1,6 +1,6 @@
 # CISA KEV enrichment
 
-Status: proposed written design for maintainer review. The maintainer approved proceeding with the recommended CVE-level enrichment; implementation has not started.
+Status: approved by the maintainer on 2 November 2026. Prepare the implementation plan for review; implementation has not started.
 
 ## Intent and scope
 
