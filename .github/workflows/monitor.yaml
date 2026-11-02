@@ -18,33 +18,49 @@ jobs:
           ref: ${{ vars.IMPACT_SOURCE_COMMIT }}
           persist-credentials: false
       - name: Check public HTML, dataset age and fingerprints
+        id: public-health
         env:
           PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
-        run: python3 checks/public_health.py "$PUBLIC_URL" | tee "$RUNNER_TEMP/public-health.json"
-      - name: Summarize the seven-day observation window and storage budget
+        run: |
+          set -euo pipefail
+          python3 checks/public_health.py "$PUBLIC_URL" | tee "$RUNNER_TEMP/public-health.json"
+      - name: Summarize public health
         if: always()
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          OBSERVATION_START: ${{ vars.IMPACT_RELIABILITY_START }}
-          SCHEDULE_START: ${{ vars.IMPACT_SCHEDULE_OBSERVATION_START }}
-        run: python3 checks/operations_report.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/operations.json" --summary "$GITHUB_STEP_SUMMARY" --observation-start "$OBSERVATION_START" --health-report "$RUNNER_TEMP/public-health.json" --schedule-observation-start "$SCHEDULE_START"
+          CHECK_OUTCOME: ${{ steps.public-health.outcome }}
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+          from pathlib import Path
 
-      - name: Assess encrypted backup growth without downloading evidence
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
-        run: python3 checks/backup_storage.py --repository "$REPOSITORY" --output "$RUNNER_TEMP/backup-storage.json" --summary "$GITHUB_STEP_SUMMARY" --vault-profile "$VAULT_PROFILE"
-
-      - name: Retain operational review evidence
+          receipt = Path(os.environ["RUNNER_TEMP"]) / "public-health.json"
+          outcome = os.environ["CHECK_OUTCOME"]
+          try:
+              report = json.loads(receipt.read_text())
+          except (OSError, ValueError):
+              report = None
+          verified = isinstance(report, dict) and report.get("status") == "fresh"
+          if outcome != "success":
+              report = {"status": "failed"}
+          elif not verified:
+              report = {"status": "unavailable"}
+          report["check_outcome"] = outcome
+          receipt.write_text(json.dumps(report, indent=2) + "\n")
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
+              stream.write(
+                  "\n## Public service health\n\n"
+                  f"Check outcome: **{outcome}**; receipt status: **{report['status']}**.\n\n"
+                  + "```json\n" + json.dumps(report, indent=2) + "\n```\n"
+              )
+          if outcome == "success" and not verified:
+              raise SystemExit("Public-health receipt unavailable; successful health is unverified")
+          PYTHON
+      - name: Retain public health evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: reliability-review-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/operations.json
-            ${{ runner.temp }}/backup-storage.json
+          name: public-health-${{ github.run_id }}
+          path: ${{ runner.temp }}/public-health.json
           if-no-files-found: warn
           retention-days: 30
