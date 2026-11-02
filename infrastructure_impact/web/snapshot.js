@@ -683,6 +683,7 @@ if (typeof document !== 'undefined') {
           status,
           headers: { 'Content-Type': type },
         });
+      const sequence = url.pathname === '/api/state' ? ++requestSequence : null;
       let ids, selection;
       try {
         const rawIds = url.searchParams.has('cves')
@@ -708,7 +709,6 @@ if (typeof document !== 'undefined') {
       } catch {
         return reply({ error: 'Invalid request' }, 400);
       }
-      const sequence = url.pathname === '/api/state' ? ++requestSequence : null;
       const load = await delivery;
       // Native selected endpoints default to the full imported CVE catalogue.
       // Read shared metadata first so the transport hydrates that same scope.

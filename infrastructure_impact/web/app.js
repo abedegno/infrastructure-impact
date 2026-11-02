@@ -528,6 +528,8 @@ $('#cohort').addEventListener('change', (e) => {
   $('#custom-cves').disabled = e.target.value !== 'custom';
 });
 $('#apply').addEventListener('click', () => {
+  // Every Apply supersedes older loads, even when validation rejects it locally.
+  ++loadSequence;
   const mode = $('#cohort').value;
   cohortMode = mode;
   customCves = $('#custom-cves').value;

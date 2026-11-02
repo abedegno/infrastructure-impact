@@ -141,10 +141,6 @@ console.log(
     reads.at(-1).resolve(value);
     return (await pending).json();
   };
-  const app = window.InfrastructureSnapshot;
-  app.commit(null, null);
-  const a = await read('/api/state?cves=' + cid, source);
-  app.commit(a, report);
   const click = (id) =>
     clicks[0]({
       preventDefault() {},
@@ -154,6 +150,70 @@ console.log(
         },
       },
     });
+  // Without app commits, rejected state intents still supersede pending states.
+  const acceptedSource = {
+    ...source,
+    publication: { id: 'standalone-accepted' },
+    kev: { ...report, publication: { id: 'standalone-accepted' } },
+  };
+  await read('/api/state?cves=' + cid, acceptedSource);
+  const jsonClick = async () => {
+    const pending = click('json-export');
+    await flush();
+    reads.at(-1).resolve({ changes: [{ synthetic: 'accepted-history' }] });
+    await pending;
+    return JSON.parse(await downloads.at(-1).blob.text());
+  };
+  const acceptedExport = await jsonClick();
+  assert.strictEqual(acceptedExport.publication.id, 'standalone-accepted');
+  assert.deepStrictEqual(acceptedExport.comparison.cohort, [cid]);
+  assert.strictEqual(acceptedExport.kev.selection.membership[cid], 'listed');
+  await click('csv-export');
+  const acceptedCSV = await downloads.at(-1).blob.text();
+  assert(acceptedCSV.includes('standalone-accepted'));
+  for (const query of [
+    'kev=invalid',
+    'cves=invalid',
+    'products=invalid',
+    'start=2026-01-01&start=2026-02-01',
+  ]) {
+    const pending = window.fetch('/api/state?cves=' + cid + '&kev=listed');
+    await flush();
+    const held = reads.at(-1);
+    const rejected = await window.fetch('/api/state?' + query);
+    assert.strictEqual(rejected.status, 400);
+    assert.deepStrictEqual(await rejected.json(), { error: 'Invalid request' });
+    held.resolve({
+      ...acceptedSource,
+      publication: { id: 'standalone-obsolete' },
+      kev: { ...report, publication: { id: 'standalone-obsolete' } },
+    });
+    assert.strictEqual((await pending).status, 200, 'older response is still returned to caller');
+    assert.deepStrictEqual(await jsonClick(), acceptedExport);
+    await click('csv-export');
+    assert.strictEqual(await downloads.at(-1).blob.text(), acceptedCSV);
+  }
+  // Invalid export/report queries have no state intent and must not cancel it.
+  for (const path of ['/api/export.json', '/api/export.csv', '/api/v1/kev']) {
+    const id = 'accepted-after-' + path;
+    const pending = window.fetch('/api/state?cves=' + cid);
+    await flush();
+    const held = reads.at(-1);
+    assert.strictEqual((await window.fetch(path + '?kev=invalid')).status, 400);
+    held.resolve({
+      ...acceptedSource,
+      publication: { id },
+      kev: { ...report, publication: { id } },
+    });
+    assert.strictEqual((await pending).status, 200);
+    assert.strictEqual((await jsonClick()).publication.id, id);
+    await click('csv-export');
+    assert((await downloads.at(-1).blob.text()).includes(id));
+  }
+  const app = window.InfrastructureSnapshot;
+  app.commit(null, null);
+  const a = await read('/api/state?cves=' + cid, source);
+  app.commit(a, report);
   const delayed = click('json-export');
   await flush();
   assert.strictEqual(reads.at(-1).history, true);
