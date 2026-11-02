@@ -17,10 +17,11 @@ delay scheduled jobs; the cadence is not an availability SLA. `Public service
 health` (`monitor.yaml`) checks public HTML, snapshot age (36-hour threshold) and
 the checksum manifest at `23 */6 * * *` UTC. The reviewed separation adds
 `Service operations` (`operations.yaml`) at `53 */6 * * *` UTC for cadence and
-storage findings. Activation is pending; the
-[rollout record](SCHEDULE_RELIABILITY.md#operational-separation--activation-pending)
-will identify deployment and independent manual verification. A healthy website
-can pass health while operations remains red for overdue scheduled observations.
+storage findings. The separation was activated on 2 November 2026; the
+[rollout record](SCHEDULE_RELIABILITY.md#operational-separation-activated-2-november-2026)
+records the deployment and independent manual verification. Health passed while
+operations remained red for overdue scheduled observations; manual verification
+does not establish repaired scheduling or continuous uptime.
 Actions failures are visible to maintainers; notification delivery
 uses their existing GitHub settings. No Slack or email integration is configured.
 

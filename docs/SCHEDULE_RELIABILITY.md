@@ -91,15 +91,30 @@ someone to view it. An external alert service or another host would need its own
 operator setup and observation. No independent notification service is claimed
 or silently enabled by this deployment.
 
-## Operational separation — activation pending
+## Operational separation activated 2 November 2026
 
-The separation was approved on 2 November 2026. This is a candidate rollout
-record, not an activation date. Deployment identity, independent health and
-operations run IDs/results, receipt retention and unchanged protected settings
-must be recorded in the operator's non-public rollout record after integration.
-Append the evidenced activation date here then; do not replace earlier failed
-observations. No live dispatch or scheduled-reliability result is established by
-local tests or this documentation.
+The separation was activated on **2 November 2026** after
+[PR 14](https://github.com/abedegno/infrastructure-impact/pull/14) merged to main
+at **20:23:59 UTC**, as commit `6ff98ead86a7b2170efc0543e8562a3775a6c0cf`.
+Independent default-branch manual dispatches verified the deployed separation:
+
+| Workflow | Manual run outcome |
+| --- | --- |
+| Public service health | [Run 41518842076](https://github.com/abedegno/infrastructure-impact/actions/runs/41518842076) passed, verifying fresh publication `d48a8aed9bb14e7a805669d4950df4f7` with 865 advisories and 18 source failures. |
+| Service operations | [Run 41518846010](https://github.com/abedegno/infrastructure-impact/actions/runs/41518846010) failed with exactly `collection_schedule_overdue` and `monitor_schedule_overdue`; its own health receipt was fresh and its storage check passed. |
+
+Checkout logs confirmed the health checker at the unchanged runtime pin
+`1716af9b37cddc7cf09d1059f7ebafb4c0898757`, with health control and operations
+source at the merged `6ff98ead86a7b2170efc0543e8562a3775a6c0cf` commit.
+The health receipt and all three operational metadata receipts were retained.
+Verified artifact expiry was **2 December 2026 at 20:24:13 UTC** for health and
+**20:24:30 UTC** for operations, matching 30-day retention. Protected repository
+variables were verified unchanged. No collection was dispatched for this rollout.
+
+These manual checks establish deployed behavior, not repaired schedule delivery
+or continuous uptime. Successful health did not clear the overdue operational
+findings. Earlier failed conclusions remain part of the observation history;
+subsequent real `schedule` events are still needed to assess cadence.
 
 On 1 November, public-health checks passed in runs `41334146901` and
 `41355786206`, while their combined operational checks failed the two-hour grace.
