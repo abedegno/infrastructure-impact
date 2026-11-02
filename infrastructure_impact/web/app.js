@@ -741,10 +741,23 @@ function renderCasefiles() {
   const report = data.research_dossiers
     ? { ...data.research_dossiers, publication: data.publication, generated_at: data.generated_at }
     : null;
+  let dossierState;
   window.ResearchDossiers.mount($('#research-dossiers'), report, {
     esc,
     link,
     date,
+    beforeSelect() {
+      try {
+        dossierState = evaluateState(data, committedSelection.kevOnly);
+        return true;
+      } catch (error) {
+        selectionError(error);
+        return false;
+      }
+    },
+    onSelect() {
+      accept(dossierState, committedSelection, '', dossierContext);
+    },
     onDownload(payload) {
       const url = URL.createObjectURL(
         new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
@@ -762,7 +775,6 @@ function renderCasefiles() {
     $('#dossier-kev-context').innerHTML = dossier ? kevContext(dossier.cve_id) : '';
   };
   dossierContext();
-  $('#research-dossiers').addEventListener('change', () => render(dossierContext));
 }
 
 function publisherHistoryMarkup(documents) {

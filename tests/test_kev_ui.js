@@ -419,6 +419,58 @@ async function checkDownloads(b, id) {
   assert(d.nodes.get('#dossier-kev-context').innerHTML.includes('KEV unknown'));
   assert(/historical/i.test(d.nodes.get('#dossier-kev-context').innerHTML));
 
+  // The child target change listener runs before parent bubbling handlers. Reject
+  // expiry before that child can replace visible evidence or its download closure.
+  const expiredDossier = browser();
+  const filteredDossierState = clone(dossierState);
+  filteredDossierState.kev = kev.selectReport(dossierState.kev, [cid, outside], {
+    kevOnly: true,
+    evaluatedAt: base.generated_at,
+  });
+  filteredDossierState.comparison.cohort = [cid, outside];
+  await success(expiredDossier, expiredDossier.requests[0], dossierState);
+  await success(expiredDossier, expiredDossier.requests.at(-1), dossierState);
+  expiredDossier.nodes.get('#kev-only').checked = true;
+  expiredDossier.nodes.get('#apply').fire('click');
+  await success(expiredDossier, expiredDossier.requests.at(-1), filteredDossierState);
+  expiredDossier.evaluate("view='casefiles'; render()");
+  const acceptedContext = expiredDossier.nodes.get('#dossier-kev-context').innerHTML;
+  assert(acceptedContext.includes('Follow the synthetic test action.'));
+  assert(
+    acceptedContext.includes('href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"'),
+  );
+  expiredDossier.advance(36 * 3600000 + 1);
+  const rejectedSelector = expiredDossier.nodes.get('#dossier-select');
+  rejectedSelector.value = 'second';
+  rejectedSelector.focus();
+  await rejectedSelector.fire('change');
+  assert(/503|unavailable/i.test(expiredDossier.nodes.get('#feedback').textContent));
+  assert.strictEqual(
+    expiredDossier.nodes.get('#dossier-select').value,
+    'first',
+    'expired dossier selection preserves accepted CVE',
+  );
+  const acceptedPanel = expiredDossier.nodes.get('#research-dossiers').innerHTML;
+  assert(acceptedPanel.includes(`<h3>${cid}</h3>`));
+  assert(!acceptedPanel.includes(`<h3>${outside}</h3>`));
+  assert.strictEqual(
+    expiredDossier.nodes.get('#dossier-kev-context').innerHTML,
+    acceptedContext,
+    'rejection preserves the accepted source and action context',
+  );
+  assert.strictEqual(
+    expiredDossier.context.document.activeElement,
+    expiredDossier.nodes.get('#dossier-select'),
+  );
+  await expiredDossier.nodes.get('#dossier-download').click();
+  const acceptedDossierExport = JSON.parse(await expiredDossier.downloads.at(-1).blob.text());
+  assert.deepStrictEqual(
+    acceptedDossierExport.dossiers,
+    [dossier('first', cid)],
+    'rejected dossier change keeps accepted evidence JSON',
+  );
+  assert(!Object.hasOwn(acceptedDossierExport, 'kev'));
+
   const c = browser(),
     comparisonState = state('comparison');
   comparisonState.comparison_eligibility = {
