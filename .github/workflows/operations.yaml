@@ -31,34 +31,7 @@ jobs:
         if: always()
         env:
           CHECK_OUTCOME: ${{ steps.public-health.outcome }}
-        run: |
-          python3 - <<'PYTHON'
-          import json
-          import os
-          from pathlib import Path
-
-          receipt = Path(os.environ["RUNNER_TEMP"]) / "public-health.json"
-          outcome = os.environ["CHECK_OUTCOME"]
-          try:
-              report = json.loads(receipt.read_text())
-          except (OSError, ValueError):
-              report = None
-          verified = isinstance(report, dict) and report.get("status") == "fresh"
-          if outcome != "success":
-              report = {"status": "failed"}
-          elif not verified:
-              report = {"status": "unavailable"}
-          report["check_outcome"] = outcome
-          receipt.write_text(json.dumps(report, indent=2) + "\n")
-          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
-              stream.write(
-                  "\n## Public service health\n\n"
-                  f"Check outcome: **{outcome}**; receipt status: **{report['status']}**.\n\n"
-                  + "```json\n" + json.dumps(report, indent=2) + "\n```\n"
-              )
-          if outcome == "success" and not verified:
-              raise SystemExit("Public-health receipt unavailable; successful health is unverified")
-          PYTHON
+        run: python3 checks/public_health_receipt.py
       - name: Summarize the seven-day observation window and storage budget
         if: always()
         env:

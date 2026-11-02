@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -411,6 +412,7 @@ def workflow_environment(
     tmp_path, *, health_exit=0, health='{"status":"fresh","source_failures":0}'
 ):
     """Replace external public HTTP/gh boundaries; keep Bash, summaries and check CLIs real."""
+    prepare_monitor_control_checkout(tmp_path)
     python = tmp_path / "python3"
     python.write_text(
         f"#!{sys.executable}\n"
@@ -474,11 +476,25 @@ def workflow_environment(
     }
 
 
-def execute_workflow_step(workflow, name, env):
+def prepare_monitor_control_checkout(workspace):
+    """Model the nested checkout while keeping the receipt helper real."""
+    source = WORKFLOW_ROOT.parents[1] / "checks/public_health_receipt.py"
+    if source.exists():
+        target = workspace / "operational-control/checks/public_health_receipt.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
+def execute_workflow_step(workflow, name, env, *, cwd=None):
     _, fields = workflow_step(workflow, name)
     return subprocess.run(
         ["bash", "-c", fields["run"]],
-        cwd=WORKFLOW_ROOT.parents[1],
+        cwd=cwd
+        or (
+            env["RUNNER_TEMP"]
+            if workflow == "monitor.yaml" and name == "Summarize public health"
+            else WORKFLOW_ROOT.parents[1]
+        ),
         env=env,
         capture_output=True,
         text=True,
@@ -586,6 +602,7 @@ def test_workflow_split_keeps_trusted_source_read_only_boundaries():
             assert forbidden not in source
 
 
+@pytest.mark.parametrize("workflow", ["monitor.yaml", "operations.yaml"])
 @pytest.mark.parametrize("event", ["schedule", "workflow_dispatch"])
 @pytest.mark.parametrize(
     "default_branch,branch,allowed",
@@ -596,12 +613,12 @@ def test_workflow_split_keeps_trusted_source_read_only_boundaries():
         ("release", "release", True),
     ],
 )
-def test_operations_event_sha_is_only_used_on_the_default_branch(
-    event, default_branch, branch, allowed
+def test_event_sha_is_only_used_on_the_default_branch(
+    workflow, event, default_branch, branch, allowed
 ):
-    source = (WORKFLOW_ROOT / "operations.yaml").read_text()
+    source = (WORKFLOW_ROOT / workflow).read_text()
     condition = re.search(r"^    if: \$\{\{ (.+) \}\}$", source, re.MULTILINE)
-    assert condition, "Both operations event types require a default-branch job guard"
+    assert condition, "Both event types require a default-branch job guard before event-SHA code"
     # Evaluate the actual equality condition over realistic event/ref contexts.
     operands = condition[1].split(" == ")
     context = {
@@ -651,6 +668,7 @@ def test_monitor_retains_public_health_receipt_even_after_failure():
 
 @pytest.mark.parametrize("workflow", ["monitor.yaml", "operations.yaml"])
 def test_real_public_checker_failure_propagates_through_workflow_tee(tmp_path, workflow):
+    prepare_monitor_control_checkout(tmp_path)
     env = {
         **os.environ,
         "PUBLIC_URL": (tmp_path / "missing-publication").as_uri() + "/",
@@ -694,3 +712,112 @@ def test_successful_public_monitor_is_independent_of_overdue_operations(tmp_path
     assert operations.returncode != 0
     assert "monitor_schedule_overdue" in operations.stderr
     assert json.loads((monitor_dir / "public-health.json").read_text())["status"] == "fresh"
+
+
+@pytest.mark.parametrize("workflow", ["monitor.yaml", "operations.yaml"])
+@pytest.mark.parametrize(
+    "outcome,payload,status,exit_code",
+    [
+        ("success", '{"status":"fresh","source_failures":0}', "fresh", 0),
+        ("success", None, "unavailable", 1),
+        ("success", "[]", "unavailable", 1),
+        ("failure", '{"status":"fresh"}', "failed", 0),
+    ],
+)
+def test_shared_receipt_helper_runs_without_application(
+    tmp_path, workflow, outcome, payload, status, exit_code
+):
+    source = WORKFLOW_ROOT.parents[1] / "checks/public_health_receipt.py"
+    assert source.is_file(), "Receipt normalization needs one standalone shared owner"
+    relative = (
+        "operational-control/checks/public_health_receipt.py"
+        if workflow == "monitor.yaml"
+        else "checks/public_health_receipt.py"
+    )
+    helper = tmp_path / relative
+    helper.parent.mkdir(parents=True)
+    shutil.copyfile(source, helper)
+    # Keep the workflow's actual helper arguments and isolate Python from site packages.
+    command = workflow_step(workflow, "Summarize public health")[1]["run"].split()
+    argv = [sys.executable, "-I", "-S", *command[1:]]
+    assert not (tmp_path / "infrastructure_impact").exists()
+    if payload is not None:
+        (tmp_path / "public-health.json").write_text(payload)
+    result = subprocess.run(
+        argv,
+        cwd=tmp_path,
+        env={
+            **os.environ,
+            "CHECK_OUTCOME": outcome,
+            "RUNNER_TEMP": str(tmp_path),
+            "GITHUB_STEP_SUMMARY": str(tmp_path / "summary.md"),
+        },
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == exit_code, result.stderr
+    receipt = json.loads((tmp_path / "public-health.json").read_text())
+    assert receipt["status"] == status and receipt["check_outcome"] == outcome
+    assert status in (tmp_path / "summary.md").read_text()
+    helper.unlink()
+    missing = subprocess.run(argv, cwd=tmp_path, capture_output=True, text=True)
+    assert missing.returncode != 0
+
+
+def workflow_checkouts(workflow):
+    source = (WORKFLOW_ROOT / workflow).read_text()
+    blocks = re.split(r"(?=^      - (?:name|uses):)", source, flags=re.MULTILINE)
+    return [
+        dict(re.findall(r"^          ([\w-]+): (.+)$", block, re.MULTILINE))
+        for block in blocks
+        if "uses: actions/checkout@" in block
+    ]
+
+
+def test_monitor_pinned_checker_and_event_control_checkout_are_independent(tmp_path):
+    checkouts = workflow_checkouts("monitor.yaml")
+    assert [checkout.get("ref") for checkout in checkouts] == [
+        "${{ vars.IMPACT_SOURCE_COMMIT }}",
+        "${{ github.sha }}",
+    ]
+    assert [checkout.get("path", ".") for checkout in checkouts] == [".", "operational-control"]
+    assert all(checkout["repository"] == "${{ github.repository }}" for checkout in checkouts)
+    assert all(checkout["persist-credentials"] == "false" for checkout in checkouts)
+    assert len(workflow_checkouts("operations.yaml")) == 1
+    assert workflow_checkouts("operations.yaml")[0]["ref"] == "${{ github.sha }}"
+
+    pinned = tmp_path / checkouts[0].get("path", ".")
+    control = tmp_path / checkouts[1]["path"]
+    (pinned / "checks").mkdir(parents=True)
+    (control / "checks").mkdir(parents=True)
+    # The old checker tree intentionally lacks all new receipt/control code.
+    (pinned / "checks/public_health.py").write_text(
+        "import json, sys\n"
+        "assert sys.argv[1:] == ['https://example.invalid/']\n"
+        "print(json.dumps({'status': 'fresh', 'source_failures': 0}))\n"
+    )
+    (control / "checks/public_health.py").write_text("raise SystemExit(29)\n")
+    source = WORKFLOW_ROOT.parents[1] / "checks/public_health_receipt.py"
+    assert source.is_file(), "Trusted event source must provide the shared helper"
+    shutil.copyfile(source, control / "checks/public_health_receipt.py")
+    assert not (pinned / "checks/public_health_receipt.py").exists()
+    env = {
+        **os.environ,
+        "PUBLIC_URL": "https://example.invalid/",
+        "RUNNER_TEMP": str(tmp_path),
+        "GITHUB_STEP_SUMMARY": str(tmp_path / "summary.md"),
+        "CHECK_OUTCOME": "success",
+    }
+    health = execute_workflow_step("monitor.yaml", HEALTH_STEP, env, cwd=pinned)
+    assert health.returncode == 0, health.stderr
+    summary = execute_workflow_step("monitor.yaml", "Summarize public health", env, cwd=pinned)
+    assert summary.returncode == 0, summary.stderr
+    assert json.loads((tmp_path / "public-health.json").read_text()) == {
+        "status": "fresh",
+        "source_failures": 0,
+        "check_outcome": "success",
+    }
+    # A missing control checkout must fail, rather than silently use another owner.
+    (control / "checks/public_health_receipt.py").unlink()
+    missing = execute_workflow_step("monitor.yaml", "Summarize public health", env, cwd=pinned)
+    assert missing.returncode != 0
