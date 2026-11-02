@@ -130,8 +130,10 @@ The reviewed separation assigns this report to `Service operations`
 `reliability-review-RUN_ID` artifact retains `operations.json`,
 `backup-storage.json` and its own `public-health.json` for 30 days. Operational
 and metadata-only backup checks run even when the public-health check fails.
-Until the window elapses, the report remains `waiting_for_window`. Deployment
-activation is pending; see the [rollout record](SCHEDULE_RELIABILITY.md#operational-separation--activation-pending).
+Until the window elapses, the report remains `waiting_for_window`. The separation
+was activated on 2 November 2026; see the
+[rollout record](SCHEDULE_RELIABILITY.md#operational-separation-activated-2-november-2026)
+for the independent manual results and unresolved schedule observations.
 The health schedule remains `23 */6 * * *`, so the first declared health slot
 after this project's service window is 2 November at 12:23 UTC, subject to GitHub
 scheduling delays.
