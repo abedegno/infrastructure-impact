@@ -115,7 +115,44 @@
     if (values.length === 1 && values[0] === 'listed') return true;
     throw Error('Invalid KEV control');
   }
-  if (typeof window !== 'undefined') window.InfrastructureKev = { selectReport, validateQuery };
+  function renderContext(report, cveId) {
+    // Views supply one evaluated selection; avoid cloning the full retained index per row.
+    const selected = Object.hasOwn(report?.selection?.membership ?? {}, cveId)
+      ? report
+      : selectReport(report, [cveId], { evaluatedAt: report?.evaluated_at });
+    const state = selected.selection.membership[cveId] ?? 'unknown';
+    const entry = selected.entries[cveId];
+    const esc = (value) =>
+      String(value ?? 'Not supplied').replace(
+        /[&<>"']/g,
+        (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+      );
+    const label = { listed: 'KEV listed', not_listed: 'KEV not listed', unknown: 'KEV unknown' }[
+      state
+    ];
+    const historical = state === 'unknown';
+    const retained = selected.listed_cve_ids.includes(cveId);
+    const fields = [
+      ['Vendor/project', 'vendorProject'],
+      ['Product', 'product'],
+      ['Vulnerability', 'vulnerabilityName'],
+      ['Date added', 'dateAdded'],
+      ['Due date', 'dueDate'],
+      ['Required action', 'requiredAction'],
+      ['Ransomware campaign use', 'knownRansomwareCampaignUse'],
+      ['Forensic triage', 'forensicTriage'],
+    ];
+    return `<aside class="kev-context"><span class="badge kev-${state}">${label}</span><small><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener noreferrer">CISA KEV catalogue ↗</a> · checked ${esc(selected.source.checked_at)} · evaluated ${esc(selected.evaluated_at)}</small>${historical ? `<p>Current membership unknown (${esc(selected.source.availability)}). ${retained ? 'Retained listed membership is historical.' : 'Retained catalogue context is historical.'}</p>` : ''}${
+      entry
+        ? `<details><summary>CISA catalogue details${historical ? ' · historical' : ''}</summary><p>Publisher fields from CISA; product applicability and vendor assessments require their own evidence.</p><dl>${fields
+            .filter(([, key]) => Object.hasOwn(entry, key))
+            .map(([title, key]) => `<dt>CISA ${title}</dt><dd>${esc(entry[key])}</dd>`)
+            .join('')}</dl></details>`
+        : '<p>Detailed CISA fields are not retained for this CVE.</p>'
+    }</aside>`;
+  }
+  if (typeof window !== 'undefined')
+    window.InfrastructureKev = { selectReport, validateQuery, renderContext };
   if (typeof module !== 'undefined' && module.exports)
-    module.exports = { selectReport, validateQuery };
+    module.exports = { selectReport, validateQuery, renderContext };
 })();

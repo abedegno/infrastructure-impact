@@ -38,7 +38,12 @@ let data,
   matrixStatus = '',
   matrixQuery = '';
 let benchmark = [];
-let selectedCves = null;
+let selectedCves = null,
+  kevOnly = false,
+  cohortMode = $('#cohort').value || 'benchmark',
+  customCves = '',
+  committedSelection = null;
+window.InfrastructureSnapshot?.commit(null, null);
 let comparisonSelection = {},
   comparisonScopeVendor = '';
 function selected() {
@@ -68,54 +73,143 @@ function stats() {
     .join('');
 }
 let loadSequence = 0;
+function selectionControls(selection) {
+  view = selection.view;
+  selectedCves = selection.selectedCves;
+  comparisonSelection = selection.comparisonSelection;
+  kevOnly = selection.kevOnly;
+  cohortMode = selection.cohortMode;
+  customCves = selection.customCves;
+  $('#cohort').value = cohortMode;
+  $('#custom-cves').value = customCves;
+  $('#custom-cves').disabled = cohortMode !== 'custom';
+  $('#kev-only').checked = kevOnly;
+}
+function evaluateState(loaded, only) {
+  const kev = window.InfrastructureKev.selectReport(
+    loaded.kev ?? null,
+    loaded.kev?.selection.requested_cve_ids ?? loaded.comparison.cohort,
+    { kevOnly: only },
+  );
+  if (!loaded.kev) {
+    kev.publication = loaded.publication;
+    kev.generated_at = loaded.generated_at;
+  }
+  return { ...loaded, kev };
+}
+function publicationKev(loaded) {
+  if (loaded.kev.source.configured === null) return null;
+  return window.InfrastructureKev.selectReport(
+    loaded.kev,
+    [...new Set([...loaded.all_cves, ...Object.keys(loaded.benchmark_cohort)])],
+    { evaluatedAt: loaded.generated_at },
+  );
+}
+function selectionError(error) {
+  if (committedSelection) selectionControls(committedSelection);
+  if (data && view === 'compare') renderComparison();
+  $('#feedback').textContent =
+    (error.code === 'kev_unavailable'
+      ? 'KEV selection rejected (503): current membership is unavailable.'
+      : error.message) + (data ? ' Displaying the last accepted selection.' : '');
+}
+function accept(loaded, selection, suffix = '', paint = draw) {
+  const report = publicationKev(loaded);
+  const previous = data;
+  data = loaded;
+  selectionControls(selection);
+  try {
+    stats();
+    paint();
+  } catch (error) {
+    data = previous;
+    if (previous && committedSelection) {
+      selectionControls(committedSelection);
+      stats();
+      draw();
+    }
+    throw error;
+  }
+  benchmark = Object.keys(data.benchmark_cohort);
+  document.querySelector('#cohort option[value="benchmark"]').textContent =
+    `Benchmark · ${benchmark.length} CVEs / ${new Set(Object.values(data.benchmark_cohort)).size} components`;
+  $('#kev-status').innerHTML =
+    `${link('https://www.cisa.gov/known-exploited-vulnerabilities-catalog', 'CISA KEV catalogue')} · ${esc(data.kev.source.availability)} · checked ${esc(data.kev.source.checked_at || 'Not supplied')} · evaluated ${esc(data.kev.evaluated_at)}${report ? '' : ' · KEV report unavailable for this publication'}`;
+  $('#kev-export').hidden = !report;
+  $('#json-export').href = window.snapshotMode
+    ? new URL('snapshot.json', document.baseURI).href
+    : '/api/export.json' + suffix;
+  $('#csv-export').href = window.snapshotMode
+    ? new URL('impact.csv', document.baseURI).href
+    : '/api/export.csv' + suffix;
+  committedSelection = selection;
+  window.InfrastructureSnapshot?.commit(data, report);
+}
 async function load() {
   const sequence = ++loadSequence;
+  const selection = {
+    view,
+    selectedCves: selectedCves?.slice() ?? null,
+    comparisonSelection: JSON.parse(JSON.stringify(comparisonSelection)),
+    kevOnly,
+    cohortMode,
+    customCves,
+  };
   $('#feedback').textContent = 'Loading evidence…';
   try {
     const params = new URLSearchParams();
-    params.set('view', view);
-    if (selectedCves) params.set('cves', selectedCves.join(','));
-    if (comparisonSelection.start) params.set('start', comparisonSelection.start);
-    if (comparisonSelection.end) params.set('end', comparisonSelection.end);
-    if (comparisonSelection.group) params.set('group', comparisonSelection.group);
-    if (comparisonSelection.products)
-      params.set('products', JSON.stringify(comparisonSelection.products));
-    const suffix = params.size ? '?' + params.toString() : '';
+    params.set('view', selection.view);
+    if (selection.selectedCves) params.set('cves', selection.selectedCves.join(','));
+    if (selection.kevOnly) params.set('kev', 'listed');
+    for (const key of ['start', 'end', 'group'])
+      if (selection.comparisonSelection[key]) params.set(key, selection.comparisonSelection[key]);
+    if (selection.comparisonSelection.products)
+      params.set('products', JSON.stringify(selection.comparisonSelection.products));
+    const suffix = '?' + params.toString();
     const response = await fetch('/api/state' + suffix);
-    if (!response.ok) throw Error('Could not load the evidence store');
+    if (!response.ok) {
+      const error = Error(
+        `Selection rejected (${response.status}): could not load the evidence store.`,
+      );
+      if (response.status === 503 && selection.kevOnly) error.code = 'kev_unavailable';
+      throw error;
+    }
     const loaded = await response.json();
     if (sequence !== loadSequence) return;
-    data = loaded;
-    benchmark = Object.keys(data.benchmark_cohort);
-    if (selectedCves === null && $('#cohort').value === 'benchmark') {
-      selectedCves = benchmark;
+    if (selection.selectedCves === null && selection.cohortMode === 'benchmark') {
+      selectedCves = Object.keys(loaded.benchmark_cohort);
       return load();
     }
-    const option = document.querySelector('#cohort option[value="benchmark"]');
-    option.textContent = `Benchmark · ${benchmark.length} CVEs / ${new Set(Object.values(data.benchmark_cohort)).size} components`;
-    const ageHours = (Date.now() - new Date(data.generated_at).getTime()) / 3600000;
-    if (ageHours > 36)
-      $('#feedback').textContent = 'Stale publication: collection needs attention.';
-    stats();
-    render();
-    $('#json-export').href = window.snapshotMode
-      ? new URL('snapshot.json', document.baseURI).href
-      : '/api/export.json' + suffix;
-    $('#csv-export').href = window.snapshotMode
-      ? new URL('impact.csv', document.baseURI).href
-      : '/api/export.csv' + suffix;
-  } catch (e) {
+    accept(evaluateState(loaded, selection.kevOnly), selection, suffix);
+  } catch (error) {
     if (sequence !== loadSequence) return;
-    $('#feedback').textContent = e.message;
+    selectionError(error);
   }
 }
-function render() {
+function render(paint = draw) {
+  if (!data) return;
+  try {
+    const selection = { ...committedSelection, view };
+    accept(evaluateState(data, selection.kevOnly), selection, '', paint);
+  } catch (error) {
+    selectionError(error);
+  }
+}
+function kevContext(cveId) {
+  return window.InfrastructureKev.renderContext(data.kev, cveId);
+}
+function draw() {
   document.querySelectorAll('[data-view]').forEach((b) => {
     if (b.dataset.view === view) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
   $('#feedback').textContent =
     `${Date.now() - new Date(data.generated_at).getTime() > 36 * 3600000 ? 'STALE DATA · ' : ''}${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
+  if (data.kev.selection.kev_only && !data.comparison.cohort.length) {
+    $('#view').innerHTML =
+      '<p class="empty">No KEV-listed CVEs match the selected cohort. The current CISA catalogue was checked successfully.</p>';
+    return;
+  }
   ({
     matrix: renderMatrix,
     compare: renderComparison,
@@ -174,9 +268,12 @@ function renderMatrix() {
     shown = 150;
     matrixRows();
   });
-  matrixRows();
+  drawMatrixRows();
 }
 function matrixRows() {
+  render(drawMatrixRows);
+}
+function drawMatrixRows() {
   rows = claims().filter(
     ({ a, r }) =>
       (!matrixCve || a.cve_id === matrixCve) &&
@@ -191,7 +288,7 @@ function matrixRows() {
       .slice(0, shown)
       .map(
         ({ a, r }, i) =>
-          `<tr><td>${esc(name(r.vendor))}<br><code>${esc(a.cve_id)}</code></td><td><strong>${esc(a.product_family || a.product)}</strong>${a.product_family ? `<small>${esc(a.product)}</small>` : ''}${a.versions?.length ? `<div class="versions">${a.versions.map((v) => esc(v.expression || `${v.version} ${v.status || ''}${v.lessThan ? ' · below ' + v.lessThan : ''}${v.lessThanOrEqual ? ' · through ' + v.lessThanOrEqual : ''}`)).join('<br>')}</div>` : ''}${publisherScope(a)}${r.document_status === 'draft' ? '<span class="draft">DRAFT SOURCE</span>' : ''}</td><td>${badge(a.status)}<small>${a.scope === 'bulletin_shared' ? 'Shared bulletin' : 'CVE-specific statement'}</small></td><td>${fixSummary(a)}</td><td><button class="text-button" data-detail="${i}">View evidence ↗</button><small>${esc(r.source_format)}</small></td></tr>`,
+          `<tr><td>${esc(name(r.vendor))}<br><code>${esc(a.cve_id)}</code>${kevContext(a.cve_id)}</td><td><strong>${esc(a.product_family || a.product)}</strong>${a.product_family ? `<small>${esc(a.product)}</small>` : ''}${a.versions?.length ? `<div class="versions">${a.versions.map((v) => esc(v.expression || `${v.version} ${v.status || ''}${v.lessThan ? ' · below ' + v.lessThan : ''}${v.lessThanOrEqual ? ' · through ' + v.lessThanOrEqual : ''}`)).join('<br>')}</div>` : ''}${publisherScope(a)}${r.document_status === 'draft' ? '<span class="draft">DRAFT SOURCE</span>' : ''}</td><td>${badge(a.status)}<small>${a.scope === 'bulletin_shared' ? 'Shared bulletin' : 'CVE-specific statement'}</small></td><td>${fixSummary(a)}</td><td><button class="text-button" data-detail="${i}">View evidence ↗</button><small>${esc(r.source_format)}</small></td></tr>`,
       )
       .join(
         '',
@@ -224,9 +321,15 @@ function fixSummary(a) {
     )
     .join('');
 }
-function detail({ a, r }) {
+function detail(row) {
+  render(() => {
+    draw();
+    drawDetail(row);
+  });
+}
+function drawDetail({ a, r }) {
   $('#detail-body').innerHTML =
-    `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(JSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(JSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(JSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
+    `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${kevContext(a.cve_id)}${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(JSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(JSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(JSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
   $('#detail').showModal();
 }
 function comparisonCoverage(v) {
@@ -420,6 +523,9 @@ $('#cohort').addEventListener('change', (e) => {
 });
 $('#apply').addEventListener('click', () => {
   const mode = $('#cohort').value;
+  cohortMode = mode;
+  customCves = $('#custom-cves').value;
+  kevOnly = $('#kev-only').checked;
   selectedCves =
     mode === 'benchmark'
       ? benchmark
@@ -435,7 +541,7 @@ $('#apply').addEventListener('click', () => {
     selectedCves &&
     (!selectedCves.length || selectedCves.some((c) => !/^CVE-\d{4}-\d{4,}$/.test(c)))
   ) {
-    $('#feedback').textContent = 'Enter valid CVE identifiers separated by commas.';
+    selectionError(Error('Enter valid CVE identifiers separated by commas.'));
     return;
   }
   load();
@@ -631,7 +737,7 @@ function sourceAuditMarkup() {
 function renderCasefiles() {
   const files = data.casefiles?.cases || [];
   $('#view').innerHTML =
-    `<h2>Disclosure research case files</h2><p>Reviewable questions with linked source fingerprints, chronology limits and alternative explanations. Exposure evidence and disclosure chronology are separate.</p><div id="research-dossiers"></div><details open><summary>Original case files</summary><div class="notice">Every initial case has incomplete evidence. Source leads are not verified release availability, and no case establishes intentional concealment. ${link('/casefiles.json', 'All case files')}</div>${files.map((c) => `<article class="change"><div class="eyebrow">${esc(name(c.vendor))} · ${esc(c.selected_cve_ids.join(', '))}</div><h3>${esc(c.question)}</h3>${badge(c.status)}<p>${esc(c.product_scope)}</p><p>Retained publisher product statement: ${c.exposure.publisher_statement_retained ? 'Yes' : 'No'} · ${c.exposure.observed_statuses.map(badge).join(' ') || 'Unresolved in this dataset'}. Prior affectedness is not inferred from a fixed-release statement.</p><h4>Retained evidence</h4>${c.evidence.map((e) => `<p>${link(e.source_url, 'Publisher document')} · evidence ${e.evidence_id}<small>Published ${date(e.publisher_published_at)} · reported fix date ${date(e.publisher_reported_fix_date)}</small><code>${esc(e.source_sha256)}</code></p>`).join('') || '<p>No matching retained publisher evidence for this case.</p>'}${c.reported_date_gaps.map((g) => `<p>Reported date difference: ${g.days} days. ${esc(g.basis)}</p>`).join('')}${caseChronology(c)}<h4>Evidence still needed</h4><ul>${c.missing_evidence.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><h4>Release-source leads</h4>${c.release_source_leads.map((u) => `<p>${link(u, 'Official source lead')} · availability not verified</p>`).join('') || '<p>No independent release-source lead registered.</p>'}<h4>Alternative explanations</h4><ul>${c.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><details><summary>Traceability and review scope</summary><p>${c.timeline_event_ids.length} linked local timeline events${c.timeline_links_truncated ? ' (bounded list)' : ''}. ${c.research_record ? link('/' + c.research_record, 'Investigation record') : ''}</p><p>${esc(c.review_method)} · ${esc(c.reviewed_at)}</p><p>Independent release availability: not verified. Earliest disclosure: not established.</p></details></article>`).join('') || '<p class="empty">No registered case files match this cohort. No exposure or disclosure conclusion follows.</p>'}</details>`;
+    `<h2>Disclosure research case files</h2><p>Reviewable questions with linked source fingerprints, chronology limits and alternative explanations. Exposure evidence and disclosure chronology are separate.</p><div id="dossier-kev-context"></div><div id="research-dossiers"></div><details open><summary>Original case files</summary><div class="notice">Every initial case has incomplete evidence. Source leads are not verified release availability, and no case establishes intentional concealment. ${link('/casefiles.json', 'All case files')}</div>${files.map((c) => `<article class="change"><div class="eyebrow">${esc(name(c.vendor))} · ${esc(c.selected_cve_ids.join(', '))}</div><h3>${esc(c.question)}</h3>${badge(c.status)}<p>${esc(c.product_scope)}</p><p>Retained publisher product statement: ${c.exposure.publisher_statement_retained ? 'Yes' : 'No'} · ${c.exposure.observed_statuses.map(badge).join(' ') || 'Unresolved in this dataset'}. Prior affectedness is not inferred from a fixed-release statement.</p><h4>Retained evidence</h4>${c.evidence.map((e) => `<p>${link(e.source_url, 'Publisher document')} · evidence ${e.evidence_id}<small>Published ${date(e.publisher_published_at)} · reported fix date ${date(e.publisher_reported_fix_date)}</small><code>${esc(e.source_sha256)}</code></p>`).join('') || '<p>No matching retained publisher evidence for this case.</p>'}${c.reported_date_gaps.map((g) => `<p>Reported date difference: ${g.days} days. ${esc(g.basis)}</p>`).join('')}${caseChronology(c)}<h4>Evidence still needed</h4><ul>${c.missing_evidence.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><h4>Release-source leads</h4>${c.release_source_leads.map((u) => `<p>${link(u, 'Official source lead')} · availability not verified</p>`).join('') || '<p>No independent release-source lead registered.</p>'}<h4>Alternative explanations</h4><ul>${c.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><details><summary>Traceability and review scope</summary><p>${c.timeline_event_ids.length} linked local timeline events${c.timeline_links_truncated ? ' (bounded list)' : ''}. ${c.research_record ? link('/' + c.research_record, 'Investigation record') : ''}</p><p>${esc(c.review_method)} · ${esc(c.reviewed_at)}</p><p>Independent release availability: not verified. Earliest disclosure: not established.</p></details></article>`).join('') || '<p class="empty">No registered case files match this cohort. No exposure or disclosure conclusion follows.</p>'}</details>`;
   const report = data.research_dossiers
     ? { ...data.research_dossiers, publication: data.publication, generated_at: data.generated_at }
     : null;
@@ -650,6 +756,13 @@ function renderCasefiles() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     },
   });
+  const dossierContext = () => {
+    const id = $('#research-dossiers').querySelector('#dossier-select')?.value;
+    const dossier = report?.dossiers.find((row) => row.id === id) || report?.dossiers[0];
+    $('#dossier-kev-context').innerHTML = dossier ? kevContext(dossier.cve_id) : '';
+  };
+  dossierContext();
+  $('#research-dossiers').addEventListener('change', () => render(dossierContext));
 }
 
 function publisherHistoryMarkup(documents) {

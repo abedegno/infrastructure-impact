@@ -659,7 +659,19 @@ if (typeof document !== 'undefined') {
   const siteBase = new URL('.', document.baseURI).pathname;
   const delivery = createStaticDelivery(originalFetch, siteBase);
   let current,
+    accepted,
+    acceptedReport,
+    appCommits = false,
     requestSequence = 0;
+  // The app accepts evidence, controls and downloads together after its own validation.
+  // Standalone adapter clients retain the latest-successful-fetch behavior.
+  window.InfrastructureSnapshot = {
+    commit(selected, report) {
+      appCommits = true;
+      accepted = selected;
+      acceptedReport = report;
+    },
+  };
   window.fetch = async (input, options) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
     if (
@@ -733,28 +745,34 @@ if (typeof document !== 'undefined') {
     return originalFetch(input, options);
   };
   document.addEventListener('click', async (e) => {
-    const a = e.target.closest('#json-export,#csv-export');
+    const a = e.target.closest('#json-export,#csv-export,#kev-export');
     if (!a) return;
     e.preventDefault();
-    if (!current) return;
-    const chosen = current;
+    const chosen = appCommits ? accepted : current;
+    if (!chosen) return;
+    const report = acceptedReport;
     const csv = a.id === 'csv-export';
+    const kev = a.id === 'kev-export';
+    if (kev && !report) return;
     try {
-      const complete = csv
-        ? chosen
-        : {
-            ...chosen,
-            changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
-          };
-      const content = csv
-        ? snapshotCSV(complete)
-        : JSON.stringify(exportSnapshot(complete), null, 2);
+      const complete =
+        csv || kev
+          ? chosen
+          : {
+              ...chosen,
+              changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
+            };
+      const content = kev
+        ? JSON.stringify(report, null, 2)
+        : csv
+          ? snapshotCSV(complete)
+          : JSON.stringify(exportSnapshot(complete), null, 2);
       const url = URL.createObjectURL(
         new Blob([content], { type: csv ? 'text/csv' : 'application/json' }),
       );
       const out = document.createElement('a');
       out.href = url;
-      out.download = csv ? 'impact.csv' : 'impact.json';
+      out.download = kev ? 'kev.json' : csv ? 'impact.csv' : 'impact.json';
       out.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {

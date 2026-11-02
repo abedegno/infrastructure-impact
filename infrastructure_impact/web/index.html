@@ -71,8 +71,14 @@
             id="custom-cves"
             placeholder="CVE-2021-44228, CVE-2023-48795"
             disabled /></label
+        ><label for="kev-only" class="kev-filter"
+          ><input type="checkbox" id="kev-only" />KEV-listed only</label
         ><button id="apply">Apply cohort</button>
       </section>
+      <div class="kev-source">
+        <span id="kev-status" role="status">CISA KEV status loading…</span>
+        <a id="kev-export" href="/kev.json" download="kev.json" hidden>KEV report JSON ↗</a>
+      </div>
       <div id="feedback" role="status" aria-live="polite">Loading evidence…</div>
       <section id="view"></section>
       <footer>

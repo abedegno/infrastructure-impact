@@ -178,6 +178,7 @@ for (const test of input.matrix)
   };
   get('#cohort').value = 'all';
   vm.createContext(app);
+  vm.runInContext(fs.readFileSync('infrastructure_impact/web/kev.js', 'utf8'), app);
   vm.runInContext(fs.readFileSync('infrastructure_impact/web/app.js', 'utf8'), app);
   vm.runInContext("view = 'casefiles'; load()", app);
   assert.strictEqual(pending.length, 2);

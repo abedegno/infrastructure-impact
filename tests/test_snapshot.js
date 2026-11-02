@@ -52,6 +52,149 @@ assert(
     .snapshotCSV(context.selectSnapshot(source, [cid], { evaluatedAt: report.generated_at }))
     .includes("'=synthetic()"),
 );
+const hostileSource = plain(source);
+hostileSource.kev.entries[cid].requiredAction = '=WEBSERVICE("<script>")';
+hostileSource.kev.entries[cid].forensicTriage = '<svg onload=alert(1)>';
+const hostileSelection = context.selectSnapshot(hostileSource, [cid], {
+  evaluatedAt: report.generated_at,
+});
+assert(
+  context.snapshotCSV(hostileSelection).includes("'=WEBSERVICE"),
+  'CISA action formulas are inert in CSV',
+);
+assert.strictEqual(
+  context.exportSnapshot(hostileSelection).kev.entries[cid].requiredAction,
+  '=WEBSERVICE("<script>")',
+  'JSON preserves literal attributed source text',
+);
 console.log(
   'Synthetic snapshot KEV scope, query contract, export isolation and CSV escaping passed.',
 );
+
+// Installed adapter clicks honor the app's accepted state, including lazy history exports.
+(async () => {
+  const reads = [],
+    clicks = [],
+    downloads = [],
+    blobs = new Map();
+  const clock = Date.parse(report.generated_at);
+  class Clock extends Date {
+    constructor(...args) {
+      super(...(args.length ? args : [clock]));
+    }
+  }
+  class BlobURL extends URL {
+    static createObjectURL(blob) {
+      const id = 'blob:' + blobs.size;
+      blobs.set(id, blob);
+      return id;
+    }
+    static revokeObjectURL() {}
+  }
+  const document = {
+    baseURI: 'https://example.test/',
+    addEventListener(type, fn) {
+      if (type === 'click') clicks.push(fn);
+    },
+    querySelector() {
+      return {};
+    },
+    createElement() {
+      return {
+        click() {
+          downloads.push({ name: this.download, blob: blobs.get(this.href) });
+        },
+      };
+    },
+  };
+  const window = {
+    fetch: async () => {
+      throw Error('No network expected');
+    },
+  };
+  const installed = {
+    window,
+    document,
+    location: { origin: 'https://example.test' },
+    URL: BlobURL,
+    Response,
+    Blob,
+    Set,
+    Date: Clock,
+    setTimeout: () => {},
+    createStaticDelivery: async () => async (ids, history) =>
+      new Promise((resolve) => reads.push({ ids, history, resolve })),
+  };
+  vm.createContext(installed);
+  for (const f of ['kev.js', 'research-dossiers.js', 'snapshot.js'])
+    vm.runInContext(fs.readFileSync('infrastructure_impact/web/' + f, 'utf8'), installed);
+  assert(
+    installed.window.InfrastructureSnapshot?.commit,
+    'adapter must accept explicit app commits',
+  );
+  const flush = async () => {
+    for (let i = 0; i < 15; i++) await Promise.resolve();
+  };
+  const read = async (url, value) => {
+    const pending = window.fetch(url);
+    await flush();
+    reads.at(-1).resolve(value);
+    return (await pending).json();
+  };
+  const app = window.InfrastructureSnapshot;
+  app.commit(null, null);
+  const a = await read('/api/state?cves=' + cid, source);
+  app.commit(a, report);
+  const click = (id) =>
+    clicks[0]({
+      preventDefault() {},
+      target: {
+        closest() {
+          return { id };
+        },
+      },
+    });
+  const delayed = click('json-export');
+  await flush();
+  assert.strictEqual(reads.at(-1).history, true);
+  const history = reads.at(-1);
+  const b = await read('/api/state?cves=' + other, {
+    ...source,
+    publication: { id: 'next-generation' },
+  });
+  app.commit(b, { ...report, publication: { id: 'next-generation' } });
+  history.resolve({ changes: [{ synthetic: 'original-history' }] });
+  await delayed;
+  const exported = JSON.parse(await downloads.at(-1).blob.text());
+  assert.strictEqual(
+    exported.publication.id,
+    source.publication.id,
+    'delayed export captures click-time state',
+  );
+  assert.deepStrictEqual(exported.comparison.cohort, [cid]);
+  assert.strictEqual(exported.changes[0].synthetic, 'original-history');
+  // An adapter-successful response can still fail app validation; it must stay undownloadable.
+  await read('/api/state?cves=' + cid, source);
+  await click('csv-export');
+  const csv = await downloads.at(-1).blob.text();
+  assert(!csv.includes('=synthetic()'), 'CSV still uses accepted empty-record cohort');
+  await click('kev-export');
+  assert.strictEqual(
+    JSON.parse(await downloads.at(-1).blob.text()).publication.id,
+    'next-generation',
+  );
+  const pending = window.fetch('/api/export.json?cves=' + cid);
+  await flush();
+  reads.at(-1).resolve(source);
+  assert.strictEqual((await (await pending).json()).comparison.cohort[0], cid);
+  await click('kev-export');
+  assert.strictEqual(
+    JSON.parse(await downloads.at(-1).blob.text()).publication.id,
+    'next-generation',
+    'explicit query export cannot change accepted report',
+  );
+  console.log('Installed snapshot accepted-state commits and delayed click-time downloads passed.');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
