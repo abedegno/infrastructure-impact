@@ -9,7 +9,7 @@ from ..storage.repository import evidence
 from .errors import SourceHTTPError, check_access_response
 
 
-def fetch(db, url, vendor):
+def fetch(db, url, vendor, *, max_bytes=15_000_000):
     if not allowed(url, vendor):
         raise ValueError("URL outside configured official vendor domains")
     cached = db.execute("SELECT * FROM http_cache WHERE url=?", (url,)).fetchone()
@@ -33,9 +33,9 @@ def fetch(db, url, vendor):
     for attempt in range(2):
         try:
             with opener.open(Request(url, headers=headers), timeout=25) as response:
-                raw = response.read(15_000_001)
-                if len(raw) > 15_000_000:
-                    raise ValueError("Document exceeds 15 MB limit")
+                raw = response.read(max_bytes + 1)
+                if len(raw) > max_bytes:
+                    raise ValueError(f"Document exceeds {max_bytes}-byte limit")
                 with db:
                     ev = evidence(db, raw, url, response.headers.get("Content-Type", ""))
                     db.execute(
@@ -57,6 +57,8 @@ def fetch(db, url, vendor):
                 raw = db.execute(
                     "SELECT raw FROM evidence WHERE id=?", (cached["evidence_id"],)
                 ).fetchone()["raw"]
+                if len(raw) > max_bytes:
+                    raise ValueError(f"Cached document exceeds {max_bytes}-byte limit")
                 check_access_response(raw)
                 from ..storage.observations import observe
 

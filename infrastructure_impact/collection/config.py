@@ -28,8 +28,14 @@ def validate_config(config):
     if not isinstance(entries, list):
         raise ValueError("reference_sources must be a list")
     for entry in entries:
-        if not isinstance(entry, dict) or set(entry) != {"source_id", "url"}:
-            raise ValueError("Reference entries require only source_id and url")
+        if (
+            not isinstance(entry, dict)
+            or not {"source_id", "url"} <= set(entry)
+            or set(entry) - {"source_id", "url", "enabled"}
+        ):
+            raise ValueError("Reference entries require source_id, url and optional enabled")
+        if type(entry.get("enabled", True)) is not bool:
+            raise ValueError("Reference enabled must be a Boolean")
         spec = source(entry["source_id"])
         if entry["url"] != spec.url:
             raise ValueError("Reference URL outside reviewed exact route")

@@ -47,10 +47,13 @@ def state(db, cohort=None):
     profiles = catalogue(db, records)
     checks = health(db)
     review_signals = signals(db)
+    from ..collection.config import load_config
+    from ..references.storage import enrichment_input
     from ..references.storage import latest as reference_inputs
 
     research = {
-        "study_inputs": reference_inputs(db),
+        "study_inputs": reference_inputs(db, purpose="component_study"),
+        "kev_input": enrichment_input(db, load_config(), "cisa-kev"),
         "release_assets": listings(db),
         "release_documents": [
             {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}

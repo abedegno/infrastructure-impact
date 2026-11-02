@@ -95,6 +95,11 @@
     "sha256": "15e437b5479713bd7b6c2a1d3dcb4619b9fa38edeb146201257d251934fa564a"
   },
   {
+    "file": "kev-valid.json",
+    "kind": "synthetic",
+    "sha256": "dfcd41e85d271bec6866dba31e893b6f2b1489994cb09fa1ebfe1693c8aa34fa"
+  },
+  {
     "file": "pan-cna.json",
     "kind": "synthetic",
     "sha256": "033c29523b2f2a77e1710ace4fe2c72b37f3f0fafce8fa9f22c7f892de3b5b65"
