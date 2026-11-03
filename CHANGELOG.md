@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 research preview — 2026-11-03
+
+- Add retained CISA Known Exploited Vulnerabilities enrichment from CISA's official mirror, with bounded strict parsing, source provenance, last-good revisions and verified-check freshness.
+- Publish a strict generation-bound KEV schema/report, complete CVE membership index and scoped publisher details. Missing, disabled, failed, stale and future checks remain explicit unknown states.
+- Add attributed KEV badges, outside-advisory membership context and a KEV-listed-only cohort filter. Preserve requested versus effective scope, vendor affectedness and frozen research contracts.
+- Align native/static selection and JSON/CSV/report exports, including legitimate empty intersections, same-generation downloads and rejection of unavailable filters. Keep accepted evidence and downloads coherent after stale, invalid or out-of-order requests.
+- Validate KEV identities, policy limits, source fingerprints and report scope in the standalone monitor and installed-wheel acceptance checks. Vendor rates, first disclosure and intentional concealment remain unestablished.
+- Separate scheduled service-operations evidence from public health; expose overdue collection/monitor cadence and storage-budget failures without turning missing receipts into success.
+- Verify example vendor plugin 0.1.7 against the 0.8 release and extend its declared compatibility through the 0.8 series.
+
 ## 0.7.0 research preview — 2026-11-02
 
 - Add generation-bound CVE research dossiers inside Case files, combining exact-build publisher statements, source fingerprints, qualified chronology, disclosure context and explicit evidence gaps.

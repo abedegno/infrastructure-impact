@@ -119,8 +119,10 @@ should modify these workflows, the source pin or Actions secrets. Update the pin
 after source CI passes, manually dispatch collection, and verify public freshness.
 The workflow uses its built-in repository-scoped GitHub token, not a personal token.
 
-The collector runtime remains pinned to the reviewed 0.7.0 source
-`1716af9b37cddc7cf09d1059f7ebafb4c0898757` through `IMPACT_SOURCE_COMMIT`.
+The 2 November 2026 activation verified the reviewed 0.7.0 source
+`1716af9b37cddc7cf09d1059f7ebafb4c0898757`. Repository variable
+`IMPACT_SOURCE_COMMIT` selects the current collector and health-check revision;
+consult its current value and the dated activation receipt when verifying a later rollout.
 Health checks out that pin at the workspace root for `checks/public_health.py`,
 then checks out the trusted default-branch event SHA separately at
 `operational-control` for the shared `checks/public_health_receipt.py` helper.
@@ -130,7 +132,7 @@ depend on installation or a helper existing at the old collector pin. Both jobs
 reject manual events selecting a non-default branch. Integration must precede
 default-branch smoke dispatch; candidate behavior is tested with local fixtures.
 The extra checkout is an infrastructure dependency and cannot supply missing
-health evidence. The collector pin and deployment template are unchanged.
+health evidence. That reliability separation did not change the collector pin or deployment template.
 
 `deploy/github-service.yaml` remains a private-repository alternative. The separate
 private service repo was configured, but its jobs were blocked by account billing
