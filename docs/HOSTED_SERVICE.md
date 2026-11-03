@@ -123,6 +123,8 @@ The 2 November 2026 activation verified the reviewed 0.7.0 source
 `1716af9b37cddc7cf09d1059f7ebafb4c0898757`. Repository variable
 `IMPACT_SOURCE_COMMIT` selects the current collector and health-check revision;
 consult its current value and the dated activation receipt when verifying a later rollout.
+The [3 November KEV activation record](rollouts/2026-11-03-cisa-kev.md) records
+the subsequent 0.8.0 source pin, controlled publication and remaining observations.
 Health checks out that pin at the workspace root for `checks/public_health.py`,
 then checks out the trusted default-branch event SHA separately at
 `operational-control` for the shared `checks/public_health_receipt.py` helper.
