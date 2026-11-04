@@ -238,8 +238,8 @@ def _validate(metric):
         issues.append("base_missing")
     elif (
         type(value) not in (int, float)
-        or not math.isfinite(value)
         or not 0 <= value <= 10
+        or not math.isfinite(value)
         or round(value, 1) != value
     ):
         issues.append("base_invalid")
@@ -281,8 +281,8 @@ def _validate(metric):
                             issues.append("structured_metric_disagreement")
     if (
         type(value) in (int, float)
-        and math.isfinite(value)
         and 0 <= value <= 10
+        and math.isfinite(value)
         and "baseSeverity" in metric
         and metric["baseSeverity"] != _band(version, value).upper()
     ):
@@ -323,7 +323,23 @@ def _vector_group(version, vector):
         return "reported_base_with_optional_context"
     pairs = dict(part.split(":", 1) for part in vector.split("/")[1:])
     threat = pairs.get("E", "X") != "X"
-    environment = any(pairs.get(key, "X") != "X" for key in list(V4)[12:27])
+    environmental_keys = (
+        "CR",
+        "IR",
+        "AR",
+        "MAV",
+        "MAC",
+        "MAT",
+        "MPR",
+        "MUI",
+        "MVC",
+        "MVI",
+        "MVA",
+        "MSC",
+        "MSI",
+        "MSA",
+    )
+    environment = any(pairs.get(key, "X") != "X" for key in environmental_keys)
     return "CVSS-B" + ("T" if threat else "") + ("E" if environment else "")
 
 
@@ -395,7 +411,7 @@ def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
             state = "invalid"
             issues.append("score_form_version_disagreement")
         value = metric.get("baseScore")
-        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 10:
+        if type(value) not in (int, float) or not 0 <= value <= 10 or not math.isfinite(value):
             value = None
         claim = dict(
             system="CVSS",

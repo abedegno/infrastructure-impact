@@ -90,16 +90,31 @@ def _retry(error, stamp):
     value = (
         error.headers.get("Retry-After") if isinstance(error, HTTPError) and error.headers else None
     )
+    if value is None:
+        return stamp
     try:
-        if value is not None:
-            seconds = float(value)
-            return stamp + min(max(seconds, 0), 86400) if math.isfinite(seconds) else stamp
+        seconds = float(value)
     except (TypeError, ValueError, OverflowError):
         try:
-            return max(stamp, min(parsedate_to_datetime(value).timestamp(), stamp + 86400))
+            date = parsedate_to_datetime(value)
+            if date.tzinfo is None:
+                return stamp
+            deadline = max(stamp, date.timestamp())
         except (TypeError, ValueError, OverflowError):
-            pass
-    return stamp
+            return stamp
+    else:
+        if not math.isfinite(seconds):
+            # Decimal delay-seconds can exceed float range while remaining a
+            # valid publisher delay; nonfinite spellings such as NaN are invalid.
+            return None if value.strip().isascii() and value.strip().isdigit() else stamp
+        deadline = stamp + max(seconds, 0)
+    try:
+        _iso(deadline)
+    except (ValueError, OverflowError, OSError):
+        # A valid but unrepresentable delay must not become an earlier retry.
+        # None leaves the durable pending marker blocked for explicit recovery.
+        return None
+    return deadline
 
 
 def _record_matches(raw, source, cid):
@@ -196,19 +211,33 @@ def run(db, cve_ids: list[str], *, limit: int) -> dict:
                         ).fetchone()[0]
                         + 1
                     )
-                    retry = max(
-                        stamp + min(30 * 2 ** min(failures - 1, 7), 3600), _retry(error, stamp)
+                    publisher_retry = _retry(error, stamp)
+                    retry = (
+                        max(stamp + min(30 * 2 ** min(failures - 1, 7), 3600), publisher_retry)
+                        if publisher_retry is not None
+                        else None
                     )
                     db.execute(
-                        "UPDATE score_service_state SET pending=0,failures=?,next_at=max(next_at,?) WHERE source=?",
-                        (failures, retry, source),
+                        "UPDATE score_service_state SET pending=?,failures=?,next_at=max(next_at,?) WHERE source=?",
+                        (
+                            int(retry is None),
+                            failures,
+                            retry if retry is not None else stamp,
+                            source,
+                        ),
                     )
                     db.execute(
                         "INSERT INTO score_attempts(source,cve_id,checked_at,state,retry_at) VALUES(?,?,?,?,?)",
-                        (source, cid, _iso(stamp), code, _iso(retry)),
+                        (
+                            source,
+                            cid,
+                            _iso(stamp),
+                            code,
+                            _iso(retry) if retry is not None else None,
+                        ),
                     )
                 result["failed"] += 1
-                result["retry_at"] = _iso(retry)
+                result["retry_at"] = _iso(retry) if retry is not None else None
                 blocked.add(source)
                 if code == "rate_limited":
                     return result

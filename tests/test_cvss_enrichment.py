@@ -779,3 +779,133 @@ def test_incomplete_vendor_yields_valid_official_fallback_in_strict_study_claim(
         for s in scores
         if s["origin"] == "cve_record"
     )
+
+
+@pytest.mark.parametrize("with_severity", [False, True])
+def test_oversized_json_integer_is_sanitized_without_hiding_valid_advisory(with_severity):
+    from infrastructure_impact.application.publication import public_projection
+    from infrastructure_impact.application.query import state
+
+    huge = {"version": "3.1", "baseScore": 10**400, "vectorString": V3}
+    if with_severity:
+        huge["baseSeverity"] = "CRITICAL"
+    d = csaf(
+        [
+            {"products": ["p"], "cvss_v3": huge},
+            {
+                "products": ["p"],
+                "cvss_v3": {"version": "3.1", "baseScore": 9.8, "vectorString": V3},
+            },
+        ]
+    )
+    extracted = extract(d)
+    assert extracted["claims"][0]["validation"] == "invalid"
+    assert extracted["claims"][0]["value"] is None
+    assert "base_invalid" in extracted["claims"][0]["issues"]
+    assert len(cvss.public_metrics(extracted["claims"])) == 1
+    db = connect(":memory:")
+    ingest(db, json.dumps(d).encode(), URL, standards.csaf, "aruba")
+    public = public_projection(state(db))
+    assert public["records"][0]["assessments"][0]["status"] == "affected"
+    assert [m["value"] for m in public["records"][0]["metrics"]] == [9.8]
+
+
+@pytest.mark.parametrize("http_date", [False, True])
+def test_publisher_48_hour_retry_after_is_never_shortened(monkeypatch, http_date):
+    from datetime import datetime, timezone
+    from email.utils import format_datetime
+    from urllib.error import HTTPError
+
+    tick = [2000000000.0]
+    deadline = tick[0] + 172800
+    header = (
+        format_datetime(datetime.fromtimestamp(deadline, timezone.utc), usegmt=True)
+        if http_date
+        else "172800"
+    )
+    calls = []
+
+    def denied(url):
+        calls.append(url)
+        raise HTTPError(url, 429, "private", {"Retry-After": header}, None)
+
+    monkeypatch.setattr(score_enrichment, "_clock", lambda: tick[0])
+    monkeypatch.setattr(score_enrichment, "_fetch", denied)
+    db = connect(":memory:")
+    receipt = score_enrichment.run(db, [CVE], limit=1)
+    assert datetime.fromisoformat(receipt["retry_at"]).timestamp() == deadline
+    assert db.execute("SELECT next_at FROM score_service_state").fetchone()[0] == deadline
+    tick[0] += 86401
+    assert score_enrichment.run(db, [CVE], limit=1)["attempted"] == 0
+    assert len(calls) == 1
+    tick[0] = deadline
+    assert score_enrichment.run(db, [CVE], limit=1)["attempted"] == 1
+
+
+@pytest.mark.parametrize("suffix,expected", [("/S:P", "CVSS-B"), ("/E:A/S:P", "CVSS-BT")])
+def test_v4_supplemental_safety_does_not_imply_environmental_context(suffix, expected):
+    claims = extract(
+        csaf(
+            [
+                {
+                    "products": ["p"],
+                    "cvss_v4": {"version": "4.0", "baseScore": 8.0, "vectorString": V4 + suffix},
+                }
+            ]
+        )
+    )["claims"]
+    assert cvss.public_metrics(claims)[0]["vector_group"] == expected
+
+
+@pytest.mark.parametrize(
+    "second_score",
+    [
+        {"version": "3.1", "baseScore": 9.8, "vectorString": V3},
+        {"version": "3.1", "baseScore": True, "vectorString": V3},
+        {"version": "3.1", "baseScore": 9.8},
+        {"version": "3.1", "vectorString": V3},
+    ],
+)
+def test_score_availability_stays_with_matching_source_representation(second_score):
+    other = "https://support.hpe.com/security/alternate.json"
+    db = connect(":memory:")
+    ingest(db, json.dumps(csaf([])).encode(), URL, standards.csaf, "aruba")
+    ingest(
+        db,
+        json.dumps(csaf([{"products": ["p"], "cvss_v3": second_score}])).encode(),
+        other,
+        standards.csaf,
+        "aruba",
+    )
+    claims = switching_evidence.inputs(db, latest(db))["claims"]
+    first = next(c for c in claims if c["source"]["source_url"] == URL)
+    second = next(c for c in claims if c["source"]["source_url"] == other)
+    assert first["scores"] == []
+    assert "score_unavailable" in first["issues"]
+    assert not {"score_invalid", "base_missing", "vector_missing", "score_value_missing"} & set(
+        first["issues"]
+    )
+    if type(second_score.get("baseScore")) is bool:
+        assert "score_invalid" in second["issues"] and second["scores"] == []
+    else:
+        assert len(second["scores"]) == 1
+        assert "score_unavailable" not in second["issues"]
+
+
+@pytest.mark.parametrize("delay", [str(10**300), str(10**400)])
+def test_unrepresentable_publisher_backoff_remains_blocked_pending_recovery(monkeypatch, delay):
+    from urllib.error import HTTPError
+
+    tick = [2000000000.0]
+
+    def denied(url):
+        raise HTTPError(url, 429, "private", {"Retry-After": delay}, None)
+
+    monkeypatch.setattr(score_enrichment, "_clock", lambda: tick[0])
+    monkeypatch.setattr(score_enrichment, "_fetch", denied)
+    db = connect(":memory:")
+    receipt = score_enrichment.run(db, [CVE], limit=1)
+    assert receipt["failed"] == 1 and receipt["retry_at"] is None
+    assert db.execute("SELECT pending FROM score_service_state").fetchone()[0] == 1
+    tick[0] += 10 * 86400
+    assert score_enrichment.run(db, [CVE], limit=1)["attempted"] == 0

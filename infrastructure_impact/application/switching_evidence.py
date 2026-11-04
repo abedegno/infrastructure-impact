@@ -548,29 +548,21 @@ def inputs(db, records: list[dict]) -> dict:
             for score in entry["claims"]
         ]
         candidates += score_data["fallback"]["claims"]
-        claim["scores"] = [
-            score
-            for score in candidates
-            if score["validation"] != "invalid"
-            and score["cve_id"] == claim["cve_id"]
-            and (
-                score["origin"] != "vendor_advisory"
-                or (
-                    score["source"]["source_url"] == claim["source"]["source_url"]
-                    and (not score["product_ids"] or claim["product_id"] in score["product_ids"])
-                )
-            )
-        ]
-        claim["scores"] = public_metrics(claim["scores"]) + [
-            {**score, "preferred": False}
-            for score in claim["scores"]
-            if score["validation"] == "incomplete"
-        ]
+        # Selection and diagnostics share CVE/product/representation attribution.
         relevant = [
             score
             for score in candidates
             if score["cve_id"] == claim["cve_id"]
             and (not score["product_ids"] or claim["product_id"] in score["product_ids"])
+            and (
+                score["origin"] != "vendor_advisory"
+                or score["source"]["source_url"] == claim["source"]["source_url"]
+            )
+        ]
+        claim["scores"] = public_metrics(relevant) + [
+            {**score, "preferred": False}
+            for score in relevant
+            if score["validation"] == "incomplete"
         ]
         for score in relevant:
             if score["validation"] == "invalid":
