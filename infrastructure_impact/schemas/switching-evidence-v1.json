@@ -236,6 +236,29 @@
         },
         "source": {
           "$ref": "#/$defs/source"
+        },
+        "scope_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "basis": {
+              "const": "same_source_row",
+              "type": "string"
+            },
+            "cve_id": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "source": {
+              "$ref": "#/$defs/source"
+            }
+          },
+          "required": [
+            "basis",
+            "cve_id",
+            "source"
+          ],
+          "description": "Explicit reviewed same-source table-row scope; claim and remediation must share source identity and CVE, with the remediation locator at the claim row or a cell below it. Does not establish an availability date."
         }
       },
       "required": [

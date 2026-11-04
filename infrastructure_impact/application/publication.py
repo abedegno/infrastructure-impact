@@ -43,6 +43,7 @@ def public_projection(data, public_release_urls=()):
         record.pop("extensions", None)
         for assessment in record["assessments"]:
             assessment.pop("extensions", None)
+    data["research"].pop("switching_input", None)
     kev_input = data["research"].pop("kev_input", None)
     scope = sorted(set(data["all_cves"]) | set(data["benchmark_cohort"]))
     data["kev"] = (

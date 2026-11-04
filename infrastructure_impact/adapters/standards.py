@@ -20,23 +20,11 @@ def csaf(raw, url, vendor):
     out["source_format"] = "CSAF"
     out["document_status"] = tracking.get("status", "unknown")
     out["timeline"] = tracking.get("revision_history", [])
-    products = {}
-
-    def walk(branches, ancestry=()):
-        for b in branches:
-            path = ancestry + ((b.get("category", ""), b.get("name", "")),)
-            if "product" in b:
-                p = b["product"]
-                products[p["product_id"]] = {"name": p["name"], "ancestry": path}
-            walk(b.get("branches", []), path)
-
     tree = d.get("product_tree", {})
-    walk(tree.get("branches", []))
-    for p in tree.get("full_product_names", []):
-        products[p["product_id"]] = {"name": p["name"], "ancestry": ()}
-    for r in tree.get("relationships", []):
-        p = r["full_product_name"]
-        products[p["product_id"]] = {"name": p["name"], "ancestry": (), "relationship": r}
+    products = csaf_products(tree)
+    for pid, product in products.items():
+        if product.get("issues"):
+            out["warnings"].append(f"{pid}: " + ", ".join(product["issues"]))
     groups = {g["group_id"]: g.get("product_ids", []) for g in tree.get("product_groups", [])}
 
     def applies(rem, pid):
@@ -282,3 +270,97 @@ def cna_product_rows(rows, warnings):
                 f"Repeated CNA product/platform rows {indices} retain their same-status release ranges and CPEs together. Other scope fields agree; range overlap and version ordering are not inferred."
             )
         yield result, indices
+
+
+def csaf_products(tree):
+    """Resolve unique CSAF ancestry without allowing a flat duplicate to erase it.
+
+    Different named definitions or branch paths are ambiguous. Relationship
+    endpoints remain separate paths; unresolved/cyclic relationships add no scope.
+    """
+    candidates = {}
+
+    def add(product, path, locator, relationship=None):
+        candidates.setdefault(product["product_id"], []).append(
+            {
+                "name": product["name"],
+                "ancestry": path,
+                "locator": locator,
+                "relationship": relationship,
+            }
+        )
+
+    def walk(branches, ancestry=(), locator="/product_tree/branches"):
+        for i, branch in enumerate(branches):
+            at = f"{locator}/{i}"
+            path = ancestry + ((branch.get("category", ""), branch.get("name", ""), at),)
+            if "product" in branch:
+                add(branch["product"], path, at + "/product")
+            walk(branch.get("branches", []), path, at + "/branches")
+
+    walk(tree.get("branches", []))
+    for i, product in enumerate(tree.get("full_product_names", [])):
+        add(product, (), f"/product_tree/full_product_names/{i}")
+    for i, relationship in enumerate(tree.get("relationships", [])):
+        add(relationship["full_product_name"], (), f"/product_tree/relationships/{i}", relationship)
+    result = {}
+
+    def resolve(pid, active=()):
+        if pid in result:
+            return result[pid]
+        if pid in active or pid not in candidates:
+            return {
+                "name": pid,
+                "ancestry": (),
+                "paths": [],
+                "locator": "/product_tree",
+                "issues": ["relationship_scope_unresolved"],
+            }
+        rows = candidates[pid]
+        paths = {tuple(r["ancestry"]) for r in rows if r["ancestry"]}
+        # Compare semantic ancestry; duplicate identical declarations may have
+        # different JSON pointers but still establish the very same path.
+        semantic_paths = {tuple((c, n) for c, n, _ in path) for path in paths}
+        relations = [r for r in rows if r["relationship"]]
+        item = {**rows[0], "paths": [], "issues": []}
+        if (
+            len({r["name"] for r in rows}) != 1
+            or len(semantic_paths) > 1
+            or len(relations) > 1
+            or (relations and paths)
+        ):
+            item.update(ancestry=(), issues=["ambiguous_product_id"])
+        elif relations:
+            item = {**relations[0], "paths": [], "issues": []}
+            rel = item["relationship"]
+            endpoints = [
+                resolve(rel.get(k), active + (pid,))
+                for k in ("product_reference", "relates_to_product_reference")
+            ]
+            if rel.get("category") not in {
+                "installed_on",
+                "installed_with",
+                "default_component_of",
+                "optional_component_of",
+                "external_component_of",
+            } or any(e["issues"] for e in endpoints):
+                item["issues"] = ["relationship_scope_unresolved"]
+            else:
+                item["paths"] = [
+                    path
+                    for e in endpoints
+                    for path in (e["paths"] or [[("product_name", e["name"], e["locator"])]])
+                ]
+            # Core advisory context remains unflattened for relationships.
+            item["ancestry"] = ()
+        else:
+            path = next((r["ancestry"] for r in rows if r["ancestry"]), ())
+            item["paths"] = [list(path)] if path else []
+            item["ancestry"] = tuple((c, n) for c, n, _ in path)
+            item["locator"] = next((r["locator"] for r in rows if r["ancestry"]), item["locator"])
+        result[pid] = item
+        return item
+
+    for pid in candidates:
+        resolve(pid)
+    return result

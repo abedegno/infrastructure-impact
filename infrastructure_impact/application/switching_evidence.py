@@ -237,6 +237,24 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
                 _official(binding["source"]["source_url"], vendor)
         for remediation in claim["remediations"]:
             _official(remediation["source"]["source_url"], vendor)
+            binding = remediation.get("scope_binding")
+            if binding is not None:
+                bound = binding["source"]
+                row = bound["source_locator"]
+                same_identity = all(
+                    bound[key] == claim["source"][key] == remediation["source"][key]
+                    for key in ("source_url", "source_sha256", "retrieved_at")
+                )
+                locator = remediation["source"]["source_locator"]
+                if (
+                    not same_identity
+                    or binding["cve_id"] != claim["cve_id"]
+                    or row != claim["source"]["source_locator"]
+                    or not (locator == row or locator.startswith(row + "/"))
+                ):
+                    raise ValueError(
+                        "Same-row remediation requires identical source, row and CVE scope"
+                    )
             product_ids = remediation["product_ids"]
             if (
                 product_ids
@@ -245,8 +263,10 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
             ):
                 raise ValueError("Product-bound remediation must include this publisher product ID")
             if (
-                not product_ids or claim["product_id"] is None
-            ) and "remediation_product_scope_unresolved" not in claim["issues"]:
+                (not product_ids or claim["product_id"] is None)
+                and binding is None
+                and "remediation_product_scope_unresolved" not in claim["issues"]
+            ):
                 raise ValueError("Unscoped remediation requires an unresolved product-scope issue")
             _missing(
                 claim["issues"],
@@ -296,3 +316,262 @@ def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET
         # Comparison sources can contain any of the registered study vendors.
         if not any(allowed(source["source_url"], v) for v in ("cisco", "aruba", "arista")):
             _official(source["source_url"])
+
+
+def inputs(db, records: list[dict]) -> dict:
+    """Reconstruct latest-known claims per retained source representation.
+
+    A core latest advisory selects the identities of interest, not a winning
+    representation. Earlier alternate URLs keep their own dated revision/hash;
+    these are not historical-as-of exposure assertions.
+    """
+    import copy
+
+    from ..adapters.switching import bindings_resource
+    from ..plugins.registry import default_registry
+
+    selected = {
+        (r["vendor"], r["advisory_id"])
+        for r in records
+        if r["vendor"] in {"cisco", "aruba", "arista"}
+    }
+    result = dict(schema_version=1, claims=[], coverage=[], issues=[])
+    bundles = []
+    registry = default_registry()
+    entries = bindings_resource()["entries"]
+    registered_urls = {(e["vendor"], e["source_url"]) for e in entries}
+
+    def retained(extracted, row, revision):
+        def stamp(value):
+            if isinstance(value, dict):
+                if "source_url" in value and "source_sha256" in value:
+                    if (
+                        value["source_url"] != row["source_url"]
+                        or value["source_sha256"] != row["sha256"]
+                    ):
+                        raise ValueError("Research source does not match retained bytes")
+                    value["retrieved_at"] = row["retrieved_at"]
+                for item in value.values():
+                    stamp(item)
+            elif isinstance(value, list):
+                for item in value:
+                    stamp(item)
+
+        stamp(extracted)
+        for claim in extracted.get("claims", []):
+            claim["revision"] = str(revision) if revision is not None else None
+            claim.setdefault("issues", []).append(
+                "latest_known_representation_not_historical_exposure"
+            )
+        result["claims"].extend(extracted.get("claims", []))
+        bundles.extend(extracted.get("bundles", []))
+        result["issues"].extend(extracted.get("issues", []))
+
+    rows = db.execute("""SELECT r.*, e.raw, e.sha256, e.observed_at AS retrieved_at
+        FROM revisions r JOIN evidence e ON e.id=r.evidence_id
+        WHERE r.id IN (SELECT MAX(id) FROM revisions GROUP BY vendor,advisory_id,source_url)
+        ORDER BY r.vendor,r.advisory_id,r.source_url""")
+    for row in rows:
+        if (row["vendor"], row["advisory_id"]) not in selected or (
+            row["vendor"],
+            row["source_url"],
+        ) in registered_urls:
+            continue
+        try:
+            extracted = registry.research_evidence(
+                row["raw"], row["source_url"], row["vendor"], json.loads(row["normalized"])
+            )
+            if extracted is None:
+                result["issues"].append("research_hook_unavailable")
+                continue
+            retained(extracted, row, row["id"])
+        except (ValueError, TypeError, KeyError):
+            result["issues"].append("source_extraction_failed")
+        result["coverage"].append(
+            dict(
+                vendor=row["vendor"],
+                source_url=row["source_url"],
+                state="partial",
+                observed_start=row["retrieved_at"][:10],
+                observed_end=row["retrieved_at"][:10],
+                total=None,
+                issues=["publisher_total_unknown", "retained_documents_not_archive_coverage"],
+            )
+        )
+    # Reviewed source-only evidence cannot invent a normalized revision. Choose
+    # successful observation/revision chronology: content IDs alone lose A→B→A.
+    visited = set()
+    for entry in entries:
+        vendor, url = entry["vendor"], entry["source_url"]
+        publisher_id = entry.get("publisher", {}).get("id")
+        if "bundle" not in entry and (vendor, publisher_id) not in selected:
+            continue
+        if (vendor, url) in visited:
+            continue
+        visited.add((vendor, url))
+        events = [
+            dict(r)
+            for r in db.execute(
+                "SELECT id AS evidence_id, observed_at AS at, 0 AS kind, id AS event_id FROM evidence WHERE source_url=?",
+                (url,),
+            )
+        ]
+        events += [
+            dict(r)
+            for r in db.execute(
+                "SELECT evidence_id, checked_at AS at, 2 AS kind, id AS event_id FROM source_observations WHERE vendor=? AND source_url=?",
+                (vendor, url),
+            )
+        ]
+        events += [
+            dict(r)
+            for r in db.execute(
+                "SELECT evidence_id, observed_at AS at, 1 AS kind, id AS event_id FROM revisions WHERE vendor=? AND source_url=?",
+                (vendor, url),
+            )
+        ]
+        events = [event for event in events if timestamp(event["at"]) is not None]
+        # Once actual successful retrieval observations exist, parser replay
+        # timestamps cannot supersede them. New raw captures still participate.
+        if any(event["kind"] == 2 for event in events):
+            events = [event for event in events if event["kind"] != 1]
+        if not events:
+            if "bundle" in entry:
+                result["issues"].append("bundle_source_unavailable")
+            continue
+        event = max(events, key=lambda e: (timestamp(e["at"]), e["kind"], e["event_id"]))
+        row = dict(
+            db.execute(
+                "SELECT *, observed_at AS retrieved_at FROM evidence WHERE id=?",
+                (event["evidence_id"],),
+            ).fetchone()
+        )
+        observations = [e for e in events if e["kind"] == 2 and e["evidence_id"] == row["id"]]
+        if observations:
+            row["retrieved_at"] = max(
+                observations, key=lambda e: (timestamp(e["at"]), e["event_id"])
+            )["at"]
+        revision = db.execute(
+            "SELECT * FROM revisions WHERE evidence_id=? AND vendor=? AND source_url=? AND advisory_id=? ORDER BY id DESC LIMIT 1",
+            (row["id"], vendor, url, publisher_id),
+        ).fetchone()
+        document = (
+            json.loads(revision["normalized"])
+            if revision
+            else {"advisory_id": publisher_id or entry["bundle"]["publisher_id"]}
+        )
+        extracted = registry.research_evidence(row["raw"], url, vendor, document)
+        if revision is None:
+            for claim in extracted.get("claims", []):
+                claim["issues"].append("source_normalization_unavailable")
+        retained(extracted, row, revision["id"] if revision else None)
+        result["coverage"].append(
+            dict(
+                vendor=vendor,
+                source_url=url,
+                state="partial",
+                observed_start=row["retrieved_at"][:10],
+                observed_end=row["retrieved_at"][:10],
+                total=None,
+                issues=["publisher_total_unknown", "retained_documents_not_archive_coverage"]
+                + (
+                    ["source_normalization_unavailable"]
+                    if revision is None and "bundle" not in entry
+                    else []
+                ),
+            )
+        )
+    expanded = []
+    for claim in result["claims"]:
+        members = [
+            b
+            for b in bundles
+            if claim["advisory_id"] in b["member_advisory_ids"]
+            and allowed(b["source"]["source_url"], claim["vendor"])
+        ]
+        for bundle in members or [None]:
+            expanded.append({**copy.deepcopy(claim), "bundle": copy.deepcopy(bundle)})
+    result["claims"] = expanded
+    result["issues"] = sorted(set(result["issues"]))
+    return result
+
+
+def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dict:
+    """Allowlist every nested public field, then validate the complete contract."""
+    schema = json.loads(
+        files("infrastructure_impact").joinpath("schemas/switching-evidence-v1.json").read_text()
+    )
+
+    def clean(value, shape):
+        if "$ref" in shape:
+            shape = schema["$defs"][shape["$ref"].rsplit("/", 1)[1]]
+        if "anyOf" in shape:
+            if value is None:
+                return None
+            shape = next(s for s in shape["anyOf"] if s.get("type") != "null")
+            return clean(value, shape)
+        if isinstance(value, dict):
+            return {
+                k: clean(value[k], s) for k, s in shape.get("properties", {}).items() if k in value
+            }
+        if isinstance(value, list):
+            return [clean(v, shape.get("items", {})) for v in value]
+        if isinstance(value, str) and len(value) > 4000:
+            raise ValueError("Public switching evidence text must be bounded to 4000 characters")
+        return value
+
+    result = clean(inputs, schema)
+    result.update(
+        schema_version=1,
+        publication=publication,
+        generated_at=generated_at,
+        definition_sha256=definition_sha256(definition()),
+    )
+    result.setdefault("claims", [])
+    result.setdefault("coverage", [])
+    result.setdefault("issues", [])
+    claims = {}
+    for claim in result["claims"]:
+        issues = claim.setdefault("issues", [])
+        for key, code in (
+            ("revision", "revision_missing"),
+            ("cve_id", "cve_id_missing"),
+            ("product_id", "product_id_missing"),
+            ("product", "product_missing"),
+            ("family", "family_unresolved"),
+            ("initial_published_at", "initial_publication_date_missing"),
+            ("updated_at", "update_date_missing"),
+        ):
+            if claim.get(key) is None:
+                issues.append(code)
+        for key in ("id", "sequence", "status"):
+            if claim["publisher"].get(key) is None:
+                issues.append(f"publisher_{key}_missing")
+        if not claim["platform_bindings"] or any(
+            b["basis"] == "unresolved" for b in claim["platform_bindings"]
+        ):
+            issues.append("model_binding_unresolved")
+        for remediation in claim["remediations"]:
+            for key, code in (
+                ("publisher_id", "remediation_publisher_id_missing"),
+                ("published_availability", "availability_statement_missing"),
+                ("availability_date", "availability_date_missing"),
+            ):
+                if remediation.get(key) is None:
+                    issues.append(code)
+            if (not remediation["product_ids"] or claim["product_id"] is None) and remediation.get(
+                "scope_binding"
+            ) is None:
+                issues.append("remediation_product_scope_unresolved")
+        if claim["bundle"] is not None and claim["bundle"]["published_at"] is None:
+            issues.append("bundle_publication_date_missing")
+        for key in ("issues", "named_platforms", "version_expressions", "conditions"):
+            claim[key] = list(dict.fromkeys(claim[key]))
+        claim["issues"].sort()
+        claim.pop("claim_id", None)
+        claim["claim_id"] = definition_sha256(claim)
+        claims[claim["claim_id"]] = claim
+    result["claims"] = list(claims.values())
+    result["issues"] = sorted(set(result["issues"]))
+    validate_evidence(result, publication=publication, generated_at=generated_at)
+    return result

@@ -153,6 +153,7 @@ class VendorPlugin:
     # None preserves the legacy package fingerprint. A tuple opts into scoped
     # hook/shared-source hashing and declares additional Python helper modules.
     normalizer_dependencies: tuple[Callable, ...] | None = None
+    research_evidence: Callable[[bytes, str, str, dict], dict] | None = None
 
 
 @dataclass(frozen=True)

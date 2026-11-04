@@ -8,6 +8,7 @@ from ..adapters.cisco_campaign import ADVISORY_ID, CVE, URL, parse_campaign, rev
 from ..adapters.cisco_ucs import security_fixes
 from ..adapters.common import cves
 from ..adapters.legacy_html import html_advisory
+from ..adapters.switching import extract
 from ..adapters.vendor_cna import registry_route, vendor_cna
 from .contracts import FeedBatch, VendorPlugin
 from .shared import is_json, resolve_reviewed_advisory, structured
@@ -87,6 +88,7 @@ def plugin():
         canonicalize=canonicalize,
         parse_feed=parse_feed,
         resolve=resolve,
+        research_evidence=extract,
         normalizer_dependencies=(
             parse_campaign,
             security_fixes,

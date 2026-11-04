@@ -51,8 +51,10 @@ def state(db, cohort=None):
     from ..collection.config import load_config
     from ..references.storage import enrichment_input
     from ..references.storage import latest as reference_inputs
+    from .switching_evidence import inputs as switching_inputs
 
     research = {
+        "switching_input": switching_inputs(db, records),
         "study_inputs": reference_inputs(db, purpose="component_study"),
         "kev_input": enrichment_input(db, load_config(), "cisa-kev"),
         "release_assets": listings(db),
