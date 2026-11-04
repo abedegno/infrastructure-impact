@@ -361,6 +361,7 @@ class Application:
             "/kev.js",
             "/switching-contracts.js",
             "/switching.js",
+            "/switching-view.js",
             "/switching-evidence.json",
             "/switching-comparison.json",
             "/switching-study.json",

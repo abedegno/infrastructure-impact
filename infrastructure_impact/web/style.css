@@ -596,3 +596,46 @@ textarea {
 .badge.kev-unknown {
   color: var(--muted);
 }
+
+/* Switching study keeps evidence and explicit selection legible on small screens. */
+[hidden] {
+  display: none !important;
+}
+#comparison-mode {
+  max-width: 100%;
+  margin-bottom: 1.25rem;
+}
+.switching-row {
+  border-top: 1px solid var(--line, #d8dedb);
+  padding: 1rem 0;
+}
+.switching-row caption {
+  text-align: left;
+  padding: 0.5rem 0;
+}
+.switching-source {
+  border-left: 2px solid #8d9c93;
+  padding-left: 1rem;
+}
+#comparison-content pre {
+  max-width: 100%;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#comparison-content .fingerprint {
+  overflow-wrap: anywhere;
+}
+.switching-controls button {
+  align-self: end;
+}
+@media (max-width: 600px) {
+  .switching-controls label,
+  .switching-controls button {
+    width: 100%;
+  }
+  #comparison-content button {
+    max-width: 100%;
+    white-space: normal;
+  }
+}

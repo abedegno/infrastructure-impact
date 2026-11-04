@@ -798,7 +798,13 @@
     bounds({ start_date: '2021-01-01', cutoff_date: '2026-04-07' }, end, window);
     return { options: { vendor, scope_level: scope, window, cve_ids: cves }, format };
   }
-  window.InfrastructureSwitching = { selectReport, severityBand, summary, queryOptions };
+  window.InfrastructureSwitching = {
+    selectReport,
+    severityBand,
+    summary,
+    queryOptions,
+    render: (...args) => window.InfrastructureSwitchingView.render(...args),
+  };
 })();
 (() => {
   const fields = [

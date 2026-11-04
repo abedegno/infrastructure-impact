@@ -46,6 +46,11 @@ let selectedCves = null,
 window.InfrastructureSnapshot?.commit(null, null);
 let comparisonSelection = {},
   comparisonScopeVendor = '';
+let comparisonMode = 'benchmark',
+  switchingReport = null,
+  switchingLoading = false,
+  switchingError = '',
+  switchingSequence = 0;
 function selected() {
   return new Set(data.comparison.cohort);
 }
@@ -205,7 +210,10 @@ function draw() {
   });
   $('#feedback').textContent =
     `${Date.now() - new Date(data.generated_at).getTime() > 36 * 3600000 ? 'STALE DATA · ' : ''}${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
-  if (data.kev.selection.kev_only && !data.comparison.cohort.length) {
+  const study = view === 'compare' && comparisonMode === 'switching';
+  for (const selector of ['#cohort-controls', '#summary', '#kev-source'])
+    $(selector).hidden = study;
+  if (data.kev.selection.kev_only && !data.comparison.cohort.length && view !== 'compare') {
     $('#view').innerHTML =
       '<p class="empty">No KEV-listed CVEs match the selected cohort. The current CISA catalogue was checked successfully.</p>';
     return;
@@ -343,9 +351,107 @@ function comparisonCoverage(v) {
   return `<details><summary>Product scope and evidence gaps</summary><p>Scope: ${esc(v.product_scope.mode.replaceAll('_', ' '))}. ${esc(v.product_scope.labels.join('; ') || 'No products selected')}.</p><p>Declared families are context, not a verified inventory: ${esc(v.product_scope.declared_families.join('; ') || 'Not declared')}.</p><p>${esc(s.history_scope)}</p>${s.archives.map((a) => `<p>${link(a.source_url, 'Archive source')} · ${a.documents.done} processed documents; ${a.documents.pending} pending; ${a.documents.error} failed. ${esc((a.observed_scopes || []).join('; '))}</p>`).join('')}${s.errors.map((e) => `<p>${link(e.source_url, 'Source gap')} · ${esc(e.error_code || 'collection error')} · checked ${date(e.checked_at)}</p>`).join('')}<ul>${s.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><p>Rate and timing blockers: ${esc(v.eligibility.reason_codes.map((r) => r.replaceAll('_', ' ')).join('; '))}.</p></details>`;
 }
 function renderComparison() {
+  $('#view').innerHTML =
+    `<label for="comparison-mode">Comparison view<select id="comparison-mode" aria-label="Comparison view"><option value="benchmark" ${comparisonMode === 'benchmark' ? 'selected' : ''}>Scoped benchmark comparison</option><option value="switching" ${comparisonMode === 'switching' ? 'selected' : ''}>Campus/branch switching study · descriptive disclosure</option></select></label><div id="comparison-content"></div>`;
+  $('#comparison-mode').addEventListener('change', (e) => {
+    comparisonMode = e.target.value;
+    render();
+  });
+  if (comparisonMode !== 'switching') return renderBenchmarkComparison();
+  for (const selector of ['#cohort-controls', '#summary', '#kev-source']) $(selector).hidden = true;
+  if (switchingReport && !switchingLoading && !switchingError)
+    switchingReport = window.InfrastructureSwitching.selectReport(
+      switchingReport,
+      switchingReport.selection
+        ? {
+            vendor: switchingReport.selection.requested_vendor,
+            scope_level: switchingReport.selection.scope_level,
+            window: switchingReport.selection.requested_window,
+            cve_ids: switchingReport.selection.requested_cve_ids,
+          }
+        : {},
+    );
+  $('#feedback').textContent =
+    'Switching study · independent controls and accepted publication below';
+  $('#comparison-content').innerHTML = window.InfrastructureSwitching.render(switchingReport, {
+    loading: switchingLoading,
+    error: switchingError,
+  });
+  $('#switching-apply').addEventListener('click', () =>
+    loadSwitching({
+      vendor: $('#switching-vendor').value || null,
+      scope_level: $('#switching-scope').value,
+      window: $('#switching-window').value,
+    }),
+  );
+  $('#switching-refresh').addEventListener('click', () => {
+    switchingError = '';
+    if (switchingReport) renderComparison();
+    else loadSwitching();
+  });
+  for (const format of ['json', 'csv'])
+    $('#switching-' + format)?.addEventListener('click', () => {
+      const blob = switchingDownload(format);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob),
+        a = document.createElement('a');
+      a.href = url;
+      a.download = 'switching-' + switchingReport.publication?.id + '.' + format;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  if (!switchingReport && !switchingLoading && !switchingError) loadSwitching();
+}
+async function loadSwitching(options = {}) {
+  const sequence = ++switchingSequence;
+  const identity = { publication: data.publication, generated_at: data.generated_at };
+  switchingLoading = true;
+  switchingError = '';
+  if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+  try {
+    const loader = await createStaticDelivery(
+      window.fetch.bind(window),
+      new URL('.', document.baseURI).pathname,
+    );
+    const full = await loader.switchingReport();
+    if (sequence !== switchingSequence) return;
+    if (
+      JSON.stringify(data.publication) !== JSON.stringify(identity.publication) ||
+      data.generated_at !== identity.generated_at ||
+      (full &&
+        (JSON.stringify(full.publication) !== JSON.stringify(identity.publication) ||
+          full.generated_at !== identity.generated_at))
+    )
+      throw Error('Mixed publication generations. Reload the page to select a new publication.');
+    const accepted = window.InfrastructureSwitching.selectReport(full, {
+      ...options,
+      ...(full ? {} : identity),
+    });
+    switchingReport = accepted;
+    switchingLoading = false;
+  } catch (error) {
+    if (sequence !== switchingSequence) return;
+    switchingLoading = false;
+    switchingError = 'Study selection rejected: ' + error.message;
+  }
+  if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+}
+function switchingDownload(format) {
+  if (!switchingReport || switchingReport.availability !== 'available') return null;
+  return new Blob(
+    [
+      format === 'csv'
+        ? window.InfrastructureSwitching.csvExport(switchingReport)
+        : JSON.stringify(switchingReport, null, 2),
+    ],
+    { type: format === 'csv' ? 'text/csv' : 'application/json' },
+  );
+}
+function renderBenchmarkComparison() {
   const c = data.comparison_eligibility;
   if (!c?.period) {
-    $('#view').innerHTML = '<p>Comparison eligibility is unavailable for this publication.</p>';
+    $('#comparison-content').innerHTML =
+      '<p>Comparison eligibility is unavailable for this publication.</p>';
     return;
   }
   const vendor = comparisonScopeVendor || Object.keys(data.vendors)[0];
@@ -367,7 +473,7 @@ function renderComparison() {
   );
   const sampleNumber = (v, key) =>
     v.eligibility.descriptive_counts_usable ? v.counts[key] : 'Unavailable';
-  $('#view').innerHTML =
+  $('#comparison-content').innerHTML =
     `<h2>Scoped vendor evidence comparison</h2><p>One reporting period and CVE cohort, with an explicit product scope and collection limits for every vendor.</p><div class="notice">${esc(c.method)}</div><div class="matrix-filters"><label>Published from<input type="date" id="comparison-start" value="${esc(c.period.start)}" min="1900-01-01" max="${esc(data.generated_at.slice(0, 10))}"></label><label>Published through<input type="date" id="comparison-end" value="${esc(c.period.end)}" min="1900-01-01" max="${esc(data.generated_at.slice(0, 10))}"></label><label>Product group<select aria-label="Product group" id="comparison-group"><option value="">All retained product roles</option>${(data.product_groups?.groups || []).map((g) => `<option value="${esc(g.id)}" ${g.id === c.product_group ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select></label><button id="comparison-period">Apply period</button><button id="comparison-download">Download scoped comparison JSON</button></div><details><summary>Product grouping coverage and rules</summary><p>Taxonomy ${esc(c.taxonomy_version)}. Roles group source statements; they do not establish equivalent devices, a complete inventory, or comparable vendor rates. Version leaves inherit only a retained named family. Shared routing/switching OS statements are kept separate from platform-specific groups. Exact product selections intersect the chosen group.</p><p>${link('/product-groups.json', 'Download grouping coverage and source-linked rules')}</p><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Mapped statements</th><th>Unmapped / ambiguous</th><th>Unresolved publisher labels</th></tr></thead><tbody>${(data.product_groups?.vendors || []).map((v) => `<tr><td>${esc(name(v.vendor))}</td><td>${v.mapped_statements} / ${v.statement_count}</td><td>${v.unmapped_statements} / ${v.ambiguous_statements}</td><td><details><summary>${v.unresolved_labels.length} labels</summary>${v.unresolved_labels.map((p) => `<p>${esc(p)}</p>`).join('')}</details></td></tr>`).join('')}</tbody></table></div><p>Grouping coverage above uses all retained non-draft statements, across dates and CVEs. The comparison below uses the selected period and cohort.</p></details><details id="comparison-product-scope"><summary>Choose exact products per vendor</summary><p>Unset vendors include all retained product labels. These labels do not establish equivalent product portfolios. Select up to 20 labels for a vendor; an empty selection gives no usable sample. Publisher family names are display context. A shared label still selects every matching statement, including other families or statements without family context.</p><label>Scope vendor<select aria-label="Scope vendor" id="comparison-scope-vendor">${Object.entries(
       data.vendors,
     )

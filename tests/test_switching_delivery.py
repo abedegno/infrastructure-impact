@@ -103,12 +103,24 @@ def test_native_static_study_contract(study, tmp_path):
     assert all(r["status"] == 400 for r in browser[5:])
     for name in [
         "switching.js",
+        "switching-view.js",
         "switching-study.json",
         "schemas/switching-summary-v1.json",
         "switching-evidence.json",
         "switching-comparison.json",
     ]:
         assert request(app, "/" + name)[0] == 200
+    manifest = json.loads((generation / "manifest.json").read_text())["sha256"]
+    html = (generation / "index.html").read_text()
+    ordered = [
+        "switching-contracts.js",
+        "switching.js",
+        "switching-view.js",
+        "snapshot.js",
+        "app.js",
+    ]
+    positions = [html.index("assets/" + manifest[name] + ".js") for name in ordered]
+    assert positions == sorted(positions)
     damaged = copy.deepcopy(data)
     damaged["switching_comparison"] = copy.deepcopy(full)
     damaged["switching_evidence"] = copy.deepcopy(full["inputs"]["evidence"])

@@ -37,6 +37,11 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 - Supports external vendor plugins without core, database or frontend changes.
 - Publishes immutable, sanitized datasets for a separate read-only reader.
 - Groups comparable product roles while exposing unmapped labels and coverage gaps.
+- Adds a [campus/branch switching disclosure study](docs/switching-comparison.md) under
+  Vendor comparison, with independent full-study controls, model-qualified context,
+  source-window gaps and generation-bound JSON/CSV downloads. Counts measure disclosure,
+  not vendor security quality; higher disclosure can reflect more scrutiny. The separate
+  16-case switching checks remain independent-human-review pending; 2026 is partial.
 - Publishes source-led extraction checks and blind independent-review packets.
 - Investigates disclosure leads with publisher histories and counter-evidence.
 - Prepares and audits private exact-build inventory evidence with a [vendor-neutral contract](docs/BUILD_INVENTORY.md), without certifying CVE exposure.

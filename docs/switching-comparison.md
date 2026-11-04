@@ -148,3 +148,111 @@ inventing CVE/model applicability. Synthetic 21-page traversal tests preserve 52
 exhausted failures and pending/draft candidates. A fresh live audit of all those
 historical failures and the full real staging backfill remain subsequent work;
 no parser route was widened to make an error disappear.
+
+## Reading the published study
+
+Choose **Vendor comparison → Campus/branch switching study · descriptive disclosure**.
+The initial selection covers the full study from 2021-01-01 through the publication's
+explicit observation end, all three vendors and OS-family context. Its scope,
+vendor and year/pre/post/undated controls are independent of the older 24-CVE
+benchmark, global product controls and KEV-only filter. The cutoff 2026-04-07 is
+included in post; 2026 and the observation-end year remain partial.
+
+**Counts measure disclosure, not vendor security quality; higher disclosure can reflect more scrutiny.**
+
+Affected advisory/CVE totals require documented affectedness. Observed identities,
+scoped drafts, fixed-only claims and explicit remediation-publication events remain
+separate. Drafts lacking family/model context may be outside scoped rows; scoped
+zero does not mean a vendor has no drafts. OS-family context and the named-model
+subset overlap. Named-model zero means no qualifying observation, not no exposure.
+Latest retained claims are grouped by the publisher's initial publication date;
+revisions do not create a new disclosure. Explicit bundle membership and its initial
+date determine bundled events. Events are publisher statements, not actual upgrades.
+No fix-delay estimate, equivalence verdict, vendor ranking, causal interpretation or
+automatic no-difference conclusion is provided.
+
+Declared models are unequal sets: Catalyst 9200, 9300/9300L, C9407R/C9410R, 9500,
+C9606R; CX 6300M/6410; and Arista 7050X3/720XP/750. The 7050X3 has a broader
+data-center role; inclusion does not establish equal campus exposures. Arista 750
+is not 7500. Lifecycle, release-train coverage and historical inventories remain
+unresolved. Models and versions are never matched automatically.
+
+Year, severity and scope sets are **nonadditive**. CVSS facets preserve reported
+version, provider, origin and preferred status; values are structurally checked,
+not independently rescored. Missing, invalid or incomplete scores remain unknown.
+Vendor SIR/advisory ratings are separate advisory context, not CVSS conversions.
+`publisher.sequence` is a publisher revision label, not an advisory SA number.
+Explicit conditional affectedness is separate from null/unclassified conditionality.
+Generic condition notes are context, not proven prerequisites or deployed settings.
+KEV is evaluated against documented affected CVEs; stale/unavailable membership is
+unknown under the existing freshness policy. Re-evaluate KEV freshness uses the
+browser clock and retained inputs, without an upstream request or timer.
+
+Source observation windows retain dates, nullable publisher totals, enumeration
+state, queue/retrieval/parse errors and gaps. These are not exact per-year coverage
+or historical completeness denominators. An exhausted listing does not prove a
+complete exposure inventory. Unknown dates remain in the undated selection.
+The separate **16-case switching extraction validation set** is automated checking;
+independent human review remains pending. The original global extraction set does
+not validate this new study.
+
+The UI accepts selection counts, traceability, publication identity and downloads
+together. Pending, failed, old or foreign-generation responses keep the last accepted
+report and its controls/downloads. JSON downloads contain that exact selected report
+with complete immutable inputs; CSV is its summary. A visible error is not an empty
+successful study. Older publications without study assets explicitly show unavailable.
+
+## Schema, browser adapter and native API
+
+The closed v1 contracts are `switching-study`, `switching-evidence`,
+`switching-comparison`, `switching-summary` and `switching-inputs` under `schemas/`.
+A full comparison contains complete typed `{evidence, kev}` inputs; a summary has
+`representation: "summary"` and excludes those inputs. Summaries must be hydrated
+before reselection. Sources retain URLs, retrieval times, SHA-256, locators and
+literal publisher identities/statuses. Trace selected claims shows the exact claim,
+remediation, score and bundle context rather than inferred model applicability.
+
+Native reader `GET /api/v1/switching-comparison` accepts optional single nonblank
+`vendor=cisco|aruba|arista`, `scope=os_family|model_qualified`,
+`window=all|pre|post|undated|YYYY`, canonical comma-separated `cves`, and
+`format=json|csv`. Defaults are the full study/all vendors/OS-family/JSON summary.
+Invalid, duplicate or unknown parameters return 400; unavailable old assets return
+503. The endpoint reads immutable publication files without collection or vault access.
+
+GitHub Pages is static hosting, not a native REST server. Its installed browser
+fetch adapter provides the same selection/summary/CSV semantics to the reader from
+fingerprinted assets; external REST clients cannot call that endpoint on Pages.
+External clients can explicitly download `switching-comparison.json` (complete
+inputs), `switching-evidence.json` and `switching-study.json`. The browser hydrates
+verified study parts through `createStaticDelivery(fetch, siteBase).switchingReport()`;
+normal bootstrap does not load the full study. Existing part/index/monitor byte
+limits stay unchanged. JSON/CSV buttons create local Blobs from the accepted report.
+
+CSV uses fixed columns, CRLF rows and quoted data cells; leading spreadsheet formula
+controls are escaped. `totals_basis=repeated_totals_nonadditive` warns that totals
+repeat per severity facet. `kev_basis=documented_affected_cves` identifies the KEV
+denominator. Null historical denominators remain blank. Source-window states/errors
+are descriptive metadata, never summed into per-year completeness.
+
+## Staging, resume and cooldown
+
+Keep all staging paths explicit, including publications, and use a separate reviewed
+configuration; default source configurations are unchanged:
+
+```sh
+export IMPACT_HOME=/absolute/path/to/staging
+export IMPACT_DATABASE=/absolute/path/to/staging/vault.sqlite3
+export IMPACT_PUBLICATIONS=/absolute/path/to/staging/publications
+impact switching-backfill --config /absolute/path/to/staging/sources.json \
+  --start-date 2021-01-01 --end-date 2026-11-04 \
+  --page-limit 2 --document-limit 8 --score-limit 0
+```
+
+Cisco authentication uses only `CISCO_OPENVULN_CLIENT_ID` and
+`CISCO_OPENVULN_CLIENT_SECRET` environment inputs. Do not put their values in
+configuration, commands, receipts or public assets. Re-run the identical backfill
+command to resume a matching run; it does not publish. On cooldown, retain the
+receipt's safe state/retry time, wait until eligible, then run the same command.
+An unresolved persistent request marker remains blocked and needs separate operator
+investigation; do not clear it to bypass quota safety. Keep operational receipts
+private. No schedule, production ingest or deployment is required by this workflow.

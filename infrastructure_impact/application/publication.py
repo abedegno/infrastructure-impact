@@ -277,6 +277,7 @@ def write_bundle(destination, data):
         "kev.js",
         "switching-contracts.js",
         "switching.js",
+        "switching-view.js",
         "snapshot.js",
         "delivery.js",
     ):
@@ -286,7 +287,7 @@ def write_bundle(destination, data):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching-contracts.js"></script><script defer src="/switching.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching-contracts.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     # Immutable script/style paths avoid mixing old cached readers with a new
@@ -298,6 +299,7 @@ def write_bundle(destination, data):
         "kev.js",
         "switching-contracts.js",
         "switching.js",
+        "switching-view.js",
         "snapshot.js",
         "delivery.js",
         "style.css",
