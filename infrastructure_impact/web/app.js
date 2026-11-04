@@ -50,7 +50,9 @@ let comparisonMode = 'benchmark',
   switchingReport = null,
   switchingLoading = false,
   switchingError = '',
-  switchingSequence = 0;
+  switchingSequence = 0,
+  switchingDelivery = null,
+  switchingAcceptedDelivery = null;
 function selected() {
   return new Set(data.comparison.cohort);
 }
@@ -359,23 +361,23 @@ function renderComparison() {
   });
   if (comparisonMode !== 'switching') return renderBenchmarkComparison();
   for (const selector of ['#cohort-controls', '#summary', '#kev-source']) $(selector).hidden = true;
-  if (switchingReport && !switchingLoading && !switchingError)
-    switchingReport = window.InfrastructureSwitching.selectReport(
-      switchingReport,
-      switchingReport.selection
-        ? {
-            vendor: switchingReport.selection.requested_vendor,
-            scope_level: switchingReport.selection.scope_level,
-            window: switchingReport.selection.requested_window,
-            cve_ids: switchingReport.selection.requested_cve_ids,
-          }
-        : {},
-    );
   $('#feedback').textContent =
     'Switching study · independent controls and accepted publication below';
   $('#comparison-content').innerHTML = window.InfrastructureSwitching.render(switchingReport, {
     loading: switchingLoading,
     error: switchingError,
+  });
+  const accepted = switchingReport,
+    delivery = switchingAcceptedDelivery;
+  window.InfrastructureSwitchingView.mount($('#comparison-content'), accepted, async (ids) => {
+    if (!delivery || !accepted) throw Error('Study evidence unavailable');
+    const loader = await delivery.promise;
+    if (
+      JSON.stringify(loader.publication) !== JSON.stringify(accepted.publication) ||
+      loader.generated_at !== accepted.generated_at
+    )
+      throw Error('Mixed publication generations');
+    return loader.switchingClaims(ids);
   });
   $('#switching-apply').addEventListener('click', () =>
     loadSwitching({
@@ -386,8 +388,16 @@ function renderComparison() {
   );
   $('#switching-refresh').addEventListener('click', () => {
     switchingError = '';
-    if (switchingReport) renderComparison();
-    else loadSwitching();
+    loadSwitching(
+      switchingReport
+        ? {
+            vendor: switchingReport.selection.requested_vendor,
+            scope_level: switchingReport.selection.scope_level,
+            window: switchingReport.selection.requested_window,
+            cve_ids: switchingReport.selection.requested_cve_ids,
+          }
+        : {},
+    );
   });
   for (const format of ['json', 'csv'])
     $('#switching-' + format)?.addEventListener('click', () => {
@@ -409,10 +419,22 @@ async function loadSwitching(options = {}) {
   switchingError = '';
   if (view === 'compare' && comparisonMode === 'switching') renderComparison();
   try {
-    const loader = await createStaticDelivery(
-      window.fetch.bind(window),
-      new URL('.', document.baseURI).pathname,
-    );
+    const key = JSON.stringify(identity);
+    if (!switchingDelivery || switchingDelivery.key !== key) {
+      const entry = {
+        key,
+        promise: createStaticDelivery(
+          window.fetch.bind(window),
+          new URL('.', document.baseURI).pathname,
+        ),
+      };
+      switchingDelivery = entry;
+      entry.promise.catch(() => {
+        if (switchingDelivery === entry) switchingDelivery = null;
+      });
+    }
+    const delivery = switchingDelivery;
+    const loader = await delivery.promise;
     const full = await loader.switchingReport();
     if (sequence !== switchingSequence) return;
     if (
@@ -428,6 +450,7 @@ async function loadSwitching(options = {}) {
       ...(full ? {} : identity),
     });
     switchingReport = accepted;
+    switchingAcceptedDelivery = delivery;
     switchingLoading = false;
   } catch (error) {
     if (sequence !== switchingSequence) return;

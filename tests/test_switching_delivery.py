@@ -202,7 +202,7 @@ const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
 const x=JSON.parse(fs.readFileSync(0,'utf8')),requests=[];
 const c={window:{},Set,Map,URL,Response,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};vm.createContext(c);
 for(const f of ['kev.js','switching-contracts.js','switching.js','delivery.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
-(async()=>{try{const load=await c.createStaticDelivery(async path=>{requests.push(path);let raw=fs.readFileSync(x.root+path);if(x.fault==='hash' && path===x.part)raw=Buffer.concat([raw.subarray(0,raw.length-1),Buffer.from(' ')]);return new Response(raw);},'/');let value=x.mode==='claims'?await load.switchingClaims(x.ids):x.mode==='summary'?await load.switchingSummary():await load.switchingReport();process.stdout.write(JSON.stringify({value,requests}));}catch(e){process.stdout.write(JSON.stringify({error:e.message,requests}));}})();
+(async()=>{try{const load=await c.createStaticDelivery(async path=>{requests.push(path);let raw=fs.readFileSync(x.root+path);if(x.fault==='hash' && path===x.part)raw=Buffer.concat([raw.subarray(0,raw.length-1),Buffer.from(' ')]);return new Response(raw);},'/');let cacheReuse=null;if(x.mode==='reuse'){const first=await load.switchingReport(),count=requests.length;const second=await load.switchingReport();const selected=c.window.InfrastructureSwitching.selectReport(first,{scope_level:'model_qualified'});const ids=first.rows.flatMap(r=>r.claim_ids).slice(0,25);await load.switchingClaims(ids);cacheReuse={same:first===second,frozen:Object.isFrozen(first.inputs.evidence.claims[0]),shared:selected.inputs===first.inputs,extraFetches:requests.length-count};}let value=x.mode==='claims'?await load.switchingClaims(x.ids):x.mode==='summary'?await load.switchingSummary():await load.switchingReport();process.stdout.write(JSON.stringify({value,requests,cacheReuse}));}catch(e){process.stdout.write(JSON.stringify({error:e.message,requests}));}})();
 """
 
 
@@ -612,3 +612,9 @@ def test_claim_index_rejects_cross_part_duplicates(study, tmp_path, monkeypatch,
     second["claim_ids"][0] = first["claim_ids"][0]
     (generation / "data/index.json").write_text(json.dumps(index))
     assert "error" in delivery(generation, mode=mode, ids=first["claim_ids"])
+
+
+def test_hydration_cache_reused_for_selection_and_detail(study, tmp_path):
+    generation = publish(study, tmp_path)
+    result = delivery(generation, mode="reuse")
+    assert result["cacheReuse"] == dict(same=True, frozen=True, shared=True, extraFetches=0)

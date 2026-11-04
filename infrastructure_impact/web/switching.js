@@ -645,7 +645,7 @@
         throw Error('Mixed study generations');
     if (report.inputs.evidence.definition_sha256 !== report.selection.definition_sha256)
       throw Error('Mixed study definitions');
-    const result = clone(report),
+    const result = { ...report },
       selectedVendors = vendor ? [vendor] : vendors,
       selectedIds = requested === null ? null : sorted(requested);
     result.evaluated_at = evaluated;
@@ -678,6 +678,53 @@
     result.sources = [...sources.values()].sort(order);
     return result;
   }
+  // Trust only objects owned here. Caller-owned objects are copied, checked and
+  // deeply frozen once; no public flag or mutable object identity bypasses gates.
+  const acceptedReports = new WeakSet(),
+    frozenNodes = new WeakSet();
+  function freezeOwned(value) {
+    if (value && typeof value === 'object' && !frozenNodes.has(value)) {
+      Object.values(value).forEach(freezeOwned);
+      Object.freeze(value);
+      frozenNodes.add(value);
+    }
+    return value;
+  }
+  function accept(report) {
+    freezeOwned(report);
+    acceptedReports.add(report);
+    return report;
+  }
+  function ownedJSON(value, ancestors = new Set()) {
+    if (value === null || ['string', 'boolean'].includes(typeof value)) return value;
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (!value || typeof value !== 'object' || ancestors.has(value))
+      throw Error('Study inputs must be finite, acyclic JSON values');
+    ancestors.add(value);
+    const copy = Array.isArray(value)
+      ? Array.from(value, (v) => ownedJSON(v, ancestors))
+      : Object.fromEntries(Object.keys(value).map((k) => [k, ownedJSON(value[k], ancestors)]));
+    ancestors.delete(value);
+    return copy;
+  }
+  function prepareReport(input) {
+    if (acceptedReports.has(input)) return input;
+    const report = ownedJSON(input);
+    window.InfrastructureSwitchingContracts.full(report);
+    if (report.availability === 'available') {
+      const original = selectUnchecked(report, {
+        vendor: report.selection.requested_vendor,
+        scope_level: report.selection.scope_level,
+        window: report.selection.requested_window,
+        cve_ids: report.selection.requested_cve_ids,
+        evaluated_at: report.evaluated_at,
+      });
+      for (const key of ['rows', 'sources', 'selection'])
+        if (canonical(report[key]) !== canonical(original[key]))
+          throw Error('Study derived ' + key + ' disagree with inputs');
+    }
+    return accept(report);
+  }
   function selectReport(report, options = {}) {
     if (
       report &&
@@ -687,7 +734,7 @@
     )
       throw Error('Complete study inputs required');
     const recognized = report && report.schema_version === 1 && 'availability' in report;
-    if (recognized) window.InfrastructureSwitchingContracts.full(report);
+    if (recognized) report = prepareReport(report);
     if (!recognized) {
       const evaluated = options.evaluated_at ?? options.evaluatedAt ?? new Date().toISOString();
       const generated = options.generated_at ?? report?.generated_at ?? evaluated;
@@ -759,17 +806,7 @@
       report.availability !== 'available'
     )
       throw Error('Invalid full study envelope');
-    const original = selectUnchecked(report, {
-      vendor: report.selection.requested_vendor,
-      scope_level: report.selection.scope_level,
-      window: report.selection.requested_window,
-      cve_ids: report.selection.requested_cve_ids,
-      evaluated_at: report.evaluated_at,
-    });
-    for (const key of ['rows', 'sources', 'selection'])
-      if (canonical(report[key]) !== canonical(original[key]))
-        throw Error('Study derived ' + key + ' disagree with inputs');
-    return selectUnchecked(report, options);
+    return accept(selectUnchecked(report, options));
   }
   function summary(report) {
     const r = clone(report);
@@ -800,6 +837,7 @@
   }
   window.InfrastructureSwitching = {
     selectReport,
+    prepareReport,
     severityBand,
     summary,
     queryOptions,

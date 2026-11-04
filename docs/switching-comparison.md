@@ -286,3 +286,34 @@ records the explicit OS-family remediation publication, without deriving model
 applicability, product IDs, an availability date or installed software state.
 A fixed-only statement still cannot establish affectedness. Python and browser
 contract checks reject mismatched source, CVE, product or revision links.
+
+### Study identity and browser ownership
+
+Study claim IDs hash the complete public claim except `claim_id`, with sorted
+Unicode keys and UTF-8 JSON tokens. Finite fractional numbers use their exact
+binary64 decimal value for hashing; integral numbers and signed zero use integer
+tokens. This makes `5` and `5.0` the same numeric value without depending on each
+runtime's shortest decimal or exponent spelling. Public score values and retained
+source bytes are unchanged. The pre-release final review changed some study claim
+IDs; earlier staging generations remain preserved. The registered study definition
+fingerprint and advisory-v2 identities are unchanged.
+
+Numeric publisher revision labels must fit the browser's exact integer range.
+Larger source integers are preserved as exact decimal strings at projection, with
+`publisher_sequence_integer_preserved_as_text`; they are never rounded. Supported
+core publisher timestamps without a timezone remain in their retained source/core
+record. Study projection records null plus an unusable/missing date issue because
+no UTC day can be established. An unusable initial date enters the undated bucket.
+
+The browser validates schema, source provenance, model/alias and remediation/score
+scope, deterministic IDs, explicit bundle membership and derived rows once when
+it hydrates a generation. `prepareReport` owns a recursively copied, validated,
+frozen source; `selectReport` returns immutable accepted reports sharing those
+inputs. Mutable caller objects are copied and validated again, without freezing
+or trusting caller identity. Selection and explicit KEV refresh each derive one
+accepted result; repainting does not select again. One generation-bound delivery
+cache serves repeated selections and claim detail without another part fetch.
+Trace, provenance, diagnostic and status details expand in batches of 25; nested
+lists in diagnostics are bounded to 25 with the complete accepted JSON available.
+These details always belong to the accepted selection, including during a pending
+or failed request.

@@ -7,6 +7,7 @@ validation never guesses applicability from an OS family or model-like string.
 import hashlib
 import json
 import re
+from decimal import Decimal
 from functools import lru_cache
 from importlib.resources import files
 from urllib.parse import urlsplit
@@ -53,10 +54,34 @@ def definition_sha256(value: dict) -> str:
     """Fingerprint canonical UTF-8 JSON independently of older cohort resources.
 
     Claim IDs use the same function over the complete claim without claim_id.
+    Numeric tokens use exact finite binary64 decimal values, independent of a
+    runtime's shortest-number/exponent spelling. Integral floats and signed zero
+    use integer tokens. Reported scores and retained source bytes are unchanged.
+    This identity format belongs only to the unreleased switching study.
     """
     if type(value) is not dict:
         raise TypeError("Expected a JSON object")
-    return hashlib.sha256(_json(value)).hexdigest()
+    _json(value)  # Reject non-JSON values and nonfinite numbers before hashing.
+
+    def canonical(node):
+        if type(node) is dict:
+            return (
+                "{"
+                + ",".join(
+                    json.dumps(k, ensure_ascii=False) + ":" + canonical(node[k])
+                    for k in sorted(node)
+                )
+                + "}"
+            )
+        if type(node) is list:
+            return "[" + ",".join(canonical(v) for v in node) + "]"
+        if type(node) is float:
+            if node.is_integer():
+                return str(int(node))
+            return format(Decimal.from_float(node), "f").rstrip("0")
+        return json.dumps(node, ensure_ascii=False, allow_nan=False)
+
+    return hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
 
 
 @lru_cache(maxsize=1)
@@ -705,6 +730,20 @@ def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dic
     claims = {}
     for claim in result["claims"]:
         issues = claim.setdefault("issues", [])
+        # Core advisory-v2 permits timezone-less publisher timestamps. Study
+        # chronology cannot place them on a UTC day; retain the original capture
+        # and report the unknown at this source-to-study boundary, never invent UTC.
+        for key, code in (
+            ("initial_published_at", "initial_publication_date"),
+            ("updated_at", "update_date"),
+        ):
+            value = claim.get(key)
+            if value is not None and not (
+                _validators()["switching-evidence-v1.json"].format_checker.conforms(value, "date")
+                or timestamp(value) is not None
+            ):
+                claim[key] = None
+                issues.append(code + "_unusable")
         for key, code in (
             ("revision", "revision_missing"),
             ("cve_id", "cve_id_missing"),
@@ -716,6 +755,11 @@ def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dic
         ):
             if claim.get(key) is None:
                 issues.append(code)
+        sequence = claim["publisher"].get("sequence")
+        if type(sequence) is int and abs(sequence) > 9007199254740991:
+            # Preserve the literal decimal identity without browser rounding.
+            claim["publisher"]["sequence"] = str(sequence)
+            issues.append("publisher_sequence_integer_preserved_as_text")
         for key in ("id", "sequence", "status"):
             if claim["publisher"].get(key) is None:
                 issues.append(f"publisher_{key}_missing")

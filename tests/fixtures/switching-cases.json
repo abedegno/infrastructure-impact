@@ -520,6 +520,7 @@
         "date_basis": "initial_publisher_date_utc_day",
         "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
         "advisory_ids": [],
+        "affected_advisory_ids": [],
         "cve_ids": [],
         "claim_ids": [],
         "affected_cve_ids": [],
@@ -528,6 +529,7 @@
         "events": [],
         "counts": {
           "advisories": 0,
+          "affected_advisories": 0,
           "cves": 0,
           "claims": 0,
           "affected_cves": 0,
@@ -540,8 +542,7 @@
           "fixed_only_claims": 0,
           "planned_fix_claims": 0,
           "workaround_claims": 0,
-          "model_unresolved_claims": 0,
-          "affected_advisories": 0
+          "model_unresolved_claims": 0
         },
         "status_buckets": [],
         "severity": [],
@@ -569,8 +570,7 @@
         "issues": [
           "period_coverage_unknown",
           "sets_nonadditive"
-        ],
-        "affected_advisory_ids": []
+        ]
       },
       {
         "row_id": "aruba:os_family:all",
@@ -582,6 +582,7 @@
         "date_basis": "initial_publisher_date_utc_day",
         "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
         "advisory_ids": [],
+        "affected_advisory_ids": [],
         "cve_ids": [],
         "claim_ids": [],
         "affected_cve_ids": [],
@@ -590,6 +591,7 @@
         "events": [],
         "counts": {
           "advisories": 0,
+          "affected_advisories": 0,
           "cves": 0,
           "claims": 0,
           "affected_cves": 0,
@@ -602,8 +604,7 @@
           "fixed_only_claims": 0,
           "planned_fix_claims": 0,
           "workaround_claims": 0,
-          "model_unresolved_claims": 0,
-          "affected_advisories": 0
+          "model_unresolved_claims": 0
         },
         "status_buckets": [],
         "severity": [],
@@ -631,8 +632,7 @@
         "issues": [
           "period_coverage_unknown",
           "sets_nonadditive"
-        ],
-        "affected_advisory_ids": []
+        ]
       },
       {
         "row_id": "arista:os_family:all",
@@ -655,6 +655,15 @@
           "shared",
           "undated"
         ],
+        "affected_advisory_ids": [
+          "april6",
+          "april7",
+          "conditional",
+          "offset",
+          "old",
+          "repeat",
+          "undated"
+        ],
         "cve_ids": [
           "CVE-2026-10001",
           "CVE-2026-10002",
@@ -666,7 +675,7 @@
           "CVE-2026-10008"
         ],
         "claim_ids": [
-          "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+          "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
           "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
           "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
           "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
@@ -720,7 +729,7 @@
             "kind": "unbundled",
             "publisher_id": "april6",
             "claim_ids": [
-              "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e"
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
             ],
             "advisory_ids": [
               "april6"
@@ -800,6 +809,7 @@
         ],
         "counts": {
           "advisories": 10,
+          "affected_advisories": 7,
           "cves": 8,
           "claims": 11,
           "affected_cves": 5,
@@ -812,8 +822,7 @@
           "fixed_only_claims": 1,
           "planned_fix_claims": 0,
           "workaround_claims": 0,
-          "model_unresolved_claims": 1,
-          "affected_advisories": 7
+          "model_unresolved_claims": 1
         },
         "status_buckets": [
           {
@@ -831,7 +840,7 @@
             "status": "affected",
             "scope": "cve_specific",
             "claim_ids": [
-              "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
               "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
               "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
               "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
@@ -941,15 +950,6 @@
           "model_binding_unresolved",
           "period_coverage_unknown",
           "sets_nonadditive"
-        ],
-        "affected_advisory_ids": [
-          "april6",
-          "april7",
-          "conditional",
-          "offset",
-          "old",
-          "repeat",
-          "undated"
         ]
       }
     ],
@@ -1079,7 +1079,7 @@
               "availability_date_missing",
               "bundle_publication_date_missing"
             ],
-            "claim_id": "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e"
+            "claim_id": "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
           },
           {
             "vendor": "arista",
@@ -1932,6 +1932,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -1940,6 +1941,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -1952,8 +1954,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -1981,8 +1982,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "aruba:os_family:all",
@@ -1994,6 +1994,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -2002,6 +2003,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -2014,8 +2016,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2043,8 +2044,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "arista:os_family:all",
@@ -2067,6 +2067,15 @@
               "shared",
               "undated"
             ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset",
+              "old",
+              "repeat",
+              "undated"
+            ],
             "cve_ids": [
               "CVE-2026-10001",
               "CVE-2026-10002",
@@ -2078,7 +2087,7 @@
               "CVE-2026-10008"
             ],
             "claim_ids": [
-              "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
               "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
               "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
               "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
@@ -2132,7 +2141,7 @@
                 "kind": "unbundled",
                 "publisher_id": "april6",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e"
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
                 ],
                 "advisory_ids": [
                   "april6"
@@ -2212,6 +2221,7 @@
             ],
             "counts": {
               "advisories": 10,
+              "affected_advisories": 7,
               "cves": 8,
               "claims": 11,
               "affected_cves": 5,
@@ -2224,8 +2234,7 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 1,
-              "affected_advisories": 7
+              "model_unresolved_claims": 1
             },
             "status_buckets": [
               {
@@ -2243,7 +2252,7 @@
                 "status": "affected",
                 "scope": "cve_specific",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
                   "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
                   "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
                   "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
@@ -2353,15 +2362,6 @@
               "model_binding_unresolved",
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "april6",
-              "april7",
-              "conditional",
-              "offset",
-              "old",
-              "repeat",
-              "undated"
             ]
           }
         ],
@@ -2419,6 +2419,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -2427,6 +2428,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -2439,8 +2441,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2468,8 +2469,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "aruba:os_family:all",
@@ -2481,6 +2481,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -2489,6 +2490,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -2501,8 +2503,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2530,8 +2531,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "arista:os_family:all",
@@ -2543,6 +2543,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -2551,6 +2552,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -2563,8 +2565,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2592,8 +2593,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           }
         ],
         "sources": [],
@@ -2654,6 +2654,12 @@
               "repeat",
               "shared"
             ],
+            "affected_advisory_ids": [
+              "april6",
+              "offset",
+              "old",
+              "repeat"
+            ],
             "cve_ids": [
               "CVE-2026-10001",
               "CVE-2026-10002",
@@ -2662,7 +2668,7 @@
               "CVE-2026-10006"
             ],
             "claim_ids": [
-              "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
               "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
               "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
               "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351",
@@ -2686,7 +2692,7 @@
                 "kind": "unbundled",
                 "publisher_id": "april6",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e"
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
                 ],
                 "advisory_ids": [
                   "april6"
@@ -2716,6 +2722,7 @@
             ],
             "counts": {
               "advisories": 7,
+              "affected_advisories": 4,
               "cves": 5,
               "claims": 7,
               "affected_cves": 3,
@@ -2728,8 +2735,7 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 1,
-              "affected_advisories": 4
+              "model_unresolved_claims": 1
             },
             "status_buckets": [
               {
@@ -2747,7 +2753,7 @@
                 "status": "affected",
                 "scope": "cve_specific",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
                   "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
                   "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
                   "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
@@ -2847,12 +2853,6 @@
               "model_binding_unresolved",
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "april6",
-              "offset",
-              "old",
-              "repeat"
             ]
           }
         ],
@@ -2912,6 +2912,10 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [
+              "april7",
+              "conditional"
+            ],
+            "affected_advisory_ids": [
               "april7",
               "conditional"
             ],
@@ -2992,6 +2996,7 @@
             ],
             "counts": {
               "advisories": 2,
+              "affected_advisories": 2,
               "cves": 4,
               "claims": 3,
               "affected_cves": 2,
@@ -3004,8 +3009,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 2
+              "model_unresolved_claims": 0
             },
             "status_buckets": [
               {
@@ -3063,10 +3067,6 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "april7",
-              "conditional"
             ]
           }
         ],
@@ -3125,6 +3125,9 @@
             "advisory_ids": [
               "undated"
             ],
+            "affected_advisory_ids": [
+              "undated"
+            ],
             "cve_ids": [
               "CVE-2026-10003"
             ],
@@ -3160,6 +3163,7 @@
             ],
             "counts": {
               "advisories": 1,
+              "affected_advisories": 1,
               "cves": 1,
               "claims": 1,
               "affected_cves": 1,
@@ -3172,8 +3176,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 1
+              "model_unresolved_claims": 0
             },
             "status_buckets": [
               {
@@ -3227,9 +3230,6 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "undated"
             ]
           }
         ],
@@ -3288,6 +3288,9 @@
             "advisory_ids": [
               "old"
             ],
+            "affected_advisory_ids": [
+              "old"
+            ],
             "cve_ids": [
               "CVE-2026-10004"
             ],
@@ -3302,6 +3305,7 @@
             "events": [],
             "counts": {
               "advisories": 1,
+              "affected_advisories": 1,
               "cves": 1,
               "claims": 1,
               "affected_cves": 1,
@@ -3314,8 +3318,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 1
+              "model_unresolved_claims": 0
             },
             "status_buckets": [
               {
@@ -3369,9 +3372,6 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "old"
             ]
           }
         ],
@@ -3435,6 +3435,9 @@
               "repeat",
               "shared"
             ],
+            "affected_advisory_ids": [
+              "repeat"
+            ],
             "cve_ids": [
               "CVE-2026-10004",
               "CVE-2026-10005",
@@ -3454,6 +3457,7 @@
             "events": [],
             "counts": {
               "advisories": 4,
+              "affected_advisories": 1,
               "cves": 3,
               "claims": 4,
               "affected_cves": 1,
@@ -3466,8 +3470,7 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 1
+              "model_unresolved_claims": 0
             },
             "status_buckets": [
               {
@@ -3554,9 +3557,6 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "repeat"
             ]
           }
         ],
@@ -3622,6 +3622,12 @@
               "conditional",
               "offset"
             ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset"
+            ],
             "cve_ids": [
               "CVE-2026-10001",
               "CVE-2026-10002",
@@ -3630,7 +3636,7 @@
               "CVE-2026-10008"
             ],
             "claim_ids": [
-              "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
               "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
               "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
               "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db",
@@ -3675,7 +3681,7 @@
                 "kind": "unbundled",
                 "publisher_id": "april6",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e"
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
                 ],
                 "advisory_ids": [
                   "april6"
@@ -3737,6 +3743,7 @@
             ],
             "counts": {
               "advisories": 4,
+              "affected_advisories": 4,
               "cves": 5,
               "claims": 5,
               "affected_cves": 3,
@@ -3749,15 +3756,14 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 1,
-              "affected_advisories": 4
+              "model_unresolved_claims": 1
             },
             "status_buckets": [
               {
                 "status": "affected",
                 "scope": "cve_specific",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
                   "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
                   "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
                   "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
@@ -3836,12 +3842,6 @@
               "model_binding_unresolved",
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "april6",
-              "april7",
-              "conditional",
-              "offset"
             ]
           }
         ],
@@ -3914,6 +3914,14 @@
               "shared",
               "undated"
             ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "old",
+              "repeat",
+              "undated"
+            ],
             "cve_ids": [
               "CVE-2026-10001",
               "CVE-2026-10003",
@@ -3924,7 +3932,7 @@
               "CVE-2026-10008"
             ],
             "claim_ids": [
-              "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
               "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
               "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
               "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
@@ -3975,7 +3983,7 @@
                 "kind": "unbundled",
                 "publisher_id": "april6",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e"
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
                 ],
                 "advisory_ids": [
                   "april6"
@@ -4039,6 +4047,7 @@
             ],
             "counts": {
               "advisories": 9,
+              "affected_advisories": 6,
               "cves": 7,
               "claims": 10,
               "affected_cves": 4,
@@ -4051,8 +4060,7 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 6
+              "model_unresolved_claims": 0
             },
             "status_buckets": [
               {
@@ -4070,7 +4078,7 @@
                 "status": "affected",
                 "scope": "cve_specific",
                 "claim_ids": [
-                  "09b553e2fad615db486098e19309701ecc0aebce713637e98ca2df75d562d70e",
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
                   "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
                   "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
                   "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
@@ -4175,14 +4183,6 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "april6",
-              "april7",
-              "conditional",
-              "old",
-              "repeat",
-              "undated"
             ]
           }
         ],
@@ -4236,6 +4236,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -4244,6 +4245,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -4256,8 +4258,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4285,8 +4286,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           }
         ],
         "sources": [],
@@ -4342,6 +4342,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -4350,6 +4351,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -4362,8 +4364,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4391,8 +4392,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "aruba:os_family:all",
@@ -4404,6 +4404,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -4412,6 +4413,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -4424,8 +4426,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4453,8 +4454,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "arista:os_family:all",
@@ -4467,6 +4467,10 @@
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [
               "conflict",
+              "old",
+              "repeat"
+            ],
+            "affected_advisory_ids": [
               "old",
               "repeat"
             ],
@@ -4507,6 +4511,7 @@
             ],
             "counts": {
               "advisories": 3,
+              "affected_advisories": 2,
               "cves": 1,
               "claims": 3,
               "affected_cves": 1,
@@ -4519,8 +4524,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 2
+              "model_unresolved_claims": 0
             },
             "status_buckets": [
               {
@@ -4586,10 +4590,6 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": [
-              "old",
-              "repeat"
             ]
           }
         ],
@@ -4651,6 +4651,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -4659,6 +4660,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -4671,8 +4673,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4700,8 +4701,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "aruba:os_family:all",
@@ -4713,6 +4713,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -4721,6 +4722,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -4733,8 +4735,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4762,8 +4763,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           },
           {
             "row_id": "arista:os_family:all",
@@ -4775,6 +4775,7 @@
             "date_basis": "initial_publisher_date_utc_day",
             "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
             "advisory_ids": [],
+            "affected_advisory_ids": [],
             "cve_ids": [],
             "claim_ids": [],
             "affected_cve_ids": [],
@@ -4783,6 +4784,7 @@
             "events": [],
             "counts": {
               "advisories": 0,
+              "affected_advisories": 0,
               "cves": 0,
               "claims": 0,
               "affected_cves": 0,
@@ -4795,8 +4797,7 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0,
-              "affected_advisories": 0
+              "model_unresolved_claims": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4824,8 +4825,7 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ],
-            "affected_advisory_ids": []
+            ]
           }
         ],
         "sources": [],

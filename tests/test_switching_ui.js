@@ -33,7 +33,6 @@ for (const text of [
   'Historical denominator: unknown',
   'Independent human review pending',
   '16-case switching validation',
-  'Initial publication',
   'Affected advisories',
   'Observed advisories',
   'Scoped draft advisories',
@@ -62,7 +61,9 @@ const hostile = JSON.parse(JSON.stringify(report));
 hostile.inputs.evidence.claims[0].product = '<svg onload=bad()>"';
 hostile.inputs.evidence.claims[0].source.source_url = 'javascript:bad()';
 hostile.inputs.evidence.claims[0].publisher.sequence = '1.5';
-const safe = api.render(hostile);
+const safe = context.window.InfrastructureSwitchingView.claimMarkup(
+  hostile.inputs.evidence.claims[0],
+);
 assert(safe.includes('&lt;svg onload=bad()&gt;'));
 assert(!safe.includes('href="javascript:'));
 assert(safe.includes('Publisher revision label: 1.5'));
@@ -75,7 +76,12 @@ for (const url of [
   hostile.sources = [
     { source_url: url, source_sha256: 'x', retrieved_at: null, source_locator: 'x' },
   ];
-  assert(!api.render(hostile).includes(`href="${url}`));
+  assert(
+    !context.window.InfrastructureSwitchingView.claimMarkup({
+      ...hostile.inputs.evidence.claims[0],
+      source: hostile.sources[0],
+    }).includes(`href="${url}`),
+  );
 }
 const r = report.rows.find((r) => r.counts.affected_cves);
 assert(html.includes(`data-affected-advisories="${r.counts.affected_advisories}"`));
@@ -138,23 +144,29 @@ console.log(
   context.location = { origin: 'http://localhost' };
   context.window.fetch = () => {};
   const pending = [];
-  context.createStaticDelivery = () =>
-    new Promise((resolve, reject) => pending.push({ resolve, reject }));
+  let loaderCreations = 0;
+  context.createStaticDelivery = async () => {
+    loaderCreations++;
+    const number = loaderCreations;
+    return {
+      publication: report.publication,
+      generated_at: report.generated_at,
+      switchingClaims: async (ids) => ({ number, ids }),
+      switchingReport: () => new Promise((resolve, reject) => pending.push({ resolve, reject })),
+    };
+  };
+  const tick = () => new Promise((resolve) => setImmediate(resolve));
   let app = fs
     .readFileSync('infrastructure_impact/web/app.js', 'utf8')
     .replace(/\nload\(\);\n/, '\n');
   vm.runInContext(app, context);
+  const paintAccepted = context.renderComparison;
   context.fullReport = report;
   vm.runInContext(
     'data={publication:fullReport.publication,generated_at:fullReport.generated_at}; comparisonMode="switching"; view="compare"; renderComparison=()=>{};',
     context,
   );
-  const resolve = (i) =>
-    pending[i].resolve({
-      publication: report.publication,
-      generated_at: report.generated_at,
-      switchingReport: async () => report,
-    });
+  const resolve = (i) => pending[i].resolve(report);
   const read = () =>
     JSON.parse(
       vm.runInContext(
@@ -177,11 +189,13 @@ console.log(
   );
   vm.runInContext('comparisonMode="switching";', context);
   const first = context.loadSwitching();
+  await tick();
   resolve(0);
   await first;
   assert.strictEqual(read().report.selection.requested_vendor, null, 'full study default');
   const old = context.loadSwitching({ vendor: 'arista' }),
     failed = context.loadSwitching({ vendor: 'cisco' });
+  await tick();
   pending[2].reject(Error('synthetic failure'));
   await failed;
   resolve(1);
@@ -194,6 +208,7 @@ console.log(
   assert(read().error.includes('synthetic failure'));
   const older = context.loadSwitching({ window: 'pre' }),
     newer = context.loadSwitching({ vendor: 'arista', window: 'post' });
+  await tick();
   resolve(4);
   await newer;
   resolve(3);
@@ -204,7 +219,8 @@ console.log(
   const bad = context.loadSwitching({ vendor: 'cisco' });
   const foreign = JSON.parse(JSON.stringify(report));
   foreign.generated_at = '2026-11-03T10:00:00Z';
-  pending[5].resolve({ switchingReport: async () => foreign });
+  await tick();
+  pending[5].resolve(foreign);
   await bad;
   assert.strictEqual(
     JSON.stringify(read().report),
@@ -215,14 +231,150 @@ console.log(
   assert.strictEqual(await exported.text(), api.csvExport(read().report));
   const json = JSON.parse(await context.switchingDownload('json').text());
   assert.deepStrictEqual(json, read().report, 'JSON exact accepted full report');
+  assert.strictEqual(loaderCreations, 1, 'one generation-bound loader across selections');
+  const beforeGenerationFailure = read().report;
+  vm.runInContext(
+    'data={...data, publication:{id:"f".repeat(32),advisory_schema_version:2}};',
+    context,
+  );
+  const newGeneration = context.loadSwitching();
+  await tick();
+  pending[6].reject(Error('new generation unavailable'));
+  await newGeneration;
+  const mount = context.window.InfrastructureSwitchingView.mount;
+  let detailOwner;
+  context.window.InfrastructureSwitchingView.mount = (root, accepted, loadClaims) => {
+    detailOwner = { accepted, loadClaims };
+  };
+  paintAccepted();
+  const oldDetail = await detailOwner.loadClaims([report.inputs.evidence.claims[0].claim_id]);
+  assert.strictEqual(
+    oldDetail.number,
+    1,
+    'failed new generation retains the accepted detail loader',
+  );
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(detailOwner.accepted)), beforeGenerationFailure);
+  assert.deepStrictEqual(
+    JSON.parse(await context.switchingDownload('json').text()),
+    beforeGenerationFailure,
+  );
+  assert.strictEqual(
+    await context.switchingDownload('csv').text(),
+    api.csvExport(beforeGenerationFailure),
+  );
+  context.window.InfrastructureSwitchingView.mount = mount;
+  vm.runInContext('data={...data, publication:fullReport.publication};', context);
   const legacy = context.loadSwitching();
-  pending[6].resolve({ switchingReport: async () => null });
+  await tick();
+  pending[7].resolve(null);
   await legacy;
   assert.strictEqual(read().report.availability, 'unavailable');
   assert.strictEqual(context.switchingDownload('json'), null);
+  assert.strictEqual(loaderCreations, 3, 'a new enclosing generation creates a new loader');
   console.log(
     'Actual app ordering, failed/foreign generations, full-study isolation and accepted exports passed.',
   );
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});
+
+// Collapsed details must not serialize entire retained evidence on each repaint.
+const lazyReport = JSON.parse(JSON.stringify(report));
+lazyReport.inputs.evidence.score_availability = [
+  { vendor: 'arista', marker: 'DIAGNOSTIC_LAZY_SENTINEL' },
+];
+lazyReport.inputs.evidence.claims[0].conditions = ['CLAIM_LAZY_SENTINEL'];
+lazyReport.sources = [{ source_url: 'https://www.arista.com/TRACE_LAZY_SENTINEL' }];
+const lazyHtml = api.render(lazyReport);
+for (const marker of ['CLAIM_LAZY_SENTINEL', 'DIAGNOSTIC_LAZY_SENTINEL', 'TRACE_LAZY_SENTINEL'])
+  assert(!lazyHtml.includes(marker), 'collapsed ' + marker);
+assert(lazyHtml.includes('data-switching-detail="claims"'));
+
+(async () => {
+  // A tiny DOM boundary harness exercises the actual expansion listener and paging.
+  function surface(kind) {
+    const body = {
+      html: '',
+      childNodes: [],
+      button: null,
+      insertAdjacentHTML(position, html) {
+        this.html += html;
+        this.childNodes.push(html);
+        if (html.includes('<button'))
+          this.button = {
+            addEventListener: (event, callback) => {
+              this.more = callback;
+            },
+            remove: () => {
+              this.button = null;
+            },
+          };
+      },
+      querySelector() {
+        return this.button;
+      },
+    };
+    const detail = {
+      dataset: { switchingDetail: kind },
+      open: true,
+      isConnected: true,
+      querySelector: () => body,
+      addEventListener: (event, callback) => {
+        detail.toggle = callback;
+      },
+    };
+    return { body, detail, root: { querySelectorAll: () => [detail] } };
+  }
+  const tick = () => new Promise((resolve) => setImmediate(resolve));
+  const many = JSON.parse(JSON.stringify(report));
+  const template = many.inputs.evidence.claims[0];
+  many.inputs.evidence.claims = Array.from({ length: 61 }, (_, i) => ({
+    ...template,
+    claim_id: String(i),
+    product: i === 0 ? '<svg onload=bad()>' : String(i),
+  }));
+  many.rows[0].claim_ids = many.inputs.evidence.claims.map((c) => c.claim_id);
+  many.rows = [many.rows[0]];
+  many.rows[0].events = [];
+  const s = surface('claims'),
+    batches = [];
+  context.window.InfrastructureSwitchingView.mount(s.root, many, async (ids) => {
+    batches.push(ids);
+    return many.inputs.evidence.claims.filter((c) => ids.includes(c.claim_id));
+  });
+  assert.strictEqual(s.body.html, '');
+  s.detail.toggle();
+  await tick();
+  assert.strictEqual(batches[0].length, 25);
+  assert(s.body.html.includes('&lt;svg onload=bad()&gt;'));
+  assert(s.body.html.includes('Initial publication'));
+  assert(s.body.html.includes('25 of 61 shown'));
+  await s.body.more();
+  assert.strictEqual(batches[1].length, 25);
+  assert(s.body.html.includes('50 of 61 shown'));
+  const fail = surface('claims');
+  let resolve;
+  context.window.InfrastructureSwitchingView.mount(
+    fail.root,
+    many,
+    () => new Promise((r) => (resolve = r)),
+  );
+  fail.detail.toggle();
+  fail.detail.isConnected = false;
+  resolve([{ ...template, product: 'LATE_DETAIL_SENTINEL' }]);
+  await tick();
+  assert(!fail.body.html.includes('LATE_DETAIL_SENTINEL'));
+  const rejected = surface('claims');
+  context.window.InfrastructureSwitchingView.mount(rejected.root, many, async () => {
+    throw Error('<img onerror=bad()>');
+  });
+  rejected.detail.toggle();
+  await tick();
+  assert(rejected.body.html.includes('role="alert"'));
+  assert(rejected.body.html.includes('&lt;img onerror=bad()&gt;'));
+  assert(rejected.body.html.includes('Retry detail'));
+  console.log('Lazy detail paging, escaping, failure and detached-generation guards passed.');
 })().catch((e) => {
   console.error(e);
   process.exitCode = 1;

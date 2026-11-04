@@ -189,7 +189,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     if (found.length !== requested.size) throw Error('Missing study claims');
     return JSON.parse(JSON.stringify(found));
   };
-  load.switchingReport = async () => {
+  async function hydrateSwitching() {
     const study = studyIndex();
     if (!study) return null;
     const contracts = window.InfrastructureSwitchingContracts;
@@ -238,8 +238,16 @@ async function createStaticDelivery(fetchPart, siteBase) {
       },
     };
     delete report.representation;
-    contracts.full(report);
-    return JSON.parse(JSON.stringify(report));
+    return window.InfrastructureSwitching.prepareReport(report);
+  }
+  let switchingPromise;
+  load.switchingReport = () => {
+    if (!switchingPromise)
+      switchingPromise = hydrateSwitching().catch((error) => {
+        switchingPromise = null;
+        throw error;
+      });
+    return switchingPromise;
   };
   return load;
 }

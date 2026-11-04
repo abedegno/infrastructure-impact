@@ -135,6 +135,56 @@ Retained-source receipt-set fingerprint: `a44ca6dec81306be08a2619d65237d428c5431
 | Compact monitor checked parts/schemas | 2931216 |
 | Complete local generation | 256544500 |
 
-The local publication passed strict projection/schema/semantic checks and the standalone monitor. Existing 512,000-byte target parts, 8,000,000-byte hard parts, 2,000,000-byte index and 20,000,000-byte monitor limits were unchanged. Full study inputs are a separate large explicit download; whole-study hydration is substantially larger than the compact monitor. Repeated full-input validation made the operational year-matrix helper slow; the final matrix reused the production row reducer after publication validation. No runtime optimization was bundled into this task.
+The local publication passed strict projection/schema/semantic checks and the standalone monitor. Existing 512,000-byte target parts, 8,000,000-byte hard parts, 2,000,000-byte index and 20,000,000-byte monitor limits were unchanged. Full study inputs are a separate large explicit download; whole-study hydration is substantially larger than the compact monitor. Repeated full-input validation made the operational year-matrix helper slow; the final matrix reused the production row reducer after publication validation. That initial staging build did not include the later reader optimization described below.
 
 Local Python, Node, lint, formatting, wheel/plugin, container and clean source-export checks are recorded in the task handoff. Remote Python 3.11/3.13 and container CI remains pending the feature branch review/push. No product version, production publication transition or hosted source-pin activation occurred.
+
+
+## Final-review local verification
+
+The collection observations above remain the original `78e96c4f70ef44e6b3fe7bc9fbc7755d`
+generation. A local rebuild from the same dedicated staging vault, without any new
+collection or score attempts, produced generation `a057ceafda454d459a7f36d99a158421`
+at `2026-11-04T17:16:49.320082+00:00`. Observation end remains 2026-11-04;
+all 7,603 retained claims and the reported vendor counts are preserved. Earlier
+staging generations and their receipts remain retained. This follow-up was not deployed.
+
+Strict browser evidence checks exposed a Python/JavaScript numeric spelling
+difference in claim IDs (`5.0` versus `5`). The unreleased study now fingerprints
+finite numbers with a shared exact binary64 decimal-token format. Some claim IDs
+and corresponding part hashes changed; reported score values, source hashes,
+source observations and the study definition fingerprint did not change. No raw
+source bytes or operational receipts are included here.
+
+A fresh isolated Chromium session against the final local assets measured
+**4,247 ms initial study hydration**, including strict validation, and **48–59 ms
+model selection**, compared with the earlier measured 4,657 ms and 9,021 ms.
+Arista/post selection took 47 ms; full OS-family reselection took 86 ms. Four
+selections, expansion from 25 to 50 claim details and explicit KEV re-evaluation
+made **zero additional part requests**. Initial DOM markup was 152,584 bytes;
+closed evidence detail is generated on expansion in bounded batches. Counts
+remained 1/16/48 affected advisories and 0/0/0 model-qualified advisories. No script
+errors or horizontal overflow at 390-pixel width were observed; keyboard expansion
+and the no-exposure caveat were checked. Initial validation still loads the full
+study; the improvement concerns repeated interaction, not smaller source inputs.
+
+The final compact monitor was fresh, with KEV and switching available, 26 checked
+parts and 2,931,319 checked bytes. It did not fetch full history or study inputs.
+The largest content-addressed part remained 1,124,627 bytes. Existing part, index
+and monitor budgets were unchanged.
+
+| Final artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| switching-comparison.json | 50903075 | `53b75aaaa8a082fa10e1a8185fc1887c429197478f89003631ea315f2f3e0942` |
+| switching-evidence.json | 49621952 | `f508b6f0ffd2003d21d7824b16d9feb86d944abf7e7ce955ebd42b4d15d7ffd6` |
+| data/index.json | 748473 | `9248ae6f89375888838aa7384bd3274fe322999468c960e12f1d63014bae8e6c` |
+| app.js | 106756 | `7ccfcd8a9b45dafbe84842171d473d517f0e60bb18c0e1603204f780ffd74c0b` |
+| delivery.js | 9914 | `22281bb36ec83e312666356b34a94658280ee30cfa898a20055fc301f3b656c8` |
+| switching-contracts.js | 59648 | `d28b6244ad71f6d4b3c15cfc92a613f2e0c669697c7e34a9fd26c25417c06ec9` |
+| switching.js | 34825 | `1666e556cc64e1f84e1e98b3aec63d8b4f4c9aeefe87e1dd87f557db177e1ccb` |
+| switching-view.js | 15826 | `52bae3aedef3cd27047f98053795ba908ff66ed6475e7634be48c0cdf0f65101` |
+
+Cisco authenticated history remains unavailable, Aruba pre-2022 coverage remains
+unestablished, and the 53 Arista parse failures, drafts, unresolved target models,
+missing score source and pending independent human review remain explicit limits.
+Local automated acceptance does not replace final-head remote CI or human review.

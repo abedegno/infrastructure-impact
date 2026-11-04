@@ -79,3 +79,55 @@ const malformedSource = {
 assert.throws(() =>
   contracts.validate('switching-evidence-v1.json', malformedSource, '/$defs/source'),
 );
+
+// Validation ownership: mutable callers cannot poison the retained source or skip
+// the boundary check; accepted immutable reports share inputs across selections.
+const caller = JSON.parse(JSON.stringify(data.comparison_base_report));
+const prepared = api.prepareReport(caller);
+assert(!Object.isFrozen(caller.inputs.evidence.claims[0]), 'caller keeps mutable ownership');
+assert(Object.isFrozen(prepared.inputs.evidence.claims[0].source));
+caller.inputs.evidence.claims[0].platform_bindings[0].model = '7500';
+assert.throws(() => api.selectReport(caller));
+assert.notStrictEqual(prepared.inputs.evidence.claims[0].platform_bindings[0].model, '7500');
+const fullValidation = contracts.full;
+let checks = 0;
+contracts.full = (...args) => {
+  checks++;
+  return fullValidation(...args);
+};
+const firstSelection = api.selectReport(prepared, { vendor: 'arista' });
+const nextSelection = api.selectReport(firstSelection, { scope_level: 'model_qualified' });
+assert.strictEqual(checks, 0, 'owned immutable inputs are not revalidated');
+assert.strictEqual(firstSelection.inputs, nextSelection.inputs, 'complete evidence shared');
+assert(Object.isFrozen(nextSelection.rows[0].counts));
+const tampered = { ...nextSelection, rows: [] };
+assert.throws(() => api.selectReport(tampered), 'new object identity requires validation');
+assert.strictEqual(checks, 1);
+contracts.full = fullValidation;
+console.log('Immutable study ownership, repeated selection and mutable-input rejection passed.');
+
+// Only the owned JSON value is validated; caller serialization hooks cannot swap
+// an unchecked value into the immutable cache after validation.
+let serializationHookCalls = 0;
+const hooked = Object.assign(
+  Object.create({
+    toJSON() {
+      serializationHookCalls++;
+      const changed = JSON.parse(JSON.stringify(data.comparison_base_report));
+      changed.inputs.evidence.claims[0].conditions.push('unchecked condition');
+      return changed;
+    },
+  }),
+  data.comparison_base_report,
+);
+api.prepareReport(hooked);
+assert.strictEqual(serializationHookCalls, 0, 'caller toJSON must not produce trusted data');
+for (const value of [NaN, Infinity, -Infinity]) {
+  const invalid = JSON.parse(JSON.stringify(data.comparison_base_report));
+  invalid.inputs.evidence.claims[0].scores[0].value = value;
+  assert.throws(
+    () => api.prepareReport(invalid),
+    'nonfinite scores rejected before copy normalization',
+  );
+  assert.throws(() => contracts.fingerprint({ value }));
+}
