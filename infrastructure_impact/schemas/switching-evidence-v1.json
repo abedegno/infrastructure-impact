@@ -1,0 +1,783 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/claim"
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/coverage"
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "definition_sha256",
+    "claims",
+    "coverage",
+    "issues"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-evidence:1",
+  "title": "Source-bound switching evidence v1",
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "source_url",
+        "source_sha256",
+        "retrieved_at",
+        "source_locator"
+      ]
+    },
+    "platform_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "enum": [
+            "publisher_explicit",
+            "reviewed_alias",
+            "unresolved"
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "platform",
+        "model",
+        "basis",
+        "source"
+      ]
+    },
+    "remediation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publisher_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "version_expressions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "published_availability": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "availability_date": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "required": [
+        "publisher_id",
+        "category",
+        "details",
+        "product_ids",
+        "version_expressions",
+        "published_availability",
+        "availability_date",
+        "source"
+      ]
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publisher_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "member_advisory_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "required": [
+        "publisher_id",
+        "title",
+        "member_advisory_ids",
+        "published_at",
+        "source"
+      ]
+    },
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vector": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cve_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "scope": {
+          "enum": [
+            "cve_specific",
+            "bulletin_shared",
+            "unresolved"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "required": [
+        "system",
+        "version",
+        "value",
+        "vector",
+        "severity",
+        "cve_id",
+        "product_ids",
+        "scope",
+        "source"
+      ]
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "advisory_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "cve_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "publisher": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sequence": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "sequence",
+            "status"
+          ]
+        },
+        "initial_published_at": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "family": {
+          "anyOf": [
+            {
+              "enum": [
+                "cisco-iosxe",
+                "aruba-aoscx",
+                "arista-eos"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "named_platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "platform_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/platform_binding"
+          },
+          "uniqueItems": true
+        },
+        "status": {
+          "enum": [
+            "affected",
+            "unaffected",
+            "fixed",
+            "partially_mitigated",
+            "investigating",
+            "unknown",
+            "recommended",
+            "conflicting"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "cve_specific",
+            "bulletin_shared",
+            "unresolved"
+          ]
+        },
+        "scope_level": {
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
+        },
+        "version_expressions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "remediations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/remediation"
+          },
+          "uniqueItems": true
+        },
+        "bundle": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/bundle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scores": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/score"
+          },
+          "uniqueItems": true
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "claim_id",
+        "vendor",
+        "advisory_id",
+        "cve_id",
+        "product_id",
+        "product",
+        "revision",
+        "source",
+        "publisher",
+        "initial_published_at",
+        "updated_at",
+        "family",
+        "named_platforms",
+        "platform_bindings",
+        "status",
+        "scope",
+        "scope_level",
+        "version_expressions",
+        "conditions",
+        "remediations",
+        "bundle",
+        "scores",
+        "issues"
+      ]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "state": {
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable",
+            "unstable",
+            "unknown"
+          ]
+        },
+        "observed_start": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_end": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "vendor",
+        "source_url",
+        "state",
+        "observed_start",
+        "observed_end",
+        "total",
+        "issues"
+      ]
+    }
+  }
+}

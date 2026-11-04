@@ -1,0 +1,182 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "const": "campus-branch-switching"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "cutoff_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "vendor": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "family": {
+            "enum": [
+              "cisco-iosxe",
+              "aruba-aoscx",
+              "arista-eos"
+            ]
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "literal": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "model": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "source_url": {
+                  "type": "string",
+                  "format": "uri",
+                  "pattern": "^https://"
+                },
+                "source_locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "literal",
+                "model",
+                "source_url",
+                "source_locator"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "vendor",
+          "family",
+          "models",
+          "aliases",
+          "issues"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "vendor": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          },
+          "source_locator": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "vendor",
+          "source_url",
+          "source_locator",
+          "reviewed_at",
+          "issues"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "start_date",
+    "cutoff_date",
+    "targets",
+    "references"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-study:1",
+  "title": "Source-bound campus and branch switching study v1"
+}

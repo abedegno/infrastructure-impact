@@ -1,0 +1,143 @@
+{
+  "evidence": {
+    "schema_version": 1,
+    "publication": null,
+    "generated_at": "2026-11-04T10:00:00Z",
+    "definition_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "claims": [
+      {
+        "vendor": "arista",
+        "advisory_id": "SYNTHETIC-1",
+        "cve_id": "CVE-2025-12345",
+        "product_id": "publisher-product-1",
+        "product": "EOS",
+        "revision": "1",
+        "source": {
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+          "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "retrieved_at": "2026-11-04T10:00:00Z",
+          "source_locator": "/vulnerabilities/0"
+        },
+        "publisher": {
+          "id": "SYNTHETIC-1",
+          "sequence": "01",
+          "status": "final"
+        },
+        "initial_published_at": "2025-01-01",
+        "updated_at": "2026-04-08T00:00:00Z",
+        "family": "arista-eos",
+        "named_platforms": [
+          "750"
+        ],
+        "platform_bindings": [
+          {
+            "platform": "750",
+            "model": "750",
+            "basis": "publisher_explicit",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            }
+          }
+        ],
+        "status": "affected",
+        "scope": "cve_specific",
+        "scope_level": "model_qualified",
+        "version_expressions": [
+          "before 4.32.1"
+        ],
+        "conditions": [],
+        "remediations": [
+          {
+            "publisher_id": "fix-1",
+            "category": "vendor_fix",
+            "details": "Update to 4.32.1",
+            "product_ids": [
+              "publisher-product-1"
+            ],
+            "version_expressions": [
+              "4.32.1"
+            ],
+            "published_availability": "available",
+            "availability_date": null,
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            }
+          }
+        ],
+        "bundle": {
+          "publisher_id": "bundle-1",
+          "title": "Publisher named bundle",
+          "member_advisory_ids": [
+            "SYNTHETIC-1",
+            "SYNTHETIC-2"
+          ],
+          "published_at": null,
+          "source": {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        },
+        "scores": [
+          {
+            "system": "CVSS",
+            "version": "3.1",
+            "value": 7.5,
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+            "severity": "HIGH",
+            "cve_id": "CVE-2025-12345",
+            "product_ids": [
+              "publisher-product-1"
+            ],
+            "scope": "cve_specific",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            }
+          }
+        ],
+        "issues": [
+          "availability_date_missing",
+          "bundle_publication_date_missing"
+        ],
+        "claim_id": "2e6905f4fb242311d3282e54d59baa51bd7deb403f590f0f93162800493fa15b"
+      }
+    ],
+    "coverage": [
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+        "state": "partial",
+        "observed_start": "2021-01-01",
+        "observed_end": "2026-11-04",
+        "total": null,
+        "issues": [
+          "publisher_total_unknown"
+        ]
+      }
+    ],
+    "issues": []
+  },
+  "old_resource_sha256": {
+    "infrastructure_impact/resources/archive-source-review.json": "2f1bffcc0277c0b234137cdb5b364075b2e8920db6f77dbb741dc6e62846989a",
+    "infrastructure_impact/resources/benchmark-cases.json": "9e6f72f67c023cbb57e7aeadcdf40aeaf73b6851a9e6ed79d5a0ef1a317cf9a7",
+    "infrastructure_impact/resources/benchmark-cohort.json": "2036eabf11e2853a6e84dec63c861cbebae851344192fb15407260a6916c0e5e",
+    "infrastructure_impact/resources/comparison-plans.json": "bace338697587c95c97b816640c0c57bdecff106c4bbb642e4cc362a3adff34b",
+    "infrastructure_impact/resources/disclosure-cases.json": "93c8ab7af960f44ef344164f51261c9bf7757d25b77aa60d696680f5b78cf7be",
+    "infrastructure_impact/resources/disclosure-investigations.json": "87a0d5e7160389376fd2cd9f33ada2e0d5bb6552e4ed0c6941e0a525004676ba",
+    "infrastructure_impact/resources/extraction-review.json": "fb363140d6deee70f2fd821ce4c786097a8adb5d15bd2788ab5cbd3795114abf",
+    "infrastructure_impact/resources/product-cohorts.json": "54565ee1720e9fe6bfee76d6ce349f3bbc0d5375b3f18bd849505ab247ccd17b",
+    "infrastructure_impact/resources/research-dossiers.json": "ab650a1dfa51277c40988f0f20252bc624d4daeadfc3c72523ad32ea01f0475f",
+    "infrastructure_impact/resources/sources.json": "0c4f379ab4c7013d2d6c066f6c2e98e596dea02833636fc9768bf925eeeceb62",
+    "infrastructure_impact/resources/studies/openssh-service-2023-2026.json": "5306704e855053894d40b426a639d500c94841fe768efacd646dc21319f4eb99"
+  }
+}

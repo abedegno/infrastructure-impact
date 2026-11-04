@@ -1,0 +1,93 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition": {
+      "$ref": "urn:infrastructure-impact:switching-study:1"
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "description": "Reserved for the strict Task 6 selection contract; no fields accepted yet."
+    },
+    "rows": {
+      "type": "array",
+      "items": false,
+      "description": "Reserved for the strict Task 6 row contract; only an empty array is accepted yet."
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:infrastructure-impact:switching-evidence:1#/$defs/source"
+      },
+      "uniqueItems": true
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "uniqueItems": true
+    },
+    "method": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "evaluated_at",
+    "definition",
+    "selection",
+    "rows",
+    "sources",
+    "issues",
+    "method"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-comparison:1",
+  "title": "Descriptive switching comparison v1"
+}
