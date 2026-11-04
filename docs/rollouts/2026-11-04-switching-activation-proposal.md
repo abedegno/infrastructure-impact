@@ -1,7 +1,7 @@
 # v0.9.0 switching study activation proposal — 4 November 2026
 
-Status: **prepared for approval; not activated**. This document proposes a source
-release followed by one controlled hosted run. It is not an activation receipt.
+Status: **replacement candidate pending renewed exact-SHA approval; not activated**.
+This document proposes a source release followed by one controlled hosted run. It is not an activation receipt.
 The release PR identifies the exact reviewed candidate commit; its full SHA must
 be recorded and approved before changing the runtime pin.
 
@@ -9,8 +9,12 @@ be recorded and approved before changing the runtime pin.
 
 Implementation [PR 19](https://github.com/abedegno/infrastructure-impact/pull/19)
 merged as `f34a16343dd329f4b5fb1c05cc0483355810b28e`. Its post-merge Python
-3.11/3.13 and container checks passed. The release candidate adds version,
-distribution-reference and release-documentation changes only.
+3.11/3.13 and container checks passed. Release preparation
+[PR 20](https://github.com/abedegno/infrastructure-impact/pull/20) merged as
+`941db92eb5172ee52826f7d5b8b4c8e3e14dceca`. The replacement candidate adds the
+bounded eligibility monitor repair described below. Version 0.9.0 remains
+unpublished; the earlier exact-candidate approval must be renewed after review
+of the replacement commit and assets.
 
 Read-only checks on 4 November found:
 
@@ -27,8 +31,43 @@ Read-only checks on 4 November found:
 The public v0.8.0 generation was `cc672063ffb04700a40cebc29f84f9e6`, generated
 `2026-11-03T19:50:23.984990+00:00`. The current-code read-only monitor reported
 fresh, KEV available, switching unavailable, 891 advisories and 19 source failures.
-It checked 4,980,307 public bytes without downloading full history. This is a
-dated baseline, not a promise that those source counts remain constant.
+Its old cohort-only counter reported 4,980,307 bytes; that counter excluded
+metadata and quality-report reads, including the complete eligibility report.
+It was not a total network-byte measurement or a compact eligibility check.
+This historical measurement is retained as recorded, not as a current result.
+
+A later v0.8.0 scheduled publication, generation
+`5090cf350ad24619b468bdca7ad0eafc`, was generated at
+`2026-11-04T20:03:44.506042+00:00`. Its full comparison-eligibility report measured
+15,168,482 bytes, exceeding the unchanged 15,000,000-byte monitor report limit.
+Scheduled run `41902343652` published the generation and verified private recovery
+but failed its final public-health check. This failure occurred before v0.9.0
+activation and is not caused by the new study. No tag, release, runtime-pin change
+or manual collector dispatch occurred during release preparation.
+
+The repair adds a closed monitor sidecar from the same validated full eligibility
+report. It binds publication/time, exact detail SHA-256, complete expected vendor
+membership and all three comparison-suppression gates. The full detail stays
+available unchanged as an explicit download. The monitor reports compact-summary
+versus legacy-full-report verification explicitly; a declared malformed sidecar
+fails without fallback. All default downloaded metadata/reports/parts/schemas now
+count toward 20,000,000 bytes, with existing per-asset limits unchanged. Explicit
+archive verification remains separately bounded. Legacy publications without a
+sidecar retain bounded full-report checks, so the current oversized legacy
+publication still fails until an authorized new publication supplies the sidecar.
+
+A read-only compatibility rehearsal of that public generation used the production
+summary producer and validator with a **local manifest/summary overlay, not a new
+deployment**. The 1,761-byte summary preserved all nine vendors and their three
+suppression gates, bound to full-detail SHA-256
+`a94935559aa9a280d3514ed565bbe3f2fc30abd93367ac70a0e191291b42fd82`.
+The compact monitor read 8,045,591 default response-body bytes and requested no
+full eligibility detail, snapshot, compressed archive or study inputs. This total
+includes the local overlay manifest, metadata, reports and cohort parts; it is
+not a measurement of a newly deployed writer bundle. With the original manifest,
+the repaired legacy path correctly stopped at the aggregate overflow sentinel
+(20,000,001 bytes) instead of reporting success. HTTP/TLS headers and the HTML
+status-only check are not response-body bytes read by this counter.
 
 Metadata-only storage review at `2026-11-04T18:36:58.590175+00:00` reported
 470,605,824 repository bytes against the unchanged 536,870,912-byte review budget
@@ -72,9 +111,11 @@ pass.
 8. Write a separate dated activation receipt with measured results. Do not change
    this proposal into a claimed success before those results exist.
 
-The existing monitor can read the old publication with switching unavailable;
-the new public study assets become required only when the publication declares
-them. The controlled collector's final health check uses its pinned source.
+Old publications remain readable with switching unavailable, but the current
+oversized eligibility report cannot pass the legacy monitor limit. Compact
+eligibility verification and new study assets become required only when their
+publication declares them. The controlled collector's final health check uses
+its pinned source.
 
 ## Commands to execute only after approval
 

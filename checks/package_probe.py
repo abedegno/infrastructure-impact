@@ -158,6 +158,7 @@ def main():
         assert (root / "current/scorecards.json").exists()
         assert (root / "current/comparison-eligibility.json").exists()
         for filename in (
+            "comparison-eligibility-summary.json",
             "product-groups.json",
             "extraction-validation.json",
             "review-packet.json",
@@ -168,7 +169,21 @@ def main():
             "kev.json",
         ):
             assert (root / "current" / filename).exists()
+        summary_path = root / "current/comparison-eligibility-summary.json"
+        status, _, summary_body = app.route(
+            {"REQUEST_METHOD": "GET", "PATH_INFO": "/comparison-eligibility-summary.json"}
+        )
+        assert status == 200 and summary_body == summary_path.read_bytes()
+        eligibility_summary = json.loads(summary_body)
+        assert (
+            eligibility_summary["source_detail"]["sha256"]
+            == hashlib.sha256(
+                (root / "current/comparison-eligibility.json").read_bytes()
+            ).hexdigest()
+        )
+        assert eligibility_summary["expected_vendor_ids"] == sorted(data["vendors"])
         for filename in (
+            "comparison-eligibility-summary-v1.json",
             "product-groups-v1.json",
             "publisher-history-v1.json",
             "extraction-review-v1.json",
