@@ -69,6 +69,10 @@ def state(db, cohort=None):
             dict(r) for r in db.execute("SELECT * FROM fix_evidence ORDER BY id DESC")
         ],
     }
+    from ..collection.switching_backfill import manifest
+    from .switching_evidence import definition
+
+    merge_switching_manifest(research["switching_input"], manifest(db, study_id=definition()["id"]))
     run = None
     if db.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='pipeline_runs'"
@@ -153,3 +157,73 @@ def state(db, cohort=None):
     result["product_cohorts"] = product_cohorts(result)
     result["disclosure_review"] = disclosure_review(result)
     return result
+
+
+def merge_switching_manifest(inputs, manifest):
+    """Join actual source-window facts, never infer historical period coverage."""
+    from .switching_evidence import definition, definition_sha256
+
+    fingerprint = definition_sha256(definition())
+    counters = (
+        "expected_total",
+        "discovered_unique_identities",
+        "duplicate_entries",
+        "withdrawn_entries",
+        "retrieved",
+        "parsed",
+        "parse_failed",
+        "retrieval_failed",
+        "classified",
+        "classification_pending",
+        "unknown_dates",
+        "unknown_models",
+        "exhausted_errors",
+    )
+    for entry in manifest["entries"]:
+        if entry["definition_sha256"] != fingerprint:
+            continue
+        if not entry.get("source_url"):
+            inputs["issues"].append("enumeration_source_unavailable")
+            continue
+        enumeration = {key: entry.get(key) for key in counters}
+        enumeration.update(
+            {
+                key: entry[key]
+                for key in (
+                    "definition_sha256",
+                    "source_kind",
+                    "window",
+                    "coverage_state",
+                    "portfolio_completeness",
+                )
+            }
+        )
+        enumeration["gaps"] = sorted(set(entry["gaps"] + entry.get("errors", [])))
+        from .switching_comparison import day
+
+        dates = sorted(
+            {
+                day(p["retrieved_at"])
+                for p in entry.get("page_evidence", [])
+                if p.get("retrieved_at")
+            }
+        )
+        missing = [] if dates else ["observation_start_unknown", "observation_end_unknown"]
+        # Repeated runs/windows remain separate facts; they are never summed.
+        inputs["coverage"].append(
+            dict(
+                vendor=entry["vendor"],
+                source_url=entry["source_url"],
+                state="unstable"
+                if entry["coverage_state"] == "unstable"
+                else "unavailable"
+                if entry["coverage_state"] in ("not_configured", "blocked")
+                else "partial",
+                observed_start=dates[0] if dates else None,
+                observed_end=dates[-1] if dates else None,
+                total=None,
+                issues=missing
+                + ["publisher_total_unknown", "source_window_not_period_completeness"],
+                enumeration=enumeration,
+            )
+        )

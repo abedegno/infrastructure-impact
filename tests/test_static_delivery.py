@@ -154,7 +154,12 @@ def test_compressed_archive_is_exact_public_projection_and_reproducible(tmp_path
     assert manifest["sha256"]["snapshot.json.gz"] == hashlib.sha256(compressed).hexdigest()
     from infrastructure_impact.application.publication import write_bundle
 
-    write_bundle(tmp_path / "repeat", json.loads(raw))
+    rehydrated = json.loads(raw)
+    rehydrated["switching_comparison"] = json.loads(
+        (generation / "switching-comparison.json").read_text()
+    )
+    rehydrated["switching_evidence"] = rehydrated["switching_comparison"]["inputs"]["evidence"]
+    write_bundle(tmp_path / "repeat", rehydrated)
     assert (tmp_path / "repeat/snapshot.json.gz").read_bytes() == compressed
     code, content_type, body = Application(tmp_path).route(
         dict(REQUEST_METHOD="GET", PATH_INFO="/snapshot.json.gz")
@@ -603,7 +608,14 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
     generation = publish(dataset(), tmp_path)
     html = (generation / "index.html").read_text()
     scripts = re.findall(r'<script defer src="([^"]+)"', html)
-    expected = ["research-dossiers.js", "delivery.js", "kev.js", "snapshot.js", "app.js"]
+    expected = [
+        "research-dossiers.js",
+        "delivery.js",
+        "kev.js",
+        "switching.js",
+        "snapshot.js",
+        "app.js",
+    ]
     paths = []
     manifest = json.loads((generation / "manifest.json").read_text())
     app = Application(tmp_path)

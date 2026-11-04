@@ -138,3 +138,119 @@ def csv_export(data):
                 row[key] = value
             writer.writerow(row)
     return stream.getvalue()
+
+
+SWITCHING_FIELDS = [
+    "publication_id",
+    "publication_generated_at",
+    "definition_id",
+    "definition_version",
+    "definition_sha256",
+    "vendor",
+    "scope_level",
+    "window",
+    "period_start",
+    "period_end",
+    "totals_basis",
+    "observed_advisories",
+    "affected_advisories",
+    "observed_cves",
+    "affected_cves",
+    "remediation_events",
+    "bundled_events",
+    "unbundled_publications",
+    "draft_advisories",
+    "model_unresolved_claims",
+    "conditional_cves",
+    "conditionality_unclassified_cves",
+    "severity_version",
+    "severity_provider",
+    "severity_origin",
+    "severity_preferred",
+    "severity_band",
+    "severity_count",
+    "kev_basis",
+    "kev_availability",
+    "kev_listed",
+    "kev_unknown",
+    "coverage_state",
+    "coverage_observed_advisories",
+    "coverage_expected_advisories",
+    "coverage_issues",
+    "source_window_states",
+]
+
+
+def switching_csv(report: dict) -> str:
+    """Summary facets; repeated observed totals are explicitly nonadditive."""
+
+    def cell(value):
+        value = (
+            "" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
+        )
+        if value.lstrip().startswith(("=", "+", "-", "@")) or value.startswith(("\t", "\r", "\n")):
+            value = "'" + value
+        return '"' + value.replace('"', '""') + '"'
+
+    lines = [",".join(SWITCHING_FIELDS)]
+    for row in report["rows"]:
+        c, k, coverage = row["counts"], row["kev"], row["coverage"]
+        issues = sorted(
+            {
+                issue
+                for source in coverage["sources"]
+                for issue in source["issues"] + source.get("enumeration", {}).get("gaps", [])
+            }
+        )
+        common = [
+            (report["publication"] or {}).get("id"),
+            report["generated_at"],
+            report["definition"]["id"],
+            report["definition"]["version"],
+            report["selection"]["definition_sha256"],
+            row["vendor"],
+            row["scope_level"],
+            row["window"],
+            row["period_start"],
+            row["period_end"],
+            "repeated_totals_nonadditive",
+            c["advisories"],
+            c["affected_advisories"],
+            c["cves"],
+            c["affected_cves"],
+            c["remediation_events"],
+            c["bundled_events"],
+            c["unbundled_publications"],
+            c["draft_advisories"],
+            c["model_unresolved_claims"],
+            c["conditional_cves"],
+            c["conditionality_unclassified_cves"],
+        ]
+        for facet in row["severity"] or [dict(band="Unknown", count=0)]:
+            values = (
+                common
+                + [
+                    facet.get(key)
+                    for key in ("version", "provider", "origin", "preferred", "band", "count")
+                ]
+                + [
+                    "documented_affected_cves",
+                    k["availability"],
+                    k["listed_count"],
+                    k["unknown_count"],
+                    coverage["state"],
+                    coverage["observed_advisories"],
+                    coverage["expected_advisories"],
+                    ";".join(issues),
+                    ";".join(
+                        sorted(
+                            {
+                                source.get("enumeration", {}).get("coverage_state", source["state"])
+                                for source in coverage["sources"]
+                            }
+                        )
+                    ),
+                ]
+            )
+            lines.append(",".join(cell(v) for v in values))
+    return "\r\n".join(lines)

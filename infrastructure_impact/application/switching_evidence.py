@@ -21,6 +21,8 @@ _SCHEMAS = (
     "switching-study-v1.json",
     "switching-evidence-v1.json",
     "switching-comparison-v1.json",
+    "switching-summary-v1.json",
+    "switching-inputs-v1.json",
     "kev-v1.json",
 )
 _UNSET = object()
@@ -326,6 +328,14 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
             _missing(claim["issues"], score["value"], "score_value_missing")
             if score["scope"] == "unresolved" and "score_scope_unresolved" not in claim["issues"]:
                 raise ValueError("Unresolved score scope requires an issue code")
+    for row in report.get("score_availability", []):
+        _official(row["source_url"], row["vendor"])
+        if row["source"] is not None:
+            _official(row["source"]["source_url"], row["vendor"])
+            if row["source"]["source_url"] != row["source_url"]:
+                raise ValueError("Score availability source differs from its representation")
+        if any(a["cve_id"] != row["cve_id"] for a in row["attempts"]):
+            raise ValueError("Score attempt belongs to another CVE")
     for coverage in report["coverage"]:
         _official(coverage["source_url"], coverage["vendor"])
         enumeration = coverage.get("enumeration")
@@ -729,7 +739,18 @@ def score_inputs(db, records: list[dict]) -> dict:
                 score["revision"] = str(revision["id"])
         result["vendor_severity"].extend(parsed.get("vendor_severity", []))
         result["advisories"].append(
-            dict(vendor=vendor, advisory_id=advisory_id, source_url=url, **parsed)
+            dict(
+                vendor=vendor,
+                advisory_id=advisory_id,
+                source_url=url,
+                source=dict(
+                    source_url=url,
+                    source_sha256=row["sha256"],
+                    retrieved_at=row["retrieved_at"],
+                    source_locator="/",
+                ),
+                **parsed,
+            )
         )
     # New successful API page events preserve A->B->A independently of content
     # IDs. Legacy retained membership is usable only with one unambiguous hash;

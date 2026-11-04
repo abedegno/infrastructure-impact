@@ -58,6 +58,140 @@
         "pattern": "^[a-z][a-z0-9_]*$"
       },
       "uniqueItems": true
+    },
+    "score_availability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cve_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+          },
+          "product_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "context": {
+            "enum": [
+              "study_claim",
+              "source_only_unclassified"
+            ]
+          },
+          "state": {
+            "enum": [
+              "available",
+              "unavailable",
+              "incomplete",
+              "invalid"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "uniqueItems": true
+          },
+          "attempts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cve_record",
+                    "nvd"
+                  ]
+                },
+                "cve_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "state": {
+                  "enum": [
+                    "unknown",
+                    "ok",
+                    "rate_limited",
+                    "source_missing",
+                    "invalid_record",
+                    "network_error",
+                    "request_state_unresolved"
+                  ]
+                },
+                "checked_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "retry_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "source",
+                "cve_id",
+                "state",
+                "checked_at",
+                "retry_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "vendor",
+          "advisory_id",
+          "source_url",
+          "source",
+          "cve_id",
+          "product_id",
+          "context",
+          "state",
+          "issues",
+          "attempts"
+        ]
+      }
     }
   },
   "required": [

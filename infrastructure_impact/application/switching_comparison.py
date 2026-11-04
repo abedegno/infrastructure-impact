@@ -380,7 +380,11 @@ def select_report(
     publication: dict | None = None,
     generated_at: str | None = None,
 ) -> dict:
-    if isinstance(report, dict) and isinstance(report.get("inputs"), dict):
+    if isinstance(report, dict) and (
+        isinstance(report.get("inputs"), dict)
+        or report.get("schema_version") == 1
+        and "availability" in report
+    ):
         contracts.validate_comparison(report)
     return _select_report(
         report,
@@ -522,6 +526,8 @@ def validate_semantics(report):
             raise ValueError("Unavailable reports cannot synthesize observations")
         return
     inputs = report["inputs"]
+    if inputs is None:
+        raise ValueError("Available comparison requires complete immutable inputs")
     contracts.validate_evidence(
         inputs["evidence"], publication=report["publication"], generated_at=report["generated_at"]
     )
@@ -550,3 +556,46 @@ def validate_semantics(report):
         or selection["effective_cve_ids"] != sorted({cid for r in expected for cid in r["cve_ids"]})
     ):
         raise ValueError("Comparison derived identities/counts disagree with retained inputs")
+
+    derived = _select_report(
+        report,
+        vendor=selection["requested_vendor"],
+        scope_level=selection["scope_level"],
+        window=selection["requested_window"],
+        cve_ids=selection["requested_cve_ids"],
+        evaluated_at=report["evaluated_at"],
+    )
+    if report["sources"] != derived["sources"]:
+        raise ValueError("Selected source provenance differs from contributing claims")
+
+
+def summary(report):
+    """Explicit non-hydratable summary; never a malformed full report."""
+    result = {k: copy.deepcopy(v) for k, v in report.items() if k != "inputs"}
+    result["representation"] = "summary"
+    contracts._validate(result, "switching-summary-v1.json")
+    return result
+
+
+def query_options(query, observation_end):
+    """Validate the independent public query; omission means full study."""
+    if set(query) - {"vendor", "scope", "window", "cves", "format"} or any(
+        len(v) != 1 or not v[0] for v in query.values()
+    ):
+        raise ValueError("Unknown, duplicate or blank study parameter")
+    values = {k: v[0] for k, v in query.items()}
+    vendor = values.get("vendor")
+    scope = values.get("scope", "os_family")
+    window = values.get("window", "all")
+    if vendor is not None and vendor not in VENDORS or scope not in SCOPES:
+        raise ValueError("Invalid study scope")
+    _bounds(contracts.definition(), observation_end, window)
+    ids = values["cves"].split(",") if "cves" in values else None
+    if ids is not None and (
+        len(ids) != len(set(ids)) or any(not kev_reports.CVE.fullmatch(c) for c in ids)
+    ):
+        raise ValueError("Invalid canonical CVE selection")
+    output = values.get("format", "json")
+    if output not in ("json", "csv"):
+        raise ValueError("Invalid study format")
+    return dict(vendor=vendor, scope_level=scope, window=window, cve_ids=ids), output

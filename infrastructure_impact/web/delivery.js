@@ -71,7 +71,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     );
     return results.flat();
   }
-  return async function (ids, includeChanges = false) {
+  const load = async function (ids, includeChanges = false) {
     const cohort = [...new Set(ids ?? Object.keys(common.benchmark_cohort))].sort();
     if (cohort.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))) throw Error('Invalid CVE cohort');
     // Selecting the entire archive is an explicit large download. The default and
@@ -127,4 +127,64 @@ async function createStaticDelivery(fetchPart, siteBase) {
       changes: includeChanges ? await parts(index.changes) : [],
     };
   };
+  load.publication = index.publication;
+  load.generated_at = index.generated_at;
+  load.switchingSummary = async () => (index.switching ? read(index.switching.summary) : null);
+  load.switchingClaims = async (ids) => {
+    if (!index.switching) throw Error('Switching unavailable');
+    const requested = new Set(ids);
+    const selected = index.switching.claims.filter((p) =>
+      p.claim_ids.some((id) => requested.has(id)),
+    );
+    const rows = await parts(selected.map((p) => p.part));
+    const found = rows.filter((c) => requested.has(c.claim_id));
+    if (new Set(found.map((c) => c.claim_id)).size !== requested.size)
+      throw Error('Missing study claims');
+    return found;
+  };
+  load.switchingReport = async () => {
+    if (!index.switching) return null;
+    const summary = await load.switchingSummary(),
+      metadata = await read(index.switching.inputs);
+    if (summary.representation !== 'summary' || metadata.representation !== 'switching-inputs')
+      throw Error('Invalid study representation');
+    const claims = await parts(index.switching.claims.map((p) => p.part));
+    const claimedIds = index.switching.claims.flatMap((p) => p.claim_ids);
+    if (
+      new Set(claimedIds).size !== claims.length ||
+      claims.length !== claimedIds.length ||
+      claims.some((c) => !claimedIds.includes(c.claim_id))
+    )
+      throw Error('Incomplete study claims');
+    const entries = await parts(index.switching.kev_entries);
+    if (new Set(entries.map((e) => e.cve_id)).size !== entries.length)
+      throw Error('Duplicate KEV entries');
+    const details = await parts(index.switching.evidence_metadata);
+    if (details.some((d) => !['coverage', 'score_availability'].includes(d.kind)))
+      throw Error('Invalid study metadata');
+    metadata.evidence.coverage = details.filter((d) => d.kind === 'coverage').map((d) => d.value);
+    if (index.switching.has_score_availability)
+      metadata.evidence.score_availability = details
+        .filter((d) => d.kind === 'score_availability')
+        .map((d) => d.value);
+    const report = {
+      ...summary,
+      inputs: {
+        evidence: { ...metadata.evidence, claims },
+        kev: {
+          ...metadata.kev,
+          entries: Object.fromEntries(entries.map((e) => [e.cve_id, e.entry])),
+        },
+      },
+    };
+    delete report.representation;
+    for (const value of [report, report.inputs.evidence, report.inputs.kev])
+      if (
+        JSON.stringify(value.publication) !== JSON.stringify(index.publication) ||
+        value.generated_at !== index.generated_at
+      )
+        throw Error('Mixed study generations');
+    return report;
+  };
+  return load;
 }
