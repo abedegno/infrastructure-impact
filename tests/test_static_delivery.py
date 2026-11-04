@@ -253,12 +253,10 @@ def test_monitor_checks_cohort_parts_without_full_archive_download(tmp_path, mon
     assert result["status"] == "fresh" and result["advisories"] == 3
     assert result["delivery"] == "cohort_parts_v1" and not result["full_archive_download_verified"]
     assert result["checked_default_bytes"] < 8_000_000
-    assert result["compressed_archive_verified"]
+    assert not result["compressed_archive_verified"]
     assert result["static_marker_verified"] and ".nojekyll" in seen
-    assert (
-        result["checked_compressed_archive_bytes"]
-        == (generation / "snapshot.json.gz").stat().st_size
-    )
+    assert result["checked_compressed_archive_bytes"] == 0
+    assert "snapshot.json.gz" not in seen
 
 
 @pytest.mark.parametrize("fault", ["digest", "contents", "truncated"])
@@ -288,7 +286,7 @@ def test_monitor_rejects_invalid_compressed_archive(tmp_path, monkeypatch, fault
         ),
     )
     with pytest.raises((AssertionError, EOFError)):
-        health.check("https://example.test")
+        health.check("https://example.test", verify_archive=True)
 
 
 @pytest.mark.parametrize("fault", [False, True])

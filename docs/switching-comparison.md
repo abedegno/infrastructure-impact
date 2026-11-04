@@ -145,9 +145,10 @@ The [Arista public listing](https://www.arista.com/en/support/advisories-notices
 and its advertised `start=200` terminal page were inspected. The current root
 includes advisory 0204 as an advance announcement. Discovery retains it without
 inventing CVE/model applicability. Synthetic 21-page traversal tests preserve 52
-exhausted failures and pending/draft candidates. A fresh live audit of all those
-historical failures and the full real staging backfill remain subsequent work;
-no parser route was widened to make an error disappear.
+exhausted failures and pending/draft candidates. The subsequent [staged run summary](research/2026-11-04-switching-backfill-summary.md)
+records actual enumeration, parser failures, typed qualification and remaining
+access limits. Reviewed core formats were bridged only at exact approved routes;
+unsupported documents remain visible.
 
 ## Reading the published study
 
@@ -242,6 +243,7 @@ configuration; default source configurations are unchanged:
 ```sh
 export IMPACT_HOME=/absolute/path/to/staging
 export IMPACT_DATABASE=/absolute/path/to/staging/vault.sqlite3
+export IMPACT_SOURCES=/absolute/path/to/staging/sources.json
 export IMPACT_PUBLICATIONS=/absolute/path/to/staging/publications
 impact switching-backfill --config /absolute/path/to/staging/sources.json \
   --start-date 2021-01-01 --end-date 2026-11-04 \
@@ -256,3 +258,31 @@ receipt's safe state/retry time, wait until eligible, then run the same command.
 An unresolved persistent request marker remains blocked and needs separate operator
 investigation; do not clear it to bypass quota safety. Keep operational receipts
 private. No schedule, production ingest or deployment is required by this workflow.
+
+
+## Release and monitor checks
+
+The standard-library monitor reads the compact study summary and fingerprinted
+schemas through the existing content-addressed index. It checks the study
+identity, definition fingerprint, publication generation, selected counts, source
+identities and declared part descriptors within the existing 20,000,000-byte
+budget. Explicit incomplete or unknown coverage is healthy data. Older indexes
+without the study report `switching_availability: unavailable`.
+
+Ordinary monitoring does not download `switching-comparison.json`, the full
+snapshot, compressed history or study detail parts. Detail bytes are verified
+when the native/browser readers load them. Use `checks/public_health.py ORIGIN
+--verify-archive` only for an explicit compressed-archive check. The manifest's
+descriptors are checked without claiming unloaded detail bytes were verified.
+Public CVSS metrics pass a closed-field monitor allowlist; private notes or added
+metric fields fail the check. These gates do not independently rescore CVSS.
+
+The unreleased evidence contract also records `reviewed_source_sections`
+remediation bindings for Arista advisory 0100. The existing core parser checks the
+reviewed section hashes; the bridge requires the exact affected EOS branch,
+CVE-specific fixed EOS branch, source identity and locators. The retained fixed
+claim and affected claim must agree on revision and publisher identity. This
+records the explicit OS-family remediation publication, without deriving model
+applicability, product IDs, an availability date or installed software state.
+A fixed-only statement still cannot establish affectedness. Python and browser
+contract checks reject mismatched source, CVE, product or revision links.

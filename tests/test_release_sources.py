@@ -132,3 +132,34 @@ def test_public_default_kev_configuration_and_resources_match():
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_distribution_checks_switching_assets_against_installed_wheel():
+    from checks import distribution
+
+    root = Path(__file__).resolve().parent.parent
+    assert hasattr(distribution, "public_resource_fingerprints"), (
+        "Missing switching wheel resource gate"
+    )
+    resources = distribution.public_resource_fingerprints(root)
+    required = [
+        "web/switching-contracts.js",
+        "web/switching.js",
+        "web/switching-view.js",
+        "resources/switching-study.json",
+        "resources/switching-source-bindings.json",
+        "resources/switching-extraction-review.json",
+        "migrations/011_switching_collection.sql",
+        "schemas/switching-study-v1.json",
+        "schemas/switching-evidence-v1.json",
+        "schemas/switching-comparison-v1.json",
+        "schemas/switching-summary-v1.json",
+        "schemas/switching-inputs-v1.json",
+    ]
+    import hashlib
+
+    for name in required:
+        assert (
+            resources[name]
+            == hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
+        )
