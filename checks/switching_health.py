@@ -169,7 +169,15 @@ def validate_switching_report(report, publication, generated_at, schemas):
     assert selection["requested_vendor"] is None and selection["requested_cve_ids"] is None
     assert selection["scope_level"] == "os_family" and selection["requested_window"] == "all"
     assert selection["effective_vendors"] == ["cisco", "aruba", "arista"]
-    assert [r["row_id"] for r in report["rows"]] == selection["effective_windows"]
+    if report["availability"] == "unavailable":
+        assert not report["rows"] and not report["sources"], "Unavailable study has observations"
+        assert not selection["effective_windows"] and not selection["effective_cve_ids"]
+        return
+    expected_rows = [v + ":os_family:all" for v in selection["effective_vendors"]]
+    assert [r["row_id"] for r in report["rows"]] == selection["effective_windows"] == expected_rows
+    assert selection["effective_cve_ids"] == sorted(
+        {cid for row in report["rows"] for cid in row["cve_ids"]}
+    ), "Invalid switching effective CVE union"
     for source in report["sources"]:
         host = uri(source["source_url"]).hostname
         assert any(
@@ -203,6 +211,17 @@ def validate_switching_report(report, publication, generated_at, schemas):
         assert set(row["affected_cve_ids"]) <= set(row["cve_ids"])
         assert set(row["conditional_cve_ids"]) <= set(row["affected_cve_ids"])
         assert set(row["affected_advisory_ids"]) <= set(row["advisory_ids"])
+        for counter in (
+            "draft_advisories",
+            "fixed_only_claims",
+            "planned_fix_claims",
+            "workaround_claims",
+            "model_unresolved_claims",
+        ):
+            assert counts[counter] <= counts["claims"], "Switching claim counter exceeds claims"
+        assert counts["conditionality_unclassified_cves"] <= counts["affected_cves"], (
+            "Unclassified conditionality exceeds affected CVEs"
+        )
         assert row["event_ids"] == [e["event_id"] for e in row["events"]]
         assert counts["bundled_events"] == sum(e["kind"] == "bundle" for e in row["events"])
         assert counts["unbundled_publications"] == sum(
@@ -210,12 +229,25 @@ def validate_switching_report(report, publication, generated_at, schemas):
         )
         for facet in row["severity"]:
             assert facet["count"] == len(facet["cve_ids"])
+            assert set(facet["cve_ids"]) <= set(row["affected_cve_ids"])
+        for facet in row["vendor_severity"]:
+            assert facet["count"] == len(facet["advisory_ids"])
+            assert set(facet["advisory_ids"]) <= set(row["advisory_ids"])
         for bucket in row["status_buckets"]:
             assert bucket["count"] == len(bucket["cve_ids"])
+            assert set(bucket["cve_ids"]) <= set(row["cve_ids"])
+            assert set(bucket["claim_ids"]) <= set(row["claim_ids"])
         kev = row["kev"]
         assert kev["listed_count"] == len(kev["listed_cve_ids"])
         assert kev["unknown_count"] == len(kev["unknown_cve_ids"])
         assert kev["denominator"] == counts["affected_cves"]
+        listed, unknown = set(kev["listed_cve_ids"]), set(kev["unknown_cve_ids"])
+        affected = set(row["affected_cve_ids"])
+        assert listed <= affected and unknown <= affected and not listed & unknown
+        if kev["availability"] == "available":
+            assert not unknown, "Available KEV cannot have unknown membership"
+        else:
+            assert not listed and unknown == affected, "Unavailable KEV must be entirely unknown"
         for source in row["coverage"]["sources"]:
             assert source["vendor"] == row["vendor"], "Mixed coverage vendors"
             domains = {

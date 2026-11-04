@@ -201,3 +201,188 @@ def test_monitor_rejects_foreign_vendor_coverage_source():
     source["source_url"] = "https://www.cisco.com/security/synthetic"
     with pytest.raises(AssertionError):
         validate(report)
+
+
+def mutate_summary(report, mutation):
+    row = report["rows"][2]
+    counts, kev = row["counts"], row["kev"]
+    foreign = "CVE-2099-99999"
+    if mutation == "missing_rows":
+        report["rows"] = []
+        report["selection"]["effective_windows"] = []
+    elif mutation == "missing_vendor":
+        report["rows"].pop(0)
+        report["selection"]["effective_windows"].pop(0)
+    elif mutation == "effective_cves":
+        report["selection"]["effective_cve_ids"] = []
+    elif mutation in {
+        "model_unresolved_claims",
+        "fixed_only_claims",
+        "planned_fix_claims",
+        "workaround_claims",
+        "draft_advisories",
+    }:
+        counts[mutation] = counts["claims"] + 100
+    elif mutation == "conditionality_unclassified_cves":
+        counts[mutation] = counts["affected_cves"] + 100
+    elif mutation.startswith("vendor_severity"):
+        row["vendor_severity"] = [
+            dict(
+                rating="High",
+                scheme=None,
+                namespace=None,
+                scope="advisory",
+                advisory_ids=[row["advisory_ids"][0]],
+                count=1,
+            )
+        ]
+        if mutation == "vendor_severity_count":
+            row["vendor_severity"][0]["count"] = 2
+        else:
+            row["vendor_severity"][0]["advisory_ids"] = ["unrelated-advisory"]
+    elif mutation == "severity_subset":
+        row["severity"][0]["cve_ids"] = [foreign]
+        row["severity"][0]["count"] = 1
+    elif mutation == "status_cve_subset":
+        row["status_buckets"][0]["cve_ids"] = [foreign]
+    elif mutation == "status_claim_subset":
+        row["status_buckets"][0]["claim_ids"] = ["f" * 64]
+    elif mutation == "kev_foreign_listed":
+        kev.update(
+            availability="available",
+            listed_cve_ids=[foreign],
+            listed_count=1,
+            unknown_cve_ids=[],
+            unknown_count=0,
+        )
+    elif mutation == "kev_foreign_unknown":
+        kev["unknown_cve_ids"][0] = foreign
+    elif mutation == "kev_overlap":
+        kev["listed_cve_ids"] = kev["unknown_cve_ids"][:1]
+        kev["listed_count"] = 1
+    elif mutation == "kev_available_unknown":
+        kev["availability"] = "available"
+    elif mutation == "kev_unavailable_listed":
+        kev["listed_cve_ids"] = kev["unknown_cve_ids"][:1]
+        kev["listed_count"] = 1
+        kev["unknown_cve_ids"].pop(0)
+        kev["unknown_count"] -= 1
+    elif mutation == "kev_incomplete_unknown":
+        kev["unknown_cve_ids"].pop(0)
+        kev["unknown_count"] -= 1
+    else:
+        raise AssertionError("Unknown test mutation")
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing_rows",
+        "missing_vendor",
+        "effective_cves",
+        "model_unresolved_claims",
+        "fixed_only_claims",
+        "planned_fix_claims",
+        "workaround_claims",
+        "draft_advisories",
+        "conditionality_unclassified_cves",
+        "vendor_severity_count",
+        "vendor_severity_subset",
+        "severity_subset",
+        "status_cve_subset",
+        "status_claim_subset",
+        "kev_foreign_listed",
+        "kev_foreign_unknown",
+        "kev_overlap",
+        "kev_available_unknown",
+        "kev_unavailable_listed",
+        "kev_incomplete_unknown",
+    ],
+)
+def test_compact_summary_rejects_impossible_selection_and_local_counts(mutation):
+    report = summary(copy.deepcopy(FIXTURE["comparison_base_report"]))
+    validate(report)
+    mutate_summary(report, mutation)
+    with pytest.raises(AssertionError):
+        validate(report)
+
+
+def test_unavailable_summary_requires_empty_observations():
+    report = summary(copy.deepcopy(FIXTURE["comparison_base_report"]))
+    report.update(availability="unavailable", rows=[], sources=[])
+    report["selection"].update(effective_windows=[], effective_cve_ids=[])
+    validate(report)
+    report["selection"]["effective_cve_ids"] = ["CVE-2099-99999"]
+    with pytest.raises(AssertionError):
+        validate(report)
+
+
+@pytest.mark.parametrize(
+    "availability",
+    [
+        "available",
+        "missing",
+        "disabled",
+        "failed",
+        "stale",
+        "future",
+        "not_configured",
+    ],
+)
+def test_kev_available_membership_and_unavailable_unknowns_are_valid(availability):
+    report = summary(copy.deepcopy(FIXTURE["comparison_base_report"]))
+    row = report["rows"][2]
+    row["kev"]["availability"] = availability
+    if availability == "available":
+        row["kev"].update(
+            listed_cve_ids=row["affected_cve_ids"][:1],
+            listed_count=1,
+            unknown_cve_ids=[],
+            unknown_count=0,
+        )
+    validate(report)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing_rows",
+        "effective_cves",
+        "model_unresolved_claims",
+        "conditionality_unclassified_cves",
+        "kev_foreign_listed",
+    ],
+)
+def test_monitor_rejects_internally_invalid_rehashed_summary(tmp_path, monkeypatch, mutation):
+    generation = publish(dataset(), tmp_path)
+    index_path = generation / "data/index.json"
+    index = json.loads(index_path.read_text())
+    envelope = json.loads((generation / index["switching"]["summary"]["path"]).read_text())
+    original = envelope["data"]
+    report = summary(copy.deepcopy(FIXTURE["comparison_base_report"]))
+    for key in ("publication", "generated_at", "evaluated_at"):
+        report[key] = original[key]
+
+    def replace_summary():
+        envelope["data"] = report
+        raw = json.dumps(envelope).encode()
+        digest = hashlib.sha256(raw).hexdigest()
+        name = "data/" + digest + ".json"
+        (generation / name).write_bytes(raw)
+        index["switching"]["summary"] = dict(path=name, sha256=digest, bytes=len(raw))
+        index_path.write_text(json.dumps(index))
+        path = generation / "manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["sha256"][name] = digest
+        manifest["sha256"]["data/index.json"] = hashlib.sha256(index_path.read_bytes()).hexdigest()
+        path.write_text(json.dumps(manifest))
+
+    replace_summary()
+    requests = serve(monkeypatch, generation)
+    assert health.check("https://example.test")["switching_availability"] == "available"
+    mutate_summary(report, mutation)
+    replace_summary()
+    with pytest.raises(AssertionError):
+        health.check("https://example.test")
+    assert index["switching"]["inputs"]["path"] not in requests
+    assert not {"snapshot.json", "snapshot.json.gz", "switching-evidence.json"} & set(requests)
