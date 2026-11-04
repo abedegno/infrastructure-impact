@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0 research preview — 2026-11-04
+
+- Add a separate campus/branch switching disclosure study for Cisco IOS XE, Aruba AOS-CX and Arista EOS, with explicit OS-family and model-qualified scopes, independent vendor/period controls and generation-bound JSON/CSV exports.
+- Add opt-in, bounded and resumable Cisco OpenVuln OAuth collection, retained Aruba/Arista archive enumeration and per-source coverage/error manifests. Credentials, hosted backfill and runtime activation remain separate operator actions.
+- Preserve source-linked platforms, versions, conditions, publisher identifiers, explicit bundles and remediation-publication events without automatic model/version matching or inferred fix dates.
+- Retain vendor-reported CVSS, separate advisory severity, official CVE/NVD fallback and full-study KEV status with explicit missingness and provider provenance. Reported scores are structurally checked, not independently rescored.
+- Validate study evidence and derived results consistently in Python and static delivery, including deterministic numeric claim fingerprints, source attribution and model/bundle/remediation scope. Unusable study dates remain unknown without blocking supported advisory-v2 publications.
+- Cache owned immutable study inputs and load detail in bounded pages. Real staged repeated selections improved from about nine seconds to tens of milliseconds; initial complete-study loading remains substantial.
+- Package strict study schemas/resources and extend compact monitoring, external-plugin and clean-export verification. Document actual partial backfill, drafts, unresolved models and automated validation separately from pending human review.
+- Verify example vendor plugin 0.1.8 against the 0.9 release and extend its declared compatibility through the 0.9 series. Keep advisory schema v2, frozen studies, default sources, schedules, permissions and hosted runtime pin unchanged.
+
 ## 0.8.0 research preview — 2026-11-03
 
 - Add retained CISA Known Exploited Vulnerabilities enrichment from CISA's official mirror, with bounded strict parsing, source provenance, last-good revisions and verified-check freshness.
