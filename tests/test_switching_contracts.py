@@ -32,17 +32,16 @@ def reidentify(report):
 
 
 def comparison():
-    return dict(
-        schema_version=1,
-        publication=None,
-        generated_at="2026-11-04T10:00:00Z",
-        evaluated_at="2026-11-04T10:00:00Z",
+    from infrastructure_impact.application import kev, switching_comparison
+
+    sample = evidence()
+    return switching_comparison.build_report(
+        sample,
+        kev.build_report({}, [], publication=None, generated_at=sample["generated_at"]),
         definition=contracts().definition(),
-        selection={},
-        rows=[],
-        sources=[],
-        issues=[],
-        method="Descriptive evidence only.",
+        publication=None,
+        generated_at=sample["generated_at"],
+        observation_end="2026-11-04",
     )
 
 
@@ -176,7 +175,7 @@ def test_claim_ids_detect_changes_and_duplicates():
         ("evaluated_at", "2026-02-30"),
     ],
 )
-def test_comparison_reserves_strict_future_shapes(field, value):
+def test_comparison_rejects_invalid_strict_shapes(field, value):
     report = comparison()
     report[field] = value
     with pytest.raises(ValidationError):
@@ -191,6 +190,9 @@ def test_enclosing_publication_identity_must_match_when_supplied():
     ]:
         report = builder()
         report["publication"] = identity
+        if "inputs" in report:
+            report["inputs"]["evidence"]["publication"] = identity
+            report["inputs"]["kev"]["publication"] = identity
         validate(report, publication=identity, generated_at=report["generated_at"])
         for wrong in [None, dict(id="d" * 32, advisory_schema_version=2)]:
             with pytest.raises(ValueError):

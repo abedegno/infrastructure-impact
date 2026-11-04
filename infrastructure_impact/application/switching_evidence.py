@@ -17,7 +17,12 @@ from referencing import Registry, Resource
 from ..source_policy import allowed
 from .eligibility import timestamp
 
-_SCHEMAS = ("switching-study-v1.json", "switching-evidence-v1.json", "switching-comparison-v1.json")
+_SCHEMAS = (
+    "switching-study-v1.json",
+    "switching-evidence-v1.json",
+    "switching-comparison-v1.json",
+    "kev-v1.json",
+)
 _UNSET = object()
 
 
@@ -60,6 +65,7 @@ def _validators():
         )
         for name in _SCHEMAS
     }
+    schemas["kev-v1.json"]["$id"] = "urn:infrastructure-impact:kev:1"
     registry = Registry().with_resources(
         (schema["$id"], Resource.from_contents(schema)) for schema in schemas.values()
     )
@@ -322,6 +328,12 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
                 raise ValueError("Unresolved score scope requires an issue code")
     for coverage in report["coverage"]:
         _official(coverage["source_url"], coverage["vendor"])
+        enumeration = coverage.get("enumeration")
+        if enumeration is not None:
+            if enumeration["definition_sha256"] != report["definition_sha256"]:
+                raise ValueError("Enumeration must use the same study definition")
+            if enumeration["window"]["start_date"] > enumeration["window"]["end_date"]:
+                raise ValueError("Enumeration window end precedes start")
         _missing(coverage["issues"], coverage["total"], "publisher_total_unknown")
         _missing(coverage["issues"], coverage["observed_start"], "observation_start_unknown")
         _missing(coverage["issues"], coverage["observed_end"], "observation_end_unknown")
@@ -334,14 +346,20 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
 
 
 def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET) -> None:
-    """Validate the envelope; Task 6 will extend the closed row/selection shapes."""
+    """Validate strict descriptive rows and recompute derived identities/counts."""
     _validate(report, "switching-comparison-v1.json")
     _publication(report, publication, generated_at)
     _validate_definition(report["definition"])
+    from .switching_comparison import validate_semantics
+
+    validate_semantics(report)
     for source in report["sources"]:
         # Comparison sources can contain any of the registered study vendors.
         if not any(allowed(source["source_url"], v) for v in ("cisco", "aruba", "arista")):
-            _official(source["source_url"])
+            try:
+                _official(source["source_url"])
+            except ValueError:
+                _official(source["source_url"], reference=True)
 
 
 def _latest_retained_source(db, vendor, url):

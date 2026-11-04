@@ -82,6 +82,10 @@ def main(argv=None):
         "evaluate", help="Evaluate primary-source-reviewed benchmark expectations"
     )
     evaluation.add_argument("--fail-on-disagreement", action="store_true")
+    switching_validation = sub.add_parser(
+        "switching-validation", help="Separate switching source review and blind packet"
+    )
+    switching_validation.add_argument("--packet", action="store_true")
     validation = sub.add_parser(
         "validation",
         help="Evaluate pinned source-led checks or emit a blind independent-review packet",
@@ -130,6 +134,21 @@ def main(argv=None):
                 indent=2,
             )
         )
+    elif args.command == "switching-validation":
+        from .application import switching_validation
+        from .application.source_scope import retained_scopes
+        from .storage.repository import latest
+
+        with closing(connect(read_only=True)) as db:
+            records = latest(db)
+            result = (
+                switching_validation.packet(records)
+                if args.packet
+                else switching_validation.report(
+                    records, retained_scopes(db, records, switching_validation.definition())
+                )
+            )
+        print(json.dumps(result, indent=2))
     elif args.command == "validation":
         from .application.extraction_validation import definition as review_definition
         from .application.extraction_validation import review_packet, validation_report
