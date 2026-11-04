@@ -55,6 +55,15 @@ def main(argv=None):
     archive.add_argument("--document-limit", type=int)
     archive.add_argument("--refresh-pages", action="store_true")
     archive.add_argument("--retry-errors", action="store_true")
+    switching = sub.add_parser(
+        "switching-backfill", help="Resume staging switching discovery without publication"
+    )
+    switching.add_argument("--config", type=Path, required=True)
+    switching.add_argument("--vendor", choices=("cisco", "aruba", "arista"))
+    switching.add_argument("--start-date", required=True)
+    switching.add_argument("--end-date", required=True)
+    switching.add_argument("--page-limit", type=int, default=2)
+    switching.add_argument("--document-limit", type=int, default=8)
     triage = sub.add_parser(
         "triage", help="Group a bounded pending/error archive sample by layout and parser outcome"
     )
@@ -267,6 +276,33 @@ def main(argv=None):
         print(json.dumps(dict(imported=result[0], failed=result[1])))
         if result[1]:
             raise SystemExit(1)
+    elif args.command == "switching-backfill":
+        import os
+
+        from .collection.config import load_config
+        from .collection.switching_backfill import run as switching_run
+        from .storage.locking import writer_lock
+
+        if not os.environ.get("IMPACT_DATABASE"):
+            parser.error("Set IMPACT_DATABASE to an explicit staging vault")
+        config = load_config(args.config)
+        with writer_lock() as acquired:
+            if not acquired:
+                parser.error("Another collector holds the writer lock")
+            with closing(connect()) as db:
+                try:
+                    receipt = switching_run(
+                        db,
+                        config,
+                        vendor=args.vendor,
+                        start_date=args.start_date,
+                        end_date=args.end_date,
+                        page_limit=args.page_limit,
+                        document_limit=args.document_limit,
+                    )
+                except ValueError:
+                    parser.error("Invalid switching source, date or budget")
+        print(json.dumps(receipt, indent=2))
     elif args.command == "triage":
         from .collection.triage import review_batch
         from .worker import writer_lock
