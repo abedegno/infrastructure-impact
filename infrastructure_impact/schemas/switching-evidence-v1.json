@@ -259,6 +259,18 @@
             "source"
           ],
           "description": "Explicit reviewed same-source table-row scope; claim and remediation must share source identity and CVE, with the remediation locator at the claim row or a cell below it. Does not establish an availability date."
+        },
+        "availability": {
+          "enum": [
+            "vendor_reports_fixed",
+            "planned",
+            "partial_mitigation",
+            "unavailable",
+            "no_fix_planned",
+            "not_a_fix",
+            "unknown"
+          ],
+          "description": "Source-led classification separate from literal published_availability. Absent means unknown; never derive an availability date."
         }
       },
       "required": [
@@ -649,6 +661,9 @@
                   "type": "null"
                 }
               ]
+            },
+            "source": {
+              "$ref": "#/$defs/source"
             }
           },
           "required": [
@@ -805,6 +820,13 @@
           "items": {
             "$ref": "#/$defs/vendor_severity"
           }
+        },
+        "conditional_affected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "True only for an explicit reviewed prerequisite; false only for an explicit unrestricted publisher statement; null or absent is unclassified."
         }
       },
       "required": [

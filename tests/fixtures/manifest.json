@@ -118,5 +118,15 @@
     "file": "pan-oss.html",
     "kind": "synthetic",
     "sha256": "7c83204e20e75672b44473e27d907f5161b59f25628ef6ee1d63b211c78e1480"
+  },
+  {
+    "file": "switching-arista-bridge.json",
+    "kind": "synthetic",
+    "sha256": "76343b3366ad75ded2419c77c5eea5ca2ab0f201e18f580ead5b61da2f67ac9a"
+  },
+  {
+    "file": "switching-cases.json",
+    "kind": "synthetic",
+    "sha256": "02ca4019c8393101716791843768d2803ecd85953723e551a8f4532ee9723c65"
   }
 ]

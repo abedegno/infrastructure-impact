@@ -8,8 +8,10 @@ The caller adds retained retrieval time and normalized revision, never this hook
 import copy
 import hashlib
 import json
+import re
 from importlib.resources import files
 
+from .common import HTML, availability, iso_date
 from .standards import csaf_products
 
 FAMILIES = {
@@ -100,6 +102,21 @@ def _models(vendor):
                 result["Cisco Catalyst " + model] = model
                 result["Catalyst " + model] = model
     return result
+
+
+def _availability(details, category, published_date, as_of):
+    if not details:
+        return "unknown"
+    state = availability(details, category, published_date, as_of=as_of)
+    if state == "vendor_reports_fixed":
+        # A link, version token or generic reference alone is not an available fix.
+        if re.search(r"\b(?:not|not yet) (?:available|released|fixed)\b", details, re.I):
+            return "unavailable"
+        if not re.search(
+            r"\b(?:released|fixed|resolved|available|can be downloaded)\b", details, re.I
+        ):
+            return "unknown"
+    return state
 
 
 def _csaf(raw, url, vendor, document, digest):
@@ -232,6 +249,15 @@ def _csaf(raw, url, vendor, document, digest):
                         product_ids=sorted(set(ids)),
                         version_expressions=[],
                         published_availability=details,
+                        availability=_availability(
+                            details,
+                            rem.get("category", "unknown"),
+                            rem.get("date"),
+                            as_of=tracking.get("current_release_date")
+                            or tracking.get("initial_release_date"),
+                        )
+                        if details
+                        else "unknown",
                         availability_date=rem.get("date"),
                         source=_source(url, digest, f"/vulnerabilities/{vi}/remediations/{ri}"),
                     )
@@ -243,6 +269,125 @@ def _csaf(raw, url, vendor, document, digest):
         bundles=[],
         issues=[] if claims else ["product_scope_unresolved"],
     )
+
+
+def _arista_reviewed(raw, url, document, digest):
+    """Bridge only reviewed routes, re-reading bytes through the core adapters.
+
+    Shared platform prose is never attached to another assessment. Slash labels
+    remain literal unresolved platforms, even when they contain a target token.
+    """
+    from ..plugins.arista import parse
+
+    routes = {
+        "19905-security-advisory-0101": "Arista reviewed applicability boundaries HTML",
+        "19222-security-advisory-0095": "Arista reviewed applicability boundaries HTML",
+        "19904-security-advisory-0100": "Arista affected software HTML",
+        "11996-security-advisory-56": "Arista reviewed older product/model HTML",
+    }
+    slug = document["advisory_id"]
+    if (
+        slug not in routes
+        or document.get("source_format") != routes[slug]
+        or url != "https://www.arista.com/en/support/advisories-notices/security-advisory/" + slug
+    ):
+        return None
+    parsed = parse(raw, url, "arista")
+    if parsed["source_format"] != routes[slug] or parsed["advisory_id"] != slug:
+        raise ValueError("Reviewed Arista identity changed")
+    tree = HTML(raw).root
+    labels = [
+        " ".join(" ".join(c for c in n.children if isinstance(c, str)).split())
+        for n in tree.find({"h2"})
+        if n.text().startswith("Security Advisory ")
+    ]
+    labels = [label for label in labels if re.fullmatch(r"Security Advisory [0-9]+", label)]
+    tables = [
+        t
+        for t in tree.find({"table"})
+        if any(
+            [c.text() for c in row.find({"th", "td"})] == ["Revision", "Date", "Changes"]
+            for row in t.find({"tr"})
+        )
+    ]
+    if len(labels) != 1 or len(tables) != 1:
+        raise ValueError("Reviewed Arista publisher identity/history changed")
+    history = [[c.text() for c in row.find({"th", "td"})] for row in tables[0].find({"tr"})][1:]
+    if not history or any(len(row) != 3 or not row[0] for row in history):
+        raise ValueError("Reviewed Arista revision rows changed")
+    dates = [iso_date(row[1]) for row in history]
+    if dates != sorted(dates) or dates[0] != parsed["published_at"]:
+        raise ValueError("Reviewed Arista revision chronology changed")
+    publisher = dict(
+        id=labels[0],
+        sequence=history[-1][0],
+        status=None,
+        source=_source(
+            url,
+            digest,
+            "h2 direct text; table[Revision, Date, Changes]/tr[" + str(len(history)) + "]",
+        ),
+    )
+    claims = []
+    for assessment in parsed["assessments"]:
+        source = _source(url, digest, assessment["evidence_locator"])
+        claim = _claim(
+            "arista",
+            parsed,
+            source,
+            publisher.copy(),
+            parsed["published_at"],
+            dates[-1] if len(dates) > 1 else None,
+        )
+        claim.update(
+            cve_id=assessment["cve_id"],
+            product_id=assessment.get("product_id"),
+            product=assessment["product"],
+            status=assessment["status"],
+            scope=assessment["scope"],
+        )
+        if assessment["product"] in {"Arista EOS", "EOS release (source platform scope applies)"}:
+            claim["family"] = "arista-eos"
+        claim["version_expressions"] = [
+            v["expression"] for v in assessment["versions"] if v.get("expression")
+        ]
+        claim["conditions"] = [
+            text
+            for e in assessment.get("exposure", [])
+            if (text := _bounded(e.get("details"), claim["issues"]))
+        ]
+        if slug == "19905-security-advisory-0101" and claim["status"] == "affected":
+            claim["conditional_affected"] = True
+        claim["named_platforms"] = assessment.get("platforms", [])
+        claim["platform_bindings"] = [
+            dict(platform=p, model=None, basis="unresolved", source=source.copy())
+            for p in claim["named_platforms"]
+        ]
+        for rem in assessment["remediations"]:
+            statement = (
+                (assessment["cve_id"] + " has been fixed in the following product releases:")
+                if slug == "19904-security-advisory-0100"
+                else rem.get("details")
+            )
+            if statement not in HTML(raw).root.text():
+                raise ValueError("Reviewed Arista fixed-release statement changed")
+            claim["remediations"].append(
+                dict(
+                    publisher_id=None,
+                    category=rem["category"],
+                    details=rem.get("details"),
+                    product_ids=[claim["product_id"]] if claim["product_id"] else [],
+                    version_expressions=[],
+                    published_availability=statement,
+                    availability=rem.get("availability", "unknown"),
+                    availability_date=None,
+                    source=_source(
+                        url, digest, rem.get("source_locator", assessment["evidence_locator"])
+                    ),
+                )
+            )
+        claims.append(claim)
+    return dict(schema_version=1, claims=claims, bundles=[], issues=[])
 
 
 def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
@@ -262,6 +407,10 @@ def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
         data = json.loads(raw)
         if "document" in data:
             return _csaf(raw, url, vendor, document, digest)
+    if entry is None and vendor == "arista":
+        bridged = _arista_reviewed(raw, url, document, digest)
+        if bridged is not None:
+            return bridged
     if entry is None:
         return dict(
             schema_version=1,

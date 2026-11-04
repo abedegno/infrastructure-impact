@@ -585,3 +585,109 @@ def test_resolved_threat_groups_and_unscoped_threats_keep_their_scope(scope, app
     c = report(d)["claims"][0]
     assert ("Scoped condition" in c["conditions"]) is applies
     assert "threat_product_scope_unresolved" not in c["issues"]
+
+
+@pytest.mark.parametrize("index", range(4))
+def test_synthetic_arista_bridge_preserves_reviewed_adapter_boundary(index, monkeypatch):
+    from pathlib import Path
+
+    from infrastructure_impact.adapters.switching import extract
+    from infrastructure_impact.plugins import arista
+
+    case = json.loads(
+        (Path(__file__).parent / "fixtures/switching-arista-bridge.json").read_text()
+    )[index]
+    assert case["kind"] == "synthetic"
+    raw = case["raw"].encode()
+    slug = case["slug"]
+    url = "https://www.arista.com/en/support/advisories-notices/security-advisory/" + slug
+    document = copy.deepcopy(case["document"])
+    calls = []
+
+    def reviewed_parser(actual_raw, actual_url, vendor):
+        # This explicitly stubs the already-reviewed core normalizer contract.
+        # It does not assert that synthetic bytes are a real supported advisory.
+        assert (actual_raw, actual_url, vendor) == (raw, url, "arista")
+        calls.append(vendor)
+        return copy.deepcopy(case["document"])
+
+    monkeypatch.setattr(arista, "parse", reviewed_parser)
+    document["assessments"] = []  # Caller assessments cannot replace the core re-read.
+    result = extract(raw, url, "arista", document)
+    assert calls == ["arista"] and result["claims"]
+    publisher = result["claims"][0]["publisher"]
+    number = {"11996-security-advisory-56": "0056"}.get(slug, slug.rsplit("-", 1)[-1])
+    assert publisher["id"] == "Security Advisory " + number
+    assert publisher["sequence"] == {"0100": "1.5", "0101": "1.1"}.get(number, "1.0")
+    assert publisher["status"] is None
+    assert "Revision" in publisher["source"]["source_locator"]
+    assert all(c["source"]["source_sha256"] == sha256(raw).hexdigest() for c in result["claims"])
+    assert all(c["scope_level"] == "os_family" for c in result["claims"])
+    assert all(c["bundle"] is None for c in result["claims"])
+    if number == "0101":
+        eos = next(c for c in result["claims"] if c["family"] == "arista-eos")
+        assert eos["conditions"] and "720XP/722XPM Series" in eos["named_platforms"]
+        assert eos["conditional_affected"] is True
+        assert all(b["basis"] == "unresolved" for b in eos["platform_bindings"])
+    if number == "0100":
+        affected = [c for c in result["claims"] if c["status"] == "affected" and c["family"]]
+        assert len(affected) == 2
+        assert all(not c["named_platforms"] and not c["remediations"] for c in affected)
+        assert len([c for c in result["claims"] if c["status"] == "fixed"]) == 2
+    if number == "0056":
+        assert all(c["initial_published_at"].startswith("2020") for c in result["claims"])
+    document["source_format"] = "generic HTML"
+    assert extract(raw, url, "arista", document)["claims"] == []
+    assert calls == ["arista"]
+
+
+def test_synthetic_html_cannot_bypass_the_real_reviewed_core_parser():
+    from pathlib import Path
+
+    from infrastructure_impact.adapters.switching import extract
+
+    case = json.loads(
+        (Path(__file__).parent / "fixtures/switching-arista-bridge.json").read_text()
+    )[1]
+    with pytest.raises(ValueError):
+        extract(
+            case["raw"].encode(),
+            "https://www.arista.com/en/support/advisories-notices/security-advisory/"
+            + case["slug"],
+            "arista",
+            case["document"],
+        )
+
+
+@pytest.mark.parametrize(
+    "details,category,date,expected",
+    [
+        ("Vendor has released software updates.", "vendor_fix", None, "vendor_reports_fixed"),
+        ("Update scheduled for a future release.", "vendor_fix", None, "planned"),
+        ("Vendor update", "vendor_fix", "2027-01-01", "planned"),
+        ("Partial mitigation only", "vendor_fix", None, "partial_mitigation"),
+        ("Restrict SSH access", "workaround", None, "not_a_fix"),
+        (None, "vendor_fix", None, "unknown"),
+    ],
+)
+def test_switching_remediation_availability_is_typed_without_losing_literal(
+    details, category, date, expected
+):
+    d = tree()
+    pid = d["vulnerabilities"][0]["product_status"]["known_affected"][0]
+    d["vulnerabilities"][0]["remediations"] = [
+        dict(
+            category=category,
+            details=details,
+            product_ids=[pid],
+            **({"date": date} if date else {}),
+        )
+    ]
+    from infrastructure_impact.adapters.switching import extract as switching_extract
+
+    c = switching_extract(
+        json.dumps(d).encode(), URL, "aruba", {"advisory_id": d["document"]["tracking"]["id"]}
+    )["claims"][0]
+    assert c["remediations"][0]["availability"] == expected
+    assert c["remediations"][0]["published_availability"] == details
+    assert c["remediations"][0]["availability_date"] == date

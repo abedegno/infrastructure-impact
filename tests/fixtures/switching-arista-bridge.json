@@ -1,0 +1,202 @@
+[
+  {
+    "kind": "synthetic",
+    "slug": "19905-security-advisory-0101",
+    "raw": "<!doctype html><html><head><title>Synthetic bridge contract</title></head><body><!-- Project-authored input. Not a captured advisory or product evidence. --><h2>Security Advisory 0101<span>PDF</span></h2><table><tr><th>Revision</th><th>Date</th><th>Changes</th></tr><tr><td>1.0</td><td>January 1, 2025</td><td>Initial synthetic revision</td></tr><tr><td>1.1</td><td>February 1, 2025</td><td>Synthetic update</td></tr></table></body></html>",
+    "document": {
+      "advisory_id": "19905-security-advisory-0101",
+      "source_format": "Arista reviewed applicability boundaries HTML",
+      "published_at": "2025-01-01",
+      "updated_at": null,
+      "assessments": [
+        {
+          "cve_id": "CVE-2025-12345",
+          "product_id": "synthetic-eos",
+          "product": "Arista EOS",
+          "status": "affected",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic affected branch",
+          "versions": [
+            {
+              "expression": "synthetic range"
+            }
+          ],
+          "exposure": [
+            {
+              "details": "Synthetic prerequisite context; not a vendor statement"
+            }
+          ],
+          "platforms": [
+            "720XP/722XPM Series"
+          ],
+          "remediations": []
+        }
+      ]
+    }
+  },
+  {
+    "kind": "synthetic",
+    "slug": "19904-security-advisory-0100",
+    "raw": "<!doctype html><html><head><title>Synthetic bridge contract</title></head><body><!-- Project-authored input. Not a captured advisory or product evidence. --><h2>Security Advisory 0100<span>PDF</span></h2><table><tr><th>Revision</th><th>Date</th><th>Changes</th></tr><tr><td>1.0</td><td>January 1, 2025</td><td>Initial synthetic revision</td></tr><tr><td>1.5</td><td>February 1, 2025</td><td>Synthetic update</td></tr></table><p>CVE-2025-12345 has been fixed in the following product releases:</p><p>CVE-2025-12346 has been fixed in the following product releases:</p></body></html>",
+    "document": {
+      "advisory_id": "19904-security-advisory-0100",
+      "source_format": "Arista affected software HTML",
+      "published_at": "2025-01-01",
+      "updated_at": null,
+      "assessments": [
+        {
+          "cve_id": "CVE-2025-12345",
+          "product_id": "synthetic-eos",
+          "product": "Arista EOS",
+          "status": "affected",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic affected branch",
+          "versions": [
+            {
+              "expression": "synthetic range"
+            }
+          ],
+          "exposure": [
+            {
+              "details": "Synthetic prerequisite context; not a vendor statement"
+            }
+          ],
+          "platforms": [],
+          "remediations": []
+        },
+        {
+          "cve_id": "CVE-2025-12345",
+          "product_id": "synthetic-fixed",
+          "product": "Arista EOS",
+          "status": "fixed",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic fixed branch",
+          "versions": [
+            {
+              "expression": "synthetic fixed release"
+            }
+          ],
+          "exposure": [],
+          "platforms": [],
+          "remediations": [
+            {
+              "category": "vendor_fix",
+              "details": "Synthetic fix statement",
+              "availability": "vendor_reports_fixed",
+              "source_locator": "Synthetic fixed branch"
+            }
+          ]
+        },
+        {
+          "cve_id": "CVE-2025-12346",
+          "product_id": "synthetic-eos",
+          "product": "Arista EOS",
+          "status": "affected",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic affected branch",
+          "versions": [
+            {
+              "expression": "synthetic range"
+            }
+          ],
+          "exposure": [
+            {
+              "details": "Synthetic prerequisite context; not a vendor statement"
+            }
+          ],
+          "platforms": [],
+          "remediations": []
+        },
+        {
+          "cve_id": "CVE-2025-12346",
+          "product_id": "synthetic-fixed",
+          "product": "Arista EOS",
+          "status": "fixed",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic fixed branch",
+          "versions": [
+            {
+              "expression": "synthetic fixed release"
+            }
+          ],
+          "exposure": [],
+          "platforms": [],
+          "remediations": [
+            {
+              "category": "vendor_fix",
+              "details": "Synthetic fix statement",
+              "availability": "vendor_reports_fixed",
+              "source_locator": "Synthetic fixed branch"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "synthetic",
+    "slug": "19222-security-advisory-0095",
+    "raw": "<!doctype html><html><head><title>Synthetic bridge contract</title></head><body><!-- Project-authored input. Not a captured advisory or product evidence. --><h2>Security Advisory 0095<span>PDF</span></h2><table><tr><th>Revision</th><th>Date</th><th>Changes</th></tr><tr><td>1.0</td><td>January 1, 2025</td><td>Initial synthetic revision</td></tr></table></body></html>",
+    "document": {
+      "advisory_id": "19222-security-advisory-0095",
+      "source_format": "Arista reviewed applicability boundaries HTML",
+      "published_at": "2025-01-01",
+      "updated_at": null,
+      "assessments": [
+        {
+          "cve_id": "CVE-2025-12345",
+          "product_id": "synthetic-eos",
+          "product": "Arista EOS",
+          "status": "unaffected",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic affected branch",
+          "versions": [
+            {
+              "expression": "synthetic range"
+            }
+          ],
+          "exposure": [
+            {
+              "details": "Synthetic prerequisite context; not a vendor statement"
+            }
+          ],
+          "platforms": [],
+          "remediations": []
+        }
+      ]
+    }
+  },
+  {
+    "kind": "synthetic",
+    "slug": "11996-security-advisory-56",
+    "raw": "<!doctype html><html><head><title>Synthetic bridge contract</title></head><body><!-- Project-authored input. Not a captured advisory or product evidence. --><h2>Security Advisory 0056<span>PDF</span></h2><table><tr><th>Revision</th><th>Date</th><th>Changes</th></tr><tr><td>1.0</td><td>December 1, 2020</td><td>Initial synthetic revision</td></tr></table></body></html>",
+    "document": {
+      "advisory_id": "11996-security-advisory-56",
+      "source_format": "Arista reviewed older product/model HTML",
+      "published_at": "2020-12-01",
+      "updated_at": null,
+      "assessments": [
+        {
+          "cve_id": "CVE-2025-12345",
+          "product_id": "synthetic-eos",
+          "product": "Arista EOS",
+          "status": "affected",
+          "scope": "cve_specific",
+          "evidence_locator": "Synthetic affected branch",
+          "versions": [
+            {
+              "expression": "synthetic range"
+            }
+          ],
+          "exposure": [
+            {
+              "details": "Synthetic prerequisite context; not a vendor statement"
+            }
+          ],
+          "platforms": [],
+          "remediations": []
+        }
+      ]
+    }
+  }
+]

@@ -200,6 +200,14 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
             _missing(claim["issues"], claim[key], code)
         for key in ("id", "sequence", "status"):
             _missing(claim["issues"], claim["publisher"][key], f"publisher_{key}_missing")
+        if claim["publisher"].get("source") is not None:
+            publisher_source = claim["publisher"]["source"]
+            _official(publisher_source["source_url"], vendor)
+            if any(
+                publisher_source[key] != claim["source"][key]
+                for key in ("source_url", "source_sha256", "retrieved_at")
+            ):
+                raise ValueError("Publisher metadata must share the claim source identity")
         bindings = claim["platform_bindings"]
         qualified = (
             bool(bindings)

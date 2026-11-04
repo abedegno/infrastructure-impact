@@ -40,9 +40,11 @@
                 "basis": "same_source_row",
                 "cve_id": "CVE-2024-6387",
                 "source_locator": "div#vulnerableproducts tr[33]"
-              }
+              },
+              "availability": "vendor_reports_fixed"
             }
-          ]
+          ],
+          "conditional_affected": true
         }
       ]
     },
@@ -69,7 +71,8 @@
             "This vulnerability affects the following Cisco devices if they are running a vulnerable release of Cisco IOS XE Software and have DHCP snooping and endpoint analytics enabled:"
           ],
           "source_locator": "div#vulnerableproducts: first paragraph and Catalyst 9000 list item",
-          "remediations": []
+          "remediations": [],
+          "conditional_affected": true
         }
       ]
     },
