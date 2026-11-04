@@ -1,6 +1,6 @@
 # Campus/branch switching descriptive study
 
-Status: descriptive-study approach approved on 4 November 2026; written design proposed for maintainer review. No implementation or hosted configuration change is authorized by this document alone.
+Status: descriptive-study approach and written design approved on 4 November 2026. Prepare the implementation plan for review; hosted configuration changes retain the explicit authorization boundary below.
 
 ## Intent and interpretation
 
