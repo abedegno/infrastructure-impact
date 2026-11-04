@@ -21,6 +21,7 @@ class CiscoAccessError(ValueError):
             "url_rejected",
             "redirect_rejected",
             "http_error",
+            "request_state_unresolved",
         }
     )
 

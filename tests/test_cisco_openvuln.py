@@ -6,7 +6,8 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
-from threading import Barrier
+from threading import Barrier, Event, Timer
+from time import monotonic
 from urllib.error import HTTPError
 from urllib.parse import parse_qs
 
@@ -63,11 +64,12 @@ def http(status, headers=None):
 class Network:
     """Only the socket boundary is fake; redirects use the production handler."""
 
-    def __init__(self, *results, db=None):
+    def __init__(self, *results, db=None, on_api=None):
         self.results = list(results)
         self.calls = []
         self.handlers = []
         self.db = db
+        self.on_api = on_api
 
     def factory(self, handler):
         session = len(self.handlers)
@@ -84,6 +86,8 @@ class Network:
                             0
                         ] > len(network.calls)
                 network.calls.append((session, request))
+                if request.full_url == URL and network.on_api:
+                    network.on_api()
                 result = network.results.pop(0)
                 if isinstance(result, BaseException):
                     raise result
@@ -202,6 +206,147 @@ def test_5xx_and_timeout_use_persisted_exponential_backoff():
     clock.advance(2)
     assert transport.get_json(URL) == DOCUMENT
     assert len(network.calls) == 4
+
+
+@pytest.mark.parametrize(
+    "result, expected, retry_at",
+    [
+        (http(429, {"Retry-After": "120"}), "rate_limited", "2026-11-04T00:02:00+00:00"),
+        (http(503), "service_unavailable", "2026-11-04T00:00:01+00:00"),
+        (TimeoutError(SECRET + TOKEN), "network_error", "2026-11-04T00:00:01+00:00"),
+    ],
+)
+@pytest.mark.parametrize("brief_lock", [True, False])
+def test_concurrent_writer_never_drops_received_cooldown(
+    tmp_path, result, expected, retry_at, brief_lock
+):
+    path = tmp_path / "vault.db"
+    db = connect(path)
+    ready, begin, held, release = Event(), Event(), Event(), Event()
+
+    def writer():
+        connection = connect(path)
+        ready.set()
+        try:
+            assert begin.wait(3)
+            connection.execute("BEGIN IMMEDIATE")
+            held.set()
+            assert release.wait(3)
+        finally:
+            connection.rollback()
+            connection.close()
+
+    def lock_at_response():
+        begin.set()
+        assert held.wait(3)
+        if brief_lock:
+            Timer(0.05, release.set).start()
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pending_writer = pool.submit(writer)
+        assert ready.wait(3)
+        network = Network(token(), result, on_api=lock_at_response)
+        started = monotonic()
+        try:
+            error = rejected(
+                client(db, network), expected if brief_lock else "request_state_unresolved"
+            )
+            assert monotonic() - started < 1
+            assert error.__context__ is None and error.__cause__ is None
+            assert SECRET not in str(error) and TOKEN not in str(error)
+            if brief_lock:
+                assert error.retry_at == retry_at
+        finally:
+            release.set()
+        pending_writer.result(timeout=3)
+    db.close()
+    db = connect(path)
+    if brief_lock:
+        assert reserve_request(db, SERVICE, START.isoformat()) == dict(
+            allowed=False, retry_at=retry_at
+        )
+    else:
+        # Unknown completion cannot expire automatically, even once ordinary quota windows pass.
+        assert reserve_request(db, SERVICE, (START + timedelta(days=2)).isoformat()) == dict(
+            allowed=False, retry_at=None
+        )
+        reopened = Network()
+        rejected(client(db, reopened), "request_state_unresolved")
+        assert not reopened.calls
+
+
+def test_brief_reservation_contention_cannot_clear_another_callers_cooldown(tmp_path):
+    from infrastructure_impact.storage.switching import defer_request
+
+    path = tmp_path / "vault.db"
+    db = connect(path)
+    defer_request(db, SERVICE, START.isoformat(), retry_at="2026-11-04T00:02:00+00:00")
+    other = connect(path)
+    other.execute("BEGIN IMMEDIATE")
+    try:
+        assert not reserve_request(db, SERVICE, START.isoformat())["allowed"]
+    finally:
+        other.rollback()
+        other.close()
+    db.close()
+    db = connect(path)
+    assert reserve_request(db, SERVICE, START.isoformat()) == dict(
+        allowed=False, retry_at="2026-11-04T00:02:00+00:00"
+    )
+
+
+def test_completion_is_per_request_and_cannot_clear_another_cooldown():
+    from infrastructure_impact.storage.switching import (
+        complete_request,
+        defer_request,
+        pending_requests,
+    )
+
+    db = connect(":memory:")
+    reservation = reserve_request(db, SERVICE, START.isoformat(), pending=True)
+    request_id = reservation["request_id"]
+    assert pending_requests(db, SERVICE) == [
+        dict(request_id=request_id, reserved_at=START.isoformat())
+    ]
+    assert not complete_request(db, SERVICE, request_id + 1)
+    assert reserve_request(db, SERVICE, START.isoformat()) == dict(allowed=False, retry_at=None)
+    until = defer_request(db, SERVICE, START.isoformat(), retry_at="2026-11-04T00:02:00+00:00")
+    assert until == "2026-11-04T00:02:00+00:00"
+    assert complete_request(db, SERVICE, request_id)
+    assert pending_requests(db, SERVICE) == []
+    assert reserve_request(db, SERVICE, START.isoformat()) == dict(allowed=False, retry_at=until)
+
+
+def test_explicit_recovery_must_persist_cooldown_and_resolve_only_named_request():
+    from infrastructure_impact.storage.switching import defer_request, pending_requests
+
+    db = connect(":memory:")
+    request_id = reserve_request(db, SERVICE, START.isoformat(), pending=True)["request_id"]
+    assert defer_request(db, SERVICE, START.isoformat(), reservation_id=request_id + 1) is None
+    assert pending_requests(db, SERVICE)[0]["request_id"] == request_id
+    until = defer_request(
+        db,
+        SERVICE,
+        START.isoformat(),
+        retry_at="2026-11-04T00:02:00+00:00",
+        reservation_id=request_id,
+    )
+    assert pending_requests(db, SERVICE) == []
+    assert reserve_request(db, SERVICE, START.isoformat()) == dict(allowed=False, retry_at=until)
+
+
+def test_stale_completion_id_cannot_resolve_a_new_request_after_quota_pruning():
+    from infrastructure_impact.storage.switching import complete_request, pending_requests
+
+    db = connect(":memory:")
+    original = reserve_request(db, SERVICE, START.isoformat(), pending=True)["request_id"]
+    assert complete_request(db, SERVICE, original)
+    newer = reserve_request(db, SERVICE, (START + timedelta(days=2)).isoformat(), pending=True)[
+        "request_id"
+    ]
+    assert newer != original
+    assert not complete_request(db, SERVICE, original)
+    assert pending_requests(db, SERVICE)[0]["request_id"] == newer
 
 
 @pytest.mark.parametrize(
@@ -324,6 +469,39 @@ def test_an_interrupted_request_keeps_its_precommitted_reservation(tmp_path):
     db.close()
     db = connect(path)
     assert db.execute("SELECT count(*) FROM switching_requests").fetchone()[0] == 1
+    assert reserve_request(db, SERVICE, (START + timedelta(days=2)).isoformat()) == dict(
+        allowed=False, retry_at=None
+    )
+    assert db.execute("SELECT count(*) FROM switching_requests WHERE pending=1").fetchone()[0] == 1
+
+
+def test_migration_012_adopts_existing_quota_and_cooldown_without_inventing_pending(tmp_path):
+    from pathlib import Path
+
+    directory = tmp_path / "migrations"
+    directory.mkdir()
+    for file in Path("infrastructure_impact/migrations").glob("*.sql"):
+        if int(file.name.split("_", 1)[0]) < 12:
+            (directory / file.name).write_bytes(file.read_bytes())
+    db = sqlite3.connect(":memory:")
+    migrate(db, directory)
+    db.execute(
+        "INSERT INTO switching_requests(service,reserved_at) VALUES(?,?)",
+        (SERVICE, START.timestamp()),
+    )
+    db.execute(
+        "INSERT INTO switching_service_state VALUES(?,?,?)",
+        (SERVICE, (START + timedelta(seconds=120)).timestamp(), 1),
+    )
+    db.commit()
+    migrate(db)
+    assert db.execute("SELECT reserved_at,pending FROM switching_requests").fetchone() == (
+        START.timestamp(),
+        0,
+    )
+    assert reserve_request(db, SERVICE, START.isoformat()) == dict(
+        allowed=False, retry_at="2026-11-04T00:02:00+00:00"
+    )
 
 
 @pytest.mark.parametrize(
@@ -455,7 +633,7 @@ def test_migration_preserves_existing_vault_rows(tmp_path, nonempty):
     directory = tmp_path / "migrations"
     directory.mkdir()
     for file in Path("infrastructure_impact/migrations").glob("*.sql"):
-        if not file.name.startswith("011_"):
+        if int(file.name.split("_", 1)[0]) < 11:
             (directory / file.name).write_bytes(file.read_bytes())
     db = sqlite3.connect(":memory:")
     migrate(db, directory)

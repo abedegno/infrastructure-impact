@@ -41,8 +41,13 @@ def _begin(db):
         db.execute(f"PRAGMA busy_timeout={int(previous)}")
 
 
-def reserve_request(db, service: str, at: str) -> dict:
-    """Atomically reserve against rolling 1/60/86400-second request windows."""
+def reserve_request(db, service: str, at: str, *, pending=False) -> dict:
+    """Reserve quota; transport opts into a pre-I/O unresolved completion marker.
+
+    An unresolved marker blocks the service without an automatic retry time.
+    Only a committed outcome for that request ID can release it. Direct quota
+    reservations retain the original two-field result; pending ones add an ID.
+    """
     _validate_service(service)
     stamp = _timestamp(at)
     try:
@@ -50,12 +55,17 @@ def reserve_request(db, service: str, at: str) -> dict:
     except sqlite3.OperationalError:
         return dict(allowed=False, retry_at=_iso(stamp + 1))
     try:
+        if db.execute(
+            "SELECT 1 FROM switching_requests WHERE service=? AND pending=1 LIMIT 1", (service,)
+        ).fetchone():
+            db.commit()
+            return dict(allowed=False, retry_at=None)
         state = db.execute(
             "SELECT cooldown_until FROM switching_service_state WHERE service=?", (service,)
         ).fetchone()
         retry = state[0] if state else 0
         db.execute(
-            "DELETE FROM switching_requests WHERE service=? AND reserved_at<=?",
+            "DELETE FROM switching_requests WHERE service=? AND reserved_at<=? AND pending=0",
             (service, stamp - 86400),
         )
         stamps = [
@@ -71,22 +81,38 @@ def reserve_request(db, service: str, at: str) -> dict:
                 retry = max(retry, stamps[-limit] + seconds)
         allowed = retry <= stamp
         if allowed:
-            db.execute(
-                "INSERT INTO switching_requests(service,reserved_at) VALUES(?,?)", (service, stamp)
+            cursor = db.execute(
+                "INSERT INTO switching_requests(service,reserved_at,pending) VALUES(?,?,?)",
+                (service, stamp, int(pending)),
             )
         db.commit()
-        return dict(allowed=allowed, retry_at=None if allowed else _iso(retry))
+        result = dict(allowed=allowed, retry_at=None if allowed else _iso(retry))
+        if allowed and pending:
+            result["request_id"] = cursor.lastrowid
+        return result
     except BaseException:
         db.rollback()
         raise
 
 
-def defer_request(db, service, at, *, retry_at=None):
-    """Persist escalating backoff, extended by a publisher Retry-After if supplied."""
+def defer_request(db, service, at, *, retry_at=None, reservation_id=None):
+    """Persist cooldown and resolve only the named request in one transaction.
+
+    Return None if persistence fails or the named pending request is absent.
+    Its precommitted marker remains unresolved on failure, including process
+    interruption. Recovery must explicitly name the request and choose a safe
+    retry_at; callers must never automatically discard an unknown outcome.
+    """
     _validate_service(service)
     stamp = _timestamp(at)
-    _begin(db)
     try:
+        _begin(db)
+    except sqlite3.Error:
+        return None
+    try:
+        if reservation_id is not None and not _resolve(db, service, reservation_id):
+            db.rollback()
+            return None
         state = db.execute(
             "SELECT cooldown_until,failures FROM switching_service_state WHERE service=?",
             (service,),
@@ -104,9 +130,57 @@ def defer_request(db, service, at, *, retry_at=None):
         )
         db.commit()
         return _iso(until)
+    except sqlite3.Error:
+        db.rollback()
+        return None
     except BaseException:
         db.rollback()
         raise
+
+
+def _resolve(db, service, request_id):
+    return (
+        db.execute(
+            "UPDATE switching_requests SET pending=0 WHERE id=? AND service=? AND pending=1",
+            (request_id, service),
+        ).rowcount
+        == 1
+    )
+
+
+def complete_request(db, service, request_id):
+    """Resolve a known non-backoff outcome without touching any cooldown.
+
+    This is for the owner of a completed request, not timed crash recovery.
+    False leaves the durable marker intact; the transport must fail closed.
+    """
+    _validate_service(service)
+    try:
+        _begin(db)
+    except sqlite3.Error:
+        return False
+    try:
+        resolved = _resolve(db, service, request_id)
+        db.commit()
+        return resolved
+    except sqlite3.Error:
+        db.rollback()
+        return False
+    except BaseException:
+        db.rollback()
+        raise
+
+
+def pending_requests(db, service):
+    """Operational IDs/times for explicit recovery; never URLs or response data."""
+    _validate_service(service)
+    return [
+        dict(request_id=row[0], reserved_at=_iso(row[1]))
+        for row in db.execute(
+            "SELECT id,reserved_at FROM switching_requests WHERE service=? AND pending=1 ORDER BY id",
+            (service,),
+        )
+    ]
 
 
 def request_succeeded(db, service):

@@ -17,7 +17,13 @@ from urllib.parse import parse_qsl, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from ..storage.repository import evidence
-from ..storage.switching import SERVICE, defer_request, request_succeeded, reserve_request
+from ..storage.switching import (
+    SERVICE,
+    complete_request,
+    defer_request,
+    request_succeeded,
+    reserve_request,
+)
 from .errors import CiscoAccessError
 
 TOKEN_URL = "https://id.cisco.com/oauth2/default/v1/token"
@@ -145,9 +151,12 @@ class CiscoOpenVuln:
 
     def _request(self, session, request, *, auth=False):
         at = self._time().isoformat()
-        reservation = reserve_request(self._db, SERVICE, at)
+        reservation = reserve_request(self._db, SERVICE, at, pending=True)
         if not reservation["allowed"]:
+            if reservation["retry_at"] is None:
+                raise CiscoAccessError("request_state_unresolved")
             raise CiscoAccessError("rate_limited", retry_at=reservation["retry_at"])
+        request_id = reservation["request_id"]
         status, raw, retry_after, code = None, None, None, None
         try:
             with session.open(request, timeout=25) as response:
@@ -174,13 +183,27 @@ class CiscoOpenVuln:
             code = "network_error"
         # Outside the except blocks: outward exceptions retain no sensitive context.
         if code == "network_error" or (status is not None and 500 <= status <= 599):
-            until = defer_request(self._db, SERVICE, self._time().isoformat())
+            until = defer_request(
+                self._db, SERVICE, self._time().isoformat(), reservation_id=request_id
+            )
+            if until is None:
+                raise CiscoAccessError("request_state_unresolved")
             raise CiscoAccessError(code or "service_unavailable", retry_at=until)
+        if status == 429:
+            until = defer_request(
+                self._db,
+                SERVICE,
+                self._time().isoformat(),
+                retry_at=retry_after,
+                reservation_id=request_id,
+            )
+            if until is None:
+                raise CiscoAccessError("request_state_unresolved")
+            raise CiscoAccessError("rate_limited", retry_at=until)
+        if not complete_request(self._db, SERVICE, request_id):
+            raise CiscoAccessError("request_state_unresolved")
         if code:
             raise CiscoAccessError(code)
-        if status == 429:
-            until = defer_request(self._db, SERVICE, self._time().isoformat(), retry_at=retry_after)
-            raise CiscoAccessError("rate_limited", retry_at=until)
         if status is not None and 300 <= status < 400:
             raise CiscoAccessError("redirect_rejected")
         if auth and status is not None and not 200 <= status < 300:
