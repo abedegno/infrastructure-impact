@@ -540,7 +540,8 @@
           "fixed_only_claims": 0,
           "planned_fix_claims": 0,
           "workaround_claims": 0,
-          "model_unresolved_claims": 0
+          "model_unresolved_claims": 0,
+          "affected_advisories": 0
         },
         "status_buckets": [],
         "severity": [],
@@ -568,7 +569,8 @@
         "issues": [
           "period_coverage_unknown",
           "sets_nonadditive"
-        ]
+        ],
+        "affected_advisory_ids": []
       },
       {
         "row_id": "aruba:os_family:all",
@@ -600,7 +602,8 @@
           "fixed_only_claims": 0,
           "planned_fix_claims": 0,
           "workaround_claims": 0,
-          "model_unresolved_claims": 0
+          "model_unresolved_claims": 0,
+          "affected_advisories": 0
         },
         "status_buckets": [],
         "severity": [],
@@ -628,7 +631,8 @@
         "issues": [
           "period_coverage_unknown",
           "sets_nonadditive"
-        ]
+        ],
+        "affected_advisory_ids": []
       },
       {
         "row_id": "arista:os_family:all",
@@ -808,7 +812,8 @@
           "fixed_only_claims": 1,
           "planned_fix_claims": 0,
           "workaround_claims": 0,
-          "model_unresolved_claims": 1
+          "model_unresolved_claims": 1,
+          "affected_advisories": 7
         },
         "status_buckets": [
           {
@@ -936,6 +941,15 @@
           "model_binding_unresolved",
           "period_coverage_unknown",
           "sets_nonadditive"
+        ],
+        "affected_advisory_ids": [
+          "april6",
+          "april7",
+          "conditional",
+          "offset",
+          "old",
+          "repeat",
+          "undated"
         ]
       }
     ],
@@ -1938,7 +1952,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -1966,7 +1981,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "aruba:os_family:all",
@@ -1998,7 +2014,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2026,7 +2043,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "arista:os_family:all",
@@ -2206,7 +2224,8 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 1
+              "model_unresolved_claims": 1,
+              "affected_advisories": 7
             },
             "status_buckets": [
               {
@@ -2334,6 +2353,15 @@
               "model_binding_unresolved",
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset",
+              "old",
+              "repeat",
+              "undated"
             ]
           }
         ],
@@ -2411,7 +2439,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2439,7 +2468,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "aruba:os_family:all",
@@ -2471,7 +2501,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2499,7 +2530,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "arista:os_family:all",
@@ -2531,7 +2563,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -2559,7 +2592,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           }
         ],
         "sources": [],
@@ -2694,7 +2728,8 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 1
+              "model_unresolved_claims": 1,
+              "affected_advisories": 4
             },
             "status_buckets": [
               {
@@ -2812,6 +2847,12 @@
               "model_binding_unresolved",
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "offset",
+              "old",
+              "repeat"
             ]
           }
         ],
@@ -2963,7 +3004,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 2
             },
             "status_buckets": [
               {
@@ -3021,6 +3063,10 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "april7",
+              "conditional"
             ]
           }
         ],
@@ -3126,7 +3172,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 1
             },
             "status_buckets": [
               {
@@ -3180,6 +3227,9 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "undated"
             ]
           }
         ],
@@ -3264,7 +3314,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 1
             },
             "status_buckets": [
               {
@@ -3318,6 +3369,9 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "old"
             ]
           }
         ],
@@ -3412,7 +3466,8 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 1
             },
             "status_buckets": [
               {
@@ -3499,6 +3554,9 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "repeat"
             ]
           }
         ],
@@ -3691,7 +3749,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 1
+              "model_unresolved_claims": 1,
+              "affected_advisories": 4
             },
             "status_buckets": [
               {
@@ -3777,6 +3836,12 @@
               "model_binding_unresolved",
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset"
             ]
           }
         ],
@@ -3986,7 +4051,8 @@
               "fixed_only_claims": 1,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 6
             },
             "status_buckets": [
               {
@@ -4109,6 +4175,14 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "old",
+              "repeat",
+              "undated"
             ]
           }
         ],
@@ -4182,7 +4256,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4210,7 +4285,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           }
         ],
         "sources": [],
@@ -4286,7 +4362,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4314,7 +4391,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "aruba:os_family:all",
@@ -4346,7 +4424,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4374,7 +4453,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "arista:os_family:all",
@@ -4439,7 +4519,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 2
             },
             "status_buckets": [
               {
@@ -4505,6 +4586,10 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
+            ],
+            "affected_advisory_ids": [
+              "old",
+              "repeat"
             ]
           }
         ],
@@ -4586,7 +4671,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4614,7 +4700,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "aruba:os_family:all",
@@ -4646,7 +4733,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4674,7 +4762,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           },
           {
             "row_id": "arista:os_family:all",
@@ -4706,7 +4795,8 @@
               "fixed_only_claims": 0,
               "planned_fix_claims": 0,
               "workaround_claims": 0,
-              "model_unresolved_claims": 0
+              "model_unresolved_claims": 0,
+              "affected_advisories": 0
             },
             "status_buckets": [],
             "severity": [],
@@ -4734,7 +4824,8 @@
             "issues": [
               "period_coverage_unknown",
               "sets_nonadditive"
-            ]
+            ],
+            "affected_advisory_ids": []
           }
         ],
         "sources": [],

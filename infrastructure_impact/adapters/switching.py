@@ -108,15 +108,46 @@ def _availability(details, category, published_date, as_of):
     if not details:
         return "unknown"
     state = availability(details, category, published_date, as_of=as_of)
-    if state == "vendor_reports_fixed":
-        # A link, version token or generic reference alone is not an available fix.
-        if re.search(r"\b(?:not|not yet) (?:available|released|fixed)\b", details, re.I):
-            return "unavailable"
-        if not re.search(
-            r"\b(?:released|fixed|resolved|available|can be downloaded)\b", details, re.I
-        ):
-            return "unknown"
-    return state
+    text = " ".join(details.split())
+    ambiguous = "?" in text or re.search(
+        r"\b(?:no|not|never|neither|without|may|might|could|should|possibly|perhaps|potentially|whether)\b|n['’]t\b",
+        text,
+        re.I,
+    )
+    if state != "vendor_reports_fixed":
+        return "unknown" if state == "planned" and ambiguous else state
+    # Handle explicit negatives before any affirmative language. The shared
+    # classifier already excludes future dates, partial fixes and workarounds.
+    if re.search(
+        r"\bunavailable\b|\b(?:not|never) (?:(?:currently|yet|now|generally|publicly|presently|been) )*"
+        r"(?:available|released|fixed|resolved)\b|"
+        r"\bno (?:(?:fixed|software|security|vendor|official|released|public|available) )*"
+        r"(?:fix(?:es)?|patch(?:es)?|updates?|releases?|versions?)\b",
+        text,
+        re.I,
+    ):
+        return "unavailable"
+    # Unsupported qualifications and questions stay inspectable, but establish
+    # neither an available fix nor an affirmative plan.
+    if ambiguous:
+        return "unknown"
+    if re.search(
+        r"\b(?:planned|expected|anticipated|pending|forthcoming)\b|\bplans? to\b", text, re.I
+    ):
+        return "planned"
+    subject = r"(?:fix(?:es)?|patch(?:es)?|updates?|releases?|versions?)"
+    positive = (
+        r"(?:^|[.!] )(?:(?:a|an|the|these|our) )?(?:(?:fixed|software|firmware|security) )?"
+        + subject
+        + r" (?:is|are|was|were|has been|have been) (?:(?:now|currently|already) )*(?:available|released)\b|"
+        r"(?:^|[.!] )[A-Za-z][A-Za-z0-9 .-]{0,80} (?:has|have) released "
+        r"(?:(?:a|an|the|new) )?(?:(?:software|firmware|security) )?" + subject + r"\b|"
+        r"(?:^|[.!] )(?:(?:the|this|these) )?(?:issue|vulnerability|vulnerabilities) "
+        r"(?:is|are|has been|have been) (?:fixed|resolved)\b|"
+        r"(?:^|[.!] )(?:software|firmware|fixes|patches|updates|releases|versions) "
+        r"[^.!?]*\bcan be downloaded\b"
+    )
+    return "vendor_reports_fixed" if re.search(positive, text, re.I) else "unknown"
 
 
 def _csaf(raw, url, vendor, document, digest):

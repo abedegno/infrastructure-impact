@@ -691,3 +691,49 @@ def test_switching_remediation_availability_is_typed_without_losing_literal(
     assert c["remediations"][0]["availability"] == expected
     assert c["remediations"][0]["published_availability"] == details
     assert c["remediations"][0]["availability_date"] == date
+
+
+@pytest.mark.parametrize(
+    "details,expected",
+    [
+        ("A fix is not currently available.", "unavailable"),
+        ("No fixed releases are available.", "unavailable"),
+        ("An update has not yet been released.", "unavailable"),
+        ("A fixed release is unavailable.", "unavailable"),
+        ("A fix is not generally available.", "unavailable"),
+        ("A fix is expected to be available next month.", "planned"),
+        ("A fixed release is planned.", "planned"),
+        ("A fix will be available in a future release.", "planned"),
+        ("A fix may be available.", "unknown"),
+        ("A fix is not expected to be available.", "unknown"),
+        ("Is a fixed release planned?", "unknown"),
+        ("A fix may be available in a future release.", "unknown"),
+        ("Is a fixed release available?", "unknown"),
+        ("Information about fixed releases is available.", "unknown"),
+        ("The released fix may not address this issue.", "unknown"),
+        ("A fix isn't available for this product.", "unknown"),
+        ("Fixed releases.", "unknown"),
+        ("Vendor has released software updates.", "vendor_reports_fixed"),
+        ("A fixed release is available.", "vendor_reports_fixed"),
+    ],
+)
+def test_remediation_prose_cannot_create_false_events(details, expected):
+    from infrastructure_impact.application import kev, switching_comparison
+
+    document = tree()
+    document["vulnerabilities"][0]["remediations"][0]["details"] = details
+    projected = report(document)
+    remediation = projected["claims"][0]["remediations"][0]
+    assert remediation["published_availability"] == details
+    assert remediation["availability"] == expected
+    comparison = switching_comparison.build_report(
+        projected,
+        kev.build_report({}, [], publication=None, generated_at=AT),
+        definition=evidence.definition(),
+        publication=None,
+        generated_at=AT,
+        observation_end="2026-11-04",
+    )
+    row = next(r for r in comparison["rows"] if r["vendor"] == "aruba")
+    assert row["counts"]["affected_cves"] == 1
+    assert row["counts"]["remediation_events"] == int(expected == "vendor_reports_fixed")

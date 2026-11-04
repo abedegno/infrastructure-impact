@@ -173,7 +173,12 @@ def _row(report, vendor, scope, window, requested, evaluated):
     events = [e for e in _events(candidates) if _in_window(e["published_at"], start, end, window)]
     facets = {}
     for c in affected:
-        for s in c["scores"] or [
+        # Retained unresolved/shared context is inspectable evidence, not a
+        # score attribution. Only the explicit matching CVE may supply a facet.
+        scores = [
+            s for s in c["scores"] if s["scope"] == "cve_specific" and s["cve_id"] == c["cve_id"]
+        ]
+        for s in scores or [
             dict(version=None, value=None, provider=None, origin=None, preferred=None)
         ]:
             key = (
@@ -247,6 +252,7 @@ def _row(report, vendor, scope, window, requested, evaluated):
     conditional = ids([c for c in affected if c.get("conditional_affected") is True], "cve_id")
     counts = dict(
         advisories=len(advisory_ids),
+        affected_advisories=len(ids(affected, "advisory_id")),
         cves=len(selected_cves),
         claims=len(claim_ids),
         affected_cves=len(affected_ids),
@@ -282,6 +288,7 @@ def _row(report, vendor, scope, window, requested, evaluated):
         date_basis="initial_publisher_date_utc_day",
         event_date_basis="explicit_bundle_initial_else_advisory_initial",
         advisory_ids=advisory_ids,
+        affected_advisory_ids=ids(affected, "advisory_id"),
         cve_ids=selected_cves,
         claim_ids=claim_ids,
         affected_cve_ids=affected_ids,

@@ -322,3 +322,60 @@ def test_shared_fixture_has_independently_pinned_boundary_results():
     assert comparison.select_report(base, cve_ids=[])["selection"]["effective_cve_ids"] == []
     for case in FIXTURE["severity_band_cases"]:
         assert comparison.severity_band(case["version"], case["value"]) == case["band"]
+
+
+@pytest.mark.parametrize("scope", ["unresolved", "bulletin_shared"])
+@pytest.mark.parametrize("score_cve", [None, "CVE-2025-12345", "CVE-2025-99999"])
+def test_unattributed_score_remains_inspectable_without_a_numeric_facet(scope, score_cve):
+    c = claim()
+    score = copy.deepcopy(FIXTURE["evidence"]["claims"][0]["scores"][0])
+    score.update(scope=scope, cve_id=score_cve, product_ids=[], value=9.8)
+    c["scores"] = [score]
+    if scope == "unresolved":
+        c["issues"].append("score_scope_unresolved")
+    built = report([c])  # Strict public projection, then comparison construction.
+    assert built["inputs"]["evidence"]["claims"][0]["scores"] == [score]
+    facets = row(built)["severity"]
+    assert len(facets) == 1
+    assert facets[0]["band"] == "Unknown"
+    assert facets[0]["cve_ids"] == [c["cve_id"]] and facets[0]["count"] == 1
+
+
+def test_unresolved_score_does_not_override_a_separately_attributed_score():
+    c = claim()
+    valid = copy.deepcopy(FIXTURE["evidence"]["claims"][0]["scores"][0])
+    unresolved = dict(valid, scope="unresolved", cve_id=None, product_ids=[], value=9.8)
+    c["scores"] = [valid, unresolved]
+    c["issues"].append("score_scope_unresolved")
+    built = report([c])
+    assert built["inputs"]["evidence"]["claims"][0]["scores"] == [valid, unresolved]
+    assert [(f["band"], f["count"]) for f in row(built)["severity"]] == [("High", 1)]
+
+
+@pytest.mark.parametrize("score_cve", [None, "CVE-2025-99999"])
+def test_explicit_cve_specific_score_mismatch_remains_a_contract_error(score_cve):
+    c = claim()
+    score = copy.deepcopy(FIXTURE["evidence"]["claims"][0]["scores"][0])
+    score["cve_id"] = score_cve
+    c["scores"] = [score]
+    with pytest.raises(ValueError, match="CVE-specific score must identify"):
+        report([c])
+
+
+def test_affected_advisories_are_distinct_from_all_observed_advisories():
+    built = report([claim("affected"), claim("excluded", status="unaffected")])
+    result = row(built)
+    assert result["advisory_ids"] == ["affected", "excluded"]
+    assert result["counts"]["advisories"] == 2
+    assert result["affected_advisory_ids"] == ["affected"]
+    assert result["counts"]["affected_advisories"] == 1
+    # A conflicting branch cannot erase a separate explicit affected statement.
+    built = report(
+        [
+            claim("affected"),
+            claim("affected", status="conflicting"),
+            claim("shared", scope="bulletin_shared"),
+        ]
+    )
+    assert row(built)["affected_advisory_ids"] == ["affected"]
+    assert row(built)["counts"]["affected_advisories"] == 1

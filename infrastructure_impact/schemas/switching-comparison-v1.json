@@ -367,6 +367,10 @@
               "conditionality_unclassified_cves": {
                 "type": "integer",
                 "minimum": 0
+              },
+              "affected_advisories": {
+                "type": "integer",
+                "minimum": 0
               }
             },
             "required": [
@@ -383,7 +387,8 @@
               "planned_fix_claims",
               "workaround_claims",
               "model_unresolved_claims",
-              "conditionality_unclassified_cves"
+              "conditionality_unclassified_cves",
+              "affected_advisories"
             ]
           },
           "status_buckets": {
@@ -707,6 +712,14 @@
               "minLength": 1
             },
             "uniqueItems": true
+          },
+          "affected_advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
           }
         },
         "required": [
@@ -732,7 +745,8 @@
           "kev",
           "coverage",
           "denominators",
-          "issues"
+          "issues",
+          "affected_advisory_ids"
         ]
       },
       "uniqueItems": true
