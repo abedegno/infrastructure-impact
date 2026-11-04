@@ -3,7 +3,7 @@ const fs = require('fs'),
   assert = require('assert');
 const context = { window: {}, console };
 vm.createContext(context);
-for (const name of ['kev', 'switching'])
+for (const name of ['kev', 'switching-contracts', 'switching'])
   vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), context);
 const data = JSON.parse(fs.readFileSync('tests/fixtures/switching-cases.json'));
 const api = context.window.InfrastructureSwitching;
@@ -43,4 +43,39 @@ assert.deepStrictEqual(
     ),
   ),
   [],
+);
+const contracts = context.window.InfrastructureSwitchingContracts;
+const { createHash } = require('crypto');
+for (const value of [
+  '',
+  'a',
+  'x'.repeat(55),
+  'x'.repeat(56),
+  'x'.repeat(64),
+  'x'.repeat(1000),
+  'é\u{10000}\ue000😀',
+]) {
+  assert.strictEqual(
+    contracts.fingerprint(value),
+    createHash('sha256').update(JSON.stringify(value)).digest('hex'),
+  );
+}
+for (const change of [
+  (report) => (report.definition.references[0].reviewed_at = '2026-11-03'),
+  (report) => (report.inputs.evidence.schema_version = 999),
+  (report) => (report.inputs.evidence.unrecognized_field = true),
+  (report) => (report.inputs.kev.policy.unrecognized_field = true),
+  (report) => (report.inputs.evidence.claims[0].publisher.unrecognized_field = true),
+]) {
+  const report = JSON.parse(JSON.stringify(data.comparison_base_report));
+  change(report);
+  assert.throws(() => api.selectReport(report));
+}
+console.log('Strict switching schema, definition hash and SHA-256 block/Unicode checks passed.');
+const malformedSource = {
+  ...data.comparison_base_report.inputs.evidence.claims[0].source,
+  source_url: 'https://www.arista.com/[invalid-path]',
+};
+assert.throws(() =>
+  contracts.validate('switching-evidence-v1.json', malformedSource, '/$defs/source'),
 );

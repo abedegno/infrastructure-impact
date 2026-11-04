@@ -687,6 +687,7 @@
     )
       throw Error('Complete study inputs required');
     const recognized = report && report.schema_version === 1 && 'availability' in report;
+    if (recognized) window.InfrastructureSwitchingContracts.full(report);
     if (!recognized) {
       const evaluated = options.evaluated_at ?? options.evaluatedAt ?? new Date().toISOString();
       const generated = options.generated_at ?? report?.generated_at ?? evaluated;

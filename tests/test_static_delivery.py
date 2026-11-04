@@ -612,6 +612,7 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
         "research-dossiers.js",
         "delivery.js",
         "kev.js",
+        "switching-contracts.js",
         "switching.js",
         "snapshot.js",
         "app.js",

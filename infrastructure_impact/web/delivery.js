@@ -57,7 +57,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     return cache.get(key);
   }
   const common = await read(index.bootstrap);
-  async function parts(descriptors) {
+  async function parts(descriptors, requireArray = false) {
     const unique = [...new Map(descriptors.map((d) => [d.path, d])).values()];
     const results = new Array(unique.length);
     let cursor = 0;
@@ -66,6 +66,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
         while (cursor < unique.length) {
           const i = cursor++;
           results[i] = await read(unique[i]);
+          if (requireArray && !Array.isArray(results[i])) throw Error('Invalid study part array');
         }
       }),
     );
@@ -129,48 +130,107 @@ async function createStaticDelivery(fetchPart, siteBase) {
   };
   load.publication = index.publication;
   load.generated_at = index.generated_at;
-  load.switchingSummary = async () => (index.switching ? read(index.switching.summary) : null);
-  load.switchingClaims = async (ids) => {
-    if (!index.switching) throw Error('Switching unavailable');
-    const requested = new Set(ids);
-    const selected = index.switching.claims.filter((p) =>
-      p.claim_ids.some((id) => requested.has(id)),
+  function studyIndex() {
+    if (!Object.hasOwn(index, 'switching')) return null;
+    const contracts = window.InfrastructureSwitchingContracts;
+    contracts.validate('static-index-v1.json', index);
+    const declared = index.switching.claims.flatMap((part) => part.claim_ids);
+    if (new Set(declared).size !== declared.length) throw Error('Duplicate declared study claims');
+    return index.switching;
+  }
+  async function readClaims(entry) {
+    const rows = await read(entry.part);
+    window.InfrastructureSwitchingContracts.validate(
+      'switching-evidence-v1.json',
+      rows,
+      '/properties/claims',
     );
-    const rows = await parts(selected.map((p) => p.part));
+    const actual = rows.map((c) => c.claim_id);
+    if (
+      new Set(actual).size !== actual.length ||
+      actual.length !== entry.claim_ids.length ||
+      actual.some((id, i) => id !== entry.claim_ids[i])
+    )
+      throw Error('Study claim part membership mismatch');
+    return rows;
+  }
+  async function claimParts(entries) {
+    const results = new Array(entries.length);
+    let cursor = 0;
+    await Promise.all(
+      Array.from({ length: Math.min(6, entries.length) }, async () => {
+        while (cursor < entries.length) {
+          const i = cursor++;
+          results[i] = await readClaims(entries[i]);
+        }
+      }),
+    );
+    return results.flat();
+  }
+  load.switchingSummary = async () => {
+    const study = studyIndex();
+    if (!study) return null;
+    const result = await read(study.summary);
+    window.InfrastructureSwitchingContracts.summary(result, index);
+    return JSON.parse(JSON.stringify(result));
+  };
+  load.switchingClaims = async (ids) => {
+    const study = studyIndex();
+    if (!study) throw Error('Switching unavailable');
+    if (
+      !Array.isArray(ids) ||
+      ids.some((id) => typeof id !== 'string' || !/^[a-f0-9]{64}$/.test(id))
+    )
+      throw Error('Invalid study claim IDs');
+    const requested = new Set(ids);
+    const selected = study.claims.filter((p) => p.claim_ids.some((id) => requested.has(id)));
+    const rows = await claimParts(selected);
     const found = rows.filter((c) => requested.has(c.claim_id));
-    if (new Set(found.map((c) => c.claim_id)).size !== requested.size)
-      throw Error('Missing study claims');
-    return found;
+    if (found.length !== requested.size) throw Error('Missing study claims');
+    return JSON.parse(JSON.stringify(found));
   };
   load.switchingReport = async () => {
-    if (!index.switching) return null;
-    const summary = await load.switchingSummary(),
-      metadata = await read(index.switching.inputs);
-    if (summary.representation !== 'summary' || metadata.representation !== 'switching-inputs')
-      throw Error('Invalid study representation');
-    const claims = await parts(index.switching.claims.map((p) => p.part));
-    const claimedIds = index.switching.claims.flatMap((p) => p.claim_ids);
+    const study = studyIndex();
+    if (!study) return null;
+    const contracts = window.InfrastructureSwitchingContracts;
+    const summary = await load.switchingSummary();
+    const metadata = await read(study.inputs);
+    contracts.header(metadata, index, summary.selection.definition_sha256);
+    const claims = await claimParts(study.claims);
+    const entries = await parts(study.kev_entries, true);
     if (
-      new Set(claimedIds).size !== claims.length ||
-      claims.length !== claimedIds.length ||
-      claims.some((c) => !claimedIds.includes(c.claim_id))
+      entries.some(
+        (e) => !e || typeof e !== 'object' || Object.keys(e).sort().join(',') !== 'cve_id,entry',
+      ) ||
+      new Set(entries.map((e) => e.cve_id)).size !== entries.length
     )
-      throw Error('Incomplete study claims');
-    const entries = await parts(index.switching.kev_entries);
-    if (new Set(entries.map((e) => e.cve_id)).size !== entries.length)
-      throw Error('Duplicate KEV entries');
-    const details = await parts(index.switching.evidence_metadata);
-    if (details.some((d) => !['coverage', 'score_availability'].includes(d.kind)))
+      throw Error('Invalid KEV entry parts');
+    const details = await parts(study.evidence_metadata, true);
+    if (
+      details.some(
+        (d) =>
+          !d ||
+          typeof d !== 'object' ||
+          Object.keys(d).sort().join(',') !== 'kind,value' ||
+          !['coverage', 'score_availability'].includes(d.kind),
+      ) ||
+      (!study.has_score_availability && details.some((d) => d.kind === 'score_availability'))
+    )
       throw Error('Invalid study metadata');
-    metadata.evidence.coverage = details.filter((d) => d.kind === 'coverage').map((d) => d.value);
-    if (index.switching.has_score_availability)
-      metadata.evidence.score_availability = details
+    // Reconstruct fresh objects only after validating the cached strict header.
+    const evidence = {
+      ...metadata.evidence,
+      claims,
+      coverage: details.filter((d) => d.kind === 'coverage').map((d) => d.value),
+    };
+    if (study.has_score_availability)
+      evidence.score_availability = details
         .filter((d) => d.kind === 'score_availability')
         .map((d) => d.value);
     const report = {
       ...summary,
       inputs: {
-        evidence: { ...metadata.evidence, claims },
+        evidence,
         kev: {
           ...metadata.kev,
           entries: Object.fromEntries(entries.map((e) => [e.cve_id, e.entry])),
@@ -178,13 +238,8 @@ async function createStaticDelivery(fetchPart, siteBase) {
       },
     };
     delete report.representation;
-    for (const value of [report, report.inputs.evidence, report.inputs.kev])
-      if (
-        JSON.stringify(value.publication) !== JSON.stringify(index.publication) ||
-        value.generated_at !== index.generated_at
-      )
-        throw Error('Mixed study generations');
-    return report;
+    contracts.full(report);
+    return JSON.parse(JSON.stringify(report));
   };
   return load;
 }

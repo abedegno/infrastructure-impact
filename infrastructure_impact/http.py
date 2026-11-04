@@ -359,6 +359,7 @@ class Application:
             "/app.js",
             "/research-dossiers.js",
             "/kev.js",
+            "/switching-contracts.js",
             "/switching.js",
             "/switching-evidence.json",
             "/switching-comparison.json",

@@ -18,7 +18,9 @@ FIXTURE = json.loads((PACKAGE.parent / "tests/fixtures/switching-cases.json").re
 
 
 def static_requests(root, queries):
-    script = ADAPTER.replace("'kev.js','research", "'kev.js','switching.js','research")
+    script = ADAPTER.replace(
+        "'kev.js','research", "'kev.js','switching-contracts.js','switching.js','research"
+    )
     return json.loads(
         subprocess.check_output(
             ["node", "-e", script],
@@ -187,8 +189,8 @@ DELIVERY = r"""
 const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
 const x=JSON.parse(fs.readFileSync(0,'utf8')),requests=[];
 const c={window:{},Set,Map,URL,Response,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};vm.createContext(c);
-for(const f of ['kev.js','switching.js','delivery.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
-(async()=>{try{const load=await c.createStaticDelivery(async path=>{requests.push(path);let raw=fs.readFileSync(x.root+path);if(x.fault==='hash' && path===x.part)raw=Buffer.concat([raw.subarray(0,raw.length-1),Buffer.from(' ')]);return new Response(raw);},'/');let value=x.mode==='claims'?await load.switchingClaims(x.ids):await load.switchingReport();process.stdout.write(JSON.stringify({value,requests}));}catch(e){process.stdout.write(JSON.stringify({error:e.message,requests}));}})();
+for(const f of ['kev.js','switching-contracts.js','switching.js','delivery.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+(async()=>{try{const load=await c.createStaticDelivery(async path=>{requests.push(path);let raw=fs.readFileSync(x.root+path);if(x.fault==='hash' && path===x.part)raw=Buffer.concat([raw.subarray(0,raw.length-1),Buffer.from(' ')]);return new Response(raw);},'/');let value=x.mode==='claims'?await load.switchingClaims(x.ids):x.mode==='summary'?await load.switchingSummary():await load.switchingReport();process.stdout.write(JSON.stringify({value,requests}));}catch(e){process.stdout.write(JSON.stringify({error:e.message,requests}));}})();
 """
 
 
@@ -375,7 +377,7 @@ def test_selector_unicode_identity_and_legacy_parity():
     from test_switching_comparison import claim, report
 
     reports = [report([claim(identity="\U00010000"), claim(identity="\ue000")]), None]
-    script = "const fs=require('fs'),vm=require('vm');const c={window:{}};vm.createContext(c);for(const f of ['kev','switching'])vm.runInContext(fs.readFileSync('infrastructure_impact/web/'+f+'.js','utf8'),c);process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(r=>c.window.InfrastructureSwitching.selectReport(r,{evaluated_at:'2026-11-04T10:00:00Z'}))));"
+    script = "const fs=require('fs'),vm=require('vm');const c={window:{}};vm.createContext(c);for(const f of ['kev','switching-contracts','switching'])vm.runInContext(fs.readFileSync('infrastructure_impact/web/'+f+'.js','utf8'),c);process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(0,'utf8')).map(r=>c.window.InfrastructureSwitching.selectReport(r,{evaluated_at:'2026-11-04T10:00:00Z'}))));"
     browser = json.loads(
         subprocess.check_output(["node", "-e", script], input=json.dumps(reports).encode())
     )
@@ -424,3 +426,177 @@ def test_shared_selections_through_installed_adapters(study, tmp_path):
         native.pop("evaluated_at")
         browser.pop("evaluated_at")
         assert native == browser
+
+
+@pytest.mark.parametrize(
+    "fault", ["definition", "evidence_version", "evidence_extra", "kev_version", "claim_extra"]
+)
+def test_browser_rejects_current_contract_tampering(fault):
+    from jsonschema import ValidationError
+
+    report = copy.deepcopy(FIXTURE["comparison_base_report"])
+    if fault == "definition":
+        report["definition"]["references"][0]["reviewed_at"] = "2026-11-03"
+    elif fault == "evidence_version":
+        report["inputs"]["evidence"]["schema_version"] = 999
+    elif fault == "evidence_extra":
+        report["inputs"]["evidence"]["unrecognized_field"] = True
+    elif fault == "kev_version":
+        report["inputs"]["kev"]["schema_version"] = 999
+    else:
+        report["inputs"]["evidence"]["claims"][0]["unrecognized_field"] = True
+    with pytest.raises((ValueError, ValidationError)):
+        comparison.select_report(report)
+    script = "const fs=require('fs'),vm=require('vm');const c={window:{}};vm.createContext(c);for(const f of ['kev','switching-contracts','switching'])vm.runInContext(fs.readFileSync('infrastructure_impact/web/'+f+'.js','utf8'),c);try{c.window.InfrastructureSwitching.selectReport(JSON.parse(fs.readFileSync(0,'utf8')));process.stdout.write('accepted');}catch{process.stdout.write('rejected');}"
+    assert (
+        subprocess.check_output(["node", "-e", script], input=json.dumps(report).encode()).decode()
+        == "rejected"
+    )
+
+
+def rehash_part(generation, descriptor, mutate):
+    from hashlib import sha256
+
+    from infrastructure_impact.application.static_delivery import encode
+
+    value = json.loads((generation / descriptor["path"]).read_text())
+    mutate(value["data"])
+    raw = encode(value)
+    digest = sha256(raw).hexdigest()
+    descriptor.update(path="data/" + digest + ".json", sha256=digest, bytes=len(raw))
+    (generation / descriptor["path"]).write_bytes(raw)
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "summary_generation",
+        "summary_extra",
+        "summary_definition",
+        "header_version",
+        "header_extra",
+        "header_definition",
+        "metadata_extra",
+        "index_null",
+        "index_false",
+    ],
+)
+def test_loaders_reject_rehashed_inner_contract_tampering(study, tmp_path, fault):
+    generation = publish(study, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    if fault.startswith("summary"):
+
+        def mutate(value):
+            if fault == "summary_generation":
+                value["publication"]["id"] = "d" * 32
+            elif fault == "summary_extra":
+                value["unexpected"] = True
+            else:
+                value["definition"]["references"][0]["reviewed_at"] = "2026-11-03"
+
+        rehash_part(generation, index["switching"]["summary"], mutate)
+        mode = "summary"
+    elif fault.startswith("header"):
+
+        def mutate(value):
+            if fault == "header_version":
+                value["evidence"]["schema_version"] = 999
+            elif fault == "header_extra":
+                value["evidence"]["coverage"] = []
+            else:
+                value["evidence"]["definition_sha256"] = "d" * 64
+
+        rehash_part(generation, index["switching"]["inputs"], mutate)
+        mode = "report"
+    elif fault in ("index_null", "index_false"):
+        index["switching"] = None if fault == "index_null" else False
+        mode = "summary"
+    else:
+        # Strict optional metadata is checked before reconstruction returns.
+        index["switching"]["has_score_availability"] = "yes"
+        mode = "report"
+    (generation / "data/index.json").write_text(json.dumps(index))
+    assert "error" in delivery(generation, mode=mode)
+
+
+@pytest.mark.parametrize("mode", ["report", "claims"])
+@pytest.mark.parametrize("fault", ["duplicate_actual", "duplicate_declared", "wrong_membership"])
+def test_claim_parts_require_exact_unique_membership(study, tmp_path, mode, fault):
+    generation = publish(study, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    part = index["switching"]["claims"][0]
+    assert len(part["claim_ids"]) > 1
+    requested = part["claim_ids"][:1]
+    if fault == "duplicate_declared":
+        part["claim_ids"][1] = part["claim_ids"][0]
+    else:
+
+        def mutate(value):
+            if fault == "duplicate_actual":
+                value[1] = copy.deepcopy(value[0])
+            else:
+                value[1]["claim_id"] = "d" * 64
+
+        rehash_part(generation, part["part"], mutate)
+    (generation / "data/index.json").write_text(json.dumps(index))
+    assert "error" in delivery(generation, mode=mode, ids=requested)
+
+
+def test_browser_contract_bundle_matches_packaged_schemas():
+    import runpy
+
+    source = (PACKAGE / "web/switching-contracts.js").read_text()
+    raw = source.split("/* BEGIN GENERATED CONTRACTS */", 1)[1].split(
+        "/* END GENERATED CONTRACTS */", 1
+    )[0]
+    generate = runpy.run_path(str(PACKAGE.parent / "checks/generate_switching_contracts.py"))
+    assert json.loads(raw.strip().removesuffix(";")) == generate["payload"]()
+
+
+@pytest.mark.parametrize("fault", ["definition", "evidence_version", "evidence_extra"])
+def test_native_static_adapter_reject_same_current_contract(study, tmp_path, fault):
+    generation = publish(study, tmp_path)
+    report = json.loads((generation / "switching-comparison.json").read_text())
+    index = json.loads((generation / "data/index.json").read_text())
+    if fault == "definition":
+        report["definition"]["references"][0]["reviewed_at"] = "2026-11-03"
+
+        def mutate(value):
+            value["definition"]["references"][0]["reviewed_at"] = "2026-11-03"
+
+        descriptor = index["switching"]["summary"]
+    else:
+
+        def mutate(value):
+            value["evidence"][
+                "schema_version" if fault == "evidence_version" else "unrecognized_field"
+            ] = 999
+
+        report["inputs"]["evidence"][
+            "schema_version" if fault == "evidence_version" else "unrecognized_field"
+        ] = 999
+        descriptor = index["switching"]["inputs"]
+    rehash_part(generation, descriptor, mutate)
+    (generation / "switching-comparison.json").write_text(json.dumps(report))
+    (generation / "data/index.json").write_text(json.dumps(index))
+    code, body = request(Application(tmp_path), "/api/v1/switching-comparison")
+    browser = static_requests(generation, ["/api/v1/switching-comparison"])[0]
+    assert code == browser["status"] == 503
+    assert (
+        json.loads(body)
+        == json.loads(browser["body"])
+        == {"error": "Publication temporarily unavailable"}
+    )
+
+
+@pytest.mark.parametrize("mode", ["report", "claims"])
+def test_claim_index_rejects_cross_part_duplicates(study, tmp_path, monkeypatch, mode):
+    from infrastructure_impact.application import static_delivery
+
+    monkeypatch.setattr(static_delivery, "TARGET_BYTES", 2500)
+    generation = publish(study, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    first, second = index["switching"]["claims"][:2]
+    second["claim_ids"][0] = first["claim_ids"][0]
+    (generation / "data/index.json").write_text(json.dumps(index))
+    assert "error" in delivery(generation, mode=mode, ids=first["claim_ids"])
