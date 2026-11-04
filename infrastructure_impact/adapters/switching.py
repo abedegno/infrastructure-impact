@@ -135,6 +135,16 @@ def _availability(details, category, published_date, as_of):
         r"\b(?:planned|expected|anticipated|pending|forthcoming)\b|\bplans? to\b", text, re.I
     ):
         return "planned"
+    # Reviewed CSAF upgrade wording is affirmative only with an explicit numeric
+    # AOS-CX release list. Existing category, date, negation and future guards
+    # above still apply; product/CVE attribution is handled by the CSAF IDs.
+    if re.search(
+        r"^The vulnerabilities contained in this advisory can be addressed by patching or "
+        r"upgrading to one of the versions listed below AOS-CX [0-9]+\.[0-9]+\.xxxx: "
+        r"[0-9]+\.[0-9]+\.[0-9]+ and above\b",
+        text,
+    ):
+        return "vendor_reports_fixed"
     subject = r"(?:fix(?:es)?|patch(?:es)?|updates?|releases?|versions?)"
     positive = (
         r"(?:^|[.!] )(?:(?:a|an|the|these|our) )?(?:(?:fixed|software|firmware|security) )?"
@@ -315,6 +325,11 @@ def _arista_reviewed(raw, url, document, digest):
         "19222-security-advisory-0095": "Arista reviewed applicability boundaries HTML",
         "19904-security-advisory-0100": "Arista affected software HTML",
         "11996-security-advisory-56": "Arista reviewed older product/model HTML",
+        "12135-security-advisory-61": "Arista reviewed older product/model HTML",
+        "12166-security-advisory-62": "Arista reviewed older product/model HTML",
+        "19221-security-advisory-0094": "Arista reviewed applicability boundaries HTML",
+        "24074-security-advisory-0140": "Arista reviewed sibling software sections HTML",
+        "24515-security-advisory-0147": "Arista CVE-grouped software HTML",
     }
     slug = document["advisory_id"]
     if (
@@ -377,6 +392,15 @@ def _arista_reviewed(raw, url, document, digest):
             status=assessment["status"],
             scope=assessment["scope"],
         )
+        if slug in {
+            "12135-security-advisory-61",
+            "12166-security-advisory-62",
+            "19221-security-advisory-0094",
+            "24074-security-advisory-0140",
+            "24515-security-advisory-0147",
+        }:
+            # These HTML adapters use local branch keys, not publisher product IDs.
+            claim["product_id"] = None
         if assessment["product"] in {"Arista EOS", "EOS release (source platform scope applies)"}:
             claim["family"] = "arista-eos"
         claim["version_expressions"] = [
@@ -418,6 +442,46 @@ def _arista_reviewed(raw, url, document, digest):
                 )
             )
         claims.append(claim)
+    if slug == "19904-security-advisory-0100":
+        # The core openssh_scope parser has verified its exact reviewed section
+        # hashes. Link only these literal EOS/CVE branches; no family/model join.
+        for claim in claims:
+            cid = claim["cve_id"]
+            if (
+                cid not in {"CVE-2024-6387", "CVE-2024-6409"}
+                or claim["status"] != "affected"
+                or claim["scope"] != "cve_specific"
+                or claim["product"] != "EOS release (source platform scope applies)"
+                or claim["source"]["source_locator"]
+                != "Affected Software / EOS release (source platform scope applies)"
+            ):
+                continue
+            fixed = [
+                c
+                for c in claims
+                if c["cve_id"] == cid
+                and c["status"] == "fixed"
+                and c["scope"] == "cve_specific"
+                and c["product"] == "Arista EOS"
+                and c["source"]["source_locator"]
+                == "Resolution / " + cid + " / Arista EOS-based products"
+            ]
+            if len(fixed) != 1:
+                continue
+            for remediation in fixed[0]["remediations"]:
+                if remediation["source"] != fixed[0]["source"]:
+                    continue
+                bound = copy.deepcopy(remediation)
+                bound["product_ids"] = []  # No synthetic publisher product ID.
+                bound["version_expressions"] = fixed[0]["version_expressions"][:]
+                bound["scope_binding"] = dict(
+                    basis="reviewed_source_sections",
+                    cve_id=cid,
+                    source=claim["source"].copy(),
+                    fixed_product="Arista EOS",
+                    fixed_source=fixed[0]["source"].copy(),
+                )
+                claim["remediations"].append(bound)
     return dict(schema_version=1, claims=claims, bundles=[], issues=[])
 
 

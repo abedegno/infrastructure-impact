@@ -376,14 +376,22 @@
           "additionalProperties": false,
           "properties": {
             "basis": {
-              "const": "same_source_row",
-              "type": "string"
+              "enum": [
+                "same_source_row",
+                "reviewed_source_sections"
+              ]
             },
             "cve_id": {
               "type": "string",
               "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
             },
             "source": {
+              "$ref": "#/$defs/source"
+            },
+            "fixed_product": {
+              "const": "Arista EOS"
+            },
+            "fixed_source": {
               "$ref": "#/$defs/source"
             }
           },
@@ -392,7 +400,40 @@
             "cve_id",
             "source"
           ],
-          "description": "Explicit reviewed same-source table-row scope; claim and remediation must share source identity and CVE, with the remediation locator at the claim row or a cell below it. Does not establish an availability date."
+          "description": "Explicit reviewed linkage: same source row, or the exact reviewed Arista 0100 EOS affected and CVE-specific Resolution sections. Never establishes a model or availability date.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "basis": {
+                    "const": "reviewed_source_sections"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "fixed_product",
+                  "fixed_source"
+                ]
+              },
+              "else": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "fixed_product"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "fixed_source"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         },
         "availability": {
           "enum": [

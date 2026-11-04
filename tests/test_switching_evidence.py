@@ -737,3 +737,300 @@ def test_remediation_prose_cannot_create_false_events(details, expected):
     row = next(r for r in comparison["rows"] if r["vendor"] == "aruba")
     assert row["counts"]["affected_cves"] == 1
     assert row["counts"]["remediation_events"] == int(expected == "vendor_reports_fixed")
+
+
+def reviewed_section_report(monkeypatch, *, fixed_only=False, mismatch=None):
+    """Synthetic core-parser outputs exercise the bridge, never primary evidence."""
+    from pathlib import Path
+
+    from infrastructure_impact.adapters.switching import extract
+    from infrastructure_impact.plugins import arista
+
+    case = json.loads(
+        (Path(__file__).parent / "fixtures/switching-arista-bridge.json").read_text()
+    )[1]
+    raw = (
+        case["raw"]
+        .replace("CVE-2025-12345", "CVE-2024-6387")
+        .replace("CVE-2025-12346", "CVE-2024-6409")
+        .encode()
+    )
+    document = copy.deepcopy(case["document"])
+    for a in document["assessments"]:
+        a["cve_id"] = {"CVE-2025-12345": "CVE-2024-6387", "CVE-2025-12346": "CVE-2024-6409"}[
+            a["cve_id"]
+        ]
+        a["product_id"] = None
+        if a["status"] == "affected":
+            a["product"] = "EOS release (source platform scope applies)"
+            a["evidence_locator"] = (
+                "Affected Software / EOS release (source platform scope applies)"
+            )
+        else:
+            a["evidence_locator"] = "Resolution / " + a["cve_id"] + " / Arista EOS-based products"
+            a["remediations"][0]["source_locator"] = a["evidence_locator"]
+    if fixed_only:
+        document["assessments"] = [a for a in document["assessments"] if a["status"] == "fixed"]
+    if mismatch:
+        for a in document["assessments"]:
+            if a["status"] == "fixed":
+                a[mismatch[0]] = mismatch[1]
+    monkeypatch.setattr(arista, "parse", lambda *_: copy.deepcopy(document))
+    url = "https://www.arista.com/en/support/advisories-notices/security-advisory/" + case["slug"]
+    result = extract(raw, url, "arista", document)
+
+    def stamp(v):
+        if isinstance(v, dict):
+            if "retrieved_at" in v:
+                v["retrieved_at"] = AT
+            for x in v.values():
+                stamp(x)
+        elif isinstance(v, list):
+            for x in v:
+                stamp(x)
+
+    stamp(result)
+    for c in result["claims"]:
+        c["revision"] = "synthetic-revision"
+    result.pop("bundles")
+    result["coverage"] = []
+    return evidence.project(result, publication=None, generated_at=AT)
+
+
+def test_reviewed_sections_link_only_explicit_eos_cve_fixes(monkeypatch):
+    from infrastructure_impact.application.switching_comparison import build_report
+
+    r = reviewed_section_report(monkeypatch)
+    affected = [c for c in r["claims"] if c["status"] == "affected"]
+    assert len(affected) == 2
+    assert all(len(c["remediations"]) == 1 for c in affected)
+    assert all(
+        c["remediations"][0]["scope_binding"]["basis"] == "reviewed_source_sections"
+        for c in affected
+    )
+    assert all(not c["named_platforms"] and c["product_id"] is None for c in affected)
+    assert all(c["remediations"][0]["availability_date"] is None for c in affected)
+    from infrastructure_impact.application import kev
+
+    full = build_report(
+        r,
+        kev.build_report({}, [], publication=None, generated_at=AT),
+        definition=evidence.definition(),
+        publication=None,
+        generated_at=AT,
+        observation_end="2026-11-04",
+    )
+    row = next(r for r in full["rows"] if r["vendor"] == "arista")
+    assert row["counts"]["remediation_events"] == 1
+    assert row["events"][0]["cve_ids"] == ["CVE-2024-6387", "CVE-2024-6409"]
+
+
+def test_fixed_only_reviewed_sections_never_create_affectedness(monkeypatch):
+    r = reviewed_section_report(monkeypatch, fixed_only=True)
+    assert all(not c["remediations"][0].get("scope_binding") for c in r["claims"])
+
+
+@pytest.mark.parametrize(
+    "field,value", [("product", "Other EOS product"), ("evidence_locator", "Unreviewed section")]
+)
+def test_reviewed_sections_do_not_join_arbitrary_claims(monkeypatch, field, value):
+    r = reviewed_section_report(monkeypatch, mismatch=(field, value))
+    assert all(not c["remediations"] for c in r["claims"] if c["status"] == "affected")
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "cve",
+        "product",
+        "url",
+        "hash",
+        "revision",
+        "fixed_source",
+        "missing_fixed",
+        "fixed_remediation",
+    ],
+)
+def test_reviewed_section_binding_rejects_mismatched_evidence_in_both_runtimes(
+    monkeypatch, mutation
+):
+    import subprocess
+
+    from infrastructure_impact.application import kev, switching_comparison
+    from infrastructure_impact.settings import PACKAGE
+
+    r = reviewed_section_report(monkeypatch)
+    assert any(c["remediations"] for c in r["claims"] if c["status"] == "affected")
+    full = switching_comparison.build_report(
+        r,
+        kev.build_report({}, [], publication=None, generated_at=AT),
+        definition=evidence.definition(),
+        publication=None,
+        generated_at=AT,
+        observation_end="2026-11-04",
+    )
+    script = """
+const fs=require('fs'),vm=require('vm');global.window=global;
+vm.runInThisContext(fs.readFileSync(process.argv[1],'utf8'));
+try { InfrastructureSwitchingContracts.full(JSON.parse(fs.readFileSync(0,'utf8'))); console.log('accepted'); }
+catch(e) { console.log('rejected'); }
+"""
+
+    def browser():
+        return (
+            subprocess.check_output(
+                ["node", "-e", script, str(PACKAGE / "web/switching-contracts.js")],
+                input=json.dumps(full).encode(),
+            )
+            .decode()
+            .strip()
+        )
+
+    assert browser() == "accepted"
+    fixed = next(c for c in r["claims"] if c["status"] == "fixed")
+    affected = next(
+        c for c in r["claims"] if c["status"] == "affected" and c["cve_id"] == fixed["cve_id"]
+    )
+    if mutation == "cve":
+        fixed["cve_id"] = "CVE-2024-99999"
+    elif mutation == "product":
+        fixed["product"] = "Other EOS product"
+    elif mutation == "url":
+        fixed["source"]["source_url"] = "https://www.arista.com/other"
+    elif mutation == "hash":
+        fixed["source"]["source_sha256"] = "f" * 64
+    elif mutation == "revision":
+        fixed["revision"] = "other-revision"
+    elif mutation == "fixed_source":
+        affected["remediations"][0]["scope_binding"]["fixed_source"]["source_locator"] = (
+            "Other section"
+        )
+    elif mutation == "fixed_remediation":
+        fixed["remediations"] = []
+    else:
+        r["claims"].remove(fixed)
+    for c in r["claims"]:
+        c["claim_id"] = evidence.definition_sha256({k: v for k, v in c.items() if k != "claim_id"})
+    full["inputs"]["evidence"] = r
+    with pytest.raises(ValueError):
+        evidence.validate_evidence(r)
+    assert browser() == "rejected"
+
+
+@pytest.mark.parametrize(
+    "slug,format_name",
+    [
+        ("12135-security-advisory-61", "Arista reviewed older product/model HTML"),
+        ("12166-security-advisory-62", "Arista reviewed older product/model HTML"),
+        ("19221-security-advisory-0094", "Arista reviewed applicability boundaries HTML"),
+        ("24074-security-advisory-0140", "Arista reviewed sibling software sections HTML"),
+        ("24515-security-advisory-0147", "Arista CVE-grouped software HTML"),
+    ],
+)
+def test_additional_reviewed_routes_preserve_core_scope_without_invented_ids(
+    monkeypatch, slug, format_name
+):
+    from pathlib import Path
+
+    from infrastructure_impact.adapters.switching import extract
+    from infrastructure_impact.plugins import arista
+
+    case = json.loads(
+        (Path(__file__).parent / "fixtures/switching-arista-bridge.json").read_text()
+    )[0]
+    number = slug.rsplit("-", 1)[-1].zfill(4)
+    raw = case["raw"].replace("Security Advisory 0101", "Security Advisory " + number).encode()
+    document = copy.deepcopy(case["document"])
+    document.update(advisory_id=slug, source_format=format_name)
+    document["assessments"][0]["scope"] = "bulletin_shared"
+    monkeypatch.setattr(arista, "parse", lambda *_: copy.deepcopy(document))
+    url = "https://www.arista.com/en/support/advisories-notices/security-advisory/" + slug
+    result = extract(raw, url, "arista", document)
+    assert len(result["claims"]) == 1
+    c = result["claims"][0]
+    assert c["family"] == "arista-eos" and c["scope"] == "bulletin_shared"
+    assert c["product_id"] is None and c["scope_level"] == "os_family"
+    assert c["named_platforms"] == ["720XP/722XPM Series"]
+    assert not c["remediations"] and not c.get("conditional_affected")
+    document["source_format"] = "Vendor HTML"
+    assert extract(raw, url, "arista", document)["claims"] == []
+
+
+@pytest.mark.parametrize(
+    "change,expected",
+    [
+        ("none", "vendor_reports_fixed"),
+        ("unrelated", "vendor_reports_fixed"),
+        ("no_list", "unknown"),
+        ("negated", "unknown"),
+        ("question", "unknown"),
+        ("may", "unknown"),
+        ("future", "planned"),
+        ("planned", "planned"),
+        ("future_date", "planned"),
+        ("workaround", "not_a_fix"),
+    ],
+)
+def test_scoped_patch_upgrade_statement_needs_explicit_releases_and_no_future_guard(
+    change, expected
+):
+    from infrastructure_impact.adapters.switching import _availability
+
+    # Project-authored synthetic release values, not a vendor capture.
+    text = (
+        "The vulnerabilities contained in this advisory can be addressed by patching or upgrading "
+        "to one of the versions listed below\n\nAOS-CX 99.01.xxxx: 99.01.2345 and above"
+    )
+    if change == "unrelated":
+        text += "\nNone of these releases address the unrelated issue in SYNTHETIC-OTHER."
+    elif change == "no_list":
+        text = text.split("\n")[0]
+    elif change == "negated":
+        text = text.replace("can be addressed", "cannot be addressed")
+    elif change == "question":
+        text += "?"
+    elif change == "may":
+        text = text.replace("can be addressed", "may be addressed")
+    elif change == "future":
+        text += "\nA future release will be required."
+    elif change == "planned":
+        text += "\nThese releases are planned."
+    assert (
+        _availability(
+            text,
+            "workaround" if change == "workaround" else "vendor_fix",
+            "2099-02-01" if change == "future_date" else "2026-01-01",
+            "2026-01-01",
+        )
+        == expected
+    )
+
+
+def test_patch_upgrade_event_retains_exact_product_binding_and_no_invented_date():
+    from infrastructure_impact.application import kev, switching_comparison
+
+    d = tree()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    rem["details"] = (
+        "The vulnerabilities contained in this advisory can be addressed by patching or upgrading "
+        "to one of the versions listed below\nAOS-CX 99.01.xxxx: 99.01.2345 and above"
+    )
+    for product_ids, expected in [(["p"], 1), ([], 0), (["unrelated"], 0)]:
+        rem["product_ids"] = product_ids
+        projected = report(d)
+        c = projected["claims"][0]
+        assert all(r["availability_date"] is None for r in c["remediations"])
+        result = switching_comparison.build_report(
+            projected,
+            kev.build_report({}, [], publication=None, generated_at=AT),
+            definition=evidence.definition(),
+            publication=None,
+            generated_at=AT,
+            observation_end="2026-11-04",
+        )
+        assert (
+            next(row for row in result["rows"] if row["vendor"] == "aruba")["counts"][
+                "remediation_events"
+            ]
+            == expected
+        )
