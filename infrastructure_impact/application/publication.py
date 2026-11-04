@@ -35,10 +35,21 @@ from .release_assets import validate_asset
 def public_projection(data, public_release_urls=()):
     """The publication boundary never copies raw evidence or private review notes."""
     data = json.loads(json.dumps(data, allow_nan=False))
+    from ..adapters.cvss import public_metrics
+
+    score_input = data["research"].pop("score_input", {})
     for record in data["records"]:
         validate_advisory(record)
         record["notes"] = []
-        record["metrics"] = []
+        scores = [
+            c
+            for entry in score_input.get("advisories", [])
+            if entry.get("vendor") == record["vendor"]
+            and entry.get("advisory_id") == record["advisory_id"]
+            for c in entry.get("claims", [])
+        ]
+        scores += score_input.get("fallback", {}).get("claims", [])
+        record["metrics"] = public_metrics([c for c in scores if c.get("cve_id") in record["cves"]])
         record["timeline"] = []
         record.pop("extensions", None)
         for assessment in record["assessments"]:

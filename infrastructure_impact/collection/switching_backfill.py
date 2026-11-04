@@ -218,6 +218,11 @@ def _commit_page(
 ):
     with db:
         ev = evidence(db, raw, item["url"])
+        if run["kind"] == "openvuln":
+            db.execute(
+                "INSERT INTO score_vendor_observations(source_url,evidence_id,observed_at) VALUES(?,?,?)",
+                (item["url"], ev["id"], now()),
+            )
         duplicates = 0
         for candidate in candidates:
             old = db.execute(
@@ -366,6 +371,7 @@ def run(
     end_date: str,
     page_limit: int = 2,
     document_limit: int = 8,
+    score_limit: int = 0,
 ) -> dict:
     """Resume a logical backfill without publication, retries or unbounded crawling.
 
@@ -373,6 +379,8 @@ def run(
     are inclusive publisher filters when the route supports them; undated rows
     and documents are retained for later review, never discarded by guessing.
     """
+    if type(score_limit) is not int or not 0 <= score_limit <= 200:
+        raise ValueError("Score limit must be 0..200")
     _validate(config, vendor, start_date, end_date, page_limit, document_limit)
     if db.in_transaction:
         raise ValueError("Finish current transaction before starting backfill")
@@ -468,7 +476,21 @@ def run(
                     archive.document(db, source, item)
                 except Exception as error:
                     archive.fail(db, source, item, error)
-    return manifest(db, study_id=study["id"])
+    from ..storage.repository import latest
+    from .score_enrichment import run as enrich_scores
+
+    cve_ids = sorted(
+        {
+            c
+            for r in latest(db)
+            if r["vendor"] in (VENDORS if vendor is None else (vendor,))
+            for c in r["cves"]
+        }
+    )
+    receipt = manifest(db, study_id=study["id"])
+    if score_limit:
+        receipt["score_enrichment"] = enrich_scores(db, cve_ids, limit=score_limit)
+    return receipt
 
 
 def _date(value):

@@ -64,6 +64,7 @@ def main(argv=None):
     switching.add_argument("--end-date", required=True)
     switching.add_argument("--page-limit", type=int, default=2)
     switching.add_argument("--document-limit", type=int, default=8)
+    switching.add_argument("--score-limit", type=int, default=0)
     triage = sub.add_parser(
         "triage", help="Group a bounded pending/error archive sample by layout and parser outcome"
     )
@@ -299,6 +300,7 @@ def main(argv=None):
                         end_date=args.end_date,
                         page_limit=args.page_limit,
                         document_limit=args.document_limit,
+                        score_limit=args.score_limit,
                     )
                 except ValueError:
                     parser.error("Invalid switching source, date or budget")

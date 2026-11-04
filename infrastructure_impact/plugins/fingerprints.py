@@ -13,6 +13,7 @@ SHARED_SOURCES = tuple(
     ("core:" + name, PACKAGE / name)
     for name in (
         "adapters/common.py",
+        "adapters/cvss.py",
         "adapters/standards.py",
         "domain.py",
         "plugins/contracts.py",

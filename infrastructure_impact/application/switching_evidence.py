@@ -107,6 +107,12 @@ def _official(url, vendor=None, *, reference=False):
             return
         if not reference:
             raise ValueError("Vendor evidence must retain its official publisher source")
+    if reference:
+        from ..adapters.cvss import official_route
+
+        cid = u.path.rsplit("/", 1)[-1]
+        if official_route(url, "cve_record", cid):
+            return
     host = (u.hostname or "").lower()
     if any(
         host == domain or host.endswith("." + domain)
@@ -283,6 +289,18 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
             if claim["advisory_id"] not in bundle["member_advisory_ids"]:
                 raise ValueError("Bundle must explicitly name this advisory as a member")
             _missing(claim["issues"], bundle["published_at"], "bundle_publication_date_missing")
+        for rating in claim.get("vendor_severity", []):
+            _official(rating["source"]["source_url"], vendor)
+            if rating["vendor"] != vendor or rating["advisory_id"] != claim["advisory_id"]:
+                raise ValueError("Vendor rating must identify this advisory")
+            if (
+                rating["scope"] != "advisory"
+                or rating["cve_id"] is not None
+                or rating["product_ids"]
+            ):
+                raise ValueError("Advisory rating cannot become a per-CVE/product score")
+            for key in ("scheme", "namespace"):
+                _missing(rating["issues"], rating[key], f"vendor_severity_{key}_missing")
         for score in claim["scores"]:
             _official(score["source"]["source_url"], vendor, reference=True)
             if score["scope"] == "cve_specific" and (
@@ -512,6 +530,57 @@ def inputs(db, records: list[dict]) -> dict:
         ]
         for bundle in members or [None]:
             expanded.append({**copy.deepcopy(claim), "bundle": copy.deepcopy(bundle)})
+    from ..adapters.cvss import public_metrics
+
+    score_data = score_inputs(db, records)
+    for claim in expanded:
+        claim["vendor_severity"] = [
+            rating
+            for rating in score_data["vendor_severity"]
+            if rating["vendor"] == claim["vendor"] and rating["advisory_id"] == claim["advisory_id"]
+        ]
+        if not claim["vendor_severity"]:
+            claim["issues"].append("vendor_severity_unavailable")
+        candidates = [
+            score
+            for entry in score_data["advisories"]
+            if entry["vendor"] == claim["vendor"] and entry["advisory_id"] == claim["advisory_id"]
+            for score in entry["claims"]
+        ]
+        candidates += score_data["fallback"]["claims"]
+        claim["scores"] = [
+            score
+            for score in candidates
+            if score["validation"] != "invalid"
+            and score["cve_id"] == claim["cve_id"]
+            and (
+                score["origin"] != "vendor_advisory"
+                or (
+                    score["source"]["source_url"] == claim["source"]["source_url"]
+                    and (not score["product_ids"] or claim["product_id"] in score["product_ids"])
+                )
+            )
+        ]
+        claim["scores"] = public_metrics(claim["scores"]) + [
+            {**score, "preferred": False}
+            for score in claim["scores"]
+            if score["validation"] == "incomplete"
+        ]
+        relevant = [
+            score
+            for score in candidates
+            if score["cve_id"] == claim["cve_id"]
+            and (not score["product_ids"] or claim["product_id"] in score["product_ids"])
+        ]
+        for score in relevant:
+            if score["validation"] == "invalid":
+                claim["issues"].append("score_invalid")
+            elif score["validation"] == "incomplete":
+                claim["issues"].extend(score["issues"])
+                if score["value"] is None:
+                    claim["issues"].append("score_value_missing")
+        if not relevant:
+            claim["issues"].append("score_unavailable")
     result["claims"] = expanded
     result["issues"] = sorted(set(result["issues"]))
     return result
@@ -595,4 +664,80 @@ def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dic
     result["claims"] = list(claims.values())
     result["issues"] = sorted(set(result["issues"]))
     validate_evidence(result, publication=publication, generated_at=generated_at)
+    return result
+
+
+def score_inputs(db, records: list[dict]) -> dict:
+    """Source-led scores for every selected vendor advisory, plus CVE-only fallback."""
+    from ..adapters import cvss
+    from ..collection.score_enrichment import inputs as fallback_inputs
+
+    selected = {(r["vendor"], r["advisory_id"]) for r in records}
+    result = {
+        "advisories": [],
+        "vendor_severity": [],
+        "fallback": fallback_inputs(db, [c for r in records for c in r["cves"]]),
+    }
+    for representation in db.execute(
+        "SELECT * FROM revisions WHERE id IN (SELECT MAX(id) FROM revisions GROUP BY vendor,advisory_id,source_url) ORDER BY id"
+    ):
+        vendor, advisory_id, url = (
+            representation["vendor"],
+            representation["advisory_id"],
+            representation["source_url"],
+        )
+        if (vendor, advisory_id) not in selected:
+            continue
+        row = _latest_retained_source(db, vendor, url)
+        revision = db.execute(
+            "SELECT * FROM revisions WHERE evidence_id=? AND vendor=? AND advisory_id=? AND source_url=? ORDER BY id DESC LIMIT 1",
+            (row["id"], vendor, advisory_id, url),
+        ).fetchone()
+        if revision is None:
+            parsed = {
+                "claims": [],
+                "issues": [{"code": "source_normalization_unavailable", "source_url": url}],
+            }
+        else:
+            try:
+                parsed = cvss.extract(row["raw"], url, vendor, json.loads(revision["normalized"]))
+            except (ValueError, TypeError, KeyError, AttributeError):
+                parsed = {
+                    "claims": [],
+                    "issues": [{"code": "score_extraction_failed", "source_url": url}],
+                }
+            for score in parsed["claims"] + parsed.get("vendor_severity", []):
+                score["source"]["retrieved_at"] = row["retrieved_at"]
+                score["revision"] = str(revision["id"])
+        result["vendor_severity"].extend(parsed.get("vendor_severity", []))
+        result["advisories"].append(
+            dict(vendor=vendor, advisory_id=advisory_id, source_url=url, **parsed)
+        )
+    # New successful API page events preserve A->B->A independently of content
+    # IDs. Legacy retained membership is usable only with one unambiguous hash;
+    # missing retrieval chronology must not silently pick an older rating.
+    api_sources = {}
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='score_vendor_observations'").fetchone():
+        for row in db.execute(
+            "SELECT e.*,o.observed_at AS retrieved_at FROM score_vendor_observations o JOIN evidence e ON e.id=o.evidence_id WHERE o.id IN (SELECT MAX(id) FROM score_vendor_observations GROUP BY source_url)"
+        ):
+            api_sources[row["source_url"]] = dict(row)
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='switching_backfill_pages'").fetchone():
+        legacy = {}
+        for row in db.execute(
+            "SELECT DISTINCT e.*,e.observed_at AS retrieved_at FROM switching_backfill_pages p JOIN switching_backfills b ON b.id=p.run_id JOIN evidence e ON e.id=p.evidence_id WHERE b.vendor='cisco' AND b.kind='openvuln'"
+        ):
+            legacy.setdefault(row["source_url"], {})[row["sha256"]] = dict(row)
+        for url, hashes in legacy.items():
+            if url not in api_sources and len(hashes) == 1:
+                api_sources[url] = next(iter(hashes.values()))
+    for row in api_sources.values():
+        for vendor, identity in sorted(selected):
+            if vendor != "cisco":
+                continue
+            parsed = cvss.extract(row["raw"], row["source_url"], vendor, {"advisory_id": identity})
+            for rating in parsed["vendor_severity"]:
+                rating["source"]["retrieved_at"] = row["retrieved_at"]
+                rating["issues"].append("revision_missing")
+                result["vendor_severity"].append(rating)
     return result

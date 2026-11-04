@@ -420,6 +420,105 @@
         },
         "source": {
           "$ref": "#/$defs/source"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "vendor_advisory",
+            "cve_record",
+            "nvd"
+          ]
+        },
+        "applicability": {
+          "enum": [
+            "source_product",
+            "cve_level"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validation": {
+          "enum": [
+            "valid",
+            "incomplete"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "preferred": {
+          "type": "boolean"
+        },
+        "product_context": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "product_id": {
+                "type": "string"
+              },
+              "product": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_locator": {
+                "type": "string"
+              },
+              "version_expressions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "product_id",
+              "product",
+              "source_locator",
+              "version_expressions",
+              "issues"
+            ]
+          }
+        },
+        "vector_group": {
+          "enum": [
+            "CVSS-B",
+            "CVSS-BT",
+            "CVSS-BE",
+            "CVSS-BTE",
+            "reported_base_with_optional_context"
+          ]
         }
       },
       "required": [
@@ -700,6 +799,12 @@
             "pattern": "^[a-z][a-z0-9_]*$"
           },
           "uniqueItems": true
+        },
+        "vendor_severity": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/vendor_severity"
+          }
         }
       },
       "required": [
@@ -802,6 +907,79 @@
         "observed_start",
         "observed_end",
         "total",
+        "issues"
+      ]
+    },
+    "vendor_severity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "advisory_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rating": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "scheme": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "namespace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "const": "advisory"
+        },
+        "cve_id": {
+          "type": "null"
+        },
+        "product_ids": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "vendor",
+        "advisory_id",
+        "rating",
+        "scheme",
+        "namespace",
+        "scope",
+        "cve_id",
+        "product_ids",
+        "source",
+        "revision",
         "issues"
       ]
     }
