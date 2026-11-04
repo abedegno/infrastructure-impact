@@ -189,7 +189,8 @@
             "minLength": 1,
             "pattern": "\\S"
           },
-          "uniqueItems": true
+          "uniqueItems": true,
+          "description": "Explicit publisher product identifiers. Empty lists or an unknown enclosing product require remediation_product_scope_unresolved and do not establish product-specific remediation evidence."
         },
         "version_expressions": {
           "type": "array",
@@ -210,7 +211,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "Literal publisher availability statement, independent of availability_date. Null requires availability_statement_missing in the enclosing claim issues."
         },
         "availability_date": {
           "anyOf": [
@@ -229,7 +231,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "Explicitly published availability date; never derived from an availability statement. Null requires availability_date_missing in the enclosing claim issues."
         },
         "source": {
           "$ref": "#/$defs/source"

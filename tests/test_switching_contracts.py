@@ -284,3 +284,63 @@ def test_kev_exploitation_metadata_is_not_a_score_origin(url):
     report["claims"][0]["scores"][0]["source"]["source_url"] = url
     with pytest.raises(ValueError):
         contracts().validate_evidence(reidentify(report))
+
+
+def test_remediation_cannot_attach_a_different_publisher_products_fix():
+    report = evidence()
+    report["claims"][0]["remediations"][0]["product_ids"] = ["unrelated-product"]
+    with pytest.raises(ValueError):
+        contracts().validate_evidence(reidentify(report))
+
+
+def test_unscoped_remediation_requires_explicit_unresolved_product_scope():
+    report = evidence()
+    claim = report["claims"][0]
+    claim["remediations"][0]["product_ids"] = []
+    with pytest.raises(ValueError):
+        contracts().validate_evidence(reidentify(report))
+    claim["issues"].append("remediation_product_scope_unresolved")
+    contracts().validate_evidence(reidentify(report))
+    assert claim["remediations"][0]["product_ids"] == []
+
+
+def test_unknown_claim_product_does_not_qualify_remediation_product_scope():
+    report = evidence()
+    claim = report["claims"][0]
+    claim["product_id"] = None
+    claim["scores"][0]["product_ids"] = []
+    claim["issues"].append("product_id_missing")
+    with pytest.raises(ValueError):
+        contracts().validate_evidence(reidentify(report))
+    claim["issues"].append("remediation_product_scope_unresolved")
+    contracts().validate_evidence(reidentify(report))
+
+
+def test_missing_availability_statement_is_distinct_from_missing_date():
+    report = evidence()
+    claim = report["claims"][0]
+    remediation = claim["remediations"][0]
+    remediation["published_availability"] = None
+    assert "availability_date_missing" in claim["issues"]
+    with pytest.raises(ValueError):
+        contracts().validate_evidence(reidentify(report))
+    claim["issues"].append("availability_statement_missing")
+    contracts().validate_evidence(reidentify(report))
+    assert remediation["published_availability"] is None
+    assert remediation["availability_date"] is None
+
+
+@pytest.mark.parametrize(
+    "character", ["<capture>", '"capture"', "{capture}", "|", "^", "`", "[capture]"]
+)
+def test_source_uri_rejects_characters_outside_rfc_uri_path_syntax(character):
+    report = evidence()
+    report["claims"][0]["source"]["source_url"] = "https://www.arista.com/" + character
+    with pytest.raises(ValidationError):
+        contracts().validate_evidence(reidentify(report))
+
+
+def test_source_uri_accepts_percent_encoded_capture_path():
+    report = evidence()
+    report["claims"][0]["source"]["source_url"] = "https://www.arista.com/%3Ccapture%3E"
+    contracts().validate_evidence(reidentify(report))

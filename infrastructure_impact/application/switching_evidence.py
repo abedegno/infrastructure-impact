@@ -79,7 +79,11 @@ def _validators():
         return (
             parsed.scheme == "https"
             and bool(parsed.hostname)
-            and not re.search(r"[\s\\\x00-\x20\x7f-\uffff]|%(?![0-9a-fA-F]{2})", value)
+            and re.fullmatch(r"[A-Za-z0-9._~:/?#\[\]@!$&'()*+,;=%-]*", value) is not None
+            and not re.search(r"%(?![0-9a-fA-F]{2})", value)
+            and not any(
+                re.search(r"[\[\]]", part) for part in (parsed.path, parsed.query, parsed.fragment)
+            )
         )
 
     return {
@@ -233,6 +237,22 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
                 _official(binding["source"]["source_url"], vendor)
         for remediation in claim["remediations"]:
             _official(remediation["source"]["source_url"], vendor)
+            product_ids = remediation["product_ids"]
+            if (
+                product_ids
+                and claim["product_id"] is not None
+                and claim["product_id"] not in product_ids
+            ):
+                raise ValueError("Product-bound remediation must include this publisher product ID")
+            if (
+                not product_ids or claim["product_id"] is None
+            ) and "remediation_product_scope_unresolved" not in claim["issues"]:
+                raise ValueError("Unscoped remediation requires an unresolved product-scope issue")
+            _missing(
+                claim["issues"],
+                remediation["published_availability"],
+                "availability_statement_missing",
+            )
             _missing(
                 claim["issues"], remediation["publisher_id"], "remediation_publisher_id_missing"
             )
