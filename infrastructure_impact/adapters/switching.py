@@ -202,11 +202,18 @@ def _csaf(raw, url, vendor, document, digest):
                 if text:
                     claim["conditions"].append(text)
             for threat in vuln.get("threats", []):
+                group_ids = threat.get("group_ids", [])
+                if any(group not in groups for group in group_ids):
+                    claim["issues"].append("threat_product_scope_unresolved")
+                    continue
                 ids = threat.get("product_ids", []) + [
-                    p for g in threat.get("group_ids", []) for p in groups.get(g, [])
+                    p for group in group_ids for p in groups[group]
                 ]
-                if (not ids or pid in ids) and threat.get("details"):
-                    claim["conditions"].append(_bounded(threat["details"], claim["issues"]))
+                declared_scope = "product_ids" in threat or "group_ids" in threat
+                if (not declared_scope or pid in ids) and threat.get("details"):
+                    text = _bounded(threat["details"], claim["issues"])
+                    if text:
+                        claim["conditions"].append(text)
             for ri, rem in enumerate(vuln.get("remediations", [])):
                 ids = rem.get("product_ids", []) + [
                     p for g in rem.get("group_ids", []) for p in groups.get(g, [])

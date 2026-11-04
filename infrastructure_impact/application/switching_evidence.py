@@ -318,6 +318,51 @@ def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET
             _official(source["source_url"])
 
 
+def _latest_retained_source(db, vendor, url):
+    """Select bytes by successful observation chronology, never content IDs alone."""
+    events = [
+        dict(r)
+        for r in db.execute(
+            "SELECT id AS evidence_id, observed_at AS at, 0 AS kind, id AS event_id FROM evidence WHERE source_url=?",
+            (url,),
+        )
+    ]
+    events += [
+        dict(r)
+        for r in db.execute(
+            "SELECT evidence_id, checked_at AS at, 2 AS kind, id AS event_id FROM source_observations WHERE vendor=? AND source_url=?",
+            (vendor, url),
+        )
+    ]
+    events += [
+        dict(r)
+        for r in db.execute(
+            "SELECT evidence_id, observed_at AS at, 1 AS kind, id AS event_id FROM revisions WHERE vendor=? AND source_url=?",
+            (vendor, url),
+        )
+    ]
+    events = [event for event in events if timestamp(event["at"]) is not None]
+    # Once actual successful retrieval observations exist, parser replay
+    # timestamps cannot supersede them. New raw captures still participate.
+    if any(event["kind"] == 2 for event in events):
+        events = [event for event in events if event["kind"] != 1]
+    if not events:
+        return None
+    event = max(events, key=lambda e: (timestamp(e["at"]), e["kind"], e["event_id"]))
+    row = dict(
+        db.execute(
+            "SELECT *, observed_at AS retrieved_at FROM evidence WHERE id=?",
+            (event["evidence_id"],),
+        ).fetchone()
+    )
+    observations = [e for e in events if e["kind"] == 2 and e["evidence_id"] == row["id"]]
+    if observations:
+        row["retrieved_at"] = max(observations, key=lambda e: (timestamp(e["at"]), e["event_id"]))[
+            "at"
+        ]
+    return row
+
+
 def inputs(db, records: list[dict]) -> dict:
     """Reconstruct latest-known claims per retained source representation.
 
@@ -367,35 +412,48 @@ def inputs(db, records: list[dict]) -> dict:
         bundles.extend(extracted.get("bundles", []))
         result["issues"].extend(extracted.get("issues", []))
 
-    rows = db.execute("""SELECT r.*, e.raw, e.sha256, e.observed_at AS retrieved_at
-        FROM revisions r JOIN evidence e ON e.id=r.evidence_id
+    rows = db.execute("""SELECT r.* FROM revisions r
         WHERE r.id IN (SELECT MAX(id) FROM revisions GROUP BY vendor,advisory_id,source_url)
         ORDER BY r.vendor,r.advisory_id,r.source_url""")
-    for row in rows:
-        if (row["vendor"], row["advisory_id"]) not in selected or (
-            row["vendor"],
-            row["source_url"],
-        ) in registered_urls:
+    for representation in rows:
+        vendor, url = representation["vendor"], representation["source_url"]
+        advisory_id = representation["advisory_id"]
+        if (vendor, advisory_id) not in selected or (vendor, url) in registered_urls:
             continue
-        try:
-            extracted = registry.research_evidence(
-                row["raw"], row["source_url"], row["vendor"], json.loads(row["normalized"])
-            )
-            if extracted is None:
-                result["issues"].append("research_hook_unavailable")
-                continue
-            retained(extracted, row, row["id"])
-        except (ValueError, TypeError, KeyError):
-            result["issues"].append("source_extraction_failed")
+        row = _latest_retained_source(db, vendor, url)
+        # The representation has retained evidence through its foreign key.
+        revision = db.execute(
+            "SELECT * FROM revisions WHERE evidence_id=? AND vendor=? AND source_url=? AND advisory_id=? ORDER BY id DESC LIMIT 1",
+            (row["id"], vendor, url, advisory_id),
+        ).fetchone()
+        source_issues = []
+        if revision is None:
+            # Generic unnormalized bytes have no verified advisory identity.
+            # Only the separately reviewed exact-byte bindings permit fallback.
+            source_issues.append("source_normalization_unavailable")
+        else:
+            try:
+                extracted = registry.research_evidence(
+                    row["raw"], url, vendor, json.loads(revision["normalized"])
+                )
+                if extracted is None:
+                    source_issues.append("research_hook_unavailable")
+                else:
+                    retained(extracted, row, revision["id"])
+                    source_issues.extend(extracted.get("issues", []))
+            except (ValueError, TypeError, KeyError):
+                source_issues.append("source_extraction_failed")
+        result["issues"].extend(source_issues)
         result["coverage"].append(
             dict(
-                vendor=row["vendor"],
-                source_url=row["source_url"],
+                vendor=vendor,
+                source_url=url,
                 state="partial",
                 observed_start=row["retrieved_at"][:10],
                 observed_end=row["retrieved_at"][:10],
                 total=None,
-                issues=["publisher_total_unknown", "retained_documents_not_archive_coverage"],
+                issues=["publisher_total_unknown", "retained_documents_not_archive_coverage"]
+                + source_issues,
             )
         )
     # Reviewed source-only evidence cannot invent a normalized revision. Choose
@@ -409,48 +467,11 @@ def inputs(db, records: list[dict]) -> dict:
         if (vendor, url) in visited:
             continue
         visited.add((vendor, url))
-        events = [
-            dict(r)
-            for r in db.execute(
-                "SELECT id AS evidence_id, observed_at AS at, 0 AS kind, id AS event_id FROM evidence WHERE source_url=?",
-                (url,),
-            )
-        ]
-        events += [
-            dict(r)
-            for r in db.execute(
-                "SELECT evidence_id, checked_at AS at, 2 AS kind, id AS event_id FROM source_observations WHERE vendor=? AND source_url=?",
-                (vendor, url),
-            )
-        ]
-        events += [
-            dict(r)
-            for r in db.execute(
-                "SELECT evidence_id, observed_at AS at, 1 AS kind, id AS event_id FROM revisions WHERE vendor=? AND source_url=?",
-                (vendor, url),
-            )
-        ]
-        events = [event for event in events if timestamp(event["at"]) is not None]
-        # Once actual successful retrieval observations exist, parser replay
-        # timestamps cannot supersede them. New raw captures still participate.
-        if any(event["kind"] == 2 for event in events):
-            events = [event for event in events if event["kind"] != 1]
-        if not events:
+        row = _latest_retained_source(db, vendor, url)
+        if row is None:
             if "bundle" in entry:
                 result["issues"].append("bundle_source_unavailable")
             continue
-        event = max(events, key=lambda e: (timestamp(e["at"]), e["kind"], e["event_id"]))
-        row = dict(
-            db.execute(
-                "SELECT *, observed_at AS retrieved_at FROM evidence WHERE id=?",
-                (event["evidence_id"],),
-            ).fetchone()
-        )
-        observations = [e for e in events if e["kind"] == 2 and e["evidence_id"] == row["id"]]
-        if observations:
-            row["retrieved_at"] = max(
-                observations, key=lambda e: (timestamp(e["at"]), e["event_id"])
-            )["at"]
         revision = db.execute(
             "SELECT * FROM revisions WHERE evidence_id=? AND vendor=? AND source_url=? AND advisory_id=? ORDER BY id DESC LIMIT 1",
             (row["id"], vendor, url, publisher_id),

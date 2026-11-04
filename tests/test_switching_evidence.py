@@ -501,3 +501,87 @@ def test_changed_reviewed_source_rejects_malformed_payload_before_parsing():
     )
     assert result["claims"] == []
     assert result["issues"] == ["source_binding_stale"]
+
+
+@pytest.mark.parametrize("unsupported", [b"<html>unsupported replacement</html>", b"{invalid"])
+def test_generic_csaf_latest_observation_suppresses_old_scope_until_observed_return(unsupported):
+    from infrastructure_impact.storage.observations import observe
+    from infrastructure_impact.storage.repository import evidence as retain
+
+    db = connect(":memory:")
+    raw = json.dumps(tree()).encode()
+    alternate = URL + "?alternate"
+    ingest(db, raw, URL, standards.csaf, "aruba")
+    ingest(db, raw, alternate, standards.csaf, "aruba")
+    a = retain(db, raw, URL)
+    observe(db, "aruba", URL, a["id"], 200)
+
+    def current():
+        return evidence.project(evidence.inputs(db, latest(db)), publication=None, generated_at=AT)
+
+    assert len(current()["claims"]) == 2
+    b = retain(db, unsupported, URL)
+    observe(db, "aruba", URL, b["id"], 200)
+
+    def assert_suppressed():
+        result = current()
+        assert [c["source"]["source_url"] for c in result["claims"]] == [alternate]
+        assert "source_normalization_unavailable" in result["issues"]
+        coverage = next(row for row in result["coverage"] if row["source_url"] == URL)
+        assert coverage["state"] == "partial"
+        assert "source_normalization_unavailable" in coverage["issues"]
+
+    assert_suppressed()
+
+    # Force an actual parser revision of A without recording a new retrieval.
+    def replay(raw, url, vendor):
+        normalized = standards.csaf(raw, url, vendor)
+        normalized["warnings"].append("Synthetic parser replay")
+        return normalized
+
+    ingest(db, raw, URL, replay, "aruba")
+    replay_revision = latest(db)[0]["revision_id"]
+    assert_suppressed()
+    observe(db, "aruba", URL, a["id"], 200)
+    result = current()
+    assert len(result["claims"]) == 2
+    returned = next(c for c in result["claims"] if c["source"]["source_url"] == URL)
+    assert returned["source"]["source_sha256"] == a["sha256"]
+    assert returned["revision"] == str(replay_revision)
+    assert "source_normalization_unavailable" not in result["issues"]
+
+
+@pytest.mark.parametrize("group_ids", [["missing"], ["known", "missing"]])
+def test_unresolved_threat_groups_do_not_broaden_conditions(group_ids):
+    d = tree()
+    d["product_tree"]["product_groups"] = [{"group_id": "known", "product_ids": ["p"]}]
+    d["vulnerabilities"][0]["threats"] = [
+        {"category": "impact", "group_ids": group_ids, "details": "Scoped condition"}
+    ]
+    c = report(d)["claims"][0]
+    assert "Scoped condition" not in c["conditions"]
+    assert "threat_product_scope_unresolved" in c["issues"]
+
+
+@pytest.mark.parametrize(
+    "scope,applies",
+    [
+        ({}, True),
+        ({"group_ids": ["known"]}, True),
+        ({"group_ids": ["other"]}, False),
+        ({"group_ids": ["empty"]}, False),
+    ],
+)
+def test_resolved_threat_groups_and_unscoped_threats_keep_their_scope(scope, applies):
+    d = tree()
+    d["product_tree"]["product_groups"] = [
+        {"group_id": "known", "product_ids": ["p"]},
+        {"group_id": "other", "product_ids": ["different-product"]},
+        {"group_id": "empty", "product_ids": []},
+    ]
+    d["vulnerabilities"][0]["threats"] = [
+        {"category": "impact", "details": "Scoped condition", **scope}
+    ]
+    c = report(d)["claims"][0]
+    assert ("Scoped condition" in c["conditions"]) is applies
+    assert "threat_product_scope_unresolved" not in c["issues"]
