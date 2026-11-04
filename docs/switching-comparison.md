@@ -82,11 +82,18 @@ cannot prove an unversioned publisher listing did not silently move between
 requests.
 
 Listing bytes, discovered document queue links, per-occurrence identities and the
-next checkpoint commit atomically. An interruption replays the unfinished page.
+next checkpoint commit atomically. Every advertised representation remains linked
+to its identity across duplicate occurrences, including missing-then-restored and
+changed URLs; migration014 repairs earlier orphaned queue memberships. An
+interruption replays the unfinished page.
 Document ingestion uses the existing reviewed archive path and is idempotent
 across interruption after ingestion. Failed items stay in queue counts; deferred
-and exhausted failures are not reset. Cisco cooldowns stop vendor I/O for the
-invocation. An unresolved request marker blocks indefinitely, including after
+and exhausted failures are not reset. Listing failures also persist queue
+attempts and backoff; a known successful page clears its completed retry state.
+Reaching the API enumeration ceiling stops listing requests while subsequent
+invocations continue bounded processing of already discovered documents. Cisco
+cooldowns stop vendor I/O for the invocation. An unresolved request marker blocks
+indefinitely, including after
 reopening the vault; this command never clears or recovers it automatically.
 
 The JSON receipt is operational staging data, separate from the strict public
@@ -105,7 +112,8 @@ returns the same stored run inventory. Each entry includes:
 - Every retained listing URL/hash/retrieval time; literal publisher identity,
   revision/status/date and locator, advertised alternate URLs and all duplicate
   occurrence evidence. Successfully parsed document identity is exposed separately
-  as `normalized_identity`; it never changes discovery into model applicability.
+  as `normalized_identity` when representations agree, with all parsed IDs in
+  `normalized_identities`; it never changes discovery into model applicability.
 
 Public archive links initially use exact URLs as discovery identities. Parser
 identities are reconciled separately; alias merging and model qualification are

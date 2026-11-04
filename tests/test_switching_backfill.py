@@ -206,6 +206,11 @@ def test_interruption_before_queue_commit_does_not_advance():
         assert e["page_evidence"] == []
         assert db.execute("SELECT count(*) FROM archive_links").fetchone()[0] == 0
         db.execute("DROP TRIGGER abort_queue")
+        # A failed durable page commit now respects the same persisted backoff
+        # as a failed fetch; simulate the retry boundary passing.
+        db.execute(
+            "UPDATE archive_items SET retry_after='2021-01-01T00:00:00+00:00' WHERE kind='page'"
+        )
         db.commit()
         with patch(
             "infrastructure_impact.collection.archive.resolve_document",
@@ -214,6 +219,9 @@ def test_interruption_before_queue_commit_does_not_advance():
             e = run(db)["entries"][0]
         assert e["coverage_state"] == "enumerated"
         assert e["discovered_unique_identities"] == 1
+        item = db.execute("SELECT * FROM archive_items WHERE kind='page'").fetchone()
+        assert item["attempts"] == 0
+        assert item["retry_after"] is None
 
 
 @pytest.mark.parametrize(
@@ -676,3 +684,189 @@ def test_changing_batch_budgets_does_not_reset_logical_run():
         result = run(db, cfg, vendor="aruba")
         assert len(result["entries"]) == 1
         assert result["entries"][0]["run_id"] == first
+
+
+@pytest.mark.parametrize(
+    "first_url",
+    [None, "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/old-a"],
+)
+def test_duplicate_occurrences_keep_all_document_memberships(first_url):
+    first = entry("a")
+    first["publicationUrl"] = first_url
+    later = entry("a")
+    responses = {1: page([first]), 2: page([later]), 3: page([])}
+    urls = []
+
+    def resolve(db, url, vendor):
+        urls.append(url)
+        raise ValueError("unsupported")
+
+    with (
+        connect(":memory:") as db,
+        patch.object(backfill.CiscoOpenVuln, "get_json", capture(responses, [])),
+        patch("infrastructure_impact.collection.archive.resolve_document", side_effect=resolve),
+    ):
+        e = run(db, config(page_size=1), page_limit=3)["entries"][0]
+        expected_urls = ([first_url] if first_url else []) + [later["publicationUrl"]]
+        assert e["documents"]["error"] == len(expected_urls)
+        assert urls == expected_urls
+        assert e["identity_evidence"][0]["alternate_urls"] == expected_urls
+        assert e["identity_evidence"][0]["observations"][1]["alternate_urls"] == [
+            later["publicationUrl"]
+        ]
+        assert e["discovered_unique_identities"] == 1
+        assert (
+            sum(e["documents"].values())
+            == db.execute("SELECT count(*) FROM archive_items WHERE kind='document'").fetchone()[0]
+        )
+        run(db, config(page_size=1), page_limit=3)
+        assert urls == expected_urls  # deferred errors do not immediately re-run
+
+
+def test_all_advertised_alternates_are_durable_document_members():
+    a = entry("a", csafUrl="https://www.cisco.com/.well-known/csaf/2024/a.json")
+    with (
+        connect(":memory:") as db,
+        patch.object(backfill.CiscoOpenVuln, "get_json", return_value=page([a])),
+        patch(
+            "infrastructure_impact.collection.archive.resolve_document",
+            side_effect=ValueError("blocked"),
+        ),
+    ):
+        e = run(db)["entries"][0]
+        assert e["documents"]["error"] == 2
+        assert e["identity_evidence"][0]["observations"][0]["alternate_urls"] == [
+            a["csafUrl"],
+            a["publicationUrl"],
+        ]
+
+
+def test_listing_failures_persist_attempts_backoff_and_exhaustion_across_reopen(tmp_path):
+    from datetime import datetime, timezone
+
+    cfg = {"vendors": [], "archives": [{"vendor": "arista", "kind": "listing", "url": ARISTA}]}
+    path = tmp_path / "staging.sqlite3"
+    requested = []
+
+    def timeout(db, url, vendor):
+        requested.append(url)
+        raise TimeoutError("listing unavailable")
+
+    with connect(path) as db, patch.object(backfill, "fetch", side_effect=timeout):
+        run(db, cfg, vendor="arista")
+    with connect(path) as db, patch.object(backfill, "fetch", side_effect=timeout):
+        e = run(db, cfg, vendor="arista")["entries"][0]
+        item = db.execute("SELECT * FROM archive_items WHERE kind='page'").fetchone()
+        assert requested == [ARISTA]
+        assert item["state"] == "error"
+        assert item["attempts"] == 1
+        assert item["error_code"] == "network_error"
+        assert datetime.fromisoformat(item["retry_after"]) > datetime.now(timezone.utc)
+        assert e["checkpoint"]["next_page"] == 1
+        db.execute("UPDATE archive_items SET retry_after='2021-01-01T00:00:00+00:00'")
+        db.commit()
+        run(db, cfg, vendor="arista")
+        assert len(requested) == 2
+        db.execute("UPDATE archive_items SET attempts=5,retry_after='2021-01-01T00:00:00+00:00'")
+        db.commit()
+        run(db, cfg, vendor="arista")
+        assert len(requested) == 2
+        assert db.execute("SELECT attempts FROM archive_items WHERE kind='page'").fetchone()[0] == 5
+
+
+def test_publisher_page_limit_keeps_bounded_document_drain_resumable():
+    responses = {1: page([entry("a"), entry("b")]), 2: page([])}
+    with (
+        connect(":memory:") as db,
+        patch.object(backfill.CiscoOpenVuln, "get_json", capture(responses, [])),
+        patch(
+            "infrastructure_impact.collection.archive.resolve_document",
+            side_effect=ValueError("blocked"),
+        ),
+    ):
+        run(db, document_limit=1)
+        db.execute("UPDATE switching_backfills SET error_code='publisher_page_limit',enumerated=0")
+        db.commit()
+        with patch.object(
+            backfill.CiscoOpenVuln, "get_json", side_effect=AssertionError("listing must stop")
+        ):
+            e = run(db, document_limit=1)["entries"][0]
+        assert e["coverage_state"] != "enumerated"
+        assert "publisher_page_limit" in e["errors"]
+        assert e["documents"]["error"] == 2
+        assert e["documents"]["pending"] == 0
+
+
+def test_membership_migration_repairs_pre014_orphans_and_unqueued_alternates():
+    from infrastructure_impact.storage.migrations import migrate
+
+    first = entry("a")
+    first["publicationUrl"] = None
+    later = entry("a", csafUrl="https://www.cisco.com/.well-known/csaf/2024/a.json")
+    responses = {1: page([first]), 2: page([later]), 3: page([])}
+    with (
+        connect(":memory:") as db,
+        patch.object(backfill.CiscoOpenVuln, "get_json", capture(responses, [])),
+        patch(
+            "infrastructure_impact.collection.archive.resolve_document",
+            side_effect=ValueError("blocked"),
+        ),
+    ):
+        run(db, config(page_size=1), page_limit=3)
+        # Model already-applied013: first entry pointer NULL; later occurrence
+        # has an orphaned selected CSAF item and an unqueued HTML alternate.
+        assert db.execute("SELECT item_id FROM switching_backfill_entries").fetchone()[0] is None
+        db.execute("DROP TABLE switching_backfill_documents")
+        db.execute("DELETE FROM schema_migrations WHERE version=14")
+        db.execute(
+            "DELETE FROM archive_links WHERE item_id IN (SELECT id FROM archive_items WHERE url=?)",
+            (later["publicationUrl"],),
+        )
+        db.execute("DELETE FROM archive_items WHERE url=?", (later["publicationUrl"],))
+        old = dict(db.execute("SELECT * FROM archive_items WHERE kind='document'").fetchone())
+        checksum = db.execute("SELECT checksum FROM schema_migrations WHERE version=13").fetchone()[
+            0
+        ]
+        db.commit()
+        migrate(db)
+        assert (
+            db.execute("SELECT checksum FROM schema_migrations WHERE version=13").fetchone()[0]
+            == checksum
+        )
+        assert db.execute("SELECT count(*) FROM switching_backfill_documents").fetchone()[0] == 2
+        assert (
+            db.execute(
+                "SELECT count(*) FROM archive_links WHERE item_id IN (SELECT id FROM archive_items WHERE kind='document')"
+            ).fetchone()[0]
+            == 2
+        )
+        adopted = dict(
+            db.execute("SELECT * FROM archive_items WHERE id=?", (old["id"],)).fetchone()
+        )
+        assert adopted == old
+        e = backfill.manifest(db, study_id="campus-branch-switching")["entries"][0]
+        assert e["documents"]["error"] == 1
+        assert e["documents"]["pending"] == 1
+        e = run(db, config(page_size=1), page_limit=3)["entries"][0]
+        assert e["documents"]["error"] == 2
+        assert e["documents"]["pending"] == 0
+
+
+def test_api_page_failure_keeps_transport_cooldown_boundary():
+    boundary = "2099-01-02T00:00:00+00:00"
+    requested = []
+
+    def limited(self, url):
+        requested.append(url)
+        raise CiscoAccessError("rate_limited", retry_at=boundary)
+
+    with connect(":memory:") as db, patch.object(backfill.CiscoOpenVuln, "get_json", limited):
+        e = run(db)["entries"][0]
+        item = db.execute("SELECT * FROM archive_items WHERE kind='page'").fetchone()
+        assert item["state"] == "error"
+        assert item["attempts"] == 1
+        assert item["retry_after"] == boundary
+        assert e["retry_at"] == boundary
+        assert e["checkpoint"]["next_page"] == 1
+        run(db)
+        assert len(requested) == 1

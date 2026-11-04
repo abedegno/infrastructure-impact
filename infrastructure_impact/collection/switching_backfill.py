@@ -227,11 +227,15 @@ def _commit_page(
             if old:
                 duplicates += 1
                 _issue(db, run["id"], "overlapping_pages")
-            item_id = None
-            if candidate["urls"]:
-                item_id = _queue(db, run["id"], run["source_id"], "document", candidate["urls"][0])
-                db.execute("INSERT OR IGNORE INTO archive_links VALUES(?,?)", (item_id, ev["id"]))
-            else:
+            document_ids = []
+            for url in candidate["urls"]:
+                document_id = _queue(db, run["id"], run["source_id"], "document", url)
+                document_ids.append(document_id)
+                db.execute(
+                    "INSERT OR IGNORE INTO archive_links VALUES(?,?)", (document_id, ev["id"])
+                )
+            item_id = next(iter(document_ids), None)
+            if not candidate["urls"]:
                 _issue(db, run["id"], "missing_document_link")
             # Literal publisher values and source locators are retained as discovery,
             # never promoted into affectedness or model claims.
@@ -251,6 +255,11 @@ def _commit_page(
                     json.dumps(candidate["urls"]),
                 ),
             )
+            for document_id in document_ids:
+                db.execute(
+                    "INSERT OR IGNORE INTO switching_backfill_documents VALUES(?,?,?)",
+                    (run["id"], candidate["identity"], document_id),
+                )
             db.execute(
                 "INSERT OR IGNORE INTO switching_backfill_observations VALUES(?,?,?,?,?,?,?,?)",
                 (
@@ -303,7 +312,7 @@ def _commit_page(
             (ev["id"], run["id"], item["id"]),
         )
         db.execute(
-            "UPDATE archive_items SET state='done',checked_at=?,evidence_id=?,entry_count=?,error_code=NULL WHERE id=?",
+            "UPDATE archive_items SET state='done',checked_at=?,evidence_id=?,entry_count=?,attempts=0,retry_after=NULL,error_code=NULL WHERE id=?",
             (now(), ev["id"], len(candidates), item["id"]),
         )
         pending = db.execute(
@@ -389,11 +398,14 @@ def run(
                 break
             if run_row["retry_at"] and run_row["retry_at"] > now():
                 break
-            if run_row["error_code"] == "publisher_page_limit":
-                continue
+            source = dict(
+                db.execute(
+                    "SELECT * FROM archive_sources WHERE id=?", (run_row["source_id"],)
+                ).fetchone()
+            )
             halted = False
             client = CiscoOpenVuln(db) if seed["kind"] == "openvuln" else None
-            while pages_left:
+            while pages_left and run_row["error_code"] != "publisher_page_limit":
                 item = db.execute(
                     "SELECT i.*,p.ordinal FROM switching_backfill_pages p JOIN archive_items i ON i.id=p.item_id WHERE p.run_id=? AND p.evidence_id IS NULL ORDER BY p.ordinal,i.id LIMIT 1",
                     (run_id,),
@@ -426,19 +438,28 @@ def run(
                         )
                 except Exception as error:
                     db.rollback()
+                    # Missing auth and unknown request outcomes are access blocks,
+                    # not completed failed fetches. In particular, never recover
+                    # or age out the transport's unresolved pending marker.
+                    if not isinstance(error, CiscoAccessError) or error.code not in {
+                        "auth_not_configured",
+                        "request_state_unresolved",
+                    }:
+                        archive.fail(db, source, item, error)
+                        if isinstance(error, CiscoAccessError) and error.retry_at is not None:
+                            with db:
+                                db.execute(
+                                    "UPDATE archive_items SET retry_after=? WHERE id=?",
+                                    (error.retry_at, item["id"]),
+                                )
                     _block(db, run_id, failure_code(error), getattr(error, "retry_at", None))
                     halted = True
                     break
             if halted:
                 # An API cooldown/unresolved outcome stops all vendor I/O this pass.
                 break
-            source = dict(
-                db.execute(
-                    "SELECT * FROM archive_sources WHERE id=?", (run_row["source_id"],)
-                ).fetchone()
-            )
             candidates = db.execute(
-                "SELECT DISTINCT i.* FROM switching_backfill_entries e JOIN archive_items i ON i.id=e.item_id WHERE e.run_id=? AND (i.state='pending' OR (i.state='error' AND i.attempts<? AND i.retry_after<=?)) ORDER BY i.id LIMIT ?",
+                "SELECT DISTINCT i.* FROM switching_backfill_documents e JOIN archive_items i ON i.id=e.item_id WHERE e.run_id=? AND (i.state='pending' OR (i.state='error' AND i.attempts<? AND i.retry_after<=?)) ORDER BY i.id LIMIT ?",
                 (run_id, archive.MAX_ATTEMPTS, now(), documents_left),
             ).fetchall()
             for item in candidates:
@@ -465,7 +486,7 @@ def manifest(db, *, study_id: str) -> dict:
     ):
         r = dict(run_row)
         identities = db.execute(
-            "SELECT e.*,i.state,i.attempts,i.error_code,i.evidence_id AS document_evidence_id,i.url,i.resolved_url FROM switching_backfill_entries e LEFT JOIN archive_items i ON i.id=e.item_id WHERE e.run_id=? ORDER BY e.identity",
+            "SELECT * FROM switching_backfill_entries WHERE run_id=? ORDER BY identity",
             (r["id"],),
         ).fetchall()
         documents = {state: 0 for state in ("pending", "done", "not_applicable", "error")}
@@ -474,51 +495,69 @@ def manifest(db, *, study_id: str) -> dict:
         identity_evidence = []
         retrieved = set()
         for item in identities:
-            if item["item_id"] is not None:
-                known_items[item["item_id"]] = item
+            members = db.execute(
+                "SELECT i.*,i.evidence_id AS document_evidence_id FROM switching_backfill_documents m JOIN archive_items i ON i.id=m.item_id WHERE m.run_id=? AND m.identity=? ORDER BY i.id",
+                (r["id"], item["identity"]),
+            ).fetchall()
+            for member in members:
+                known_items[member["id"]] = member
                 if (
-                    item["document_evidence_id"] is not None
+                    member["document_evidence_id"] is not None
                     or db.execute(
                         "SELECT 1 FROM evidence WHERE source_url IN (?,?) LIMIT 1",
-                        (item["url"], item["resolved_url"]),
+                        (member["url"], member["resolved_url"]),
                     ).fetchone()
                 ):
-                    retrieved.add(item["item_id"])
+                    retrieved.add(member["id"])
             observations = [
                 dict(o)
                 for o in db.execute(
-                    "SELECT o.publisher_revision AS revision,o.publisher_status AS status,o.published_at,o.source_locator,e.sha256,e.source_url,e.observed_at AS retrieved_at FROM switching_backfill_observations o JOIN evidence e ON e.id=o.evidence_id JOIN switching_backfill_pages p ON p.run_id=o.run_id AND p.evidence_id=o.evidence_id WHERE o.run_id=? AND o.identity=? ORDER BY p.ordinal,o.source_locator",
+                    "SELECT o.publisher_revision AS revision,o.publisher_status AS status,o.published_at,o.source_locator,o.alternate_urls,e.sha256,e.source_url,e.observed_at AS retrieved_at FROM switching_backfill_observations o JOIN evidence e ON e.id=o.evidence_id JOIN switching_backfill_pages p ON p.run_id=o.run_id AND p.evidence_id=o.evidence_id WHERE o.run_id=? AND o.identity=? ORDER BY p.ordinal,o.source_locator",
                     (r["id"], item["identity"]),
                 )
             ]
+            for observation in observations:
+                observation["alternate_urls"] = json.loads(observation["alternate_urls"])
+            alternate_urls = list(
+                dict.fromkeys(
+                    url for observation in observations for url in observation["alternate_urls"]
+                )
+            )
             latest = observations[-1] if observations else {}
             published = latest.get("published_at", item["published_at"])
             normalized_identity = None
             status = latest.get("status", item["publisher_status"])
             revision = latest.get("revision", item["publisher_revision"])
-            if item["document_evidence_id"]:
+            normalized_identities = []
+            for member in members:
+                if member["document_evidence_id"] is None:
+                    continue
                 normalized = db.execute(
                     "SELECT normalized FROM revisions WHERE evidence_id=? AND vendor=? ORDER BY id DESC LIMIT 1",
-                    (item["document_evidence_id"], r["vendor"]),
+                    (member["document_evidence_id"], r["vendor"]),
                 ).fetchone()
                 if normalized:
                     record = json.loads(normalized[0])
-                    normalized_identity = record.get("advisory_id")
+                    if record.get("advisory_id") not in normalized_identities:
+                        normalized_identities.append(record.get("advisory_id"))
                     if not _date(published):
                         published = record.get("published_at")
                     status = status if status is not None else record.get("document_status")
                     revision = revision if revision is not None else record.get("revision")
+            if len(normalized_identities) == 1:
+                normalized_identity = normalized_identities[0]
             unknown_dates += not bool(_date(published))
             identity_evidence.append(
                 dict(
                     identity=item["identity"],
                     normalized_identity=normalized_identity,
+                    normalized_identities=normalized_identities,
                     status=status,
                     revision=revision,
                     published_at=published,
                     evidence_id=item["evidence_id"],
                     source_locator=item["source_locator"],
-                    alternate_urls=json.loads(item["alternate_urls"]),
+                    alternate_urls=alternate_urls,
                     observations=observations,
                 )
             )
