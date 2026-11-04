@@ -13,6 +13,7 @@ SHARED_SOURCES = tuple(
     ("core:" + name, PACKAGE / name)
     for name in (
         "adapters/common.py",
+        "adapters/cvss.py",
         "adapters/standards.py",
         "domain.py",
         "plugins/contracts.py",
@@ -31,6 +32,8 @@ SHARED_SOURCES = tuple(
 def sources(plugin):
     """Return local source files; caller metadata and remote feeds cannot name paths."""
     dependencies = plugin.normalizer_dependencies
+    if dependencies is None and plugin.research_evidence is not None:
+        dependencies = ()
     if not isinstance(dependencies, tuple) or any(not callable(d) for d in dependencies):
         raise ValueError("Scoped normalizer dependencies must be a tuple of Python callables")
     result = {}
@@ -45,6 +48,13 @@ def sources(plugin):
 
     for label, path in SHARED_SOURCES:
         include(label, path)
+    if plugin.research_evidence is not None:
+        for name in (
+            "resources/switching-source-bindings.json",
+            "resources/switching-study.json",
+            "schemas/switching-evidence-v1.json",
+        ):
+            include("research:" + name, PACKAGE / name)
     callbacks = [
         getattr(plugin, f.name) for f in fields(plugin) if callable(getattr(plugin, f.name))
     ]

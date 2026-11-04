@@ -50,7 +50,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -149,7 +151,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -265,7 +269,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ]
@@ -292,7 +298,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -380,7 +388,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -432,7 +442,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -520,7 +532,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ]
@@ -598,7 +612,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -674,7 +690,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ]
@@ -957,7 +975,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -992,7 +1012,9 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": ["listed"]
+              "enum": [
+                "listed"
+              ]
             }
           }
         ],
@@ -1042,6 +1064,203 @@
         "responses": {
           "200": {
             "description": "JSON Schema for generation-bound KEV reports"
+          }
+        }
+      }
+    },
+    "/api/v1/switching-comparison": {
+      "get": {
+        "summary": "Read a generation-bound descriptive switching comparison",
+        "description": "Native read-only API; browser static adapter implements equivalent selections on static hosting. Static hosting does not provide an external REST service. Blank, duplicate and unknown parameters are rejected. No upstream access or database writes. Complete immutable inputs are in switching-comparison.json; the API returns an explicit summary without inputs.",
+        "parameters": [
+          {
+            "name": "vendor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            "description": "Optional single vendor; omission selects all registered study vendors."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ],
+              "default": "os_family"
+            },
+            "description": "OS-family context or explicitly qualified model subset."
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "all"
+            },
+            "description": "all, pre, post, undated, or an observed year from 2021 through observation_end year. Cutoff 2026-04-07 is post."
+          },
+          {
+            "name": "cves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}(,CVE-[0-9]{4}-[0-9]{4,19})*$"
+            },
+            "description": "Canonical distinct comma-separated IDs. Omission selects full study independently of ordinary benchmark/KEV controls. Unmatched selection is empty."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "default": "json"
+            },
+            "description": "JSON is explicit switching summary v1 with traceable claim IDs and sources; CSV repeats totals as nonadditive severity facets."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Explicit switching-summary-v1 JSON or CSV summary (provider-reported scores, no rescoring).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/switching-summary-v1.json"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request: blank, repeated, unknown or invalid study control."
+          },
+          "503": {
+            "description": "Missing legacy study: {\"error\":\"switching_unavailable\"}. Damaged publication: {\"error\":\"Publication temporarily unavailable\"}."
+          }
+        }
+      }
+    },
+    "/switching-evidence.json": {
+      "get": {
+        "summary": "Immutable generation asset: switching-evidence.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/switching-comparison.json": {
+      "get": {
+        "summary": "Immutable generation asset: switching-comparison.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/switching-study.json": {
+      "get": {
+        "summary": "Immutable generation asset: switching-study.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/schemas/switching-evidence-v1.json": {
+      "get": {
+        "summary": "Immutable generation asset: schemas/switching-evidence-v1.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/schemas/switching-comparison-v1.json": {
+      "get": {
+        "summary": "Immutable generation asset: schemas/switching-comparison-v1.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/schemas/switching-summary-v1.json": {
+      "get": {
+        "summary": "Immutable generation asset: schemas/switching-summary-v1.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/schemas/switching-study-v1.json": {
+      "get": {
+        "summary": "Immutable generation asset: schemas/switching-study-v1.json",
+        "responses": {
+          "200": {
+            "description": "Generation-bound static public asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/schemas/switching-inputs-v1.json": {
+      "get": {
+        "summary": "Strict sharded switching input metadata schema",
+        "responses": {
+          "200": {
+            "description": "Static schema asset."
+          },
+          "404": {
+            "description": "Absent in older publications."
           }
         }
       }

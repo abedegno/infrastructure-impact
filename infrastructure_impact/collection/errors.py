@@ -3,6 +3,36 @@
 from urllib.error import HTTPError
 
 
+class CiscoAccessError(ValueError):
+    """Only reviewed codes/timestamps, never upstream messages or auth responses."""
+
+    CODES = frozenset(
+        {
+            "auth_not_configured",
+            "auth_rejected",
+            "access_denied",
+            "rate_limited",
+            "service_unavailable",
+            "network_error",
+            "response_too_large",
+            "invalid_json",
+            "unsupported_response",
+            "credential_response_rejected",
+            "url_rejected",
+            "redirect_rejected",
+            "http_error",
+            "request_state_unresolved",
+        }
+    )
+
+    def __init__(self, code, *, retry_at=None):
+        if code not in self.CODES:
+            code = "http_error"
+        self.code = code
+        self.retry_at = retry_at
+        super().__init__(code)
+
+
 class PublisherScopeUnavailable(ValueError):
     """A retrieved publisher envelope has no explicit CVE/product scope."""
 
@@ -57,6 +87,8 @@ class SourceHTTPError(HTTPError):
 
 
 def failure_code(error):
+    if isinstance(error, CiscoAccessError):
+        return error.code
     if isinstance(error, PublisherScopeUnavailable):
         return "publisher_scope_unavailable"
     if isinstance(error, SourceNotRetained):

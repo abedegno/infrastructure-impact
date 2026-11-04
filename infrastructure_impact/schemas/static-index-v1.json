@@ -18,7 +18,10 @@
     "publication": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "advisory_schema_version"],
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -57,7 +60,11 @@
     "full": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256", "bytes"],
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
       "properties": {
         "path": {
           "const": "snapshot.json"
@@ -71,13 +78,76 @@
           "minimum": 1
         }
       }
+    },
+    "switching": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "inputs",
+        "claims",
+        "kev_entries",
+        "evidence_metadata",
+        "has_score_availability"
+      ],
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/part"
+        },
+        "inputs": {
+          "$ref": "#/$defs/part"
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "claim_ids",
+              "part"
+            ],
+            "properties": {
+              "claim_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "part": {
+                "$ref": "#/$defs/part"
+              }
+            }
+          }
+        },
+        "kev_entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        },
+        "evidence_metadata": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        },
+        "has_score_availability": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "$defs": {
     "part": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256", "bytes"],
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
       "properties": {
         "path": {
           "type": "string",

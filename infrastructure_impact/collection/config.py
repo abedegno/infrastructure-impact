@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -18,9 +19,11 @@ def validate_config(config):
         "release_documents",
         "archives",
         "reference_sources",
+        "switching_sources",
     }
     if unknown:
         raise ValueError(f"Unknown sources configuration keys: {sorted(unknown)}")
+    validate_switching_sources(config.get("switching_sources", []))
     from ..references.registry import source
 
     reference_ids = []
@@ -136,3 +139,30 @@ def load_config(path=None):
             raise FileNotFoundError(f"Configured sources file not found: {path}")
         path = PACKAGE / "resources/sources.json"
     return validate_config(json.loads(path.read_text()))
+
+
+def validate_switching_sources(entries):
+    """Staging-only API enumeration seeds; no auth, arbitrary queries or OSType."""
+    if not isinstance(entries, list):
+        raise ValueError("switching_sources must be a list")
+    urls = []
+    for entry in entries:
+        if (
+            not isinstance(entry, dict)
+            or set(entry) - {"vendor", "kind", "url", "page_size"}
+            or entry.get("vendor") != "cisco"
+            or entry.get("kind") != "openvuln"
+            or not isinstance(entry.get("url"), str)
+        ):
+            raise ValueError("Switching API source requires Cisco openvuln route")
+        if not re.fullmatch(
+            r"https://apix\.cisco\.com/security/advisories/v2/(?:all|year/20[0-9]{2}|all/firstpublished)",
+            entry["url"],
+        ):
+            raise ValueError("Unreviewed switching enumeration route")
+        size = entry.get("page_size", 100)
+        if type(size) is not int or not 1 <= size <= 100:
+            raise ValueError("Switching page_size must be an integer from 1 to 100")
+        urls.append(entry["url"])
+    if len(set(urls)) != len(urls):
+        raise ValueError("Duplicate switching API source")

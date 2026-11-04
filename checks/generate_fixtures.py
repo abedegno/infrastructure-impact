@@ -85,6 +85,109 @@ def pdf(lines):
     ROOT.joinpath("juniper-ssr.pdf").write_bytes(output)
 
 
+def switching_bridge():
+    """Invented HTML and adapter-output contracts, not real advisory assertions.
+
+    The production routes/format markers exercise the bridge dispatch boundary.
+    Reviewed core parsers are stubbed explicitly by those unit tests; actual
+    primary-source integration replays belong only in the ignored workspace.
+    """
+    cases = []
+    for slug, number, source_format, sequence in [
+        (
+            "19905-security-advisory-0101",
+            "0101",
+            "Arista reviewed applicability boundaries HTML",
+            "1.1",
+        ),
+        ("19904-security-advisory-0100", "0100", "Arista affected software HTML", "1.5"),
+        (
+            "19222-security-advisory-0095",
+            "0095",
+            "Arista reviewed applicability boundaries HTML",
+            "1.0",
+        ),
+        ("11996-security-advisory-56", "0056", "Arista reviewed older product/model HTML", "1.0"),
+    ]:
+        initial = "2020-12-01" if number == "0056" else "2025-01-01"
+        initial_label = "December 1, 2020" if number == "0056" else "January 1, 2025"
+        cves = ["CVE-2025-12345", "CVE-2025-12346"] if number == "0100" else ["CVE-2025-12345"]
+        statements = []
+        assessments = []
+        for cid in cves:
+            assessments.append(
+                dict(
+                    cve_id=cid,
+                    product_id="synthetic-eos",
+                    product="Arista EOS",
+                    status="unaffected" if number == "0095" else "affected",
+                    scope="cve_specific",
+                    evidence_locator="Synthetic affected branch",
+                    versions=[dict(expression="synthetic range")],
+                    exposure=[
+                        dict(details="Synthetic prerequisite context; not a vendor statement")
+                    ],
+                    platforms=["720XP/722XPM Series"] if number == "0101" else [],
+                    remediations=[],
+                )
+            )
+            if number == "0100":
+                statements.append(cid + " has been fixed in the following product releases:")
+                assessments.append(
+                    dict(
+                        cve_id=cid,
+                        product_id="synthetic-fixed",
+                        product="Arista EOS",
+                        status="fixed",
+                        scope="cve_specific",
+                        evidence_locator="Synthetic fixed branch",
+                        versions=[dict(expression="synthetic fixed release")],
+                        exposure=[],
+                        platforms=[],
+                        remediations=[
+                            dict(
+                                category="vendor_fix",
+                                details="Synthetic fix statement",
+                                availability="vendor_reports_fixed",
+                                source_locator="Synthetic fixed branch",
+                            )
+                        ],
+                    )
+                )
+        history = (
+            f"<tr><td>1.0</td><td>{initial_label}</td><td>Initial synthetic revision</td></tr>"
+        )
+        if sequence != "1.0":
+            history += (
+                f"<tr><td>{sequence}</td><td>February 1, 2025</td><td>Synthetic update</td></tr>"
+            )
+        raw = (
+            "<!doctype html><html><head><title>Synthetic bridge contract</title></head><body>"
+            "<!-- Project-authored input. Not a captured advisory or product evidence. -->"
+            f"<h2>Security Advisory {number}<span>PDF</span></h2>"
+            "<table><tr><th>Revision</th><th>Date</th><th>Changes</th></tr>"
+            + history
+            + "</table>"
+            + "".join("<p>" + statement + "</p>" for statement in statements)
+            + "</body></html>"
+        )
+        cases.append(
+            dict(
+                kind="synthetic",
+                slug=slug,
+                raw=raw,
+                document=dict(
+                    advisory_id=slug,
+                    source_format=source_format,
+                    published_at=initial,
+                    updated_at=None,
+                    assessments=assessments,
+                ),
+            )
+        )
+    put("switching-arista-bridge.json", cases)
+
+
 def main():
     ROOT.mkdir(parents=True, exist_ok=True)
     html(
@@ -297,6 +400,7 @@ def main():
             },
         },
     )
+    switching_bridge()
     # Original-capture manifests are retained privately, not carried into releases.
     for name in [
         "expanded-manifest.json",

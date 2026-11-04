@@ -166,6 +166,34 @@ class Application:
                 }
             )
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        if path == "/api/v1/switching-comparison":
+            from .application.switching_comparison import day, query_options, select_report, summary
+            from .exports import switching_csv
+
+            try:
+                options, output = query_options(
+                    query,
+                    data.get("switching_comparison", {}).get(
+                        "observation_end", day(data["generated_at"])
+                    ),
+                )
+            except ValueError as error:
+                raise BadRequest("Invalid study query") from error
+            asset = generation / "switching-comparison.json"
+            if not asset.exists():
+                return self.json({"error": "switching_unavailable"}, status=503)
+            from .application.switching_evidence import validate_comparison
+
+            complete = json.loads(asset.read_text())
+            validate_comparison(
+                complete, publication=data["publication"], generated_at=data["generated_at"]
+            )
+            report = select_report(complete, **options)
+            if report["availability"] == "unavailable":
+                return self.json({"error": "switching_unavailable"}, status=503)
+            if output == "csv":
+                return 200, "text/csv", switching_csv(report).encode()
+            return self.json(summary(report))
         ids = None
         if "cves" in query or "cve" in query:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
@@ -331,6 +359,17 @@ class Application:
             "/app.js",
             "/research-dossiers.js",
             "/kev.js",
+            "/switching-contracts.js",
+            "/switching.js",
+            "/switching-view.js",
+            "/switching-evidence.json",
+            "/switching-comparison.json",
+            "/switching-study.json",
+            "/schemas/switching-study-v1.json",
+            "/schemas/switching-evidence-v1.json",
+            "/schemas/switching-comparison-v1.json",
+            "/schemas/switching-summary-v1.json",
+            "/schemas/switching-inputs-v1.json",
             "/kev.json",
             "/schemas/kev-v1.json",
             "/style.css",

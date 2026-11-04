@@ -23,3 +23,19 @@ metadata, times and membership claims are invented. Cases exercise retained
 historical context, legacy absence, strict CVE joins and verification freshness;
 they are not evidence of exploitation or product impact. It is maintained
 directly and fingerprinted by the fixture manifest generator.
+
+`switching-arista-bridge.json` is generated from project-authored minimal HTML and
+invented normalized adapter outputs. It exercises the switching bridge's strict
+reviewed-core boundary with an explicit normalizer stub; it does not claim those
+synthetic bodies are supported real advisories. Actual core-parser/bridge source
+replays and retrieval receipts remain only in the ignored private workspace.
+Production route identifiers and selected parser markers are retained to test
+routing, literal metadata, scope separation and rejection behavior.
+
+`switching-cases.json` contains project-authored evidence and shared Python/browser
+comparison cases. The cases, scores, dates, publisher metadata and availability
+claims are invented. Its frozen-resource digests are integrity assertions, not
+vendor source evidence. It is maintained directly and fingerprinted by the fixture
+manifest generator. Real source-led review expectations are metadata in the separate
+switching-extraction-review resource; synthetic CI results never count as passes
+for those retained primary-source cases.

@@ -674,6 +674,51 @@ if (typeof document !== 'undefined') {
   };
   window.fetch = async (input, options) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
+    if (url.origin === location.origin && url.pathname === '/api/v1/switching-comparison') {
+      const reply = (value, status = 200, type = 'application/json') =>
+        new Response(type === 'application/json' ? JSON.stringify(value) : value, {
+          status,
+          headers: { 'Content-Type': type },
+        });
+      let load, summary;
+      try {
+        load = await delivery;
+        summary = await load.switchingSummary();
+      } catch {
+        return reply({ error: 'Publication temporarily unavailable' }, 503);
+      }
+      let selection;
+      try {
+        selection = window.InfrastructureSwitching.queryOptions(
+          url.searchParams,
+          summary?.observation_end ?? new Date(load.generated_at).toISOString().slice(0, 10),
+        );
+      } catch {
+        return reply({ error: 'Invalid request' }, 400);
+      }
+      if (!summary) return reply({ error: 'switching_unavailable' }, 503);
+      try {
+        const report = window.InfrastructureSwitching.selectReport(
+          await load.switchingReport(),
+          selection.options,
+        );
+        if (report.availability === 'unavailable')
+          return reply({ error: 'switching_unavailable' }, 503);
+        return selection.format === 'csv'
+          ? reply(window.InfrastructureSwitching.csvExport(report), 200, 'text/csv')
+          : reply(window.InfrastructureSwitching.summary(report));
+      } catch (error) {
+        return reply(
+          {
+            error:
+              error.code === 'switching_unavailable'
+                ? 'switching_unavailable'
+                : 'Publication temporarily unavailable',
+          },
+          503,
+        );
+      }
+    }
     if (
       url.origin === location.origin &&
       ['/api/state', '/api/export.json', '/api/export.csv', '/api/v1/kev'].includes(url.pathname)

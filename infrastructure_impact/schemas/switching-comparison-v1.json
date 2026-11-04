@@ -1,0 +1,826 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition": {
+      "$ref": "urn:infrastructure-impact:switching-study:1"
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requested_vendor": {
+          "anyOf": [
+            {
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_vendors": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "scope_level": {
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
+        },
+        "requested_window": {
+          "type": "string",
+          "pattern": "^(all|pre|post|undated|[0-9]{4})$"
+        },
+        "effective_windows": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "requested_cve_ids": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+              },
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+          },
+          "uniqueItems": true
+        },
+        "definition_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "requested_vendor",
+        "effective_vendors",
+        "scope_level",
+        "requested_window",
+        "effective_windows",
+        "requested_cve_ids",
+        "effective_cve_ids",
+        "definition_sha256"
+      ]
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "row_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "vendor": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "scope_level": {
+            "enum": [
+              "os_family",
+              "model_qualified"
+            ]
+          },
+          "window": {
+            "type": "string",
+            "pattern": "^(all|pre|post|undated|[0-9]{4})$"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date_basis": {
+            "const": "initial_publisher_date_utc_day"
+          },
+          "event_date_basis": {
+            "const": "explicit_bundle_initial_else_advisory_initial"
+          },
+          "advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+            },
+            "uniqueItems": true
+          },
+          "claim_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "uniqueItems": true
+          },
+          "affected_cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+            },
+            "uniqueItems": true
+          },
+          "conditional_cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+            },
+            "uniqueItems": true
+          },
+          "event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "bundle",
+                    "unbundled"
+                  ]
+                },
+                "publisher_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "published_at": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "claim_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "uniqueItems": true
+                },
+                "advisory_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                },
+                "cve_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "event_id",
+                "kind",
+                "publisher_id",
+                "published_at",
+                "claim_ids",
+                "advisory_ids",
+                "cve_ids",
+                "issues"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "advisories": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cves": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "claims": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "affected_cves": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "conditional_cves": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "draft_advisories": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "remediation_events": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "bundled_events": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unbundled_publications": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "fixed_only_claims": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "planned_fix_claims": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "workaround_claims": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "model_unresolved_claims": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "conditionality_unclassified_cves": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "affected_advisories": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "advisories",
+              "cves",
+              "claims",
+              "affected_cves",
+              "conditional_cves",
+              "draft_advisories",
+              "remediation_events",
+              "bundled_events",
+              "unbundled_publications",
+              "fixed_only_claims",
+              "planned_fix_claims",
+              "workaround_claims",
+              "model_unresolved_claims",
+              "conditionality_unclassified_cves",
+              "affected_advisories"
+            ]
+          },
+          "status_buckets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "status": {
+                  "enum": [
+                    "affected",
+                    "unaffected",
+                    "fixed",
+                    "investigating",
+                    "unknown",
+                    "partially_mitigated",
+                    "recommended",
+                    "conflicting"
+                  ]
+                },
+                "scope": {
+                  "enum": [
+                    "cve_specific",
+                    "bulletin_shared",
+                    "unresolved"
+                  ]
+                },
+                "claim_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "uniqueItems": true
+                },
+                "cve_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "status",
+                "scope",
+                "claim_ids",
+                "cve_ids",
+                "count"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "severity": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "2.0",
+                        "3.0",
+                        "3.1",
+                        "4.0"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "provider": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "origin": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "preferred": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "band": {
+                  "enum": [
+                    "None",
+                    "Low",
+                    "Medium",
+                    "High",
+                    "Critical",
+                    "Unknown"
+                  ]
+                },
+                "cve_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "version",
+                "provider",
+                "origin",
+                "preferred",
+                "band",
+                "cve_ids",
+                "count"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "vendor_severity": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rating": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "scheme": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "namespace": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "scope": {
+                  "const": "advisory"
+                },
+                "advisory_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "uniqueItems": true
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "rating",
+                "scheme",
+                "namespace",
+                "scope",
+                "advisory_ids",
+                "count"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "kev": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "availability": {
+                "enum": [
+                  "available",
+                  "missing",
+                  "disabled",
+                  "failed",
+                  "stale",
+                  "future",
+                  "not_configured"
+                ]
+              },
+              "listed_cve_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                },
+                "uniqueItems": true
+              },
+              "unknown_cve_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                },
+                "uniqueItems": true
+              },
+              "listed_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unknown_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "denominator": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "availability",
+              "listed_cve_ids",
+              "unknown_cve_ids",
+              "listed_count",
+              "unknown_count",
+              "denominator"
+            ]
+          },
+          "coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "state": {
+                "enum": [
+                  "partial",
+                  "unknown"
+                ]
+              },
+              "expected_advisories": {
+                "type": "null"
+              },
+              "observed_advisories": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "basis": {
+                "const": "retained_source_windows_not_period_completeness"
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:infrastructure-impact:switching-evidence:1#/$defs/coverage"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "state",
+              "expected_advisories",
+              "observed_advisories",
+              "basis",
+              "sources"
+            ]
+          },
+          "denominators": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "affected_cves": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "observed_advisories": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expected_advisories": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "affected_cves",
+              "observed_advisories",
+              "expected_advisories"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "affected_advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "row_id",
+          "vendor",
+          "scope_level",
+          "window",
+          "period_start",
+          "period_end",
+          "date_basis",
+          "event_date_basis",
+          "advisory_ids",
+          "cve_ids",
+          "claim_ids",
+          "affected_cve_ids",
+          "conditional_cve_ids",
+          "event_ids",
+          "events",
+          "counts",
+          "status_buckets",
+          "severity",
+          "vendor_severity",
+          "kev",
+          "coverage",
+          "denominators",
+          "issues",
+          "affected_advisory_ids"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:infrastructure-impact:switching-evidence:1#/$defs/source"
+      },
+      "uniqueItems": true
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "uniqueItems": true
+    },
+    "method": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "availability": {
+      "enum": [
+        "available",
+        "unavailable"
+      ]
+    },
+    "observation_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "inputs": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "evidence": {
+              "$ref": "urn:infrastructure-impact:switching-evidence:1"
+            },
+            "kev": {
+              "$ref": "urn:infrastructure-impact:kev:1"
+            }
+          },
+          "required": [
+            "evidence",
+            "kev"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "evaluated_at",
+    "definition",
+    "selection",
+    "rows",
+    "sources",
+    "issues",
+    "method",
+    "availability",
+    "observation_end",
+    "inputs"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-comparison:1",
+  "title": "Descriptive switching comparison v1"
+}

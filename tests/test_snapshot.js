@@ -67,6 +67,21 @@ assert.strictEqual(
   '=WEBSERVICE("<script>")',
   'JSON preserves literal attributed source text',
 );
+// The old benchmark/global selectors must not silently narrow the independent study.
+const studySummary = {
+  representation: 'summary',
+  selection: { requested_cve_ids: null },
+  rows: [{ vendor: 'arista', cve_ids: ['CVE-2026-10001'] }],
+};
+const withStudy = { ...source, switching_comparison: studySummary };
+for (const ids of [[cid], []]) {
+  const selected = context.selectSnapshot(withStudy, ids, {
+    kevOnly: true,
+    evaluatedAt: report.generated_at,
+  });
+  assert.deepStrictEqual(plain(selected.switching_comparison), studySummary);
+  assert.deepStrictEqual(plain(selected.switching_comparison.selection.requested_cve_ids), null);
+}
 console.log(
   'Synthetic snapshot KEV scope, query contract, export isolation and CSV escaping passed.',
 );

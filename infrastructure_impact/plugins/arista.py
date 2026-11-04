@@ -23,6 +23,7 @@ from ..adapters.arista_scoped import (
 )
 from ..adapters.common import HTML
 from ..adapters.legacy_html import html_advisory
+from ..adapters.switching import extract
 from .archive_listings import arista as archive_listing
 from .contracts import VendorPlugin
 from .shared import is_json, structured
@@ -103,6 +104,7 @@ def plugin():
             + document["advisory_id"]
         ),
         parse_release_history=arista_release_history,
+        research_evidence=extract,
         normalizer_dependencies=(
             arista_aggregate_notice,
             arista_software,

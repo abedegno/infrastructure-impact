@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "id": "campus-branch-switching",
+  "version": 1,
+  "start_date": "2021-01-01",
+  "cutoff_date": "2026-04-07",
+  "targets": [
+    {
+      "id": "cisco-9200",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "models": [
+        "9200"
+      ],
+      "aliases": [
+        {
+          "literal": "Catalyst 9200",
+          "model": "9200",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9200-series-switches/nb-06-cat9200-ser-data-sheet-cte-en.html",
+          "source_locator": "Product overview"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "cisco-9300",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "models": [
+        "9300",
+        "9300L"
+      ],
+      "aliases": [
+        {
+          "literal": "Catalyst 9300",
+          "model": "9300",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9300-series-switches/nb-06-cat9300-ser-data-sheet-cte-en.html",
+          "source_locator": "Product overview; Catalyst 9300 and 9300L models"
+        },
+        {
+          "literal": "Catalyst 9300L",
+          "model": "9300L",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9300-series-switches/nb-06-cat9300-ser-data-sheet-cte-en.html",
+          "source_locator": "Product overview; Catalyst 9300 and 9300L models"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "cisco-9400",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "models": [
+        "C9407R",
+        "C9410R"
+      ],
+      "aliases": [
+        {
+          "literal": "Cisco Catalyst C9407R",
+          "model": "C9407R",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9400-series-switches/nb-06-cat9400-ser-data-sheet-cte-en.html",
+          "source_locator": "Table 1: chassis features; Table 11: ordering information"
+        },
+        {
+          "literal": "Cisco Catalyst C9410R",
+          "model": "C9410R",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9400-series-switches/nb-06-cat9400-ser-data-sheet-cte-en.html",
+          "source_locator": "Table 1: chassis features; Table 11: ordering information"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "cisco-9500",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "models": [
+        "9500"
+      ],
+      "aliases": [
+        {
+          "literal": "Catalyst 9500",
+          "model": "9500",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9500-series-switches/nb-06-cat9500-ser-data-sheet-cte-en.html",
+          "source_locator": "Introduction"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "cisco-9600",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "models": [
+        "C9606R"
+      ],
+      "aliases": [
+        {
+          "literal": "Catalyst 9606R",
+          "model": "C9606R",
+          "source_url": "https://www.cisco.com/site/us/en/products/collateral/networking/switches/catalyst-9600-series-switches/nb-06-cat9600-series-data-sheet-cte-en.html",
+          "source_locator": "Cisco Catalyst 9606R chassis"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "aruba-6300",
+      "vendor": "aruba",
+      "family": "aruba-aoscx",
+      "models": [
+        "6300M"
+      ],
+      "aliases": [
+        {
+          "literal": "HPE Aruba Networking CX 6300M",
+          "model": "6300M",
+          "source_url": "https://www.hpe.com/int/en/collaterals/collateral.a00073540enw.html",
+          "source_locator": "Models; CX 6300M"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "aruba-6400",
+      "vendor": "aruba",
+      "family": "aruba-aoscx",
+      "models": [
+        "6410"
+      ],
+      "aliases": [
+        {
+          "literal": "HPE Aruba Networking 6410 Switch",
+          "model": "6410",
+          "source_url": "https://www.hpe.com/psnow/doc/a00073541enw",
+          "source_locator": "HPE Aruba Networking 6410 Switch (R0X27A)"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "arista-7050x3",
+      "vendor": "arista",
+      "family": "arista-eos",
+      "models": [
+        "7050X3"
+      ],
+      "aliases": [
+        {
+          "literal": "Arista 7050X3 Series",
+          "model": "7050X3",
+          "source_url": "https://www.arista.com/en/products/7050x3-series",
+          "source_locator": "Overview heading"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "arista-720xp",
+      "vendor": "arista",
+      "family": "arista-eos",
+      "models": [
+        "720XP"
+      ],
+      "aliases": [
+        {
+          "literal": "Arista 720XP Series",
+          "model": "720XP",
+          "source_url": "https://www.arista.com/en/products/720xp-series",
+          "source_locator": "Overview heading"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    },
+    {
+      "id": "arista-750",
+      "vendor": "arista",
+      "family": "arista-eos",
+      "models": [
+        "750"
+      ],
+      "aliases": [
+        {
+          "literal": "Arista 750 Series",
+          "model": "750",
+          "source_url": "https://www.arista.com/en/products/750-series",
+          "source_locator": "Arista 750 Series Cognitive Campus Modular POE Leaf Switches; technical specifications"
+        }
+      ],
+      "issues": [
+        "lifecycle_unresolved",
+        "release_train_coverage_unresolved",
+        "role_equivalence_not_established"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "cisco-9200-catalogue",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9200-series-switches/nb-06-cat9200-ser-data-sheet-cte-en.html",
+      "source_locator": "Product overview",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "cisco-9300-catalogue",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9300-series-switches/nb-06-cat9300-ser-data-sheet-cte-en.html",
+      "source_locator": "Product overview; Catalyst 9300 and 9300L models",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "cisco-9400-catalogue",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9400-series-switches/nb-06-cat9400-ser-data-sheet-cte-en.html",
+      "source_locator": "Table 1: chassis features; Table 11: ordering information",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "cisco-9500-catalogue",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9500-series-switches/nb-06-cat9500-ser-data-sheet-cte-en.html",
+      "source_locator": "Introduction",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "cisco-9600-catalogue",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/site/us/en/products/collateral/networking/switches/catalyst-9600-series-switches/nb-06-cat9600-series-data-sheet-cte-en.html",
+      "source_locator": "Cisco Catalyst 9606R chassis",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "aruba-6300-catalogue",
+      "vendor": "aruba",
+      "source_url": "https://www.hpe.com/int/en/collaterals/collateral.a00073540enw.html",
+      "source_locator": "Models; CX 6300M",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "aruba-6400-catalogue",
+      "vendor": "aruba",
+      "source_url": "https://www.hpe.com/psnow/doc/a00073541enw",
+      "source_locator": "HPE Aruba Networking 6410 Switch (R0X27A)",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "arista-7050x3-catalogue",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/products/7050x3-series",
+      "source_locator": "Overview heading",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "arista-720xp-catalogue",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/products/720xp-series",
+      "source_locator": "Overview heading",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    },
+    {
+      "id": "arista-750-catalogue",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/products/750-series",
+      "source_locator": "Arista 750 Series Cognitive Campus Modular POE Leaf Switches; technical specifications",
+      "reviewed_at": "2026-11-04",
+      "issues": [
+        "catalogue_not_historical_inventory"
+      ]
+    }
+  ]
+}

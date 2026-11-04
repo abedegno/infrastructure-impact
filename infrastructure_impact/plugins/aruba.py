@@ -1,6 +1,7 @@
 """HPE Aruba CSAF sources."""
 
 from ..adapters.aruba_history import aruba_release_history
+from ..adapters.switching import extract
 from .contracts import VendorPlugin
 from .shared import structured
 
@@ -14,5 +15,6 @@ def plugin():
         reference_filter=lambda url: "aruba" in url.lower(),
         capabilities=("csaf", "browser-release-history"),
         parse_release_history=aruba_release_history,
+        research_evidence=extract,
         normalizer_dependencies=(),
     )

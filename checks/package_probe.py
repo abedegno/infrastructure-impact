@@ -42,10 +42,13 @@ def main():
     assert observation["returned_components"] == 1 and observation["inventory_verified"] is False
     registry = default_registry()
     assert "acme" in registry.names() and "f5" in registry.names()
+    assert registry.get("acme").research_evidence is None
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
-    for name, digest in json.loads(os.environ.get("IMPACT_EXPECTED_KEV_RESOURCES", "{}")).items():
+    for name, digest in json.loads(
+        os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
+    ).items():
         assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest, name
     configured = json.loads((package / "resources/sources.json").read_text())
     assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
@@ -215,6 +218,25 @@ def main():
             {"REQUEST_METHOD": "GET", "PATH_INFO": "/kev.js", "QUERY_STRING": ""}
         )
         assert status == 200 and body == (package / "web/kev.js").read_bytes()
+        from infrastructure_impact.application.switching_evidence import validate_comparison
+
+        study = json.loads((root / "current/switching-comparison.json").read_text())
+        validate_comparison(study, publication=kev["publication"], generated_at=kev["generated_at"])
+        assert study["availability"] == "available"
+        assert all(row["counts"]["advisories"] == 0 for row in study["rows"])
+        status, _, body = app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/switching-comparison",
+                "QUERY_STRING": "",
+            }
+        )
+        assert status == 200 and json.loads(body)["representation"] == "summary"
+        for name in ("switching-contracts.js", "switching.js", "switching-view.js"):
+            status, _, body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": "/" + name, "QUERY_STRING": ""}
+            )
+            assert status == 200 and body == (package / "web" / name).read_bytes()
         from infrastructure_impact.application.research_dossiers import research_dossiers
 
         assert (package / "web/research-dossiers.js").is_file()
@@ -306,6 +328,8 @@ def main():
                 "database_and_publication": True,
                 "public_api": True,
                 "kev_resources_and_api": True,
+                "switching_resources_and_api": True,
+                "optional_research_hook_compatible": True,
             }
         )
     )

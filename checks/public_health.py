@@ -10,6 +10,23 @@ from datetime import date, datetime, timezone
 from urllib.error import HTTPError
 from urllib.request import urlopen
 
+try:
+    from checks.switching_health import (
+        SCHEMAS,
+        validate_public_metrics,
+        validate_schema,
+        validate_switching_report,
+    )
+except ModuleNotFoundError:  # Direct standalone script, without an installed checkout.
+    import runpy
+    from pathlib import Path
+
+    _switching = runpy.run_path(str(Path(__file__).with_name("switching_health.py")))
+    SCHEMAS = _switching["SCHEMAS"]
+    validate_switching_report = _switching["validate_switching_report"]
+    validate_schema = _switching["validate_schema"]
+    validate_public_metrics = _switching["validate_public_metrics"]
+
 
 def validate_dossier_limits(report: dict) -> None:
     """Enforce this increment's public gates without installed application imports."""
@@ -187,7 +204,7 @@ def validate_kev_report(report, publication, generated_at, scope):
     assert not selection["kev_only"] or availability == "available"
 
 
-def check(origin, expected=None):
+def check(origin, expected=None, *, verify_archive=False):
     origin = origin.rstrip("/") + "/"
     with urlopen(origin, timeout=20) as response:
         assert response.status == 200, "Dashboard unavailable"
@@ -250,6 +267,38 @@ def check(origin, expected=None):
         }
         rows = [r for descriptor in descriptors.values() for r in part(descriptor)]
         data["records"] = [r["record"] for r in rows if r["kind"] == "record"]
+    switching_availability = "unavailable"
+    if index is not None and "switching" in index:
+        switching = index["switching"]
+        assert isinstance(switching, dict), "Malformed switching index"
+        report = part(switching["summary"])
+        schemas = {}
+        for name in SCHEMAS:
+            raw = verified("schemas/" + name, 500_000)
+            checked_bytes += len(raw)
+            assert checked_bytes <= 20_000_000, "Default cohort exceeds monitor budget"
+            schemas[name] = json.loads(raw)
+        validate_schema(index, "static-index-v1.json", schemas)
+
+        def descriptors(value):
+            if isinstance(value, dict):
+                if set(value) == {"path", "sha256", "bytes"}:
+                    assert value["path"] == "data/" + value["sha256"] + ".json", (
+                        "Non-addressed study part"
+                    )
+                    assert manifest["sha256"].get(value["path"]) == value["sha256"], (
+                        "Study part absent from manifest"
+                    )
+                else:
+                    for item in value.values():
+                        descriptors(item)
+            elif isinstance(value, list):
+                for item in value:
+                    descriptors(item)
+
+        descriptors(switching)
+        validate_switching_report(report, data["publication"], data["generated_at"], schemas)
+        switching_availability = report["availability"]
     published = datetime.fromisoformat(data["generated_at"].replace("Z", "+00:00"))
     age_seconds = (datetime.now(timezone.utc) - published).total_seconds()
     assert age_seconds >= -300, "Publication timestamp exceeds five-minute clock tolerance"
@@ -349,12 +398,12 @@ def check(origin, expected=None):
             v["eligibility"]["rate_comparison"] == "suppressed"
             for v in data["comparison_eligibility"]["vendors"]
         )
-    assert all(not r.get("notes") and not r.get("metrics") for r in data["records"]), (
-        "Private projection failed"
-    )
+    for record in data["records"]:
+        assert not record.get("notes"), "Private projection failed"
+        validate_public_metrics(record)
     compressed_bytes = 0
     compressed_verified = False
-    if "snapshot.json.gz" in manifest["sha256"]:
+    if (index is None or verify_archive) and "snapshot.json.gz" in manifest["sha256"]:
         compressed = verified("snapshot.json.gz", 8_000_000)
         compressed_bytes = len(compressed)
         with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as archive:
@@ -367,6 +416,7 @@ def check(origin, expected=None):
     return {
         "status": "fresh",
         "kev_availability": kev_availability,
+        "switching_availability": switching_availability,
         "static_marker_verified": marker_verified,
         "publication": data["publication"]["id"],
         "generated_at": data["generated_at"],
@@ -387,8 +437,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("origin")
     parser.add_argument("--generation")
+    parser.add_argument(
+        "--verify-archive",
+        action="store_true",
+        help="Explicitly verify the separate compressed full archive",
+    )
     args = parser.parse_args()
-    print(json.dumps(check(args.origin, args.generation)))
+    print(json.dumps(check(args.origin, args.generation, verify_archive=args.verify_archive)))
 
 
 if __name__ == "__main__":

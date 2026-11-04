@@ -1,0 +1,5039 @@
+{
+  "evidence": {
+    "schema_version": 1,
+    "publication": null,
+    "generated_at": "2026-11-04T10:00:00Z",
+    "definition_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "claims": [
+      {
+        "vendor": "arista",
+        "advisory_id": "SYNTHETIC-1",
+        "cve_id": "CVE-2025-12345",
+        "product_id": "publisher-product-1",
+        "product": "EOS",
+        "revision": "1",
+        "source": {
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+          "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "retrieved_at": "2026-11-04T10:00:00Z",
+          "source_locator": "/vulnerabilities/0"
+        },
+        "publisher": {
+          "id": "SYNTHETIC-1",
+          "sequence": "01",
+          "status": "final"
+        },
+        "initial_published_at": "2025-01-01",
+        "updated_at": "2026-04-08T00:00:00Z",
+        "family": "arista-eos",
+        "named_platforms": [
+          "750"
+        ],
+        "platform_bindings": [
+          {
+            "platform": "750",
+            "model": "750",
+            "basis": "publisher_explicit",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            }
+          }
+        ],
+        "status": "affected",
+        "scope": "cve_specific",
+        "scope_level": "model_qualified",
+        "version_expressions": [
+          "before 4.32.1"
+        ],
+        "conditions": [],
+        "remediations": [
+          {
+            "publisher_id": "fix-1",
+            "category": "vendor_fix",
+            "details": "Update to 4.32.1",
+            "product_ids": [
+              "publisher-product-1"
+            ],
+            "version_expressions": [
+              "4.32.1"
+            ],
+            "published_availability": "available",
+            "availability_date": null,
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            }
+          }
+        ],
+        "bundle": {
+          "publisher_id": "bundle-1",
+          "title": "Publisher named bundle",
+          "member_advisory_ids": [
+            "SYNTHETIC-1",
+            "SYNTHETIC-2"
+          ],
+          "published_at": null,
+          "source": {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        },
+        "scores": [
+          {
+            "system": "CVSS",
+            "version": "3.1",
+            "value": 7.5,
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+            "severity": "HIGH",
+            "cve_id": "CVE-2025-12345",
+            "product_ids": [
+              "publisher-product-1"
+            ],
+            "scope": "cve_specific",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            }
+          }
+        ],
+        "issues": [
+          "availability_date_missing",
+          "bundle_publication_date_missing"
+        ],
+        "claim_id": "2e6905f4fb242311d3282e54d59baa51bd7deb403f590f0f93162800493fa15b"
+      }
+    ],
+    "coverage": [
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+        "state": "partial",
+        "observed_start": "2021-01-01",
+        "observed_end": "2026-11-04",
+        "total": null,
+        "issues": [
+          "publisher_total_unknown"
+        ]
+      }
+    ],
+    "issues": []
+  },
+  "old_resource_sha256": {
+    "infrastructure_impact/resources/archive-source-review.json": "2f1bffcc0277c0b234137cdb5b364075b2e8920db6f77dbb741dc6e62846989a",
+    "infrastructure_impact/resources/benchmark-cases.json": "9e6f72f67c023cbb57e7aeadcdf40aeaf73b6851a9e6ed79d5a0ef1a317cf9a7",
+    "infrastructure_impact/resources/benchmark-cohort.json": "2036eabf11e2853a6e84dec63c861cbebae851344192fb15407260a6916c0e5e",
+    "infrastructure_impact/resources/comparison-plans.json": "bace338697587c95c97b816640c0c57bdecff106c4bbb642e4cc362a3adff34b",
+    "infrastructure_impact/resources/disclosure-cases.json": "93c8ab7af960f44ef344164f51261c9bf7757d25b77aa60d696680f5b78cf7be",
+    "infrastructure_impact/resources/disclosure-investigations.json": "87a0d5e7160389376fd2cd9f33ada2e0d5bb6552e4ed0c6941e0a525004676ba",
+    "infrastructure_impact/resources/extraction-review.json": "fb363140d6deee70f2fd821ce4c786097a8adb5d15bd2788ab5cbd3795114abf",
+    "infrastructure_impact/resources/product-cohorts.json": "54565ee1720e9fe6bfee76d6ce349f3bbc0d5375b3f18bd849505ab247ccd17b",
+    "infrastructure_impact/resources/research-dossiers.json": "ab650a1dfa51277c40988f0f20252bc624d4daeadfc3c72523ad32ea01f0475f",
+    "infrastructure_impact/resources/sources.json": "0c4f379ab4c7013d2d6c066f6c2e98e596dea02833636fc9768bf925eeeceb62",
+    "infrastructure_impact/resources/studies/openssh-service-2023-2026.json": "5306704e855053894d40b426a639d500c94841fe768efacd646dc21319f4eb99"
+  },
+  "comparison_base_report": {
+    "schema_version": 1,
+    "publication": null,
+    "generated_at": "2026-11-04T10:00:00Z",
+    "evaluated_at": "2026-11-04T10:00:00Z",
+    "availability": "available",
+    "definition": {
+      "schema_version": 1,
+      "id": "campus-branch-switching",
+      "version": 1,
+      "start_date": "2021-01-01",
+      "cutoff_date": "2026-04-07",
+      "targets": [
+        {
+          "id": "cisco-9200",
+          "vendor": "cisco",
+          "family": "cisco-iosxe",
+          "models": [
+            "9200"
+          ],
+          "aliases": [
+            {
+              "literal": "Catalyst 9200",
+              "model": "9200",
+              "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9200-series-switches/nb-06-cat9200-ser-data-sheet-cte-en.html",
+              "source_locator": "Product overview"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "cisco-9300",
+          "vendor": "cisco",
+          "family": "cisco-iosxe",
+          "models": [
+            "9300",
+            "9300L"
+          ],
+          "aliases": [
+            {
+              "literal": "Catalyst 9300",
+              "model": "9300",
+              "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9300-series-switches/nb-06-cat9300-ser-data-sheet-cte-en.html",
+              "source_locator": "Product overview; Catalyst 9300 and 9300L models"
+            },
+            {
+              "literal": "Catalyst 9300L",
+              "model": "9300L",
+              "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9300-series-switches/nb-06-cat9300-ser-data-sheet-cte-en.html",
+              "source_locator": "Product overview; Catalyst 9300 and 9300L models"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "cisco-9400",
+          "vendor": "cisco",
+          "family": "cisco-iosxe",
+          "models": [
+            "C9407R",
+            "C9410R"
+          ],
+          "aliases": [
+            {
+              "literal": "Cisco Catalyst C9407R",
+              "model": "C9407R",
+              "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9400-series-switches/nb-06-cat9400-ser-data-sheet-cte-en.html",
+              "source_locator": "Table 1: chassis features; Table 11: ordering information"
+            },
+            {
+              "literal": "Cisco Catalyst C9410R",
+              "model": "C9410R",
+              "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9400-series-switches/nb-06-cat9400-ser-data-sheet-cte-en.html",
+              "source_locator": "Table 1: chassis features; Table 11: ordering information"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "cisco-9500",
+          "vendor": "cisco",
+          "family": "cisco-iosxe",
+          "models": [
+            "9500"
+          ],
+          "aliases": [
+            {
+              "literal": "Catalyst 9500",
+              "model": "9500",
+              "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9500-series-switches/nb-06-cat9500-ser-data-sheet-cte-en.html",
+              "source_locator": "Introduction"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "cisco-9600",
+          "vendor": "cisco",
+          "family": "cisco-iosxe",
+          "models": [
+            "C9606R"
+          ],
+          "aliases": [
+            {
+              "literal": "Catalyst 9606R",
+              "model": "C9606R",
+              "source_url": "https://www.cisco.com/site/us/en/products/collateral/networking/switches/catalyst-9600-series-switches/nb-06-cat9600-series-data-sheet-cte-en.html",
+              "source_locator": "Cisco Catalyst 9606R chassis"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "aruba-6300",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "models": [
+            "6300M"
+          ],
+          "aliases": [
+            {
+              "literal": "HPE Aruba Networking CX 6300M",
+              "model": "6300M",
+              "source_url": "https://www.hpe.com/int/en/collaterals/collateral.a00073540enw.html",
+              "source_locator": "Models; CX 6300M"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "aruba-6400",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "models": [
+            "6410"
+          ],
+          "aliases": [
+            {
+              "literal": "HPE Aruba Networking 6410 Switch",
+              "model": "6410",
+              "source_url": "https://www.hpe.com/psnow/doc/a00073541enw",
+              "source_locator": "HPE Aruba Networking 6410 Switch (R0X27A)"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "arista-7050x3",
+          "vendor": "arista",
+          "family": "arista-eos",
+          "models": [
+            "7050X3"
+          ],
+          "aliases": [
+            {
+              "literal": "Arista 7050X3 Series",
+              "model": "7050X3",
+              "source_url": "https://www.arista.com/en/products/7050x3-series",
+              "source_locator": "Overview heading"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "arista-720xp",
+          "vendor": "arista",
+          "family": "arista-eos",
+          "models": [
+            "720XP"
+          ],
+          "aliases": [
+            {
+              "literal": "Arista 720XP Series",
+              "model": "720XP",
+              "source_url": "https://www.arista.com/en/products/720xp-series",
+              "source_locator": "Overview heading"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        },
+        {
+          "id": "arista-750",
+          "vendor": "arista",
+          "family": "arista-eos",
+          "models": [
+            "750"
+          ],
+          "aliases": [
+            {
+              "literal": "Arista 750 Series",
+              "model": "750",
+              "source_url": "https://www.arista.com/en/products/750-series",
+              "source_locator": "Arista 750 Series Cognitive Campus Modular POE Leaf Switches; technical specifications"
+            }
+          ],
+          "issues": [
+            "lifecycle_unresolved",
+            "release_train_coverage_unresolved",
+            "role_equivalence_not_established"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "id": "cisco-9200-catalogue",
+          "vendor": "cisco",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9200-series-switches/nb-06-cat9200-ser-data-sheet-cte-en.html",
+          "source_locator": "Product overview",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "cisco-9300-catalogue",
+          "vendor": "cisco",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9300-series-switches/nb-06-cat9300-ser-data-sheet-cte-en.html",
+          "source_locator": "Product overview; Catalyst 9300 and 9300L models",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "cisco-9400-catalogue",
+          "vendor": "cisco",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9400-series-switches/nb-06-cat9400-ser-data-sheet-cte-en.html",
+          "source_locator": "Table 1: chassis features; Table 11: ordering information",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "cisco-9500-catalogue",
+          "vendor": "cisco",
+          "source_url": "https://www.cisco.com/c/en/us/products/collateral/switches/catalyst-9500-series-switches/nb-06-cat9500-ser-data-sheet-cte-en.html",
+          "source_locator": "Introduction",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "cisco-9600-catalogue",
+          "vendor": "cisco",
+          "source_url": "https://www.cisco.com/site/us/en/products/collateral/networking/switches/catalyst-9600-series-switches/nb-06-cat9600-series-data-sheet-cte-en.html",
+          "source_locator": "Cisco Catalyst 9606R chassis",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "aruba-6300-catalogue",
+          "vendor": "aruba",
+          "source_url": "https://www.hpe.com/int/en/collaterals/collateral.a00073540enw.html",
+          "source_locator": "Models; CX 6300M",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "aruba-6400-catalogue",
+          "vendor": "aruba",
+          "source_url": "https://www.hpe.com/psnow/doc/a00073541enw",
+          "source_locator": "HPE Aruba Networking 6410 Switch (R0X27A)",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "arista-7050x3-catalogue",
+          "vendor": "arista",
+          "source_url": "https://www.arista.com/en/products/7050x3-series",
+          "source_locator": "Overview heading",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "arista-720xp-catalogue",
+          "vendor": "arista",
+          "source_url": "https://www.arista.com/en/products/720xp-series",
+          "source_locator": "Overview heading",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        },
+        {
+          "id": "arista-750-catalogue",
+          "vendor": "arista",
+          "source_url": "https://www.arista.com/en/products/750-series",
+          "source_locator": "Arista 750 Series Cognitive Campus Modular POE Leaf Switches; technical specifications",
+          "reviewed_at": "2026-11-04",
+          "issues": [
+            "catalogue_not_historical_inventory"
+          ]
+        }
+      ]
+    },
+    "observation_end": "2026-11-04",
+    "selection": {
+      "requested_vendor": null,
+      "effective_vendors": [
+        "cisco",
+        "aruba",
+        "arista"
+      ],
+      "scope_level": "os_family",
+      "requested_window": "all",
+      "effective_windows": [
+        "cisco:os_family:all",
+        "aruba:os_family:all",
+        "arista:os_family:all"
+      ],
+      "requested_cve_ids": null,
+      "effective_cve_ids": [
+        "CVE-2026-10001",
+        "CVE-2026-10002",
+        "CVE-2026-10003",
+        "CVE-2026-10004",
+        "CVE-2026-10005",
+        "CVE-2026-10006",
+        "CVE-2026-10007",
+        "CVE-2026-10008"
+      ],
+      "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+    },
+    "rows": [
+      {
+        "row_id": "cisco:os_family:all",
+        "vendor": "cisco",
+        "scope_level": "os_family",
+        "window": "all",
+        "period_start": "2021-01-01",
+        "period_end": "2026-11-04",
+        "date_basis": "initial_publisher_date_utc_day",
+        "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+        "advisory_ids": [],
+        "affected_advisory_ids": [],
+        "cve_ids": [],
+        "claim_ids": [],
+        "affected_cve_ids": [],
+        "conditional_cve_ids": [],
+        "event_ids": [],
+        "events": [],
+        "counts": {
+          "advisories": 0,
+          "affected_advisories": 0,
+          "cves": 0,
+          "claims": 0,
+          "affected_cves": 0,
+          "conditional_cves": 0,
+          "conditionality_unclassified_cves": 0,
+          "draft_advisories": 0,
+          "remediation_events": 0,
+          "bundled_events": 0,
+          "unbundled_publications": 0,
+          "fixed_only_claims": 0,
+          "planned_fix_claims": 0,
+          "workaround_claims": 0,
+          "model_unresolved_claims": 0
+        },
+        "status_buckets": [],
+        "severity": [],
+        "vendor_severity": [],
+        "kev": {
+          "availability": "not_configured",
+          "listed_cve_ids": [],
+          "unknown_cve_ids": [],
+          "listed_count": 0,
+          "unknown_count": 0,
+          "denominator": 0
+        },
+        "coverage": {
+          "state": "unknown",
+          "expected_advisories": null,
+          "observed_advisories": 0,
+          "basis": "retained_source_windows_not_period_completeness",
+          "sources": []
+        },
+        "denominators": {
+          "affected_cves": 0,
+          "observed_advisories": 0,
+          "expected_advisories": null
+        },
+        "issues": [
+          "period_coverage_unknown",
+          "sets_nonadditive"
+        ]
+      },
+      {
+        "row_id": "aruba:os_family:all",
+        "vendor": "aruba",
+        "scope_level": "os_family",
+        "window": "all",
+        "period_start": "2021-01-01",
+        "period_end": "2026-11-04",
+        "date_basis": "initial_publisher_date_utc_day",
+        "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+        "advisory_ids": [],
+        "affected_advisory_ids": [],
+        "cve_ids": [],
+        "claim_ids": [],
+        "affected_cve_ids": [],
+        "conditional_cve_ids": [],
+        "event_ids": [],
+        "events": [],
+        "counts": {
+          "advisories": 0,
+          "affected_advisories": 0,
+          "cves": 0,
+          "claims": 0,
+          "affected_cves": 0,
+          "conditional_cves": 0,
+          "conditionality_unclassified_cves": 0,
+          "draft_advisories": 0,
+          "remediation_events": 0,
+          "bundled_events": 0,
+          "unbundled_publications": 0,
+          "fixed_only_claims": 0,
+          "planned_fix_claims": 0,
+          "workaround_claims": 0,
+          "model_unresolved_claims": 0
+        },
+        "status_buckets": [],
+        "severity": [],
+        "vendor_severity": [],
+        "kev": {
+          "availability": "not_configured",
+          "listed_cve_ids": [],
+          "unknown_cve_ids": [],
+          "listed_count": 0,
+          "unknown_count": 0,
+          "denominator": 0
+        },
+        "coverage": {
+          "state": "unknown",
+          "expected_advisories": null,
+          "observed_advisories": 0,
+          "basis": "retained_source_windows_not_period_completeness",
+          "sources": []
+        },
+        "denominators": {
+          "affected_cves": 0,
+          "observed_advisories": 0,
+          "expected_advisories": null
+        },
+        "issues": [
+          "period_coverage_unknown",
+          "sets_nonadditive"
+        ]
+      },
+      {
+        "row_id": "arista:os_family:all",
+        "vendor": "arista",
+        "scope_level": "os_family",
+        "window": "all",
+        "period_start": "2021-01-01",
+        "period_end": "2026-11-04",
+        "date_basis": "initial_publisher_date_utc_day",
+        "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+        "advisory_ids": [
+          "april6",
+          "april7",
+          "conditional",
+          "conflict",
+          "fixed",
+          "offset",
+          "old",
+          "repeat",
+          "shared",
+          "undated"
+        ],
+        "affected_advisory_ids": [
+          "april6",
+          "april7",
+          "conditional",
+          "offset",
+          "old",
+          "repeat",
+          "undated"
+        ],
+        "cve_ids": [
+          "CVE-2026-10001",
+          "CVE-2026-10002",
+          "CVE-2026-10003",
+          "CVE-2026-10004",
+          "CVE-2026-10005",
+          "CVE-2026-10006",
+          "CVE-2026-10007",
+          "CVE-2026-10008"
+        ],
+        "claim_ids": [
+          "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+          "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+          "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+          "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
+          "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+          "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db",
+          "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351",
+          "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5",
+          "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+          "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0",
+          "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+        ],
+        "affected_cve_ids": [
+          "CVE-2026-10001",
+          "CVE-2026-10002",
+          "CVE-2026-10003",
+          "CVE-2026-10004",
+          "CVE-2026-10007"
+        ],
+        "conditional_cve_ids": [
+          "CVE-2026-10007"
+        ],
+        "event_ids": [
+          "arista:bundle:bundle-1",
+          "arista:unbundled:april6",
+          "arista:unbundled:april7",
+          "arista:unbundled:conditional",
+          "arista:unbundled:offset",
+          "arista:unbundled:undated"
+        ],
+        "events": [
+          {
+            "event_id": "arista:bundle:bundle-1",
+            "kind": "bundle",
+            "publisher_id": "bundle-1",
+            "claim_ids": [
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+            ],
+            "advisory_ids": [
+              "old",
+              "repeat"
+            ],
+            "cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "published_at": "2026-04-07",
+            "issues": []
+          },
+          {
+            "event_id": "arista:unbundled:april6",
+            "kind": "unbundled",
+            "publisher_id": "april6",
+            "claim_ids": [
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
+            ],
+            "advisory_ids": [
+              "april6"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001"
+            ],
+            "published_at": "2026-04-06",
+            "issues": []
+          },
+          {
+            "event_id": "arista:unbundled:april7",
+            "kind": "unbundled",
+            "publisher_id": "april7",
+            "claim_ids": [
+              "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+            ],
+            "advisory_ids": [
+              "april7"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001"
+            ],
+            "published_at": "2026-04-07",
+            "issues": []
+          },
+          {
+            "event_id": "arista:unbundled:conditional",
+            "kind": "unbundled",
+            "publisher_id": "conditional",
+            "claim_ids": [
+              "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e"
+            ],
+            "advisory_ids": [
+              "conditional"
+            ],
+            "cve_ids": [
+              "CVE-2026-10007"
+            ],
+            "published_at": "2026-05-01",
+            "issues": []
+          },
+          {
+            "event_id": "arista:unbundled:offset",
+            "kind": "unbundled",
+            "publisher_id": "offset",
+            "claim_ids": [
+              "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+            ],
+            "advisory_ids": [
+              "offset"
+            ],
+            "cve_ids": [
+              "CVE-2026-10002"
+            ],
+            "published_at": "2026-04-06",
+            "issues": []
+          },
+          {
+            "event_id": "arista:unbundled:undated",
+            "kind": "unbundled",
+            "publisher_id": "undated",
+            "claim_ids": [
+              "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+            ],
+            "advisory_ids": [
+              "undated"
+            ],
+            "cve_ids": [
+              "CVE-2026-10003"
+            ],
+            "published_at": null,
+            "issues": [
+              "event_publication_date_missing"
+            ]
+          }
+        ],
+        "counts": {
+          "advisories": 10,
+          "affected_advisories": 7,
+          "cves": 8,
+          "claims": 11,
+          "affected_cves": 5,
+          "conditional_cves": 1,
+          "conditionality_unclassified_cves": 4,
+          "draft_advisories": 1,
+          "remediation_events": 6,
+          "bundled_events": 1,
+          "unbundled_publications": 5,
+          "fixed_only_claims": 1,
+          "planned_fix_claims": 0,
+          "workaround_claims": 0,
+          "model_unresolved_claims": 1
+        },
+        "status_buckets": [
+          {
+            "status": "affected",
+            "scope": "bulletin_shared",
+            "claim_ids": [
+              "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5"
+            ],
+            "cve_ids": [
+              "CVE-2026-10006"
+            ],
+            "count": 1
+          },
+          {
+            "status": "affected",
+            "scope": "cve_specific",
+            "claim_ids": [
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+              "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+              "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+              "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0",
+              "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10003",
+              "CVE-2026-10004",
+              "CVE-2026-10007"
+            ],
+            "count": 5
+          },
+          {
+            "status": "conflicting",
+            "scope": "cve_specific",
+            "claim_ids": [
+              "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+            ],
+            "cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "count": 1
+          },
+          {
+            "status": "fixed",
+            "scope": "cve_specific",
+            "claim_ids": [
+              "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351"
+            ],
+            "cve_ids": [
+              "CVE-2026-10005"
+            ],
+            "count": 1
+          }
+        ],
+        "severity": [
+          {
+            "version": "3.1",
+            "provider": "other-provider",
+            "origin": null,
+            "preferred": false,
+            "band": "Critical",
+            "cve_ids": [
+              "CVE-2026-10001"
+            ],
+            "count": 1
+          },
+          {
+            "version": "3.1",
+            "provider": "vendor-reported",
+            "origin": null,
+            "preferred": true,
+            "band": "None",
+            "cve_ids": [
+              "CVE-2026-10001"
+            ],
+            "count": 1
+          },
+          {
+            "version": null,
+            "provider": null,
+            "origin": null,
+            "preferred": null,
+            "band": "Unknown",
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10003",
+              "CVE-2026-10004",
+              "CVE-2026-10007"
+            ],
+            "count": 5
+          }
+        ],
+        "vendor_severity": [],
+        "kev": {
+          "availability": "not_configured",
+          "listed_cve_ids": [],
+          "unknown_cve_ids": [
+            "CVE-2026-10001",
+            "CVE-2026-10002",
+            "CVE-2026-10003",
+            "CVE-2026-10004",
+            "CVE-2026-10007"
+          ],
+          "listed_count": 0,
+          "unknown_count": 5,
+          "denominator": 5
+        },
+        "coverage": {
+          "state": "unknown",
+          "expected_advisories": null,
+          "observed_advisories": 10,
+          "basis": "retained_source_windows_not_period_completeness",
+          "sources": []
+        },
+        "denominators": {
+          "affected_cves": 5,
+          "observed_advisories": 10,
+          "expected_advisories": null
+        },
+        "issues": [
+          "model_binding_unresolved",
+          "period_coverage_unknown",
+          "sets_nonadditive"
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "retrieved_at": "2026-11-04T10:00:00Z",
+        "source_locator": "/vulnerabilities/0"
+      }
+    ],
+    "issues": [],
+    "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial.",
+    "inputs": {
+      "evidence": {
+        "claims": [
+          {
+            "vendor": "arista",
+            "advisory_id": "april6",
+            "cve_id": "CVE-2026-10001",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "april6",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2026-04-06",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [
+              {
+                "system": "CVSS",
+                "version": "3.1",
+                "value": 0,
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                "severity": "HIGH",
+                "cve_id": "CVE-2026-10001",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "scope": "cve_specific",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "provider": "vendor-reported",
+                "preferred": true
+              },
+              {
+                "system": "CVSS",
+                "version": "3.1",
+                "value": 9.8,
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+                "severity": "HIGH",
+                "cve_id": "CVE-2026-10001",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "scope": "cve_specific",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "provider": "other-provider",
+                "preferred": false
+              }
+            ],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "april7",
+            "cve_id": "CVE-2026-10001",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "april7",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2026-04-07",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "offset",
+            "cve_id": "CVE-2026-10002",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "offset",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2026-04-07T00:30:00+02:00",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [],
+            "platform_bindings": [],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "os_family",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing",
+              "model_binding_unresolved"
+            ],
+            "claim_id": "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "undated",
+            "cve_id": "CVE-2026-10003",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "undated",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": null,
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing",
+              "initial_publication_date_missing"
+            ],
+            "claim_id": "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "old",
+            "cve_id": "CVE-2026-10004",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "old",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2024-01-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": {
+              "publisher_id": "bundle-1",
+              "title": "Publisher named bundle",
+              "member_advisory_ids": [
+                "old",
+                "repeat"
+              ],
+              "published_at": "2026-04-07",
+              "source": {
+                "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-04T10:00:00Z",
+                "source_locator": "/vulnerabilities/0"
+              }
+            },
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "repeat",
+            "cve_id": "CVE-2026-10004",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "repeat",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2025-01-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": {
+              "publisher_id": "bundle-1",
+              "title": "Publisher named bundle",
+              "member_advisory_ids": [
+                "old",
+                "repeat"
+              ],
+              "published_at": "2026-04-07",
+              "source": {
+                "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-04T10:00:00Z",
+                "source_locator": "/vulnerabilities/0"
+              }
+            },
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "fixed",
+            "cve_id": "CVE-2026-10005",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "fixed",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2025-01-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "fixed",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "shared",
+            "cve_id": "CVE-2026-10006",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "shared",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2025-01-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "bulletin_shared",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "conflict",
+            "cve_id": "CVE-2026-10004",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "conflict",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2025-01-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "conflicting",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "conditional",
+            "cve_id": "CVE-2026-10007",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "conditional",
+              "sequence": "01",
+              "status": "final"
+            },
+            "initial_published_at": "2026-05-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [
+              "Only when a synthetic prerequisite is enabled"
+            ],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "conditional_affected": true,
+            "claim_id": "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e"
+          },
+          {
+            "vendor": "arista",
+            "advisory_id": "draft",
+            "cve_id": "CVE-2026-10008",
+            "product_id": "publisher-product-1",
+            "product": "EOS",
+            "revision": "1",
+            "source": {
+              "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+              "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "retrieved_at": "2026-11-04T10:00:00Z",
+              "source_locator": "/vulnerabilities/0"
+            },
+            "publisher": {
+              "id": "draft",
+              "sequence": "01",
+              "status": "draft"
+            },
+            "initial_published_at": "2026-08-01",
+            "updated_at": "2026-04-08T00:00:00Z",
+            "family": "arista-eos",
+            "named_platforms": [
+              "750"
+            ],
+            "platform_bindings": [
+              {
+                "platform": "750",
+                "model": "750",
+                "basis": "publisher_explicit",
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                }
+              }
+            ],
+            "status": "affected",
+            "scope": "cve_specific",
+            "scope_level": "model_qualified",
+            "version_expressions": [
+              "before 4.32.1"
+            ],
+            "conditions": [],
+            "remediations": [
+              {
+                "publisher_id": "fix-1",
+                "category": "vendor_fix",
+                "details": "Update to 4.32.1",
+                "product_ids": [
+                  "publisher-product-1"
+                ],
+                "version_expressions": [
+                  "4.32.1"
+                ],
+                "published_availability": "available",
+                "availability_date": null,
+                "source": {
+                  "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+                  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "retrieved_at": "2026-11-04T10:00:00Z",
+                  "source_locator": "/vulnerabilities/0"
+                },
+                "availability": "vendor_reports_fixed"
+              }
+            ],
+            "bundle": null,
+            "scores": [],
+            "issues": [
+              "availability_date_missing",
+              "bundle_publication_date_missing"
+            ],
+            "claim_id": "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db"
+          }
+        ],
+        "coverage": [],
+        "issues": [],
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+      },
+      "kev": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": false,
+          "enabled": false,
+          "availability": "not_configured",
+          "latest_attempt": null,
+          "checked_at": null
+        },
+        "catalogue": null,
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": [],
+        "entries": {},
+        "selection": {
+          "requested_cve_ids": [],
+          "effective_cve_ids": [],
+          "kev_only": false,
+          "membership": {}
+        }
+      }
+    }
+  },
+  "comparison_cases": [
+    {
+      "name": "selection-0",
+      "options": {
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10001",
+            "CVE-2026-10002",
+            "CVE-2026-10003",
+            "CVE-2026-10004",
+            "CVE-2026-10005",
+            "CVE-2026-10006",
+            "CVE-2026-10007",
+            "CVE-2026-10008"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "cisco:os_family:all",
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "aruba:os_family:all",
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "arista:os_family:all",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "conflict",
+              "fixed",
+              "offset",
+              "old",
+              "repeat",
+              "shared",
+              "undated"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset",
+              "old",
+              "repeat",
+              "undated"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10003",
+              "CVE-2026-10004",
+              "CVE-2026-10005",
+              "CVE-2026-10006",
+              "CVE-2026-10007",
+              "CVE-2026-10008"
+            ],
+            "claim_ids": [
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+              "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+              "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
+              "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+              "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db",
+              "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351",
+              "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+              "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0",
+              "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10003",
+              "CVE-2026-10004",
+              "CVE-2026-10007"
+            ],
+            "conditional_cve_ids": [
+              "CVE-2026-10007"
+            ],
+            "event_ids": [
+              "arista:bundle:bundle-1",
+              "arista:unbundled:april6",
+              "arista:unbundled:april7",
+              "arista:unbundled:conditional",
+              "arista:unbundled:offset",
+              "arista:unbundled:undated"
+            ],
+            "events": [
+              {
+                "event_id": "arista:bundle:bundle-1",
+                "kind": "bundle",
+                "publisher_id": "bundle-1",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "advisory_ids": [
+                  "old",
+                  "repeat"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april6",
+                "kind": "unbundled",
+                "publisher_id": "april6",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
+                ],
+                "advisory_ids": [
+                  "april6"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april7",
+                "kind": "unbundled",
+                "publisher_id": "april7",
+                "claim_ids": [
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+                ],
+                "advisory_ids": [
+                  "april7"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:conditional",
+                "kind": "unbundled",
+                "publisher_id": "conditional",
+                "claim_ids": [
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e"
+                ],
+                "advisory_ids": [
+                  "conditional"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10007"
+                ],
+                "published_at": "2026-05-01",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:offset",
+                "kind": "unbundled",
+                "publisher_id": "offset",
+                "claim_ids": [
+                  "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+                ],
+                "advisory_ids": [
+                  "offset"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10002"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:undated",
+                "kind": "unbundled",
+                "publisher_id": "undated",
+                "claim_ids": [
+                  "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+                ],
+                "advisory_ids": [
+                  "undated"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10003"
+                ],
+                "published_at": null,
+                "issues": [
+                  "event_publication_date_missing"
+                ]
+              }
+            ],
+            "counts": {
+              "advisories": 10,
+              "affected_advisories": 7,
+              "cves": 8,
+              "claims": 11,
+              "affected_cves": 5,
+              "conditional_cves": 1,
+              "conditionality_unclassified_cves": 4,
+              "draft_advisories": 1,
+              "remediation_events": 6,
+              "bundled_events": 1,
+              "unbundled_publications": 5,
+              "fixed_only_claims": 1,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 1
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "bulletin_shared",
+                "claim_ids": [
+                  "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10006"
+                ],
+                "count": 1
+              },
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+                  "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0",
+                  "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10002",
+                  "CVE-2026-10003",
+                  "CVE-2026-10004",
+                  "CVE-2026-10007"
+                ],
+                "count": 5
+              },
+              {
+                "status": "conflicting",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              },
+              {
+                "status": "fixed",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10005"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": "3.1",
+                "provider": "other-provider",
+                "origin": null,
+                "preferred": false,
+                "band": "Critical",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": "3.1",
+                "provider": "vendor-reported",
+                "origin": null,
+                "preferred": true,
+                "band": "None",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10002",
+                  "CVE-2026-10003",
+                  "CVE-2026-10004",
+                  "CVE-2026-10007"
+                ],
+                "count": 5
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10001",
+                "CVE-2026-10002",
+                "CVE-2026-10003",
+                "CVE-2026-10004",
+                "CVE-2026-10007"
+              ],
+              "listed_count": 0,
+              "unknown_count": 5,
+              "denominator": 5
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 10,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 5,
+              "observed_advisories": 10,
+              "expected_advisories": null
+            },
+            "issues": [
+              "model_binding_unresolved",
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-1",
+      "options": {
+        "cve_ids": [],
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": [],
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "cisco:os_family:all",
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "aruba:os_family:all",
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "arista:os_family:all",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-2",
+      "options": {
+        "vendor": "arista",
+        "window": "pre",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "pre",
+          "effective_windows": [
+            "arista:os_family:pre"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10001",
+            "CVE-2026-10002",
+            "CVE-2026-10004",
+            "CVE-2026-10005",
+            "CVE-2026-10006"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:os_family:pre",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "pre",
+            "period_start": "2021-01-01",
+            "period_end": "2026-04-06",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "april6",
+              "conflict",
+              "fixed",
+              "offset",
+              "old",
+              "repeat",
+              "shared"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "offset",
+              "old",
+              "repeat"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10004",
+              "CVE-2026-10005",
+              "CVE-2026-10006"
+            ],
+            "claim_ids": [
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+              "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
+              "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351",
+              "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+              "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10004"
+            ],
+            "conditional_cve_ids": [],
+            "event_ids": [
+              "arista:unbundled:april6",
+              "arista:unbundled:offset"
+            ],
+            "events": [
+              {
+                "event_id": "arista:unbundled:april6",
+                "kind": "unbundled",
+                "publisher_id": "april6",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
+                ],
+                "advisory_ids": [
+                  "april6"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:offset",
+                "kind": "unbundled",
+                "publisher_id": "offset",
+                "claim_ids": [
+                  "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+                ],
+                "advisory_ids": [
+                  "offset"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10002"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              }
+            ],
+            "counts": {
+              "advisories": 7,
+              "affected_advisories": 4,
+              "cves": 5,
+              "claims": 7,
+              "affected_cves": 3,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 3,
+              "draft_advisories": 0,
+              "remediation_events": 2,
+              "bundled_events": 0,
+              "unbundled_publications": 2,
+              "fixed_only_claims": 1,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 1
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "bulletin_shared",
+                "claim_ids": [
+                  "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10006"
+                ],
+                "count": 1
+              },
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+                  "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10002",
+                  "CVE-2026-10004"
+                ],
+                "count": 3
+              },
+              {
+                "status": "conflicting",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              },
+              {
+                "status": "fixed",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10005"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": "3.1",
+                "provider": "other-provider",
+                "origin": null,
+                "preferred": false,
+                "band": "Critical",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": "3.1",
+                "provider": "vendor-reported",
+                "origin": null,
+                "preferred": true,
+                "band": "None",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10002",
+                  "CVE-2026-10004"
+                ],
+                "count": 2
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10001",
+                "CVE-2026-10002",
+                "CVE-2026-10004"
+              ],
+              "listed_count": 0,
+              "unknown_count": 3,
+              "denominator": 3
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 7,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 3,
+              "observed_advisories": 7,
+              "expected_advisories": null
+            },
+            "issues": [
+              "model_binding_unresolved",
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-3",
+      "options": {
+        "vendor": "arista",
+        "window": "post",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "post",
+          "effective_windows": [
+            "arista:os_family:post"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10001",
+            "CVE-2026-10004",
+            "CVE-2026-10007",
+            "CVE-2026-10008"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:os_family:post",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "post",
+            "period_start": "2026-04-07",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "april7",
+              "conditional"
+            ],
+            "affected_advisory_ids": [
+              "april7",
+              "conditional"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10004",
+              "CVE-2026-10007",
+              "CVE-2026-10008"
+            ],
+            "claim_ids": [
+              "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+              "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+              "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10007"
+            ],
+            "conditional_cve_ids": [
+              "CVE-2026-10007"
+            ],
+            "event_ids": [
+              "arista:bundle:bundle-1",
+              "arista:unbundled:april7",
+              "arista:unbundled:conditional"
+            ],
+            "events": [
+              {
+                "event_id": "arista:bundle:bundle-1",
+                "kind": "bundle",
+                "publisher_id": "bundle-1",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "advisory_ids": [
+                  "old",
+                  "repeat"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april7",
+                "kind": "unbundled",
+                "publisher_id": "april7",
+                "claim_ids": [
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+                ],
+                "advisory_ids": [
+                  "april7"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:conditional",
+                "kind": "unbundled",
+                "publisher_id": "conditional",
+                "claim_ids": [
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e"
+                ],
+                "advisory_ids": [
+                  "conditional"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10007"
+                ],
+                "published_at": "2026-05-01",
+                "issues": []
+              }
+            ],
+            "counts": {
+              "advisories": 2,
+              "affected_advisories": 2,
+              "cves": 4,
+              "claims": 3,
+              "affected_cves": 2,
+              "conditional_cves": 1,
+              "conditionality_unclassified_cves": 1,
+              "draft_advisories": 1,
+              "remediation_events": 3,
+              "bundled_events": 1,
+              "unbundled_publications": 2,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10007"
+                ],
+                "count": 2
+              }
+            ],
+            "severity": [
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10007"
+                ],
+                "count": 2
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10001",
+                "CVE-2026-10007"
+              ],
+              "listed_count": 0,
+              "unknown_count": 2,
+              "denominator": 2
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 2,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 2,
+              "observed_advisories": 2,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-4",
+      "options": {
+        "vendor": "arista",
+        "window": "undated",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "undated",
+          "effective_windows": [
+            "arista:os_family:undated"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10003"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:os_family:undated",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "undated",
+            "period_start": null,
+            "period_end": null,
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "undated"
+            ],
+            "affected_advisory_ids": [
+              "undated"
+            ],
+            "cve_ids": [
+              "CVE-2026-10003"
+            ],
+            "claim_ids": [
+              "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10003"
+            ],
+            "conditional_cve_ids": [],
+            "event_ids": [
+              "arista:unbundled:undated"
+            ],
+            "events": [
+              {
+                "event_id": "arista:unbundled:undated",
+                "kind": "unbundled",
+                "publisher_id": "undated",
+                "claim_ids": [
+                  "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+                ],
+                "advisory_ids": [
+                  "undated"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10003"
+                ],
+                "published_at": null,
+                "issues": [
+                  "event_publication_date_missing"
+                ]
+              }
+            ],
+            "counts": {
+              "advisories": 1,
+              "affected_advisories": 1,
+              "cves": 1,
+              "claims": 1,
+              "affected_cves": 1,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 1,
+              "draft_advisories": 0,
+              "remediation_events": 1,
+              "bundled_events": 0,
+              "unbundled_publications": 1,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10003"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10003"
+                ],
+                "count": 1
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10003"
+              ],
+              "listed_count": 0,
+              "unknown_count": 1,
+              "denominator": 1
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 1,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 1,
+              "observed_advisories": 1,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-5",
+      "options": {
+        "vendor": "arista",
+        "window": "2024",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2024",
+          "effective_windows": [
+            "arista:os_family:2024"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10004"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:os_family:2024",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "2024",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "old"
+            ],
+            "affected_advisory_ids": [
+              "old"
+            ],
+            "cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "claim_ids": [
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 1,
+              "affected_advisories": 1,
+              "cves": 1,
+              "claims": 1,
+              "affected_cves": 1,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 1,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10004"
+              ],
+              "listed_count": 0,
+              "unknown_count": 1,
+              "denominator": 1
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 1,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 1,
+              "observed_advisories": 1,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-6",
+      "options": {
+        "vendor": "arista",
+        "window": "2025",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2025",
+          "effective_windows": [
+            "arista:os_family:2025"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10004",
+            "CVE-2026-10005",
+            "CVE-2026-10006"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:os_family:2025",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "2025",
+            "period_start": "2025-01-01",
+            "period_end": "2025-12-31",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "conflict",
+              "fixed",
+              "repeat",
+              "shared"
+            ],
+            "affected_advisory_ids": [
+              "repeat"
+            ],
+            "cve_ids": [
+              "CVE-2026-10004",
+              "CVE-2026-10005",
+              "CVE-2026-10006"
+            ],
+            "claim_ids": [
+              "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
+              "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351",
+              "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 4,
+              "affected_advisories": 1,
+              "cves": 3,
+              "claims": 4,
+              "affected_cves": 1,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 1,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 1,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "bulletin_shared",
+                "claim_ids": [
+                  "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10006"
+                ],
+                "count": 1
+              },
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              },
+              {
+                "status": "conflicting",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              },
+              {
+                "status": "fixed",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10005"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10004"
+              ],
+              "listed_count": 0,
+              "unknown_count": 1,
+              "denominator": 1
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 4,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 1,
+              "observed_advisories": 4,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-7",
+      "options": {
+        "vendor": "arista",
+        "window": "2026",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2026",
+          "effective_windows": [
+            "arista:os_family:2026"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10001",
+            "CVE-2026-10002",
+            "CVE-2026-10004",
+            "CVE-2026-10007",
+            "CVE-2026-10008"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:os_family:2026",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "2026",
+            "period_start": "2026-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "offset"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10004",
+              "CVE-2026-10007",
+              "CVE-2026-10008"
+            ],
+            "claim_ids": [
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+              "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+              "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+              "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db",
+              "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10002",
+              "CVE-2026-10007"
+            ],
+            "conditional_cve_ids": [
+              "CVE-2026-10007"
+            ],
+            "event_ids": [
+              "arista:bundle:bundle-1",
+              "arista:unbundled:april6",
+              "arista:unbundled:april7",
+              "arista:unbundled:conditional",
+              "arista:unbundled:offset"
+            ],
+            "events": [
+              {
+                "event_id": "arista:bundle:bundle-1",
+                "kind": "bundle",
+                "publisher_id": "bundle-1",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "advisory_ids": [
+                  "old",
+                  "repeat"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april6",
+                "kind": "unbundled",
+                "publisher_id": "april6",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
+                ],
+                "advisory_ids": [
+                  "april6"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april7",
+                "kind": "unbundled",
+                "publisher_id": "april7",
+                "claim_ids": [
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+                ],
+                "advisory_ids": [
+                  "april7"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:conditional",
+                "kind": "unbundled",
+                "publisher_id": "conditional",
+                "claim_ids": [
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e"
+                ],
+                "advisory_ids": [
+                  "conditional"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10007"
+                ],
+                "published_at": "2026-05-01",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:offset",
+                "kind": "unbundled",
+                "publisher_id": "offset",
+                "claim_ids": [
+                  "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+                ],
+                "advisory_ids": [
+                  "offset"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10002"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              }
+            ],
+            "counts": {
+              "advisories": 4,
+              "affected_advisories": 4,
+              "cves": 5,
+              "claims": 5,
+              "affected_cves": 3,
+              "conditional_cves": 1,
+              "conditionality_unclassified_cves": 2,
+              "draft_advisories": 1,
+              "remediation_events": 5,
+              "bundled_events": 1,
+              "unbundled_publications": 4,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 1
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+                  "e7fe2a4aea130613fd2c9b0ec68f45575f321a2d0370bb4f5836ed255d691de0"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10002",
+                  "CVE-2026-10007"
+                ],
+                "count": 3
+              }
+            ],
+            "severity": [
+              {
+                "version": "3.1",
+                "provider": "other-provider",
+                "origin": null,
+                "preferred": false,
+                "band": "Critical",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": "3.1",
+                "provider": "vendor-reported",
+                "origin": null,
+                "preferred": true,
+                "band": "None",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10002",
+                  "CVE-2026-10007"
+                ],
+                "count": 3
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10001",
+                "CVE-2026-10002",
+                "CVE-2026-10007"
+              ],
+              "listed_count": 0,
+              "unknown_count": 3,
+              "denominator": 3
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 4,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 3,
+              "observed_advisories": 4,
+              "expected_advisories": null
+            },
+            "issues": [
+              "model_binding_unresolved",
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-8",
+      "options": {
+        "vendor": "arista",
+        "scope_level": "model_qualified",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "model_qualified",
+          "requested_window": "all",
+          "effective_windows": [
+            "arista:model_qualified:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2026-10001",
+            "CVE-2026-10003",
+            "CVE-2026-10004",
+            "CVE-2026-10005",
+            "CVE-2026-10006",
+            "CVE-2026-10007",
+            "CVE-2026-10008"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "arista:model_qualified:all",
+            "vendor": "arista",
+            "scope_level": "model_qualified",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "conflict",
+              "fixed",
+              "old",
+              "repeat",
+              "shared",
+              "undated"
+            ],
+            "affected_advisory_ids": [
+              "april6",
+              "april7",
+              "conditional",
+              "old",
+              "repeat",
+              "undated"
+            ],
+            "cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10003",
+              "CVE-2026-10004",
+              "CVE-2026-10005",
+              "CVE-2026-10006",
+              "CVE-2026-10007",
+              "CVE-2026-10008"
+            ],
+            "claim_ids": [
+              "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+              "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+              "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
+              "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+              "6f413baee0390082ade5e82a32c2334e8df4d5e0a62f3e0dfbc4af43e05c48db",
+              "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351",
+              "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+              "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10001",
+              "CVE-2026-10003",
+              "CVE-2026-10004",
+              "CVE-2026-10007"
+            ],
+            "conditional_cve_ids": [
+              "CVE-2026-10007"
+            ],
+            "event_ids": [
+              "arista:bundle:bundle-1",
+              "arista:unbundled:april6",
+              "arista:unbundled:april7",
+              "arista:unbundled:conditional",
+              "arista:unbundled:undated"
+            ],
+            "events": [
+              {
+                "event_id": "arista:bundle:bundle-1",
+                "kind": "bundle",
+                "publisher_id": "bundle-1",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "advisory_ids": [
+                  "old",
+                  "repeat"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april6",
+                "kind": "unbundled",
+                "publisher_id": "april6",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a"
+                ],
+                "advisory_ids": [
+                  "april6"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-06",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:april7",
+                "kind": "unbundled",
+                "publisher_id": "april7",
+                "claim_ids": [
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3"
+                ],
+                "advisory_ids": [
+                  "april7"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:conditional",
+                "kind": "unbundled",
+                "publisher_id": "conditional",
+                "claim_ids": [
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e"
+                ],
+                "advisory_ids": [
+                  "conditional"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10007"
+                ],
+                "published_at": "2026-05-01",
+                "issues": []
+              },
+              {
+                "event_id": "arista:unbundled:undated",
+                "kind": "unbundled",
+                "publisher_id": "undated",
+                "claim_ids": [
+                  "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+                ],
+                "advisory_ids": [
+                  "undated"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10003"
+                ],
+                "published_at": null,
+                "issues": [
+                  "event_publication_date_missing"
+                ]
+              }
+            ],
+            "counts": {
+              "advisories": 9,
+              "affected_advisories": 6,
+              "cves": 7,
+              "claims": 10,
+              "affected_cves": 4,
+              "conditional_cves": 1,
+              "conditionality_unclassified_cves": 3,
+              "draft_advisories": 1,
+              "remediation_events": 5,
+              "bundled_events": 1,
+              "unbundled_publications": 4,
+              "fixed_only_claims": 1,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "bulletin_shared",
+                "claim_ids": [
+                  "862c47e3fd339a508e2ee1c134f4801d3f89ff50a9e1230d917571647b0e05b5"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10006"
+                ],
+                "count": 1
+              },
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "15b21dff0915269bfe68998607fa80999876c730bfaa8c9494d9fa843690317a",
+                  "1b67ea44fb6b3ebd062eca979c3c6453df8e885b6315a47ceb7f323e4af57f1e",
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "534d70eb39105ebde86b41668ea6c9eb9a0bddffeda816f7a851f7958f37dde3",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168",
+                  "ea71ad46e297bb6ea2a56672aa052f31d445e8a0867ed025078164219a259e97"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10003",
+                  "CVE-2026-10004",
+                  "CVE-2026-10007"
+                ],
+                "count": 4
+              },
+              {
+                "status": "conflicting",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              },
+              {
+                "status": "fixed",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "7782c4b0776aa1f2547246bce581415ce0d73e50052577a7033d52ecf5a97351"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10005"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": "3.1",
+                "provider": "other-provider",
+                "origin": null,
+                "preferred": false,
+                "band": "Critical",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": "3.1",
+                "provider": "vendor-reported",
+                "origin": null,
+                "preferred": true,
+                "band": "None",
+                "cve_ids": [
+                  "CVE-2026-10001"
+                ],
+                "count": 1
+              },
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10001",
+                  "CVE-2026-10003",
+                  "CVE-2026-10004",
+                  "CVE-2026-10007"
+                ],
+                "count": 4
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10001",
+                "CVE-2026-10003",
+                "CVE-2026-10004",
+                "CVE-2026-10007"
+              ],
+              "listed_count": 0,
+              "unknown_count": 4,
+              "denominator": 4
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 9,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 4,
+              "observed_advisories": 9,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-9",
+      "options": {
+        "vendor": "cisco",
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": "cisco",
+          "effective_vendors": [
+            "cisco"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "cisco:os_family:all",
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-10",
+      "options": {
+        "cve_ids": [
+          "CVE-2026-10004"
+        ],
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": [
+            "CVE-2026-10004"
+          ],
+          "effective_cve_ids": [
+            "CVE-2026-10004"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "cisco:os_family:all",
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "aruba:os_family:all",
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "arista:os_family:all",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [
+              "conflict",
+              "old",
+              "repeat"
+            ],
+            "affected_advisory_ids": [
+              "old",
+              "repeat"
+            ],
+            "cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "claim_ids": [
+              "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+              "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4",
+              "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+            ],
+            "affected_cve_ids": [
+              "CVE-2026-10004"
+            ],
+            "conditional_cve_ids": [],
+            "event_ids": [
+              "arista:bundle:bundle-1"
+            ],
+            "events": [
+              {
+                "event_id": "arista:bundle:bundle-1",
+                "kind": "bundle",
+                "publisher_id": "bundle-1",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "advisory_ids": [
+                  "old",
+                  "repeat"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "published_at": "2026-04-07",
+                "issues": []
+              }
+            ],
+            "counts": {
+              "advisories": 3,
+              "affected_advisories": 2,
+              "cves": 1,
+              "claims": 3,
+              "affected_cves": 1,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 1,
+              "draft_advisories": 0,
+              "remediation_events": 1,
+              "bundled_events": 1,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [
+              {
+                "status": "affected",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "25f0b3b087bbbebd12a5001de2af3409f48dd1c9ffa5e0d283d9338006e1d9b7",
+                  "8c6a727cfc79e64b70c7adadc07b24451e13c61a255010a724a46ba177ecc168"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              },
+              {
+                "status": "conflicting",
+                "scope": "cve_specific",
+                "claim_ids": [
+                  "2c03dc433d4a078c10e96df6552c05f37c68b8725c0ff2de74c4635324cc78e4"
+                ],
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              }
+            ],
+            "severity": [
+              {
+                "version": null,
+                "provider": null,
+                "origin": null,
+                "preferred": null,
+                "band": "Unknown",
+                "cve_ids": [
+                  "CVE-2026-10004"
+                ],
+                "count": 1
+              }
+            ],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [
+                "CVE-2026-10004"
+              ],
+              "listed_count": 0,
+              "unknown_count": 1,
+              "denominator": 1
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 3,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 1,
+              "observed_advisories": 3,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [
+          {
+            "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic",
+            "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "retrieved_at": "2026-11-04T10:00:00Z",
+            "source_locator": "/vulnerabilities/0"
+          }
+        ],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    },
+    {
+      "name": "selection-11",
+      "options": {
+        "cve_ids": [
+          "CVE-2099-99999"
+        ],
+        "evaluated_at": "2026-11-04T10:00:00Z"
+      },
+      "expected": {
+        "schema_version": 1,
+        "publication": null,
+        "generated_at": "2026-11-04T10:00:00Z",
+        "evaluated_at": "2026-11-04T10:00:00Z",
+        "availability": "available",
+        "observation_end": "2026-11-04",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": [
+            "CVE-2099-99999"
+          ],
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "row_id": "cisco:os_family:all",
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "aruba:os_family:all",
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          },
+          {
+            "row_id": "arista:os_family:all",
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "window": "all",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-04",
+            "date_basis": "initial_publisher_date_utc_day",
+            "event_date_basis": "explicit_bundle_initial_else_advisory_initial",
+            "advisory_ids": [],
+            "affected_advisory_ids": [],
+            "cve_ids": [],
+            "claim_ids": [],
+            "affected_cve_ids": [],
+            "conditional_cve_ids": [],
+            "event_ids": [],
+            "events": [],
+            "counts": {
+              "advisories": 0,
+              "affected_advisories": 0,
+              "cves": 0,
+              "claims": 0,
+              "affected_cves": 0,
+              "conditional_cves": 0,
+              "conditionality_unclassified_cves": 0,
+              "draft_advisories": 0,
+              "remediation_events": 0,
+              "bundled_events": 0,
+              "unbundled_publications": 0,
+              "fixed_only_claims": 0,
+              "planned_fix_claims": 0,
+              "workaround_claims": 0,
+              "model_unresolved_claims": 0
+            },
+            "status_buckets": [],
+            "severity": [],
+            "vendor_severity": [],
+            "kev": {
+              "availability": "not_configured",
+              "listed_cve_ids": [],
+              "unknown_cve_ids": [],
+              "listed_count": 0,
+              "unknown_count": 0,
+              "denominator": 0
+            },
+            "coverage": {
+              "state": "unknown",
+              "expected_advisories": null,
+              "observed_advisories": 0,
+              "basis": "retained_source_windows_not_period_completeness",
+              "sources": []
+            },
+            "denominators": {
+              "affected_cves": 0,
+              "observed_advisories": 0,
+              "expected_advisories": null
+            },
+            "issues": [
+              "period_coverage_unknown",
+              "sets_nonadditive"
+            ]
+          }
+        ],
+        "sources": [],
+        "issues": [],
+        "method": "Distinct observed identities, not prevalence or a security ranking. OS-family and model-qualified contexts overlap; CVE sets across years and severity facets are nonadditive. Initial publisher dates determine disclosures; explicit bundles use their own initial dates. Conditional statements do not establish deployed configuration. General context notes do not establish prerequisites; absent conditionality is unclassified. Scores are provider-reported, not independently rescored. No timing, fix-delay, causal, equivalence or no-difference inference. Coverage describes source observation windows, not historical period completeness. The observation-end year is partial."
+      }
+    }
+  ],
+  "severity_band_cases": [
+    {
+      "version": "2.0",
+      "value": null,
+      "band": "Unknown"
+    },
+    {
+      "version": "2.0",
+      "value": 0,
+      "band": "Low"
+    },
+    {
+      "version": "2.0",
+      "value": 0.1,
+      "band": "Low"
+    },
+    {
+      "version": "2.0",
+      "value": 3.9,
+      "band": "Low"
+    },
+    {
+      "version": "2.0",
+      "value": 4,
+      "band": "Medium"
+    },
+    {
+      "version": "2.0",
+      "value": 6.9,
+      "band": "Medium"
+    },
+    {
+      "version": "2.0",
+      "value": 7,
+      "band": "High"
+    },
+    {
+      "version": "2.0",
+      "value": 8.9,
+      "band": "High"
+    },
+    {
+      "version": "2.0",
+      "value": 9,
+      "band": "High"
+    },
+    {
+      "version": "2.0",
+      "value": 10,
+      "band": "High"
+    },
+    {
+      "version": "3.0",
+      "value": null,
+      "band": "Unknown"
+    },
+    {
+      "version": "3.0",
+      "value": 0,
+      "band": "None"
+    },
+    {
+      "version": "3.0",
+      "value": 0.1,
+      "band": "Low"
+    },
+    {
+      "version": "3.0",
+      "value": 3.9,
+      "band": "Low"
+    },
+    {
+      "version": "3.0",
+      "value": 4,
+      "band": "Medium"
+    },
+    {
+      "version": "3.0",
+      "value": 6.9,
+      "band": "Medium"
+    },
+    {
+      "version": "3.0",
+      "value": 7,
+      "band": "High"
+    },
+    {
+      "version": "3.0",
+      "value": 8.9,
+      "band": "High"
+    },
+    {
+      "version": "3.0",
+      "value": 9,
+      "band": "Critical"
+    },
+    {
+      "version": "3.0",
+      "value": 10,
+      "band": "Critical"
+    },
+    {
+      "version": "3.1",
+      "value": null,
+      "band": "Unknown"
+    },
+    {
+      "version": "3.1",
+      "value": 0,
+      "band": "None"
+    },
+    {
+      "version": "3.1",
+      "value": 0.1,
+      "band": "Low"
+    },
+    {
+      "version": "3.1",
+      "value": 3.9,
+      "band": "Low"
+    },
+    {
+      "version": "3.1",
+      "value": 4,
+      "band": "Medium"
+    },
+    {
+      "version": "3.1",
+      "value": 6.9,
+      "band": "Medium"
+    },
+    {
+      "version": "3.1",
+      "value": 7,
+      "band": "High"
+    },
+    {
+      "version": "3.1",
+      "value": 8.9,
+      "band": "High"
+    },
+    {
+      "version": "3.1",
+      "value": 9,
+      "band": "Critical"
+    },
+    {
+      "version": "3.1",
+      "value": 10,
+      "band": "Critical"
+    },
+    {
+      "version": "4.0",
+      "value": null,
+      "band": "Unknown"
+    },
+    {
+      "version": "4.0",
+      "value": 0,
+      "band": "None"
+    },
+    {
+      "version": "4.0",
+      "value": 0.1,
+      "band": "Low"
+    },
+    {
+      "version": "4.0",
+      "value": 3.9,
+      "band": "Low"
+    },
+    {
+      "version": "4.0",
+      "value": 4,
+      "band": "Medium"
+    },
+    {
+      "version": "4.0",
+      "value": 6.9,
+      "band": "Medium"
+    },
+    {
+      "version": "4.0",
+      "value": 7,
+      "band": "High"
+    },
+    {
+      "version": "4.0",
+      "value": 8.9,
+      "band": "High"
+    },
+    {
+      "version": "4.0",
+      "value": 9,
+      "band": "Critical"
+    },
+    {
+      "version": "4.0",
+      "value": 10,
+      "band": "Critical"
+    }
+  ]
+}

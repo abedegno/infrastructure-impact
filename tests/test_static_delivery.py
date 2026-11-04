@@ -154,7 +154,12 @@ def test_compressed_archive_is_exact_public_projection_and_reproducible(tmp_path
     assert manifest["sha256"]["snapshot.json.gz"] == hashlib.sha256(compressed).hexdigest()
     from infrastructure_impact.application.publication import write_bundle
 
-    write_bundle(tmp_path / "repeat", json.loads(raw))
+    rehydrated = json.loads(raw)
+    rehydrated["switching_comparison"] = json.loads(
+        (generation / "switching-comparison.json").read_text()
+    )
+    rehydrated["switching_evidence"] = rehydrated["switching_comparison"]["inputs"]["evidence"]
+    write_bundle(tmp_path / "repeat", rehydrated)
     assert (tmp_path / "repeat/snapshot.json.gz").read_bytes() == compressed
     code, content_type, body = Application(tmp_path).route(
         dict(REQUEST_METHOD="GET", PATH_INFO="/snapshot.json.gz")
@@ -248,12 +253,10 @@ def test_monitor_checks_cohort_parts_without_full_archive_download(tmp_path, mon
     assert result["status"] == "fresh" and result["advisories"] == 3
     assert result["delivery"] == "cohort_parts_v1" and not result["full_archive_download_verified"]
     assert result["checked_default_bytes"] < 8_000_000
-    assert result["compressed_archive_verified"]
+    assert not result["compressed_archive_verified"]
     assert result["static_marker_verified"] and ".nojekyll" in seen
-    assert (
-        result["checked_compressed_archive_bytes"]
-        == (generation / "snapshot.json.gz").stat().st_size
-    )
+    assert result["checked_compressed_archive_bytes"] == 0
+    assert "snapshot.json.gz" not in seen
 
 
 @pytest.mark.parametrize("fault", ["digest", "contents", "truncated"])
@@ -283,7 +286,7 @@ def test_monitor_rejects_invalid_compressed_archive(tmp_path, monkeypatch, fault
         ),
     )
     with pytest.raises((AssertionError, EOFError)):
-        health.check("https://example.test")
+        health.check("https://example.test", verify_archive=True)
 
 
 @pytest.mark.parametrize("fault", [False, True])
@@ -603,7 +606,16 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
     generation = publish(dataset(), tmp_path)
     html = (generation / "index.html").read_text()
     scripts = re.findall(r'<script defer src="([^"]+)"', html)
-    expected = ["research-dossiers.js", "delivery.js", "kev.js", "snapshot.js", "app.js"]
+    expected = [
+        "research-dossiers.js",
+        "delivery.js",
+        "kev.js",
+        "switching-contracts.js",
+        "switching.js",
+        "switching-view.js",
+        "snapshot.js",
+        "app.js",
+    ]
     paths = []
     manifest = json.loads((generation / "manifest.json").read_text())
     app = Application(tmp_path)

@@ -21,6 +21,29 @@ def release_wheel(root):
     return wheels[0]
 
 
+def public_resource_fingerprints(root):
+    names = [
+        "web/kev.js",
+        "schemas/kev-v1.json",
+        "resources/sources.json",
+        "web/switching-contracts.js",
+        "web/switching.js",
+        "web/switching-view.js",
+        "resources/switching-study.json",
+        "resources/switching-source-bindings.json",
+        "resources/switching-extraction-review.json",
+        "migrations/011_switching_collection.sql",
+    ]
+    names += [
+        "schemas/switching-" + name + "-v1.json"
+        for name in ("study", "evidence", "comparison", "summary", "inputs")
+    ]
+    return {
+        name: hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
+        for name in names
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -41,12 +64,7 @@ def main():
         (root / "pyproject.toml").read_text()
     )["project"]["version"]
     environment["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"] = json.dumps(expected)
-    environment["IMPACT_EXPECTED_KEV_RESOURCES"] = json.dumps(
-        {
-            name: hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
-            for name in ("web/kev.js", "schemas/kev-v1.json", "resources/sources.json")
-        }
-    )
+    environment["IMPACT_EXPECTED_PUBLIC_RESOURCES"] = json.dumps(public_resource_fingerprints(root))
     with tempfile.TemporaryDirectory() as directory:
         subprocess.run(
             [

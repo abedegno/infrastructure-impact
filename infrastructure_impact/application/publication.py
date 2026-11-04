@@ -35,14 +35,26 @@ from .release_assets import validate_asset
 def public_projection(data, public_release_urls=()):
     """The publication boundary never copies raw evidence or private review notes."""
     data = json.loads(json.dumps(data, allow_nan=False))
+    from ..adapters.cvss import public_metrics
+
+    score_input = data["research"].pop("score_input", {})
     for record in data["records"]:
         validate_advisory(record)
         record["notes"] = []
-        record["metrics"] = []
+        scores = [
+            c
+            for entry in score_input.get("advisories", [])
+            if entry.get("vendor") == record["vendor"]
+            and entry.get("advisory_id") == record["advisory_id"]
+            for c in entry.get("claims", [])
+        ]
+        scores += score_input.get("fallback", {}).get("claims", [])
+        record["metrics"] = public_metrics([c for c in scores if c.get("cve_id") in record["cves"]])
         record["timeline"] = []
         record.pop("extensions", None)
         for assessment in record["assessments"]:
             assessment.pop("extensions", None)
+    switching_input = data["research"].pop("switching_input", None)
     kev_input = data["research"].pop("kev_input", None)
     scope = sorted(set(data["all_cves"]) | set(data["benchmark_cohort"]))
     data["kev"] = (
@@ -54,6 +66,27 @@ def public_projection(data, public_release_urls=()):
     )
     data["kev"]["publication"] = data.get("publication")
     data["kev"]["generated_at"] = data["generated_at"]
+    from .switching_comparison import build_report as build_switching
+    from .switching_comparison import day
+    from .switching_evidence import definition, project
+
+    # Old publications predate this study; they remain readable without a study asset.
+    observation_end = day(data["generated_at"])
+    if switching_input is not None and observation_end >= definition()["start_date"]:
+        switching_input["score_availability"] = switching_score_availability(
+            score_input, switching_input, data["records"]
+        )
+        data["switching_evidence"] = project(
+            switching_input, publication=data.get("publication"), generated_at=data["generated_at"]
+        )
+        data["switching_comparison"] = build_switching(
+            data["switching_evidence"],
+            data["kev"],
+            definition=definition(),
+            publication=data.get("publication"),
+            generated_at=data["generated_at"],
+            observation_end=observation_end,
+        )
     data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
     data["research"]["release_assets"] = [
@@ -145,9 +178,35 @@ def write_bundle(destination, data):
     validate(data)
     report_validator().validate(data["comparison_eligibility"])
     validate_groups(data["product_groups"])
+    from .switching_comparison import summary
+    from .switching_evidence import validate_comparison, validate_evidence
+
+    if "switching_comparison" in data:
+        validate_comparison(
+            data["switching_comparison"],
+            publication=data["publication"],
+            generated_at=data["generated_at"],
+        )
+        validate_evidence(
+            data["switching_evidence"],
+            publication=data["publication"],
+            generated_at=data["generated_at"],
+        )
+        if (
+            data["switching_comparison"]["evaluated_at"] != data["generated_at"]
+            or data["switching_comparison"]["inputs"]["kev"]["evaluated_at"] != data["generated_at"]
+        ):
+            raise ValueError("Published switching evaluation must match generation time")
+        if data["switching_evidence"] != data["switching_comparison"]["inputs"]["evidence"]:
+            raise ValueError("Switching asset and comparison evidence disagree")
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
-    snapshot = (json.dumps(data, separators=(",", ":")) + "\n").encode("utf-8")
+    compact = {k: v for k, v in data.items() if k != "switching_evidence"}
+    if "switching_comparison" in data:
+        compact["switching_comparison"] = summary(data["switching_comparison"])
+        for name in ("switching_evidence", "switching_comparison"):
+            (destination / (name.replace("_", "-") + ".json")).write_text(json.dumps(data[name]))
+    snapshot = (json.dumps(compact, separators=(",", ":")) + "\n").encode("utf-8")
     (destination / "snapshot.json").write_bytes(snapshot)
     compressed = io.BytesIO()
     # Empty filename and fixed time make the same public bytes reproducible.
@@ -216,6 +275,9 @@ def write_bundle(destination, data):
         "style.css",
         "research-dossiers.js",
         "kev.js",
+        "switching-contracts.js",
+        "switching.js",
+        "switching-view.js",
         "snapshot.js",
         "delivery.js",
     ):
@@ -225,7 +287,7 @@ def write_bundle(destination, data):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching-contracts.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     # Immutable script/style paths avoid mixing old cached readers with a new
@@ -235,6 +297,9 @@ def write_bundle(destination, data):
         "app.js",
         "research-dossiers.js",
         "kev.js",
+        "switching-contracts.js",
+        "switching.js",
+        "switching-view.js",
         "snapshot.js",
         "delivery.js",
         "style.css",
@@ -299,10 +364,18 @@ def write_bundle(destination, data):
         "product-cohorts-v1.json",
         "disclosure-review-v1.json",
         "kev-v1.json",
+        "switching-study-v1.json",
+        "switching-evidence-v1.json",
+        "switching-comparison-v1.json",
+        "switching-summary-v1.json",
+        "switching-inputs-v1.json",
         "research-dossiers-v1.json",
         "research-dossier-definition-v1.json",
     ):
         shutil.copyfile(PACKAGE / "schemas" / name, destination / "schemas" / name)
+    shutil.copyfile(
+        PACKAGE / "resources/switching-study.json", destination / "switching-study.json"
+    )
     shutil.copyfile(PACKAGE / "resources/openapi.json", destination / "openapi.json")
     (destination / "_headers").write_text(
         "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'\n"
@@ -325,9 +398,8 @@ def publish(data, root=None, public_release_urls=()):
     generations = root / "generations"
     generations.mkdir(parents=True, exist_ok=True)
     generation = uuid4().hex
+    data = {**data, "publication": {"id": generation, "advisory_schema_version": 2}}
     data = public_projection(data, public_release_urls)
-    data["publication"] = {"id": generation, "advisory_schema_version": 2}
-    data["kev"]["publication"] = dict(data["publication"])
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:
         write_bundle(stage, data)
@@ -369,3 +441,118 @@ def build(output=None):
         )
     )
     return generation
+
+
+def switching_score_availability(score_input, switching_input, records):
+    """Explicit public diagnostics; metadata cannot establish study affectedness."""
+    allowed_issues = {
+        "score_unavailable",
+        "score_invalid",
+        "score_format_unsupported",
+        "source_normalization_unavailable",
+        "score_extraction_failed",
+        "base_invalid",
+        "base_missing",
+        "base_severity_disagreement",
+        "vector_missing",
+        "vector_invalid",
+        "vector_base_metrics_missing",
+        "vector_duplicate_metric",
+        "vector_order_invalid",
+        "vector_version_disagreement",
+        "version_invalid",
+        "score_form_version_disagreement",
+        "structured_metric_disagreement",
+        "consistency_not_verified",
+    }
+    states = {
+        "unknown",
+        "ok",
+        "rate_limited",
+        "source_missing",
+        "invalid_record",
+        "network_error",
+        "request_state_unresolved",
+    }
+    result = []
+    for entry in score_input.get("advisories", []):
+        if entry["vendor"] not in ("cisco", "aruba", "arista"):
+            continue
+        claims = [
+            c
+            for c in switching_input.get("claims", [])
+            if c["vendor"] == entry["vendor"]
+            and c["advisory_id"] == entry["advisory_id"]
+            and c["source"]["source_url"] == entry["source_url"]
+        ]
+        contexts = [(c["cve_id"], c["product_id"], "study_claim") for c in claims]
+        if not contexts:
+            contexts = [
+                (cid, None, "source_only_unclassified")
+                for r in records
+                if r["vendor"] == entry["vendor"] and r["advisory_id"] == entry["advisory_id"]
+                for cid in r["cves"]
+            ]
+        for cid, product, context in sorted(
+            set(contexts), key=lambda x: (x[0] or "", x[1] or "", x[2])
+        ):
+            candidates = [
+                s
+                for s in entry.get("claims", []) + score_input.get("fallback", {}).get("claims", [])
+                if cid is not None
+                and s.get("cve_id") == cid
+                and s.get("scope") == "cve_specific"
+                and (not s.get("product_ids") or product in s["product_ids"])
+                and (
+                    s.get("origin") != "vendor_advisory"
+                    or s["source"]["source_url"] == entry["source_url"]
+                )
+            ]
+            issues = {
+                i["code"]
+                for i in entry.get("issues", [])
+                if isinstance(i, dict) and i.get("code") in allowed_issues
+            }
+            issues.update(i for s in candidates for i in s.get("issues", []) if i in allowed_issues)
+            state = (
+                "available"
+                if any(s.get("validation") == "valid" for s in candidates)
+                else "incomplete"
+                if any(s.get("validation") == "incomplete" for s in candidates)
+                else "invalid"
+                if candidates
+                else "unavailable"
+            )
+            if not candidates:
+                issues.add("score_unavailable")
+            attempts = [
+                {k: a.get(k) for k in ("source", "cve_id", "state", "checked_at", "retry_at")}
+                for a in score_input.get("fallback", {}).get("attempts", [])
+                if a.get("cve_id") == cid
+                and a.get("source") in ("nvd", "cve_record")
+                and a.get("state") in states
+            ]
+            source = entry.get("source")
+            source = (
+                {
+                    k: source.get(k)
+                    for k in ("source_url", "source_sha256", "retrieved_at", "source_locator")
+                }
+                if source
+                else None
+            )
+            result.append(
+                dict(
+                    vendor=entry["vendor"],
+                    advisory_id=entry["advisory_id"],
+                    source_url=entry["source_url"],
+                    cve_id=cid,
+                    product_id=product,
+                    context=context,
+                    source=source,
+                    state=state,
+                    issues=sorted(issues),
+                    attempts=attempts,
+                )
+            )
+    return result
