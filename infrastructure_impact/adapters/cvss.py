@@ -589,6 +589,8 @@ def public_metrics(claims: list[dict]) -> list[dict]:
 
             if not any(allowed(url, vendor) for vendor in default_registry().names()):
                 continue
+        product_ids = _strings(c.get("product_ids", []))
+        product_ids_set = set(product_ids)
         result.append(
             dict(
                 system="CVSS",
@@ -597,7 +599,7 @@ def public_metrics(claims: list[dict]) -> list[dict]:
                 vector=c["vector"],
                 severity=_band(c["version"], c["value"]),
                 cve_id=c["cve_id"],
-                product_ids=_strings(c.get("product_ids", [])),
+                product_ids=product_ids,
                 scope="cve_specific",
                 source={
                     k: _text(source.get(k))
@@ -606,7 +608,7 @@ def public_metrics(claims: list[dict]) -> list[dict]:
                 provider=_text(c.get("provider")),
                 origin=origin,
                 applicability="source_product"
-                if origin == "vendor_advisory" and _strings(c.get("product_ids", []))
+                if origin == "vendor_advisory" and product_ids
                 else "cve_level",
                 revision=_text(c.get("revision")),
                 validation="valid",
@@ -622,7 +624,9 @@ def public_metrics(claims: list[dict]) -> list[dict]:
                         issues=_strings(p.get("issues", [])),
                     )
                     for p in c.get("product_context", [])
-                    if isinstance(p, dict) and p.get("product_id") in c.get("product_ids", [])
+                    if isinstance(p, dict)
+                    and isinstance(p.get("product_id"), str)
+                    and p["product_id"] in product_ids_set
                 ],
             )
         )

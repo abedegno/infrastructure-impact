@@ -3,6 +3,7 @@
 import json
 import os
 
+from ..phase_events import phase
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import VENDORS, health, history, latest, now
@@ -30,6 +31,7 @@ from .timeline import evidence_timeline
 ROOT = Paths.from_env().home
 
 
+@phase("publication.query")
 def state(db, cohort=None):
     records = latest(db)
     scopes = retained_scopes(db, records, review_definition())

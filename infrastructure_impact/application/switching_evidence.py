@@ -12,7 +12,7 @@ from functools import lru_cache
 from importlib.resources import files
 from urllib.parse import urlsplit
 
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError, validators
 from referencing import Registry, Resource
 
 from ..source_policy import allowed
@@ -27,6 +27,41 @@ _SCHEMAS = (
     "kev-v1.json",
 )
 _UNSET = object()
+_SOURCE_FIELDS = ("source_url", "source_sha256", "retrieved_at", "source_locator")
+
+
+def _source_unique_items(validator, unique, instance, schema):
+    """Index only closed four-string sources; all other JSON uses stock equality.
+
+    This replaces the pairwise object comparison, not item/type validation. The
+    schema still requires uniqueItems and independently validates every source.
+    """
+    if (
+        unique
+        and type(instance) is list
+        and schema.get("items")
+        == {"$ref": "urn:infrastructure-impact:switching-evidence:1#/$defs/source"}
+        and all(
+            type(item) is dict
+            and item.keys() == set(_SOURCE_FIELDS)
+            and all(type(item[key]) is str for key in _SOURCE_FIELDS)
+            for item in instance
+        )
+    ):
+        seen = set()
+        for item in instance:
+            identity = tuple(item[key] for key in _SOURCE_FIELDS)
+            if identity in seen:
+                yield ValidationError("Array contains duplicate source identities")
+                return
+            seen.add(identity)
+    else:
+        yield from Draft202012Validator.VALIDATORS["uniqueItems"](
+            validator, unique, instance, schema
+        )
+
+
+_SourceValidator = validators.extend(Draft202012Validator, {"uniqueItems": _source_unique_items})
 
 
 def _json(value):
@@ -120,7 +155,7 @@ def _validators():
         )
 
     return {
-        name: Draft202012Validator(schema, format_checker=checker, registry=registry)
+        name: _SourceValidator(schema, format_checker=checker, registry=registry)
         for name, schema in schemas.items()
     }
 
@@ -645,40 +680,76 @@ def inputs(db, records: list[dict]) -> dict:
         ]
         for bundle in members or [None]:
             expanded.append({**copy.deepcopy(claim), "bundle": copy.deepcopy(bundle)})
+    _attach_scores(expanded, score_inputs(db, records))
+    result["claims"] = expanded
+    result["issues"] = sorted(set(result["issues"]))
+    return result
+
+
+def _attach_scores(claims, score_data):
+    """Select original scopes and priority first, then copy exact claim PID subsets.
+
+    Ordinals identify original candidate occurrences in this extraction only.
+    Different overlapping scopes therefore cannot share a preference result just
+    because they share a URL, CVE or score value. Full ordinary metrics stay owned
+    by the caller; no cache or projected object escapes into source inputs.
+    """
+    import copy
+    from collections import defaultdict
+
     from ..adapters.cvss import public_metrics
 
-    score_data = score_inputs(db, records)
-    for claim in expanded:
-        claim["vendor_severity"] = [
-            rating
-            for rating in score_data["vendor_severity"]
-            if rating["vendor"] == claim["vendor"] and rating["advisory_id"] == claim["advisory_id"]
-        ]
+    candidates, index = [], defaultdict(list)
+    for entry in score_data["advisories"] + [
+        {"vendor": None, "advisory_id": None, **score_data["fallback"]}
+    ]:
+        for score in entry["claims"]:
+            ordinal = len(candidates)
+            candidates.append(score)
+            representation = (
+                score["source"]["source_url"] if score["origin"] == "vendor_advisory" else None
+            )
+            for pid in set(score["product_ids"]) or {None}:
+                key = (entry["vendor"], entry["advisory_id"], score["cve_id"], representation, pid)
+                index[key].append(ordinal)
+    ratings = defaultdict(list)
+    for rating in score_data["vendor_severity"]:
+        ratings[rating["vendor"], rating["advisory_id"]].append(rating)
+    cache = {}
+    for claim in claims:
+        claim["vendor_severity"] = copy.deepcopy(ratings[claim["vendor"], claim["advisory_id"]])
         if not claim["vendor_severity"]:
             claim["issues"].append("vendor_severity_unavailable")
-        candidates = [
-            score
-            for entry in score_data["advisories"]
-            if entry["vendor"] == claim["vendor"] and entry["advisory_id"] == claim["advisory_id"]
-            for score in entry["claims"]
-        ]
-        candidates += score_data["fallback"]["claims"]
-        # Selection and diagnostics share CVE/product/representation attribution.
-        relevant = [
-            score
-            for score in candidates
-            if score["cve_id"] == claim["cve_id"]
-            and (not score["product_ids"] or claim["product_id"] in score["product_ids"])
-            and (
-                score["origin"] != "vendor_advisory"
-                or score["source"]["source_url"] == claim["source"]["source_url"]
-            )
-        ]
-        claim["scores"] = public_metrics(relevant) + [
-            {**score, "preferred": False}
-            for score in relevant
-            if score["validation"] == "incomplete"
-        ]
+        keys = {
+            (vendor, advisory, claim["cve_id"], representation, pid)
+            for vendor, advisory in ((claim["vendor"], claim["advisory_id"]), (None, None))
+            for representation in (claim["source"]["source_url"], None)
+            for pid in (claim["product_id"], None)
+        }
+        identity = tuple(sorted(i for key in keys for i in index.get(key, ())))
+        relevant = [candidates[i] for i in identity]
+        if identity not in cache:
+            metrics = public_metrics(relevant) + [
+                {**score, "preferred": False}
+                for score in relevant
+                if score["validation"] == "incomplete"
+            ]
+            prepared = []
+            for score in metrics:
+                context = defaultdict(list)
+                for product in score.get("product_context", []):
+                    context[product["product_id"]].append(product)
+                prepared.append((score, set(score["product_ids"]), context))
+            cache[identity] = prepared
+        claim["scores"] = []
+        pid = claim["product_id"]
+        for score, pids, context in cache[identity]:
+            projected = score
+            if pid is not None and pid in pids:
+                projected = {**score, "product_ids": [pid]}
+                if "product_context" in score:
+                    projected["product_context"] = context.get(pid, [])
+            claim["scores"].append(copy.deepcopy(projected))
         for score in relevant:
             if score["validation"] == "invalid":
                 claim["issues"].append("score_invalid")
@@ -688,9 +759,6 @@ def inputs(db, records: list[dict]) -> dict:
                     claim["issues"].append("score_value_missing")
         if not relevant:
             claim["issues"].append("score_unavailable")
-    result["claims"] = expanded
-    result["issues"] = sorted(set(result["issues"]))
-    return result
 
 
 def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dict:
