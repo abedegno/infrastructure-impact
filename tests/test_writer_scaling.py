@@ -156,6 +156,78 @@ def test_remediation_groups_preserve_unbound_and_unresolved_rules():
     assert data == original
 
 
+@pytest.mark.parametrize("scope", [["unrelated", {}], [{}], [[]]])
+@pytest.mark.parametrize("grouped", [False, True])
+@pytest.mark.parametrize("resolved_product", [False, True])
+def test_unrelated_malformed_remediation_scope_keeps_retained_claims(
+    scope, grouped, resolved_product
+):
+    data = fanout(1)
+    if not resolved_product:
+        data["product_tree"]["full_product_names"] = []
+    rem = {"category": "vendor_fix", "details": "The fix is available."}
+    if grouped:
+        data["product_tree"]["product_groups"] = [{"group_id": "bad", "product_ids": scope}]
+        rem["group_ids"] = ["bad"]
+    else:
+        rem["product_ids"] = scope
+    data["vulnerabilities"][0]["remediations"].append(rem)
+    db, raw = retained(data)
+    try:
+        records = latest(db)
+        assert len(records) == 1
+        result = evidence.inputs(db, records)
+        assert "source_extraction_failed" not in result["issues"]
+        assert len(result["claims"]) == 1
+        claim = result["claims"][0]
+        assert claim["product_id"] == "synthetic-0"
+        assert claim["family"] is None
+        assert claim["status"] == "affected"
+        # The malformed nonempty scope must not become unbound fix evidence.
+        assert [r["product_ids"] for r in claim["remediations"]] == [["synthetic-0"]]
+        assert claim["remediations"][0]["details"] == "The software fix is available."
+        assert ("product_id_unresolved" in claim["issues"]) == (not resolved_product)
+        assert bytes(db.execute("SELECT raw FROM evidence").fetchone()[0]) == raw
+        evidence.project(result, publication=None, generated_at=AT)
+    finally:
+        db.close()
+
+
+def test_no_product_claim_does_not_prepare_malformed_remediation_scope():
+    data = fanout(0)
+    data["vulnerabilities"][0]["remediations"][0]["product_ids"] = [{}]
+    db, _ = retained(data)
+    try:
+        result = evidence.inputs(db, latest(db))
+        assert "source_extraction_failed" not in result["issues"]
+        assert len(result["claims"]) == 1
+        claim = result["claims"][0]
+        assert claim["product_id"] is None
+        assert claim["remediations"] == []
+        assert "product_scope_unresolved" in claim["issues"]
+        evidence.project(result, publication=None, generated_at=AT)
+    finally:
+        db.close()
+
+
+@pytest.mark.parametrize("unresolved_group", [False, True])
+def test_applicable_malformed_remediation_scope_preserves_failure_boundary(unresolved_group):
+    data = fanout(1)
+    rem = data["vulnerabilities"][0]["remediations"][0]
+    rem["product_ids"] = ["synthetic-0", {}]
+    if unresolved_group:
+        rem["group_ids"] = ["missing"]
+    raw = json.dumps(data).encode()
+    if unresolved_group:
+        result = switching.extract(raw, URL, "cisco", {"advisory_id": "SYNTHETIC-SCALING"})
+        assert len(result["claims"]) == 1
+        assert result["claims"][0]["remediations"] == []
+        assert "remediation_product_scope_unresolved" in result["claims"][0]["issues"]
+    else:
+        with pytest.raises(TypeError, match="unhashable"):
+            switching.extract(raw, URL, "cisco", {"advisory_id": "SYNTHETIC-SCALING"})
+
+
 def test_overlapping_candidate_groups_keep_preference_and_diagnostics(monkeypatch):
     data = fanout(4)
     scores = data["vulnerabilities"][0]["scores"]

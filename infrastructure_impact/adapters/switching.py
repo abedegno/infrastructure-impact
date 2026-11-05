@@ -174,13 +174,36 @@ def _csaf(raw, url, vendor, document, digest):
     claims = []
     models = _models(vendor)
     for vi, vuln in enumerate(data.get("vulnerabilities", [])):
+        by_pid = {}
+        for status, ids in vuln.get("product_status", {}).items():
+            for pid in ids:
+                by_pid.setdefault(pid, []).append(status)
+        if not by_pid:
+            claim = _claim(
+                vendor,
+                document,
+                _source(url, digest, f"/vulnerabilities/{vi}"),
+                publisher,
+                tracking.get("initial_release_date"),
+                tracking.get("current_release_date"),
+            )
+            claim["cve_id"] = vuln.get("cve")
+            claim["issues"] = ["product_scope_unresolved"]
+            claims.append(claim)
+            continue
         # Resolve each publisher scope once. Membership is checked before any
         # claim-local projection; an unresolved group still cannot authorize a fix.
         remediations = []
         for ri, rem in enumerate(vuln.get("remediations", [])):
-            ids = set(rem.get("product_ids", []))
-            for group in rem.get("group_ids", []):
-                ids.update(groups.get(group, []))
+            ids = rem.get("product_ids", []) + [
+                p for group in rem.get("group_ids", []) for p in groups.get(group, [])
+            ]
+            try:
+                ids = set(ids)
+            except TypeError:
+                # Keep malformed scopes intact for the original membership check.
+                # Only an applicable, resolved scope reached set conversion before.
+                pass
             unresolved = any(g not in groups for g in rem.get("group_ids", []))
             issues = []
             details = _bounded(rem.get("details"), issues)
@@ -203,22 +226,6 @@ def _csaf(raw, url, vendor, document, digest):
                 source=_source(url, digest, f"/vulnerabilities/{vi}/remediations/{ri}"),
             )
             remediations.append((ids, unresolved, prepared, issues))
-        by_pid = {}
-        for status, ids in vuln.get("product_status", {}).items():
-            for pid in ids:
-                by_pid.setdefault(pid, []).append(status)
-        if not by_pid:
-            claim = _claim(
-                vendor,
-                document,
-                _source(url, digest, f"/vulnerabilities/{vi}"),
-                publisher,
-                tracking.get("initial_release_date"),
-                tracking.get("current_release_date"),
-            )
-            claim["cve_id"] = vuln.get("cve")
-            claim["issues"] = ["product_scope_unresolved"]
-            claims.append(claim)
         for pid, statuses in by_pid.items():
             product = products.get(
                 pid,
@@ -307,6 +314,9 @@ def _csaf(raw, url, vendor, document, digest):
                 if unresolved:
                     claim["issues"].append("remediation_product_scope_unresolved")
                     continue
+                if isinstance(ids, list):
+                    # Preserve the failure boundary for an applicable malformed scope.
+                    ids = set(ids)
                 claim["issues"].extend(issues)
                 claim["remediations"].append(
                     {
