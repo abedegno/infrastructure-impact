@@ -356,17 +356,24 @@ def _form_versions(form):
         "cvssMetricV30": ("3.0",),
         "cvssMetricV31": ("3.1",),
         "cvssMetricV40": ("4.0",),
-    }[form]
+    }.get(form, ())
 
 
 def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
     """Extract only source-structured metrics; never read normalized raw metrics."""
     result = {"claims": [], "issues": [], "vendor_severity": []}
+    text_inputs = None
     try:
         data = json.loads(raw)
     except (ValueError, UnicodeError):
-        result["issues"].append({"code": "score_format_unsupported", "source_url": url})
-        return result
+        from .aruba_text import metric_inputs
+
+        try:
+            text_inputs = metric_inputs(raw, url, vendor, document)
+        except ValueError:
+            result["issues"].append({"code": "score_format_unsupported", "source_url": url})
+            return result
+        data = {}
     if not isinstance(data, dict):
         return result
     digest = sha256(raw).hexdigest()
@@ -443,7 +450,27 @@ def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
             {"code": i, "source_url": url, "source_locator": locator, "cve_id": cid} for i in issues
         )
 
-    if "document" in data and isinstance(data.get("vulnerabilities"), list):
+    if text_inputs is not None:
+        result["issues"].extend(text_inputs["issues"])
+        for severity in text_inputs["severity"]:
+            rating(
+                severity["rating"],
+                severity["source_locator"],
+                scheme=severity["scheme"],
+                namespace=severity["namespace"],
+            )
+        for item in text_inputs["metrics"]:
+            add(
+                item["metric"],
+                item["cve_id"],
+                [],
+                vendor,
+                "vendor_advisory",
+                item["source_locator"],
+                item["context"],
+                form=item["form"],
+            )
+    elif "document" in data and isinstance(data.get("vulnerabilities"), list):
         from .standards import csaf_products
 
         aggregate = data["document"].get("aggregate_severity")

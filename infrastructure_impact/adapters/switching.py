@@ -525,6 +525,11 @@ def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
         data = json.loads(raw)
         if "document" in data:
             return _csaf(raw, url, vendor, document, digest)
+    if entry is None and vendor == "aruba":
+        from .aruba_text import FORMAT, research_evidence
+
+        if document.get("source_format") == FORMAT:
+            return research_evidence(raw, url, vendor, document)
     if entry is None and vendor == "arista":
         bridged = _arista_reviewed(raw, url, document, digest)
         if bridged is not None:

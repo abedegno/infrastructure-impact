@@ -331,6 +331,145 @@ def test_aruba_known_index_exhaustion_retains_pre2022_gap():
         assert e["documents"]["error"] == 1
 
 
+@pytest.mark.parametrize("ordinary", [False, True])
+def test_aruba_historical_text_archive_interruption_resume(tmp_path, ordinary):
+    from hashlib import sha256
+    from pathlib import Path
+
+    from test_aruba_text_coverage import DIRECTORY, URL, listing, signed_text
+
+    from infrastructure_impact.application import switching_evidence
+    from infrastructure_impact.collection import archive, service
+    from infrastructure_impact.storage.repository import latest
+
+    name = URL.rsplit("/", 1)[1]
+    other = name.replace("013", "019")
+    raw = signed_text()
+    excluded = signed_text(excluded=True).replace(b"ARUBA-PSA-2021-013", b"ARUBA-PSA-2021-019")
+    captures = {DIRECTORY: listing(name, name, other), URL: raw, DIRECTORY + other: excluded}
+    cfg = {"vendors": [], "archives": [{"vendor": "aruba", "kind": "listing", "url": DIRECTORY}]}
+    protected = [
+        Path("infrastructure_impact/resources") / n
+        for n in ("sources.json", "switching-study.json", "switching-source-bindings.json")
+    ]
+    before = {p: sha256(p.read_bytes()).hexdigest() for p in protected}
+    path = tmp_path / "stage.sqlite3"
+
+    def fetch(db, url, vendor):
+        assert vendor == "aruba"
+        return captures[url]
+
+    with (
+        patch.object(archive, "fetch", fetch),
+        patch.object(service, "fetch", fetch),
+        patch.object(backfill, "fetch", fetch),
+    ):
+
+        def invoke():
+            if ordinary:
+                return archive.run(cfg, path, vendor="aruba", page_limit=1, document_limit=1)
+            with connect(path) as db:
+                return run(db, cfg, vendor="aruba", page_limit=1, document_limit=1)
+
+        # The first document is committed before its queue acknowledgement.
+        original = archive.evidence
+
+        def interrupt(db, body, url, *args):
+            if url == URL:
+                raise KeyboardInterrupt
+            return original(db, body, url, *args)
+
+        with patch.object(archive, "evidence", interrupt), pytest.raises(KeyboardInterrupt):
+            invoke()
+        with connect(path) as db:
+            assert db.execute("SELECT count(*) FROM revisions").fetchone()[0] == 1
+        invoke()
+        invoke()
+        invoke()
+        with connect(path) as db:
+            assert db.execute("SELECT count(*) FROM revisions").fetchone()[0] == 2
+            assert (
+                db.execute(
+                    "SELECT count(*) FROM archive_items WHERE kind='document' AND state='done'"
+                ).fetchone()[0]
+                == 2
+            )
+            assert (
+                db.execute("SELECT entry_count FROM archive_items WHERE kind='page'").fetchone()[0]
+                == 3
+            )
+            assert (
+                db.execute("SELECT raw FROM evidence WHERE source_url=?", (URL,)).fetchone()[0]
+                == raw
+            )
+            report = switching_evidence.project(
+                switching_evidence.inputs(db, latest(db)),
+                publication=None,
+                generated_at="2026-11-05T12:00:00Z",
+            )
+            cx = [c for c in report["claims"] if c["family"] == "aruba-aoscx"]
+            assert len(cx) == 8
+            assert {c["status"] for c in cx} == {"affected", "unaffected"}
+            if not ordinary:
+                entry = invoke()["entries"][0]
+                assert entry["coverage_state"] == "enumerated"
+                assert entry["expected_total"] is None
+                assert entry["duplicate_entries"] == 1
+                assert entry["parse_failed"] == entry["retrieval_failed"] == 0
+                assert entry["documents"]["error"] == 0
+                assert entry["gaps"] == []
+                assert entry["unknown_models"] == 2
+                assert entry["source_url"] == DIRECTORY
+                assert entry["portfolio_completeness"] == "not_established"
+                assert "listing_duplicate_links" in entry["errors"]
+                assert "overlapping_pages" not in entry["errors"]
+    assert {p: sha256(p.read_bytes()).hexdigest() for p in protected} == before
+
+
+def test_aruba_historical_text_missing_links_are_not_counted_as_duplicates():
+    from dataclasses import replace
+
+    from test_aruba_text_coverage import DIRECTORY, URL, signed_text
+
+    from infrastructure_impact.plugins import ArchivePage, default_registry
+
+    registry = default_registry()
+    plugin = replace(registry.get("aruba"), parse_archive=lambda *_: ArchivePage((URL,), 4, 2))
+    cfg = {"vendors": [], "archives": [{"vendor": "aruba", "kind": "listing", "url": DIRECTORY}]}
+    get = registry.get
+    with (
+        connect(":memory:") as db,
+        patch.object(
+            registry, "get", side_effect=lambda vendor: plugin if vendor == "aruba" else get(vendor)
+        ),
+        patch.object(backfill, "fetch", return_value=b"synthetic listing"),
+        patch("infrastructure_impact.collection.service.fetch", return_value=signed_text()),
+    ):
+        first = run(db, cfg, vendor="aruba")["entries"][0]
+        again = run(db, cfg, vendor="aruba")["entries"][0]
+        assert first["duplicate_entries"] == again["duplicate_entries"] == 1
+        assert first["discovered_unique_identities"] == 1
+        assert "entries_without_links" in first["errors"]
+        assert (
+            db.execute("SELECT entry_count FROM archive_items WHERE kind='page'").fetchone()[0] == 4
+        )
+
+
+@pytest.mark.parametrize("count,missing", [(True, 0), (-1, 0), (1, True), (1, -1), (1, 1)])
+def test_aruba_historical_text_inconsistent_listing_counts_fail_visibly(count, missing):
+    from test_aruba_text_coverage import DIRECTORY, URL
+
+    with patch.object(
+        backfill,
+        "inventory",
+        return_value=dict(
+            urls=[URL], next_pages=[], entry_count=count, entries_without_links=missing
+        ),
+    ):
+        with pytest.raises(ValueError, match="entry counts"):
+            backfill._public_page(b"synthetic", DIRECTORY, {"vendor": "aruba", "kind": "index"})
+
+
 def test_cli_requires_explicit_staging_vault_and_never_publishes(tmp_path, monkeypatch, capsys):
     from infrastructure_impact.cli import main
 
