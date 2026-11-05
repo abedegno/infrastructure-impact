@@ -1,6 +1,7 @@
 # Juniper canonical reference and F5 PDF revision repairs
 
-Status: source investigation complete; written design awaiting approval.
+Status: approved with “Proceed”; preparation and execution of the implementation
+plan are authorized. The existing subagent-driven execution choice is preserved.
 
 ## Intent and selected approach
 
