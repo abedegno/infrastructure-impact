@@ -1,6 +1,6 @@
 # Public-source coverage repairs
 
-Status: coverage-first approach selected by the maintainer; written design passed the builder-completeness check and is pending maintainer approval. Implementation follows approval of this document, then a written implementation plan using the maintainer’s existing subagent-driven preference. Release-history work follows this milestone.
+Status: coverage-first approach selected by the maintainer; written design passed the builder-completeness check and was approved with “Proceed.” The implementation plan uses the maintainer’s existing subagent-driven preference. Release-history work follows this milestone.
 
 ## Intent
 

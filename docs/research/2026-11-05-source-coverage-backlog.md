@@ -1,6 +1,6 @@
 # Source coverage and vendor comparison backlog — 5 November 2026
 
-Status: the maintainer selected coverage fixes first, then release-history work. The [coverage-repair design](../superpowers/specs/2026-11-05-source-coverage-repairs-design.md) passed the builder-completeness check and awaits maintainer approval. Product code and hosted configuration are unchanged.
+Status: the maintainer selected coverage fixes first, then release-history work, and approved the [coverage-repair design](../superpowers/specs/2026-11-05-source-coverage-repairs-design.md). The [implementation plan](../superpowers/plans/2026-11-05-source-coverage-repairs.md) is ready for review. Product code and hosted configuration are unchanged.
 
 ## Intended outcome
 
