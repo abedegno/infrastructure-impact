@@ -563,3 +563,164 @@ def test_wrapper_cache_reversion_cannot_reuse_an_unrelated_resolution():
         row = report(db, CONFIG)["sources"][0]
         assert row["current"]["parsed_advisories"] == 0
         assert row["current"]["unknown_aliases"] == 1
+
+
+@pytest.mark.parametrize("expected_total", [None, 137])
+def test_invocation_preserves_nullable_publisher_window_total(expected_total):
+    from infrastructure_impact.collection.switching_backfill import _initialize, _issue
+
+    with closing(connect(":memory:")) as db:
+        run = _initialize(
+            db,
+            {"id": "synthetic-study"},
+            "a" * 64,
+            "aruba",
+            CONFIG["archives"][0],
+            "2021-01-01",
+            "2026-11-05",
+        )
+        db.execute(
+            "UPDATE switching_backfills SET expected_total=?,unstable=1 WHERE id=?",
+            (expected_total, run),
+        )
+        _issue(db, run, "publisher_total_changed")
+        row = next(r for r in report(db, CONFIG)["sources"] if r["invocation"])
+        assert row["invocation"]["expected_total"] == expected_total
+        assert row["invocation"]["enumeration_state"] == "unstable"
+        assert "publisher_total_changed" in row["invocation"]["diagnostics"]
+        assert row["current"]["publisher_total"] is None
+        assert row["current"]["portfolio_completeness"] == "not_established"
+
+
+@pytest.mark.parametrize("section", ["pinned", "feed"])
+@pytest.mark.parametrize("ingested", [False, True])
+def test_unqueued_wrapper_uses_proven_preview_without_promoting_preview_to_ingestion(
+    section, ingested
+):
+    root = INDEX.replace("index.txt", "wrapper")
+    selected = INDEX.replace("index.txt", "selected.json")
+    cfg = {"vendors": []}
+    if section == "pinned":
+        cfg["pinned"] = [{"vendor": "aruba", "url": root}]
+        report_url = root
+    else:
+        cfg["vendors"] = [{"vendor": "aruba", "url": INDEX, "kind": "index"}]
+        report_url = INDEX
+    with closing(connect(":memory:")) as db:
+        if section == "feed":
+            evidence(db, (root + "\n").encode(), INDEX)
+            # Index discovery deliberately only accepts .json source links.
+            root += ".json"
+            evidence(db, (root + "\n").encode(), INDEX)
+        evidence(db, ('<a href="' + selected + '">CSAF</a>').encode(), root)
+        raw = document(selected)
+        evidence(db, raw, selected)
+        if ingested:
+            ingest(db, raw, selected, default_registry().normalize, "aruba")
+        before = list(db.iterdump())
+        result = report(db, cfg, limit=1)
+        row = next(r for r in result["sources"] if r["source_url"] == report_url)
+        assert result["triage"]["sampled"] == 1
+        assert result["triage"]["documents"][0]["outcome"] == "parsed_preview"
+        assert row["current"]["parsed_advisories"] == int(ingested)
+        assert row["current"]["parsed_representations"] == int(ingested)
+        assert row["current"]["unknown_aliases"] == int(not ingested)
+        assert list(db.iterdump()) == before
+
+
+def test_unqueued_pin_uses_current_persisted_selection_outside_preview_sample():
+    from infrastructure_impact.plugins.contracts import SourceSelection, SourceView
+    from infrastructure_impact.storage.source_selections import retain
+
+    root = INDEX.replace("index.txt", "wrapper")
+    selected = INDEX.replace("index.txt", "selected.json")
+    with closing(connect(":memory:")) as db:
+        s = source(db)
+        item(db, s, INDEX.replace("index.txt", "failed.json"), "error")
+        raw = document(selected)
+        wrapper = ('<a href="' + selected + '">CSAF</a>').encode()
+        ingest(db, raw, selected, default_registry().normalize, "aruba")
+        retain(
+            db,
+            "aruba",
+            root,
+            SourceSelection(
+                SourceView(selected, raw, "CSAF", 1, "synthetic"),
+                (SourceView(root, wrapper, "HTML", 0, "synthetic"),),
+                "Synthetic reviewed source choice",
+            ),
+            record_health=False,
+        )
+        cfg = {"vendors": [], "pinned": [{"vendor": "aruba", "url": root}]}
+        before = list(db.iterdump())
+        result = report(db, cfg, limit=1)
+        row = next(r for r in result["sources"] if r["source_url"] == root)
+        assert result["triage"]["sampled"] == 1
+        assert row["triage"]["sampled"] == 0
+        assert row["current"]["parsed_advisories"] == 1
+        assert row["current"]["unknown_aliases"] == 0
+        assert list(db.iterdump()) == before
+        # A later current wrapper capture cannot inherit the old source choice.
+        evidence(db, b"new unreviewed wrapper", root)
+        row = next(r for r in report(db, cfg, limit=1)["sources"] if r["source_url"] == root)
+        assert row["current"]["parsed_advisories"] == 0
+        assert row["current"]["unknown_aliases"] == 1
+
+        # Restore the wrapper pointer, but change its selected representation.
+        # The old selection cannot certify new selected bytes; an exact cache
+        # reversion to both known captures can certify the retained relation.
+        original_wrapper = evidence(db, wrapper, root)
+        original_selected = evidence(db, raw, selected)
+        db.execute(
+            "INSERT INTO http_cache(url,evidence_id) VALUES(?,?)", (root, original_wrapper["id"])
+        )
+        evidence(db, b"new unparsed selected bytes", selected)
+        row = next(r for r in report(db, cfg, limit=1)["sources"] if r["source_url"] == root)
+        assert row["current"]["parsed_advisories"] == 0
+        assert row["current"]["unknown_aliases"] == 1
+        db.execute(
+            "INSERT INTO http_cache(url,evidence_id) VALUES(?,?)",
+            (selected, original_selected["id"]),
+        )
+        row = next(r for r in report(db, cfg, limit=1)["sources"] if r["source_url"] == root)
+        assert row["current"]["parsed_advisories"] == 1
+        assert row["current"]["unknown_aliases"] == 0
+
+
+@pytest.mark.parametrize("product", [None, 123, {"PRIVATE_CONFIG_SENTINEL": "secret"}])
+def test_cli_malformed_explicit_release_product_is_sanitized_with_existing_database(
+    tmp_path, capsys, product
+):
+    dbpath = tmp_path / "vault.sqlite"
+    cfg = tmp_path / "sources.json"
+    output = tmp_path / "inventory.json"
+    with closing(connect(dbpath)):
+        pass
+    cfg.write_text(
+        json.dumps(
+            {
+                "vendors": [],
+                "release_documents": [{"vendor": "aruba", "url": INDEX, "product": product}],
+            }
+        )
+    )
+    before = dbpath.read_bytes()
+    with pytest.raises(SystemExit) as caught:
+        cli.main(
+            [
+                "coverage-gaps",
+                "--database",
+                str(dbpath),
+                "--config",
+                str(cfg),
+                "--output",
+                str(output),
+            ]
+        )
+    assert caught.value.code == 2
+    captured = capsys.readouterr()
+    assert "Coverage inventory failed" in captured.err
+    assert "PRIVATE_CONFIG_SENTINEL" not in captured.err
+    assert "AttributeError" not in captured.err and "Traceback" not in captured.err
+    assert captured.out == "" and not output.exists()
+    assert dbpath.read_bytes() == before

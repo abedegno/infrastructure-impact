@@ -50,7 +50,12 @@ Each source row has:
   `invocation`. A missing seed has a null source URL and `kind=unknown`.
   Persisted invocation metadata includes `run_id`, `study_id`,
   `requested_window`, start/check timestamps, `enumeration_state`, a controlled
-  `error_code`, `enumerated_identities`, `duplicate_entries` and `diagnostics`.
+  `error_code`, `enumerated_identities`, `duplicate_entries`, `expected_total`
+  and `diagnostics`. `expected_total` preserves the nullable publisher-reported
+  denominator observed by this source/enumeration invocation. Requested bounds
+  do not prove that the publisher total is filtered to that window. It is
+  separate from the unknown vendor-wide total; instability diagnostics
+  remain visible when publisher totals change.
   Requested windows describe the invocation; they are not inferred publisher
   history. `listing_duplicate_links` is a discovery diagnostic, not a document
   retrieval or parser failure. Missing seed runs remain `not_configured`.
@@ -74,7 +79,10 @@ Each source row has:
   zero-CVE notice records have their own `retained_unlinked_notices` count.
   Current evidence selection respects the HTTP cache pointer before retained
   fallback. Wrapper aliases require either a matching bounded retained-only preview or
-  an explicit persisted source selection linking both current captures. An
+  an explicit persisted source selection linking both current captures. The same
+  proof applies to unqueued configured wrapper pins and feed links. Successful
+  previews count as parsed current evidence only when a matching normalized
+  revision already exists in the vault. An
   unproven mapping remains uncertain, including after cache A → B → A reversions. `unknown_aliases` counts document representations without a usable
   persisted identity for that evidence; it does not guess which other advisory
   they represent. `publisher_date_range` uses usable publisher dates from these

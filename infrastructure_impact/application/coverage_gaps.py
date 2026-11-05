@@ -132,6 +132,7 @@ def _window(db, url, vendor, kind):
 
 
 def _preview(db, vendor, url):
+    resolved = None
     result = dict(
         vendor=vendor,
         source_url=_url(url, vendor),
@@ -170,7 +171,8 @@ def _preview(db, vendor, url):
         pass
     except Exception as error:
         result.update(outcome="error", error_code=_code(failure_code(error)))
-    return result
+    # Keep the exact route internal: public URLs omit query strings/fragments.
+    return result, resolved
 
 
 def report(db, config: dict, *, vendor: str | None = None, limit: int = 32) -> dict:
@@ -256,6 +258,7 @@ def report(db, config: dict, *, vendor: str | None = None, limit: int = 32) -> d
                 "SELECT count(*) FROM switching_backfill_entries WHERE run_id=?", (r["id"],)
             ).fetchone()[0],
             duplicate_entries=r["duplicate_entries"],
+            expected_total=r["expected_total"],
         )
         invocation["diagnostics"] = [
             issue[0]
@@ -323,8 +326,13 @@ def report(db, config: dict, *, vendor: str | None = None, limit: int = 32) -> d
             if (name, candidate) not in seen and _url(candidate, name):
                 seen.add((name, candidate))
                 targets.append(dict(vendor=name, url=candidate))
-    previews = [_preview(db, r["vendor"], r["url"]) for r in targets[:limit]]
+    observations = [_preview(db, r["vendor"], r["url"]) for r in targets[:limit]]
+    previews = [preview for preview, _ in observations]
     preview_map = {(r["vendor"], target["url"]): r for target, r in zip(targets, previews)}
+    preview_urls = {
+        (target["vendor"], target["url"]): resolved
+        for target, (_, resolved) in zip(targets, observations)
+    }
     rows = []
     for (name, url, kind, _), row in sources.items():
         invocation = row["invocation"]
@@ -409,29 +417,34 @@ def report(db, config: dict, *, vendor: str | None = None, limit: int = 32) -> d
             # Queue pointers/timestamps cannot prove a wrapper's current alias,
             # especially after a cache A -> B -> A reversion.
             current_requested = _evidence(db, target)
-            current = _evidence(db, resolved)
-            if resolved != target and current is not None:
-                preview = preview_map.get((name, target), {})
-                proven = (
-                    preview.get("outcome") in {"parsed_preview", "retained_unlinked_notice"}
-                    and preview.get("source_sha256") == current["sha256"]
-                    and preview.get("resolved_url") == _url(resolved, name)
-                )
-                if not proven and current_requested is not None:
-                    selection = db.execute(
-                        "SELECT * FROM source_selections WHERE vendor=? AND requested_url=? ORDER BY id DESC LIMIT 1",
-                        (name, target),
+            current = current_requested if resolved == target else None
+            preview = preview_map.get((name, target), {})
+            preview_url = preview_urls.get((name, target))
+            if preview.get("outcome") in {"parsed_preview", "retained_unlinked_notice"}:
+                current = None
+                candidate = _evidence(db, preview_url)
+                # This also handles unqueued wrapper pins/listing links. A preview
+                # establishes a relationship, never a persisted normalized record.
+                if candidate is not None and candidate["sha256"] == preview["source_sha256"]:
+                    current = candidate
+            elif current_requested is not None:
+                selection = db.execute(
+                    "SELECT * FROM source_selections WHERE vendor=? AND requested_url=? ORDER BY id DESC LIMIT 1",
+                    (name, target),
+                ).fetchone()
+                if (
+                    selection
+                    and db.execute(
+                        "SELECT 1 FROM source_selection_views WHERE selection_id=? AND evidence_id=?",
+                        (selection["id"], current_requested["id"]),
                     ).fetchone()
-                    proven = bool(
-                        selection
-                        and selection["selected_evidence_id"] == current["id"]
-                        and db.execute(
-                            "SELECT 1 FROM source_selection_views WHERE selection_id=? AND evidence_id=?",
-                            (selection["id"], current_requested["id"]),
-                        ).fetchone()
-                    )
-                if not proven:
-                    current = None
+                ):
+                    candidate = db.execute(
+                        "SELECT * FROM evidence WHERE id=?", (selection["selected_evidence_id"],)
+                    ).fetchone()
+                    selected_current = _evidence(db, candidate["source_url"]) if candidate else None
+                    if selected_current is not None and selected_current["id"] == candidate["id"]:
+                        current = candidate
             retain(current_requested)
             retain(current)
             if current is None:

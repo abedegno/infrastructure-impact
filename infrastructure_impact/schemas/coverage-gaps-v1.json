@@ -184,7 +184,8 @@
                   "error_code",
                   "enumerated_identities",
                   "duplicate_entries",
-                  "diagnostics"
+                  "diagnostics",
+                  "expected_total"
                 ],
                 "properties": {
                   "run_id": {
@@ -288,6 +289,17 @@
                         "pre_2022_history_not_enumerated"
                       ]
                     }
+                  },
+                  "expected_total": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
                   }
                 }
               },
