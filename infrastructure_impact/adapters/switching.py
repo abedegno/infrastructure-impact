@@ -174,6 +174,35 @@ def _csaf(raw, url, vendor, document, digest):
     claims = []
     models = _models(vendor)
     for vi, vuln in enumerate(data.get("vulnerabilities", [])):
+        # Resolve each publisher scope once. Membership is checked before any
+        # claim-local projection; an unresolved group still cannot authorize a fix.
+        remediations = []
+        for ri, rem in enumerate(vuln.get("remediations", [])):
+            ids = set(rem.get("product_ids", []))
+            for group in rem.get("group_ids", []):
+                ids.update(groups.get(group, []))
+            unresolved = any(g not in groups for g in rem.get("group_ids", []))
+            issues = []
+            details = _bounded(rem.get("details"), issues)
+            prepared = dict(
+                publisher_id=None,
+                category=rem.get("category", "unknown"),
+                details=details,
+                version_expressions=[],
+                published_availability=details,
+                availability=_availability(
+                    details,
+                    rem.get("category", "unknown"),
+                    rem.get("date"),
+                    as_of=tracking.get("current_release_date")
+                    or tracking.get("initial_release_date"),
+                )
+                if details
+                else "unknown",
+                availability_date=rem.get("date"),
+                source=_source(url, digest, f"/vulnerabilities/{vi}/remediations/{ri}"),
+            )
+            remediations.append((ids, unresolved, prepared, issues))
         by_pid = {}
         for status, ids in vuln.get("product_status", {}).items():
             for pid in ids:
@@ -272,36 +301,20 @@ def _csaf(raw, url, vendor, document, digest):
                     text = _bounded(threat["details"], claim["issues"])
                     if text:
                         claim["conditions"].append(text)
-            for ri, rem in enumerate(vuln.get("remediations", [])):
-                ids = rem.get("product_ids", []) + [
-                    p for g in rem.get("group_ids", []) for p in groups.get(g, [])
-                ]
+            for ids, unresolved, prepared, issues in remediations:
                 if ids and pid not in ids:
                     continue
-                if rem.get("group_ids") and any(g not in groups for g in rem["group_ids"]):
+                if unresolved:
                     claim["issues"].append("remediation_product_scope_unresolved")
                     continue
-                details = _bounded(rem.get("details"), claim["issues"])
+                claim["issues"].extend(issues)
                 claim["remediations"].append(
-                    dict(
-                        publisher_id=None,
-                        category=rem.get("category", "unknown"),
-                        details=details,
-                        product_ids=sorted(set(ids)),
-                        version_expressions=[],
-                        published_availability=details,
-                        availability=_availability(
-                            details,
-                            rem.get("category", "unknown"),
-                            rem.get("date"),
-                            as_of=tracking.get("current_release_date")
-                            or tracking.get("initial_release_date"),
-                        )
-                        if details
-                        else "unknown",
-                        availability_date=rem.get("date"),
-                        source=_source(url, digest, f"/vulnerabilities/{vi}/remediations/{ri}"),
-                    )
+                    {
+                        **prepared,
+                        "product_ids": [pid] if ids and pid is not None else sorted(ids),
+                        "version_expressions": [],
+                        "source": dict(prepared["source"]),
+                    }
                 )
             claims.append(claim)
     return dict(

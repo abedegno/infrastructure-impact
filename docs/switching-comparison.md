@@ -213,6 +213,26 @@ before reselection. Sources retain URLs, retrieval times, SHA-256, locators and
 literal publisher identities/statuses. Trace selected claims shows the exact claim,
 remediation, score and bundle context rather than inferred model applicability.
 
+From 0.9.1, a nonempty score or remediation product-ID list that explicitly
+contains the enclosing claim's non-null product ID is projected to that exact ID
+and its matching score product context. Original source/CVE/representation
+membership and score preference are resolved before this projection. Empty and
+unbound lists, unresolved-scope rules and reviewed HTML bindings retain their
+existing meanings. Every claim remains present, including unresolved families;
+status, versions, conditions, score values/providers and remediation facts are
+unchanged. The complete typed inputs needed for study reselection are retained.
+
+These claim-local lists are explicitly bound subsets, not copies of the full
+publisher scope. Broader publisher product-ID unions cannot be reconstructed
+from narrowed claim JSON alone: a source score or remediation can also name
+products with no corresponding retained claim. Ordinary advisory metrics retain
+the complete valid score scope and context. Original retained source bytes,
+revision, capture time, URL, hash and locator preserve broader publisher facts,
+including invalid/incomplete score evidence; existing claim diagnostics remain
+visible. No full-scope sidecar or new format is introduced. Corrected normalized
+content can change deterministic claim IDs and normalizer fingerprints; advisory
+identities, advisory-v2 and frozen study definitions are unchanged.
+
 Native reader `GET /api/v1/switching-comparison` accepts optional single nonblank
 `vendor=cisco|aruba|arista`, `scope=os_family|model_qualified`,
 `window=all|pre|post|undated|YYYY`, canonical comma-separated `cves`, and

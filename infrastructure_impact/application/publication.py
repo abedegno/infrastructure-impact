@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from ..domain import validate_advisory
 from ..exports import csv_export
+from ..phase_events import phase
 from ..settings import PACKAGE, Paths
 from ..storage.repository import connect
 from .casefiles import casefiles
@@ -32,6 +33,7 @@ from .readiness import readiness
 from .release_assets import validate_asset
 
 
+@phase("publication.projection")
 def public_projection(data, public_release_urls=()):
     """The publication boundary never copies raw evidence or private review notes."""
     data = json.loads(json.dumps(data, allow_nan=False))
@@ -165,6 +167,7 @@ def public_projection(data, public_release_urls=()):
     return data
 
 
+@phase("publication.writing")
 def write_bundle(destination, data):
     from .research_reports import validate
 
