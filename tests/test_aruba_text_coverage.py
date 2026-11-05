@@ -1,6 +1,7 @@
 """Project-authored examples of the reviewed Aruba signed-text structures."""
 
 from hashlib import sha256
+from pathlib import Path
 
 import pytest
 
@@ -313,3 +314,42 @@ def test_aruba_historical_text_unknown_unaffected_wrapping_does_not_truncate_pro
     )
     with pytest.raises(ValueError):
         normalize(raw)
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig", "utf-16", "utf-32", None])
+def test_aruba_json_dispatch_preserves_structured_encodings(encoding):
+    source = Path("tests/fixtures/aruba.json").read_text()
+    raw = source.encode(encoding) if encoding else source
+    doc = default_registry().normalize(raw, "https://support.hpe.com/synthetic.json", "aruba")
+    assert doc["advisory_id"] == "synthetic-aruba"
+    assert doc["cves"] == ["CVE-2026-109618"]
+    assert doc["assessments"][0]["status"] == "partially_mitigated"
+
+
+def test_aruba_historical_text_signed_dispatch_preserves_crlf():
+    doc = normalize(signed_text().replace(b"\n", b"\r\n"))
+    assert doc["cves"] == CVES
+    assert len(doc["assessments"]) == 4
+
+
+@pytest.mark.parametrize(
+    "catch_all",
+    [
+        "Other Aruba products not listed above",
+        "All other Aruba products",
+        "Any other products",
+    ],
+)
+def test_aruba_historical_text_generic_bullets_never_become_product_claims(catch_all):
+    raw = signed_text(excluded=True).replace(
+        b"  -- ArubaOS-CX Switches",
+        ("  -- " + catch_all + "\n  -- ArubaOS-CX Switches").encode(),
+    )
+    doc = normalize(raw)
+    claims = default_registry().research_evidence(raw, URL, "aruba", doc)["claims"]
+    assert {a["product"] for a in doc["assessments"]} == {
+        "ArubaOS-CX Switches",
+        "ArubaOS-S Switches",
+    }
+    assert {c["product"] for c in claims} == {"ArubaOS-CX Switches", "ArubaOS-S Switches"}
+    assert any(catch_all in note["text"] for note in doc["notes"])

@@ -5,11 +5,15 @@ from ..adapters.aruba_text import parse as text_parse
 from ..adapters.switching import extract
 from .archive_listings import aruba as archive
 from .contracts import VendorPlugin
-from .shared import is_json, structured
+from .shared import structured
 
 
 def parse(raw, url, vendor):
-    return structured(raw, url, vendor) if is_json(raw) else text_parse(raw, url, vendor)
+    # Select the added representation positively; json.loads in structured
+    # remains the authority for its accepted JSON encodings and input types.
+    if isinstance(raw, bytes) and raw.startswith(b"-----BEGIN PGP SIGNED MESSAGE-----"):
+        return text_parse(raw, url, vendor)
+    return structured(raw, url, vendor)
 
 
 def plugin():

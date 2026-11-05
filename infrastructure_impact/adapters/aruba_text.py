@@ -214,6 +214,10 @@ def _interpret(raw, url, vendor):
         if not rows or "ArubaOS-CX Switches" not in rows:
             raise ValueError("Unreviewed Aruba unaffected product list")
         for row in rows:
+            # Catch-all prose is retained in the section note, even when the
+            # publisher formats it as a bullet beside literal product names.
+            if re.search(r"\b(?:other|all|any|every)\b|\bnot listed\b", row, re.I):
+                continue
             for cid in ids:
                 a = assessment(
                     cid,
