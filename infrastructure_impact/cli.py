@@ -76,6 +76,14 @@ def main(argv=None):
         help="Retrieve and retain official sources without ingesting or changing queue state",
     )
     triage.add_argument("--output", type=Path)
+    gaps = sub.add_parser(
+        "coverage-gaps", help="Read-only explicit-vault source coverage inventory"
+    )
+    gaps.add_argument("--database", type=Path, required=True)
+    gaps.add_argument("--config", type=Path, required=True)
+    gaps.add_argument("--vendor")
+    gaps.add_argument("--limit", type=int, default=32)
+    gaps.add_argument("--output", type=Path)
     bench = sub.add_parser("benchmark", help="Refresh the declared benchmark")
     bench.add_argument("--aruba-limit", type=int, default=200)
     evaluation = sub.add_parser(
@@ -324,6 +332,41 @@ def main(argv=None):
                 except ValueError:
                     parser.error("Invalid switching source, date or budget")
         print(json.dumps(receipt, indent=2))
+    elif args.command == "coverage-gaps":
+        import sqlite3
+
+        from jsonschema import ValidationError
+
+        from .application.coverage_gaps import report as coverage_report
+        from .collection.config import load_config
+
+        try:
+            if not args.database.is_file() or not args.config.is_file():
+                raise ValueError("Missing explicit input")
+            protected = [args.database, args.config]
+            for database in (args.database.absolute(), args.database.resolve()):
+                protected.extend(
+                    database.with_name(database.name + suffix)
+                    for suffix in ("-wal", "-shm", "-journal")
+                )
+            if args.output and any(
+                args.output.resolve() == source.resolve()
+                or (args.output.exists() and source.exists() and args.output.samefile(source))
+                for source in protected
+            ):
+                raise ValueError("Output aliases an input")
+            config = load_config(args.config)
+            with closing(connect(args.database, read_only=True)) as db:
+                result = coverage_report(db, config, vendor=args.vendor, limit=args.limit)
+            raw = json.dumps(result, indent=2, ensure_ascii=False) + "\n"
+            if args.output:
+                args.output.write_text(raw, encoding="utf-8")
+            else:
+                print(raw, end="")
+        except (OSError, ValueError, TypeError, sqlite3.Error, ValidationError):
+            parser.error(
+                "Coverage inventory failed: check explicit inputs, output, vendor and limit"
+            )
     elif args.command == "triage":
         from .collection.triage import review_batch
         from .worker import writer_lock

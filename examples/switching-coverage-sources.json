@@ -1,0 +1,34 @@
+{
+  "vendors": [],
+  "archives": [
+    {
+      "vendor": "aruba",
+      "kind": "listing",
+      "url": "https://csaf.arubanetworking.hpe.com/2021/",
+      "page_limit": 1,
+      "document_limit": 8
+    },
+    {
+      "vendor": "arista",
+      "kind": "listing",
+      "url": "https://www.arista.com/en/support/advisories-notices",
+      "page_limit": 2,
+      "document_limit": 8
+    }
+  ],
+  "pinned": [
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24853-security-advisory-0202"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/25023-security-advisory-0203"
+    },
+    {
+      "vendor": "arista",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/25024-security-advisory-0204"
+    }
+  ],
+  "switching_sources": []
+}
