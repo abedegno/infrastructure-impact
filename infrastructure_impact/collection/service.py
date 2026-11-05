@@ -203,6 +203,8 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 failed += alternate_failures
                 parsed = auto(raw, url, target["vendor"])
                 if registry.get(target["vendor"]).non_cve_notice(parsed):
+                    evidence(db, raw, url)
+                    retain_resolution(db, target["vendor"], target["url"], resolved)
                     collection_result(
                         db,
                         target["vendor"],

@@ -7,6 +7,14 @@ from ..adapters.arista_boundaries import (
     restricted_cloud_notice,
     xz_unaffected,
 )
+from ..adapters.arista_current_scope import (
+    NOTICE_FORMAT,
+    NOTICE_SLUG,
+    PREFIX,
+    ROUTES,
+    advance_notice,
+)
+from ..adapters.arista_current_scope import parse as current_scope
 from ..adapters.arista_history import arista_release_history
 from ..adapters.arista_legacy_scope import ROUTES as OLDER_ROUTES
 from ..adapters.arista_legacy_scope import older_scope
@@ -32,6 +40,10 @@ from .shared import is_json, structured
 def parse(raw, url, vendor):
     if is_json(raw):
         return structured(raw, url, vendor)
+    if any(url == PREFIX + slug for slug, _ in ROUTES.values()):
+        return current_scope(raw, url, vendor)
+    if url == PREFIX + NOTICE_SLUG:
+        return advance_notice(raw, url, vendor)
     if any(url.rstrip("/").endswith("/" + value[0]) for value in OLDER_ROUTES.values()):
         return older_scope(raw, url, vendor)
     if any(url.rstrip("/").endswith("/" + value[0]) for value in ROUTING_ROUTES.values()):
@@ -91,6 +103,13 @@ def plugin():
             "browser-release-history",
             "reviewed-unlinked-security-notice",
         ),
+        non_cve_notice=lambda d: (
+            not d["cves"]
+            and not d["assessments"]
+            and d.get("source_format") == NOTICE_FORMAT
+            and d.get("advisory_id") == NOTICE_SLUG
+            and d.get("source_url") == PREFIX + NOTICE_SLUG
+        ),
         retain_unlinked_notice=lambda document: (
             document.get("source_format") == "Arista security notice without CVE"
             and document.get("advisory_id")
@@ -106,6 +125,8 @@ def plugin():
         parse_release_history=arista_release_history,
         research_evidence=extract,
         normalizer_dependencies=(
+            current_scope,
+            advance_notice,
             arista_aggregate_notice,
             arista_software,
             openssh_scope,

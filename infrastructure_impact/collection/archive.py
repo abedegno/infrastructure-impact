@@ -29,6 +29,13 @@ def enqueue(db, source_id, kind, url):
         "INSERT OR IGNORE INTO archive_items(source_id,kind,url,discovered_at) VALUES(?,?,?,?)",
         (source_id, kind, url, now()),
     )
+    # A positive notice is a source state, not a permanently excluded URL.
+    # Only explicit listing rediscovery requeues it, within the existing budget.
+    if kind == "document":
+        db.execute(
+            "UPDATE archive_items SET state='pending' WHERE source_id=? AND kind='document' AND url=? AND state='not_applicable'",
+            (source_id, url),
+        )
 
 
 def fail(db, source, item, error):
@@ -127,7 +134,7 @@ def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
     )
 
 
-def document(db, source, item, *, fetcher=None, reprocessed=False):
+def document(db, source, item, *, fetcher=None, reprocessed=False, record_replay=True):
     resolved = (
         resolve_document(db, item["url"], source["vendor"])
         if fetcher is None
@@ -158,7 +165,7 @@ def document(db, source, item, *, fetcher=None, reprocessed=False):
                 item["id"],
             ),
         )
-        if reprocessed:
+        if reprocessed and record_replay:
             from ..storage.archive_replays import record
 
             record(
@@ -180,7 +187,7 @@ def document(db, source, item, *, fetcher=None, reprocessed=False):
             else "partial"
             if alternate_failures
             else "ok",
-            "Retained capture normalized under an updated parser; no network retrieval or historical availability inferred."
+            "Retained capture normalized without network retrieval; historical availability is not inferred."
             if reprocessed
             else "Archive document processed through reviewed vendor parser; publisher dates are not observed historical availability.",
         )
