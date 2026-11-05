@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 from ..adapters.common import base, cves
-from ..adapters.component_statements import juniper_component_statement
+from ..adapters.component_statements import JUNIPER_URL, juniper_component_statement
 from ..adapters.juniper import juniper_pdf
 from ..adapters.juniper_apstra import apstra_component_reference
 from ..adapters.vendor_cna import juniper_cna, registry_route
@@ -72,11 +72,21 @@ def component_reference(raw, url, vendor):
     return apstra if apstra is not None else juniper_component_statement(raw, url, vendor)
 
 
+def allowed_url(url):
+    """Keep the migrated component reference exact, alongside existing Juniper routes."""
+    return (
+        (urlsplit(url).hostname or "").endswith(".juniper.net")
+        or urlsplit(url).hostname == "juniper.net"
+        or registry_route(url)
+        or url == JUNIPER_URL.replace("https://www.juniper.net", "https://networkingdocs.hpe.com")
+    )
+
+
 def plugin():
     return VendorPlugin(
         "juniper",
         "Juniper",
-        ("juniper.net", "cveawg.mitre.org"),
+        ("juniper.net", "cveawg.mitre.org", "networkingdocs.hpe.com"),
         parse,
         parse_feed=parse_feed,
         capabilities=("rss-discovery", "scoped-pdf", "verified-vendor-cna", "component-reference"),
@@ -88,9 +98,5 @@ def plugin():
             juniper_cna,
             structured,
         ),
-        url_filter=lambda url: (
-            (urlsplit(url).hostname or "").endswith(".juniper.net")
-            or urlsplit(url).hostname == "juniper.net"
-            or registry_route(url)
-        ),
+        url_filter=allowed_url,
     )

@@ -29,6 +29,7 @@ def versions():
     "filename,affected",
     [
         ("adapters/juniper_apstra.py", {"juniper"}),
+        ("plugins/juniper.py", {"juniper"}),
         ("adapters/fortinet_ranges.py", {"fortinet"}),
         ("adapters/f5_pdf.py", {"f5"}),
         ("adapters/arista_routing_scope.py", {"arista"}),

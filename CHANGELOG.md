@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Restore the exact HPE-hosted canonical transport route for the reviewed Juniper OpenSSH reference, preserving its original source binding and release/platform scope without creating CVE assessments. See the [source observations](docs/research/2026-11-05-juniper-canonical-reference.md).
+
 ## 0.10.0 research preview candidate — 2026-11-05
 
 - Parse the reviewed Aruba 2021 directory and two signed-text advisory structures, retaining shared product scope, per-CVE metrics and unresolved model/remediation bindings.
