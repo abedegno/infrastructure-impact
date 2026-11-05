@@ -1,12 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.10.0 research preview candidate — 2026-11-05
 
 - Parse the reviewed Aruba 2021 directory and two signed-text advisory structures, retaining shared product scope, per-CVE metrics and unresolved model/remediation bindings.
 - Preserve literal Arista affected, unaffected and triage groups with their configuration qualifications. Recognize reviewed Arista/Cisco advance notices without creating CVE assessments, and revisit later retained revisions.
 - Add an explicit, read-only `coverage-gaps` operator inventory with separate enumeration, retrieval, parsing, notice, error and bounded preview accounting; package its closed schema.
 - Verify source-to-publication/native/browser/JSON/CSV integration and an isolated public-only acceptance stage. See the [dated observations](docs/research/2026-11-05-coverage-repair-observations.md): Aruba parsed 2 of 19 listed documents; complete vendor history and authenticated Cisco coverage remain unestablished.
-- Keep the existing package version for this unreleased test build. Published v0.9.1 artifacts, frozen results, default sources, limits and hosted activation remain unchanged.
+- Track the actual requested and selected retained inputs during archive replay, recovering when missing linked documents arrive while skipping unchanged wrapped notices without consuming the document budget. Preserve immutable parser receipts, HTTP backoff and page-scope reporting.
+- Verify example vendor plugin 0.1.9 against the 0.10 release and extend its declared compatibility through the 0.10 series. Published v0.9.1 artifacts, frozen results, dependency pins, default sources, limits and hosted activation remain unchanged. See the [release notes](docs/releases/0.10.0.md) and [activation proposal](docs/rollouts/2026-11-05-coverage-010-activation-proposal.md).
 
 ## 0.9.1 research preview candidate — 2026-11-05
 
