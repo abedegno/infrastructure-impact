@@ -11,7 +11,7 @@ Early-stage software: the pipeline works end to end, but source coverage is boun
 The opt-in [source coverage inventory](docs/source-coverage.md) separates discovery,
 retrieval, supported parsing and informational notices. The
 [2026-11-05 public-stage observations](docs/research/2026-11-05-coverage-repair-observations.md)
-record the remaining gaps and pending human review; these unreleased repairs do
+record the remaining gaps and pending human review; the v0.10.0 repairs do
 not establish complete vendor history or change the frozen benchmark.
 
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
