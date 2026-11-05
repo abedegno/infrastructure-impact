@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 research preview candidate — 2026-11-05
+
+- Bound explicitly product-scoped CSAF scores and remediations to each claim's exact product ID after source/CVE/representation membership and score preference resolution. Retain every claim, including unresolved families, original source bytes/provenance and full valid score scope in ordinary advisory metrics.
+- Index original score candidates, cache exact ordered candidate groups within one extraction, and resolve remediation scopes once. Preserve empty/unbound and reviewed HTML scope, invalid/incomplete diagnostics and all non-scope facts.
+- Validate closed four-string source uniqueness with an index while preserving the schema's `uniqueItems` contract, strict independent writer validation and stock JSON equality for other shapes.
+- Emit flushed metadata-only timings at collection, benchmark coverage, report, query, projection, writing and backup boundaries, including failed phases without serializing errors or payloads.
+- Preserve all existing delivery/storage/monitor budgets, pinned dependencies, default sources and recovery settings. Example plugin 0.1.8 already admits 0.9.1. This is a replacement candidate for the published but rolled-back 0.9.0 source release; no new activation is claimed. See the [failed activation receipt](docs/rollouts/2026-11-05-switching-activation-failed.md) and [replacement proposal](docs/rollouts/2026-11-05-switching-091-proposal.md).
+
 ## 0.9.0 research preview — 2026-11-04
 
 - Add a closed, generation-bound comparison-eligibility monitor summary with exact full-report fingerprints, complete vendor membership and unchanged suppression gates. Preserve full case evidence as an explicit download and bounded full-report checks for older publications.
