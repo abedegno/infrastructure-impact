@@ -5,6 +5,7 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree as ET
 
 from ..adapters.cisco_campaign import ADVISORY_ID, CVE, URL, parse_campaign, reviewed_route
+from ..adapters.cisco_notice import parse_notice
 from ..adapters.cisco_ucs import security_fixes
 from ..adapters.common import cves
 from ..adapters.legacy_html import html_advisory
@@ -19,6 +20,9 @@ def parse(raw, url, vendor):
         return vendor_cna(raw, url, vendor)
     if is_json(raw):
         return structured(raw, url, vendor)
+    notice = parse_notice(raw, url, vendor)
+    if notice is not None:
+        return notice
     release = security_fixes(raw, url, vendor)
     if release is not None:
         return release
@@ -90,6 +94,7 @@ def plugin():
         resolve=resolve,
         research_evidence=extract,
         normalizer_dependencies=(
+            parse_notice,
             parse_campaign,
             security_fixes,
             html_advisory,

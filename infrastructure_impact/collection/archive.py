@@ -29,6 +29,13 @@ def enqueue(db, source_id, kind, url):
         "INSERT OR IGNORE INTO archive_items(source_id,kind,url,discovered_at) VALUES(?,?,?,?)",
         (source_id, kind, url, now()),
     )
+    # A positive notice is a source state, not a permanently excluded URL.
+    # Only explicit listing rediscovery requeues it, within the existing budget.
+    if kind == "document":
+        db.execute(
+            "UPDATE archive_items SET state='pending' WHERE source_id=? AND kind='document' AND url=? AND state='not_applicable'",
+            (source_id, url),
+        )
 
 
 def fail(db, source, item, error):
@@ -127,11 +134,15 @@ def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
     )
 
 
-def document(db, source, item, *, fetcher=None, reprocessed=False):
-    resolved = (
-        resolve_document(db, item["url"], source["vendor"])
-        if fetcher is None
-        else resolve_document(db, item["url"], source["vendor"], fetcher=fetcher)
+def document(
+    db, source, item, *, fetcher=None, reprocessed=False, record_replay=True, replay_inputs=None
+):
+    from .archive_replay import input_snapshot, track_inputs
+    from .service import fetch as retrieve
+
+    inputs = {} if replay_inputs is None else replay_inputs
+    resolved = resolve_document(
+        db, item["url"], source["vendor"], fetcher=track_inputs(fetcher or retrieve, inputs)
     )
     url, raw = resolved
     alternate_failures = getattr(resolved, "source_failures", 0)
@@ -148,17 +159,18 @@ def document(db, source, item, *, fetcher=None, reprocessed=False):
     with db:
         ev = evidence(db, raw, url)
         db.execute(
-            "UPDATE archive_items SET state=?,checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL,parser_version=? WHERE id=?",
+            "UPDATE archive_items SET state=?,checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL,parser_version=?,scope=? WHERE id=?",
             (
                 "not_applicable" if ignored else "done",
                 now(),
                 ev["id"],
                 url,
                 default_registry().fingerprint(source["vendor"]),
+                input_snapshot(item, inputs),
                 item["id"],
             ),
         )
-        if reprocessed:
+        if reprocessed and record_replay:
             from ..storage.archive_replays import record
 
             record(
@@ -180,7 +192,7 @@ def document(db, source, item, *, fetcher=None, reprocessed=False):
             else "partial"
             if alternate_failures
             else "ok",
-            "Retained capture normalized under an updated parser; no network retrieval or historical availability inferred."
+            "Retained capture normalized without network retrieval; historical availability is not inferred."
             if reprocessed
             else "Archive document processed through reviewed vendor parser; publisher dates are not observed historical availability.",
         )

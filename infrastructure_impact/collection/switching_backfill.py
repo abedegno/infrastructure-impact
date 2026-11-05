@@ -186,7 +186,7 @@ def _public_page(raw, url, seed):
         else inventory(raw, url, seed["kind"])
     )
     candidates = []
-    for n, url in enumerate(found["urls"]):
+    for n, url in enumerate(dict.fromkeys(found["urls"])):
         url = urldefrag(url)[0]
         if not allowed(url, seed["vendor"]):
             raise ValueError("Unreviewed document link")
@@ -210,11 +210,29 @@ def _public_page(raw, url, seed):
             raise ValueError("Continuation changes publisher host")
         if seed["kind"] != "listing" and a.path != b.path:
             raise ValueError("Continuation changes listing route")
-    return candidates, next_pages, found["entries_without_links"]
+    count, missing = found["entry_count"], found["entries_without_links"]
+    if (
+        type(count) is not int
+        or type(missing) is not int
+        or missing < 0
+        or count < len(candidates) + missing
+    ):
+        raise ValueError("Invalid public listing entry counts")
+    return candidates, next_pages, missing, count
 
 
 def _commit_page(
-    db, run, item, raw, candidates, next_pages, total, terminal, source_limit=False, gaps=0
+    db,
+    run,
+    item,
+    raw,
+    candidates,
+    next_pages,
+    total,
+    terminal,
+    source_limit=False,
+    gaps=0,
+    listing_count=None,
 ):
     with db:
         ev = evidence(db, raw, item["url"])
@@ -223,6 +241,11 @@ def _commit_page(
                 "INSERT INTO score_vendor_observations(source_url,evidence_id,observed_at) VALUES(?,?,?)",
                 (item["url"], ev["id"], now()),
             )
+        # Listing parsers return unique URLs; their declared entry count also
+        # retains repeated links. Missing links never imply duplicate entries.
+        repeated_links = 0 if listing_count is None else listing_count - len(candidates) - gaps
+        if repeated_links:
+            _issue(db, run["id"], "listing_duplicate_links")
         duplicates = 0
         for candidate in candidates:
             old = db.execute(
@@ -318,7 +341,12 @@ def _commit_page(
         )
         db.execute(
             "UPDATE archive_items SET state='done',checked_at=?,evidence_id=?,entry_count=?,attempts=0,retry_after=NULL,error_code=NULL WHERE id=?",
-            (now(), ev["id"], len(candidates), item["id"]),
+            (
+                now(),
+                ev["id"],
+                len(candidates) if listing_count is None else listing_count,
+                item["id"],
+            ),
         )
         pending = db.execute(
             "SELECT count(*) FROM switching_backfill_pages WHERE run_id=? AND evidence_id IS NULL",
@@ -331,7 +359,7 @@ def _commit_page(
                 int(not pending and terminal and not source_limit),
                 int(unstable),
                 total,
-                duplicates,
+                duplicates + repeated_links,
                 now(),
                 run["id"],
             ),
@@ -440,9 +468,18 @@ def run(
                         )
                         _commit_page(db, run_row, item, raw, found, links, total, terminal, limit)
                     else:
-                        found, links, gaps = _public_page(raw, item["url"], seed)
+                        found, links, gaps, listing_count = _public_page(raw, item["url"], seed)
                         _commit_page(
-                            db, run_row, item, raw, found, links, None, not links, gaps=gaps
+                            db,
+                            run_row,
+                            item,
+                            raw,
+                            found,
+                            links,
+                            None,
+                            not links,
+                            gaps=gaps,
+                            listing_count=listing_count,
                         )
                 except Exception as error:
                     db.rollback()

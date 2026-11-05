@@ -251,7 +251,11 @@ def test_hook_fingerprint_tracks_resource_and_extractor(monkeypatch, filename):
         Path, "read_bytes", lambda p: original(p) + b" " if p == target else original(p)
     )
     after = {p.id: registry.fingerprint(p.id) for p in registry.all()}
-    assert {k for k in before if before[k] != after[k]} == {"aruba", "arista", "cisco"}
+    # Shared CVSS dispatch reads Aruba text, whose research hook reuses switching
+    # claim templates. Code is therefore transitive; frozen study resources are
+    # still dependencies only of plugins with research hooks.
+    expected = set(before) if filename == "adapters/switching.py" else {"aruba", "arista", "cisco"}
+    assert {k for k in before if before[k] != after[k]} == expected
 
 
 def test_public_boundary_removes_internal_switching_inputs():

@@ -344,6 +344,8 @@ def _arista_reviewed(raw, url, document, digest):
     from ..plugins.arista import parse
 
     routes = {
+        "24853-security-advisory-0202": "Arista reviewed current applicability HTML",
+        "25023-security-advisory-0203": "Arista reviewed current applicability HTML",
         "19905-security-advisory-0101": "Arista reviewed applicability boundaries HTML",
         "19222-security-advisory-0095": "Arista reviewed applicability boundaries HTML",
         "19904-security-advisory-0100": "Arista affected software HTML",
@@ -416,6 +418,8 @@ def _arista_reviewed(raw, url, document, digest):
             scope=assessment["scope"],
         )
         if slug in {
+            "24853-security-advisory-0202",
+            "25023-security-advisory-0203",
             "12135-security-advisory-61",
             "12166-security-advisory-62",
             "19221-security-advisory-0094",
@@ -525,6 +529,11 @@ def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:
         data = json.loads(raw)
         if "document" in data:
             return _csaf(raw, url, vendor, document, digest)
+    if entry is None and vendor == "aruba":
+        from .aruba_text import FORMAT, research_evidence
+
+        if document.get("source_format") == FORMAT:
+            return research_evidence(raw, url, vendor, document)
     if entry is None and vendor == "arista":
         bridged = _arista_reviewed(raw, url, document, digest)
         if bridged is not None:

@@ -14,6 +14,8 @@ SHARED_SOURCES = tuple(
     for name in (
         "adapters/common.py",
         "adapters/cvss.py",
+        "adapters/aruba_text.py",
+        "adapters/switching.py",
         "adapters/standards.py",
         "domain.py",
         "plugins/contracts.py",

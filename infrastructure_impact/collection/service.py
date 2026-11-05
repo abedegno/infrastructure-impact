@@ -91,6 +91,14 @@ def resolve_document(db, url, vendor, *, fetcher=None):
     for link in HTML(raw).root.find({"a"}):
         href = link.attrs.get("href", "")
         if "csaf" in href.lower() and href.lower().endswith(".json"):
+            # Positive notice classification belongs to this HTML article. Its
+            # advertised CSAF can be empty or describe separate advisories.
+            try:
+                notice = registry.normalize(raw, url, vendor)
+                if plugin.non_cve_notice(notice):
+                    return url, raw
+            except (ValueError, KeyError):
+                pass
             target = plugin.canonicalize(urljoin(url, href))
             structured = retrieve(db, target, vendor)
             parsed = json.loads(structured)
@@ -203,6 +211,8 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 failed += alternate_failures
                 parsed = auto(raw, url, target["vendor"])
                 if registry.get(target["vendor"]).non_cve_notice(parsed):
+                    evidence(db, raw, url)
+                    retain_resolution(db, target["vendor"], target["url"], resolved)
                     collection_result(
                         db,
                         target["vendor"],

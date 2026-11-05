@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Parse the reviewed Aruba 2021 directory and two signed-text advisory structures, retaining shared product scope, per-CVE metrics and unresolved model/remediation bindings.
+- Preserve literal Arista affected, unaffected and triage groups with their configuration qualifications. Recognize reviewed Arista/Cisco advance notices without creating CVE assessments, and revisit later retained revisions.
+- Add an explicit, read-only `coverage-gaps` operator inventory with separate enumeration, retrieval, parsing, notice, error and bounded preview accounting; package its closed schema.
+- Verify source-to-publication/native/browser/JSON/CSV integration and an isolated public-only acceptance stage. See the [dated observations](docs/research/2026-11-05-coverage-repair-observations.md): Aruba parsed 2 of 19 listed documents; complete vendor history and authenticated Cisco coverage remain unestablished.
+- Keep the existing package version for this unreleased test build. Published v0.9.1 artifacts, frozen results, default sources, limits and hosted activation remain unchanged.
+
 ## 0.9.1 research preview candidate — 2026-11-05
 
 - Bound explicitly product-scoped CSAF scores and remediations to each claim's exact product ID after source/CVE/representation membership and score preference resolution. Retain every claim, including unresolved families, original source bytes/provenance and full valid score scope in ordinary advisory metrics.

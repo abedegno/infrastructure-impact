@@ -123,7 +123,9 @@ def validate_config(config):
                 and not plugin.parse_release
             ):
                 raise ValueError("Release listing requires a reviewed vendor parser")
-            if section == "release_documents" and not entry.get("product", "").strip():
+            if section == "release_documents" and (
+                not isinstance(entry.get("product"), str) or not entry["product"].strip()
+            ):
                 raise ValueError("Release documents require a product label")
     seeds = [(e["vendor"], e["url"], e["kind"]) for e in config.get("archives", [])]
     if len(set(seeds)) != len(seeds):

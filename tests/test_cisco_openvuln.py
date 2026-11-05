@@ -649,3 +649,19 @@ def test_migration_preserves_existing_vault_rows(tmp_path, nonempty):
     migrate(db)
     assert list(db.execute("SELECT * FROM revisions")) == before
     assert reserve_request(db, SERVICE, START.isoformat())["allowed"]
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"CISCO_OPENVULN_CLIENT_ID": "synthetic-id"},
+        {"CISCO_OPENVULN_CLIENT_SECRET": "synthetic-secret"},
+    ],
+)
+def test_partial_credentials_are_safe_without_request_or_reservation(values):
+    db = connect(":memory:")
+    network = Network()
+    rejected(client(db, network, environ=values), "auth_not_configured")
+    assert not network.calls
+    assert db.execute("SELECT count(*) FROM switching_requests").fetchone()[0] == 0
+    db.close()

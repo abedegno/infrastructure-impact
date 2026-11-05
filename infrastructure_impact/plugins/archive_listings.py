@@ -11,6 +11,38 @@ from ..adapters.common import HTML
 from .contracts import ArchivePage
 
 
+def aruba(raw: bytes, url: str, vendor: str) -> ArchivePage:
+    """Only the observed 2021 autoindex; parent navigation is never followed."""
+    if vendor != "aruba" or url != "https://csaf.arubanetworking.hpe.com/2021/":
+        raise ValueError("Unreviewed Aruba archive route")
+    text = raw.decode("utf-8").replace("\r\n", "\n")
+    layout = re.fullmatch(
+        r"<html>\s*<head><title>Index of /2021/</title></head>\s*<body>\s*"
+        r'<h1>Index of /2021/</h1><hr><pre><a href="\.\./">\.\./</a>\s*'
+        r"(?P<entries>.+)</pre><hr></body>\s*</html>\s*",
+        text,
+        re.S,
+    )
+    if not layout:
+        raise ValueError("Aruba directory layout changed")
+    entry = re.compile(
+        r'<a href="(?P<name>hpe_aruba_networking_-_2021-\d{3}\.txt)">(?P=name)</a>'
+        r"[ \t]+\d{2}-[A-Z][a-z]{2}-\d{4} \d{2}:\d{2}[ \t]+\d+[ \t]*\n"
+    )
+    entries = layout["entries"]
+    matches = list(entry.finditer(entries))
+    if not matches or "".join(m[0] for m in matches) != entries:
+        raise ValueError("Unexpected Aruba directory entry or unlinked row")
+    urls = []
+    for match in matches:
+        urls.append(url + match["name"])
+    return ArchivePage(
+        tuple(dict.fromkeys(urls)),
+        len(urls),
+        scope="Reviewed public 2021 directory only; vendor-wide totals and completeness unknown",
+    )
+
+
 def arista(raw, url, vendor):
     root = HTML(raw).root
     if not any(h.text() == "Security Advisories" for h in root.find({"h2"})):
