@@ -1,6 +1,7 @@
 """Positive notices retain bytes and remain eligible for later advisory revisions."""
 
 import json
+from dataclasses import replace
 from unittest.mock import patch
 
 import pytest
@@ -323,3 +324,356 @@ def test_cisco_unreviewed_own_body_prose_or_product_heading_requires_review(inse
     raw = cisco_notice(lambda s: s.replace("<h2>Details</h2>", insertion + "<h2>Details</h2>"))
     with pytest.raises(ValueError):
         default_registry().normalize(raw, CISCO_URL, "cisco")
+
+
+WRAPPER_URL = "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-synthetic-wrapper"
+SELECTED_URL = "https://sec.cloudapps.cisco.com/synthetic/csaf/notice.json"
+
+
+def wrapper(selected=SELECTED_URL, suffix=""):
+    return f'<html><a href="{selected}">CSAF</a>{suffix}</html>'.encode()
+
+
+def selected_notice(title="Synthetic notice"):
+    return json.dumps(
+        {
+            "document": {
+                "title": "Cisco Informational: " + title,
+                "tracking": {"id": "cisco-sa-synthetic-notice", "status": "final"},
+            },
+            "vulnerabilities": [],
+        }
+    ).encode()
+
+
+def cache_url(db, url, raw):
+    retained = evidence(db, raw, url)
+    db.execute(
+        "INSERT INTO http_cache(url,evidence_id) VALUES(?,?) ON CONFLICT(url) DO UPDATE SET evidence_id=excluded.evidence_id",
+        (url, retained["id"]),
+    )
+    return retained["id"]
+
+
+def seed_wrapper(db):
+    db.execute(
+        "INSERT INTO archive_sources(vendor,source_url,kind,started_at) VALUES(?,?,?,?)",
+        ("cisco", "https://sec.cloudapps.cisco.com/synthetic/index", "index", now()),
+    )
+    source = dict(db.execute("SELECT * FROM archive_sources").fetchone())
+    archive.enqueue(db, source["id"], "document", WRAPPER_URL)
+    cache_url(db, WRAPPER_URL, wrapper())
+    cache_url(db, SELECTED_URL, selected_notice())
+    archive.document(
+        db, source, db.execute("SELECT * FROM archive_items").fetchone(), fetcher=retained_fetch
+    )
+    return source
+
+
+@pytest.mark.parametrize("rediscover", [False, True])
+def test_missing_linked_notice_dependency_arrival_recovers_without_network(rediscover):
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source, _ = seed(db)
+        db.execute("UPDATE archive_items SET parser_version='old-parser'")
+        assert archive_replay.reprocess_errors(db, source, 1)["not_applicable"] == 1
+        receipt = dict(db.execute("SELECT * FROM archive_parser_replays").fetchone())
+        linked = "https://www.arista.com/synthetic/csaf/later-advisory.json"
+        evidence(db, wrapper(linked), URL)
+        result = archive_replay.reprocess_errors(db, source, 1)
+        assert result["attempted"] == result["not_retained"] == 1
+        item = db.execute("SELECT * FROM archive_items").fetchone()
+        assert item["state"] == "error" and item["error_code"] == "retained_source_missing"
+        assert item["attempts"] == 0 and item["retry_after"] is None
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        # Unrelated retention must not spend this document's budget.
+        evidence(db, advisory(), "https://www.arista.com/synthetic/unrelated.json")
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        evidence(db, advisory(), linked)
+        if rediscover:
+            archive.enqueue(db, source["id"], "document", URL)
+        result = archive_replay.reprocess_errors(db, source, 1)
+        assert result["attempted"] == result["recovered"] == result["imported"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        assert latest(db)[0]["cves"] == ["CVE-2099-12345"]
+        assert db.execute("SELECT COUNT(*) FROM revisions").fetchone()[0] == 1
+        assert dict(db.execute("SELECT * FROM archive_parser_replays").fetchone()) == receipt
+        assert db.execute("SELECT COUNT(*) FROM archive_parser_replays").fetchone()[0] == 1
+        assert not db.execute("SELECT 1 FROM source_observations").fetchone()
+
+
+@pytest.mark.parametrize("changed_url", [WRAPPER_URL, SELECTED_URL])
+def test_wrapper_notice_tracks_both_inputs_and_cache_reversions(changed_url):
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source = seed_wrapper(db)
+        before = db.execute("SELECT COUNT(*) FROM collection_runs").fetchone()[0]
+        for _ in range(3):
+            assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        assert db.execute("SELECT COUNT(*) FROM collection_runs").fetchone()[0] == before
+        original = wrapper() if changed_url == WRAPPER_URL else selected_notice()
+        changed = (
+            wrapper(suffix="<p>Updated wrapper</p>")
+            if changed_url == WRAPPER_URL
+            else selected_notice("Updated synthetic notice")
+        )
+        # Each A -> B -> A transition is processed once, even with reused evidence IDs.
+        for raw in (changed, original):
+            cache_url(db, changed_url, raw)
+            result = archive_replay.reprocess_errors(db, source, 1)
+            assert result["attempted"] == result["not_applicable"] == 1
+            assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        assert db.execute("SELECT COUNT(*) FROM collection_runs").fetchone()[0] == before + 2
+        assert not db.execute("SELECT 1 FROM archive_parser_replays").fetchone()
+        assert not db.execute("SELECT 1 FROM source_observations").fetchone()
+        assert not latest(db)
+
+
+@pytest.mark.parametrize(
+    "failed_raw",
+    [b"{}", b"<html><title>Client Challenge</title><p>/_fs-ch- Javascript is disabled</p></html>"],
+)
+def test_failed_selected_bytes_are_reconsidered_only_when_relevant_inputs_change(failed_raw):
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source = seed_wrapper(db)
+        cache_url(db, SELECTED_URL, failed_raw)
+        result = archive_replay.reprocess_errors(db, source, 1)
+        assert result["attempted"] == result["still_unsupported"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        cache_url(db, SELECTED_URL, selected_notice())
+        result = archive_replay.reprocess_errors(db, source, 1)
+        assert result["attempted"] == result["not_applicable"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+
+
+def test_unchanged_wrapper_notice_leaves_shared_budget_for_pending_document(tmp_path, monkeypatch):
+    # Cisco uses a feed in production. This synthetic archive-capable plugin
+    # keeps its real source resolver/parser while exercising the shared runner.
+    registry = default_registry()
+    monkeypatch.setitem(registry._plugins, "cisco", replace(registry.get("cisco"), parse_feed=None))
+    path = tmp_path / "wrapper-budget.sqlite"
+    pending = "https://sec.cloudapps.cisco.com/synthetic/csaf/pending.json"
+    with connect(path) as db:
+        source = seed_wrapper(db)
+        cache_url(db, pending, advisory())
+        archive.enqueue(db, source["id"], "document", pending)
+    config = {
+        "vendors": [],
+        "archives": [
+            {"vendor": "cisco", "url": source["source_url"], "kind": "index", "document_limit": 1}
+        ],
+    }
+    with (
+        patch(
+            "infrastructure_impact.collection.archive.fetch", return_value=(pending + "\n").encode()
+        ),
+        patch("infrastructure_impact.collection.service.fetch", side_effect=retained_fetch),
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        assert archive.run(config, path) == (1, 0)
+    with connect(path) as db:
+        assert (
+            db.execute("SELECT state FROM archive_items WHERE url=?", (pending,)).fetchone()[0]
+            == "done"
+        )
+        assert (
+            db.execute(
+                "SELECT COUNT(*) FROM collection_runs WHERE source_url=?", (WRAPPER_URL,)
+            ).fetchone()[0]
+            == 1
+        )
+
+
+@pytest.mark.parametrize(
+    "scope",
+    [
+        "",
+        "not-json",
+        "[]",
+        *[
+            json.dumps(
+                dict(
+                    version=1,
+                    kind="document",
+                    requested_url=WRAPPER_URL,
+                    inputs={WRAPPER_URL: None},
+                )
+                | changes
+            )
+            for changes in (
+                {"version": 99},
+                {"version": True},
+                {"kind": "page"},
+                {"requested_url": SELECTED_URL},
+                {"inputs": []},
+                {"inputs": {}},
+                {"inputs": {WRAPPER_URL: True}},
+                {"inputs": {WRAPPER_URL: -1}},
+            )
+        ],
+    ],
+)
+def test_legacy_or_invalid_document_snapshot_establishes_state_once(scope):
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source = seed_wrapper(db)
+        db.execute("UPDATE archive_items SET scope=?", (scope,))
+        assert archive_replay.reprocess_errors(db, source, 1)["not_applicable"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+
+
+def test_legacy_missing_dependency_null_error_state_can_recover():
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source, _ = seed(db)
+        linked = "https://www.arista.com/synthetic/csaf/later-advisory.json"
+        requested_id = evidence(db, wrapper(linked), URL)["id"]
+        # Row written by the previous implementation after source-only failure.
+        db.execute(
+            "UPDATE archive_items SET state='error',error_code=NULL,scope='',evidence_id=?",
+            (requested_id,),
+        )
+        evidence(db, advisory(), linked)
+        result = archive_replay.reprocess_errors(db, source, 1)
+        assert result["attempted"] == result["recovered"] == result["imported"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+
+
+def test_missing_linked_bytes_preserve_http_backoff_until_offline_recovery():
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source, _ = seed(db)
+        linked = "https://www.arista.com/synthetic/csaf/later-advisory.json"
+        evidence(db, wrapper(linked), URL)
+        db.execute(
+            "UPDATE archive_items SET state='error',error_code='unsupported_or_invalid_document',"
+            "attempts=5,retry_after='2099-01-01T00:00:00+00:00'"
+        )
+        assert archive_replay.reprocess_errors(db, source, 1)["not_retained"] == 1
+        archive.enqueue(db, source["id"], "document", URL)
+        assert archive.ready(db, source["id"], "document", 1) == []
+        item = db.execute("SELECT * FROM archive_items").fetchone()
+        assert item["attempts"] == 5 and item["retry_after"] == "2099-01-01T00:00:00+00:00"
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        evidence(db, advisory(), linked)
+        assert archive_replay.reprocess_errors(db, source, 1)["recovered"] == 1
+
+
+def test_unchanged_inputs_do_not_hide_later_changed_item_with_limit_one():
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source = seed_wrapper(db)
+        other = "https://sec.cloudapps.cisco.com/synthetic/csaf/other.json"
+        archive.enqueue(db, source["id"], "document", other)
+        cache_url(db, other, selected_notice("Another synthetic notice"))
+        archive.document(
+            db,
+            source,
+            db.execute("SELECT * FROM archive_items WHERE url=?", (other,)).fetchone(),
+            fetcher=retained_fetch,
+        )
+        cache_url(db, other, advisory())
+        assert archive_replay.reprocess_errors(db, source, 0)["attempted"] == 0
+        result = archive_replay.reprocess_errors(db, source, 1)
+        assert result["attempted"] == result["recovered"] == result["imported"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+
+
+def test_document_snapshot_never_replaces_or_exports_page_scope():
+    with connect(":memory:") as db:
+        source, item = seed(db)
+        archive.enqueue(db, source["id"], "page", ROOT)
+        page = dict(db.execute("SELECT * FROM archive_items WHERE kind='page'").fetchone())
+        db.execute(
+            "UPDATE archive_items SET state='done',scope='Synthetic listing scope' WHERE id=?",
+            (page["id"],),
+        )
+        before = dict(db.execute("SELECT * FROM archive_items WHERE kind='page'").fetchone())
+        db.execute("UPDATE archive_items SET parser_version='old-parser' WHERE kind='document'")
+        assert archive_replay.reprocess_errors(db, source, 1)["not_applicable"] == 1
+        assert (
+            dict(db.execute("SELECT * FROM archive_items WHERE kind='page'").fetchone()) == before
+        )
+        config = {"archives": [{"vendor": "arista", "url": ROOT, "kind": "listing"}]}
+        progress = archive.progress(db, latest(db), config)[0]
+        assert progress["observed_scopes"] == ["Synthetic listing scope"]
+        assert "requested_url" not in json.dumps(progress["observed_scopes"])
+
+
+def test_wrapper_reselection_stops_tracking_previous_dependency():
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source = seed_wrapper(db)
+        replacement = "https://sec.cloudapps.cisco.com/synthetic/csaf/replacement.json"
+        cache_url(db, WRAPPER_URL, wrapper(replacement))
+        cache_url(db, replacement, selected_notice("Replacement notice"))
+        assert archive_replay.reprocess_errors(db, source, 1)["not_applicable"] == 1
+        cache_url(db, SELECTED_URL, advisory())
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        assert db.execute("SELECT resolved_url FROM archive_items").fetchone()[0] == replacement
+        assert not latest(db)
+
+
+def test_interrupted_missing_dependency_attempt_does_not_commit_inputs_before_outcome():
+    with (
+        connect(":memory:") as db,
+        patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ),
+    ):
+        source, _ = seed(db)
+        before = dict(db.execute("SELECT * FROM archive_items").fetchone())
+        evidence(db, wrapper("https://www.arista.com/synthetic/csaf/missing.json"), URL)
+        db.commit()  # This capture arrived before the interrupted replay transaction.
+        # Stop after resolution has failed, before the error outcome is written.
+        with patch.object(archive_replay, "failure_code", side_effect=KeyboardInterrupt):
+            with pytest.raises(KeyboardInterrupt):
+                archive_replay.reprocess_errors(db, source, 1)
+        assert dict(db.execute("SELECT * FROM archive_items").fetchone()) == before
+        assert archive_replay.reprocess_errors(db, source, 1)["not_retained"] == 1
+        assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0

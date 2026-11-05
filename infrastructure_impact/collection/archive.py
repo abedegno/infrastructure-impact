@@ -134,11 +134,15 @@ def acknowledge_retained(db, vendor, requested_url, resolved_url, evidence_id):
     )
 
 
-def document(db, source, item, *, fetcher=None, reprocessed=False, record_replay=True):
-    resolved = (
-        resolve_document(db, item["url"], source["vendor"])
-        if fetcher is None
-        else resolve_document(db, item["url"], source["vendor"], fetcher=fetcher)
+def document(
+    db, source, item, *, fetcher=None, reprocessed=False, record_replay=True, replay_inputs=None
+):
+    from .archive_replay import input_snapshot, track_inputs
+    from .service import fetch as retrieve
+
+    inputs = {} if replay_inputs is None else replay_inputs
+    resolved = resolve_document(
+        db, item["url"], source["vendor"], fetcher=track_inputs(fetcher or retrieve, inputs)
     )
     url, raw = resolved
     alternate_failures = getattr(resolved, "source_failures", 0)
@@ -155,13 +159,14 @@ def document(db, source, item, *, fetcher=None, reprocessed=False, record_replay
     with db:
         ev = evidence(db, raw, url)
         db.execute(
-            "UPDATE archive_items SET state=?,checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL,parser_version=? WHERE id=?",
+            "UPDATE archive_items SET state=?,checked_at=?,attempts=0,retry_after=NULL,evidence_id=?,resolved_url=?,error_code=NULL,parser_version=?,scope=? WHERE id=?",
             (
                 "not_applicable" if ignored else "done",
                 now(),
                 ev["id"],
                 url,
                 default_registry().fingerprint(source["vendor"]),
+                input_snapshot(item, inputs),
                 item["id"],
             ),
         )

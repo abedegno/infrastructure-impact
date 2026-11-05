@@ -627,7 +627,7 @@ def test_real_parser_ingests_once_and_reconciles_publisher_identity():
         patch.object(backfill, "fetch", return_value=b"2022/example.json\n"),
         patch(
             "infrastructure_impact.collection.archive.resolve_document",
-            side_effect=lambda db, url, vendor: (url, raw),
+            side_effect=lambda db, url, vendor, *, fetcher=None: (url, raw),
         ),
     ):
         e = run(db, cfg, vendor="aruba")["entries"][0]
@@ -722,7 +722,7 @@ def test_document_interruption_after_ingest_is_idempotent_on_resume():
         patch.object(backfill, "fetch", return_value=b"2022/example.json\n"),
         patch(
             "infrastructure_impact.collection.archive.resolve_document",
-            side_effect=lambda db, url, vendor: (url, raw),
+            side_effect=lambda db, url, vendor, *, fetcher=None: (url, raw),
         ),
     ):
         with patch(
@@ -836,7 +836,7 @@ def test_duplicate_occurrences_keep_all_document_memberships(first_url):
     responses = {1: page([first]), 2: page([later]), 3: page([])}
     urls = []
 
-    def resolve(db, url, vendor):
+    def resolve(db, url, vendor, *, fetcher=None):
         urls.append(url)
         raise ValueError("unsupported")
 
