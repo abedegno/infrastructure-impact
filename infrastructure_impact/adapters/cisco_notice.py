@@ -36,10 +36,23 @@ def parse_notice(raw, url, vendor):
     ):
         raise ValueError("Cisco informational identity or own CVE scope changed")
     if any(
-        n.text() in {"Affected Products", "Vulnerable Products", "Fixed Software"}
-        for n in body.find({"h2", "h3"})
+        (n.tag, n.text())
+        not in {
+            ("h2", "Summary"),
+            ("h2", "Details"),
+            ("h2", "Cisco Security Vulnerability Policy"),
+            ("h2", "Subscribe to Cisco Security Notifications"),
+            ("h2", "Related to This Advisory"),
+            ("h2", "URL"),
+            ("h2", "Revision History"),
+            ("h2", "Legal Disclaimer"),
+            ("h2", "Feedback"),
+            ("h3", "SOFTWARE DOWNLOADS AND TECHNICAL SUPPORT"),
+            ("h3", "LEGAL DISCLAIMER DETAILS"),
+        }
+        for n in body.find({"h2", "h3", "h4"})
     ):
-        raise ValueError("Cisco notice gained an unreviewed product scope")
+        raise ValueError("Cisco notice gained an unreviewed own-body section")
     summary, details = field(body, "summaryfield"), field(body, "detailfield")
     if (
         "published the following advisories:" not in summary.text()
@@ -85,7 +98,10 @@ def parse_notice(raw, url, vendor):
             return ""
         return " ".join(outside_table(c) if isinstance(c, Node) else c for c in node.children)
 
-    if cves(outside_table(summary)) or cves(details.text()):
+    # Exclude the exact table node, not its CVE set: a repeated identifier in
+    # another own-body section is still a material new own-scope statement.
+    # Related/footer material outside this article body remains out of scope.
+    if cves(outside_table(body)):
         raise ValueError("Cisco notice has unreviewed own CVE prose")
     out = base(vendor, url, ID, "Cisco Informational: " + TITLE)
     for label, identity, key in [

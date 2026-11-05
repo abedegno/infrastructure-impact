@@ -233,3 +233,13 @@ def test_current_html_routes_preserve_existing_json_dispatch(encoding):
     doc = default_registry().normalize(raw, URLS["0203"], "arista")
     assert doc["source_format"] != "Arista reviewed current applicability HTML"
     assert doc["cves"]
+
+
+@pytest.mark.parametrize("opening", ["<ul hidden>", "<ul>Except 7050X3:"])
+def test_outer_eos_exclusion_container_cannot_discard_qualifications(opening):
+    with pytest.raises(ValueError):
+        normalize(
+            edit=lambda s: s.replace(
+                "<ul><li>Arista EOS-based products:", opening + "<li>Arista EOS-based products:"
+            )
+        )

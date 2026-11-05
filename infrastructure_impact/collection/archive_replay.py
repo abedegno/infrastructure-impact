@@ -14,10 +14,14 @@ def reprocess_errors(db, source, limit):
         raise ValueError("Parser replay limit must be an integer from 0 to 200")
 
     version = default_registry().fingerprint(source["vendor"])
+    # A completed document resolution distinguishes an established source that
+    # later returned a challenge from an initial transport/access failure. Keep
+    # that transition eligible without admitting HTTP denials or changing backoff.
     items = list(
         db.execute(
             "SELECT * FROM archive_items i WHERE source_id=? AND kind='document' AND "
-            "(state='not_applicable' OR (state='error' AND error_code='unsupported_or_invalid_document')) AND "
+            "(state='not_applicable' OR (state='error' AND (error_code='unsupported_or_invalid_document' OR "
+            "(error_code='access_verification_required' AND resolved_url IS NOT NULL AND evidence_id IS NOT NULL)))) AND "
             "(parser_version IS NULL OR parser_version<>? OR ((evidence_id IS NOT NULL OR EXISTS("
             "SELECT 1 FROM archive_parser_replays r WHERE r.item_id=i.id AND r.parser_version=i.parser_version AND r.outcome='not_retained')) "
             "AND evidence_id IS NOT COALESCE("

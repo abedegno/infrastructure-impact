@@ -112,6 +112,10 @@ def parse(raw: bytes, url: str, vendor: str) -> dict:
     )
     if affected_platforms != [expected_platform]:
         raise ValueError("Arista affected product attribution changed")
+    # This outer container carries the status for both EOS and other products;
+    # qualifiers/visibility here must not disappear when selecting child nodes.
+    if platform[3].attrs or any(isinstance(c, str) and c.strip() for c in platform[3].children):
+        raise ValueError("Unreviewed Arista outer exclusion qualification")
     excluded = children(platform[3])
     if (
         len(excluded) < 3

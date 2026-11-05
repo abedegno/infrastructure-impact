@@ -232,3 +232,94 @@ def test_missing_retained_bytes_do_not_disable_later_source_recovery():
         evidence(db, notice(), URL)
         assert archive_replay.reprocess_errors(db, source, 1)["not_applicable"] == 1
         assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+
+
+@pytest.mark.parametrize("cid", ["CVE-2099-33333", "CVE-2099-23456"])
+def test_cisco_new_own_body_section_cannot_hide_a_cve_even_if_already_linked(cid):
+    raw = cisco_notice(
+        lambda s: s.replace(
+            "<h2>Details</h2>",
+            f"<h2>Vulnerability Details</h2><p>This advisory addresses {cid} in the affected product.</p><h2>Details</h2>",
+        )
+    )
+    with pytest.raises(ValueError):
+        default_registry().normalize(raw, CISCO_URL, "cisco")
+
+
+@pytest.mark.parametrize("parser_changed", [False, True])
+def test_notice_access_challenge_retains_failure_and_recovers_changed_bytes_offline(parser_changed):
+    with connect(":memory:") as db:
+        source, item = seed(db)
+        db.execute("UPDATE archive_items SET parser_version='old-parser'")
+        archive_replay.reprocess_errors(db, source, 1)
+        receipt = dict(db.execute("SELECT * FROM archive_parser_replays").fetchone())
+        challenge_id = cache(
+            db,
+            b"<html><title>Client Challenge</title><p>/_fs-ch- Javascript is disabled</p></html>",
+        )
+        with patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ):
+            result = archive_replay.reprocess_errors(db, source, 1)
+            assert result["attempted"] == result["still_unsupported"] == 1
+            item = db.execute("SELECT * FROM archive_items").fetchone()
+            assert (item["state"], item["error_code"], item["evidence_id"]) == (
+                "error",
+                "access_verification_required",
+                challenge_id,
+            )
+            assert item["attempts"] == 0 and item["retry_after"] is None
+            assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+            # A parser change can revisit this established source, but unchanged
+            # challenge bytes still fail honestly and do not create a retry loop.
+            if parser_changed:
+                db.execute("UPDATE archive_items SET parser_version='earlier-parser'")
+                result = archive_replay.reprocess_errors(db, source, 1)
+                assert result["attempted"] == result["still_unsupported"] == 1
+                assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+            cache(db, advisory())
+            result = archive_replay.reprocess_errors(db, source, 1)
+            assert result["attempted"] == result["recovered"] == result["imported"] == 1
+            assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        assert dict(db.execute("SELECT * FROM archive_parser_replays").fetchone()) == receipt
+        assert db.execute("SELECT COUNT(*) FROM archive_parser_replays").fetchone()[0] == 1
+        assert not db.execute("SELECT 1 FROM source_observations").fetchone()
+        assert latest(db)[0]["cves"] == ["CVE-2099-12345"]
+
+
+@pytest.mark.parametrize("error_code", ["access_verification_required", "access_denied"])
+@pytest.mark.parametrize("parser_changed", [False, True])
+def test_initial_access_failures_are_not_new_offline_transition_candidates(
+    error_code, parser_changed
+):
+    with connect(":memory:") as db:
+        source, item = seed(db)
+        # An initial transport failure has no prior completed document resolution.
+        db.execute(
+            "UPDATE archive_items SET state='error',error_code=?,resolved_url=NULL,parser_version=?",
+            (
+                error_code,
+                "old-parser" if parser_changed else default_registry().fingerprint("arista"),
+            ),
+        )
+        cache(db, advisory())
+        with patch(
+            "infrastructure_impact.collection.transport.build_opener",
+            side_effect=AssertionError("No network"),
+        ):
+            assert archive_replay.reprocess_errors(db, source, 1)["attempted"] == 0
+        assert not latest(db)
+
+
+@pytest.mark.parametrize(
+    "insertion",
+    [
+        "<p>This notice now addresses CVE-2099-23456.</p>",
+        "<h2>Product Applicability</h2><p>All synthetic product versions.</p>",
+    ],
+)
+def test_cisco_unreviewed_own_body_prose_or_product_heading_requires_review(insertion):
+    raw = cisco_notice(lambda s: s.replace("<h2>Details</h2>", insertion + "<h2>Details</h2>"))
+    with pytest.raises(ValueError):
+        default_registry().normalize(raw, CISCO_URL, "cisco")
