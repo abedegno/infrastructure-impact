@@ -275,7 +275,8 @@
       "sha256": "b55fbdf0ded9e03babe88518c0b5c0d787cec5b86323aa6432c0c0960fed2057",
       "content_type": "text/html; charset=utf-8",
       "offline_parse": "ValueError",
-      "diagnostic": "No product assessments extracted; source layout may have changed"
+      "diagnostic": "No product assessments extracted; source layout may have changed",
+      "parser_hook_tested": "ordinary_advisory_parser"
     },
     {
       "source_url": "https://networkingdocs.hpe.com/documentation/us/en/software/junos/release-notes/24.2/junos-evo-release-notes-24.2r1/topics/new-features/feature-descriptions/authentication-access-control.html",
@@ -289,7 +290,10 @@
       "sha256": "6fa4c282b02887f98cdf369487ece2be3e96a356e08a7c0004994be4c337ed44",
       "content_type": "text/html",
       "offline_parse": "ValueError",
-      "diagnostic": "Expected CSAF or CVE JSON; vendor HTML requires a reviewed plugin parser"
+      "diagnostic": "Expected CSAF or CVE JSON; vendor HTML requires a reviewed plugin parser",
+      "parser_hook_tested": "ordinary_advisory_parser",
+      "configured_source_kind": "component_inventory",
+      "diagnostic_relevance": "This advisory-parser diagnostic is not the configured component hook. See juniper_correct_component_hook for the successful test."
     },
     {
       "source_url": "https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000163821",
@@ -303,7 +307,8 @@
       "sha256": "ecd4d0554dbf5dcd14e10be4ddba2a1a05ca8991266acb99d9fb4dbc67762410",
       "content_type": "application/pdf;charset=UTF-8",
       "offline_parse": "ValueError",
-      "diagnostic": "F5 PDF product, impact, table-footnote or guidance scope changed; review required"
+      "diagnostic": "F5 PDF product, impact, table-footnote or guidance scope changed; review required",
+      "parser_hook_tested": "ordinary_advisory_parser"
     }
   ],
   "f5_section_fingerprints": {
@@ -329,7 +334,10 @@
       "openssh": [
         "9.4"
       ]
-    }
+    },
+    "parser_hook_tested": "parse_component_inventory",
+    "source_binding": "original_configured_juniper_url",
+    "input_sha256": "6fa4c282b02887f98cdf369487ece2be3e96a356e08a7c0004994be4c337ed44"
   },
   "independent_human_review_completed": false
 }
