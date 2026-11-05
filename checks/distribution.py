@@ -24,6 +24,7 @@ def release_wheel(root):
 def public_resource_fingerprints(root):
     names = [
         "schemas/comparison-eligibility-summary-v1.json",
+        "schemas/coverage-gaps-v1.json",
         "web/kev.js",
         "schemas/kev-v1.json",
         "resources/sources.json",

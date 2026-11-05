@@ -8,6 +8,12 @@ vendor statements into a shared schema, and provides a dashboard and read-only A
 for product impact, vendor comparisons, coverage gaps and disclosure research.
 
 Early-stage software: the pipeline works end to end, but source coverage is bounded.
+The opt-in [source coverage inventory](docs/source-coverage.md) separates discovery,
+retrieval, supported parsing and informational notices. The
+[2026-11-05 public-stage observations](docs/research/2026-11-05-coverage-repair-observations.md)
+record the remaining gaps and pending human review; these unreleased repairs do
+not establish complete vendor history or change the frozen benchmark.
+
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.
 

@@ -211,3 +211,34 @@ complete Cisco portfolio. Real authenticated Cisco history remains blocked until
 authorized credentials exist. This implementation performs no live credential
 probe, hosted secret wiring or history run. Hosted activation, publication,
 release and source-default changes require their own approved concrete proposal.
+
+
+## Reviewed inputs and acceptance limits
+
+The opt-in example adds Aruba's exact 2021 directory and reviewed Arista source
+routes without changing ordinary defaults. Reviewed Aruba signed-text structures
+preserve shared product scope and per-CVE CVSS candidates; incomplete or invalid
+candidates remain diagnosed and cannot become valid public numeric metrics.
+Literal family/platform statements do not establish exact model applicability.
+Aruba prose fix guidance can remain visible with
+`remediation_product_scope_unresolved`; it does not become a counted, independently
+bound remediation event or an inferred software release date.
+
+Arista affected, unaffected and triage lists retain their local software and
+configuration context. In SA-0203, a configuration-based non-exploitability
+statement does not establish absence of vulnerable underlying component code.
+Slash labels and model-family labels stay literal. A positively reviewed advance
+notice has zero own CVEs and assessments, even if it links separate advisories.
+The resolver preserves such an HTML notice before following an advertised CSAF
+representation. Unrecognized articles still use the existing structured resolver.
+Rediscovery and retained-source replay can process a later advisory revision;
+parser receipts and earlier source evidence remain immutable.
+
+The [dated acceptance observations](research/2026-11-05-coverage-repair-observations.md)
+record actual denominators, source dates, errors and replay labels. The new gap
+inventory describes one explicit vault and configuration; source rows overlap,
+preview is bounded and read-only, and unknown completeness stays unknown. Counts
+are extraction and availability observations, not security quality or vendor
+rankings. Independent human review remains pending. The next research milestone
+is the [release-history work in the backlog](research/2026-11-05-source-coverage-backlog.md);
+these repairs do not implement it or establish complete Cisco/vendor history.

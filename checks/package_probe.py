@@ -64,6 +64,26 @@ def main():
         expected = json.loads(os.environ["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"])
         assert {vendor: registry.fingerprint(vendor) for vendor in expected} == expected
     assert registry.fingerprint_scheme("acme") == "legacy-package-v1"
+    # Installed operator schema and dynamic external-plugin inventory use no checkout.
+    from jsonschema import Draft202012Validator
+
+    from infrastructure_impact.application.coverage_gaps import report as coverage_report
+
+    with tempfile.TemporaryDirectory() as directory:
+        database = Path(directory) / "operator.sqlite3"
+        with connect(database):
+            pass
+        before = database.read_bytes()
+        with connect(database, read_only=True) as operator:
+            inventory = coverage_report(operator, {"vendors": []}, vendor="acme")
+            assert operator.execute("PRAGMA query_only").fetchone()[0] == 1
+        Draft202012Validator(
+            json.loads((package / "schemas/coverage-gaps-v1.json").read_text())
+        ).validate(inventory)
+        assert inventory["scope"] == {"vendor": "acme", "sample_limit": 32}
+        assert inventory["sources"] == []
+        assert database.read_bytes() == before
+
     from infrastructure_impact.application.build_inventory import audit, template
 
     inventory = template("acme", "Example Router", "1.0", "ExampleSSL", "routing")
