@@ -204,19 +204,88 @@ def validate_kev_report(report, publication, generated_at, scope):
     assert not selection["kev_only"] or availability == "available"
 
 
+def validate_eligibility_summary(report, publication, generated_at, vendors, detail_sha256):
+    """Check the closed v1 projection locally; this does not verify full case history."""
+
+    def obj(value, fields):
+        assert isinstance(value, dict) and set(value) == set(fields.split()), (
+            "Malformed eligibility summary object"
+        )
+
+    obj(
+        report,
+        "schema_version representation publication generated_at source_detail "
+        "expected_vendor_ids vendors",
+    )
+    assert type(report["schema_version"]) is int and report["schema_version"] == 1
+    assert report["representation"] == "monitor_summary"
+    obj(report["publication"], "id advisory_schema_version")
+    identity = report["publication"]
+    assert isinstance(identity["id"], str) and 1 <= len(identity["id"]) <= 128
+    assert type(identity["advisory_schema_version"]) is int
+    assert identity["advisory_schema_version"] == 2
+    assert identity == publication, "Mixed eligibility summary generations"
+    assert report["generated_at"] == generated_at, "Mixed eligibility summary dates"
+    assert isinstance(generated_at, str) and re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}"
+        r"(?:\.[0-9]+)?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])",
+        generated_at,
+    ), "Invalid eligibility summary timestamp"
+    try:
+        datetime.fromisoformat(generated_at.upper().replace("Z", "+00:00"))
+    except ValueError as error:
+        raise AssertionError("Invalid eligibility summary timestamp") from error
+    obj(report["source_detail"], "path sha256")
+    source = report["source_detail"]
+    assert source["path"] == "comparison-eligibility.json"
+    assert isinstance(source["sha256"], str) and re.fullmatch(r"[a-f0-9]{64}", source["sha256"])
+    assert source["sha256"] == detail_sha256, "Eligibility detail fingerprint differs from manifest"
+    expected = report["expected_vendor_ids"]
+    assert isinstance(expected, list) and 1 <= len(expected) <= 128
+    assert all(isinstance(v, str) and 1 <= len(v) <= 128 for v in expected)
+    assert expected == sorted(set(expected)) == sorted(vendors), (
+        "Eligibility vendor membership changed"
+    )
+    rows = report["vendors"]
+    assert isinstance(rows, list) and len(rows) == len(expected)
+    actual = []
+    for row in rows:
+        obj(row, "vendor eligibility")
+        assert isinstance(row["vendor"], str)
+        actual.append(row["vendor"])
+        obj(row["eligibility"], "rate_comparison first_disclosure_comparison fix_timing_comparison")
+        assert all(value == "suppressed" for value in row["eligibility"].values()), (
+            "Eligibility comparison gates changed"
+        )
+    assert actual == expected, "Eligibility vendors must match complete sorted membership"
+
+
 def check(origin, expected=None, *, verify_archive=False):
     origin = origin.rstrip("/") + "/"
     with urlopen(origin, timeout=20) as response:
         assert response.status == 200, "Dashboard unavailable"
-    with urlopen(origin + "manifest.json", timeout=20) as response:
-        manifest_raw = response.read(2_000_001)
-    assert len(manifest_raw) <= 2_000_000, "Publication manifest exceeds monitor budget"
-    manifest = json.loads(manifest_raw)
+    checked_bytes = 0
 
-    def verified(path, budget):
+    def read(path, budget, *, archive=False):
+        nonlocal checked_bytes
+        # Bound the actual read by both limits, including the one-byte overflow sentinel.
+        limit = budget if archive else min(budget, 20_000_000 - checked_bytes)
         with urlopen(origin + path, timeout=30) as response:
-            raw = response.read(budget + 1)
-        assert len(raw) <= budget, "Publication part exceeds monitor budget"
+            raw = response.read(limit + 1)
+        if not archive:
+            checked_bytes += len(raw)
+            assert checked_bytes <= 20_000_000, "Default publication exceeds monitor budget"
+        assert len(raw) <= budget, (
+            "Publication manifest exceeds monitor budget"
+            if path == "manifest.json"
+            else "Publication part exceeds monitor budget"
+        )
+        return raw
+
+    manifest = json.loads(read("manifest.json", 2_000_000))
+
+    def verified(path, budget, *, archive=False):
+        raw = read(path, budget, archive=archive)
         assert hashlib.sha256(raw).hexdigest() == manifest["sha256"][path], "Fingerprint mismatch"
         return raw
 
@@ -231,18 +300,16 @@ def check(origin, expected=None, *, verify_archive=False):
         if error.code != 404:
             raise
         index = None
-    checked_bytes = 0
     checked_parts = 0
     if index is None:
         raw = verified("snapshot.json", 30_000_000)
         data = json.loads(raw)
-        checked_bytes = len(raw)
     else:
         assert index["schema_version"] == 1, "Unsupported static index"
         assert index["publication"]["id"] == manifest["generation"], "Mixed publication index"
 
         def part(descriptor):
-            nonlocal checked_bytes, checked_parts
+            nonlocal checked_parts
             path = descriptor["path"]
             assert re.fullmatch(r"data/[a-f0-9]{64}\.json", path), "Invalid part path"
             assert path == "data/" + descriptor["sha256"] + ".json", "Non-addressed part"
@@ -250,9 +317,7 @@ def check(origin, expected=None, *, verify_archive=False):
             raw = verified(path, descriptor["bytes"])
             assert len(raw) == descriptor["bytes"], "Part size mismatch"
             assert hashlib.sha256(raw).hexdigest() == descriptor["sha256"], "Part hash mismatch"
-            checked_bytes += len(raw)
             checked_parts += 1
-            assert checked_bytes <= 20_000_000, "Default cohort exceeds monitor budget"
             value = json.loads(raw)
             assert (
                 value["schema_version"] == 1
@@ -275,8 +340,6 @@ def check(origin, expected=None, *, verify_archive=False):
         schemas = {}
         for name in SCHEMAS:
             raw = verified("schemas/" + name, 500_000)
-            checked_bytes += len(raw)
-            assert checked_bytes <= 20_000_000, "Default cohort exceeds monitor budget"
             schemas[name] = json.loads(raw)
         validate_schema(index, "static-index-v1.json", schemas)
 
@@ -318,6 +381,18 @@ def check(origin, expected=None, *, verify_archive=False):
         validate_dossier_limits(report)
         assert report.get("publication") == data["publication"], "Mixed report generations"
         assert report.get("generated_at") == data["generated_at"], "Mixed report dates"
+    eligibility_verification = "unavailable"
+    if "comparison-eligibility-summary.json" in manifest["sha256"]:
+        report = json.loads(verified("comparison-eligibility-summary.json", 100_000))
+        validate_eligibility_summary(
+            report,
+            data["publication"],
+            data["generated_at"],
+            data["vendors"],
+            manifest["sha256"].get("comparison-eligibility.json"),
+        )
+        assert report["publication"]["id"] == manifest["generation"], "Mixed summary manifest"
+        eligibility_verification = "compact_summary"
     if data.get("product_groups"):
         report_keys = (
             "product_groups",
@@ -339,13 +414,10 @@ def check(origin, expected=None, *, verify_archive=False):
             )
             if data.get(k)
         ):
+            if key == "comparison_eligibility" and eligibility_verification == "compact_summary":
+                continue
             filename = key.replace("_", "-") + ".json"
-            with urlopen(origin + filename, timeout=20) as response:
-                report_raw = response.read(15_000_001)
-            assert len(report_raw) <= 15_000_000, "Evidence-quality report exceeds monitor budget"
-            assert hashlib.sha256(report_raw).hexdigest() == manifest["sha256"][filename], (
-                "Evidence-quality report fingerprint mismatch"
-            )
+            report_raw = verified(filename, 15_000_000)
             report = json.loads(report_raw)
             assert report["publication"] == data["publication"], "Mixed report generations"
             assert report["generated_at"] == data["generated_at"], "Mixed report dates"
@@ -394,17 +466,19 @@ def check(origin, expected=None, *, verify_archive=False):
                 and all(g["state"] == "not_established" for g in c["checklist"])
                 for c in review["cases"]
             ), "Disclosure investigation gates changed"
-        assert all(
-            v["eligibility"]["rate_comparison"] == "suppressed"
-            for v in data["comparison_eligibility"]["vendors"]
-        )
+        if eligibility_verification != "compact_summary":
+            assert all(
+                v["eligibility"]["rate_comparison"] == "suppressed"
+                for v in data["comparison_eligibility"]["vendors"]
+            )
+            eligibility_verification = "legacy_full_report"
     for record in data["records"]:
         assert not record.get("notes"), "Private projection failed"
         validate_public_metrics(record)
     compressed_bytes = 0
     compressed_verified = False
     if (index is None or verify_archive) and "snapshot.json.gz" in manifest["sha256"]:
-        compressed = verified("snapshot.json.gz", 8_000_000)
+        compressed = verified("snapshot.json.gz", 8_000_000, archive=verify_archive)
         compressed_bytes = len(compressed)
         with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as archive:
             expanded = archive.read(128_000_001)
@@ -423,6 +497,7 @@ def check(origin, expected=None, *, verify_archive=False):
         "advisories": data.get("counts", {}).get("advisories", len(data["records"])),
         "delivery": "cohort_parts_v1" if index else "legacy_snapshot",
         "checked_default_bytes": checked_bytes,
+        "comparison_eligibility_verification": eligibility_verification,
         "checked_parts": checked_parts,
         "full_archive_download_verified": index is None,
         "compressed_archive_verified": compressed_verified,

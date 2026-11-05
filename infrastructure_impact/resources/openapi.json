@@ -1264,6 +1264,33 @@
           }
         }
       }
+    },
+    "/comparison-eligibility-summary.json": {
+      "get": {
+        "summary": "Closed monitor safety-gate summary; full case history remains an explicit download",
+        "responses": {
+          "200": {
+            "description": "Generation-bound eligibility summary with exact detail SHA-256 and complete vendor membership",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/comparison-eligibility-summary-v1.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemas/comparison-eligibility-summary-v1.json": {
+      "get": {
+        "summary": "Comparison eligibility monitor summary schema",
+        "responses": {
+          "200": {
+            "description": "Closed JSON Schema for the monitor summary"
+          }
+        }
+      }
     }
   }
 }

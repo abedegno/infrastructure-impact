@@ -2,6 +2,8 @@
 
 ## 0.9.0 research preview — 2026-11-04
 
+- Add a closed, generation-bound comparison-eligibility monitor summary with exact full-report fingerprints, complete vendor membership and unchanged suppression gates. Preserve full case evidence as an explicit download and bounded full-report checks for older publications.
+- Count all default monitor metadata, reports, parts and schemas against the unchanged 20,000,000-byte aggregate budget; retain existing per-asset limits and separate explicit archive verification. The unpublished replacement candidate requires renewed exact-commit approval before release or activation.
 - Add a separate campus/branch switching disclosure study for Cisco IOS XE, Aruba AOS-CX and Arista EOS, with explicit OS-family and model-qualified scopes, independent vendor/period controls and generation-bound JSON/CSV exports.
 - Add opt-in, bounded and resumable Cisco OpenVuln OAuth collection, retained Aruba/Arista archive enumeration and per-source coverage/error manifests. Credentials, hosted backfill and runtime activation remain separate operator actions.
 - Preserve source-linked platforms, versions, conditions, publisher identifiers, explicit bundles and remediation-publication events without automatic model/version matching or inferred fix dates.

@@ -10,6 +10,7 @@ import json
 import re
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
+from hashlib import sha256
 
 from jsonschema import Draft202012Validator, FormatChecker
 
@@ -387,3 +388,42 @@ def report_validator():
     schema = json.loads((PACKAGE / "schemas/comparison-eligibility-v1.json").read_text())
     Draft202012Validator.check_schema(schema)
     return Draft202012Validator(schema, format_checker=FormatChecker())
+
+
+def monitor_summary(detail_raw, *, publication, generated_at, vendors):
+    """Project only validated safety gates; bind the exact downloadable detail bytes."""
+    detail = json.loads(detail_raw)
+    report_validator().validate(detail)
+    if detail.get("publication") != publication or detail.get("generated_at") != generated_at:
+        raise ValueError("Eligibility detail differs from publication identity or time")
+    expected = sorted(vendors)
+    actual = [row["vendor"] for row in detail["vendors"]]
+    if sorted(actual) != expected or len(set(actual)) != len(actual):
+        raise ValueError("Eligibility detail must contain every expected vendor exactly once")
+    report = dict(
+        schema_version=1,
+        representation="monitor_summary",
+        publication=publication,
+        generated_at=generated_at,
+        source_detail=dict(
+            path="comparison-eligibility.json", sha256=sha256(detail_raw).hexdigest()
+        ),
+        expected_vendor_ids=expected,
+        vendors=[
+            dict(
+                vendor=row["vendor"],
+                eligibility={
+                    key: row["eligibility"][key]
+                    for key in (
+                        "rate_comparison",
+                        "first_disclosure_comparison",
+                        "fix_timing_comparison",
+                    )
+                },
+            )
+            for row in sorted(detail["vendors"], key=lambda row: row["vendor"])
+        ],
+    )
+    schema = json.loads((PACKAGE / "schemas/comparison-eligibility-summary-v1.json").read_text())
+    Draft202012Validator(schema, format_checker=FormatChecker()).validate(report)
+    return report

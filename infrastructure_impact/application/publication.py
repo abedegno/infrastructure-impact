@@ -18,7 +18,7 @@ from ..settings import PACKAGE, Paths
 from ..storage.repository import connect
 from .casefiles import casefiles
 from .cohort import COHORT, coverage
-from .eligibility import eligibility, report_validator
+from .eligibility import eligibility, monitor_summary, report_validator
 from .extraction_validation import review_packet, validation_report
 from .families import completeness
 from .fix_leads import leads, public_inputs
@@ -247,6 +247,17 @@ def write_bundle(destination, data):
                 }
             )
         )
+    # Derive the monitor sidecar from the same validated bytes kept for explicit downloads.
+    # Both files and their hashes become visible only with the atomic generation pointer.
+    eligibility_summary = monitor_summary(
+        (destination / "comparison-eligibility.json").read_bytes(),
+        publication=data["publication"],
+        generated_at=data["generated_at"],
+        vendors=data["vendors"],
+    )
+    (destination / "comparison-eligibility-summary.json").write_text(
+        json.dumps(eligibility_summary, separators=(",", ":")) + "\n"
+    )
     (destination / "benchmark.json").write_text(json.dumps(data.get("benchmark", {})))
     for record in data["records"]:
         path = destination / "evidence" / f"{record['evidence_id']}.json"
@@ -347,6 +358,7 @@ def write_bundle(destination, data):
         destination / "schemas/comparison-eligibility-v1.json",
     )
     for name in (
+        "comparison-eligibility-summary-v1.json",
         "product-groups-v1.json",
         "publisher-history-v1.json",
         "extraction-review-v1.json",

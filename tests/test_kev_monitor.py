@@ -226,7 +226,7 @@ def test_monitor_keeps_existing_delivery_bounds(tmp_path, monkeypatch, fault):
             descriptors.append(dict(path=path, sha256=digest, bytes=len(raw)))
         index["cohorts"] = {"CVE-2025-12345": descriptors}
         index_path.write_text(json.dumps(index))
-        message = "Default cohort exceeds monitor budget"
+        message = "Default publication exceeds monitor budget"
     manifest["sha256"]["data/index.json"] = hashlib.sha256(index_path.read_bytes()).hexdigest()
     manifest_path.write_text(json.dumps(manifest))
     serve(monkeypatch, generation)
