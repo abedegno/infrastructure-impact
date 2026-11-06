@@ -298,6 +298,11 @@ def test_invalid_full_report_cannot_replace_current_generation(tmp_path, monkeyp
 def test_legacy_snapshot_counts_implicit_archive_in_default_budget(tmp_path, monkeypatch):
     generation = publish(dataset(), tmp_path)
     (generation / "data/index.json").unlink()
+    # A genuine no-index generation does not declare a missing index asset.
+    manifest_path = generation / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    del manifest["sha256"]["data/index.json"]
+    manifest_path.write_text(json.dumps(manifest))
     requests, reads = serve(monkeypatch, generation)
     result = health.check("https://example.test")
     assert result["delivery"] == "legacy_snapshot"

@@ -18,9 +18,7 @@ FIXTURE = json.loads((PACKAGE.parent / "tests/fixtures/switching-cases.json").re
 
 
 def static_requests(root, queries):
-    script = ADAPTER.replace(
-        "'kev.js','research", "'kev.js','switching.js','research"
-    )
+    script = ADAPTER.replace("'kev.js','research", "'kev.js','switching.js','research")
     return json.loads(
         subprocess.check_output(
             ["node", "-e", script],

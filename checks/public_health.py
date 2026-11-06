@@ -260,6 +260,51 @@ def validate_eligibility_summary(report, publication, generated_at, vendors, det
     assert actual == expected, "Eligibility vendors must match complete sorted membership"
 
 
+def validate_current_evidence(report, publication, generated_at, schemas):
+    """Check the bounded public decision ledger without importing the application."""
+    canonical = lambda value: json.dumps(  # noqa: E731
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    ).encode()
+    digest = lambda value: hashlib.sha256(canonical(value)).hexdigest()  # noqa: E731
+    assert len(canonical(report)) + 1 <= 2_000_000, "Oversized current-evidence report"
+    validate_schema(report, "current-evidence-v1.json", schemas)
+    assert report["publication"] == publication, "Mixed current-evidence generations"
+    assert report["generated_at"] == generated_at, "Mixed current-evidence dates"
+    policies = {(p["vendor"], p["policy_id"]): p for p in report["policies"]}
+    assert len(policies) == len(report["policies"]), "Duplicate current-evidence policy"
+    decisions, targets = {}, set()
+    for decision in report["decisions"]:
+        policy = policies.get((decision["vendor"], decision["policy_id"]))
+        assert policy is not None, "Unregistered decision policy"
+        assert decision["target"]["vendor"] == decision["vendor"]
+        assert digest(decision["target"]) == decision["target_key"], "Invalid decision target"
+        assert decision["policy_version"] == policy["version"]
+        assert decision["policy_fingerprint"] == policy["fingerprint"]
+        assert decision["reason_text"] == policy["reason_text"]
+        assert decision["proofs"] == sorted(decision["proofs"], key=canonical)
+        assert len({canonical(p) for p in decision["proofs"]}) == len(decision["proofs"])
+        identity = {
+            k: decision[k]
+            for k in ("policy_id", "policy_version", "policy_fingerprint", "target_key", "proofs")
+        }
+        assert digest(identity) == decision["decision_id"], "Invalid decision identity"
+        assert decision["decision_id"] not in decisions and decision["target_key"] not in targets
+        decisions[decision["decision_id"]] = decision
+        targets.add(decision["target_key"])
+    issues = set()
+    for issue in report["issues"]:
+        assert (issue["vendor"], issue["policy_id"]) in policies
+        assert issue["target_key"] not in targets and canonical(issue) not in issues
+        issues.add(canonical(issue))
+    counts = report["counts"]
+    if report["availability"] == "available":
+        assert counts["excluded"] == len(decisions), "Excluded decision count mismatch"
+        assert counts["current"] + counts["excluded"] == counts["retained_total"], (
+            "Current/retained union count mismatch"
+        )
+    return decisions
+
+
 def check(origin, expected=None, *, verify_archive=False):
     origin = origin.rstrip("/") + "/"
     with urlopen(origin, timeout=20) as response:
@@ -297,7 +342,7 @@ def check(origin, expected=None, *, verify_archive=False):
     try:
         index = json.loads(verified("data/index.json", 2_000_000))
     except HTTPError as error:
-        if error.code != 404:
+        if error.code != 404 or "data/index.json" in manifest["sha256"]:
             raise
         index = None
     checked_parts = 0
@@ -332,6 +377,109 @@ def check(origin, expected=None, *, verify_archive=False):
         }
         rows = [r for descriptor in descriptors.values() for r in part(descriptor)]
         data["records"] = [r["record"] for r in rows if r["kind"] == "record"]
+    assert data["publication"]["id"] == manifest["generation"], "Mixed publication manifest"
+    current_availability = "unavailable"
+    current_counts = dict(current=None, excluded=None, retained_total=None)
+    capability = index.get("current_evidence") if index is not None else None
+    marker = data.get("current_evidence_version")
+    if capability is not None or marker is not None:
+        assert (
+            index is not None and capability is not None and type(marker) is int and marker == 1
+        ), "Missing current-evidence capability"
+        assert type(capability["schema_version"]) is int and capability["schema_version"] == 1
+        schemas = {}
+        for name in ("current-evidence-v1.json", "kev-v1.json"):
+            schemas[name] = json.loads(verified("schemas/" + name, 500_000))
+        report = part(capability["report"])
+        decisions = validate_current_evidence(
+            report, data["publication"], data["generated_at"], schemas
+        )
+        root_report = json.loads(verified("current-evidence.json", 2_000_000))
+        assert root_report == report, "Current-evidence root differs from index"
+        retained = []
+        membership = []
+        assert len(capability["retained"]) <= 1000, "Oversized retained index"
+        for fragment in capability["retained"]:
+            wrappers = part(fragment["part"])
+            assert isinstance(wrappers, list), "Malformed retained fragment"
+            assert [w["decision_id"] for w in wrappers] == fragment["decision_ids"], (
+                "Retained decision membership mismatch"
+            )
+            assert (
+                sorted({cid for w in wrappers for cid in w["record"]["cves"]})
+                == fragment["cve_ids"]
+            )
+            for wrapper in wrappers:
+                assert set(wrapper) == {"record", "decision_id", "record_scope", "target_key"}
+                assert wrapper["record_scope"] == "retained_latest_excluded"
+                decision = decisions.get(wrapper["decision_id"])
+                assert decision and wrapper["target_key"] == decision["target_key"]
+                record = wrapper["record"]
+                identity = {k: record[k] for k in decision["target"]}
+                # Literal JSON scalar types matter (in particular integer revisions).
+                assert json.dumps(identity, sort_keys=True) == json.dumps(
+                    decision["target"], sort_keys=True
+                )
+                assert not record.get("notes"), "Private retained projection failed"
+                validate_public_metrics(record)
+                retained.append(record)
+                membership.append(wrapper["decision_id"])
+        assert len(membership) == len(set(membership)) and set(membership) == set(decisions), (
+            "Incomplete retained decision membership"
+        )
+        current_availability = report["availability"]
+        current_counts = report["counts"]
+        if current_availability == "available":
+            assert data["counts"]["advisories"] == current_counts["current"]
+            assert len(retained) == current_counts["excluded"]
+        if "retained_advisories" in data:
+            assert data["retained_advisories"] == [] or data["retained_advisories"] == retained
+        excluded_targets = {json.dumps(d["target"], sort_keys=True) for d in decisions.values()}
+        for record in data["records"]:
+            identity = {
+                k: record[k]
+                for k in ("vendor", "advisory_id", "revision_id", "source_url", "sha256")
+            }
+            assert json.dumps(identity, sort_keys=True) not in excluded_targets, (
+                "Excluded record is current"
+            )
+        assert {row["decision_id"] for row in data["retained_index"]} == set(decisions)
+    elif "current_evidence" in data:
+        schemas = {
+            name: json.loads(verified("schemas/" + name, 500_000))
+            for name in ("current-evidence-v1.json", "kev-v1.json")
+        }
+        report = data["current_evidence"]
+        validate_current_evidence(report, data["publication"], data["generated_at"], schemas)
+        assert index is None or report["availability"] == "unavailable", (
+            "Missing current-evidence capability"
+        )
+        if report["availability"] == "available":
+            assert report == json.loads(verified("current-evidence.json", 2_000_000))
+            wrappers = data["retained_advisories"]
+            assert len(wrappers) == report["counts"]["excluded"]
+            assert len(data["records"]) == report["counts"]["current"]
+            decisions = {d["decision_id"]: d for d in report["decisions"]}
+            assert {w["decision_id"] for w in wrappers} == set(decisions)
+            for wrapper in wrappers:
+                decision = decisions[wrapper["decision_id"]]
+                assert set(wrapper) == {"record", "decision_id", "record_scope", "target_key"}
+                assert wrapper["record_scope"] == "retained_latest_excluded"
+                assert wrapper["target_key"] == decision["target_key"]
+                assert not wrapper["record"].get("notes"), "Private retained projection failed"
+                validate_public_metrics(wrapper["record"])
+                identity = {k: wrapper["record"][k] for k in decision["target"]}
+                assert json.dumps(identity, sort_keys=True) == json.dumps(
+                    decision["target"], sort_keys=True
+                )
+            fields = ("vendor", "advisory_id", "revision_id", "source_url", "sha256")
+            identities = [
+                json.dumps({k: r[k] for k in fields}, sort_keys=True) for r in data["records"]
+            ]
+            targets = {json.dumps(d["target"], sort_keys=True) for d in decisions.values()}
+            assert len(identities) == len(set(identities)), "Duplicate current identity"
+            assert not set(identities) & targets, "Excluded record is current"
+            current_availability, current_counts = report["availability"], report["counts"]
     switching_availability = "unavailable"
     if index is not None and "switching" in index:
         switching = index["switching"]
@@ -491,6 +639,8 @@ def check(origin, expected=None, *, verify_archive=False):
         "status": "fresh",
         "kev_availability": kev_availability,
         "switching_availability": switching_availability,
+        "current_evidence_availability": current_availability,
+        "current_evidence_counts": current_counts,
         "static_marker_verified": marker_verified,
         "publication": data["publication"]["id"],
         "generated_at": data["generated_at"],

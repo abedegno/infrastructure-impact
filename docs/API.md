@@ -105,3 +105,43 @@ objects and separate `source_check` metadata for each exact firmware target. The
 additive fields are independent of the private proposal audit; no submission API
 is exposed. The input schema is available at
 `/schemas/build-inventory-submission-v1.json`. See [Build inventory](BUILD_INVENTORY.md).
+
+## Current and retained evidence
+
+New generations publish `/current-evidence.json`, the strict
+`/schemas/current-evidence-v1.json` decision report, and GET/HEAD
+`/api/v1/current-evidence`. Its counts satisfy `current + excluded = retained_total`;
+`excluded` equals the number of decisions. A decision binds the exact typed
+vendor/advisory/revision/source/hash identity to its policy fingerprint and public
+source proofs. Advisory schema v2 is unchanged.
+
+Default catalogue, assessment, study and JSON/CSV exports use current records.
+Retained latest records excluded by a reviewed policy are available explicitly:
+
+```text
+GET /api/v1/retained-advisories?vendor=arista&limit=100&offset=0
+GET /api/v1/retained-advisories?cves=CVE-2023-5501&format=json
+GET /api/v1/retained-advisories?cves=CVE-2023-5501&format=csv
+```
+
+The paginated envelope includes `record_scope: retained_latest_excluded`, the
+full report, generation/time, and wrappers with full records, `decision_id` and
+`target_key`. Explicit formats download the full filtered assessment set rather
+than one page; each record/assessment or CSV row labels its scope, disposition,
+reason, decision, target and policy identity. These are excluded **latest**
+representations, not a complete historical revision download. Source audit,
+casefiles and timelines retain historical evidence independently. An exclusion
+never renames an old CVE or establishes that every record sharing that CVE is
+invalid. Vendor/CVE filtering, 200-CVE request cap, default100/max500 page size,
+400 invalid controls, 405 non-read methods and empty HEAD bodies with GET lengths
+match the native and browser static adapters.
+
+Static index capability `current_evidence` declares a generation-bound report
+part and separate content-addressed retained fragments. Normal cohort browsing
+validates decision membership without downloading those records; the explicit
+retained view hydrates only selected fragments. Script order includes
+`lossless-json.js` and `current-evidence.js` before the readers so large integer
+revision identities survive unchanged. Public manifests fingerprint the scripts,
+schema, root report and parts. Older generations without the capability expose
+unavailable dispositions and null counts; absent required assets in a new
+generation are errors, never a zero-exclusion fallback.

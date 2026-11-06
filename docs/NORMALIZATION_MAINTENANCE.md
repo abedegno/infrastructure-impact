@@ -175,3 +175,18 @@ live vault before previewing it. Preview never opens the source with SQLite,
 creates source SQLite sidecars, performs a checkpoint, or takes the writer lock.
 The authenticated hosted restore supplies this checkpointed input. Apply still
 recomputes the same logical inventory binding under the caller's writer lock.
+
+The current-evidence policy evaluates retained source/selection facts when the
+reader rebuilds views, before any profile apply. A stage already containing the
+reviewed primary and selection may therefore exclude the exact legacy CSAF
+immediately under new code; do not credit the apply operation for that preexisting
+disposition. Compare before/after partition counts, every old evidence/revision
+row, and capture observation time versus normalization revision time explicitly.
+Identical bytes under identical installed code append no normalization revisions.
+Replaying a retained capture is reinterpretation, not fresh HTTP retrieval.
+
+For hosted use, the preview receipt is an operator artifact only; publication is
+withheld. Apply's public candidate is eligible only after the shared reducer,
+audit, report and authenticated recovery path succeeds. See
+[operations effects and compatibility](OPERATIONS.md#current-evidence-health-and-maintenance-effects)
+and [activation gates](RELEASING.md#targeted-refresh-and-current-evidence-activation-gates).

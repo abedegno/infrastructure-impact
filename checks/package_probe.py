@@ -43,6 +43,7 @@ def main():
     registry = default_registry()
     assert "acme" in registry.names() and "f5" in registry.names()
     assert registry.get("acme").research_evidence is None
+    assert registry.get("acme").current_evidence_policy is None
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
@@ -191,6 +192,15 @@ def main():
     ingest(db, raw, url, lambda *_: document, "acme")
     data = state(db, ["CVE-2025-12345"])
     assert set(data["vendors"]) == set(registry.names())
+    assert data["current_evidence"]["counts"] == {"current": 1, "excluded": 0, "retained_total": 1}
+    assert data["retained_advisories"] == []
+    assert not any(p["vendor"] == "acme" for p in data["current_evidence"]["policies"])
+    from infrastructure_impact.application.current_evidence import (
+        validate_report as validate_current,
+    )
+    from infrastructure_impact.collection.maintenance_profiles import profile
+
+    assert len(profile("arista-reviewed-2024-0099-0103-v1").allowed_urls) == 3
     assert any(
         row["vendor"] == "acme" and row["affected_cves"] == 1
         for row in data["comparison"]["vendors"]
@@ -271,6 +281,54 @@ def main():
                 }
             )
             assert status == 200 and contract_body == contract.read_bytes(), contract.name
+        snapshot = json.loads((root / "current/snapshot.json").read_text())
+        current = json.loads((root / "current/current-evidence.json").read_text())
+        validate_current(
+            current, publication=snapshot["publication"], generated_at=snapshot["generated_at"]
+        )
+        index = json.loads((root / "current/data/index.json").read_text())
+        capability = index["current_evidence"]
+        descriptor = capability["report"]
+        raw_part = (root / "current" / descriptor["path"]).read_bytes()
+        assert hashlib.sha256(raw_part).hexdigest() == descriptor["sha256"]
+        assert len(raw_part) == descriptor["bytes"]
+        assert json.loads(raw_part)["data"] == current and capability["retained"] == []
+        for path in ("/api/v1/current-evidence", "/api/v1/retained-advisories"):
+            for query in ("", "vendor=acme", "cves=CVE-2025-12345", "format=json", "format=csv"):
+                if path.endswith("current-evidence") and query:
+                    continue
+                status, _, body = app.route(
+                    {"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": query}
+                )
+                assert status == 200, (path, query)
+                if path.endswith("current-evidence"):
+                    assert json.loads(body) == current
+                elif query != "format=csv":
+                    value = json.loads(body)
+                    assert value["record_scope"] == "retained_latest_excluded"
+                    assert value.get("items", value.get("records")) == []
+                response_headers = []
+                head = b"".join(
+                    app(
+                        {"REQUEST_METHOD": "HEAD", "PATH_INFO": path, "QUERY_STRING": query},
+                        lambda status, headers: response_headers.extend(headers),
+                    )
+                )
+                assert head == b"" and ("Content-Length", str(len(body))) in response_headers
+            status, _, _ = app.route(
+                {"REQUEST_METHOD": "POST", "PATH_INFO": path, "QUERY_STRING": ""}
+            )
+            assert status == 405
+        for name in ("lossless-json.js", "current-evidence.js"):
+            status, _, body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": "/" + name, "QUERY_STRING": ""}
+            )
+            assert status == 200 and body == (package / "web" / name).read_bytes()
+            assert (root / "current" / name).read_bytes() == body
+        assert (package / "schemas/current-evidence-v1.json").is_file()
+        openapi = json.loads((package / "resources/openapi.json").read_text())
+        for path in ("/api/v1/current-evidence", "/api/v1/retained-advisories"):
+            assert set(openapi["paths"][path]) >= {"get", "head"}
         from infrastructure_impact.application.kev import validate_report
 
         kev = json.loads((root / "current/kev.json").read_text())
@@ -404,6 +462,8 @@ def main():
                 "kev_resources_and_api": True,
                 "switching_resources_and_api": True,
                 "optional_research_hook_compatible": True,
+                "optional_current_evidence_hook_compatible": True,
+                "current_evidence_resources_and_api": True,
             }
         )
     )
