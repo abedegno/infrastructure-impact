@@ -65,14 +65,36 @@ profiles and differential receipts remain outside Git.
 
 ## Complete-corpus acceptance and remaining limits
 
-Complete-corpus acceptance is pending its final receipt. The required matrix is
-one all-vendor JSON/CSV pair for each of nine windows (`all`, `pre`, `post` and
-2021–2026) at both OS-family and model-qualified scopes: 18 pairs. Full exported
-shape/semantic checks, CSV provenance/counts, immutable input hashes and repeated
-representative selections must complete before reporting a full-corpus result.
+Complete-corpus acceptance is pending its final receipt. The matrix is one
+all-vendor JSON/CSV pair for each of nine windows (`all`, `pre`, `post` and
+2021–2026) at both OS-family and model-qualified scopes: 18 pairs. JSON exports
+use the existing `representation: "summary"` schema, backed by the hashed
+`full-report.json` containing complete retained inputs. They are summary exports,
+not standalone full reports for reselection.
+
+The complete corrected report built in 125.364 seconds and passed fresh full
+validation in 101.083 seconds. The first OS-family/all selection,
+output validation, summary export and deterministic reselection completed. The
+remaining 17 views use three bounded read-only operator workers with exclusive
+assignments and a 1,200-second deadline each. Each view still performs fresh
+full input and output validation from the hashed report; no API, validation
+cache or product limit changed. Per-view timings and the final cross-export
+checks remain pending. This mixed serial/parallel operator run cannot supply a
+serial before/after performance factor. Full shape/semantic checks, CSV
+provenance/counts, immutable input hashes and representative reselections must
+complete before reporting acceptance of all 18 pairs.
 See the [operator acceptance procedure](../switching-comparison.md#corrected-source-comparison-acceptance).
-Broad platform, clean-export, packaging and final branch review gates remain
-separate from the focused implementation checks recorded here.
+
+The controller's full platform checks on final production code `6b43e54` passed:
+Python 3.13 had 2,577 tests and 12 subtests pass in 154.94 seconds; the clean
+Python 3.11 export had 2,576 tests and 12 subtests pass in 177.76 seconds, with
+one existing Git-only skip. Both exact CI Ruff commands passed across 239 files,
+including both new regression suites. The five Node checks and Prettier passed.
+Clean-export privacy and authored-fixture checks passed; both frozen dependency
+exports were byte-identical. The wheel contained the new Arista modules and
+license files, and the offline installed wheel/plugin/resource probe passed.
+These are automated controller-owned checks. Final whole-branch review remains
+a separate gate and independent human impact review remains pending.
 
 Unknown model applicability, unresolved product aliases, source-access and
 historical-coverage gaps remain visible. A source or bounded traversal ending

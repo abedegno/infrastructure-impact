@@ -289,9 +289,11 @@ reviewed primary is usable but an alternate disagrees; retain that issue rather
 than treating it as a successful alternate comparison.
 
 Use one all-vendor JSON/CSV pair for each of `all`, `pre`, `post` and calendar years
-2021–2026 at both `os_family` and `model_qualified` scopes: 18 pairs. Check the
-actual exported JSON with full schema and semantic validation, CSV counts and
-provenance, input immutability and deterministic representative reselections.
+2021–2026 at both `os_family` and `model_qualified` scopes: 18 pairs. Validate
+complete backing reports with full schema and semantic checks. If JSON exports
+use the existing `representation: "summary"` contract, validate that schema and
+retain the fingerprinted full report containing the complete inputs. Check CSV
+counts and provenance, input immutability and deterministic representative reselections.
 Retain failed-phase receipts; a bounded profile or partial export is not complete
 corpus acceptance. Python public selection validates afresh on every call and
 returns isolated inputs and publication metadata, without a cross-call success
