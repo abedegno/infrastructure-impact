@@ -48,7 +48,7 @@ def record(cna=None, adp=(), **meta):
     )
 
 
-def select(value, *, path="cves/1999/1xxx/CVE-1999-1234.json", **options):
+def select(value, *, path="cves/1999/1xxx/CVE-1999-1234.json", rules=None, **options):
     raw = value if isinstance(value, bytes) else json.dumps(value).encode()
     entry = Entry(path, "CVE-1999-1234", "a" * 40, len(raw))
     snap = Snapshot("b" * 40, "c" * 40, "d" * 64, 1, 100, Path("unused"), (entry,))
@@ -56,7 +56,7 @@ def select(value, *, path="cves/1999/1xxx/CVE-1999-1234.json", **options):
         raw,
         entry=entry,
         snapshot=snap,
-        rules=api().load_selectors(),
+        rules=api().load_selectors() if rules is None else rules,
         start_date="2026-01-01",
         end_date="2026-12-31",
         **options,
@@ -160,12 +160,11 @@ def test_unknown_provider_and_conflicts_remain_visible():
         "affected",
         "unaffected",
     ]
-    # A reference-only vendor route is a lead, even when the actual product is upstream.
+    # A vendor link does not establish family context for an upstream product.
     ref = dict(url="https://support.hpe.com/advisory/synthetic")
     result = select(record(container([product("OpenSSH", "upstream")], OTHER, [ref])))
-    assert result["discovery_class"] == "reference_only_lead"
-    assert result["findings"][0]["product"] is None
-    assert result["findings"][0]["family"] == "aruba-aoscx"
+    assert result["discovery_class"] == "non_target"
+    assert result["findings"] == []
     result = select(
         record(
             container(
@@ -305,3 +304,103 @@ def test_assigner_provider_conflict_remains_explicit():
     assert result["findings"][0]["provider_identity"]["orgId"] == OTHER
     assert result["findings"][0]["trusted_vendor_cna"] is False
     assert "cna_assigner_mismatch" in result["diagnostic_codes"]
+
+
+# Catches family selection from vendor names, homepages or advisory routes alone.
+@pytest.mark.parametrize("kind", ["cna", "adp"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://www.cisco.com/",
+        "https://www.hpe.com/",
+        "https://www.arista.com/",
+        "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/"
+        "cisco-sa-iosxe-webui-privesc-j22SaA4z",
+        "https://support.hpe.com/hpesc/public/docDisplay?docId=hpesbnw05134en_us&docLocale=en_US",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/"
+        "24706-security-advisory-0150",
+    ],
+)
+def test_vendor_homepage_and_advisory_route_without_family_context_are_non_target(kind, url):
+    upstream = product("Synthetic component", "Synthetic upstream")
+    c = container([upstream], OTHER, [dict(url=url)])
+    value = record(
+        c if kind == "cna" else container([upstream], OTHER), [c] if kind == "adp" else []
+    )
+    result = select(value)
+    assert result["outcome"] == "parsed"
+    assert result["discovery_class"] == "non_target"
+    assert result["findings"] == []
+
+
+# Catches treating vendor/known-provider identity as a replacement for family context.
+@pytest.mark.parametrize(
+    "vendor,provider",
+    [("Cisco", CISCO), ("Hewlett Packard Enterprise (HPE)", HPE), ("Arista Networks", ARISTA)],
+)
+def test_vendor_only_component_rows_are_not_family_rows(vendor, provider):
+    value = record(container([product("Synthetic component", vendor)], provider))
+    value["cveMetadata"]["assignerOrgId"] = provider
+    result = select(value)
+    assert result["discovery_class"] == "non_target"
+    assert result["findings"] == []
+
+
+# Catches borrowing context/references across CNA/ADP when reference rules are disabled.
+@pytest.mark.parametrize("context_kind", ["cna", "adp"])
+@pytest.mark.parametrize("explicit", [True, False])
+def test_family_context_and_literal_references_remain_container_local(context_kind, explicit):
+    local_ref = dict(url="https://www.arista.com/", tags=["x_transferred"])
+    other_ref = dict(url="https://www.cisco.com/", tags=["x_transferred"])
+    context = container(
+        [product("EOS", "Arista Networks")] if explicit else [],
+        ARISTA,
+        [local_ref],
+        **({} if explicit else {"title": "Arista EOS"}),
+    )
+    unrelated = container(
+        [product("Synthetic component", "Synthetic upstream")], OTHER, [other_ref]
+    )
+    value = record(
+        context if context_kind == "cna" else unrelated,
+        [context if context_kind == "adp" else unrelated],
+    )
+    result = select(value)
+    assert len(result["findings"]) == 1
+    row = result["findings"][0]
+    assert row["family"] == "arista-eos"
+    assert row["container_type"] == context_kind
+    assert row["discovery_class"] == (
+        "explicit_family_row" if explicit else "ambiguous_family_lead"
+    )
+    assert row["references"] == [
+        dict(
+            locator=("/containers/cna" if context_kind == "cna" else "/containers/adp/0")
+            + "/references/0",
+            row=local_ref,
+        )
+    ]
+
+
+# Catches stale or custom rule dictionaries silently re-enabling host-only discovery.
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "active_reference_rule",
+        "legacy_family_domains",
+        "legacy_top_domains",
+        "missing_reference_policy",
+    ],
+)
+def test_unreviewed_reference_policy_is_rejected(mutation):
+    rules = api().load_selectors()
+    if mutation == "active_reference_rule":
+        rules["reference_rules"] = [dict(domain="cisco.com")]
+    if mutation == "legacy_family_domains":
+        rules["families"][0]["reference_domains"] = ["cisco.com"]
+    if mutation == "legacy_top_domains":
+        rules["reference_domains"] = ["cisco.com"]
+    if mutation == "missing_reference_policy":
+        rules.pop("reference_rules", None)
+    with pytest.raises(ValueError, match="^invalid_selector_rules$"):
+        select(record(), rules=rules)

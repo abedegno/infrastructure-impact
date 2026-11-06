@@ -2,7 +2,8 @@
 
 Rules are a closed, reviewed resource. Matching uses literal product-local names,
 never provider identity, global CPE context, version arithmetic or model inference.
-Container text and vendor reference routes can only supply weaker discovery leads.
+Container text can supply weaker discovery leads. Reference-only discovery is
+disabled until jointly reviewed advisory-route and bounded-family-context rules exist.
 """
 
 from __future__ import annotations
@@ -12,7 +13,6 @@ import json
 import re
 from datetime import date, datetime
 from importlib.resources import files
-from urllib.parse import urlsplit
 
 from .snapshot import MAX_RECORD_BYTES, Entry, Snapshot
 
@@ -22,15 +22,59 @@ _TIMESTAMP = re.compile(
     r"(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})?\Z"
 )
 _CLASSES = ("explicit_family_row", "ambiguous_family_lead", "reference_only_lead")
+_RULE_KEYS = frozenset(
+    {
+        "format_version",
+        "selector_version",
+        "supported_data_versions",
+        "method_note",
+        "unknown_vendor_labels",
+        "cpe_rules",
+        "reference_rules",
+        "families",
+    }
+)
+_FAMILY_KEYS = frozenset(
+    {
+        "id",
+        "vendor_id",
+        "trusted_cna_org_ids",
+        "product_vendors",
+        "product_aliases",
+        "text_phrases",
+        "provenance",
+    }
+)
+
+
+def _validate_rules(rules):
+    """Reject stale/domain-only policy and unreviewed reference/CPE activation."""
+    if (
+        not isinstance(rules, dict)
+        or rules.keys() != _RULE_KEYS
+        or type(rules["format_version"]) is not int
+        or rules["format_version"] != 1
+        or rules["selector_version"] != "2026-11-06.2"
+        or rules["reference_rules"] != []
+        or rules["cpe_rules"] != []
+        or not isinstance(rules["families"], list)
+        or any(
+            not isinstance(family, dict) or family.keys() != _FAMILY_KEYS
+            for family in rules["families"]
+        )
+    ):
+        raise ValueError("invalid_selector_rules")
 
 
 def load_selectors() -> dict:
     """Load a fresh copy of the packaged versioned selector rules, with no I/O to sources."""
-    return json.loads(
+    rules = json.loads(
         files("infrastructure_impact")
         .joinpath("resources/cve-reconciliation-selectors.json")
         .read_text(encoding="utf-8")
     )
+    _validate_rules(rules)
+    return rules
 
 
 def selector_hash(rules: dict) -> str:
@@ -109,24 +153,6 @@ def _date_window(published, start, end):
     return "inside" if start <= parsed.date() <= end else "outside"
 
 
-def _reference_domain(row):
-    value = row.get("url")
-    if not isinstance(value, str):
-        return ""
-    try:
-        url = urlsplit(value)
-        if (
-            url.scheme != "https"
-            or url.username is not None
-            or url.password is not None
-            or url.port not in (None, 443)
-        ):
-            return ""
-        return url.hostname or ""
-    except ValueError:
-        return ""
-
-
 def _product_match(product, family, rules):
     name, vendor = _norm(product.get("product")), _norm(product.get("vendor"))
     for alias in family["product_aliases"]:
@@ -190,7 +216,7 @@ def _container_findings(container, kind, index, meta, rules):
         if family_rows:
             findings.extend(family_rows)
             continue
-        # Text/reference discovery never borrows another container's products or
+        # Text discovery never borrows another container's products or
         # references and never fabricates a product row from a mention.
         texts = [(base + "/title", container.get("title", ""))]
         texts.extend(
@@ -207,20 +233,8 @@ def _container_findings(container, kind, index, meta, rules):
                     )
         if matches:
             findings.append(finding(family, "ambiguous_family_lead", matches))
-            continue
-        matches = []
-        for i, row in enumerate(container.get("references", [])):
-            host = _reference_domain(row)
-            for domain in family["reference_domains"]:
-                if host == domain or host.endswith("." + domain):
-                    matches.append(
-                        dict(
-                            rule_id=f"{family['id']}:reference:{domain}",
-                            locator=f"{base}/references/{i}/url",
-                        )
-                    )
-        if matches:
-            findings.append(finding(family, "reference_only_lead", matches))
+        # reference_only_lead remains a reserved class, with no active matcher.
+        # A vendor hostname or route alone cannot establish bounded family context.
     return findings
 
 
@@ -233,6 +247,7 @@ def select_record(
     stable ValueError; malformed source records instead return an unprocessed result.
     Literal fields/references are retained as evidence, separate from safe diagnostics.
     """
+    _validate_rules(rules)
     try:
         start, end = date.fromisoformat(start_date), date.fromisoformat(end_date)
         if start.isoformat() != start_date or end.isoformat() != end_date or start > end:
