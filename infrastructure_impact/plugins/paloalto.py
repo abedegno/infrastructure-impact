@@ -6,6 +6,7 @@ from urllib.parse import urljoin, urlsplit
 
 from ..adapters.common import HTML, cves
 from ..adapters.paloalto import pan_impact_bulletin, pan_oss_bulletin
+from ..adapters.pan_bulletins import HTML_URLS, parse_bulletin, representation_guard, retain_notice
 from ..adapters.pan_components import component_inventory
 from ..adapters.pan_notices import FORMAT as NOTICE_FORMAT
 from ..adapters.pan_notices import IDENTITY as NOTICE_ID
@@ -17,6 +18,9 @@ from .shared import is_json, structured
 
 
 def parse(raw, url, vendor):
+    representation_guard(raw, url)
+    if url in HTML_URLS:
+        return parse_bulletin(raw, url, vendor)
     if url == NOTICE_URL and not is_json(raw):
         return configuration_notice(raw, url, vendor)
     if is_json(raw):
@@ -44,6 +48,9 @@ def parse(raw, url, vendor):
 
 
 def resolve(raw, url, fetch):
+    representation_guard(raw, url)
+    if url in HTML_URLS:
+        return url, raw
     if is_json(raw):
         return url, raw
     if url == NOTICE_URL:
@@ -95,13 +102,19 @@ def plugin():
             pan_impact_bulletin,
             pan_oss_bulletin,
             configuration_notice,
+            parse_bulletin,
+            representation_guard,
+            retain_notice,
             structured,
         ),
         retain_unlinked_notice=lambda document: (
-            document.get("advisory_id") == NOTICE_ID
-            and document.get("source_url") == NOTICE_URL
-            and document.get("source_format") == NOTICE_FORMAT
-            and not document.get("cves")
-            and not document.get("assessments")
+            retain_notice(document)
+            or (
+                document.get("advisory_id") == NOTICE_ID
+                and document.get("source_url") == NOTICE_URL
+                and document.get("source_format") == NOTICE_FORMAT
+                and not document.get("cves")
+                and not document.get("assessments")
+            )
         ),
     )

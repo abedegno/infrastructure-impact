@@ -6,10 +6,10 @@ from xml.etree import ElementTree as ET
 
 from ..adapters.cisco_campaign import ADVISORY_ID, CVE, URL, parse_campaign, reviewed_route
 from ..adapters.cisco_notice import parse_notice
+from ..adapters.cisco_platforms import extract
 from ..adapters.cisco_ucs import security_fixes
 from ..adapters.common import cves
 from ..adapters.legacy_html import html_advisory
-from ..adapters.switching import extract
 from ..adapters.vendor_cna import registry_route, vendor_cna
 from .contracts import FeedBatch, VendorPlugin
 from .shared import is_json, resolve_reviewed_advisory, structured
