@@ -1,0 +1,1522 @@
+{
+  "base_report": {
+    "schema_version": 1,
+    "publication": {
+      "id": "synthetic-generation",
+      "advisory_schema_version": 2
+    },
+    "generated_at": "2026-11-02T12:00:00Z",
+    "evaluated_at": "2026-11-02T12:00:00Z",
+    "source": {
+      "id": "cisa-kev",
+      "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+      "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+      "configured": true,
+      "enabled": true,
+      "availability": "available",
+      "latest_attempt": {
+        "checked_at": "2026-11-02T12:00:00Z",
+        "outcome": "ok",
+        "error_code": null
+      },
+      "checked_at": "2026-11-02T12:00:00Z"
+    },
+    "catalogue": {
+      "version": "synthetic",
+      "released_at": "2020-01-01T00:00:00Z",
+      "count": 2,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision_id": "7",
+      "source_observed_at": "2026-11-01T12:00:00Z",
+      "parsed_at": "2026-11-01T12:01:00Z",
+      "parser_version": 1
+    },
+    "policy": {
+      "max_bytes": 8000000,
+      "max_entries": 20000,
+      "fresh_for_seconds": 129600,
+      "future_tolerance_seconds": 300
+    },
+    "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+    "entries": {
+      "CVE-2024-6387": {
+        "cveID": "CVE-2024-6387",
+        "vendorProject": "Synthetic vendor",
+        "product": "Synthetic service",
+        "vulnerabilityName": "Synthetic imported CVE",
+        "dateAdded": "2026-11-01",
+        "shortDescription": "Project-authored test description; not a real exploitation claim.",
+        "requiredAction": "Follow the synthetic test action.",
+        "dueDate": "2026-11-22",
+        "knownRansomwareCampaignUse": "Unknown",
+        "forensicTriage": "Novel publisher triage value",
+        "notes": "Synthetic notes",
+        "cwes": ["CWE-362"]
+      }
+    },
+    "selection": {
+      "requested_cve_ids": ["CVE-2024-6387"],
+      "effective_cve_ids": ["CVE-2024-6387"],
+      "kev_only": false,
+      "membership": {
+        "CVE-2024-6387": "listed"
+      }
+    }
+  },
+  "cases": [
+    {
+      "name": "fresh old release; membership beyond detailed scope",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2024-6387": "listed",
+          "CVE-2025-1234": "not_listed",
+          "CVE-2099-99999": "listed"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "filtered fresh membership",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": true,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2024-6387": "listed",
+          "CVE-2025-1234": "not_listed",
+          "CVE-2099-99999": "listed"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "fresh no matches",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2025-1234"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": true,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2025-1234": "not_listed"
+        },
+        "effective_cve_ids": [],
+        "error": null
+      }
+    },
+    {
+      "name": "absent old publication",
+      "report": null,
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "absent filtered publication",
+      "report": null,
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": true,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "error": "kev_unavailable"
+      }
+    },
+    {
+      "name": "unconfigured before disabled",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": false,
+          "enabled": false,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "not_configured",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "disabled retained before failure",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": false,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "error",
+            "error_code": "network_error"
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "disabled",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "missing retention before latest failure",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "error",
+            "error_code": "network_error"
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": null,
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": [],
+        "entries": {},
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "missing successful verification",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": null
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "latest failure before future",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "error",
+            "error_code": "network_error"
+          },
+          "checked_at": "2026-11-02T12:05:01Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "failed",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "latest failure filtered",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "error",
+            "error_code": "network_error"
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": true,
+      "expected": {
+        "availability": "failed",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "error": "kev_unavailable"
+      }
+    },
+    {
+      "name": "fresh inclusive age boundary",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-04T00:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2024-6387": "listed",
+          "CVE-2025-1234": "not_listed",
+          "CVE-2099-99999": "listed"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "stale beyond age boundary",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-04T00:00:01Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "stale",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "future inclusive boundary",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:05:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2024-6387": "listed",
+          "CVE-2025-1234": "not_listed",
+          "CVE-2099-99999": "listed"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "future beyond boundary",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:05:01Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "future",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "offset equivalent verification",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T13:00:00.123456+01:00"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00.123456Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2024-6387": "listed",
+          "CVE-2025-1234": "not_listed",
+          "CVE-2099-99999": "listed"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "invalid verification timestamp",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-02-30T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "timezone required",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "invalid latest attempt timestamp",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "invalid",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "missing",
+        "membership": {
+          "CVE-2024-6387": "unknown",
+          "CVE-2025-1234": "unknown",
+          "CVE-2099-99999": "unknown"
+        },
+        "effective_cve_ids": ["CVE-2024-6387", "CVE-2025-1234", "CVE-2099-99999"],
+        "error": null
+      }
+    },
+    {
+      "name": "canonical CVEs only",
+      "report": {
+        "schema_version": 1,
+        "publication": {
+          "id": "synthetic-generation",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-02T12:00:00Z",
+        "evaluated_at": "2026-11-02T12:00:00Z",
+        "source": {
+          "id": "cisa-kev",
+          "retrieval_url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+          "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+          "configured": true,
+          "enabled": true,
+          "availability": "available",
+          "latest_attempt": {
+            "checked_at": "2026-11-02T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "checked_at": "2026-11-02T12:00:00Z"
+        },
+        "catalogue": {
+          "version": "synthetic",
+          "released_at": "2020-01-01T00:00:00Z",
+          "count": 2,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "revision_id": "7",
+          "source_observed_at": "2026-11-01T12:00:00Z",
+          "parsed_at": "2026-11-01T12:01:00Z",
+          "parser_version": 1
+        },
+        "policy": {
+          "max_bytes": 8000000,
+          "max_entries": 20000,
+          "fresh_for_seconds": 129600,
+          "future_tolerance_seconds": 300
+        },
+        "listed_cve_ids": ["CVE-2024-6387", "CVE-2099-99999"],
+        "entries": {
+          "CVE-2024-6387": {
+            "cveID": "CVE-2024-6387",
+            "vendorProject": "Synthetic vendor",
+            "product": "Synthetic service",
+            "vulnerabilityName": "Synthetic imported CVE",
+            "dateAdded": "2026-11-01",
+            "shortDescription": "Project-authored test description; not a real exploitation claim.",
+            "requiredAction": "Follow the synthetic test action.",
+            "dueDate": "2026-11-22",
+            "knownRansomwareCampaignUse": "Unknown",
+            "forensicTriage": "Novel publisher triage value",
+            "notes": "Synthetic notes",
+            "cwes": ["CWE-362"]
+          }
+        },
+        "selection": {
+          "requested_cve_ids": ["CVE-2024-6387"],
+          "effective_cve_ids": ["CVE-2024-6387"],
+          "kev_only": false,
+          "membership": {
+            "CVE-2024-6387": "listed"
+          }
+        }
+      },
+      "requested": [
+        "cve-2024-6387",
+        "CVE-2024-6387",
+        "CVE-2024-6387",
+        "invalid",
+        "CVE-2024-123",
+        " CVE-2025-1234",
+        "CVE-2024-6387\n"
+      ],
+      "evaluated_at": "2026-11-02T12:00:00Z",
+      "kev_only": false,
+      "expected": {
+        "availability": "available",
+        "membership": {
+          "CVE-2024-6387": "listed"
+        },
+        "effective_cve_ids": ["CVE-2024-6387"],
+        "error": null
+      }
+    }
+  ]
+}

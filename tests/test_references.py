@@ -10,7 +10,7 @@ from infrastructure_impact.collection.config import validate_config
 from infrastructure_impact.collection.service import run
 from infrastructure_impact.collection.transport import allowed
 from infrastructure_impact.references.nvd import parse_openssh
-from infrastructure_impact.references.registry import NVD_OPENSSH_URL
+from infrastructure_impact.references.registry import KEV_URL, NVD_OPENSSH_URL
 from infrastructure_impact.references.storage import ingest, latest
 from infrastructure_impact.storage.repository import collection_result, connect
 
@@ -91,21 +91,24 @@ def test_timestamp_churn_is_distinct_from_semantic_drift_and_mapping_is_not_expo
     assert "affected" not in result
 
 
-def test_only_exact_reviewed_reference_routes_are_configurable_and_retrievable():
+@pytest.mark.parametrize(
+    "source_id,url", [("nvd-openssh-products", NVD_OPENSSH_URL), ("cisa-kev", KEV_URL)]
+)
+def test_only_exact_reviewed_reference_routes_are_configurable_and_retrievable(source_id, url):
     config = {
         "vendors": [],
-        "reference_sources": [{"source_id": "nvd-openssh-products", "url": NVD_OPENSSH_URL}],
+        "reference_sources": [{"source_id": source_id, "url": url}],
     }
     assert validate_config(config) is config
-    assert allowed(NVD_OPENSSH_URL, "upstream")
-    for url in [
-        NVD_OPENSSH_URL + "&extra=1",
-        NVD_OPENSSH_URL.replace("https:", "http:"),
+    assert allowed(url, "upstream")
+    for unreviewed in [
+        url + "&extra=1",
+        url.replace("https:", "http:"),
         "https://services.nvd.nist.gov/other",
     ]:
-        assert not allowed(url, "upstream")
+        assert not allowed(unreviewed, "upstream")
         broken = deepcopy(config)
-        broken["reference_sources"][0]["url"] = url
+        broken["reference_sources"][0]["url"] = unreviewed
         with pytest.raises(ValueError):
             validate_config(broken)
     config["reference_sources"] *= 2

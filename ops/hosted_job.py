@@ -20,6 +20,7 @@ from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 
+from infrastructure_impact.phase_events import phase
 from infrastructure_impact.recovery_policy import (
     ARCHIVE_LIMIT,
     DECODER_MEMORY_LIMIT,
@@ -186,6 +187,7 @@ def restore(state, database, encryption_key=None, *, vault_limit_bytes=None):
     return True
 
 
+@phase("backup.local")
 def backup(state, database, encryption_key=None, *, compression="xz", vault_limit_bytes=None):
     limit = checked_limit(MAX_VAULT_BYTES if vault_limit_bytes is None else vault_limit_bytes)
     if compression not in ("gzip", "xz"):
@@ -288,6 +290,7 @@ def restore_current(state, database, encryption_key=None, *, store=None, vault_l
         return restore(private, database, encryption_key, vault_limit_bytes=vault_limit_bytes)
 
 
+@phase("backup.validation")
 def validate_current(state, encryption_key, *, store=None):
     if state_backend(state) == "git":
         return validate_encrypted_state(state, encryption_key)
@@ -300,6 +303,7 @@ def validate_current(state, encryption_key, *, store=None):
         return validate_encrypted_state(state, encryption_key, recovery_archive=archive)
 
 
+@phase("backup.remote")
 def backup_remote(
     state, database, encryption_key, *, store, compression="xz", vault_limit_bytes=None
 ):

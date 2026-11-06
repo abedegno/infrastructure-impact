@@ -49,6 +49,51 @@ def schedule_observation(runs, start, now, hours, minute, grace_hours=2):
     )
 
 
+def operational_failures(report: dict) -> list[dict]:
+    """Explain operational gates using their original cadence and storage observations."""
+    failures = []
+    for kind, workflow in (("collection", "collect.yaml"), ("monitor", "monitor.yaml")):
+        observation = report["schedule_cadence"][kind]
+        if not observation["overdue"]:
+            continue
+        expected = observation["last_expected_trigger_at"]
+        latest = observation["latest_successful_scheduled_run_created_at"]
+        deadline = (
+            datetime.fromisoformat(expected) + timedelta(hours=observation["grace_hours"])
+        ).isoformat()
+        failures.append(
+            dict(
+                code=f"{kind}_schedule_overdue",
+                workflow=workflow,
+                expected_trigger_at=expected,
+                latest_successful_scheduled_run_created_at=latest,
+                grace_deadline_at=deadline,
+                message=(
+                    f"{workflow}: expected trigger at {expected}; latest successful scheduled "
+                    f"run created at {latest if latest else 'not observed'}; "
+                    f"grace deadline at {deadline}. Run creation times do not identify "
+                    "an original cron slot."
+                ),
+            )
+        )
+    if report["storage_review_required"]:
+        failures.append(
+            dict(
+                code="repository_storage_budget_exceeded",
+                workflow=None,
+                expected_trigger_at=None,
+                latest_successful_scheduled_run_created_at=None,
+                grace_deadline_at=None,
+                message=(
+                    f"Repository size {report['repository_size_kib']} KiB meets or exceeds "
+                    f"the {report['repository_budget_kib']} KiB storage budget; "
+                    "operator review required; no data deleted."
+                ),
+            )
+        )
+    return failures
+
+
 def summarize(
     collections,
     monitors,
@@ -132,10 +177,10 @@ def summarize(
         findings.append("Source-failure count is unavailable")
     elif public_health.get("source_failures"):
         findings.append("Public publication retains unresolved source failures")
-    if repository_size_kib is not None and repository_size_kib > 512 * 1024:
+    if repository_size_kib is not None and repository_size_kib >= 512 * 1024:
         findings.append("Repository storage budget requires operator review")
     review_ready = elapsed >= 7 and not truncated and public_health is not None
-    return {
+    report = {
         "schema_version": 1,
         "checked_at": now.isoformat(),
         "first_observed_run": start.isoformat(),
@@ -172,13 +217,15 @@ def summarize(
             "Seven days must actually elapse before the initial reliability review can be completed.",
         ],
     }
+    report["operational_failures"] = operational_failures(report)
+    return report
 
 
 def run_json(command):
     return json.loads(subprocess.check_output(command, text=True))
 
 
-def main():
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -186,7 +233,7 @@ def main():
     parser.add_argument("--observation-start")
     parser.add_argument("--schedule-observation-start")
     parser.add_argument("--health-report", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     def runs(workflow):
         return run_json(
@@ -210,6 +257,8 @@ def main():
     if args.health_report:
         try:
             receipt = json.loads(args.health_report.read_text())
+            if not isinstance(receipt, dict):
+                raise ValueError("Public-health receipt must be a JSON object")
         except (OSError, ValueError):
             receipt = {"status": "unavailable", "reason": "No successful public-health receipt"}
     report = summarize(
@@ -240,12 +289,13 @@ def main():
             }
         )
     )
-    if any(observation["overdue"] for observation in report["schedule_cadence"].values()):
+    if report["operational_failures"]:
         raise SystemExit(
-            "A recent successful scheduled run was not observed after the cadence grace period"
+            "\n".join(
+                f"{failure['code']}: {failure['message']}"
+                for failure in report["operational_failures"]
+            )
         )
-    if report["storage_review_required"]:
-        raise SystemExit("Repository storage budget requires operator review; no data deleted")
 
 
 if __name__ == "__main__":

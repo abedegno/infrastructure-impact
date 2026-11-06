@@ -1,0 +1,1355 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/claim"
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/coverage"
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "uniqueItems": true
+    },
+    "score_availability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cve_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+          },
+          "product_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "context": {
+            "enum": [
+              "study_claim",
+              "source_only_unclassified"
+            ]
+          },
+          "state": {
+            "enum": [
+              "available",
+              "unavailable",
+              "incomplete",
+              "invalid"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            "uniqueItems": true
+          },
+          "attempts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cve_record",
+                    "nvd"
+                  ]
+                },
+                "cve_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "state": {
+                  "enum": [
+                    "unknown",
+                    "ok",
+                    "rate_limited",
+                    "source_missing",
+                    "invalid_record",
+                    "network_error",
+                    "request_state_unresolved"
+                  ]
+                },
+                "checked_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "retry_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "source",
+                "cve_id",
+                "state",
+                "checked_at",
+                "retry_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "vendor",
+          "advisory_id",
+          "source_url",
+          "source",
+          "cve_id",
+          "product_id",
+          "context",
+          "state",
+          "issues",
+          "attempts"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "definition_sha256",
+    "claims",
+    "coverage",
+    "issues"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-evidence:1",
+  "title": "Source-bound switching evidence v1",
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "required": [
+        "source_url",
+        "source_sha256",
+        "retrieved_at",
+        "source_locator"
+      ]
+    },
+    "platform_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "enum": [
+            "publisher_explicit",
+            "reviewed_alias",
+            "unresolved"
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "platform",
+        "model",
+        "basis",
+        "source"
+      ]
+    },
+    "remediation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publisher_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true,
+          "description": "Explicit publisher product identifiers. Empty lists or an unknown enclosing product require remediation_product_scope_unresolved and do not establish product-specific remediation evidence."
+        },
+        "version_expressions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "published_availability": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Literal publisher availability statement, independent of availability_date. Null requires availability_statement_missing in the enclosing claim issues."
+        },
+        "availability_date": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Explicitly published availability date; never derived from an availability statement. Null requires availability_date_missing in the enclosing claim issues."
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "scope_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "basis": {
+              "enum": [
+                "same_source_row",
+                "reviewed_source_sections"
+              ]
+            },
+            "cve_id": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "source": {
+              "$ref": "#/$defs/source"
+            },
+            "fixed_product": {
+              "const": "Arista EOS"
+            },
+            "fixed_source": {
+              "$ref": "#/$defs/source"
+            }
+          },
+          "required": [
+            "basis",
+            "cve_id",
+            "source"
+          ],
+          "description": "Explicit reviewed linkage: same source row, or the exact reviewed Arista 0100 EOS affected and CVE-specific Resolution sections. Never establishes a model or availability date.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "basis": {
+                    "const": "reviewed_source_sections"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "fixed_product",
+                  "fixed_source"
+                ]
+              },
+              "else": {
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "fixed_product"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "fixed_source"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "availability": {
+          "enum": [
+            "vendor_reports_fixed",
+            "planned",
+            "partial_mitigation",
+            "unavailable",
+            "no_fix_planned",
+            "not_a_fix",
+            "unknown"
+          ],
+          "description": "Source-led classification separate from literal published_availability. Absent means unknown; never derive an availability date."
+        }
+      },
+      "required": [
+        "publisher_id",
+        "category",
+        "details",
+        "product_ids",
+        "version_expressions",
+        "published_availability",
+        "availability_date",
+        "source"
+      ]
+    },
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publisher_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "member_advisory_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "required": [
+        "publisher_id",
+        "title",
+        "member_advisory_ids",
+        "published_at",
+        "source"
+      ]
+    },
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "system": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vector": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cve_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "scope": {
+          "enum": [
+            "cve_specific",
+            "bulletin_shared",
+            "unresolved"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "vendor_advisory",
+            "cve_record",
+            "nvd"
+          ]
+        },
+        "applicability": {
+          "enum": [
+            "source_product",
+            "cve_level"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "validation": {
+          "enum": [
+            "valid",
+            "incomplete"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "preferred": {
+          "type": "boolean"
+        },
+        "product_context": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "product_id": {
+                "type": "string"
+              },
+              "product": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source_locator": {
+                "type": "string"
+              },
+              "version_expressions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "product_id",
+              "product",
+              "source_locator",
+              "version_expressions",
+              "issues"
+            ]
+          }
+        },
+        "vector_group": {
+          "enum": [
+            "CVSS-B",
+            "CVSS-BT",
+            "CVSS-BE",
+            "CVSS-BTE",
+            "reported_base_with_optional_context"
+          ]
+        }
+      },
+      "required": [
+        "system",
+        "version",
+        "value",
+        "vector",
+        "severity",
+        "cve_id",
+        "product_ids",
+        "scope",
+        "source"
+      ]
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "advisory_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "cve_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "publisher": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sequence": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "source": {
+              "$ref": "#/$defs/source"
+            }
+          },
+          "required": [
+            "id",
+            "sequence",
+            "status"
+          ]
+        },
+        "initial_published_at": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "family": {
+          "anyOf": [
+            {
+              "enum": [
+                "cisco-iosxe",
+                "aruba-aoscx",
+                "arista-eos"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "named_platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "platform_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/platform_binding"
+          },
+          "uniqueItems": true
+        },
+        "status": {
+          "enum": [
+            "affected",
+            "unaffected",
+            "fixed",
+            "partially_mitigated",
+            "investigating",
+            "unknown",
+            "recommended",
+            "conflicting"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "cve_specific",
+            "bulletin_shared",
+            "unresolved"
+          ]
+        },
+        "scope_level": {
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
+        },
+        "version_expressions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "uniqueItems": true
+        },
+        "remediations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/remediation"
+          },
+          "uniqueItems": true
+        },
+        "bundle": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/bundle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scores": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/score"
+          },
+          "uniqueItems": true
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "vendor_severity": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/vendor_severity"
+          }
+        },
+        "conditional_affected": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "True only for an explicit reviewed prerequisite; false only for an explicit unrestricted publisher statement; null or absent is unclassified."
+        }
+      },
+      "required": [
+        "claim_id",
+        "vendor",
+        "advisory_id",
+        "cve_id",
+        "product_id",
+        "product",
+        "revision",
+        "source",
+        "publisher",
+        "initial_published_at",
+        "updated_at",
+        "family",
+        "named_platforms",
+        "platform_bindings",
+        "status",
+        "scope",
+        "scope_level",
+        "version_expressions",
+        "conditions",
+        "remediations",
+        "bundle",
+        "scores",
+        "issues"
+      ]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "state": {
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable",
+            "unstable",
+            "unknown"
+          ]
+        },
+        "observed_start": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_end": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "enumeration": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "definition_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "source_kind": {
+              "enum": [
+                "openvuln",
+                "index",
+                "listing",
+                null
+              ]
+            },
+            "window": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "start_date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "end_date": {
+                  "type": "string",
+                  "format": "date"
+                }
+              },
+              "required": [
+                "start_date",
+                "end_date"
+              ]
+            },
+            "coverage_state": {
+              "enum": [
+                "not_configured",
+                "unstable",
+                "blocked",
+                "enumerated",
+                "partial"
+              ]
+            },
+            "portfolio_completeness": {
+              "const": "not_established"
+            },
+            "gaps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "uniqueItems": true
+            },
+            "expected_total": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "discovered_unique_identities": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "duplicate_entries": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "withdrawn_entries": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "retrieved": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "parsed": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "parse_failed": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "retrieval_failed": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "classified": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "classification_pending": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "unknown_dates": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "unknown_models": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "exhausted_errors": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          },
+          "required": [
+            "definition_sha256",
+            "source_kind",
+            "window",
+            "coverage_state",
+            "portfolio_completeness",
+            "gaps",
+            "expected_total",
+            "discovered_unique_identities",
+            "duplicate_entries",
+            "withdrawn_entries",
+            "retrieved",
+            "parsed",
+            "parse_failed",
+            "retrieval_failed",
+            "classified",
+            "classification_pending",
+            "unknown_dates",
+            "unknown_models",
+            "exhausted_errors"
+          ],
+          "description": "Optional allowlisted Task3 manifest facts for this source window, never per-period attribution or historical portfolio completeness."
+        }
+      },
+      "required": [
+        "vendor",
+        "source_url",
+        "state",
+        "observed_start",
+        "observed_end",
+        "total",
+        "issues"
+      ]
+    },
+    "vendor_severity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "advisory_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rating": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "scheme": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "namespace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "const": "advisory"
+        },
+        "cve_id": {
+          "type": "null"
+        },
+        "product_ids": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "vendor",
+        "advisory_id",
+        "rating",
+        "scheme",
+        "namespace",
+        "scope",
+        "cve_id",
+        "product_ids",
+        "source",
+        "revision",
+        "issues"
+      ]
+    }
+  }
+}

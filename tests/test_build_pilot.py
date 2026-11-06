@@ -181,3 +181,24 @@ def test_latest_source_failure_does_not_erase_retained_fixed_reference():
     assert row["fields"][0]["state"] == "publisher_statement"
     assert row["fields"][0]["evidence"][0]["source_sha256"] == record["sha256"]
     assert all(c["state"] == "unknown" for c in row["inventory_proposal_template"]["claims"])
+
+
+def test_same_locator_different_build_does_not_contribute_to_pilot_fields():
+    d = dataset()
+    exact = d["records"][0]["assessments"][0]
+    other = deepcopy(exact)
+    other["versions"] = [{"expression": "4.32.3F"}]
+    other["exposure"].append(
+        dict(
+            category="publisher_platform_scope",
+            details="Unrelated build platform",
+            source_locator="Other scope",
+        )
+    )
+    d["records"][0]["assessments"].append(other)
+    row = build_pilot(d)["targets"][0]
+    assert len(row["fields"][0]["evidence"]) == 1
+    platform = next(f for f in row["fields"] if f["field"] == "platform_applicability_context")
+    assert platform == dict(
+        field="platform_applicability_context", state="unknown", value=None, evidence=[]
+    )

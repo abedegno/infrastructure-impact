@@ -3,6 +3,7 @@
 import json
 import os
 
+from ..phase_events import phase
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import VENDORS, health, history, latest, now
@@ -17,6 +18,7 @@ from .extraction_validation import definition as review_definition
 from .extraction_validation import review_packet, validation_report
 from .families import completeness
 from .fix_leads import evidence_inputs, leads
+from .kev import build_report
 from .product_groups import product_groups
 from .publisher_history import publisher_history
 from .readiness import readiness
@@ -29,6 +31,7 @@ from .timeline import evidence_timeline
 ROOT = Paths.from_env().home
 
 
+@phase("publication.query")
 def state(db, cohort=None):
     records = latest(db)
     scopes = retained_scopes(db, records, review_definition())
@@ -47,10 +50,17 @@ def state(db, cohort=None):
     profiles = catalogue(db, records)
     checks = health(db)
     review_signals = signals(db)
+    from ..collection.config import load_config
+    from ..references.storage import enrichment_input
     from ..references.storage import latest as reference_inputs
+    from .switching_evidence import inputs as switching_inputs
+    from .switching_evidence import score_inputs
 
     research = {
-        "study_inputs": reference_inputs(db),
+        "switching_input": switching_inputs(db, records),
+        "score_input": score_inputs(db, records),
+        "study_inputs": reference_inputs(db, purpose="component_study"),
+        "kev_input": enrichment_input(db, load_config(), "cisa-kev"),
         "release_assets": listings(db),
         "release_documents": [
             {k: r[k] for k in ("vendor", "product", "source_url", "published_at", "evidence_id")}
@@ -61,6 +71,10 @@ def state(db, cohort=None):
             dict(r) for r in db.execute("SELECT * FROM fix_evidence ORDER BY id DESC")
         ],
     }
+    from ..collection.switching_backfill import manifest
+    from .switching_evidence import definition
+
+    merge_switching_manifest(research["switching_input"], manifest(db, study_id=definition()["id"]))
     run = None
     if db.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name='pipeline_runs'"
@@ -120,6 +134,13 @@ def state(db, cohort=None):
         },
     }
 
+    result["kev"] = build_report(
+        research["kev_input"],
+        all_scope,
+        publication=result.get("publication"),
+        generated_at=generated,
+    )
+
     from .vendor_gaps import vendor_gaps
 
     result["vendor_gaps"] = vendor_gaps(result)
@@ -138,3 +159,73 @@ def state(db, cohort=None):
     result["product_cohorts"] = product_cohorts(result)
     result["disclosure_review"] = disclosure_review(result)
     return result
+
+
+def merge_switching_manifest(inputs, manifest):
+    """Join actual source-window facts, never infer historical period coverage."""
+    from .switching_evidence import definition, definition_sha256
+
+    fingerprint = definition_sha256(definition())
+    counters = (
+        "expected_total",
+        "discovered_unique_identities",
+        "duplicate_entries",
+        "withdrawn_entries",
+        "retrieved",
+        "parsed",
+        "parse_failed",
+        "retrieval_failed",
+        "classified",
+        "classification_pending",
+        "unknown_dates",
+        "unknown_models",
+        "exhausted_errors",
+    )
+    for entry in manifest["entries"]:
+        if entry["definition_sha256"] != fingerprint:
+            continue
+        if not entry.get("source_url"):
+            inputs["issues"].append("enumeration_source_unavailable")
+            continue
+        enumeration = {key: entry.get(key) for key in counters}
+        enumeration.update(
+            {
+                key: entry[key]
+                for key in (
+                    "definition_sha256",
+                    "source_kind",
+                    "window",
+                    "coverage_state",
+                    "portfolio_completeness",
+                )
+            }
+        )
+        enumeration["gaps"] = sorted(set(entry["gaps"] + entry.get("errors", [])))
+        from .switching_comparison import day
+
+        dates = sorted(
+            {
+                day(p["retrieved_at"])
+                for p in entry.get("page_evidence", [])
+                if p.get("retrieved_at")
+            }
+        )
+        missing = [] if dates else ["observation_start_unknown", "observation_end_unknown"]
+        # Repeated runs/windows remain separate facts; they are never summed.
+        inputs["coverage"].append(
+            dict(
+                vendor=entry["vendor"],
+                source_url=entry["source_url"],
+                state="unstable"
+                if entry["coverage_state"] == "unstable"
+                else "unavailable"
+                if entry["coverage_state"] in ("not_configured", "blocked")
+                else "partial",
+                observed_start=dates[0] if dates else None,
+                observed_end=dates[-1] if dates else None,
+                total=None,
+                issues=missing
+                + ["publisher_total_unknown", "source_window_not_period_completeness"],
+                enumeration=enumeration,
+            )
+        )

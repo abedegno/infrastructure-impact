@@ -8,6 +8,16 @@ vendor statements into a shared schema, and provides a dashboard and read-only A
 for product impact, vendor comparisons, coverage gaps and disclosure research.
 
 Early-stage software: the pipeline works end to end, but source coverage is bounded.
+The opt-in [source coverage inventory](docs/source-coverage.md) separates discovery,
+retrieval, supported parsing and informational notices. The
+[2026-11-05 public-stage observations](docs/research/2026-11-05-coverage-repair-observations.md)
+record the remaining gaps and pending human review; the v0.10.0 repairs do
+not establish complete vendor history or change the frozen benchmark.
+
+The unreleased [local CVE reconciliation workflow](docs/CVE_RECONCILIATION.md)
+compares a verified official snapshot with an explicit collection baseline,
+including partial scans and missing reference evidence. It has no hosted activation.
+
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.
 
@@ -21,6 +31,8 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 ## What it does
 
 - Collects structured CSAF/CVE JSON, feeds and reviewed HTML/PDF layouts.
+- Adds [CISA KEV membership](docs/cisa-kev.md) with source freshness, retained history,
+  and an optional listed-only CVE filter; it does not infer product exposure.
 - Adds [family evidence, comparison readiness and dated fix leads](docs/RESEARCH_FOUNDATIONS.md) with explicit coverage gaps and alternative explanations.
 - Supports bounded historical collection, offline parser recovery and
   [archive layout triage](docs/ARCHIVE_TRIAGE.md) before ingestion.
@@ -35,6 +47,11 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 - Supports external vendor plugins without core, database or frontend changes.
 - Publishes immutable, sanitized datasets for a separate read-only reader.
 - Groups comparable product roles while exposing unmapped labels and coverage gaps.
+- Adds a [campus/branch switching disclosure study](docs/switching-comparison.md) under
+  Vendor comparison, with independent full-study controls, model-qualified context,
+  source-window gaps and generation-bound JSON/CSV downloads. Counts measure disclosure,
+  not vendor security quality; higher disclosure can reflect more scrutiny. The separate
+  16-case switching checks remain independent-human-review pending; 2026 is partial.
 - Publishes source-led extraction checks and blind independent-review packets.
 - Investigates disclosure leads with publisher histories and counter-evidence.
 - Prepares and audits private exact-build inventory evidence with a [vendor-neutral contract](docs/BUILD_INVENTORY.md), without certifying CVE exposure.
@@ -193,6 +210,7 @@ only after those dependencies have been cached.
 | [Product cohorts](docs/PRODUCT_COHORTS.md) | Product/build scope and denominator gaps |
 | [Source access](docs/SOURCE_ACCESS.md) | Runner checks for reviewed source alternatives |
 | [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Evidence gates and investigation queue |
+| [CVE research dossiers](docs/RESEARCH_DOSSIERS.md) | Selected source-bound comparisons, chronology and JSON downloads |
 | [Releasing](docs/RELEASING.md)                           | Prepare a clean public source tree and release                    |
 | [Capacity](docs/CAPACITY.md) | Storage profiling and explicit bounded recovery profiles |
 | [Scheduled reliability](docs/SCHEDULE_RELIABILITY.md) | Actual scheduled-run observations and missing-trigger checks |

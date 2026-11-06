@@ -98,7 +98,16 @@ def write_static_delivery(destination, data):
             )
     for i, event in enumerate(data["timeline"]["events"]):
         by_cve.setdefault(event["cve_id"], []).append(dict(kind="timeline", index=i, value=event))
-    omitted = {"records", "coverage", "timeline", "scorecards", "comparison_eligibility", "changes"}
+    omitted = {
+        "records",
+        "coverage",
+        "timeline",
+        "scorecards",
+        "comparison_eligibility",
+        "changes",
+        "switching_evidence",
+        "switching_comparison",
+    }
     common = {k: v for k, v in data.items() if k not in omitted}
     common["records"], common["coverage"], common["changes"] = [], [], []
     common["timeline"] = {**data["timeline"], "events": []}
@@ -141,6 +150,45 @@ def write_static_delivery(destination, data):
         cohorts={cid: chunks(rows) for cid, rows in by_cve.items()},
         changes=chunks(data["changes"]),
     )
+    if (
+        "switching_comparison" in data
+        and data["switching_comparison"].get("representation") != "summary"
+    ):
+        from .switching_comparison import summary
+
+        report = data["switching_comparison"]
+        evidence, kev = report["inputs"]["evidence"], report["inputs"]["kev"]
+        claim_parts = chunks(evidence["claims"])
+        claim_index = []
+        for part in claim_parts:
+            claims = json.loads((destination / part["path"]).read_text())["data"]
+            claim_index.append(dict(claim_ids=[c["claim_id"] for c in claims], part=part))
+        from .switching_evidence import _validate
+
+        metadata = dict(
+            representation="switching-inputs",
+            evidence={
+                k: v
+                for k, v in evidence.items()
+                if k not in ("claims", "coverage", "score_availability")
+            },
+            kev={k: v for k, v in kev.items() if k != "entries"},
+        )
+        _validate(metadata, "switching-inputs-v1.json")
+        index["switching"] = dict(
+            summary=write_part(summary(report)),
+            inputs=write_part(metadata),
+            claims=claim_index,
+            evidence_metadata=chunks(
+                [
+                    dict(kind=kind, value=value)
+                    for kind in ("coverage", "score_availability")
+                    for value in evidence.get(kind, [])
+                ]
+            ),
+            has_score_availability="score_availability" in evidence,
+            kev_entries=chunks([dict(cve_id=k, entry=v) for k, v in kev["entries"].items()]),
+        )
     full = (destination / "snapshot.json").read_bytes()
     index["full"] = dict(path="snapshot.json", sha256=sha256(full).hexdigest(), bytes=len(full))
     from jsonschema import Draft202012Validator, FormatChecker

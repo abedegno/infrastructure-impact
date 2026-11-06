@@ -1,7 +1,9 @@
 """Original synthetic PDF text exercises F5's reviewed scope and failure boundary."""
 
+import json
 from copy import deepcopy
 from hashlib import sha256
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -292,3 +294,200 @@ def test_broad_or_unreviewed_f5_labels_remain_unmapped(label):
     from infrastructure_impact.application.product_groups import classify
 
     assert classify("f5", dict(product=label)) == dict(state="unmapped", group=None, rule_ids=[])
+
+
+# Author-written section text is mapped to reviewed digests at the hash boundary.
+# This exercises the real profile constants without committing vendor PDF prose.
+PHP_DIGESTS = {
+    "evaluated": "7cb03fe23b90bd7a28da49d7608a60e4a180a3a97cd97b7cbe2d52d37a35c7f9",
+    "old_critical": "30cd5b9e0634a9737eaeca1d0f1fabd2a7098f426bf36bc76802eee7a6d41ef0",
+    "old_guidance": "fc93fd20fae798a2acaa4a4ef91585d29920cd7c7bde5ecd82602e91d742726e",
+    "current_critical": "a672d9082bf84be5b3a8f49349d0c09238cd71f32bad4a3727efc1f190e2b7c3",
+    "current_guidance": "e33dda8738adc8c10013ea90706e003ed78cc301f76b957fc59bbfe7ec1242a4",
+}
+OLD_FIXES = [
+    "17.5.1.11",
+    "Hotfix-BIGIP-17.5.1.10.0.37.35-ENG",
+    "17.1.3.7",
+    "Hotfix-BIGIP-17.1.3.6.0.9.20-ENG",
+]
+CURRENT_FIXES = [
+    "17.5.1.11",
+    "17.1.3.7",
+    "17.5.1.10 + Hotfix-BIGIP-17.5.1.10.0.37.35-ENG",
+    "17.1.3.6 + Hotfix-BIGIP-17.1.3.6.0.9.20-ENG",
+]
+
+
+def php_revision(critical="old", guidance="old"):
+    return (
+        synthetic()
+        .replace(
+            "Synthetic reviewed table and lifecycle footnotes.",
+            f"Synthetic {critical} table and footnotes. PHP example build: Oct 23 2026 01:44:40.",
+        )
+        .replace(
+            "Synthetic mitigation text; not an appliance fix.",
+            f"Synthetic {guidance} guidance. Related Content CVE-2026-115560.",
+        )
+    )
+
+
+def reviewed_php_revisions():
+    digests = {}
+    for revision in ("old", "current"):
+        before, critical, guidance = f5_pdf.reviewed_scope(php_revision(revision, revision))
+        evaluated = " ".join(before.split("Evaluated products", 1)[1].split())
+        for text, key in (
+            (evaluated, "evaluated"),
+            (critical, revision + "_critical"),
+            (guidance, revision + "_guidance"),
+        ):
+            digests[text.encode()] = PHP_DIGESTS[key]
+
+    def digest(value):
+        return SimpleNamespace(hexdigest=lambda: digests.get(value, sha256(value).hexdigest()))
+
+    return patch.object(f5_pdf, "sha256", side_effect=digest)
+
+
+def normalize_php_revision(revision):
+    with (
+        reviewed_php_revisions(),
+        patch.object(f5_pdf, "pdf_text", return_value=php_revision(revision, revision)),
+    ):
+        return default_registry().normalize(RAW, f5_pdf.PDF_PREFIX + PHP, "f5")
+
+
+@pytest.mark.parametrize("revision,fixes", [("old", OLD_FIXES), ("current", CURRENT_FIXES)])
+def test_php_complete_revisions_preserve_scope_and_exact_fix_pairs(revision, fixes):
+    doc = normalize_php_revision(revision)
+    assert doc["cves"] == ["CVE-2026-109618", "CVE-2026-109619"]
+    assert len(doc["assessments"]) == 38
+    assert len([a for a in doc["assessments"] if a["status"] == "unaffected"]) == 30
+    affected = [a for a in doc["assessments"] if a["status"] == "affected"]
+    assert len(affected) == 8
+    assert {a["cve_id"] for a in doc["assessments"]} == set(doc["cves"])
+    for claim in affected:
+        is_17 = claim["product_id"].endswith(":17.x")
+        assert [v["expression"] for v in claim["versions"]] == (
+            ["17.5.0 - 17.5.1", "17.1.0 - 17.1.3"] if is_17 else ["21.1.0"]
+        )
+        assert [r["details"] for r in claim["remediations"]] == (fixes if is_17 else ["21.1.0.4"])
+        assert all(r["availability"] == "vendor_reports_fixed" for r in claim["remediations"])
+        assert all(
+            r["source_locator"].endswith(" / Fixes introduced in") for r in claim["remediations"]
+        )
+    assert doc["published_at"] == "2025-01-01" and doc["updated_at"] == "2025-01-02"
+    assert not doc.get("reported_fix_date") and doc["timeline"] == []
+    assert "Oct 23" not in json.dumps(doc) and "2026-10-23" not in json.dumps(doc)
+    assert "CVE-2026-115560" not in json.dumps(doc)
+
+
+def test_current_php_changes_only_paired_fixes_and_affected_backport_context():
+    old = normalize_php_revision("old")
+    current = normalize_php_revision("current")
+    for before, after in zip(old["assessments"], current["assessments"], strict=True):
+        if before["status"] == "unaffected":
+            assert before == after
+            continue
+        context = [e for e in after["exposure"] if e["category"] == "publisher_backport_context"]
+        assert len(context) == 1
+        assert context[0]["source_locator"] == "Security Advisory Status / table footnote 5"
+        assert "5.4.45" in context[0]["details"]
+        assert "backport" in context[0]["details"].lower()
+        assert "revision" in context[0]["details"].lower()
+        assert "not necessarily increase" in context[0]["details"]
+        assert "listed fixed BIG-IP versions" in context[0]["details"]
+        assert "installed" in context[0]["details"]
+        after["exposure"].remove(context[0])
+        if before["product_id"].endswith(":17.x"):
+            after["remediations"] = before["remediations"]
+        assert before == after
+    assert old == current
+
+
+@pytest.mark.parametrize(
+    "critical,guidance",
+    [("old", "current"), ("current", "old"), ("new", "current"), ("current", "new")],
+)
+def test_php_mixed_or_unsupported_complete_tuples_fail_closed(critical, guidance):
+    with (
+        reviewed_php_revisions(),
+        patch.object(f5_pdf, "pdf_text", return_value=php_revision(critical, guidance)),
+    ):
+        with pytest.raises(ValueError, match="scope changed"):
+            f5_pdf.advisory(RAW, f5_pdf.PDF_PREFIX + PHP, "f5")
+
+
+def test_php_old_current_and_failed_refresh_preserve_revisions_and_strict_publication(
+    tmp_path, monkeypatch
+):
+    url = f5_pdf.PDF_PREFIX + PHP
+    config = dict(vendors=[], pinned=[dict(vendor="f5", url=url)])
+    db_path = tmp_path / "vault.sqlite3"
+    accepted = []
+    for revision, outcome in (("old", (1, 0)), ("current", (1, 0)), ("unsupported", (0, 1))):
+        raw = RAW + revision.encode()
+        monkeypatch.setattr(
+            "infrastructure_impact.collection.service.resolve_document",
+            lambda *_, raw=raw: (url, raw),
+        )
+        with (
+            reviewed_php_revisions(),
+            patch.object(f5_pdf, "pdf_text", return_value=php_revision(revision, revision)),
+        ):
+            assert run(config, db_path=db_path) == outcome
+        if revision != "unsupported":
+            accepted.append((sha256(raw).hexdigest(), raw))
+    with connect(db_path) as db:
+        assert [
+            tuple(r) for r in db.execute("SELECT sha256,raw FROM evidence ORDER BY id")
+        ] == accepted
+        revisions = db.execute(
+            "SELECT advisory_id,normalized FROM revisions ORDER BY id"
+        ).fetchall()
+        assert [r["advisory_id"] for r in revisions] == [PHP, PHP]
+        for row, fixes in zip(revisions, (OLD_FIXES, CURRENT_FIXES), strict=True):
+            doc = json.loads(row["normalized"])
+            claim = next(
+                a
+                for a in doc["assessments"]
+                if a["status"] == "affected" and a["product_id"].endswith(":17.x")
+            )
+            assert [r["details"] for r in claim["remediations"]] == fixes
+        assert latest(db)[0]["sha256"] == accepted[-1][0]
+        check = db.execute(
+            "SELECT outcome,details FROM collection_runs ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        assert check["outcome"] == "error" and "scope changed" in check["details"]
+        data = state(db, ["CVE-2026-109618", "CVE-2026-109619"])
+    generation = publish(data, tmp_path / "publications")
+    exported = json.loads((generation / "snapshot.json").read_text())
+    assert len(exported["records"]) == 1
+    assert exported["records"][0]["sha256"] == accepted[-1][0]
+    assert len(exported["records"][0]["assessments"]) == 38
+    assert "Synthetic" not in json.dumps(exported["records"])
+    assert "publisher_backport_context" in json.dumps(exported["records"])
+
+
+def test_ambiguous_php_profile_tuple_is_not_silently_selected(monkeypatch):
+    monkeypatch.setattr(f5_pdf, "ADDITIONAL_PROFILES", {PHP: (f5_pdf.PROFILES[PHP],)})
+    with reviewed_php_revisions(), patch.object(f5_pdf, "pdf_text", return_value=php_revision()):
+        with pytest.raises(ValueError, match="scope changed"):
+            f5_pdf.advisory(RAW, f5_pdf.PDF_PREFIX + PHP, "f5")
+
+
+@pytest.mark.parametrize("change", ["evaluated", "title", "date", "boundary", "text_budget"])
+def test_current_php_profile_still_requires_original_metadata_and_layout_guards(change):
+    text = php_revision("current", "current")
+    changed = {
+        "evaluated": text.replace("Synthetic evaluated version list", "Unreviewed evaluated list"),
+        "title": text.replace("PHP vulnerabilities", "Unreviewed PHP title"),
+        "date": text.replace("Jan 02, 2025", "Dec 31, 2024"),
+        "boundary": text + f5_pdf.END,
+        "text_budget": text + "x" * 1_500_000,
+    }[change]
+    with reviewed_php_revisions(), patch.object(f5_pdf, "pdf_text", return_value=changed):
+        with pytest.raises(ValueError):
+            f5_pdf.advisory(RAW, f5_pdf.PDF_PREFIX + PHP, "f5")

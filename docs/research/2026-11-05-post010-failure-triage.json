@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "report_kind": "dated_public_research_triage_not_runtime_contract",
+  "publication": "07a2e555415148b2be32c3b0f4f40472",
+  "source_release": "v0.10.0",
+  "pipeline_run": {
+    "id": 63,
+    "started_at": "2026-11-05T20:34:22.183522+00:00",
+    "finished_at": "2026-11-05T20:36:43.767727+00:00",
+    "outcome": "partial",
+    "imported": 132,
+    "failures": 17,
+    "details": "Collection finished; source gaps remain visible. Data publication is distinct from code deployment."
+  },
+  "method": "Join latest public source-audit errors by vendor/URL and filter checked_at inclusively to the published pipeline interval. Counts are run-window observations, not a vendor portfolio denominator. Fresh anonymous probes are separate later observations.",
+  "public_input_sha256": {
+    "manifest.json": "1297874cafad026b2664981e5ab8e1d8e2c28ffed0ec3b2d7cfe7bb7c55a7ac2",
+    "index.json": "59b49ffbb09830c37a5b3f8627d9633c74a2199645f4fe791d624177780e147e",
+    "bootstrap.json": "fb4dd7bb6703f84721340966d04163ed01a74457b2df00fc9ca7706741d7deeb",
+    "source-audit.json": "0d64e42733c362b5cf972a409668e0e6b173432689fee0e0b183e5066bc5386b"
+  },
+  "counts": {
+    "run_window_errors": 17,
+    "older_latest_source_errors": 54,
+    "by_vendor": {
+      "arista": 8,
+      "checkpoint": 4,
+      "f5": 1,
+      "fortinet": 1,
+      "juniper": 1,
+      "paloalto": 2
+    },
+    "by_published_error_code": {
+      "access_verification_required": 4,
+      "publisher_scope_unavailable": 1,
+      "unsupported_or_invalid_document": 12
+    }
+  },
+  "rows": [
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1221-security-advisory-15",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:11.063849+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2015-11-18",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:53.081181+00:00",
+      "fresh_probe_sha256": "3a090bac0143e71685147d46565906827676be717acfae53e70cd342565658b1",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1255-security-advisory-17",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:11.010906+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-02-16",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:53.081905+00:00",
+      "fresh_probe_sha256": "0b79b6437cf7f478ba1deb7a2c25ec8e9fe908bc8efc65a9ad00f438424646fa",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1260-security-advisory-18",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:10.954232+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-03-01",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:53.083505+00:00",
+      "fresh_probe_sha256": "f6727dd129fd1c7aee29b05b4ce09b38c4e6f62a1619ed39b0a6dd99be238d67",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1332-security-advisory-19",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:10.907758+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-05-03",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:53.083587+00:00",
+      "fresh_probe_sha256": "640ff40991d3ed32572eea1524aa500bf4c99e4d4195157d0f881ef934ef5fca",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1334-security-advisory-20",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:10.855769+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-05-06",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:53.973195+00:00",
+      "fresh_probe_sha256": "6838e9fd8d4ee03d34ddd49c82596bcc29d015474d533f28c2b6a1d1c27f3eb4",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1354-security-advisory-21",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:10.677781+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-06-13",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.004683+00:00",
+      "fresh_probe_sha256": "c822d545cf7d58c531b55b0fe4bb79dabb7f8cd69d3bcfb9bb751a0c3ce85c63",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1356-security-advisory-22",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:10.624415+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-06-15",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.022427+00:00",
+      "fresh_probe_sha256": "9dc09cc351d4a65a34d116ffcca07277e5fd3f6c9ce234ced0c5eaf0685b4b1c",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1461-security-advisory-23",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:10.543489+00:00",
+      "triage_class": "legacy_extraction_gap",
+      "publisher_initial_release_date_from_revision_table": "2016-08-15",
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.137141+00:00",
+      "fresh_probe_sha256": "e9819944700cbdf1dfb6b994be2206f0f5221a7b929e145aca56d2504e76935e",
+      "note": "Outside 2021+ initial-publication window; do not infer current product applicability."
+    },
+    {
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/PAN-SA-2021-0002",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:11.500988+00:00",
+      "triage_class": "informational_html_scope_requires_review",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.841495+00:00",
+      "fresh_probe_sha256": "2a95d5e09a094e8098b8a1657131ddc8dce71cee18103236bfc22b784be7e4b3",
+      "note": "2021 bulletin has no literal CVE; 2023 bulletin explicitly reports non-impact for three third-party CVEs."
+    },
+    {
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/PAN-SA-2023-0003",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:36:11.494854+00:00",
+      "triage_class": "informational_html_scope_requires_review",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.858244+00:00",
+      "fresh_probe_sha256": "5601bc1e0756d6d8b0d7f1b72ce7a429bb38319ff7de4d46162a6373a58745d9",
+      "note": "2021 bulletin has no literal CVE; 2023 bulletin explicitly reports non-impact for three third-party CVEs."
+    },
+    {
+      "vendor": "juniper",
+      "source_url": "https://www.juniper.net/documentation/us/en/software/junos/release-notes/24.2/junos-evo-release-notes-24.2r1/topics/new-features/feature-descriptions/authentication-access-control.html",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:35:58.466607+00:00",
+      "triage_class": "official_host_migration_blocked_by_policy",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": 301,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.859891+00:00",
+      "fresh_probe_sha256": null,
+      "note": "Observed same-path redirect to networkingdocs.hpe.com; existing component hook accepts target bytes at original binding."
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/download/134275",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-05T20:35:57.173870+00:00",
+      "triage_class": "recorded_interactive_access_challenge",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": null,
+      "fresh_probe_retrieved_at": null,
+      "fresh_probe_sha256": null,
+      "note": "Not freshly retried; no challenge execution or access workaround attempted."
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/download/134302",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-05T20:35:57.247908+00:00",
+      "triage_class": "recorded_interactive_access_challenge",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": null,
+      "fresh_probe_retrieved_at": null,
+      "fresh_probe_sha256": null,
+      "note": "Not freshly retried; no challenge execution or access workaround attempted."
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk181833",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-05T20:34:38.336843+00:00",
+      "triage_class": "recorded_interactive_access_challenge",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": null,
+      "fresh_probe_retrieved_at": null,
+      "fresh_probe_sha256": null,
+      "note": "Not freshly retried; no challenge execution or access workaround attempted."
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-05T20:34:38.243749+00:00",
+      "triage_class": "recorded_interactive_access_challenge",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": null,
+      "fresh_probe_retrieved_at": null,
+      "fresh_probe_sha256": null,
+      "note": "Not freshly retried; no challenge execution or access workaround attempted."
+    },
+    {
+      "vendor": "fortinet",
+      "source_url": "https://filestore.fortinet.com/fortiguard/psirt/csaf_multiple-node-js-cves_fg-ir-26-187.json",
+      "published_error_code": "publisher_scope_unavailable",
+      "published_checked_at": "2026-11-05T20:35:54.742979+00:00",
+      "triage_class": "publisher_scope_missing",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:54.883784+00:00",
+      "fresh_probe_sha256": "ee8f6be09cccd234f15591c6e0f47d19d17d0466c2caa58c7f2883dd4669aa01",
+      "note": "Fresh CSAF has zero vulnerability entries; no CVE/product scope inferred."
+    },
+    {
+      "vendor": "f5",
+      "source_url": "https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000163821",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-05T20:35:38.464314+00:00",
+      "triage_class": "reviewed_pdf_fingerprint_change",
+      "publisher_initial_release_date_from_revision_table": null,
+      "fresh_probe_http_status": 200,
+      "fresh_probe_retrieved_at": "2026-11-05T22:07:55.028483+00:00",
+      "fresh_probe_sha256": "6269c60aeda5d0e40a451a2fe9ca84e7f721af3f3ed6bc1dd81dbbbdcde12998",
+      "note": "Evaluated-product fingerprint matches; critical-scope and guidance fingerprints differ. Related-article CVE is not an assessment."
+    }
+  ],
+  "fresh_probe_limits": {
+    "attempted_failed_source_urls": 13,
+    "direct_captures": 12,
+    "redirects_not_automatically_followed": true,
+    "checkpoint_challenges_not_retried": 4,
+    "first_probe_user_agent": "InfrastructureImpact/0.10.0 (+https://github.com/abedegno/infrastructure-impact)",
+    "separate_collector_header_probes": [
+      "arista SA-0015",
+      "F5 K000163821",
+      "Juniper explicit canonical HPE URL"
+    ],
+    "raw_captures_included": false
+  },
+  "interpretation_limits": [
+    "A failed source is not a missing vendor disclosure.",
+    "No failure count establishes complete coverage.",
+    "Lexical product mentions are not affectedness or model matching.",
+    "No human affectedness review, vendor security ranking, equivalence, causal Glasswing finding or concealment conclusion is established."
+  ],
+  "analyzed_normalizer_source_commit": "b61adddd81f63b1b143c5901dccbae7e65b85b48",
+  "focused_fresh_probes": [
+    {
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1221-security-advisory-15",
+      "original_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1221-security-advisory-15",
+      "vendor": "arista",
+      "retrieved_at": "2026-11-05T22:11:45.313924+00:00",
+      "user_agent": "VendorImpact/0.2 (public advisory research)",
+      "currently_allowed_for_vendor": true,
+      "status": 200,
+      "bytes": 111721,
+      "sha256": "b55fbdf0ded9e03babe88518c0b5c0d787cec5b86323aa6432c0c0960fed2057",
+      "content_type": "text/html; charset=utf-8",
+      "offline_parse": "ValueError",
+      "diagnostic": "No product assessments extracted; source layout may have changed",
+      "parser_hook_tested": "ordinary_advisory_parser"
+    },
+    {
+      "source_url": "https://networkingdocs.hpe.com/documentation/us/en/software/junos/release-notes/24.2/junos-evo-release-notes-24.2r1/topics/new-features/feature-descriptions/authentication-access-control.html",
+      "original_url": "https://www.juniper.net/documentation/us/en/software/junos/release-notes/24.2/junos-evo-release-notes-24.2r1/topics/new-features/feature-descriptions/authentication-access-control.html",
+      "vendor": "juniper",
+      "retrieved_at": "2026-11-05T22:11:46.260126+00:00",
+      "user_agent": "VendorImpact/0.2 (public advisory research)",
+      "currently_allowed_for_vendor": false,
+      "status": 200,
+      "bytes": 7598,
+      "sha256": "6fa4c282b02887f98cdf369487ece2be3e96a356e08a7c0004994be4c337ed44",
+      "content_type": "text/html",
+      "offline_parse": "ValueError",
+      "diagnostic": "Expected CSAF or CVE JSON; vendor HTML requires a reviewed plugin parser",
+      "parser_hook_tested": "ordinary_advisory_parser",
+      "configured_source_kind": "component_inventory",
+      "diagnostic_relevance": "This advisory-parser diagnostic is not the configured component hook. See juniper_correct_component_hook for the successful test."
+    },
+    {
+      "source_url": "https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000163821",
+      "original_url": "https://my.f5.com/manage/MyF5_KnowledgeArticlePDF?article=K000163821",
+      "vendor": "f5",
+      "retrieved_at": "2026-11-05T22:11:46.821802+00:00",
+      "user_agent": "VendorImpact/0.2 (public advisory research)",
+      "currently_allowed_for_vendor": true,
+      "status": 200,
+      "bytes": 53886,
+      "sha256": "ecd4d0554dbf5dcd14e10be4ddba2a1a05ca8991266acb99d9fb4dbc67762410",
+      "content_type": "application/pdf;charset=UTF-8",
+      "offline_parse": "ValueError",
+      "diagnostic": "F5 PDF product, impact, table-footnote or guidance scope changed; review required",
+      "parser_hook_tested": "ordinary_advisory_parser"
+    }
+  ],
+  "f5_section_fingerprints": {
+    "evaluated": {
+      "expected": "7cb03fe23b90bd7a28da49d7608a60e4a180a3a97cd97b7cbe2d52d37a35c7f9",
+      "observed": "7cb03fe23b90bd7a28da49d7608a60e4a180a3a97cd97b7cbe2d52d37a35c7f9",
+      "matches": true
+    },
+    "scope": {
+      "expected": "30cd5b9e0634a9737eaeca1d0f1fabd2a7098f426bf36bc76802eee7a6d41ef0",
+      "observed": "a672d9082bf84be5b3a8f49349d0c09238cd71f32bad4a3727efc1f190e2b7c3",
+      "matches": false
+    },
+    "guidance": {
+      "expected": "fc93fd20fae798a2acaa4a4ef91585d29920cd7c7bde5ecd82602e91d742726e",
+      "observed": "e33dda8738adc8c10013ea90706e003ed78cc301f76b957fc59bbfe7ec1242a4",
+      "matches": false
+    }
+  },
+  "juniper_correct_component_hook": {
+    "outcome": "ok",
+    "components": {
+      "openssh": [
+        "9.4"
+      ]
+    },
+    "parser_hook_tested": "parse_component_inventory",
+    "source_binding": "original_configured_juniper_url",
+    "input_sha256": "6fa4c282b02887f98cdf369487ece2be3e96a356e08a7c0004994be4c337ed44"
+  },
+  "independent_human_review_completed": false
+}

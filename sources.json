@@ -482,6 +482,11 @@
   ],
   "reference_sources": [
     {
+      "source_id": "cisa-kev",
+      "url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+      "enabled": true
+    },
+    {
       "source_id": "nvd-openssh-products",
       "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?virtualMatchString=cpe%3A2.3%3Aa%3Aopenbsd%3Aopenssh%3A*&resultsPerPage=2000&startIndex=0"
     }

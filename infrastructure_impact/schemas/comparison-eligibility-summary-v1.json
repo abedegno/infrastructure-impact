@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:comparison-eligibility-summary:1",
+  "title": "Comparison eligibility monitor summary v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "representation": {
+      "const": "monitor_summary"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "advisory_schema_version": {
+          "type": "integer",
+          "const": 2
+        }
+      },
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "const": "comparison-eligibility.json"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ]
+    },
+    "expected_vendor_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      }
+    },
+    "vendors": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "eligibility": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rate_comparison": {
+                "const": "suppressed"
+              },
+              "first_disclosure_comparison": {
+                "const": "suppressed"
+              },
+              "fix_timing_comparison": {
+                "const": "suppressed"
+              }
+            },
+            "required": [
+              "rate_comparison",
+              "first_disclosure_comparison",
+              "fix_timing_comparison"
+            ]
+          }
+        },
+        "required": [
+          "vendor",
+          "eligibility"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "representation",
+    "publication",
+    "generated_at",
+    "source_detail",
+    "expected_vendor_ids",
+    "vendors"
+  ]
+}
