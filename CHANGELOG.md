@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Support the reviewed current F5 PHP PDF profile alongside its original revision, retaining paired engineering hotfix/base versions and source-bound backport context. Mixed or unreviewed sections still fail visibly. See the [profile review](docs/research/2026-11-05-f5-php-profile-revision.md).
+- Restore the exact HPE-hosted canonical transport route for the reviewed Juniper OpenSSH reference, preserving its original source binding and release/platform scope without creating CVE assessments. See the [source observations](docs/research/2026-11-05-juniper-canonical-reference.md).
+
 ## 0.10.0 research preview candidate — 2026-11-05
 
 - Parse the reviewed Aruba 2021 directory and two signed-text advisory structures, retaining shared product scope, per-CVE metrics and unresolved model/remediation bindings.

@@ -125,6 +125,40 @@ PROFILES = {
 }
 
 
+# Complete additional revisions share only facts verified unchanged in source review.
+# Original profiles above retain their historical interpretation for evidence replay.
+ADDITIONAL_PROFILES = {
+    "K000163821": (
+        {
+            **PROFILES["K000163821"],
+            "scope_sha256": "a672d9082bf84be5b3a8f49349d0c09238cd71f32bad4a3727efc1f190e2b7c3",
+            "guidance_sha256": "e33dda8738adc8c10013ea90706e003ed78cc301f76b957fc59bbfe7ec1242a4",
+            "affected": tuple(
+                (
+                    product,
+                    branch,
+                    versions,
+                    (
+                        "17.5.1.11",
+                        "17.1.3.7",
+                        "17.5.1.10 + Hotfix-BIGIP-17.5.1.10.0.37.35-ENG",
+                        "17.1.3.6 + Hotfix-BIGIP-17.1.3.6.0.9.20-ENG",
+                    )
+                    if branch == "17.x"
+                    else fixes,
+                    feature,
+                    authentication,
+                )
+                for product, branch, versions, fixes, feature, authentication in PROFILES[
+                    "K000163821"
+                ]["affected"]
+            ),
+            "backport_context": "F5 reports that the listed fixed BIG-IP versions contain backported fixes for both title CVEs while PHP still reports 5.4.45. Package revision numbers do not necessarily increase with release order. This publisher context does not establish installed package state or product release availability.",
+        },
+    ),
+}
+
+
 def reviewed_scope(text):
     if len(text) > 1_500_000:
         raise ValueError("F5 PDF text exceeds reviewed size budget")
@@ -159,15 +193,28 @@ def advisory(raw, url, vendor):
         raise ValueError("Unreviewed F5 article PDF route")
     if not isinstance(raw, bytes) or not raw.startswith(b"%PDF") or len(raw) > 3_000_000:
         raise ValueError("Reviewed F5 source must be a PDF within 3 MB")
-    profile = PROFILES[identity]
+    profiles = (PROFILES[identity], *ADDITIONAL_PROFILES.get(identity, ()))
     before, critical, guidance = reviewed_scope(pdf_text(raw, layout=True))
     if before.count("Evaluated products") != 1:
         raise ValueError("F5 evaluated-product boundary changed")
     header, evaluated = before.split("Evaluated products", 1)
     header = " ".join(header.split())
     evaluated = " ".join(evaluated.split())
-    if sha256(evaluated.encode()).hexdigest() != profile["evaluated_sha256"]:
+    fingerprints = tuple(
+        sha256(part.encode()).hexdigest() for part in (evaluated, critical, guidance)
+    )
+    if not any(p["evaluated_sha256"] == fingerprints[0] for p in profiles):
         raise ValueError("F5 evaluated-product scope changed; review required")
+    matches = [
+        p
+        for p in profiles
+        if (p["evaluated_sha256"], p["scope_sha256"], p["guidance_sha256"]) == fingerprints
+    ]
+    if len(matches) != 1:
+        raise ValueError(
+            "F5 PDF product, impact, table-footnote or guidance scope changed; review required"
+        )
+    profile = matches[0]
     match = re.fullmatch(
         re.escape(identity + ": " + profile["title"] + " " + ARTICLE_PREFIX + identity)
         + r" Published Date: ([A-Z][a-z]{2} \d{1,2}, \d{4}) UTC Updated Date: ([A-Z][a-z]{2} \d{1,2}, \d{4}) UTC",
@@ -175,13 +222,6 @@ def advisory(raw, url, vendor):
     )
     if not match or tuple(cves(profile["title"])) != profile["cves"]:
         raise ValueError("F5 article identity or publisher date metadata changed")
-    if (
-        sha256(critical.encode()).hexdigest() != profile["scope_sha256"]
-        or sha256(guidance.encode()).hexdigest() != profile["guidance_sha256"]
-    ):
-        raise ValueError(
-            "F5 PDF product, impact, table-footnote or guidance scope changed; review required"
-        )
     dates = [datetime.strptime(value, "%b %d, %Y").date() for value in match.groups()]
     if dates[1] < dates[0]:
         raise ValueError("F5 publisher date claims are contradictory")
@@ -238,6 +278,14 @@ def advisory(raw, url, vendor):
                         category="publisher_prerequisite",
                         details=f"{feature}. The Impact section describes a remote {auth} attacker. No installed configuration or component inventory is inferred.",
                         source_locator=locator + " / Vulnerable component or feature; Impact",
+                    )
+                )
+            if status == "affected" and profile.get("backport_context"):
+                claim["exposure"].append(
+                    dict(
+                        category="publisher_backport_context",
+                        details=profile["backport_context"],
+                        source_locator="Security Advisory Status / table footnote 5",
                     )
                 )
             out["assessments"].append(claim)

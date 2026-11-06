@@ -1,6 +1,11 @@
 """Synthetic boundaries for release-scoped component references and access shells."""
 
 import json
+from email.message import Message
+from hashlib import sha256
+from io import BytesIO
+from urllib.request import HTTPSHandler, build_opener
+from urllib.response import addinfourl
 
 import pytest
 
@@ -12,11 +17,18 @@ from infrastructure_impact.adapters.component_statements import (
 )
 from infrastructure_impact.application.disclosure import import_release_note
 from infrastructure_impact.application.fix_leads import evidence_inputs, leads, public_inputs
+from infrastructure_impact.collection import transport
 from infrastructure_impact.collection.errors import (
     AccessVerificationRequired,
     check_access_response,
 )
+from infrastructure_impact.plugins.registry import default_registry
+from infrastructure_impact.source_policy import allowed
 from infrastructure_impact.storage.repository import connect
+
+CANONICAL_JUNIPER_URL = JUNIPER_URL.replace(
+    "https://www.juniper.net", "https://networkingdocs.hpe.com"
+)
 
 
 def juniper(target="9.4", announced=None):
@@ -54,7 +66,7 @@ def test_junos_identity_release_and_version_agreement_are_required(mutation):
     if mutation == "duplicate":
         raw += juniper().split(b"</h1>", 1)[1]
     with pytest.raises(ValueError):
-        juniper_component_statement(raw, JUNIPER_URL, "juniper")
+        default_registry().normalize_component_inventory(raw, JUNIPER_URL, "juniper")
 
 
 def test_ilo_route_release_and_literal_upgrade_syntax_are_required():
@@ -105,3 +117,129 @@ def test_session_check_shell_is_an_access_gap_not_valid_document_content():
         check_access_response(shell)
     check_access_response(hpe())
     assert "sessions/me" not in json.dumps(hpe_component_statement(hpe(), HPE_URL, "hpe"))
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        CANONICAL_JUNIPER_URL.replace("https:", "http:"),
+        CANONICAL_JUNIPER_URL.replace("https://", "https://user@"),
+        CANONICAL_JUNIPER_URL.replace("https://", "https://user:password@"),
+        CANONICAL_JUNIPER_URL.replace("https://", "https://@"),
+        CANONICAL_JUNIPER_URL.replace("hpe.com/", "hpe.com:443/"),
+        CANONICAL_JUNIPER_URL.replace("hpe.com/", "hpe.com:444/"),
+        CANONICAL_JUNIPER_URL + "?changed=1",
+        CANONICAL_JUNIPER_URL + "?",
+        CANONICAL_JUNIPER_URL + "#section",
+        CANONICAL_JUNIPER_URL + "#",
+        CANONICAL_JUNIPER_URL + "/",
+        CANONICAL_JUNIPER_URL.replace("24.2r1", "24.2r2"),
+        CANONICAL_JUNIPER_URL.replace("authentication-access-control", "other-feature"),
+        CANONICAL_JUNIPER_URL.replace(
+            "networkingdocs.hpe.com", "networkingdocs.hpe.com.evil.example"
+        ),
+        CANONICAL_JUNIPER_URL.replace("networkingdocs.hpe.com", "sub.networkingdocs.hpe.com"),
+        CANONICAL_JUNIPER_URL.replace("networkingdocs.hpe.com", "networkingdocs-hpe.com"),
+        CANONICAL_JUNIPER_URL.replace("networkingdocs.hpe.com", "support.hpe.com"),
+        CANONICAL_JUNIPER_URL.replace("networkingdocs.hpe.com", "NETWORKINGDOCS.HPE.COM"),
+        CANONICAL_JUNIPER_URL.replace("/documentation/", "/%64ocumentation/"),
+        CANONICAL_JUNIPER_URL.replace("/documentation/", "/documentation%2f"),
+        CANONICAL_JUNIPER_URL.replace("/documentation/", "/documentation/../documentation/"),
+    ],
+)
+def test_juniper_canonical_transport_rejects_every_nonexact_identity(url):
+    assert not allowed(url, "juniper")
+
+
+def test_juniper_canonical_route_and_existing_routes_remain_allowed():
+    assert allowed(CANONICAL_JUNIPER_URL, "juniper")
+    assert allowed(JUNIPER_URL, "juniper")
+    # HPE and Aruba already allow this host; their existing policies stay unchanged.
+    assert allowed(CANONICAL_JUNIPER_URL, "hpe")
+    assert allowed(CANONICAL_JUNIPER_URL, "aruba")
+    assert allowed("https://supportportal.juniper.net/s/article/synthetic", "juniper")
+    assert allowed("https://cveawg.mitre.org/api/cve/CVE-2099-12345", "juniper")
+    for vendor in default_registry().names().keys() - {"juniper", "hpe", "aruba"}:
+        assert not allowed(CANONICAL_JUNIPER_URL, vendor)
+    assert not allowed(CANONICAL_JUNIPER_URL, "upstream")
+
+
+def install_juniper_https_chain(monkeypatch, routes):
+    """Replace only the HTTPS wire; retain urllib and transport redirect policy."""
+    requested = []
+
+    class SyntheticHTTPS(HTTPSHandler):
+        def https_open(self, request):
+            url = request.full_url
+            requested.append(url)
+            status, fields, raw = routes[url]
+            headers = Message()
+            for name, value in fields.items():
+                headers[name] = value
+            response = addinfourl(BytesIO(raw), headers, url, status)
+            response.msg = "Synthetic HTTPS response"
+            return response
+
+    monkeypatch.setattr(
+        transport, "build_opener", lambda *handlers: build_opener(*handlers, SyntheticHTTPS())
+    )
+    return requested
+
+
+def test_juniper_canonical_redirect_retains_original_component_binding_and_evidence(monkeypatch):
+    raw = juniper()
+    requested = install_juniper_https_chain(
+        monkeypatch,
+        {
+            JUNIPER_URL: (301, {"Location": CANONICAL_JUNIPER_URL}, b""),
+            CANONICAL_JUNIPER_URL: (200, {"Content-Type": "text/html"}, raw),
+        },
+    )
+    registry = default_registry()
+    with connect(":memory:") as db:
+        fetched = transport.fetch(db, JUNIPER_URL, "juniper")
+        component = registry.normalize_component_inventory(fetched, JUNIPER_URL, "juniper")
+        retained = db.execute("SELECT * FROM evidence").fetchall()
+        assert len(retained) == 1
+        assert retained[0]["source_url"] == JUNIPER_URL
+        assert retained[0]["raw"] == raw == fetched
+        assert retained[0]["sha256"] == sha256(raw).hexdigest()
+        observation = db.execute("SELECT * FROM source_observations").fetchone()
+        assert observation["source_url"] == JUNIPER_URL
+        assert observation["evidence_id"] == retained[0]["id"]
+        assert observation["http_status"] == 200
+        cache = db.execute("SELECT * FROM http_cache").fetchone()
+        assert cache["url"] == JUNIPER_URL and cache["evidence_id"] == retained[0]["id"]
+        assert not db.execute("SELECT 1 FROM revisions").fetchone()
+        assert not db.execute("SELECT 1 FROM documents").fetchone()
+    assert requested == [JUNIPER_URL, CANONICAL_JUNIPER_URL]
+    assert component["state"] == "scoped"
+    assert component["components"] == {"openssh": ["9.4"]}
+    assert "Junos OS Evolved 24.2R1" in component["component_scope"]
+    assert "ACX-EXAMPLE, PTX-EXAMPLE" in component["component_scope"]
+    assert component["blocks"][0]["cves"] == []
+    assert "assessments" not in component
+    assert registry.normalize_component_inventory(raw, CANONICAL_JUNIPER_URL, "juniper") is None
+    assert registry.normalize_component_inventory(raw, CANONICAL_JUNIPER_URL, "hpe") is None
+
+
+@pytest.mark.parametrize(
+    "unsafe", ["https://attacker.example/substitute", CANONICAL_JUNIPER_URL + "?changed=1"]
+)
+def test_juniper_canonical_second_redirect_is_blocked_before_fetch_or_retention(
+    monkeypatch, unsafe
+):
+    requested = install_juniper_https_chain(
+        monkeypatch,
+        {
+            JUNIPER_URL: (301, {"Location": CANONICAL_JUNIPER_URL}, b""),
+            CANONICAL_JUNIPER_URL: (302, {"Location": unsafe}, b""),
+            unsafe: (200, {"Content-Type": "text/html"}, juniper()),
+        },
+    )
+    with connect(":memory:") as db:
+        with pytest.raises(ValueError, match="Cross-domain redirect outside vendor allowlist"):
+            transport.fetch(db, JUNIPER_URL, "juniper")
+        assert requested == [JUNIPER_URL, CANONICAL_JUNIPER_URL]
+        for table in ("evidence", "http_cache", "source_observations", "revisions", "documents"):
+            assert not db.execute(f"SELECT 1 FROM {table}").fetchone()
