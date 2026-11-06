@@ -180,3 +180,7 @@ Inspect/remove only the abandoned export/staging files or use fresh names. Never
 remove workspace state or captures to recover an export. Two arbitrary filesystem
 paths cannot be atomically renamed as one operation; this policy makes partial
 publication detectable and prevents mixed-generation overwrites.
+
+A [public-baseline follow-up](research/2026-11-06-public-reconciliation-followup.md)
+records published membership gaps, a staged primary-document backfill, reproduced
+Arista attribution defects and the incomplete expanded-corpus comparison attempt.
