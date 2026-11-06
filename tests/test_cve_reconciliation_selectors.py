@@ -404,3 +404,117 @@ def test_unreviewed_reference_policy_is_rejected(mutation):
         rules.pop("reference_rules", None)
     with pytest.raises(ValueError, match="^invalid_selector_rules$"):
         select(record(), rules=rules)
+
+
+# Catches returning decoded scalars that cannot be committed as canonical UTF-8 JSON.
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("cveMetadata", "datePublished"),
+        ("cveMetadata", "dateReserved"),
+        ("cveMetadata", "dateUpdated"),
+        ("cveMetadata", "assignerOrgId"),
+        ("cveMetadata", "state"),
+        ("containers", "cna", "providerMetadata", "extra"),
+        ("containers", "cna", "affected", 0, "versions", 0, "extra"),
+        ("containers", "cna", "references", 0, "extra"),
+        ("containers", "cna", "cpeApplicability", 0, "extra"),
+    ],
+)
+@pytest.mark.parametrize(
+    "token",
+    [b"1e400", b"-1e400", b'"\\ud800"', b'"\\udfff"', b'{"\\ud800":"SOURCE_TEXT"}'],
+)
+def test_uncommittable_retained_scalars_return_clean_invalid(path, token):
+    value = record(container([product()], references=[{}], cpeApplicability=[{}]))
+    target = value
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = "SYNTHETIC_UNSERIALIZABLE"
+    raw = json.dumps(value).encode().replace(b'"SYNTHETIC_UNSERIALIZABLE"', token)
+    result = select(raw)
+    assert result["outcome"] == "invalid"
+    assert result["discovery_class"] == "unprocessed"
+    assert result["diagnostic_codes"] == ["invalid_json_scalar"]
+    assert result["findings"] == []
+    assert result["data_version"] is None and result["record_state"] is None
+    assert result["assigner_org_id"] is None
+    assert result["dates"] == dict(dateReserved=None, datePublished=None, dateUpdated=None)
+    assert result["date_window_state"] == "unknown"
+    assert result["source_sha256"] == hashlib.sha256(raw).hexdigest()
+    encoded = json.dumps(result, ensure_ascii=False, allow_nan=False).encode("utf-8")
+    assert b"SOURCE_TEXT" not in encoded and b"SYNTHETIC_UNSERIALIZABLE" not in encoded
+
+
+@pytest.mark.parametrize("version", ["\ud800", "\udfff"])
+def test_uncommittable_version_is_invalid_instead_of_unsupported(version):
+    value = record()
+    value["dataVersion"] = version
+    result = select(value)
+    assert result["outcome"] == "invalid"
+    assert result["data_version"] is None
+    assert result["diagnostic_codes"] == ["invalid_json_scalar"]
+
+
+@pytest.mark.parametrize("early_outcome", ["rejected", "unsupported", "id", "structure"])
+def test_uncommittable_metadata_cannot_escape_through_early_outcome(early_outcome):
+    value = record()
+    value["cveMetadata"]["datePublished"] = "\ud800"
+    if early_outcome == "rejected":
+        value["cveMetadata"]["state"] = "REJECTED"
+    elif early_outcome == "unsupported":
+        value["dataVersion"] = "5.99"
+    elif early_outcome == "id":
+        value["cveMetadata"]["cveId"] = "CVE-1999-9999"
+    else:
+        value["containers"] = {}
+    result = select(value)
+    assert result["outcome"] == "invalid"
+    assert result["diagnostic_codes"] == ["invalid_json_scalar"]
+    assert result["dates"]["datePublished"] is None and result["findings"] == []
+
+
+# Catches broad whole-source validation that would reinterpret committable records.
+@pytest.mark.parametrize("field", ["root", "metadata", "container", "product", "other_cna", "text"])
+@pytest.mark.parametrize("token", [b"1e400", b'"\\ud800"', b'{"\\udfff":1e400}'])
+def test_unretained_malformed_scalars_preserve_existing_projection(field, token):
+    value = record(container([product(), product("Unrelated", "Synthetic")]))
+    if field == "other_cna":
+        value["containers"]["cna"] = container(
+            [product("Unrelated", "Synthetic")], references=[{}], cpeApplicability=[]
+        )
+        value["containers"]["adp"] = [container([product()])]
+    baseline = select(value)
+    if field == "root":
+        value["extra"] = "SYNTHETIC_UNSERIALIZABLE"
+    elif field == "metadata":
+        value["cveMetadata"]["extra"] = "SYNTHETIC_UNSERIALIZABLE"
+    elif field == "container":
+        value["containers"]["cna"]["extra"] = "SYNTHETIC_UNSERIALIZABLE"
+    elif field == "product":
+        value["containers"]["cna"]["affected"][1]["extra"] = "SYNTHETIC_UNSERIALIZABLE"
+    elif field == "other_cna":
+        value["containers"]["cna"]["references"][0]["extra"] = "SYNTHETIC_UNSERIALIZABLE"
+        value["containers"]["cna"]["cpeApplicability"] = ["SYNTHETIC_UNSERIALIZABLE"]
+    else:
+        value["containers"]["cna"]["descriptions"] = [dict(value="SYNTHETIC_UNSERIALIZABLE")]
+    raw = json.dumps(value).encode().replace(b'"SYNTHETIC_UNSERIALIZABLE"', token)
+    baseline["source_sha256"] = hashlib.sha256(raw).hexdigest()
+    assert select(raw) == baseline
+
+
+@pytest.mark.parametrize(
+    "literal", [1e308, -1e308, 1e-300, 0.0, -0.0, "café 東京 😀", {"😀": [1.25]}]
+)
+def test_committable_finite_numbers_and_unicode_keep_literal_evidence(literal):
+    value = record(
+        container([product(extra={"nested": literal})], references=[dict(extra=literal)])
+    )
+    value["cveMetadata"]["datePublished"] = literal
+    result = select(value)
+    assert result["outcome"] == "parsed"
+    assert result["dates"]["datePublished"] == literal
+    assert result["date_window_state"] == "unknown"
+    assert result["findings"][0]["product"]["extra"] == {"nested": literal}
+    assert result["findings"][0]["references"][0]["row"] == {"extra": literal}
+    json.dumps(result, ensure_ascii=False, allow_nan=False).encode("utf-8")

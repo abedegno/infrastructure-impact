@@ -9,11 +9,13 @@ from contextlib import closing
 import pytest
 from test_cve_reconciliation_baseline import PUBLISHER, add_revision
 from test_cve_reconciliation_state import source as source_fixture
+from test_cve_reconciliation_state import uncommittable_source as scalar_source_fixture
 
 from infrastructure_impact.reconciliation import baseline, scan, state
 from infrastructure_impact.storage.repository import connect
 
 source = source_fixture
+uncommittable_source = scalar_source_fixture
 
 
 def api():
@@ -617,3 +619,32 @@ def test_malformed_reference_url_preserves_literal_and_exports_unknown(
     rehash(report)
     with pytest.raises(ValueError, match="invalid_report"):
         api().validate_report(report)
+
+
+def test_invalid_scalar_scan_exports_complete_repeatable_reports(uncommittable_source, tmp_path):
+    report, args, base = build(uncommittable_source, tmp_path)
+    assert report["scan"]["scan_complete"] and report["scan"]["coverage_complete"] is None
+    assert report["scan"]["attempted"] == 3 and report["scan"]["invalid"] == 1
+    assert report["scan"]["parsed"] == 2 and report["scan"]["remaining"] == 0
+    assert report["counts"]["findings"] == report["counts"]["unique_cves"] == 2
+    assert [row["cve_id"] for row in report["findings"]] == ["CVE-2026-1235", "CVE-2026-1236"]
+    api().validate_report(report)
+    pairs = []
+    for index in range(2):
+        result = scan.scan_snapshot(**args)
+        assert result["invocation_attempted"] == 0 and result["stop_reason"] == "complete"
+        repeated = api().build_report(workspace=args["workspace"], baseline_path=base)
+        assert repeated == report
+        output, sheet = tmp_path / f"out-{index}.json", tmp_path / f"out-{index}.csv"
+        api().write_report(
+            repeated,
+            json_path=output,
+            csv_path=sheet,
+            workspace=args["workspace"],
+            baseline_path=base,
+        )
+        assert json.loads(output.read_text()) == report
+        rows = list(csv.DictReader(sheet.open()))
+        assert len(rows) == 2 and all(row["scan_complete"] == "true" for row in rows)
+        pairs.append((output.read_bytes(), sheet.read_bytes()))
+    assert pairs[0] == pairs[1]

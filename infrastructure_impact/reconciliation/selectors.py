@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from datetime import date, datetime
 from importlib.resources import files
@@ -96,6 +97,28 @@ def _unique(pairs):
 
 def _constant(value):
     raise ValueError
+
+
+def _canonical_scalars(value):
+    """Check retained JSON scalars without serializing amplified/shared evidence."""
+    pending, seen = [value], set()
+    while pending:
+        item = pending.pop()
+        if isinstance(item, float) and not math.isfinite(item):
+            return False
+        if isinstance(item, str):
+            try:
+                item.encode("utf-8")
+            except UnicodeEncodeError:
+                return False
+        elif isinstance(item, (dict, list)) and id(item) not in seen:
+            seen.add(id(item))
+            if isinstance(item, dict):
+                pending.extend(item.keys())
+                pending.extend(item.values())
+            else:
+                pending.extend(item)
+    return True
 
 
 def _norm(value):
@@ -269,10 +292,18 @@ def select_record(
         findings=[],
         diagnostic_codes=[],
     )
+    clean_result = result.copy()
+
+    def finish():
+        # Only the returned projection must be canonical UTF-8 JSON. Ignored
+        # source fields cannot change previously committable classifications.
+        if not _canonical_scalars(result):
+            return clean_result | dict(diagnostic_codes=["invalid_json_scalar"])
+        return result
 
     def stop(code, outcome="invalid", classification="unprocessed"):
         result.update(outcome=outcome, discovery_class=classification, diagnostic_codes=[code])
-        return result
+        return finish()
 
     if not _valid_path(entry):
         return stop("record_path_mismatch")
@@ -342,4 +373,4 @@ def select_record(
             (c for c in _CLASSES if any(f["discovery_class"] == c for f in findings)), "non_target"
         ),
     )
-    return result
+    return finish()

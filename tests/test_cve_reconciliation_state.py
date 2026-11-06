@@ -73,6 +73,74 @@ def modules():
     )
 
 
+@pytest.fixture(
+    params=[
+        ("date", b"1e400"),
+        ("date", b'"\\ud800"'),
+        ("evidence", b"-1e400"),
+        ("evidence", b'"\\udfff"'),
+        ("date", b'{"\\ud800":["SOURCE_TEXT"]}'),
+        ("evidence", b'{"\\udfff":["SOURCE_TEXT"]}'),
+    ]
+)
+def uncommittable_source(source, monkeypatch, request):
+    args, bodies = source
+    location, token = request.param
+    body = json.loads(bodies[0])
+    if location == "date":
+        body["cveMetadata"]["datePublished"] = "SYNTHETIC_UNSERIALIZABLE"
+    else:
+        body["containers"]["cna"]["affected"][0]["extra"] = {"nested": ["SYNTHETIC_UNSERIALIZABLE"]}
+    raw = json.dumps(body).encode().replace(b'"SYNTHETIC_UNSERIALIZABLE"', token)
+    path = args["repository"] / "cves/2026/1xxx/CVE-2026-1234.json"
+    path.write_bytes(raw)
+    git(args["repository"], "add", ".")
+    git(args["repository"], "commit", "-qm", "synthetic uncommittable scalar")
+    args["commit"], _, _, _ = official(monkeypatch, snapshot, args["repository"])
+    args["receipt_path"] = args["receipt_path"].with_name("scalar-receipt.json")
+    snapshot.verify_snapshot(args["repository"], args["commit"], args["receipt_path"])
+
+    def no_network(*args, **kwargs):
+        raise AssertionError("offline scan attempted network")
+
+    monkeypatch.setattr(snapshot.http.client, "HTTPSConnection", no_network)
+    return args, [raw, *bodies[1:]]
+
+
+def test_invalid_scalars_commit_then_resume_past_following_valid_records(uncommittable_source):
+    scan, state = modules()
+    args, bodies = uncommittable_source
+    partial = scan.scan_snapshot(**args, record_limit=1)
+    assert partial["attempted"] == partial["invalid"] == partial["unresolved"] == 1
+    assert partial["remaining"] == 2 and partial["candidate_findings"] == 0
+    assert partial["stop_reason"] == "record_limit"
+    complete = scan.scan_snapshot(**args)
+    assert complete["attempted"] == 3 and complete["parsed"] == 2
+    assert complete["invalid"] == complete["unresolved"] == 1
+    assert complete["scan_complete"] and complete["remaining"] == 0
+    assert complete["stop_reason"] == "complete" and complete["candidate_findings"] == 2
+    with state.open_workspace(args["workspace"]) as reader:
+        outcomes = list(reader.iter_outcomes())
+        findings = list(reader.iter_findings())
+        invalid = outcomes[0]
+        assert invalid["capture_sha256"] is None and invalid["finding_count"] == 0
+        assert invalid["source_sha256"] == hashlib.sha256(bodies[0]).hexdigest()
+        assert invalid["metadata"]["diagnostic_codes"] == ["invalid_json_scalar"]
+        assert invalid["metadata"]["dates"] == dict(
+            dateReserved=None, datePublished=None, dateUpdated=None
+        )
+        assert [row["outcome"] for row in outcomes] == ["invalid", "parsed", "parsed"]
+        assert reader.read_capture(hashlib.sha256(bodies[1]).hexdigest()) == bodies[1]
+    before = (args["workspace"] / "state.sqlite3").read_bytes()
+    resumed = scan.scan_snapshot(**args)
+    assert resumed["invocation_attempted"] == resumed["invocation_consumed_bytes"] == 0
+    assert resumed["scan_complete"] and resumed["invalid"] == 1
+    assert (args["workspace"] / "state.sqlite3").read_bytes() == before
+    with state.open_workspace(args["workspace"]) as reader:
+        assert list(reader.iter_outcomes()) == outcomes
+        assert list(reader.iter_findings()) == findings
+
+
 def test_limits_stop_before_next_record_and_resume_exactly(source):
     scan, state = modules()
     args, bodies = source
