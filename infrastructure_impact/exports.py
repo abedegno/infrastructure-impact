@@ -96,7 +96,7 @@ def select(
 def assessment_export(data):
     cohort = set(data["comparison"]["cohort"])
     return {
-        **data,
+        **{k: v for k, v in data.items() if k != "retained_advisories"},
         "research": {
             k: v for k, v in data.get("research", {}).items() if k != "current_evidence_input"
         },

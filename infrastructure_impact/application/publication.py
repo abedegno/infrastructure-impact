@@ -327,6 +327,8 @@ def write_bundle(destination, data):
         path.parent.mkdir(exist_ok=True)
         path.write_text(json.dumps(change))
     for name in (
+        "lossless-json.js",
+        "current-evidence.js",
         "app.js",
         "style.css",
         "research-dossiers.js",
@@ -343,13 +345,15 @@ def write_bundle(destination, data):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching-contracts.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     # Immutable script/style paths avoid mixing old cached readers with a new
     # delivery contract. Root names remain available for existing integrations.
     (destination / "assets").mkdir(exist_ok=True)
     for name in (
+        "lossless-json.js",
+        "current-evidence.js",
         "app.js",
         "research-dossiers.js",
         "kev.js",

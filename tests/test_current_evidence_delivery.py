@@ -767,3 +767,159 @@ def test_score_shared_capture_requires_an_unambiguous_revision(delivery, revisio
             rebuild(data, partition_result)
     else:
         assert rebuild(data, partition_result)["research"]["score_input"]["advisories"] == [entry]
+
+
+def test_static_browser_retained_and_current_native_parity(delivery, tmp_path):
+    import subprocess
+
+    from infrastructure_impact.settings import PACKAGE
+
+    data = copy.deepcopy(delivery)
+    excluded = data.pop("retained_advisories")[0]["record"]
+    excluded["revision_id"] = 9007199254740993
+    data["records"][-1]["revision_id"] = 9007199254740995
+    data["records"][-1]["evidence_id"] = 9007199254740997
+    data["records"].append(excluded)
+    data.pop("current_evidence")
+    generation = publish(data, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    assert index.get("current_evidence", {}).get("schema_version") == 1
+    script = r"""
+const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
+const [root,web,ids,vendor]=process.argv.slice(1), c={window:{},URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
+vm.createContext(c);for(const f of ['lossless-json.js','switching-contracts.js','current-evidence.js','kev.js','research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(web+'/'+f,'utf8'),c);
+(async()=>{const load=await c.createStaticDelivery(async p=>new Response(fs.readFileSync(root+p)),'/');const requested=JSON.parse(ids),source=await load(requested);source.retained_advisories=await load.retained(requested);const selected=c.selectSnapshot(source,requested,{evaluatedAt:source.generated_at});const retained=c.selectRetainedSnapshot(source,requested,{vendor:vendor||undefined});process.stdout.write(c.window.InfrastructureJSON.stringify({current:c.exportSnapshot(selected),csv:c.snapshotCSV(selected),retained:c.exportRetainedSnapshot(retained),retained_csv:c.retainedSnapshotCSV(retained)}));})();
+"""
+    app = Application(tmp_path)
+    for ids, vendor in [
+        (["CVE-2023-5501", "CVE-2024-6858"], ""),
+        (["CVE-2023-5501"], "arista"),
+        (["CVE-2024-6858"], "arista"),
+        ([], ""),
+        (["CVE-2023-5501"], "cisco"),
+    ]:
+        result = json.loads(
+            subprocess.check_output(
+                [
+                    "node",
+                    "-e",
+                    script,
+                    str(generation),
+                    str(PACKAGE / "web"),
+                    json.dumps(ids),
+                    vendor,
+                ]
+            )
+        )
+        full = json.loads((generation / "snapshot.json").read_text())
+        from infrastructure_impact.exports import assessment_export, select
+
+        selected = select(full, ids, evaluated_at=full["generated_at"])
+        assert result["current"]["records"] == assessment_export(selected)["records"]
+        assert not result["current"].get("retained_advisories")
+        assert list(csv.DictReader(io.StringIO(result["csv"]))) == list(
+            csv.DictReader(io.StringIO(csv_export(selected)))
+        )
+        query = "cves=" + ",".join(ids) + ("&vendor=" + vendor if vendor else "")
+        # Empty explicit browser selections correspond to the native empty filtered export.
+        if not ids:
+            assert result["retained"]["records"] == []
+            continue
+        for fmt, key in [("json", "retained"), ("csv", "retained_csv")]:
+            status, _, body = app.route(
+                {
+                    "REQUEST_METHOD": "GET",
+                    "PATH_INFO": "/api/v1/retained-advisories",
+                    "QUERY_STRING": query + "&format=" + fmt,
+                }
+            )
+            assert status == 200
+            if fmt == "json":
+                assert result[key] == json.loads(body)
+            else:
+                assert list(csv.DictReader(io.StringIO(result[key]))) == list(
+                    csv.DictReader(io.StringIO(body.decode()))
+                )
+    manifest = json.loads((generation / "manifest.json").read_text())
+    for asset in [
+        "current-evidence.json",
+        "current-evidence.js",
+        "lossless-json.js",
+        "schemas/current-evidence-v1.json",
+    ]:
+        assert asset in manifest["sha256"]
+        assert (
+            app.route({"REQUEST_METHOD": "GET", "PATH_INFO": "/" + asset, "QUERY_STRING": ""})[0]
+            == 200
+        )
+
+
+def test_current_json_vs_explicit_archive_scopes(delivery, tmp_path):
+    import gzip
+
+    from infrastructure_impact.exports import assessment_export, select
+
+    generation = publish(delivery, tmp_path)
+    raw = (generation / "snapshot.json").read_bytes()
+    archived = json.loads(gzip.decompress((generation / "snapshot.json.gz").read_bytes()))
+    assert archived == json.loads(raw)
+    assert len(archived["retained_advisories"]) == 1
+    assert archived["retained_advisories"][0]["record"]["assessments"]
+    exported = assessment_export(select(archived, archived["all_cves"]))
+    assert "retained_advisories" not in exported
+    assert not any(
+        r["advisory_id"] == "Arista Networks Security Advisory 103" for r in exported["records"]
+    )
+    assert archived["current_evidence"]["decisions"][0]["target"]
+    assert "record" not in archived["current_evidence"]["decisions"][0]
+
+
+def test_static_current_and_retained_api_native_parity(delivery, tmp_path):
+    from test_kev_delivery import static_requests
+
+    # A public-only transport fixture adds a second assessment to exercise whole-record
+    # pagination versus selected assessment exports. Never mutate a published generation.
+    from infrastructure_impact.application.static_delivery import write_static_delivery
+
+    published = publish(delivery, tmp_path / "published")
+    data = json.loads((published / "snapshot.json").read_text())
+    record = data["retained_advisories"][0]["record"]
+    record["cves"].append("CVE-2024-6858")
+    record["assessments"].append({**record["assessments"][0], "cve_id": "CVE-2024-6858"})
+    generation = tmp_path / "fixture" / "generations" / published.name
+    generation.mkdir(parents=True)
+    (generation / "snapshot.json").write_text(json.dumps(data))
+    write_static_delivery(generation, data)
+    (tmp_path / "fixture" / "current").symlink_to(generation)
+    app = Application(tmp_path / "fixture")
+    urls = [
+        "/api/v1/current-evidence",
+        "/api/v1/retained-advisories",
+        "/api/v1/retained-advisories?cves=CVE-2023-5501&vendor=arista&format=json",
+        "/api/v1/retained-advisories?cves=CVE-2023-5501&format=csv",
+        "/api/v1/retained-advisories?cves=CVE-2024-6858&format=json",
+        "/api/v1/retained-advisories?limit=1&offset=1",
+        "/api/v1/retained-advisories?cves=CVE-2023-5501",
+        "/api/v1/retained-advisories?offset=9007199254740993",
+        "/api/v1/retained-advisories?vendor=cisco",
+        "/api/v1/retained-advisories?limit=501",
+        "/api/v1/retained-advisories?offset=-1",
+        "/api/v1/retained-advisories?limit=1&limit=2",
+        "/api/v1/retained-advisories?format=raw",
+    ]
+    for url, browser in zip(urls, static_requests(generation, urls)):
+        path, _, query = url.partition("?")
+        replies = []
+        native = b"".join(
+            app(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": query},
+                lambda status, headers: replies.append((int(status.split()[0]), headers)),
+            )
+        )
+        assert browser["status"] == replies[0][0], url
+        if "format=csv" in query:
+            assert list(csv.DictReader(io.StringIO(browser["body"]))) == list(
+                csv.DictReader(io.StringIO(native.decode()))
+            )
+        else:
+            assert json.loads(browser["body"]) == json.loads(native), url

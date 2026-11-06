@@ -19,7 +19,7 @@ FIXTURE = json.loads((PACKAGE.parent / "tests/fixtures/switching-cases.json").re
 
 def static_requests(root, queries):
     script = ADAPTER.replace(
-        "'kev.js','research", "'kev.js','switching-contracts.js','switching.js','research"
+        "'kev.js','research", "'kev.js','switching.js','research"
     )
     return json.loads(
         subprocess.check_output(
@@ -206,7 +206,7 @@ DELIVERY = r"""
 const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
 const x=JSON.parse(fs.readFileSync(0,'utf8')),requests=[];
 const c={window:{},Set,Map,URL,Response,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};vm.createContext(c);
-for(const f of ['kev.js','switching-contracts.js','switching.js','delivery.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+for(const f of ['lossless-json.js','switching-contracts.js','current-evidence.js','kev.js','switching.js','delivery.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
 (async()=>{try{const load=await c.createStaticDelivery(async path=>{requests.push(path);let raw=fs.readFileSync(x.root+path);if(x.fault==='hash' && path===x.part)raw=Buffer.concat([raw.subarray(0,raw.length-1),Buffer.from(' ')]);return new Response(raw);},'/');let cacheReuse=null;if(x.mode==='reuse'){const first=await load.switchingReport(),count=requests.length;const second=await load.switchingReport();const selected=c.window.InfrastructureSwitching.selectReport(first,{scope_level:'model_qualified'});const ids=first.rows.flatMap(r=>r.claim_ids).slice(0,25);await load.switchingClaims(ids);cacheReuse={same:first===second,frozen:Object.isFrozen(first.inputs.evidence.claims[0]),shared:selected.inputs===first.inputs,extraFetches:requests.length-count};}let value=x.mode==='claims'?await load.switchingClaims(x.ids):x.mode==='summary'?await load.switchingSummary():await load.switchingReport();process.stdout.write(JSON.stringify({value,requests,cacheReuse}));}catch(e){process.stdout.write(JSON.stringify({error:e.message,requests}));}})();
 """
 
