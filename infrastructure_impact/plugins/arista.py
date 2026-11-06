@@ -21,6 +21,9 @@ from ..adapters.arista_legacy_scope import older_scope
 from ..adapters.arista_management_scope import ROUTES as MANAGEMENT_ROUTES
 from ..adapters.arista_management_scope import management_scope
 from ..adapters.arista_openssh import openssh_scope
+from ..adapters.arista_reconciliation import CSAF103
+from ..adapters.arista_reconciliation import ROUTES as RECONCILIATION_ROUTES
+from ..adapters.arista_reconciliation import parse as reconciliation
 from ..adapters.arista_routing_scope import ROUTES as ROUTING_ROUTES
 from ..adapters.arista_routing_scope import routing_scope
 from ..adapters.arista_scoped import (
@@ -33,11 +36,16 @@ from ..adapters.common import HTML
 from ..adapters.legacy_html import html_advisory
 from ..adapters.switching import extract
 from .archive_listings import arista as archive_listing
+from .arista_selection import resolve
 from .contracts import VendorPlugin
 from .shared import is_json, structured
 
 
 def parse(raw, url, vendor):
+    if url == CSAF103:
+        raise ValueError("Reviewed Arista CSAF requires HTML source selection")
+    if url in RECONCILIATION_ROUTES:
+        return reconciliation(raw, url, vendor)
     if is_json(raw):
         return structured(raw, url, vendor)
     if any(url == PREFIX + slug for slug, _ in ROUTES.values()):
@@ -90,6 +98,14 @@ def parse(raw, url, vendor):
     return html_advisory(raw, url, vendor)
 
 
+def research_evidence(raw, url, vendor, document):
+    if url == CSAF103:
+        return dict(
+            schema_version=1, claims=[], bundles=[], issues=["reviewed_html_selection_required"]
+        )
+    return extract(raw, url, vendor, document)
+
+
 def plugin():
     return VendorPlugin(
         "arista",
@@ -97,6 +113,7 @@ def plugin():
         ("arista.com",),
         parse,
         parse_archive=archive_listing,
+        resolve=resolve,
         capabilities=(
             "csaf",
             "html",
@@ -123,8 +140,9 @@ def plugin():
             + document["advisory_id"]
         ),
         parse_release_history=arista_release_history,
-        research_evidence=extract,
+        research_evidence=research_evidence,
         normalizer_dependencies=(
+            reconciliation,
             current_scope,
             advance_notice,
             arista_aggregate_notice,

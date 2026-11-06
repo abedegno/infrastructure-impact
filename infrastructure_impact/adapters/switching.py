@@ -344,6 +344,8 @@ def _arista_reviewed(raw, url, document, digest):
     from ..plugins.arista import parse
 
     routes = {
+        "19862-security-advisory-0099": "Arista reviewed reconciliation software HTML",
+        "19917-security-advisory-0103": "Arista reviewed reconciliation software HTML",
         "24853-security-advisory-0202": "Arista reviewed current applicability HTML",
         "25023-security-advisory-0203": "Arista reviewed current applicability HTML",
         "19905-security-advisory-0101": "Arista reviewed applicability boundaries HTML",
@@ -418,6 +420,8 @@ def _arista_reviewed(raw, url, document, digest):
             scope=assessment["scope"],
         )
         if slug in {
+            "19862-security-advisory-0099",
+            "19917-security-advisory-0103",
             "24853-security-advisory-0202",
             "25023-security-advisory-0203",
             "12135-security-advisory-61",

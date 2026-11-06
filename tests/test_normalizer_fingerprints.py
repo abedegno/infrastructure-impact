@@ -33,6 +33,8 @@ def versions():
         ("adapters/fortinet_ranges.py", {"fortinet"}),
         ("adapters/f5_pdf.py", {"f5"}),
         ("adapters/arista_routing_scope.py", {"arista"}),
+        ("adapters/arista_reconciliation.py", {"arista"}),
+        ("plugins/arista_selection.py", {"arista"}),
         ("adapters/arista_management_scope.py", {"arista"}),
         ("adapters/component_statements.py", {"hpe", "juniper"}),
         ("adapters/vendor_cna.py", {"cisco", "hpe", "juniper", "checkpoint"}),
