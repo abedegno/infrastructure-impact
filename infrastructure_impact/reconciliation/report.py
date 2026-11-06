@@ -92,13 +92,19 @@ def _presence(cve, vendor, family, baseline):
     )
 
 
+def _reference_url(row):
+    """Project only string URL values; literal_json retains original types."""
+    value = row.get("url") if isinstance(row, dict) else None
+    return value if isinstance(value, str) else None
+
+
 def _reference(row, locator, baseline):
-    literal = row.get("url") if row else None
-    route = _route(literal)
+    url = _reference_url(row)
+    route = _route(url)
     result = dict(
         locator=locator,
         literal_json=_canonical(row),
-        url=literal,
+        url=url,
         route_identity=route,
         collection_state="missing_reference" if row is None else "unknown_identity",
         revision_ids=[],
@@ -441,7 +447,7 @@ def validate_report(report: dict) -> None:
                 raise ValueError
             for reference_index, reference in enumerate(finding["references"]):
                 literal = json.loads(reference["literal_json"])
-                if reference["url"] != (literal.get("url") if literal else None) or reference[
+                if reference["url"] != _reference_url(literal) or reference[
                     "route_identity"
                 ] != _route(reference["url"]):
                     raise ValueError

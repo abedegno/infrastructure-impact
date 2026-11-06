@@ -567,3 +567,53 @@ def test_writer_rejects_unsafe_workspace_before_opening_database(source, tmp_pat
             workspace=args["workspace"],
             baseline_path=base,
         )
+
+
+@pytest.mark.parametrize(
+    "reference",
+    [
+        {},
+        {"url": None},
+        {"url": 42},
+        {"url": 1.25},
+        {"url": False},
+        {"url": [PUBLISHER]},
+        {"url": {"href": PUBLISHER}},
+    ],
+    ids=["missing", "null", "integer", "number", "boolean", "list", "object"],
+)
+def test_malformed_reference_url_preserves_literal_and_exports_unknown(
+    source, tmp_path, monkeypatch, reference
+):
+    def mutate(body):
+        body["containers"]["cna"]["references"] = [reference]
+
+    source = changed_source(source, monkeypatch, mutate)
+    report, args, base = build(source, tmp_path)
+    assert report["scan"]["parsed"] == 3
+    exported = report["findings"][0]["references"][0]
+    assert exported["url"] is None and exported["route_identity"] is None
+    assert exported["collection_state"] == "unknown_identity"
+    assert exported["locator"] == "/containers/cna/references/0"
+    assert json.loads(exported["literal_json"]) == reference
+    assert type(json.loads(exported["literal_json"]).get("url")) is type(reference.get("url"))
+    assert report["findings"][1]["references"][0]["collection_state"] == "missing_reference"
+    assert report["counts"]["dimensions"]["collection_state"] == [
+        {"value": "missing_reference", "unique_cves": 2},
+        {"value": "unknown_identity", "unique_cves": 1},
+    ]
+    output = tmp_path / "out.json"
+    sheet = tmp_path / "out.csv"
+    api().write_report(
+        report, json_path=output, csv_path=sheet, workspace=args["workspace"], baseline_path=base
+    )
+    row = list(csv.DictReader(sheet.open()))[0]
+    assert row["reference_url"] == "" and row["collection_state"] == "unknown_identity"
+    assert json.loads(row["reference_literal_json"]) == reference
+    assert json.loads(output.read_text())["findings"][0]["references"][0] == exported
+
+    # Recompute the report identity so only the invented URL projection is wrong.
+    exported["url"] = "42"
+    rehash(report)
+    with pytest.raises(ValueError, match="invalid_report"):
+        api().validate_report(report)
