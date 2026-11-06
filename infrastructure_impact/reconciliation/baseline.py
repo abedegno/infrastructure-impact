@@ -638,9 +638,14 @@ def _validate(data):
         for r in data[section]:
             if r["evidence_id"] is not None and r["evidence_id"] not in evidence_ids:
                 raise BaselineError("invalid_baseline")
-    source_ids = {r["source_id"] for r in data["archive_sources"]}
+    sources = {r["source_id"]: r for r in data["archive_sources"]}
     for r in data["queue"]:
-        if r["source_id"] not in source_ids or not set(r["page_evidence_ids"]) <= evidence_ids:
+        source = sources.get(r["source_id"])
+        if (
+            source is None
+            or r["vendor"] != source["vendor"]
+            or not set(r["page_evidence_ids"]) <= evidence_ids
+        ):
             raise BaselineError("invalid_baseline")
     for s in data["source_selections"]:
         views = {v["evidence_id"] for v in s["views"]}

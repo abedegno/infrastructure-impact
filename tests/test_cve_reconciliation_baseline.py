@@ -503,3 +503,42 @@ def test_latest_source_check_preserves_reviewed_error_codes(inputs, tmp_path, er
     assert len(data["source_checks"]) == 1
     assert data["source_checks"][0]["outcome"] == "error"
     assert data["source_checks"][0]["error_code"] == error_code
+
+
+def test_reader_rejects_queue_vendor_mismatch_with_recomputed_identity(inputs, tmp_path):
+    data = export(inputs, tmp_path)
+    data["archive_sources"] = [
+        dict(
+            source_id=1,
+            vendor="cisco",
+            source_url=REGISTRY,
+            kind="index",
+            started_at=AT,
+            checked_at=None,
+        )
+    ]
+    data["queue"] = [
+        dict(
+            item_id=1,
+            source_id=1,
+            vendor="cisco",
+            kind="document",
+            requested_url=REGISTRY,
+            resolved_url=None,
+            state="pending",
+            evidence_id=None,
+            attempts=0,
+            discovered_at=AT,
+            checked_at=None,
+            error_code=None,
+            page_evidence_ids=[],
+        )
+    ]
+    path = tmp_path / "cross-vendor-baseline.json"
+    write_rehashed(path, data)
+    assert baseline.load_baseline(path)["queue"][0]["vendor"] == "cisco"
+    # Both routes and vendors are individually reviewed; only the crosslink is wrong.
+    data["queue"][0].update(vendor="arista", requested_url=ARISTA)
+    write_rehashed(path, data)
+    with pytest.raises(baseline.BaselineError, match="invalid_baseline"):
+        baseline.load_baseline(path)
