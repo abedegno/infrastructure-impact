@@ -400,7 +400,7 @@ def workflow_steps():
     return result
 
 
-def gate(step, effects, *, success=True):
+def gate(step, effects, *, success=True, protocol="effects-v1", hosted_outcome=None):
     """Small evaluator for the workflow's trusted boolean/string gate subset."""
     from types import SimpleNamespace
 
@@ -418,7 +418,13 @@ def gate(step, effects, *, success=True):
             {
                 "always": lambda: True,
                 "success": lambda: success,
-                "steps": SimpleNamespace(hosted=SimpleNamespace(outputs=Outputs(effects))),
+                "steps": SimpleNamespace(
+                    hosted=SimpleNamespace(
+                        outputs=Outputs(effects),
+                        outcome=hosted_outcome or ("success" if success else "failure"),
+                    ),
+                    protocol=SimpleNamespace(outputs=Outputs(protocol=protocol)),
+                ),
             },
         )
     )
@@ -655,6 +661,7 @@ def test_workflow_forwards_controls_as_literal_arguments(
     env = {
         **os.environ,
         "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
+        "HOSTED_PROTOCOL": "effects-v1",
         "VAULT_PROFILE": "standard",
         "RECOVERY_STORAGE": "git",
         "REPARSE_LIMIT": budget,

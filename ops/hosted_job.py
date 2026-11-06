@@ -31,6 +31,9 @@ from infrastructure_impact.recovery_policy import (
 )
 from infrastructure_impact.storage.profiling import storage_profile
 
+# Workflow compatibility is explicit; missing effects never imply legacy support.
+HOSTED_WORKFLOW_PROTOCOL = "effects-v1"
+
 MAX_VAULT_BYTES = vault_limit()
 MAX_ARCHIVE_BYTES = ARCHIVE_LIMIT
 MAX_DECODER_MEMORY = DECODER_MEMORY_LIMIT
