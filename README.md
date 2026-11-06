@@ -14,6 +14,10 @@ retrieval, supported parsing and informational notices. The
 record the remaining gaps and pending human review; the v0.10.0 repairs do
 not establish complete vendor history or change the frozen benchmark.
 
+The unreleased [local CVE reconciliation workflow](docs/CVE_RECONCILIATION.md)
+compares a verified official snapshot with an explicit collection baseline,
+including partial scans and missing reference evidence. It has no hosted activation.
+
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.
 

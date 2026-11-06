@@ -12,6 +12,7 @@ import re
 import sqlite3
 from collections import Counter
 from contextlib import closing
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
@@ -24,7 +25,22 @@ from ..plugins.registry import default_registry
 from ..references.registry import allowed as reference_allowed
 from ..settings import PACKAGE
 from ..source_policy import allowed
-from ..storage.repository import connect, now
+
+
+def connect(path: Path, *, read_only: bool):
+    """Explicit baseline-only reader; importing this module never resolves a vault."""
+    if read_only is not True:
+        raise ValueError("read_only_required")
+    db = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True, timeout=30)
+    db.execute("PRAGMA query_only=ON")
+    db.row_factory = sqlite3.Row
+    db.execute("PRAGMA foreign_keys=ON")
+    return db
+
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
 
 # Exact current table definitions after migrations 1..15, normalized for whitespace.
 # A different schema requires an explicit reader review, never a migration here.
