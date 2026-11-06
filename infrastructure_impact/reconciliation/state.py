@@ -23,8 +23,15 @@ MAX_FINDINGS = 100_000
 MAX_WORKSPACE_BYTES = 1_000_000_000
 _OVERHEAD = 65_536
 _PAGE = 4096
-_MAX_OUTCOME_BYTES = 2_016_384
-_MAX_COMPRESSED_BYTES = _MAX_OUTCOME_BYTES + 4096
+# Finite binary64 JSON numbers need at most 24 ASCII bytes. Each source
+# numeric token consumes at least one byte. This factor also dominates string
+# expansion from non-UTF-8 source encodings; integer/punctuation spelling cannot
+# grow. Metadata retains disjoint source fields once.
+# Keep fixed scanner/locator overhead separate from that conservative 24x bound.
+_MAX_OUTCOME_BYTES = 24 * 2_000_000 + 16_384
+# More than zlib's default compressBound overhead, including incompressible input.
+_MAX_COMPRESSED_BYTES = _MAX_OUTCOME_BYTES + _MAX_OUTCOME_BYTES // 100 + 64
+_INITIAL_DATABASE_BYTES = 6 * _PAGE
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
 _OUTCOMES = (
     "parsed",
@@ -61,7 +68,7 @@ def digest(raw):
 def _encode_outcome(row):
     raw = canonical(row).encode()
     if len(raw) > _MAX_OUTCOME_BYTES:
-        raise StorageLimit("workspace_limit")
+        raise StateError("outcome_encoding_limit")
     return zlib.compress(raw), len(raw), digest(raw)
 
 
@@ -476,6 +483,20 @@ def _read_identity(path):
         raise StateError("state_integrity") from None
 
 
+def _reserve_initialization(path, identity, *, new_identity_bytes=0):
+    # Run for fresh and interrupted initialization. Existing reports/staging/lock
+    # bytes remain charged before any new identity/database/journal bytes exist.
+    if (
+        retained_bytes(path)
+        + new_identity_bytes
+        + identity["inventory_bytes"]
+        + _OVERHEAD
+        + 3 * _INITIAL_DATABASE_BYTES
+        > MAX_WORKSPACE_BYTES
+    ):
+        raise StorageLimit("workspace_limit")
+
+
 @contextmanager
 def writable_workspace(path, identity, entries):
     path.mkdir(parents=True, exist_ok=True)
@@ -489,20 +510,16 @@ def writable_workspace(path, identity, entries):
         else:
             if any(item.name not in {".lock", "pending.identity"} for item in path.iterdir()):
                 raise StateError("unsafe_workspace")
-            if (
-                identity["inventory_bytes"]
-                + _OVERHEAD
-                + 3 * 24_576
-                + len(canonical(identity).encode())
-                > MAX_WORKSPACE_BYTES
-            ):
-                raise StorageLimit("workspace_limit")
+            _reserve_initialization(
+                path, identity, new_identity_bytes=len(canonical(identity).encode())
+            )
             pending_identity = path / "pending.identity"
             pending_identity.unlink(missing_ok=True)
             _write_new(pending_identity, canonical(identity).encode())
             os.replace(pending_identity, identity_file)
             _sync_directory(path)
         if not database.exists():
+            _reserve_initialization(path, identity)
             # No committed state exists yet: discard only reserved initialization
             # staging files, then atomically publish a fully initialized database.
             pending_database = path / "pending.sqlite3"
@@ -511,6 +528,7 @@ def writable_workspace(path, identity, entries):
             db = sqlite3.connect(pending_database)
             db.executescript("""
                 PRAGMA page_size=4096;
+                PRAGMA max_page_count=6;
                 PRAGMA journal_mode=DELETE;
                 CREATE TABLE meta(key TEXT PRIMARY KEY,value TEXT NOT NULL);
                 CREATE TABLE outcomes(position INTEGER PRIMARY KEY,payload BLOB NOT NULL,

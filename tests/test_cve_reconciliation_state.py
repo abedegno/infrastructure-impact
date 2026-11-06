@@ -533,7 +533,7 @@ def test_outcome_decompression_bounds_and_integrity(damage):
     elif damage == "declared_length":
         length = 15
     else:
-        length = 2_016_385
+        length = 48_016_385
     with pytest.raises(state.StateError, match="state_integrity"):
         state._decode_outcome(encoded, length, sha)
 
@@ -558,3 +558,90 @@ def test_compact_outcome_digests_preserve_canonical_hashes(source):
         raw_sha, retained_sha = db.execute("SELECT raw_sha256,sha256 FROM outcomes").fetchone()
     assert raw_sha == expected.digest()
     assert retained_sha == combined.digest()
+
+
+def test_interrupted_initialization_reserves_existing_files_before_creation(source, monkeypatch):
+    scan, state = modules()
+    args, _ = source
+    scan.scan_snapshot(**args, record_limit=0)
+    # A matching identity can survive a crash before the staged DB is published.
+    (args["workspace"] / "state.sqlite3").unlink()
+    (args["workspace"] / "report.txt").write_bytes(b"x" * 190_000)
+    monkeypatch.setattr(state, "MAX_WORKSPACE_BYTES", 200_000)
+    before = sum(path.stat().st_size for path in args["workspace"].rglob("*") if path.is_file())
+    with pytest.raises(state.StorageLimit, match="workspace_limit"):
+        scan.scan_snapshot(**args)
+    after = sum(path.stat().st_size for path in args["workspace"].rglob("*") if path.is_file())
+    assert after == before <= 200_000
+    assert not (args["workspace"] / "state.sqlite3").exists()
+    assert not (args["workspace"] / "pending.sqlite3").exists()
+
+
+@pytest.mark.parametrize("token,count", [(b"1e9", 160_000), (b"1e15", 390_000)])
+def test_canonical_numeric_metadata_expansion_is_retained_without_false_quota_stop(
+    source, monkeypatch, token, count
+):
+    scan, state = modules()
+    args, bodies = source
+    dates = b"[" + b",".join([token] * count) + b"]"
+    raw = bodies[0].replace(b'"2026-02-03T00:00:00Z"', dates)
+    assert len(raw) < 2_000_000
+    path = args["repository"] / "cves/2026/1xxx/CVE-2026-1234.json"
+    path.write_bytes(raw)
+    git(args["repository"], "add", ".")
+    git(args["repository"], "commit", "-qm", "synthetic expanded date metadata")
+    args["commit"], _, _, _ = official(monkeypatch, snapshot, args["repository"])
+    args["receipt_path"] = args["receipt_path"].with_name("expanded-metadata-receipt.json")
+    snapshot.verify_snapshot(args["repository"], args["commit"], args["receipt_path"])
+
+    def no_network(*args, **kwargs):
+        raise AssertionError("network")
+
+    monkeypatch.setattr(snapshot.http.client, "HTTPSConnection", no_network)
+    result = scan.scan_snapshot(**args)
+    assert result["scan_complete"] and result["parsed"] == 3
+    assert result["candidate_findings"] == 3 and result["stop_reason"] == "complete"
+    with state.open_workspace(args["workspace"]) as reader:
+        row = next(reader.iter_outcomes())
+        assert row["metadata"]["date_window_state"] == "unknown"
+        assert row["metadata"]["dates"]["datePublished"] == [float(token)] * count
+        assert reader.read_capture(row["capture_sha256"]) == raw
+    resumed = scan.scan_snapshot(**args)
+    assert resumed["scan_complete"] and resumed["invocation_attempted"] == 0
+
+
+def test_initialization_counts_existing_lock_before_identity_write(source, monkeypatch):
+    scan, state = modules()
+    args, _ = source
+    args["workspace"].mkdir()
+    (args["workspace"] / ".lock").write_bytes(b"x" * 190_000)
+    monkeypatch.setattr(state, "MAX_WORKSPACE_BYTES", 200_000)
+    with pytest.raises(state.StorageLimit, match="workspace_limit"):
+        scan.scan_snapshot(**args)
+    assert not (args["workspace"] / "identity.json").exists()
+    assert (
+        sum(path.stat().st_size for path in args["workspace"].rglob("*") if path.is_file())
+        == 190_000
+    )
+
+
+def test_internal_encoding_guard_is_not_a_resumable_workspace_quota(monkeypatch):
+    _, state = modules()
+    monkeypatch.setattr(state, "_MAX_OUTCOME_BYTES", 100)
+    with pytest.raises(state.StateError, match="outcome_encoding_limit") as failure:
+        state._encode_outcome({"literal": "x" * 101})
+    assert not isinstance(failure.value, state.StorageLimit)
+
+
+def test_expanded_codec_declared_ceiling_is_checked_before_decompression(monkeypatch):
+    import zlib
+
+    _, state = modules()
+    encoded = zlib.compress(b"{}")
+
+    def forbidden():
+        raise AssertionError("decoder allocated before declared-size validation")
+
+    monkeypatch.setattr(state.zlib, "decompressobj", forbidden)
+    with pytest.raises(state.StateError, match="state_integrity"):
+        state._decode_outcome(encoded, 48_016_385, hashlib.sha256(b"{}").hexdigest())
