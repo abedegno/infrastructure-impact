@@ -244,6 +244,11 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
     Unpublished queries pass publication=None; omitted context checks shape only.
     """
     _validate(report, "switching-evidence-v1.json")
+    _validate_evidence_semantics(report, publication=publication, generated_at=generated_at)
+
+
+def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UNSET):
+    """Check evidence whose complete shape was validated by its enclosing boundary."""
     _publication(report, publication, generated_at)
     study = definition()
     if report["definition_sha256"] != definition_sha256(study):
