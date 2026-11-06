@@ -353,19 +353,20 @@ def build_report(
         raise ValueError("KEV and evidence must share their enclosing generation")
     report = dict(
         schema_version=1,
-        publication=copy.deepcopy(publication),
+        publication=publication,
         generated_at=generated_at,
         evaluated_at=generated_at,
         availability="available",
-        definition=copy.deepcopy(definition),
+        definition=definition,
         observation_end=observation_end,
         selection={},
         rows=[],
         sources=[],
         issues=[],
         method=METHOD,
-        inputs=dict(evidence=copy.deepcopy(evidence), kev=copy.deepcopy(kev)),
+        inputs=dict(evidence=evidence, kev=kev),
     )
+    # _select_report makes the sole isolated copy before constructing output.
     return _select_report(report, evaluated_at=generated_at)
 
 
@@ -380,12 +381,16 @@ def select_report(
     publication: dict | None = None,
     generated_at: str | None = None,
 ) -> dict:
+    validated_inputs_json = None
     if isinstance(report, dict) and (
         isinstance(report.get("inputs"), dict)
         or report.get("schema_version") == 1
         and "availability" in report
     ):
         contracts.validate_comparison(report)
+        if report["inputs"] is not None:
+            # Call-local value proof: never reuse a previous call's validation.
+            validated_inputs_json = contracts._json(report["inputs"])
     return _select_report(
         report,
         vendor=vendor,
@@ -395,6 +400,7 @@ def select_report(
         evaluated_at=evaluated_at,
         publication=publication,
         generated_at=generated_at,
+        validated_inputs_json=validated_inputs_json,
     )
 
 
@@ -408,6 +414,7 @@ def _select_report(
     evaluated_at=None,
     publication=None,
     generated_at=None,
+    validated_inputs_json=None,
 ):
     """Recompute from typed immutable inputs, never from already-filtered rows."""
     if vendor is not None and vendor not in VENDORS:
@@ -468,30 +475,54 @@ def _select_report(
         definition_sha256=contracts.definition_sha256(result["definition"]),
     )
     if available:
-        # Full provenance remains in typed inputs; selected row sources are an explicit allowlist.
-        used = {i for row in result["rows"] for i in row["claim_ids"]} | {
-            i for row in result["rows"] for e in row["events"] for i in e["claim_ids"]
-        }
-        sources = []
-
-        def collect(node):
-            if isinstance(node, dict):
-                if set(node) == {"source_url", "source_sha256", "retrieved_at", "source_locator"}:
-                    sources.append(node)
-                else:
-                    for value in node.values():
-                        collect(value)
-            elif isinstance(node, list):
-                for value in node:
-                    collect(value)
-
-        for c in result["inputs"]["evidence"]["claims"]:
-            if c["claim_id"] in used:
-                collect(c)
-        result["sources"] = list({contracts.definition_sha256(s): s for s in sources}.values())
-        result["sources"].sort(key=contracts._json)
-    contracts._validate(result, "switching-comparison-v1.json")
+        result["sources"] = _selected_sources(result["inputs"]["evidence"], result["rows"])
+    _validate_selection_output(result, validated_inputs_json)
     return result
+
+
+def _validate_selection_output(result, validated_inputs_json):
+    """Compose full input validation with validation of every generated field.
+
+    Only public selection supplies a proof, after fresh full comparison shape
+    and semantic validation in the same call. Build and other private callers
+    retain full output validation. The byte comparison is type-aware (unlike
+    Python equality, where True == 1) and also rejects any deepcopy/reducer
+    mutation. The nullable proxy is only for checking the other fields against
+    the original schema; the returned report keeps its complete isolated inputs.
+    """
+    if validated_inputs_json is None:
+        contracts._validate(result, "switching-comparison-v1.json")
+        return
+    if contracts._json(result["inputs"]) != validated_inputs_json:
+        raise ValueError("Retained comparison inputs changed while selecting")
+    contracts._validate({**result, "inputs": None}, "switching-comparison-v1.json")
+
+
+def _selected_sources(evidence, rows):
+    """Derive the exact provenance allowlist without rebuilding a comparison."""
+    # Full provenance remains in typed inputs; selected row sources are an explicit allowlist.
+    used = {i for row in rows for i in row["claim_ids"]} | {
+        i for row in rows for e in row["events"] for i in e["claim_ids"]
+    }
+    sources = []
+
+    def collect(node):
+        if isinstance(node, dict):
+            if set(node) == {"source_url", "source_sha256", "retrieved_at", "source_locator"}:
+                sources.append(node)
+            else:
+                for value in node.values():
+                    collect(value)
+        elif isinstance(node, list):
+            for value in node:
+                collect(value)
+
+    for c in evidence["claims"]:
+        if c["claim_id"] in used:
+            collect(c)
+    sources = list({contracts.definition_sha256(s): s for s in sources}.values())
+    sources.sort(key=contracts._json)
+    return sources
 
 
 def validate_semantics(report):
@@ -528,7 +559,7 @@ def validate_semantics(report):
     inputs = report["inputs"]
     if inputs is None:
         raise ValueError("Available comparison requires complete immutable inputs")
-    contracts.validate_evidence(
+    contracts._validate_evidence_semantics(
         inputs["evidence"], publication=report["publication"], generated_at=report["generated_at"]
     )
     if inputs["evidence"]["definition_sha256"] != selection["definition_sha256"]:
@@ -557,15 +588,7 @@ def validate_semantics(report):
     ):
         raise ValueError("Comparison derived identities/counts disagree with retained inputs")
 
-    derived = _select_report(
-        report,
-        vendor=selection["requested_vendor"],
-        scope_level=selection["scope_level"],
-        window=selection["requested_window"],
-        cve_ids=selection["requested_cve_ids"],
-        evaluated_at=report["evaluated_at"],
-    )
-    if report["sources"] != derived["sources"]:
+    if report["sources"] != _selected_sources(inputs["evidence"], expected):
         raise ValueError("Selected source provenance differs from contributing claims")
 
 
