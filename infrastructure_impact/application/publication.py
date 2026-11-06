@@ -65,6 +65,7 @@ def public_projection(data, public_release_urls=()):
     data = rebuild(data, computed)
     from ..adapters.cvss import public_metrics
 
+    has_score_input = "score_input" in data["research"]
     score_input = data["research"].pop("score_input", {})
     for record in data["records"] + [w["record"] for w in data["retained_advisories"]]:
         validate_advisory(record)
@@ -101,9 +102,10 @@ def public_projection(data, public_release_urls=()):
     # Old publications predate this study; they remain readable without a study asset.
     observation_end = day(data["generated_at"])
     if switching_input is not None and observation_end >= definition()["start_date"]:
-        switching_input["score_availability"] = switching_score_availability(
-            score_input, switching_input, data["records"]
-        )
+        if has_score_input:
+            switching_input["score_availability"] = switching_score_availability(
+                score_input, switching_input, data["records"]
+            )
         data["switching_evidence"] = project(
             switching_input, publication=data.get("publication"), generated_at=data["generated_at"]
         )

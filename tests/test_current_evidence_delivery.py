@@ -296,6 +296,16 @@ def test_cli_current_validation_excludes_retained_source(delivery_db, monkeypatc
     # The command reads the real synthetic database; it never opens an ambient vault.
     clone = connect(":memory:")
     delivery_db.backup(clone)
+    # This CLI test needs an independently reviewable historical interpretation,
+    # not the draft control used by the general delivery fixture.
+    for row in clone.execute("SELECT id, normalized FROM revisions WHERE source_url=?", (CSAF,)):
+        document = json.loads(row["normalized"])
+        document["document_status"] = "published"
+        clone.execute(
+            "UPDATE revisions SET normalized=? WHERE id=?", (json.dumps(document), row["id"])
+        )
+    clone.commit()
+
     monkeypatch.setattr(repository, "connect", lambda **kw: clone)
     cli.main([command])
     result = json.loads(capsys.readouterr().out)
@@ -478,13 +488,17 @@ def test_cached_switching_report_is_rebuilt_from_current_public_input(delivery):
     ]["inputs"]["evidence"]
     excluded = data["retained_advisories"][0]["record"]
     claim = next(c for c in cached["claims"] if c["vendor"] == "arista")
-    claim.update(advisory_id=excluded["advisory_id"], cve_id="CVE-2023-5501")
+    claim.update(advisory_id=excluded["advisory_id"], cve_id="CVE-2023-5501", scores=[])
+    claim["publisher"]["id"] = excluded["advisory_id"]
     claim["source"].update(source_url=excluded["source_url"], source_sha256=excluded["sha256"])
     unrelated = copy.deepcopy(claim)
     unrelated.update(advisory_id="UNRELATED-SAME-CVE", scores=[])
     unrelated["publisher"]["id"] = "UNRELATED-SAME-CVE"
     # The same CVE remains a current, independently owned statement.
     cached["claims"] = [claim, unrelated]
+    from infrastructure_impact.application.switching_evidence import project
+
+    cached = project(cached, publication=cached["publication"], generated_at=cached["generated_at"])
     data["research"].pop("switching_input")
     data["switching_evidence"] = cached
     data["switching_comparison"] = {"stale_cache_marker": True}
@@ -573,3 +587,183 @@ def test_blind_packet_cli_uses_retained_context_without_policy(
     monkeypatch.setattr(query, "current_partition", forbidden)
     cli.main([command, "--packet"])
     assert json.loads(capsys.readouterr().out) == expected
+
+
+@pytest.mark.parametrize("location", ["switching_evidence", "comparison"])
+@pytest.mark.parametrize(
+    "missing", ["claims", "coverage", "issues", "metadata", "invalid_type", "definition"]
+)
+def test_cached_switching_requires_complete_valid_contract(delivery, location, missing):
+    from infrastructure_impact.application.switching_evidence import project
+
+    data = copy.deepcopy(delivery)
+    data["research"].pop("switching_input")
+    cached = project(
+        {"claims": [], "coverage": [], "issues": []}, publication=None, generated_at=AT
+    )
+    if missing == "metadata":
+        cached = {"cached_summary_only": True}
+    elif missing == "invalid_type":
+        cached["claims"] = None
+    elif missing == "definition":
+        cached["definition_sha256"] = "0" * 64
+    else:
+        cached.pop(missing)
+    if location == "switching_evidence":
+        data["switching_evidence"] = cached
+    else:
+        data["switching_comparison"] = {"inputs": {"evidence": cached}}
+    with pytest.raises(ValueError):
+        public_projection(data)
+
+
+@pytest.mark.parametrize("location", ["switching_evidence", "comparison"])
+def test_cached_switching_explicit_valid_empty_contract_is_retained(delivery, location):
+    from infrastructure_impact.application.switching_evidence import project
+
+    data = copy.deepcopy(delivery)
+    data["research"].pop("switching_input")
+    cached = project(
+        {"claims": [], "coverage": [], "issues": []}, publication=None, generated_at=AT
+    )
+    if location == "switching_evidence":
+        data["switching_evidence"] = cached
+    else:
+        data["switching_comparison"] = {"inputs": {"evidence": cached}}
+    projected = public_projection(data)
+    assert projected["switching_evidence"]["claims"] == []
+    assert projected["switching_comparison"]["availability"] == "available"
+
+
+def test_cached_source_only_score_availability_survives_without_native_scores(delivery):
+    from infrastructure_impact.application.switching_evidence import project
+
+    data = copy.deepcopy(delivery)
+    for key in ("switching_input", "score_input"):
+        data["research"].pop(key)
+    url = "https://www.arista.com/security/synthetic-alternate.json"
+    row = {
+        "vendor": "arista",
+        "advisory_id": data["records"][0]["advisory_id"],
+        "source_url": url,
+        "source": {
+            "source_url": url,
+            "source_sha256": "f" * 64,
+            "retrieved_at": AT,
+            "source_locator": "/",
+        },
+        "cve_id": "CVE-2024-6858",
+        "product_id": None,
+        "context": "source_only_unclassified",
+        "state": "unavailable",
+        "issues": ["score_format_unsupported"],
+        "attempts": [],
+    }
+    data["switching_evidence"] = project(
+        {"claims": [], "coverage": [], "issues": [], "score_availability": [row]},
+        publication=None,
+        generated_at=AT,
+    )
+    projected = public_projection(data)
+    assert projected["switching_evidence"]["score_availability"] == [row]
+
+
+def test_score_filter_removes_only_exact_excluded_source_ownership(delivery):
+    from infrastructure_impact.application.current_views import rebuild
+
+    data = copy.deepcopy(delivery)
+    excluded = data["retained_advisories"][0]["record"]
+    source = {
+        "vendor": excluded["vendor"],
+        "advisory_id": excluded["advisory_id"],
+        "source_url": excluded["source_url"],
+        "claims": [],
+        "source": {"source_url": excluded["source_url"], "source_sha256": excluded["sha256"]},
+    }
+    another_owner = copy.deepcopy(source)
+    another_owner["advisory_id"] = "UNRELATED-SAME-CVE"
+    later_capture = copy.deepcopy(source)
+    later_capture["source"]["source_sha256"] = "c" * 64
+    alternate = copy.deepcopy(source)
+    alternate["source_url"] = alternate["source"]["source_url"] = (
+        "https://www.arista.com/security/alternate.json"
+    )
+    data["research"]["score_input"]["advisories"] = [
+        source,
+        another_owner,
+        later_capture,
+        alternate,
+    ]
+    partition_result = {k: data[k] for k in ("records", "retained_advisories", "current_evidence")}
+    result = rebuild(data, partition_result)
+    assert result["research"]["score_input"]["advisories"] == [
+        another_owner,
+        later_capture,
+        alternate,
+    ]
+    source["source"].pop("source_sha256")
+    with pytest.raises(ValueError, match="ownership"):
+        rebuild(data, partition_result)
+
+
+def test_score_source_header_cannot_disguise_excluded_capture(delivery):
+    from infrastructure_impact.application.current_views import rebuild
+
+    data = copy.deepcopy(delivery)
+    record = data["retained_advisories"][0]["record"]
+    data["research"]["score_input"]["advisories"] = [
+        {
+            "vendor": record["vendor"],
+            "advisory_id": record["advisory_id"],
+            "source_url": "https://www.arista.com/security/alternate.json",
+            "claims": [],
+            "source": {"source_url": record["source_url"], "source_sha256": record["sha256"]},
+        }
+    ]
+    result = {k: data[k] for k in ("records", "retained_advisories", "current_evidence")}
+    with pytest.raises(ValueError, match="ownership"):
+        rebuild(data, result)
+
+
+def test_null_score_header_cannot_hide_exact_excluded_source(delivery):
+    from infrastructure_impact.application.current_views import rebuild
+
+    data = copy.deepcopy(delivery)
+    record = data["retained_advisories"][0]["record"]
+    data["research"]["score_input"]["advisories"] = [
+        {
+            "vendor": record["vendor"],
+            "advisory_id": record["advisory_id"],
+            "source_url": None,
+            "claims": [],
+            "source": {"source_url": record["source_url"], "source_sha256": record["sha256"]},
+        }
+    ]
+    partition_result = {k: data[k] for k in ("records", "retained_advisories", "current_evidence")}
+    assert rebuild(data, partition_result)["research"]["score_input"]["advisories"] == []
+
+
+@pytest.mark.parametrize("revision", [None, "9999"])
+def test_score_shared_capture_requires_an_unambiguous_revision(delivery, revision):
+    from infrastructure_impact.application.current_views import rebuild
+
+    data = copy.deepcopy(delivery)
+    record = copy.deepcopy(data["retained_advisories"][0]["record"])
+    record["revision_id"] = 9999
+    data["records"].append(record)
+    data["current_evidence"]["counts"]["current"] += 1
+    data["current_evidence"]["counts"]["retained_total"] += 1
+    entry = {
+        "vendor": record["vendor"],
+        "advisory_id": record["advisory_id"],
+        "source_url": record["source_url"],
+        "source": {"source_url": record["source_url"], "source_sha256": record["sha256"]},
+        "claims": [] if revision is None else [{"revision": revision}],
+    }
+    data["research"]["score_input"]["advisories"] = [entry]
+    partition_result = {k: data[k] for k in ("records", "retained_advisories", "current_evidence")}
+    if revision is None:
+        with pytest.raises(ValueError, match="ownership"):
+            rebuild(data, partition_result)
+    else:
+        assert rebuild(data, partition_result)["research"]["score_input"]["advisories"] == [entry]

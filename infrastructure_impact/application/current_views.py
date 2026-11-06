@@ -114,16 +114,58 @@ def rebuild(data: dict, partition_result: dict) -> dict:
         records, scopes=data.get("reviewed_source_scopes", []), retained_advisories=retained
     )
     data["review_packet"] = review_packet(union)
-    # Independent source-only research remains valid; remove exact excluded source claims.
-    excluded = {
-        (
-            w["record"]["vendor"],
-            w["record"]["advisory_id"],
-            w["record"]["source_url"],
-            w["record"]["sha256"],
+
+    # Preserve independently owned alternate/source-only representations. Only
+    # an exact excluded owner can remove a research claim or score source.
+    def current_source(value):
+        source = value.get("source") or {}
+        if (
+            value.get("source_url") is not None
+            and source.get("source_url") is not None
+            and value["source_url"] != source["source_url"]
+        ):
+            raise ValueError("Ambiguous current research source ownership")
+        owner_url = (
+            value["vendor"],
+            value["advisory_id"],
+            value.get("source_url") or source.get("source_url"),
         )
-        for w in retained
-    }
+        candidates = [
+            w["record"]
+            for w in retained
+            if (w["record"]["vendor"], w["record"]["advisory_id"], w["record"]["source_url"])
+            == owner_url
+        ]
+        if not candidates:
+            return True
+        digest = source.get("source_sha256")
+        if digest is None:
+            raise ValueError("Ambiguous current research source ownership")
+        excluded = [r for r in candidates if r["sha256"] == digest]
+        if not excluded:
+            return True
+        matching = [
+            r
+            for r in records
+            if (r["vendor"], r["advisory_id"], r["source_url"]) == owner_url
+            and r["sha256"] == digest
+        ]
+        if not matching:
+            return False
+        # Native switching and score evidence use text revision references.
+        revision = value.get("revision")
+        if revision is None:
+            revisions = {c.get("revision") for c in value.get("claims", [])}
+            if len(revisions) == 1:
+                revision = next(iter(revisions))
+        if revision is None:
+            raise ValueError("Ambiguous current research source ownership")
+        current_match = any(str(r["revision_id"]) == revision for r in matching)
+        excluded_match = any(str(r["revision_id"]) == revision for r in excluded)
+        if current_match != excluded_match:
+            return current_match
+        raise ValueError("Ambiguous current research source ownership")
+
     research = data.get("research", {})
     switching = research.get("switching_input")
     if switching is None:
@@ -135,66 +177,30 @@ def rebuild(data: dict, partition_result: dict) -> dict:
                     "Cached switching summary requires complete current evidence inputs"
                 )
         if switching is not None:
+            from jsonschema import ValidationError
+
+            from .switching_evidence import validate_evidence
+
+            try:
+                validate_evidence(switching)
+            except (ValidationError, ValueError, TypeError, KeyError):
+                raise ValueError(
+                    "Cached switching evidence requires a complete valid contract"
+                ) from None
             research["switching_input"] = switching
     # Every public switching result is regenerated below the projection boundary.
     data.pop("switching_evidence", None)
     data.pop("switching_comparison", None)
     if switching is not None:
-
-        def current_claim(claim):
-            owner = (
-                claim["vendor"],
-                claim["advisory_id"],
-                claim["source"]["source_url"],
-                claim["source"]["source_sha256"],
-            )
-            if owner not in excluded:
-                return True
-            matching = [
-                r
-                for r in records
-                if (r["vendor"], r["advisory_id"], r["source_url"], r["sha256"]) == owner
-            ]
-            if not matching:
-                return False
-            # Switching's existing revision contract is text. Never use a shared
-            # URL/hash alone to discard a differently owned current representation.
-            revision = claim.get("revision")
-            if revision is None:
-                raise ValueError("Ambiguous current switching claim ownership")
-            current_match = any(str(r["revision_id"]) == revision for r in matching)
-            excluded_match = any(
-                str(w["record"]["revision_id"]) == revision
-                for w in retained
-                if (
-                    w["record"]["vendor"],
-                    w["record"]["advisory_id"],
-                    w["record"]["source_url"],
-                    w["record"]["sha256"],
-                )
-                == owner
-            )
-            if current_match and not excluded_match:
-                return True
-            if excluded_match and not current_match:
-                return False
-            raise ValueError("Ambiguous current switching claim ownership")
-
-        switching["claims"] = [c for c in switching.get("claims", []) if current_claim(c)]
-        current_owners = {(r["vendor"], r["advisory_id"], r["source_url"]) for r in records}
+        switching["claims"] = [c for c in switching.get("claims", []) if current_source(c)]
         if "score_availability" in switching:
             switching["score_availability"] = [
-                a
-                for a in switching["score_availability"]
-                if (a["vendor"], a["advisory_id"], a["source_url"]) in current_owners
+                a for a in switching["score_availability"] if current_source(a)
             ]
     score_input = research.get("score_input")
     if score_input is not None:
-        selected = {(r["vendor"], r["advisory_id"], r["source_url"]) for r in records}
         score_input["advisories"] = [
-            a
-            for a in score_input.get("advisories", [])
-            if (a["vendor"], a["advisory_id"], a["source_url"]) in selected
+            a for a in score_input.get("advisories", []) if current_source(a)
         ]
     for name, reducer in (
         ("vendor_gaps", vendor_gaps),
