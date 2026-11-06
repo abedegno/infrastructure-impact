@@ -303,6 +303,19 @@ class Snapshot:
     def iter_entries(self) -> Iterator[Entry]:
         return iter(self._entries)
 
+    @contextmanager
+    def blob_reader(self):
+        """One offline batch child, with no prefetch; closes even on early exit."""
+        with _git(self._repository, "cat-file", "--batch") as process:
+            reader = _BlobReader(self, process)
+            try:
+                yield reader
+                process.stdin.close()
+                if process.stdout.read(1):
+                    raise SnapshotError("git_batch_protocol")
+            finally:
+                reader.closed = True
+
     def read_blob(self, entry: Entry, *, max_bytes: int) -> bytes:
         if type(max_bytes) is not int or not 0 <= max_bytes <= MAX_RECORD_BYTES:
             raise SnapshotError("invalid_blob_limit")
@@ -315,6 +328,40 @@ class Snapshot:
         if len(data) != entry.size:
             raise SnapshotError("git_object_identity_mismatch")
         return data
+
+
+class _BlobReader:
+    def __init__(self, snapshot, process):
+        self.snapshot = snapshot
+        self.process = process
+        self.closed = False
+
+    def read_blob(self, entry: Entry, *, max_bytes: int) -> bytes:
+        if self.closed:
+            raise SnapshotError("reader_closed")
+        if type(max_bytes) is not int or not 0 <= max_bytes <= MAX_RECORD_BYTES:
+            raise SnapshotError("invalid_blob_limit")
+        entries = self.snapshot._entries
+        position = bisect_left(entries, entry.path, key=lambda item: item.path)
+        if position == len(entries) or entries[position] != entry:
+            raise SnapshotError("entry_not_in_snapshot")
+        if entry.size > max_bytes:
+            raise SnapshotError("blob_byte_limit")
+        self.process.stdin.write((entry.oid + "\n").encode("ascii"))
+        self.process.stdin.flush()
+        header = self.process.stdout.readline(256)
+        if header == f"{entry.oid} missing\n".encode("ascii"):
+            raise SnapshotError("git_object_unavailable")
+        if header != f"{entry.oid} blob {entry.size}\n".encode("ascii"):
+            raise SnapshotError("git_batch_protocol")
+        framed = self.process.stdout.read(entry.size + 1)
+        if len(framed) != entry.size + 1 or framed[-1:] != b"\n":
+            raise SnapshotError("git_batch_protocol")
+        raw = framed[:-1]
+        oid = hashlib.sha1(f"blob {entry.size}\0".encode() + raw).hexdigest()
+        if oid != entry.oid:
+            raise SnapshotError("git_object_identity_mismatch")
+        return raw
 
 
 def _inventory(repository: Path, tree: str) -> tuple[tuple[Entry, ...], int, int]:
