@@ -64,7 +64,7 @@ file hashes. No real captures are committed as synthetic fixtures.
   Full-snapshot RED also caught overlap and retained privacy gaps. The standalone
   schema validator now enforces exactly one typed `oneOf` branch, including
   rejection of overlapping alternatives and boolean-as-integer values.
-- Final monitor suites: 158 passed. Checks use actual HTTP, fingerprinted assets,
+- Initial Task7 monitor suites: 158 passed. Checks use actual HTTP, fingerprinted assets,
   schema and identity validation; no application/jsonschema imports in `-S`
   standalone execution. The previously accepted generation stays byte-identical
   after a rejected candidate; the checker itself has no rollback action.
@@ -74,21 +74,21 @@ file hashes. No real captures are committed as synthetic fixtures.
   absent current-policy hook, count union, schemas, scripts, static capability,
   OpenAPI and native GET/HEAD/405 behavior.
 
-Final functional inputs have canonical manifest SHA-256
+Initial Task7 functional inputs have canonical manifest SHA-256
 `4d3ba0886b11851b26be7283a169e6b5ed1fa5fe7da78fd2d6fa0a62ca0f8aef`
 (416 package/check/test/workflow/build-input files), on parent
 `e5614e0ce3b953ff3791a81e175c6cc6c608f7ec`. All exact CI Ruff check/format command
 sets, seven standalone Node suites, locked Prettier3.9.10, both pinned-uv frozen
 relative-output dependency exports and generated browser-contract byte parity
 passed. The clean public source/privacy export contains 564 allowlisted files.
-A clean Gitless Python3.11 environment explicitly passed all37 portable protocol
+A clean Gitless Python3.11 environment explicitly passed all 37 portable protocol
 cases (two optional Git-package cases deselected in that focused check).
 
 The installed wheel is 620,125 bytes/247 entries, SHA-256
 `7145a35b5cb0deabe94c1b6fee4b4bdeecd3a78d5669218eebc464fd4d52662e`,
 including LICENSE, NOTICE and THIRD_PARTY plus all new resources. Docker build,
 plugin execution and Compose config validation passed from a clean allowlisted
-context. All249 container/package inputs are identical to the final functional
+context. All 249 container/package inputs are identical to the final functional
 source. Image identity:
 `sha256:60643acf1b1a427d9fd33c8ffe071a0cdced24a3a81adbe23f2c55dc2f4e2340`,
 user10001:10001. No service or deployment was started.
@@ -112,13 +112,49 @@ claim that nine parsers changed. Arista is now `85c124006aa0bde2` (base
 These measurements fit the unchanged delivery limits and describe this small
 public-only stage, not production capacity.
 
-Final frozen full matrix: Python3.13 **2,905 passed, 12 subtests passed**
+Initial Task7 frozen full matrix: Python3.13 **2,905 passed, 12 subtests passed**
 (259.90 seconds); clean Gitless Python3.11 **2,902 passed, 3 skipped, 12 subtests
 passed** (246.94 seconds). Skips are the original Git-only checked-in source
-parity test and the two optional original-package compatibility tests; all37
+parity test and the two optional original-package compatibility tests; all 37
 mandatory portable protocol cases pass, and both optional package cases run in
-the Git-backed3.13 suite. The final source export's functional files match the
-manifest above; later edits only complete this documentation.
+the Git-backed3.13 suite. These receipts precede the scoped publication-clock
+review correction below; they are retained as earlier verification evidence.
+
+## Publication-clock review correction
+
+Fresh task review found that payload and envelope publication clocks were each
+internally consistent but lacked a link: a fresh bootstrap/report payload could
+coexist with a stale index and stale part envelopes. The checker now compares the
+bootstrap payload publication identity and `generated_at` directly with the index
+immediately after reading it. Report payloads continue to bind to bootstrap;
+part envelopes bind to index. This concerns publication time only; retained
+capture/retrieval and publisher dates remain independent. Genuine no-index
+compatibility is unchanged.
+
+A real localhost HTTP regression rewrites every content-addressed part envelope
+and its descriptor/hash to the stale index time while preserving fresh,
+consistent bootstrap/report payloads. It first failed because the old checker
+accepted the mixed clocks; the corrected checker rejects it immediately. All
+four monitor suites now pass **159 tests**, including standalone no-site-packages
+and exactly-one typed-schema cases. Exact CI Ruff/Node/Prettier commands, generated
+contracts and both frozen dependency exports pass again.
+
+The corrected 416-file functional inventory has canonical SHA-256
+`c74c1e528dba2a72d07b16947b32e6c45ccc6a1f9b7b66cc02d0527ce134c677`,
+on parent `4a048036a6d22b767160c81061ef27c7433f3be5`. This inventory is distinct
+from the full 564-file allowlisted source export, which also includes documentation.
+Only the checker and regression test changed functionally. All 249 wheel/container
+build inputs match the previously verified artifacts, so their successful probes
+and image are reused. The exact core/profile/policy/normalizer code is unchanged;
+original live/replay source acceptance above remains earlier evidence, and no
+new retrieval or apply is claimed. A clean public-source/privacy export passed
+again. Final corrected-code matrix: **Python 3.13: 2,906 passed, 12 subtests
+passed** (295.47 seconds); **clean Gitless Python 3.11: 2,903 passed, 3 skipped,
+12 subtests passed** (284.91 seconds). The three skips remain exactly the original
+Git-only source parity case and the two optional original-package cases. All
+mandatory portable cases pass, and the Git-backed 3.13 suite executes both
+optional original-package cases. This is the latest functional verification;
+the initial matrix above is earlier evidence.
 
 ## Limits and rollout decisions
 

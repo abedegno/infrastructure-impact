@@ -286,7 +286,8 @@ reparse or migration.
 
 `python checks/public_health.py ORIGIN --generation GENERATION` is read-only and
 uses only the standard library. For a new capability it checks the fingerprinted
-root/report/schema, policy and decision identities, full retained-fragment
+root/report/schema, bootstrap payload publication identity/time against the
+index, policy and decision identities, full retained-fragment
 membership/targets, generation/time, exclusion/current disjointness in the loaded
 cohort, and the global count union. It checks every declared retained fragment
 within the existing 20,000,000-byte default monitor budget and unchanged

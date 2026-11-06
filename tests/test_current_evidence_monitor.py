@@ -199,3 +199,41 @@ def test_no_index_report_cannot_disagree_with_manifest_without_eligibility(deliv
     rewrite(generation, "snapshot.json", data)
     with serving(generation) as origin, pytest.raises(AssertionError):
         check(origin)
+
+
+def test_monitor_rejects_fresh_payload_with_stale_index_and_part_clocks(delivery, tmp_path):
+    generation = publish_monitored(delivery, tmp_path)
+    with serving(generation) as origin:
+        assert check(origin)["status"] == "fresh"
+    index = json.loads((generation / "data/index.json").read_text())
+    stale = "2000-01-01T00:00:00+00:00"
+    index["generated_at"] = stale
+    rewritten = {}
+
+    def stale_envelopes(value):
+        if isinstance(value, list):
+            for item in value:
+                stale_envelopes(item)
+        elif isinstance(value, dict):
+            if set(value) == {"path", "sha256", "bytes"} and value["path"].startswith("data/"):
+                original = value["path"]
+                if original in rewritten:
+                    value.update(rewritten[original])
+                    return
+                envelope = json.loads((generation / original).read_text())
+                # Only publication envelope clocks change. The internally consistent
+                # bootstrap/report payloads and source/publisher dates stay untouched.
+                envelope["generated_at"] = stale
+                rewrite_part(generation, index, value, envelope)
+                rewritten[original] = dict(value)
+            else:
+                for item in value.values():
+                    stale_envelopes(item)
+
+    stale_envelopes(index)
+    rewrite(generation, "data/index.json", index)
+    with (
+        serving(generation) as origin,
+        pytest.raises(AssertionError, match="Mixed publication dates"),
+    ):
+        check(origin)

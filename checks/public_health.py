@@ -372,6 +372,8 @@ def check(origin, expected=None, *, verify_archive=False):
             return value["data"]
 
         data = part(index["bootstrap"])
+        assert data["publication"] == index["publication"], "Mixed publication identities"
+        assert data["generated_at"] == index["generated_at"], "Mixed publication dates"
         descriptors = {
             d["path"]: d for cid in data["benchmark_cohort"] for d in index["cohorts"].get(cid, [])
         }
