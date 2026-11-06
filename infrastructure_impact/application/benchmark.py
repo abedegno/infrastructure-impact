@@ -11,6 +11,7 @@ from ..adapters.compat import auto
 from ..collection.config import load_config
 from ..collection.errors import failure_code
 from ..collection.service import allowed, fetch, resolve_document, retain_resolution
+from ..phase_events import phase
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import collection_result, connect, evidence, ingest, latest, now
@@ -159,7 +160,7 @@ def run(aruba_limit=200):
             failures += 1
             collection_result(db, vendor, url, "error", str(e), failure_code(e))
             print("ERROR", vendor, url, str(e), flush=True)
-    with db:
+    with phase("benchmark.coverage"), db:
         result = coverage(db, latest(db))
     (Paths.from_env().home / "benchmark").mkdir(parents=True, exist_ok=True)
     (Paths.from_env().home / "benchmark/cohort-coverage.json").write_text(

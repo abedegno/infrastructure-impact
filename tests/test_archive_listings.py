@@ -192,9 +192,9 @@ def test_archivepage_contract_and_plugin_registration_guard_the_extension_bounda
                 "vendors": [],
                 "archives": [
                     {
-                        "vendor": "aruba",
+                        "vendor": "hpe",
                         "kind": "listing",
-                        "url": "https://csaf.arubanetworking.hpe.com/",
+                        "url": "https://support.hpe.com/",
                     }
                 ],
             }

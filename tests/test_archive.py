@@ -42,7 +42,7 @@ def test_restart_resumes_documents_and_new_index_links_are_additive(tmp_path):
     index = [b"one.json\ntwo.json\n"]
     docs = []
 
-    def resolve(db, url, vendor):
+    def resolve(db, url, vendor, *, fetcher=None):
         docs.append(url)
         return url, document(url)
 
@@ -89,7 +89,7 @@ def test_pagination_is_bounded_resumable_and_cycles_do_not_loop(tmp_path):
         patch("infrastructure_impact.collection.archive.fetch", side_effect=fetch),
         patch(
             "infrastructure_impact.collection.archive.resolve_document",
-            side_effect=lambda db, url, vendor: (url, document(url)),
+            side_effect=lambda db, url, vendor, *, fetcher=None: (url, document(url)),
         ),
     ):
         assert run(config, path) == (1, 0)
@@ -146,7 +146,7 @@ def test_crash_after_ingest_before_queue_commit_replays_without_duplicate_revisi
         patch("infrastructure_impact.collection.archive.fetch", return_value=b"one.json\n"),
         patch(
             "infrastructure_impact.collection.archive.resolve_document",
-            side_effect=lambda db, url, vendor: (url, document(url)),
+            side_effect=lambda db, url, vendor, *, fetcher=None: (url, document(url)),
         ),
     ):
         with (
@@ -226,7 +226,7 @@ def test_discovery_edges_retain_each_index_revision_and_progress_has_no_raw_byte
         patch("infrastructure_impact.collection.archive.fetch", side_effect=lambda *_: index[0]),
         patch(
             "infrastructure_impact.collection.archive.resolve_document",
-            side_effect=lambda db, url, vendor: (url, document(url)),
+            side_effect=lambda db, url, vendor, *, fetcher=None: (url, document(url)),
         ),
     ):
         run(CONFIG, path)
@@ -256,7 +256,7 @@ def test_archive_progress_survives_sanitized_publication_and_api(tmp_path, monke
         ),
         patch(
             "infrastructure_impact.collection.archive.resolve_document",
-            side_effect=lambda db, url, vendor: (url, document(url)),
+            side_effect=lambda db, url, vendor, *, fetcher=None: (url, document(url)),
         ),
     ):
         run(CONFIG, path)

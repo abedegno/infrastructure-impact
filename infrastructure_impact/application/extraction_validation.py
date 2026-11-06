@@ -130,8 +130,8 @@ def validation_report(records, review=None, scopes=()):
     )
 
 
-def review_packet(records):
-    review = definition()
+def review_packet(records, review=None):
+    review = definition() if review is None else review
     documents = {}
     for case in review["cases"]:
         key = case["vendor"], case["source_url"]

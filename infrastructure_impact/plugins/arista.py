@@ -7,12 +7,23 @@ from ..adapters.arista_boundaries import (
     restricted_cloud_notice,
     xz_unaffected,
 )
+from ..adapters.arista_current_scope import (
+    NOTICE_FORMAT,
+    NOTICE_SLUG,
+    PREFIX,
+    ROUTES,
+    advance_notice,
+)
+from ..adapters.arista_current_scope import parse as current_scope
 from ..adapters.arista_history import arista_release_history
 from ..adapters.arista_legacy_scope import ROUTES as OLDER_ROUTES
 from ..adapters.arista_legacy_scope import older_scope
 from ..adapters.arista_management_scope import ROUTES as MANAGEMENT_ROUTES
 from ..adapters.arista_management_scope import management_scope
 from ..adapters.arista_openssh import openssh_scope
+from ..adapters.arista_reconciliation import CSAF103
+from ..adapters.arista_reconciliation import ROUTES as RECONCILIATION_ROUTES
+from ..adapters.arista_reconciliation import parse as reconciliation
 from ..adapters.arista_routing_scope import ROUTES as ROUTING_ROUTES
 from ..adapters.arista_routing_scope import routing_scope
 from ..adapters.arista_scoped import (
@@ -23,14 +34,24 @@ from ..adapters.arista_scoped import (
 )
 from ..adapters.common import HTML
 from ..adapters.legacy_html import html_advisory
+from ..adapters.switching import extract
 from .archive_listings import arista as archive_listing
+from .arista_selection import resolve
 from .contracts import VendorPlugin
 from .shared import is_json, structured
 
 
 def parse(raw, url, vendor):
+    if url == CSAF103:
+        raise ValueError("Reviewed Arista CSAF requires HTML source selection")
+    if url in RECONCILIATION_ROUTES:
+        return reconciliation(raw, url, vendor)
     if is_json(raw):
         return structured(raw, url, vendor)
+    if any(url == PREFIX + slug for slug, _ in ROUTES.values()):
+        return current_scope(raw, url, vendor)
+    if url == PREFIX + NOTICE_SLUG:
+        return advance_notice(raw, url, vendor)
     if any(url.rstrip("/").endswith("/" + value[0]) for value in OLDER_ROUTES.values()):
         return older_scope(raw, url, vendor)
     if any(url.rstrip("/").endswith("/" + value[0]) for value in ROUTING_ROUTES.values()):
@@ -77,6 +98,14 @@ def parse(raw, url, vendor):
     return html_advisory(raw, url, vendor)
 
 
+def research_evidence(raw, url, vendor, document):
+    if url == CSAF103:
+        return dict(
+            schema_version=1, claims=[], bundles=[], issues=["reviewed_html_selection_required"]
+        )
+    return extract(raw, url, vendor, document)
+
+
 def plugin():
     return VendorPlugin(
         "arista",
@@ -84,11 +113,19 @@ def plugin():
         ("arista.com",),
         parse,
         parse_archive=archive_listing,
+        resolve=resolve,
         capabilities=(
             "csaf",
             "html",
             "browser-release-history",
             "reviewed-unlinked-security-notice",
+        ),
+        non_cve_notice=lambda d: (
+            not d["cves"]
+            and not d["assessments"]
+            and d.get("source_format") == NOTICE_FORMAT
+            and d.get("advisory_id") == NOTICE_SLUG
+            and d.get("source_url") == PREFIX + NOTICE_SLUG
         ),
         retain_unlinked_notice=lambda document: (
             document.get("source_format") == "Arista security notice without CVE"
@@ -103,7 +140,11 @@ def plugin():
             + document["advisory_id"]
         ),
         parse_release_history=arista_release_history,
+        research_evidence=research_evidence,
         normalizer_dependencies=(
+            reconciliation,
+            current_scope,
+            advance_notice,
             arista_aggregate_notice,
             arista_software,
             openssh_scope,

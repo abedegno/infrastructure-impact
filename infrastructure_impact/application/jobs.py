@@ -6,6 +6,7 @@ from this durable collection receipt; deployment credentials are not stored here
 
 from contextlib import closing
 
+from ..phase_events import phase
 from ..settings import Paths
 from ..storage.repository import connect, now
 
@@ -32,11 +33,16 @@ def execute(sync_fn, cohort_fn, report_fn, build_fn, db_path=None, status_fn=Non
             ).lastrowid
         imported = failures = 0
         try:
-            for collect in (sync_fn, cohort_fn):
-                added, failed = collect()
+            for label, collect in (
+                ("collection.sync", sync_fn),
+                ("collection.benchmark", cohort_fn),
+            ):
+                with phase(label):
+                    added, failed = collect()
                 imported += added
                 failures += failed
-            report_fn()
+            with phase("report"):
+                report_fn()
             outcome = "partial" if failures else "ok"
             checks = list(
                 db.execute("SELECT outcome FROM collection_runs WHERE checked_at>=?", (started,))
@@ -66,7 +72,8 @@ def execute(sync_fn, cohort_fn, report_fn, build_fn, db_path=None, status_fn=Non
                     ),
                 )
             if not all_failed:
-                build_fn()
+                with phase("publication.build"):
+                    build_fn()
         except Exception as e:
             with db:
                 db.execute(

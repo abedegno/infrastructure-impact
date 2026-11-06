@@ -38,9 +38,21 @@ let data,
   matrixStatus = '',
   matrixQuery = '';
 let benchmark = [];
-let selectedCves = null;
+let selectedCves = null,
+  kevOnly = false,
+  cohortMode = $('#cohort').value || 'benchmark',
+  customCves = '',
+  committedSelection = null;
+window.InfrastructureSnapshot?.commit(null, null);
 let comparisonSelection = {},
   comparisonScopeVendor = '';
+let comparisonMode = 'benchmark',
+  switchingReport = null,
+  switchingLoading = false,
+  switchingError = '',
+  switchingSequence = 0,
+  switchingDelivery = null,
+  switchingAcceptedDelivery = null;
 function selected() {
   return new Set(data.comparison.cohort);
 }
@@ -68,54 +80,146 @@ function stats() {
     .join('');
 }
 let loadSequence = 0;
+function selectionControls(selection) {
+  view = selection.view;
+  selectedCves = selection.selectedCves;
+  comparisonSelection = selection.comparisonSelection;
+  kevOnly = selection.kevOnly;
+  cohortMode = selection.cohortMode;
+  customCves = selection.customCves;
+  $('#cohort').value = cohortMode;
+  $('#custom-cves').value = customCves;
+  $('#custom-cves').disabled = cohortMode !== 'custom';
+  $('#kev-only').checked = kevOnly;
+}
+function evaluateState(loaded, only) {
+  const kev = window.InfrastructureKev.selectReport(
+    loaded.kev ?? null,
+    loaded.kev?.selection.requested_cve_ids ?? loaded.comparison.cohort,
+    { kevOnly: only },
+  );
+  if (!loaded.kev) {
+    kev.publication = loaded.publication;
+    kev.generated_at = loaded.generated_at;
+  }
+  return { ...loaded, kev };
+}
+function publicationKev(loaded) {
+  if (loaded.kev.source.configured === null) return null;
+  return window.InfrastructureKev.selectReport(
+    loaded.kev,
+    [...new Set([...loaded.all_cves, ...Object.keys(loaded.benchmark_cohort)])],
+    { evaluatedAt: loaded.generated_at },
+  );
+}
+function selectionError(error) {
+  if (committedSelection) selectionControls(committedSelection);
+  if (data && view === 'compare') renderComparison();
+  $('#feedback').textContent =
+    (error.code === 'kev_unavailable'
+      ? 'KEV selection rejected (503): current membership is unavailable.'
+      : error.message) + (data ? ' Displaying the last accepted selection.' : '');
+}
+function accept(loaded, selection, suffix = '', paint = draw) {
+  const report = publicationKev(loaded);
+  const previous = data;
+  data = loaded;
+  selectionControls(selection);
+  try {
+    stats();
+    paint();
+  } catch (error) {
+    data = previous;
+    if (previous && committedSelection) {
+      selectionControls(committedSelection);
+      stats();
+      draw();
+    }
+    throw error;
+  }
+  benchmark = Object.keys(data.benchmark_cohort);
+  document.querySelector('#cohort option[value="benchmark"]').textContent =
+    `Benchmark · ${benchmark.length} CVEs / ${new Set(Object.values(data.benchmark_cohort)).size} components`;
+  $('#kev-status').innerHTML =
+    `${link('https://www.cisa.gov/known-exploited-vulnerabilities-catalog', 'CISA KEV catalogue')} · ${esc(data.kev.source.availability)} · checked ${esc(data.kev.source.checked_at || 'Not supplied')} · evaluated ${esc(data.kev.evaluated_at)}${report ? '' : ' · KEV report unavailable for this publication'}`;
+  $('#kev-export').hidden = !report;
+  $('#json-export').href = window.snapshotMode
+    ? new URL('snapshot.json', document.baseURI).href
+    : '/api/export.json' + suffix;
+  $('#csv-export').href = window.snapshotMode
+    ? new URL('impact.csv', document.baseURI).href
+    : '/api/export.csv' + suffix;
+  committedSelection = selection;
+  window.InfrastructureSnapshot?.commit(data, report);
+}
 async function load() {
   const sequence = ++loadSequence;
+  const selection = {
+    view,
+    selectedCves: selectedCves?.slice() ?? null,
+    comparisonSelection: JSON.parse(JSON.stringify(comparisonSelection)),
+    kevOnly,
+    cohortMode,
+    customCves,
+  };
   $('#feedback').textContent = 'Loading evidence…';
   try {
     const params = new URLSearchParams();
-    params.set('view', view);
-    if (selectedCves) params.set('cves', selectedCves.join(','));
-    if (comparisonSelection.start) params.set('start', comparisonSelection.start);
-    if (comparisonSelection.end) params.set('end', comparisonSelection.end);
-    if (comparisonSelection.group) params.set('group', comparisonSelection.group);
-    if (comparisonSelection.products)
-      params.set('products', JSON.stringify(comparisonSelection.products));
-    const suffix = params.size ? '?' + params.toString() : '';
+    params.set('view', selection.view);
+    if (selection.selectedCves) params.set('cves', selection.selectedCves.join(','));
+    if (selection.kevOnly) params.set('kev', 'listed');
+    for (const key of ['start', 'end', 'group'])
+      if (selection.comparisonSelection[key]) params.set(key, selection.comparisonSelection[key]);
+    if (selection.comparisonSelection.products)
+      params.set('products', JSON.stringify(selection.comparisonSelection.products));
+    const suffix = '?' + params.toString();
     const response = await fetch('/api/state' + suffix);
-    if (!response.ok) throw Error('Could not load the evidence store');
+    if (!response.ok) {
+      const error = Error(
+        `Selection rejected (${response.status}): could not load the evidence store.`,
+      );
+      if (response.status === 503 && selection.kevOnly) error.code = 'kev_unavailable';
+      throw error;
+    }
     const loaded = await response.json();
     if (sequence !== loadSequence) return;
-    data = loaded;
-    benchmark = Object.keys(data.benchmark_cohort);
-    if (selectedCves === null && $('#cohort').value === 'benchmark') {
-      selectedCves = benchmark;
+    if (selection.selectedCves === null && selection.cohortMode === 'benchmark') {
+      selectedCves = Object.keys(loaded.benchmark_cohort);
       return load();
     }
-    const option = document.querySelector('#cohort option[value="benchmark"]');
-    option.textContent = `Benchmark · ${benchmark.length} CVEs / ${new Set(Object.values(data.benchmark_cohort)).size} components`;
-    const ageHours = (Date.now() - new Date(data.generated_at).getTime()) / 3600000;
-    if (ageHours > 36)
-      $('#feedback').textContent = 'Stale publication: collection needs attention.';
-    stats();
-    render();
-    $('#json-export').href = window.snapshotMode
-      ? new URL('snapshot.json', document.baseURI).href
-      : '/api/export.json' + suffix;
-    $('#csv-export').href = window.snapshotMode
-      ? new URL('impact.csv', document.baseURI).href
-      : '/api/export.csv' + suffix;
-  } catch (e) {
+    accept(evaluateState(loaded, selection.kevOnly), selection, suffix);
+  } catch (error) {
     if (sequence !== loadSequence) return;
-    $('#feedback').textContent = e.message;
+    selectionError(error);
   }
 }
-function render() {
+function render(paint = draw) {
+  if (!data) return;
+  try {
+    const selection = { ...committedSelection, view };
+    accept(evaluateState(data, selection.kevOnly), selection, '', paint);
+  } catch (error) {
+    selectionError(error);
+  }
+}
+function kevContext(cveId) {
+  return window.InfrastructureKev.renderContext(data.kev, cveId);
+}
+function draw() {
   document.querySelectorAll('[data-view]').forEach((b) => {
     if (b.dataset.view === view) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
   $('#feedback').textContent =
     `${Date.now() - new Date(data.generated_at).getTime() > 36 * 3600000 ? 'STALE DATA · ' : ''}${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
+  const study = view === 'compare' && comparisonMode === 'switching';
+  for (const selector of ['#cohort-controls', '#summary', '#kev-source'])
+    $(selector).hidden = study;
+  if (data.kev.selection.kev_only && !data.comparison.cohort.length && view !== 'compare') {
+    $('#view').innerHTML =
+      '<p class="empty">No KEV-listed CVEs match the selected cohort. The current CISA catalogue was checked successfully.</p>';
+    return;
+  }
   ({
     matrix: renderMatrix,
     compare: renderComparison,
@@ -174,10 +278,19 @@ function renderMatrix() {
     shown = 150;
     matrixRows();
   });
-  matrixRows();
+  drawMatrixRows();
 }
 function matrixRows() {
-  rows = claims().filter(
+  render(drawMatrixRows);
+}
+function drawMatrixRows() {
+  const assessments = claims();
+  const assessedCves = new Set(assessments.map(({ a }) => a.cve_id));
+  const withoutAssessment = data.comparison.cohort.filter((id) => !assessedCves.has(id));
+  const membership = withoutAssessment.length
+    ? `<section aria-label="CVE membership without local assessments"><h3>Selected CVEs without local product assessments</h3><p>No local product assessment is retained for these CVEs. CISA membership does not establish product affectedness.</p>${withoutAssessment.map((id) => `<div><code>${esc(id)}</code>${kevContext(id)}</div>`).join('')}</section>`
+    : '';
+  rows = assessments.filter(
     ({ a, r }) =>
       (!matrixCve || a.cve_id === matrixCve) &&
       (!matrixVendor || r.vendor === matrixVendor) &&
@@ -187,11 +300,11 @@ function matrixRows() {
         .includes(matrixQuery.toLowerCase()),
   );
   $('#matrix-results').innerHTML =
-    `<p class="count">${rows.length} product/version statements · showing ${Math.min(shown, rows.length)}</p><div class="table-wrap"><table><thead><tr><th>Vendor / CVE</th><th>Product & version scope</th><th>Assessment</th><th>Remediation evidence</th><th>Source</th></tr></thead><tbody>${rows
+    `${membership}<p class="count">${rows.length} product/version statements · showing ${Math.min(shown, rows.length)}</p><div class="table-wrap"><table><thead><tr><th>Vendor / CVE</th><th>Product & version scope</th><th>Assessment</th><th>Remediation evidence</th><th>Source</th></tr></thead><tbody>${rows
       .slice(0, shown)
       .map(
         ({ a, r }, i) =>
-          `<tr><td>${esc(name(r.vendor))}<br><code>${esc(a.cve_id)}</code></td><td><strong>${esc(a.product_family || a.product)}</strong>${a.product_family ? `<small>${esc(a.product)}</small>` : ''}${a.versions?.length ? `<div class="versions">${a.versions.map((v) => esc(v.expression || `${v.version} ${v.status || ''}${v.lessThan ? ' · below ' + v.lessThan : ''}${v.lessThanOrEqual ? ' · through ' + v.lessThanOrEqual : ''}`)).join('<br>')}</div>` : ''}${publisherScope(a)}${r.document_status === 'draft' ? '<span class="draft">DRAFT SOURCE</span>' : ''}</td><td>${badge(a.status)}<small>${a.scope === 'bulletin_shared' ? 'Shared bulletin' : 'CVE-specific statement'}</small></td><td>${fixSummary(a)}</td><td><button class="text-button" data-detail="${i}">View evidence ↗</button><small>${esc(r.source_format)}</small></td></tr>`,
+          `<tr><td>${esc(name(r.vendor))}<br><code>${esc(a.cve_id)}</code>${kevContext(a.cve_id)}</td><td><strong>${esc(a.product_family || a.product)}</strong>${a.product_family ? `<small>${esc(a.product)}</small>` : ''}${a.versions?.length ? `<div class="versions">${a.versions.map((v) => esc(v.expression || `${v.version} ${v.status || ''}${v.lessThan ? ' · below ' + v.lessThan : ''}${v.lessThanOrEqual ? ' · through ' + v.lessThanOrEqual : ''}`)).join('<br>')}</div>` : ''}${publisherScope(a)}${r.document_status === 'draft' ? '<span class="draft">DRAFT SOURCE</span>' : ''}</td><td>${badge(a.status)}<small>${a.scope === 'bulletin_shared' ? 'Shared bulletin' : 'CVE-specific statement'}</small></td><td>${fixSummary(a)}</td><td><button class="text-button" data-detail="${i}">View evidence ↗</button><small>${esc(r.source_format)}</small></td></tr>`,
       )
       .join(
         '',
@@ -224,9 +337,15 @@ function fixSummary(a) {
     )
     .join('');
 }
-function detail({ a, r }) {
+function detail(row) {
+  render(() => {
+    draw();
+    drawDetail(row);
+  });
+}
+function drawDetail({ a, r }) {
   $('#detail-body').innerHTML =
-    `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(JSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(JSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(JSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
+    `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${kevContext(a.cve_id)}${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(JSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(JSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(JSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
   $('#detail').showModal();
 }
 function comparisonCoverage(v) {
@@ -234,9 +353,128 @@ function comparisonCoverage(v) {
   return `<details><summary>Product scope and evidence gaps</summary><p>Scope: ${esc(v.product_scope.mode.replaceAll('_', ' '))}. ${esc(v.product_scope.labels.join('; ') || 'No products selected')}.</p><p>Declared families are context, not a verified inventory: ${esc(v.product_scope.declared_families.join('; ') || 'Not declared')}.</p><p>${esc(s.history_scope)}</p>${s.archives.map((a) => `<p>${link(a.source_url, 'Archive source')} · ${a.documents.done} processed documents; ${a.documents.pending} pending; ${a.documents.error} failed. ${esc((a.observed_scopes || []).join('; '))}</p>`).join('')}${s.errors.map((e) => `<p>${link(e.source_url, 'Source gap')} · ${esc(e.error_code || 'collection error')} · checked ${date(e.checked_at)}</p>`).join('')}<ul>${s.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><p>Rate and timing blockers: ${esc(v.eligibility.reason_codes.map((r) => r.replaceAll('_', ' ')).join('; '))}.</p></details>`;
 }
 function renderComparison() {
+  $('#view').innerHTML =
+    `<label for="comparison-mode">Comparison view<select id="comparison-mode" aria-label="Comparison view"><option value="benchmark" ${comparisonMode === 'benchmark' ? 'selected' : ''}>Scoped benchmark comparison</option><option value="switching" ${comparisonMode === 'switching' ? 'selected' : ''}>Campus/branch switching study · descriptive disclosure</option></select></label><div id="comparison-content"></div>`;
+  $('#comparison-mode').addEventListener('change', (e) => {
+    comparisonMode = e.target.value;
+    render();
+  });
+  if (comparisonMode !== 'switching') return renderBenchmarkComparison();
+  for (const selector of ['#cohort-controls', '#summary', '#kev-source']) $(selector).hidden = true;
+  $('#feedback').textContent =
+    'Switching study · independent controls and accepted publication below';
+  $('#comparison-content').innerHTML = window.InfrastructureSwitching.render(switchingReport, {
+    loading: switchingLoading,
+    error: switchingError,
+  });
+  const accepted = switchingReport,
+    delivery = switchingAcceptedDelivery;
+  window.InfrastructureSwitchingView.mount($('#comparison-content'), accepted, async (ids) => {
+    if (!delivery || !accepted) throw Error('Study evidence unavailable');
+    const loader = await delivery.promise;
+    if (
+      JSON.stringify(loader.publication) !== JSON.stringify(accepted.publication) ||
+      loader.generated_at !== accepted.generated_at
+    )
+      throw Error('Mixed publication generations');
+    return loader.switchingClaims(ids);
+  });
+  $('#switching-apply').addEventListener('click', () =>
+    loadSwitching({
+      vendor: $('#switching-vendor').value || null,
+      scope_level: $('#switching-scope').value,
+      window: $('#switching-window').value,
+    }),
+  );
+  $('#switching-refresh').addEventListener('click', () => {
+    switchingError = '';
+    loadSwitching(
+      switchingReport
+        ? {
+            vendor: switchingReport.selection.requested_vendor,
+            scope_level: switchingReport.selection.scope_level,
+            window: switchingReport.selection.requested_window,
+            cve_ids: switchingReport.selection.requested_cve_ids,
+          }
+        : {},
+    );
+  });
+  for (const format of ['json', 'csv'])
+    $('#switching-' + format)?.addEventListener('click', () => {
+      const blob = switchingDownload(format);
+      if (!blob) return;
+      const url = URL.createObjectURL(blob),
+        a = document.createElement('a');
+      a.href = url;
+      a.download = 'switching-' + switchingReport.publication?.id + '.' + format;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+  if (!switchingReport && !switchingLoading && !switchingError) loadSwitching();
+}
+async function loadSwitching(options = {}) {
+  const sequence = ++switchingSequence;
+  const identity = { publication: data.publication, generated_at: data.generated_at };
+  switchingLoading = true;
+  switchingError = '';
+  if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+  try {
+    const key = JSON.stringify(identity);
+    if (!switchingDelivery || switchingDelivery.key !== key) {
+      const entry = {
+        key,
+        promise: createStaticDelivery(
+          window.fetch.bind(window),
+          new URL('.', document.baseURI).pathname,
+        ),
+      };
+      switchingDelivery = entry;
+      entry.promise.catch(() => {
+        if (switchingDelivery === entry) switchingDelivery = null;
+      });
+    }
+    const delivery = switchingDelivery;
+    const loader = await delivery.promise;
+    const full = await loader.switchingReport();
+    if (sequence !== switchingSequence) return;
+    if (
+      JSON.stringify(data.publication) !== JSON.stringify(identity.publication) ||
+      data.generated_at !== identity.generated_at ||
+      (full &&
+        (JSON.stringify(full.publication) !== JSON.stringify(identity.publication) ||
+          full.generated_at !== identity.generated_at))
+    )
+      throw Error('Mixed publication generations. Reload the page to select a new publication.');
+    const accepted = window.InfrastructureSwitching.selectReport(full, {
+      ...options,
+      ...(full ? {} : identity),
+    });
+    switchingReport = accepted;
+    switchingAcceptedDelivery = delivery;
+    switchingLoading = false;
+  } catch (error) {
+    if (sequence !== switchingSequence) return;
+    switchingLoading = false;
+    switchingError = 'Study selection rejected: ' + error.message;
+  }
+  if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+}
+function switchingDownload(format) {
+  if (!switchingReport || switchingReport.availability !== 'available') return null;
+  return new Blob(
+    [
+      format === 'csv'
+        ? window.InfrastructureSwitching.csvExport(switchingReport)
+        : JSON.stringify(switchingReport, null, 2),
+    ],
+    { type: format === 'csv' ? 'text/csv' : 'application/json' },
+  );
+}
+function renderBenchmarkComparison() {
   const c = data.comparison_eligibility;
   if (!c?.period) {
-    $('#view').innerHTML = '<p>Comparison eligibility is unavailable for this publication.</p>';
+    $('#comparison-content').innerHTML =
+      '<p>Comparison eligibility is unavailable for this publication.</p>';
     return;
   }
   const vendor = comparisonScopeVendor || Object.keys(data.vendors)[0];
@@ -258,7 +496,7 @@ function renderComparison() {
   );
   const sampleNumber = (v, key) =>
     v.eligibility.descriptive_counts_usable ? v.counts[key] : 'Unavailable';
-  $('#view').innerHTML =
+  $('#comparison-content').innerHTML =
     `<h2>Scoped vendor evidence comparison</h2><p>One reporting period and CVE cohort, with an explicit product scope and collection limits for every vendor.</p><div class="notice">${esc(c.method)}</div><div class="matrix-filters"><label>Published from<input type="date" id="comparison-start" value="${esc(c.period.start)}" min="1900-01-01" max="${esc(data.generated_at.slice(0, 10))}"></label><label>Published through<input type="date" id="comparison-end" value="${esc(c.period.end)}" min="1900-01-01" max="${esc(data.generated_at.slice(0, 10))}"></label><label>Product group<select aria-label="Product group" id="comparison-group"><option value="">All retained product roles</option>${(data.product_groups?.groups || []).map((g) => `<option value="${esc(g.id)}" ${g.id === c.product_group ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select></label><button id="comparison-period">Apply period</button><button id="comparison-download">Download scoped comparison JSON</button></div><details><summary>Product grouping coverage and rules</summary><p>Taxonomy ${esc(c.taxonomy_version)}. Roles group source statements; they do not establish equivalent devices, a complete inventory, or comparable vendor rates. Version leaves inherit only a retained named family. Shared routing/switching OS statements are kept separate from platform-specific groups. Exact product selections intersect the chosen group.</p><p>${link('/product-groups.json', 'Download grouping coverage and source-linked rules')}</p><div class="table-wrap"><table><thead><tr><th>Vendor</th><th>Mapped statements</th><th>Unmapped / ambiguous</th><th>Unresolved publisher labels</th></tr></thead><tbody>${(data.product_groups?.vendors || []).map((v) => `<tr><td>${esc(name(v.vendor))}</td><td>${v.mapped_statements} / ${v.statement_count}</td><td>${v.unmapped_statements} / ${v.ambiguous_statements}</td><td><details><summary>${v.unresolved_labels.length} labels</summary>${v.unresolved_labels.map((p) => `<p>${esc(p)}</p>`).join('')}</details></td></tr>`).join('')}</tbody></table></div><p>Grouping coverage above uses all retained non-draft statements, across dates and CVEs. The comparison below uses the selected period and cohort.</p></details><details id="comparison-product-scope"><summary>Choose exact products per vendor</summary><p>Unset vendors include all retained product labels. These labels do not establish equivalent product portfolios. Select up to 20 labels for a vendor; an empty selection gives no usable sample. Publisher family names are display context. A shared label still selects every matching statement, including other families or statements without family context.</p><label>Scope vendor<select aria-label="Scope vendor" id="comparison-scope-vendor">${Object.entries(
       data.vendors,
     )
@@ -419,7 +657,12 @@ $('#cohort').addEventListener('change', (e) => {
   $('#custom-cves').disabled = e.target.value !== 'custom';
 });
 $('#apply').addEventListener('click', () => {
+  // Every Apply supersedes older loads, even when validation rejects it locally.
+  ++loadSequence;
   const mode = $('#cohort').value;
+  cohortMode = mode;
+  customCves = $('#custom-cves').value;
+  kevOnly = $('#kev-only').checked;
   selectedCves =
     mode === 'benchmark'
       ? benchmark
@@ -435,7 +678,7 @@ $('#apply').addEventListener('click', () => {
     selectedCves &&
     (!selectedCves.length || selectedCves.some((c) => !/^CVE-\d{4}-\d{4,}$/.test(c)))
   ) {
-    $('#feedback').textContent = 'Enter valid CVE identifiers separated by commas.';
+    selectionError(Error('Enter valid CVE identifiers separated by commas.'));
     return;
   }
   load();
@@ -631,7 +874,44 @@ function sourceAuditMarkup() {
 function renderCasefiles() {
   const files = data.casefiles?.cases || [];
   $('#view').innerHTML =
-    `<h2>Disclosure research case files</h2><p>Reviewable questions with linked source fingerprints, chronology limits and alternative explanations. Exposure evidence and disclosure chronology are separate.</p><div class="notice">Every initial case has incomplete evidence. Source leads are not verified release availability, and no case establishes intentional concealment. ${link('/casefiles.json', 'All case files')}</div>${files.map((c) => `<article class="change"><div class="eyebrow">${esc(name(c.vendor))} · ${esc(c.selected_cve_ids.join(', '))}</div><h3>${esc(c.question)}</h3>${badge(c.status)}<p>${esc(c.product_scope)}</p><p>Retained publisher product statement: ${c.exposure.publisher_statement_retained ? 'Yes' : 'No'} · ${c.exposure.observed_statuses.map(badge).join(' ') || 'Unresolved in this dataset'}. Prior affectedness is not inferred from a fixed-release statement.</p><h4>Retained evidence</h4>${c.evidence.map((e) => `<p>${link(e.source_url, 'Publisher document')} · evidence ${e.evidence_id}<small>Published ${date(e.publisher_published_at)} · reported fix date ${date(e.publisher_reported_fix_date)}</small><code>${esc(e.source_sha256)}</code></p>`).join('') || '<p>No matching retained publisher evidence for this case.</p>'}${c.reported_date_gaps.map((g) => `<p>Reported date difference: ${g.days} days. ${esc(g.basis)}</p>`).join('')}${caseChronology(c)}<h4>Evidence still needed</h4><ul>${c.missing_evidence.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><h4>Release-source leads</h4>${c.release_source_leads.map((u) => `<p>${link(u, 'Official source lead')} · availability not verified</p>`).join('') || '<p>No independent release-source lead registered.</p>'}<h4>Alternative explanations</h4><ul>${c.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><details><summary>Traceability and review scope</summary><p>${c.timeline_event_ids.length} linked local timeline events${c.timeline_links_truncated ? ' (bounded list)' : ''}. ${c.research_record ? link('/' + c.research_record, 'Investigation record') : ''}</p><p>${esc(c.review_method)} · ${esc(c.reviewed_at)}</p><p>Independent release availability: not verified. Earliest disclosure: not established.</p></details></article>`).join('') || '<p class="empty">No registered case files match this cohort. No exposure or disclosure conclusion follows.</p>'}`;
+    `<h2>Disclosure research case files</h2><p>Reviewable questions with linked source fingerprints, chronology limits and alternative explanations. Exposure evidence and disclosure chronology are separate.</p><div id="dossier-kev-context"></div><div id="research-dossiers"></div><details open><summary>Original case files</summary><div class="notice">Every initial case has incomplete evidence. Source leads are not verified release availability, and no case establishes intentional concealment. ${link('/casefiles.json', 'All case files')}</div>${files.map((c) => `<article class="change"><div class="eyebrow">${esc(name(c.vendor))} · ${esc(c.selected_cve_ids.join(', '))}</div><h3>${esc(c.question)}</h3>${badge(c.status)}<p>${esc(c.product_scope)}</p><p>Retained publisher product statement: ${c.exposure.publisher_statement_retained ? 'Yes' : 'No'} · ${c.exposure.observed_statuses.map(badge).join(' ') || 'Unresolved in this dataset'}. Prior affectedness is not inferred from a fixed-release statement.</p><h4>Retained evidence</h4>${c.evidence.map((e) => `<p>${link(e.source_url, 'Publisher document')} · evidence ${e.evidence_id}<small>Published ${date(e.publisher_published_at)} · reported fix date ${date(e.publisher_reported_fix_date)}</small><code>${esc(e.source_sha256)}</code></p>`).join('') || '<p>No matching retained publisher evidence for this case.</p>'}${c.reported_date_gaps.map((g) => `<p>Reported date difference: ${g.days} days. ${esc(g.basis)}</p>`).join('')}${caseChronology(c)}<h4>Evidence still needed</h4><ul>${c.missing_evidence.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><h4>Release-source leads</h4>${c.release_source_leads.map((u) => `<p>${link(u, 'Official source lead')} · availability not verified</p>`).join('') || '<p>No independent release-source lead registered.</p>'}<h4>Alternative explanations</h4><ul>${c.alternative_explanations.map((a) => `<li>${esc(a)}</li>`).join('')}</ul><details><summary>Traceability and review scope</summary><p>${c.timeline_event_ids.length} linked local timeline events${c.timeline_links_truncated ? ' (bounded list)' : ''}. ${c.research_record ? link('/' + c.research_record, 'Investigation record') : ''}</p><p>${esc(c.review_method)} · ${esc(c.reviewed_at)}</p><p>Independent release availability: not verified. Earliest disclosure: not established.</p></details></article>`).join('') || '<p class="empty">No registered case files match this cohort. No exposure or disclosure conclusion follows.</p>'}</details>`;
+  const report = data.research_dossiers
+    ? { ...data.research_dossiers, publication: data.publication, generated_at: data.generated_at }
+    : null;
+  let dossierState;
+  window.ResearchDossiers.mount($('#research-dossiers'), report, {
+    esc,
+    link,
+    date,
+    beforeSelect() {
+      try {
+        dossierState = evaluateState(data, committedSelection.kevOnly);
+        return true;
+      } catch (error) {
+        selectionError(error);
+        return false;
+      }
+    },
+    onSelect() {
+      accept(dossierState, committedSelection, '', dossierContext);
+    },
+    onDownload(payload) {
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'research-dossier-' + payload.dossiers[0].cve_id + '.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+  });
+  const dossierContext = () => {
+    const id = $('#research-dossiers').querySelector('#dossier-select')?.value;
+    const dossier = report?.dossiers.find((row) => row.id === id) || report?.dossiers[0];
+    $('#dossier-kev-context').innerHTML = dossier ? kevContext(dossier.cve_id) : '';
+  };
+  dossierContext();
 }
 
 function publisherHistoryMarkup(documents) {

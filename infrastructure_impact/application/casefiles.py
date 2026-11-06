@@ -117,10 +117,14 @@ def casefiles(data, definition=None):
                         )
             for record in records:
                 product_pattern = case.get("prior_advisory_product_pattern")
-                if not product_pattern or not any(
-                    re.search(product_pattern, a["product"]) and a["cve_id"] in case["cve_ids"]
+                applicable = [
+                    a
                     for a in record["assessments"]
-                ):
+                    if product_pattern
+                    and re.search(product_pattern, a["product"])
+                    and a["cve_id"] in case["cve_ids"]
+                ]
+                if not applicable:
                     continue
                 try:
                     # A labelled calendar claim; never infer UTC or eligible timing.
@@ -130,25 +134,24 @@ def casefiles(data, definition=None):
                 except (ValueError, TypeError, AttributeError):
                     continue
                 if published.date().isoformat() < initial:
-                    prior_documents.append(
-                        dict(
-                            source_url=record["source_url"],
-                            source_sha256=record["sha256"],
-                            publisher_published_at=record["published_at"],
-                            date_basis="publisher_calendar_claim_timezone_unspecified"
-                            if published.tzinfo is None
-                            else "publisher_calendar_claim_timezone_qualified",
-                            cve_ids=sorted(set(record["cves"]) & set(case["cve_ids"])),
-                            product_labels=sorted(
-                                {
-                                    a["product"]
-                                    for a in record["assessments"]
-                                    if re.search(product_pattern, a["product"])
-                                }
-                            ),
-                            interpretation="An earlier-dated vendor advisory is counter-evidence to inferring nondisclosure from the release-note edit. Its historical availability and first-ever disclosure remain unverified.",
+                    # Keep product labels bound to the assessment CVE. A shared
+                    # source remains one identity, with separately selectable rows.
+                    for cid in sorted({a["cve_id"] for a in applicable}):
+                        prior_documents.append(
+                            dict(
+                                source_url=record["source_url"],
+                                source_sha256=record["sha256"],
+                                publisher_published_at=record["published_at"],
+                                date_basis="publisher_calendar_claim_timezone_unspecified"
+                                if published.tzinfo is None
+                                else "publisher_calendar_claim_timezone_qualified",
+                                cve_ids=[cid],
+                                product_labels=sorted(
+                                    {a["product"] for a in applicable if a["cve_id"] == cid}
+                                ),
+                                interpretation="An earlier-dated vendor advisory is counter-evidence to inferring nondisclosure from the release-note edit. Its historical availability and first-ever disclosure remain unverified.",
+                            )
                         )
-                    )
         cases.append(
             dict(
                 **case,

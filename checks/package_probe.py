@@ -1,5 +1,6 @@
 """Executed outside the checkout against installed wheels, including an extension."""
 
+import hashlib
 import json
 import os
 import tempfile
@@ -41,9 +42,59 @@ def main():
     assert observation["returned_components"] == 1 and observation["inventory_verified"] is False
     registry = default_registry()
     assert "acme" in registry.names() and "f5" in registry.names()
+    assert registry.get("acme").research_evidence is None
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
+    for name, digest in json.loads(
+        os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
+    ).items():
+        assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest, name
+    # Unreleased local reconciliation commands/resources work without checkout imports.
+    from infrastructure_impact.cli import main as cli_main
+    from infrastructure_impact.reconciliation.report import ReportError, validate_report
+    from infrastructure_impact.reconciliation.selectors import load_selectors
+
+    assert len(load_selectors()["families"]) == 3
+    try:
+        validate_report({})
+    except ReportError as error:
+        assert error.code == "invalid_report"
+    else:
+        raise AssertionError("Installed report schema accepted an invalid report")
+    with tempfile.TemporaryDirectory() as probe_directory:
+        probe = Path(probe_directory)
+        for command in ("verify", "scan", "baseline", "report"):
+            try:
+                cli_main(["cve-reconcile", command, "--help"])
+            except SystemExit as error:
+                assert error.code == 0
+        config = probe / "config.json"
+        config.write_text('{"vendors": []}')
+        database = probe / "vault.sqlite3"
+        with connect(database):
+            pass
+        cli_main(
+            [
+                "cve-reconcile",
+                "baseline",
+                "--database",
+                str(database),
+                "--config",
+                str(config),
+                "--output",
+                str(probe / "baseline.json"),
+            ]
+        )
+        from infrastructure_impact.reconciliation.baseline import load_baseline
+
+        assert load_baseline(probe / "baseline.json")["revisions"] == []
+    configured = json.loads((package / "resources/sources.json").read_text())
+    assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
+        "source_id": "cisa-kev",
+        "url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+        "enabled": True,
+    }
     if os.environ.get("IMPACT_DISTRIBUTION_SOURCE_ROOT"):
         assert not package.resolve().is_relative_to(
             Path(os.environ["IMPACT_DISTRIBUTION_SOURCE_ROOT"]).resolve()
@@ -52,6 +103,26 @@ def main():
         expected = json.loads(os.environ["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"])
         assert {vendor: registry.fingerprint(vendor) for vendor in expected} == expected
     assert registry.fingerprint_scheme("acme") == "legacy-package-v1"
+    # Installed operator schema and dynamic external-plugin inventory use no checkout.
+    from jsonschema import Draft202012Validator
+
+    from infrastructure_impact.application.coverage_gaps import report as coverage_report
+
+    with tempfile.TemporaryDirectory() as directory:
+        database = Path(directory) / "operator.sqlite3"
+        with connect(database):
+            pass
+        before = database.read_bytes()
+        with connect(database, read_only=True) as operator:
+            inventory = coverage_report(operator, {"vendors": []}, vendor="acme")
+            assert operator.execute("PRAGMA query_only").fetchone()[0] == 1
+        Draft202012Validator(
+            json.loads((package / "schemas/coverage-gaps-v1.json").read_text())
+        ).validate(inventory)
+        assert inventory["scope"] == {"vendor": "acme", "sample_limit": 32}
+        assert inventory["sources"] == []
+        assert database.read_bytes() == before
+
     from infrastructure_impact.application.build_inventory import audit, template
 
     inventory = template("acme", "Example Router", "1.0", "ExampleSSL", "routing")
@@ -146,15 +217,32 @@ def main():
         assert (root / "current/scorecards.json").exists()
         assert (root / "current/comparison-eligibility.json").exists()
         for filename in (
+            "comparison-eligibility-summary.json",
             "product-groups.json",
             "extraction-validation.json",
             "review-packet.json",
             "publisher-history.json",
             "product-cohorts.json",
             "disclosure-review.json",
+            "research-dossiers.json",
+            "kev.json",
         ):
             assert (root / "current" / filename).exists()
+        summary_path = root / "current/comparison-eligibility-summary.json"
+        status, _, summary_body = app.route(
+            {"REQUEST_METHOD": "GET", "PATH_INFO": "/comparison-eligibility-summary.json"}
+        )
+        assert status == 200 and summary_body == summary_path.read_bytes()
+        eligibility_summary = json.loads(summary_body)
+        assert (
+            eligibility_summary["source_detail"]["sha256"]
+            == hashlib.sha256(
+                (root / "current/comparison-eligibility.json").read_bytes()
+            ).hexdigest()
+        )
+        assert eligibility_summary["expected_vendor_ids"] == sorted(data["vendors"])
         for filename in (
+            "comparison-eligibility-summary-v1.json",
             "product-groups-v1.json",
             "publisher-history-v1.json",
             "extraction-review-v1.json",
@@ -169,6 +257,9 @@ def main():
             "product-cohort-definition-v1.json",
             "product-cohorts-v1.json",
             "disclosure-review-v1.json",
+            "research-dossier-definition-v1.json",
+            "research-dossiers-v1.json",
+            "kev-v1.json",
         ):
             assert (root / "current/schemas" / filename).exists()
         for contract in (root / "current/schemas").glob("*.json"):
@@ -180,6 +271,84 @@ def main():
                 }
             )
             assert status == 200 and contract_body == contract.read_bytes(), contract.name
+        from infrastructure_impact.application.kev import validate_report
+
+        kev = json.loads((root / "current/kev.json").read_text())
+        validate_report(kev)
+        assert (
+            kev["publication"]
+            == json.loads((root / "current/snapshot.json").read_text())["publication"]
+        )
+        assert kev["source"]["availability"] != "available"
+        for path in ("/api/v1/kev", "/kev.json"):
+            status, _, body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": ""}
+            )
+            assert status == 200
+            served = json.loads(body)
+            validate_report(served)
+            assert served["publication"] == kev["publication"]
+        status, _, body = app.route(
+            {"REQUEST_METHOD": "GET", "PATH_INFO": "/kev.js", "QUERY_STRING": ""}
+        )
+        assert status == 200 and body == (package / "web/kev.js").read_bytes()
+        from infrastructure_impact.application.switching_evidence import validate_comparison
+
+        study = json.loads((root / "current/switching-comparison.json").read_text())
+        validate_comparison(study, publication=kev["publication"], generated_at=kev["generated_at"])
+        assert study["availability"] == "available"
+        assert all(row["counts"]["advisories"] == 0 for row in study["rows"])
+        status, _, body = app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/switching-comparison",
+                "QUERY_STRING": "",
+            }
+        )
+        assert status == 200 and json.loads(body)["representation"] == "summary"
+        for name in ("switching-contracts.js", "switching.js", "switching-view.js"):
+            status, _, body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": "/" + name, "QUERY_STRING": ""}
+            )
+            assert status == 200 and body == (package / "web" / name).read_bytes()
+        from infrastructure_impact.application.research_dossiers import research_dossiers
+
+        assert (package / "web/research-dossiers.js").is_file()
+        assert (package / "resources/research-dossiers.json").is_file()
+        for filename in ("research-dossier-definition-v1.json", "research-dossiers-v1.json"):
+            assert (package / "schemas" / filename).is_file()
+        derived = research_dossiers(data)
+        assert len(derived["dossiers"]) == 3
+        assert all(
+            not t["statements"] for d in derived["dossiers"] for t in d["comparison_targets"]
+        )
+        assert all(not d["sources"] for d in derived["dossiers"])
+        assert all(
+            t["vendor"] != "acme" for d in derived["dossiers"] for t in d["comparison_targets"]
+        )
+        exported = json.loads((root / "current/research-dossiers.json").read_text())
+        assert exported["definition_sha256"] == derived["definition_sha256"]
+        assert (
+            exported["publication"]
+            == json.loads((root / "current/snapshot.json").read_text())["publication"]
+        )
+        for path in ("/api/v1/research-dossiers", "/research-dossiers.json"):
+            status, _, dossier_body = app.route(
+                {"REQUEST_METHOD": "GET", "PATH_INFO": path, "QUERY_STRING": ""}
+            )
+            assert status == 200 and json.loads(dossier_body) == exported
+        status, _, dossier_body = app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/research-dossiers",
+                "QUERY_STRING": "vendor=acme",
+            }
+        )
+        assert status == 200 and json.loads(dossier_body)["dossiers"] == []
+        status, _, script_body = app.route(
+            {"REQUEST_METHOD": "GET", "PATH_INFO": "/research-dossiers.js", "QUERY_STRING": ""}
+        )
+        assert status == 200 and script_body == (package / "web/research-dossiers.js").read_bytes()
         groups = json.loads((root / "current/product-groups.json").read_text())
         assert (
             next(v for v in groups["vendors"] if v["vendor"] == "acme")["unmapped_statements"] == 1
@@ -232,6 +401,9 @@ def main():
                 "schema_validated": True,
                 "database_and_publication": True,
                 "public_api": True,
+                "kev_resources_and_api": True,
+                "switching_resources_and_api": True,
+                "optional_research_hook_compatible": True,
             }
         )
     )

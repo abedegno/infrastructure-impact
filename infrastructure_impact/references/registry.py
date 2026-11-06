@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Callable
 
+from .kev import parse as parse_kev
 from .nvd import parse_openssh
 
 NVD_OPENSSH_URL = (
@@ -11,16 +12,24 @@ NVD_OPENSSH_URL = (
     "&resultsPerPage=2000&startIndex=0"
 )
 
+KEV_URL = (
+    "https://raw.githubusercontent.com/cisagov/kev-data/develop/"
+    "known_exploited_vulnerabilities.json"
+)
+KEV_ATTRIBUTION_URL = "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+
 
 @dataclass(frozen=True)
 class ReferenceSource:
     id: str
     url: str
     parse: Callable
+    purpose: str = "component_study"
 
 
 SOURCES = {
-    "nvd-openssh-products": ReferenceSource("nvd-openssh-products", NVD_OPENSSH_URL, parse_openssh)
+    "nvd-openssh-products": ReferenceSource("nvd-openssh-products", NVD_OPENSSH_URL, parse_openssh),
+    "cisa-kev": ReferenceSource("cisa-kev", KEV_URL, parse_kev, purpose="cve_enrichment"),
 }
 
 

@@ -1,0 +1,409 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "evaluated_at",
+    "source",
+    "catalogue",
+    "policy",
+    "listed_cve_ids",
+    "entries",
+    "selection"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "advisory_schema_version"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "advisory_schema_version": {
+              "const": 2,
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "evaluated_at": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "retrieval_url",
+        "catalogue_url",
+        "configured",
+        "enabled",
+        "availability",
+        "latest_attempt",
+        "checked_at"
+      ],
+      "properties": {
+        "id": {
+          "const": "cisa-kev"
+        },
+        "retrieval_url": {
+          "const": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json"
+        },
+        "catalogue_url": {
+          "const": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+        },
+        "configured": {
+          "type": ["boolean", "null"]
+        },
+        "enabled": {
+          "type": ["boolean", "null"]
+        },
+        "availability": {
+          "enum": [
+            "available",
+            "not_configured",
+            "disabled",
+            "missing",
+            "failed",
+            "stale",
+            "future"
+          ]
+        },
+        "latest_attempt": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checked_at", "outcome", "error_code"],
+              "properties": {
+                "checked_at": {
+                  "$ref": "#/$defs/timestamp"
+                },
+                "outcome": {
+                  "enum": ["ok", "error"]
+                },
+                "error_code": {
+                  "type": ["string", "null"]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checked_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "catalogue": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "released_at",
+            "count",
+            "sha256",
+            "revision_id",
+            "source_observed_at",
+            "parsed_at",
+            "parser_version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "released_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20000
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "revision_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "source_observed_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "parsed_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "parser_version": {
+              "type": "integer",
+              "const": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_bytes", "max_entries", "fresh_for_seconds", "future_tolerance_seconds"],
+      "properties": {
+        "max_bytes": {
+          "type": "integer",
+          "const": 8000000
+        },
+        "max_entries": {
+          "type": "integer",
+          "const": 20000
+        },
+        "fresh_for_seconds": {
+          "type": "integer",
+          "const": 129600
+        },
+        "future_tolerance_seconds": {
+          "type": "integer",
+          "const": 300
+        }
+      }
+    },
+    "listed_cve_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/cve"
+      },
+      "maxItems": 20000
+    },
+    "entries": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/cve"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/entry"
+      },
+      "maxProperties": 20000
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested_cve_ids", "effective_cve_ids", "kev_only", "membership"],
+      "properties": {
+        "requested_cve_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/cve"
+          }
+        },
+        "effective_cve_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/cve"
+          }
+        },
+        "kev_only": {
+          "type": "boolean"
+        },
+        "membership": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/cve"
+          },
+          "additionalProperties": {
+            "enum": ["listed", "not_listed", "unknown"]
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Generation-bound CISA KEV membership report v1",
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cve": {
+      "type": "string",
+      "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$",
+      "not": {
+        "pattern": "[^A-Z0-9-]"
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cveID",
+        "vendorProject",
+        "product",
+        "vulnerabilityName",
+        "shortDescription",
+        "requiredAction",
+        "dateAdded",
+        "dueDate",
+        "knownRansomwareCampaignUse",
+        "forensicTriage",
+        "notes",
+        "cwes"
+      ],
+      "properties": {
+        "cveID": {
+          "$ref": "#/$defs/cve"
+        },
+        "vendorProject": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "vulnerabilityName": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "shortDescription": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "requiredAction": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "dateAdded": {
+          "type": "string",
+          "format": "date"
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "knownRansomwareCampaignUse": {
+          "type": ["string", "null"]
+        },
+        "forensicTriage": {
+          "type": ["string", "null"]
+        },
+        "notes": {
+          "type": ["string", "null"]
+        },
+        "cwes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "properties": {
+              "configured": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "properties": {
+              "enabled": {
+                "type": "null"
+              },
+              "availability": {
+                "const": "missing"
+              },
+              "checked_at": {
+                "type": "null"
+              },
+              "latest_attempt": {
+                "type": "null"
+              }
+            }
+          },
+          "catalogue": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "source": {
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "catalogue": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "listed_cve_ids": {
+            "maxItems": 0
+          },
+          "entries": {
+            "maxProperties": 0
+          }
+        }
+      }
+    }
+  ]
+}

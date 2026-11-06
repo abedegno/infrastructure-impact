@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-inputs:1",
+  "title": "Strict sharded switching input metadata v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "representation",
+    "evidence",
+    "kev"
+  ],
+  "properties": {
+    "representation": {
+      "const": "switching-inputs"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "$ref": "urn:infrastructure-impact:switching-evidence:1#/properties/schema_version"
+        },
+        "publication": {
+          "$ref": "urn:infrastructure-impact:switching-evidence:1#/properties/publication"
+        },
+        "generated_at": {
+          "$ref": "urn:infrastructure-impact:switching-evidence:1#/properties/generated_at"
+        },
+        "definition_sha256": {
+          "$ref": "urn:infrastructure-impact:switching-evidence:1#/properties/definition_sha256"
+        },
+        "issues": {
+          "$ref": "urn:infrastructure-impact:switching-evidence:1#/properties/issues"
+        }
+      },
+      "required": [
+        "schema_version",
+        "publication",
+        "generated_at",
+        "definition_sha256",
+        "issues"
+      ]
+    },
+    "kev": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/schema_version"
+        },
+        "publication": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/publication"
+        },
+        "generated_at": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/generated_at"
+        },
+        "evaluated_at": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/evaluated_at"
+        },
+        "source": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/source"
+        },
+        "catalogue": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/catalogue"
+        },
+        "policy": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/policy"
+        },
+        "listed_cve_ids": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/listed_cve_ids"
+        },
+        "selection": {
+          "$ref": "urn:infrastructure-impact:kev:1#/properties/selection"
+        }
+      },
+      "required": [
+        "schema_version",
+        "publication",
+        "generated_at",
+        "evaluated_at",
+        "source",
+        "catalogue",
+        "policy",
+        "listed_cve_ids",
+        "selection"
+      ]
+    }
+  }
+}

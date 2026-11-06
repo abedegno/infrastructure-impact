@@ -9,6 +9,7 @@ from pathlib import Path
 from threading import Lock
 from urllib.parse import parse_qs
 
+from .application.kev import KevUnavailable
 from .exports import assessment_export, csv_export, select
 
 LOG = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ class Application:
     def __call__(self, environ, start_response):
         try:
             status, content_type, body = self.route(environ)
+        except KevUnavailable:
+            status, content_type, body = 503, "application/json", b'{"error":"kev_unavailable"}'
         except BadRequest:
             status, content_type, body = 400, "application/json", b'{"error":"Invalid request"}'
         except Exception:
@@ -163,13 +166,59 @@ class Application:
                 }
             )
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        if path == "/api/v1/switching-comparison":
+            from .application.switching_comparison import day, query_options, select_report, summary
+            from .exports import switching_csv
+
+            try:
+                options, output = query_options(
+                    query,
+                    data.get("switching_comparison", {}).get(
+                        "observation_end", day(data["generated_at"])
+                    ),
+                )
+            except ValueError as error:
+                raise BadRequest("Invalid study query") from error
+            asset = generation / "switching-comparison.json"
+            if not asset.exists():
+                return self.json({"error": "switching_unavailable"}, status=503)
+            from .application.switching_evidence import validate_comparison
+
+            complete = json.loads(asset.read_text())
+            validate_comparison(
+                complete, publication=data["publication"], generated_at=data["generated_at"]
+            )
+            report = select_report(complete, **options)
+            if report["availability"] == "unavailable":
+                return self.json({"error": "switching_unavailable"}, status=503)
+            if output == "csv":
+                return 200, "text/csv", switching_csv(report).encode()
+            return self.json(summary(report))
         ids = None
         if "cves" in query or "cve" in query:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
             if len(ids) > 200 or not all(CVE.fullmatch(cid) for cid in ids):
                 raise BadRequest("Invalid CVE cohort")
+        if path == "/api/v1/research-dossiers":
+            from .application.research_dossiers import select_research_dossiers
+
+            values = query.get("vendor", [])
+            if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                raise BadRequest("Unknown or repeated vendor")
+            if "research_dossiers" not in data:
+                return self.json({"error": "Report unavailable for this generation"}, status=404)
+            report = data["research_dossiers"]
+            cohort = ids if ids is not None else [d["cve_id"] for d in report["dossiers"]]
+            return self.json(
+                {
+                    **select_research_dossiers(report, cohort, values[0] if values else None),
+                    "publication": data["publication"],
+                    "generated_at": data["generated_at"],
+                }
+            )
         if path in (
             "/api/state",
+            "/api/v1/kev",
             "/api/export.json",
             "/api/export.csv",
             "/api/assessments",
@@ -182,20 +231,40 @@ class Application:
             "/api/v1/assessments",
         ):
             try:
+                kev_values = query.get("kev", [])
+                if kev_values and kev_values != ["listed"]:
+                    raise ValueError("Invalid KEV control")
+                values = query.get("vendor", [])
+                if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                    raise ValueError("Unknown or repeated vendor")
                 for key in ("start", "end", "products", "group"):
                     if key in query and len(query[key]) != 1:
                         raise ValueError("Duplicate comparison control")
                 products = json.loads(query["products"][0]) if "products" in query else None
                 selected = select(
                     data,
-                    ids,
+                    (
+                        ids
+                        if ids is not None
+                        else (
+                            data.get("kev", {}).get("selection", {}).get("requested_cve_ids")
+                            if path == "/api/v1/kev"
+                            else None
+                        )
+                    ),
                     start=query.get("start", [None])[0],
                     end=query.get("end", [None])[0],
                     products=products,
                     group=query.get("group", [None])[0],
+                    vendor=values[0] if values else None,
+                    kev_only=kev_values == ["listed"],
                 )
+            except KevUnavailable:
+                raise
             except (ValueError, TypeError) as error:
                 raise BadRequest("Invalid comparison selection") from error
+            if path == "/api/v1/kev":
+                return self.json(selected["kev"])
             if path == "/api/state":
                 return self.json(selected)
             if path in (
@@ -288,6 +357,21 @@ class Application:
             "/",
             "/index.html",
             "/app.js",
+            "/research-dossiers.js",
+            "/kev.js",
+            "/switching-contracts.js",
+            "/switching.js",
+            "/switching-view.js",
+            "/switching-evidence.json",
+            "/switching-comparison.json",
+            "/switching-study.json",
+            "/schemas/switching-study-v1.json",
+            "/schemas/switching-evidence-v1.json",
+            "/schemas/switching-comparison-v1.json",
+            "/schemas/switching-summary-v1.json",
+            "/schemas/switching-inputs-v1.json",
+            "/kev.json",
+            "/schemas/kev-v1.json",
             "/style.css",
             "/snapshot.js",
             "/delivery.js",
@@ -304,7 +388,9 @@ class Application:
             "/component-studies.json",
             "/product-cohorts.json",
             "/disclosure-review.json",
+            "/research-dossiers.json",
             "/comparison-eligibility.json",
+            "/comparison-eligibility-summary.json",
             "/product-groups.json",
             "/extraction-validation.json",
             "/review-packet.json",
@@ -317,6 +403,7 @@ class Application:
             "/schemas/advisory-v2.json",
             "/schemas/release-asset-v1.json",
             "/schemas/comparison-eligibility-v1.json",
+            "/schemas/comparison-eligibility-summary-v1.json",
             "/schemas/product-groups-v1.json",
             "/schemas/publisher-history-v1.json",
             "/schemas/extraction-review-v1.json",
@@ -330,6 +417,8 @@ class Application:
             "/schemas/product-cohort-definition-v1.json",
             "/schemas/product-cohorts-v1.json",
             "/schemas/disclosure-review-v1.json",
+            "/schemas/research-dossiers-v1.json",
+            "/schemas/research-dossier-definition-v1.json",
             "/schemas/source-selection-v1.json",
             "/schemas/component-inventory-v1.json",
             "/schemas/build-inventory-submission-v1.json",

@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-11-04",
+  "review_method": "Automated source-led byte and local-scope review; independent human review pending",
+  "sample_strategy": "Purposive local boundaries; five or more cases per vendor, not five documents or a statistical accuracy estimate. Source-only Cisco bundle/HTML replay is a separate contract test. Unavailable categories remain incomplete.",
+  "cases": [
+    {
+      "id": "switching-cisco-1",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+      "source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^IOS\\ XE\\ Software\\ with\\ NETCONF\\ enabled$",
+      "expected_status": "affected",
+      "source_locator": "div#vulnerableproducts / tr[33] / IOS XE Software with NETCONF enabled",
+      "rationale": "Conditional software row; no named target hardware; fixed 17.15.1 remains in this row only.",
+      "remediation_availability": "vendor_reports_fixed"
+    },
+    {
+      "id": "switching-cisco-2",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+      "source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Cisco\\ Catalyst\\ SD\\-WAN\\ $",
+      "expected_status": "affected",
+      "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-238692",
+      "rationale": "Explicit product identity in structured representation; not the missing HTML IOS XE NETCONF statement.",
+      "forbidden_statuses": [
+        "fixed",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "switching-cisco-3",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+      "source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Cisco\\ Catalyst\\ SD\\-WAN\\ Manager\\ $",
+      "expected_status": "affected",
+      "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-271450",
+      "rationale": "Explicit product identity in structured representation; not the missing HTML IOS XE NETCONF statement.",
+      "forbidden_statuses": [
+        "fixed",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "switching-cisco-4",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+      "source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Cisco\\ Catalyst\\ SD\\-WAN\\ Controller\\ $",
+      "expected_status": "affected",
+      "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-292518",
+      "rationale": "Explicit product identity in structured representation; not the missing HTML IOS XE NETCONF statement.",
+      "forbidden_statuses": [
+        "fixed",
+        "unaffected"
+      ]
+    },
+    {
+      "id": "switching-cisco-5",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z/csaf/cisco-sa-dhcp-dos-T3CXPO9z.json",
+      "source_sha256": "12b27df5cfedde1fc0c3f1359c26304e61a5ad8683ab594d5b1a441815fb09d7",
+      "cve_id": "CVE-2024-20259",
+      "product_pattern": "^17\\.1\\.1$",
+      "expected_status": "affected",
+      "source_locator": "/product_tree/branches/0/branches/0/branches/0/branches/0; /vulnerabilities/0/product_status/known_affected",
+      "rationale": "Nested service-pack leaf retains parent version 17.1 and IOS XE family; not an inferred Catalyst model.",
+      "claim_context": [
+        [
+          "product_version",
+          "17.1"
+        ]
+      ]
+    },
+    {
+      "id": "switching-aruba-6",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-017.json",
+      "source_sha256": "eda14edea2bc27237302800cd27ec4ada28213e406502c5714d6c658479e93cb",
+      "cve_id": "CVE-2022-3602",
+      "product_pattern": "^AOS\\-CX$",
+      "expected_status": "unaffected",
+      "source_locator": "/vulnerabilities/0/product_status/known_not_affected; /product_tree/branches/0/branches/5",
+      "rationale": "Explicit all-versions AOS-CX exclusion independently stated for this CVE in a multi-CVE bulletin.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "claim_context": [
+        [
+          "product_version_range",
+          "vers:all/*"
+        ]
+      ]
+    },
+    {
+      "id": "switching-aruba-7",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-017.json",
+      "source_sha256": "eda14edea2bc27237302800cd27ec4ada28213e406502c5714d6c658479e93cb",
+      "cve_id": "CVE-2022-3786",
+      "product_pattern": "^AOS\\-CX$",
+      "expected_status": "unaffected",
+      "source_locator": "/vulnerabilities/1/product_status/known_not_affected; /product_tree/branches/0/branches/5",
+      "rationale": "Explicit all-versions AOS-CX exclusion independently stated for this CVE in a multi-CVE bulletin.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "claim_context": [
+        [
+          "product_version_range",
+          "vers:all/*"
+        ]
+      ]
+    },
+    {
+      "id": "switching-aruba-8",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^AOS\\-CX$",
+      "expected_status": "affected",
+      "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree/branches/0/branches/0/branches/4",
+      "rationale": "Explicit 10.13 affected interval; distinct fixed branch cannot be inherited as an affected-product fix.",
+      "claim_context": [
+        [
+          "product_version_range",
+          "vers:semver/>=10.13.0000|<=10.13.1030"
+        ]
+      ]
+    },
+    {
+      "id": "switching-aruba-9",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^AOS\\-CX$",
+      "expected_status": "fixed",
+      "source_locator": "/vulnerabilities/0/product_status/fixed; /product_tree/branches/0/branches/0/branches/1",
+      "rationale": "Fixed-only 10.13.1031 branch; downloadable statement does not prove affectedness for that product identity.",
+      "remediation_availability": "vendor_reports_fixed",
+      "claim_context": [
+        [
+          "product_version",
+          "10.13.1031"
+        ]
+      ]
+    },
+    {
+      "id": "switching-aruba-10",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^AOS\\-CX$",
+      "expected_status": "unaffected",
+      "source_locator": "/vulnerabilities/0/product_status/known_not_affected; /product_tree/branches/0/branches/0/branches/8",
+      "rationale": "Legacy branch is explicitly excluded; never erase neighboring affected branches.",
+      "claim_context": [
+        [
+          "legacy",
+          "vers:semver/>=10.0.0000|<10.10.0000"
+        ]
+      ]
+    },
+    {
+      "id": "switching-arista-11",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19905-security-advisory-0101",
+      "source_sha256": "ce7c2b84e1a342131e7c28d3cf21820195f98c938a8e778e54acc8659ec99d0c",
+      "cve_id": "CVE-2024-3596",
+      "product_pattern": "^Arista\\ EOS$",
+      "expected_status": "affected",
+      "source_locator": "Affected Software and Platforms / EOS Products; Required Configuration for Exploitation",
+      "rationale": "Conditional RADIUS configuration and slash platform shorthand retained literally; no target-model membership is inferred.",
+      "version_contains": "4.34.0F and older",
+      "exposure_contains": "RADIUS",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "7ebc6a136a33bb221961cb1953bb80abf1c3c2f0dd996fb3b33d44abea494518"
+      }
+    },
+    {
+      "id": "switching-arista-12",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100",
+      "source_sha256": "12ac03213f9550ac59e704e5811335f89e253e753de288a9f7dfadbff11e9c98",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^EOS\\ release\\ \\(source\\ platform\\ scope\\ applies\\)$",
+      "expected_status": "affected",
+      "source_locator": "Affected Software / CVE-2024-6387 / EOS release versions",
+      "rationale": "Two CVEs have distinct local software branches; the separate shared Affected Platforms section is not cross-joined.",
+      "expected_scope": "cve_specific",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "91a5b3ab6b8dce153a9c01fd99b4c43d486e924e4cd416e08e3bbdf66274f654"
+      }
+    },
+    {
+      "id": "switching-arista-13",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100",
+      "source_sha256": "12ac03213f9550ac59e704e5811335f89e253e753de288a9f7dfadbff11e9c98",
+      "cve_id": "CVE-2024-6409",
+      "product_pattern": "^EOS\\ release\\ \\(source\\ platform\\ scope\\ applies\\)$",
+      "expected_status": "affected",
+      "source_locator": "Affected Software / CVE-2024-6409 / EOS release versions",
+      "rationale": "Two CVEs have distinct local software branches; the separate shared Affected Platforms section is not cross-joined.",
+      "expected_scope": "cve_specific",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "91a5b3ab6b8dce153a9c01fd99b4c43d486e924e4cd416e08e3bbdf66274f654"
+      }
+    },
+    {
+      "id": "switching-arista-14",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100",
+      "source_sha256": "12ac03213f9550ac59e704e5811335f89e253e753de288a9f7dfadbff11e9c98",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Arista\\ EOS$",
+      "expected_status": "fixed",
+      "source_locator": "Resolution / CVE-2024-6387 / Arista EOS-based products",
+      "rationale": "Fixed-only backport branch remains separate; package version text is not appliance exposure.",
+      "version_contains": "4.32.2F",
+      "remediation_availability": "vendor_reports_fixed",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "91a5b3ab6b8dce153a9c01fd99b4c43d486e924e4cd416e08e3bbdf66274f654"
+      }
+    },
+    {
+      "id": "switching-arista-15",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19222-security-advisory-0095",
+      "source_sha256": "8eb5ef89750bc621bf5fcc4f4145a91051be9630afb8bdc8b42227ea34097a8f",
+      "cve_id": "CVE-2024-3094",
+      "product_pattern": "^Arista\\ products\\ \\(publisher\\-wide\\ current\\ statement\\)$",
+      "expected_status": "unaffected",
+      "source_locator": "Vulnerability Assessment / No Arista products are affected.",
+      "rationale": "Publisher-wide xz exclusion; no absent model statement is converted to individual model qualification.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ],
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "9d3d0c3e95342b31066c20fa9cb13032db99c2f42b581e2c9b28873c2218de13"
+      }
+    },
+    {
+      "id": "switching-arista-16",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/11996-security-advisory-56",
+      "source_sha256": "922f6007be550716146183ee08809107342a8ffbd22486b4771b13cca47e5309",
+      "cve_id": "CVE-2020-15898",
+      "product_pattern": "^Arista\\ EOS$",
+      "expected_status": "unaffected",
+      "source_locator": "Affected Software / explicitly unaffected EOS platforms; revision table 1.0",
+      "rationale": "2020-12-16 initial publication is outside the 2021 study even though later revisions exist. This is a boundary control, not a 2021 observation.",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "06bed0e67d62fe830dc905f7953b73d5b05d61d32e12045fa10c1821dd008484"
+      }
+    }
+  ]
+}

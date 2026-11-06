@@ -90,6 +90,28 @@ The built-in Cisco policy checks the advertised CSAF identity and CVE scope. Its
 choice is based on the reviewed source structure, not an automatic rule that
 whichever representation has more rows must be correct.
 
+## Reviewed Arista SA-0103 choice
+
+The exact reviewed [SA-0103 HTML article](https://www.arista.com/en/support/advisories-notices/security-advisory/19917-security-advisory-0103)
+tracks CVE-2024-6858. Its explicitly advertised
+[CSAF representation](https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_103.json)
+instead describes CVE-2023-5501 in the retained capture. From either entry URL,
+the policy independently validates and selects the HTML. The literal CSAF ID
+`Arista Networks Security Advisory 103` is an explicit representation pairing,
+not a CVE alias. A disagreeing alternate produces a bounded existing
+`SourceViewIssue` and partial collection health; it contributes no merged scope
+or remediation. A matching alternate remains a separate validated source view.
+The advertised pairing must occur inside the validated article heading; changed
+primary identity or layout fails visibly.
+
+Direct normalization of this exact CSAF route is rejected, including replay.
+Earlier contradictory normalized revisions remain retained under their original
+identity, but the research hook emits no claims from this representation.
+Operators must use the reviewed selection path rather than renaming or deleting
+history. Other Arista routes retain their existing policy. See the
+[dated repair observations](research/2026-11-06-arista-comparison-repair-observations.md)
+for the offline retained-capture result and its limits.
+
 ## Storage and public audit
 
 Migration 009 adds append-only source selections, retained-view edges and bounded
