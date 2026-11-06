@@ -1,6 +1,6 @@
 # Exact-target refresh and current-evidence dispositions
 
-Date: 6 November 2026. Status: maintainer-approved design; implementation plan pending review. Not implemented or activated.
+Date: 6 November 2026. Status: maintainer-approved design and plan; implementation verified locally. Review and integration are tracked in [PR #33](https://github.com/abedegno/infrastructure-impact/pull/33). Hosted activation remains separately gated.
 Base: merged PR #32, `a9014f01a697c98103e908a9941a91f62417d890`.
 
 ## Intent and approved direction

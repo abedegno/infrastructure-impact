@@ -10,6 +10,8 @@
 
 **Spec:** [Approved design](../specs/2026-11-06-targeted-refresh-current-evidence-design.md), approved by the maintainer after PR #33 was opened. Base implementation is merged PR #32 at `a9014f01a697c98103e908a9941a91f62417d890`.
 
+**Execution status:** Implementation and local verification are complete; review and integration are tracked in [PR #33](https://github.com/abedegno/infrastructure-impact/pull/33). See the [acceptance record](../../research/2026-11-06-targeted-refresh-acceptance.md). The checkboxes preserve the approved plan; the handoff below records its original approval-stage instructions. Hosted activation remains separately gated.
+
 ## Global Constraints
 
 - Preserve advisory schema v2 and immutable evidence/revision history; never rename CVE-2023-5501 to CVE-2024-6858.
