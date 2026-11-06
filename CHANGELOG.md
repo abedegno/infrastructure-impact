@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — source gaps and model scope
+
+- Preserve the two exact reviewed Palo Alto informational HTML bulletins: a no-CVE NAT notice and 78 explicit MOVEit non-impact product/CVE statements. Block structured representation overrides of those policies and the existing reviewed configuration notice; preserve unrelated PAN advisory behavior.
+- Add a Cisco-only, exact-source fast-reload platform bridge for explicit 9300/9300L scope under each of two CVEs. Preserve all 89 original software branches, their CVE ownership, dates, versions, statuses and remediation boundaries; leave frozen studies and other platform gaps unchanged.
+- Reconcile the 15 hosted source failures and three missing-source benchmark cases, record the live two-advisory Arista preview and identify the separate exact-target maintenance/current-catalogue policy work needed before hosted application. No deployment or hosted maintenance is included.
+
 ## 0.11.0 research preview candidate — 2026-11-06
 
 - Add explicit `impact cve-reconcile` verification, bounded offline scan/resume, immutable baseline and strict JSON/CSV reporting for official CVE snapshots. Preserve source/container evidence, current versus historical presence, missing references and unestablished coverage completeness. See the [local operator guide](docs/CVE_RECONCILIATION.md). No hosted activation, default-source change or publication is included; the website source pin remains released 0.10.1.

@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "report_kind": "dated_research_not_runtime_contract",
+  "publication": "d7ae2a3d59564ca6a8d235413e27d124",
+  "pipeline_run": {
+    "id": 65,
+    "started_at": "2026-11-06T18:30:26.769194+00:00",
+    "finished_at": "2026-11-06T18:32:03.194907+00:00",
+    "outcome": "partial",
+    "imported": 123,
+    "failures": 15,
+    "details": "Collection finished; source gaps remain visible. Data publication is distinct from code deployment."
+  },
+  "method": "Latest public source-audit errors joined inclusively to the actual pipeline interval; separate local source probes and fixes are not hosted outcomes.",
+  "counts": {
+    "run_window_errors": 15,
+    "older_latest_source_errors": 54,
+    "by_vendor": {
+      "arista": 8,
+      "checkpoint": 4,
+      "fortinet": 1,
+      "paloalto": 2
+    }
+  },
+  "rows": [
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1221-security-advisory-15",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.674501+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2015-11-18"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1255-security-advisory-17",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.605316+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-02-16"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1260-security-advisory-18",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.531510+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-03-01"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1332-security-advisory-19",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.468879+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-05-03"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1334-security-advisory-20",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.398501+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-05-06"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1354-security-advisory-21",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.331599+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-06-13"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1356-security-advisory-22",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.263672+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-06-15"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1461-security-advisory-23",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:35.157478+00:00",
+      "classification": "legacy_layout_before_study_window",
+      "publisher_initial_release_date": "2016-08-15"
+    },
+    {
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/PAN-SA-2021-0002",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:36.143524+00:00",
+      "classification": "reviewed_html_parser_gap",
+      "publisher_initial_release_date": null,
+      "local_fix": "fresh_primary_source_validated_not_deployed",
+      "fresh_probe_sha256": "2a95d5e09a094e8098b8a1657131ddc8dce71cee18103236bfc22b784be7e4b3",
+      "fresh_probe_retrieved_at": "2026-11-06T19:03:15.892744+00:00",
+      "local_cves": [],
+      "local_assessments": 0
+    },
+    {
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/PAN-SA-2023-0003",
+      "published_error_code": "unsupported_or_invalid_document",
+      "published_checked_at": "2026-11-06T18:31:36.138433+00:00",
+      "classification": "reviewed_html_parser_gap",
+      "publisher_initial_release_date": null,
+      "local_fix": "fresh_primary_source_validated_not_deployed",
+      "fresh_probe_sha256": "5601bc1e0756d6d8b0d7f1b72ce7a429bb38319ff7de4d46162a6373a58745d9",
+      "fresh_probe_retrieved_at": "2026-11-06T19:03:16.475481+00:00",
+      "local_cves": [
+        "CVE-2023-34362",
+        "CVE-2023-35036",
+        "CVE-2023-35708"
+      ],
+      "local_assessments": 78
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/download/134275",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-06T18:31:29.605914+00:00",
+      "classification": "access_verification_required",
+      "publisher_initial_release_date": null
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/download/134302",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-06T18:31:29.727484+00:00",
+      "classification": "access_verification_required",
+      "publisher_initial_release_date": null
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk181833",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-06T18:30:42.816290+00:00",
+      "classification": "access_verification_required",
+      "publisher_initial_release_date": null
+    },
+    {
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "published_error_code": "access_verification_required",
+      "published_checked_at": "2026-11-06T18:30:42.700603+00:00",
+      "classification": "access_verification_required",
+      "publisher_initial_release_date": null
+    },
+    {
+      "vendor": "fortinet",
+      "source_url": "https://filestore.fortinet.com/fortiguard/psirt/csaf_multiple-node-js-cves_fg-ir-26-187.json",
+      "published_error_code": "publisher_scope_unavailable",
+      "published_checked_at": "2026-11-06T18:31:25.549700+00:00",
+      "classification": "publisher_scope_unavailable",
+      "publisher_initial_release_date": null
+    }
+  ],
+  "benchmark": {
+    "total": 47,
+    "passed": 44,
+    "remaining_cases": [
+      {
+        "id": "checkpoint-CVE-2024-6387-22",
+        "vendor": "checkpoint",
+        "cve_id": "CVE-2024-6387",
+        "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+        "product_pattern": "^Quantum Spark R81.10.x",
+        "expected_status": "affected",
+        "reviewed_at": "2026-10-26",
+        "review_method": "Assistant review of official primary source, separate from normalized output",
+        "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+        "outcome": "source_missing",
+        "source_fingerprints": [],
+        "forbidden_claim_count": 0,
+        "observed_statuses": []
+      },
+      {
+        "id": "checkpoint-CVE-2024-6387-23",
+        "vendor": "checkpoint",
+        "cve_id": "CVE-2024-6387",
+        "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+        "product_pattern": "^Gaia OS",
+        "expected_status": "unaffected",
+        "reviewed_at": "2026-10-26",
+        "review_method": "Assistant review of official primary source, separate from normalized output",
+        "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+        "forbidden_statuses": [
+          "affected",
+          "fixed",
+          "investigating"
+        ],
+        "outcome": "source_missing",
+        "source_fingerprints": [],
+        "forbidden_claim_count": 0,
+        "observed_statuses": []
+      },
+      {
+        "id": "checkpoint-CVE-2023-48795-24",
+        "vendor": "checkpoint",
+        "cve_id": "CVE-2023-48795",
+        "source_url": "https://support.checkpoint.com/results/sk/sk181833",
+        "product_pattern": "^Check Point Scalable",
+        "expected_status": "fixed",
+        "reviewed_at": "2026-10-26",
+        "review_method": "Assistant review of official primary source, separate from normalized output",
+        "rationale": "Primary source product table; conditions and version expressions remain source-defined.",
+        "expected_scope": "cve_specific",
+        "version_contains": "R82",
+        "outcome": "source_missing",
+        "source_fingerprints": [],
+        "forbidden_claim_count": 0,
+        "observed_statuses": []
+      }
+    ],
+    "finding": "All three remaining cases are source_missing at two access-challenged Check Point SK URLs; no extraction disagreement was observed. Frozen expectations are unchanged."
+  },
+  "review_status": "automated_source_review_independent_human_pending",
+  "hosted_changed": false,
+  "comparison_limits": "Legacy Arista initial dates predate 2021; missing sources and incomplete model scope are not zero exposure or a vendor security rate."
+}
