@@ -413,3 +413,65 @@ def test_oversize_record_rejects_before_starting_reader(monkeypatch, snapshot, r
     monkeypatch.setattr(snapshot.subprocess, "Popen", forbidden)
     with pytest.raises(snapshot.SnapshotError, match="blob_byte_limit"):
         view.read_blob(entry, max_bytes=2_000_000)
+
+
+def test_official_metadata_layout_keeps_historical_records_and_inventory_bounds(
+    monkeypatch, snapshot, repo, tmp_path
+):
+    old = repo / "cves/1999/0xxx/CVE-1999-0001.json"
+    old.parent.mkdir(parents=True)
+    old.write_bytes(b"{}")
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "historical synthetic baseline")
+    commit, _, _, _ = official(monkeypatch, snapshot, repo)
+    before_receipt = tmp_path / "before.json"
+    snapshot.verify_snapshot(repo, commit, before_receipt)
+    before = snapshot.open_snapshot(repo, commit, before_receipt)
+    for name in ("delta.json", "deltaLog.json"):
+        (repo / "cves" / name).write_bytes(b'{"metadata":"synthetic"}')
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "authored official metadata layout")
+    commit, _, _, calls, receipt, _ = verified(monkeypatch, snapshot, repo, tmp_path)
+    view = snapshot.open_snapshot(repo, commit, receipt)
+    assert [entry.cve_id for entry in view.iter_entries()] == ["CVE-1999-0001", "CVE-2026-1234"]
+    assert view.inventory_entries == 10
+    assert view.inventory_bytes > before.inventory_bytes
+    assert len(calls) == 1
+    monkeypatch.setattr(snapshot, "MAX_TREE_ENTRIES", 9)
+    with pytest.raises(snapshot.SnapshotError, match="inventory_entry_limit"):
+        snapshot.open_snapshot(repo, commit, receipt)
+    monkeypatch.setattr(snapshot, "MAX_TREE_ENTRIES", 10)
+    monkeypatch.setattr(snapshot, "MAX_INVENTORY_BYTES", before.inventory_bytes)
+    with pytest.raises(snapshot.SnapshotError, match="inventory_byte_limit"):
+        snapshot.open_snapshot(repo, commit, receipt)
+
+
+@pytest.mark.parametrize("name", ["delta.json", "deltaLog.json"])
+@pytest.mark.parametrize("mode", ["symlink", "executable", "directory"])
+def test_official_metadata_requires_exact_regular_blob(
+    monkeypatch, snapshot, repo, tmp_path, name, mode
+):
+    path = repo / "cves" / name
+    if mode == "symlink":
+        path.symlink_to("/synthetic/never-read")
+    elif mode == "directory":
+        path.mkdir()
+        (path / "README").write_text("synthetic")
+    else:
+        path.write_bytes(b"{}")
+        path.chmod(0o755)
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "invalid metadata mode")
+    commit, _, _, _, receipt, _ = verified(monkeypatch, snapshot, repo, tmp_path)
+    with pytest.raises(snapshot.SnapshotError):
+        snapshot.open_snapshot(repo, commit, receipt)
+
+
+@pytest.mark.parametrize("path", ["cves/other.json", "cves/2026/delta.json", "cves/deltalog.json"])
+def test_other_json_metadata_paths_remain_rejected(monkeypatch, snapshot, repo, tmp_path, path):
+    (repo / path).write_bytes(b"{}")
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "unsupported synthetic metadata")
+    commit, _, _, _, receipt, _ = verified(monkeypatch, snapshot, repo, tmp_path)
+    with pytest.raises(snapshot.SnapshotError, match="invalid_record_path"):
+        snapshot.open_snapshot(repo, commit, receipt)

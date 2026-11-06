@@ -342,6 +342,10 @@ def _inventory(repository: Path, tree: str) -> tuple[tuple[Entry, ...], int, int
                     raise SnapshotError("invalid_tree_entry") from None
                 if mode == b"120000":
                     raise SnapshotError("tree_symlink")
+                if path in {"cves/delta.json", "cves/deltaLog.json"}:
+                    if mode != b"100644" or kind != b"blob":
+                        raise SnapshotError("invalid_record_mode")
+                    continue
                 name = path.rsplit("/", 1)[-1]
                 match = _CVE.fullmatch(name)
                 record_like = (
