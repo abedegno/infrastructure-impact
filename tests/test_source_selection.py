@@ -187,6 +187,7 @@ def test_selected_capture_is_published_with_provenance_but_private_fields_are_no
     assert "PRIVATE_RAW_SENTINEL" not in json.dumps(public)
     other = deepcopy(data)
     other["records"] = []
+    other.pop("current_evidence")  # Author a new inventory, not a stale supplied partition.
     assert public_projection(other)["source_audit"]["source_selections"] == []
     legacy = sqlite3.connect(":memory:")
     assert choices(legacy) == []

@@ -180,11 +180,17 @@ def main(argv=None):
 
         with closing(connect(read_only=True)) as db:
             records = latest(db)
+            from .application.query import current_partition
+
+            if not args.packet:
+                current, _ = current_partition(db, records)
             result = (
                 switching_validation.packet(records)
                 if args.packet
                 else switching_validation.report(
-                    records, retained_scopes(db, records, switching_validation.definition())
+                    current["records"],
+                    retained_scopes(db, records, switching_validation.definition()),
+                    retained_advisories=current["retained_advisories"],
                 )
             )
         print(json.dumps(result, indent=2))
@@ -212,6 +218,10 @@ def main(argv=None):
             else:
                 with closing(connect(read_only=True)) as db:
                     records = latest(db)
+                    from .application.query import current_partition
+
+                    if not (args.packet or args.submission or args.submission_template):
+                        current, _ = current_partition(db, records)
                     packet = review_packet(records)
                     result = (
                         audit_submission(read_review_file(args.submission), packet)
@@ -221,7 +231,9 @@ def main(argv=None):
                         else packet
                         if args.packet
                         else validation_report(
-                            records, scopes=retained_scopes(db, records, review_definition())
+                            current["records"],
+                            scopes=retained_scopes(db, records, review_definition()),
+                            retained_advisories=current["retained_advisories"],
                         )
                     )
         except ValueError as error:
@@ -427,10 +439,13 @@ def main(argv=None):
         print(run(args.aruba_limit))
     elif args.command == "evaluate":
         from .application.evaluation import evaluate
-        from .storage.repository import latest
+        from .application.query import current_partition
 
         with closing(connect(read_only=True)) as db:
-            result = evaluate(latest(db))
+            current, _ = current_partition(db)
+            result = evaluate(
+                current["records"], retained_advisories=current["retained_advisories"]
+            )
         print(json.dumps(result, indent=2))
         if args.fail_on_disagreement and result["passed"] != result["total"]:
             raise SystemExit(1)

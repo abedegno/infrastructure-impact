@@ -27,6 +27,9 @@ from infrastructure_impact.storage.repository import connect
 def writer_seed():
     with closing(connect(":memory:")) as db:
         data = state(db)
+    # This fixture authors records below; it is not a supplied authoritative partition.
+    data.pop("current_evidence")
+    data.pop("retained_advisories")
     targets = json.loads((PACKAGE / "resources/build-pilot.json").read_text())["targets"]
     for index, target in enumerate(targets, 1):
         record = base(
@@ -550,6 +553,7 @@ def test_publication_scopes_earlier_document_products_by_cve(
             assessment("CVE-2023-38546", "FortiProxy second branch", "affected", "Second CVE row"),
         ],
         evidence_id=3,
+        revision_id=3,
         sha256="b" * 64,
         source_observed_at="2026-10-27T00:00:00Z",
         observed_at="2026-10-27T00:00:00Z",

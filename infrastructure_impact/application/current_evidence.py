@@ -23,7 +23,7 @@ from urllib.parse import urlsplit
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 from ..settings import PACKAGE
-from .evidence_identity import canonical_json, record_key
+from .evidence_identity import canonical_json, record_identity, record_key
 
 MAX_FRAME_BYTES = 2_000_000
 MAX_CONTEXT_BYTES = 8_000_000
@@ -359,6 +359,7 @@ def policy_decisions(plugin, records, selection_context):
             "policy_version": policy["version"],
             "policy_fingerprint": policy["fingerprint"],
             "target_key": target,
+            "target": record_identity(next(r for r in records if record_key(r) == target)),
             "disposition": _DISPOSITION,
             "reason": _REASON,
             "reason_text": policy["reason_text"],
@@ -391,7 +392,8 @@ def partition(records, selection_context, *, registry, publication, generated_at
     if len(set(keys)) != len(keys):
         raise ValueError("Duplicate retained record identity")
     vendors = sorted({r["vendor"] for r in records})
-    plugins = [registry.get(v) for v in vendors]
+    installed = registry.names()
+    plugins = [registry.get(v) for v in vendors if v in installed]
     context = validate_context(selection_context, plugins)
     policies, decisions, issues = [], [], []
     for plugin in plugins:
@@ -441,7 +443,8 @@ def partition(records, selection_context, *, registry, publication, generated_at
 def collect_policy_input(db, records, *, registry):
     """Read only registered URLs; never scan the evidence inventory or retrieve HTTP."""
     context = {"selections": [], "sources": []}
-    plugins = [registry.get(v) for v in sorted({r["vendor"] for r in records})]
+    installed = registry.names()
+    plugins = [registry.get(v) for v in sorted({r["vendor"] for r in records}) if v in installed]
     frames = set()
     has_selections = db.execute(
         "SELECT 1 FROM sqlite_master WHERE name='source_selections'"
@@ -571,6 +574,8 @@ def validate_report(report, *, publication=_UNSET, generated_at=_UNSET):
         policy = policies.get(key)
         if (
             policy is None
+            or record_key(decision["target"]) != decision["target_key"]
+            or decision["target"]["vendor"] != decision["vendor"]
             or decision["policy_fingerprint"] != policy["fingerprint"]
             or decision["policy_version"] != policy["version"]
             or decision["reason_text"] != policy["reason_text"]

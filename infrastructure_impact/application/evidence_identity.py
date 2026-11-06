@@ -33,8 +33,8 @@ def canonical_json(value) -> bytes:
         raise ValueError("Identity requires UTF-8 JSON") from error
 
 
-def record_key(record: dict) -> str:
-    """Hash retained identity, never mutable claims or observation-time analysis."""
+def record_identity(record: dict) -> dict:
+    """Validated literal target reference, preserving JSON scalar identity types."""
     if type(record) is not dict:
         raise ValueError("Record identity requires an object")
     keys = ("vendor", "advisory_id", "revision_id", "source_url", "sha256")
@@ -52,4 +52,9 @@ def record_key(record: dict) -> str:
         or (type(revision) is str and 1 <= len(revision) <= 128)
     ):
         raise ValueError("Record identity requires a typed revision ID")
-    return sha256(canonical_json(identity)).hexdigest()
+    return identity
+
+
+def record_key(record: dict) -> str:
+    """Hash retained identity, never mutable claims or observation-time analysis."""
+    return sha256(canonical_json(record_identity(record))).hexdigest()

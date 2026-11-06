@@ -6,7 +6,7 @@ import re
 from ..settings import PACKAGE
 
 
-def evaluate(records, *, definition=None):
+def evaluate(records, *, definition=None, retained_advisories=()):
     if definition is None:
         definition = json.loads((PACKAGE / "resources/benchmark-cases.json").read_text())
     results = []
@@ -60,13 +60,36 @@ def evaluate(records, *, definition=None):
                 "observed_statuses": sorted({a["status"] for _, a in claims}),
             }
         )
+    if retained_advisories:
+        historical = evaluate(
+            records + [w["record"] for w in retained_advisories], definition=definition
+        )
+        for result, previous in zip(results, historical["cases"]):
+            excluded = [
+                w
+                for w in retained_advisories
+                if w["record"]["vendor"] == result["vendor"]
+                and w["record"]["source_url"] == result["source_url"]
+                and any(
+                    a["cve_id"] == result["cve_id"]
+                    and re.search(result["product_pattern"], a["product"], re.I)
+                    for a in w["record"]["assessments"]
+                )
+            ]
+            if excluded and result["outcome"] in ("source_missing", "product_scope_missing"):
+                result.update(
+                    outcome="current_scope_excluded",
+                    historical_outcome=previous["outcome"],
+                    historical_result=previous,
+                    decision_ids=sorted({w["decision_id"] for w in excluded}),
+                )
     passed = sum(r["outcome"] == "pass" for r in results)
     return {
         "schema_version": 1,
         "cases": results,
         "total": len(results),
         "passed": passed,
-        "agreement_on_declared_cases": passed / len(results),
+        "agreement_on_declared_cases": passed / len(results) if results else None,
         "negative_boundaries": sum(bool(c.get("forbidden_statuses")) for c in results),
         "forbidden_claim_count": sum(c["forbidden_claim_count"] for c in results),
         "global_precision": None,

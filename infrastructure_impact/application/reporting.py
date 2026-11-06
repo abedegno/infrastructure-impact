@@ -6,18 +6,19 @@ from collections import Counter
 from contextlib import closing
 
 from ..settings import Paths
-from ..storage.repository import connect, latest, now
-from .cohort import COHORT, coverage
-from .comparison import compare
+from ..storage.repository import connect, now
+from .cohort import COHORT
+from .query import state
 
 
 def report():
     root = Paths.from_env().home
     (root / "benchmark").mkdir(parents=True, exist_ok=True)
     with closing(connect(read_only=True)) as db:
-        records = latest(db)
-        pairs = coverage(db, records)
-        comparison = compare(records, COHORT)
+        data = state(db, COHORT)
+        records = data["records"]
+        pairs = [p for p in data["coverage"] if p["cve_id"] in COHORT]
+        comparison = data["comparison"]
     result = {"generated_at": now(), "cohort": COHORT, "pairs": pairs}
     (root / "benchmark/cohort-coverage.json").write_text(json.dumps(result, indent=2) + "\n")
     with (root / "benchmark/cohort-coverage.csv").open("w", newline="") as f:

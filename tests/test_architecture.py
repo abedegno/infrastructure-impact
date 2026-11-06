@@ -278,6 +278,7 @@ class PublicationBoundary(unittest.TestCase):
     def test_stale_publication_is_reported_but_data_remains_readable(self):
         old = dataset()
         old["generated_at"] = "2000-01-01T00:00:00Z"
+        old["current_evidence"]["generated_at"] = old["generated_at"]
         publish(old, root=self.root)
         self.assertEqual(request(self.app, "/health/ready")[0], 503)
         self.assertEqual(request(self.app, "/api/state")[0], 200)

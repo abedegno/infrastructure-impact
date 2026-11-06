@@ -7,21 +7,16 @@ from ..phase_events import phase
 from ..plugins.registry import default_registry
 from ..settings import Paths
 from ..storage.repository import VENDORS, health, history, latest, now
-from .casefiles import casefiles
 from .catalogue import catalogue
 from .cohort import COHORT, coverage
 from .comparison import compare
 from .disclosure import latest_documents, signals
-from .eligibility import eligibility
 from .evaluation import evaluate
 from .extraction_validation import definition as review_definition
 from .extraction_validation import review_packet, validation_report
-from .families import completeness
-from .fix_leads import evidence_inputs, leads
+from .fix_leads import evidence_inputs
 from .kev import build_report
-from .product_groups import product_groups
 from .publisher_history import publisher_history
-from .readiness import readiness
 from .release_assets import listings
 from .scorecards import scorecards
 from .source_audit import source_audit
@@ -31,17 +26,34 @@ from .timeline import evidence_timeline
 ROOT = Paths.from_env().home
 
 
+def current_partition(db, records=None, *, generated_at=None):
+    """Return (partition, private context) from retained local evidence; no writes or HTTP."""
+    from .current_evidence import collect_policy_input, partition
+
+    records = latest(db) if records is None else records
+    context = collect_policy_input(db, records, registry=default_registry())
+    return partition(
+        records,
+        context,
+        registry=default_registry(),
+        publication=None,
+        generated_at=generated_at or now(),
+    ), context
+
+
 @phase("publication.query")
 def state(db, cohort=None):
-    records = latest(db)
-    scopes = retained_scopes(db, records, review_definition())
+    retained = latest(db)
+    scopes = retained_scopes(db, retained, review_definition())
+    generated = now()
+    partition_result, context = current_partition(db, retained, generated_at=generated)
+    records = partition_result["records"]
     upstream = {
         r["cve_id"]: dict(r)
         for r in db.execute(
             "SELECT v.*, e.sha256 FROM vulnerabilities v LEFT JOIN evidence e ON e.id=v.evidence_id"
         )
     }
-    generated = now()
     comparison = compare(records, cohort)
     all_scope = sorted(
         set(COHORT) | {c for r in records for c in r["cves"]} | set(comparison["cohort"])
@@ -114,11 +126,13 @@ def state(db, cohort=None):
             records, all_coverage, profiles, checks, all_scope, dict(VENDORS), generated
         ),
         "timeline": evidence_timeline(db),
-        "source_audit": source_audit(db, records),
-        "benchmark": evaluate(records),
-        "extraction_validation": validation_report(records, scopes=scopes),
+        "source_audit": source_audit(db, retained),
+        "benchmark": evaluate(records, retained_advisories=partition_result["retained_advisories"]),
+        "extraction_validation": validation_report(
+            records, scopes=scopes, retained_advisories=partition_result["retained_advisories"]
+        ),
         "reviewed_source_scopes": scopes,
-        "review_packet": review_packet(records),
+        "review_packet": review_packet(retained),
         "publisher_history": publisher_history(db),
         "coverage": all_coverage,
         "changes": history(db, full=False),
@@ -136,28 +150,15 @@ def state(db, cohort=None):
 
     result["kev"] = build_report(
         research["kev_input"],
-        all_scope,
+        sorted(set(all_scope) | {c for r in retained for c in r["cves"]}),
         publication=result.get("publication"),
         generated_at=generated,
     )
 
-    from .vendor_gaps import vendor_gaps
+    from .current_views import rebuild
 
-    result["vendor_gaps"] = vendor_gaps(result)
-    result["casefiles"] = casefiles(result)
-    result["product_groups"] = product_groups(result)
-    result["comparison_eligibility"] = eligibility(result, comparison["cohort"])
-    result["family_completeness"] = completeness(result)
-    result["comparison_readiness"] = readiness(result)
-    result["fix_leads"] = leads(result)
-    from .component_studies import component_studies
-
-    result["component_studies"] = component_studies(result)
-    from .disclosure_review import disclosure_review
-    from .product_cohorts import product_cohorts
-
-    result["product_cohorts"] = product_cohorts(result)
-    result["disclosure_review"] = disclosure_review(result)
+    result = rebuild(result, partition_result)
+    result["research"]["current_evidence_input"] = context
     return result
 
 

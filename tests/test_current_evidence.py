@@ -519,7 +519,8 @@ def test_report_real_two_million_byte_wire_boundary_includes_final_newline(parti
         rows = []
         for n in range(100):
             d = copy.deepcopy(original)
-            d["target_key"] = sha256(str(n).encode()).hexdigest()
+            d["target"]["revision_id"] = n + 1
+            d["target_key"] = sha256(encode(d["target"])).hexdigest()
             d["proofs"] = sorted(
                 [
                     dict(original["proofs"][0], source_url=URL + "/" + "x" * padding + "/" + str(p))

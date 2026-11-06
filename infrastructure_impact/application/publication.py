@@ -36,11 +36,37 @@ from .release_assets import validate_asset
 @phase("publication.projection")
 def public_projection(data, public_release_urls=()):
     """The publication boundary never copies raw evidence or private review notes."""
-    data = json.loads(json.dumps(data, allow_nan=False))
+    from ..plugins.registry import default_registry
+    from .current_evidence import partition
+    from .current_views import rebuild, validate_partition
+
+    # Consume private frames before any general clone or public serialization.
+    research = {k: v for k, v in data["research"].items() if k != "current_evidence_input"}
+    context = data["research"].get("current_evidence_input", {"selections": [], "sources": []})
+    union = data["records"] + [w["record"] for w in data.get("retained_advisories", [])]
+    computed = partition(
+        union,
+        context,
+        registry=default_registry(),
+        publication=data.get("publication"),
+        generated_at=data["generated_at"],
+    )
+    if "current_evidence" in data:
+        validate_partition(data)
+        if data["current_evidence"] != computed["current_evidence"]:
+            raise ValueError("Supplied current-evidence decisions differ from retained proofs")
+        if {w["decision_id"] for w in data.get("retained_advisories", [])} != {
+            w["decision_id"] for w in computed["retained_advisories"]
+        }:
+            raise ValueError("Supplied retained partition differs from recomputed decisions")
+    elif data.get("retained_advisories"):
+        raise ValueError("Retained exclusions require decision references")
+    data = json.loads(json.dumps({**data, "research": research}, allow_nan=False))
+    data = rebuild(data, computed)
     from ..adapters.cvss import public_metrics
 
     score_input = data["research"].pop("score_input", {})
-    for record in data["records"]:
+    for record in data["records"] + [w["record"] for w in data["retained_advisories"]]:
         validate_advisory(record)
         record["notes"] = []
         scores = [
@@ -58,7 +84,7 @@ def public_projection(data, public_release_urls=()):
             assessment.pop("extensions", None)
     switching_input = data["research"].pop("switching_input", None)
     kev_input = data["research"].pop("kev_input", None)
-    scope = sorted(set(data["all_cves"]) | set(data["benchmark_cohort"]))
+    scope = sorted(set(data["retained_cves"]) | set(data["benchmark_cohort"]))
     data["kev"] = (
         build_report(
             kev_input, scope, publication=data.get("publication"), generated_at=data["generated_at"]
@@ -102,7 +128,8 @@ def public_projection(data, public_release_urls=()):
     from .source_selections import public_selections
 
     data["source_audit"]["source_selections"] = public_selections(
-        data["source_audit"].get("source_selections", []), data["records"]
+        data["source_audit"].get("source_selections", []),
+        data["records"] + [w["record"] for w in data["retained_advisories"]],
     )
     data["publisher_history"] = public_history(
         data.get("publisher_history", {}), public_release_urls
@@ -123,7 +150,10 @@ def public_projection(data, public_release_urls=()):
     ]
     for signal in data["signals"]:
         signal.pop("basis", None)
-    known_sources = {(r["source_url"], r["sha256"]) for r in data["records"]}
+    known_sources = {
+        (r["source_url"], r["sha256"])
+        for r in data["records"] + [w["record"] for w in data["retained_advisories"]]
+    }
     data["reviewed_source_scopes"] = [
         {k: s[k] for k in ("source_url", "source_sha256", "scheme", "scope_sha256")}
         for s in data.get("reviewed_source_scopes", [])
@@ -135,10 +165,14 @@ def public_projection(data, public_release_urls=()):
     data["casefiles"] = casefiles(data)
     data["product_groups"] = product_groups(data)
     data["extraction_validation"] = validation_report(
-        data["records"], scopes=data["reviewed_source_scopes"]
+        data["records"],
+        scopes=data["reviewed_source_scopes"],
+        retained_advisories=data["retained_advisories"],
     )
     data["vendor_gaps"] = vendor_gaps(data)
-    data["review_packet"] = review_packet(data["records"])
+    data["review_packet"] = review_packet(
+        data["records"] + [w["record"] for w in data["retained_advisories"]]
+    )
     data["comparison_eligibility"] = eligibility(data, data["comparison"]["cohort"])
     data["family_completeness"] = completeness(data)
     data["comparison_readiness"] = readiness(data)
@@ -169,8 +203,13 @@ def public_projection(data, public_release_urls=()):
 
 @phase("publication.writing")
 def write_bundle(destination, data):
+    from .current_evidence import report_bytes
+    from .current_views import validate_partition
     from .research_reports import validate
 
+    validate_partition(data, require_targets=True)
+    if "current_evidence_input" in data.get("research", {}):
+        raise ValueError("Private current-evidence input cannot be published")
     validate_kev(data["kev"])
     if (
         data["kev"]["publication"] != data["publication"]
@@ -204,6 +243,7 @@ def write_bundle(destination, data):
             raise ValueError("Switching asset and comparison evidence disagree")
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
+    (destination / "current-evidence.json").write_bytes(report_bytes(data["current_evidence"]))
     compact = {k: v for k, v in data.items() if k != "switching_evidence"}
     if "switching_comparison" in data:
         compact["switching_comparison"] = summary(data["switching_comparison"])
@@ -262,7 +302,7 @@ def write_bundle(destination, data):
         json.dumps(eligibility_summary, separators=(",", ":")) + "\n"
     )
     (destination / "benchmark.json").write_text(json.dumps(data.get("benchmark", {})))
-    for record in data["records"]:
+    for record in data["records"] + [w["record"] for w in data["retained_advisories"]]:
         path = destination / "evidence" / f"{record['evidence_id']}.json"
         path.parent.mkdir(exist_ok=True)
         path.write_text(
@@ -361,6 +401,7 @@ def write_bundle(destination, data):
         destination / "schemas/comparison-eligibility-v1.json",
     )
     for name in (
+        "current-evidence-v1.json",
         "comparison-eligibility-summary-v1.json",
         "product-groups-v1.json",
         "publisher-history-v1.json",
@@ -413,7 +454,17 @@ def publish(data, root=None, public_release_urls=()):
     generations = root / "generations"
     generations.mkdir(parents=True, exist_ok=True)
     generation = uuid4().hex
+    from .current_evidence import validate_report
+
+    if "current_evidence" in data:
+        validate_report(
+            data["current_evidence"],
+            publication=data.get("publication"),
+            generated_at=data["generated_at"],
+        )
     data = {**data, "publication": {"id": generation, "advisory_schema_version": 2}}
+    if "current_evidence" in data:
+        data["current_evidence"] = {**data["current_evidence"], "publication": data["publication"]}
     data = public_projection(data, public_release_urls)
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:

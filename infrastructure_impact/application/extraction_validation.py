@@ -26,7 +26,7 @@ def definition():
     return value
 
 
-def validation_report(records, review=None, scopes=()):
+def validation_report(records, review=None, scopes=(), *, retained_advisories=()):
     review = definition() if review is None else review
     cases = []
     for case in review["cases"]:
@@ -107,6 +107,29 @@ def validation_report(records, review=None, scopes=()):
                 matching_reviewed_scope=bool(scoped),
             )
         )
+    if retained_advisories:
+        historical = validation_report(
+            records + [w["record"] for w in retained_advisories], review, scopes
+        )
+        for result, previous in zip(cases, historical["cases"]):
+            excluded = [
+                w
+                for w in retained_advisories
+                if w["record"]["vendor"] == result["vendor"]
+                and w["record"]["source_url"] == result["source_url"]
+                and w["record"]["sha256"] == result["source_sha256"]
+            ]
+            if excluded and result["outcome"] in (
+                "source_missing",
+                "source_revision_unreviewed",
+                "product_scope_missing",
+            ):
+                result.update(
+                    outcome="current_scope_excluded",
+                    historical_outcome=previous["outcome"],
+                    historical_result=previous,
+                    decision_ids=sorted({w["decision_id"] for w in excluded}),
+                )
     return dict(
         schema_version=1,
         reviewed_at=review["reviewed_at"],

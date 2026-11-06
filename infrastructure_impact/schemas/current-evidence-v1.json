@@ -108,7 +108,8 @@
           "disposition",
           "reason",
           "reason_text",
-          "proofs"
+          "proofs",
+          "target"
         ],
         "properties": {
           "decision_id": {
@@ -189,6 +190,48 @@
             },
             "maxItems": 20,
             "minItems": 1
+          },
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "vendor",
+              "advisory_id",
+              "revision_id",
+              "source_url",
+              "sha256"
+            ],
+            "properties": {
+              "vendor": {
+                "type": "string",
+                "minLength": 1
+              },
+              "advisory_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "revision_id": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                ]
+              }
+            }
           }
         }
       },

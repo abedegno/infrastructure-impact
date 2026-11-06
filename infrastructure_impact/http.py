@@ -34,6 +34,14 @@ class PublicationStore:
         with self._lock:
             if generation != self._generation:
                 self._data = json.loads((generation / "snapshot.json").read_text())
+                if "current_evidence" not in self._data:
+                    from .application.current_evidence import unavailable_report
+
+                    self._data["current_evidence"] = unavailable_report(
+                        publication=self._data.get("publication"),
+                        generated_at=self._data["generated_at"],
+                    )
+                    self._data.setdefault("retained_advisories", [])
                 self._generation = generation
             return generation, self._data
 
@@ -199,6 +207,84 @@ class Application:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
             if len(ids) > 200 or not all(CVE.fullmatch(cid) for cid in ids):
                 raise BadRequest("Invalid CVE cohort")
+        if path == "/api/v1/current-evidence":
+            from .application.current_evidence import unavailable_report
+
+            return self.json(
+                data.get("current_evidence")
+                or unavailable_report(
+                    publication=data.get("publication"), generated_at=data["generated_at"]
+                )
+            )
+        if path == "/api/v1/retained-advisories":
+            from .application.current_evidence import unavailable_report
+            from .exports import retained_assessment_export
+
+            values = query.get("vendor", [])
+            if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                raise BadRequest("Unknown or repeated vendor")
+            formats = query.get("format", [])
+            if formats and formats not in (["json"], ["csv"]):
+                raise BadRequest("Invalid retained format")
+            items = [
+                w
+                for w in data.get("retained_advisories", [])
+                if (ids is None or set(ids).intersection(w["record"]["cves"]))
+                and (not values or w["record"]["vendor"] == values[0])
+            ]
+            if formats:
+                # Validate the complete envelope first; filters never fabricate a partition.
+                exported = retained_assessment_export(data)
+                keys = {w["decision_id"] for w in items}
+                exported["records"] = [r for r in exported["records"] if r["decision_id"] in keys]
+                if ids is not None:
+                    exported["records"] = [
+                        {**r, "assessments": [a for a in r["assessments"] if a["cve_id"] in ids]}
+                        for r in exported["records"]
+                    ]
+                if formats == ["json"]:
+                    return self.json(exported)
+                from .exports import FIELDS, RETAINED_FIELDS
+
+                csv_data = {
+                    **exported,
+                    "kev": data.get("kev"),
+                    "comparison": {
+                        "cohort": ids
+                        if ids is not None
+                        else sorted({c for r in exported["records"] for c in r["cves"]})
+                    },
+                }
+                return (
+                    200,
+                    "text/csv",
+                    csv_export(csv_data, _fields=FIELDS + RETAINED_FIELDS).encode(),
+                )
+            try:
+                if any(len(query.get(k, [])) > 1 for k in ("limit", "offset")):
+                    raise ValueError("Repeated pagination")
+                limit = int(query.get("limit", ["100"])[0])
+                offset = int(query.get("offset", ["0"])[0])
+                if not 1 <= limit <= 500 or offset < 0:
+                    raise ValueError("Pagination out of bounds")
+            except ValueError as error:
+                raise BadRequest("Invalid pagination") from error
+            return self.json(
+                {
+                    "schema_version": 1,
+                    "publication": data.get("publication"),
+                    "generated_at": data["generated_at"],
+                    "record_scope": "retained_latest_excluded",
+                    "current_evidence": data.get("current_evidence")
+                    or unavailable_report(
+                        publication=data.get("publication"), generated_at=data["generated_at"]
+                    ),
+                    "total": len(items),
+                    "offset": offset,
+                    "limit": limit,
+                    "items": items[offset : offset + limit],
+                }
+            )
         if path == "/api/v1/research-dossiers":
             from .application.research_dossiers import select_research_dossiers
 
@@ -400,6 +486,7 @@ class Application:
             "/release-assets.json",
             "/impact.csv",
             "/manifest.json",
+            "/schemas/current-evidence-v1.json",
             "/schemas/advisory-v2.json",
             "/schemas/release-asset-v1.json",
             "/schemas/comparison-eligibility-v1.json",
