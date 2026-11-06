@@ -364,7 +364,12 @@ def build_report(
         sources=[],
         issues=[],
         method=METHOD,
-        inputs=dict(evidence=evidence, kev=kev),
+        # Isolate the small generation snapshots before the whole-report copy:
+        # deepcopy otherwise preserves caller aliases between publications.
+        inputs=dict(
+            evidence={**evidence, "publication": copy.deepcopy(evidence["publication"])},
+            kev={**kev, "publication": copy.deepcopy(kev["publication"])},
+        ),
     )
     # _select_report makes the sole isolated copy before constructing output.
     return _select_report(report, evaluated_at=generated_at)

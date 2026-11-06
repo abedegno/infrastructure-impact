@@ -286,3 +286,53 @@ def test_selection_still_validates_generated_row_shapes(monkeypatch):
     monkeypatch.setattr(evidence, "validate_comparison", validate_then_inject)
     with pytest.raises(ValidationError):
         comparison.select_report(report, evaluated_at=report["evaluated_at"])
+
+
+def build_with_shared_publication():
+    report = sample()
+    publication = {"id": "a" * 32, "advisory_schema_version": 2}
+    retained = report["inputs"]["evidence"]
+    kev = report["inputs"]["kev"]
+    retained["publication"] = kev["publication"] = publication
+    built = comparison.build_report(
+        retained,
+        kev,
+        definition=report["definition"],
+        publication=publication,
+        generated_at=report["generated_at"],
+        observation_end=report["observation_end"],
+    )
+    return built, publication
+
+
+def test_build_shared_publication_keeps_independent_generation_snapshots():
+    built, caller_publication = build_with_shared_publication()
+    evidence.validate_comparison(built)
+    snapshots = [
+        built["publication"],
+        built["inputs"]["evidence"]["publication"],
+        built["inputs"]["kev"]["publication"],
+    ]
+    assert all(value == caller_publication for value in snapshots)
+    assert len({id(value) for value in snapshots}) == 3
+    assert all(value is not caller_publication for value in snapshots)
+    caller_publication["id"] = "b" * 32
+    assert all(value["id"] == "a" * 32 for value in snapshots)
+    evidence.validate_comparison(built)
+
+
+@pytest.mark.parametrize("location", ["outer", "evidence", "kev"])
+def test_build_shared_publication_rejects_single_snapshot_mutation(location):
+    built, caller_publication = build_with_shared_publication()
+    sibling = comparison.select_report(built, evaluated_at=built["evaluated_at"])
+    untouched = copy.deepcopy(built)
+    publication = (
+        built["publication"] if location == "outer" else built["inputs"][location]["publication"]
+    )
+    publication["id"] = "b" * 32
+    assert caller_publication["id"] == "a" * 32
+    assert sibling == untouched
+    for operation in (evidence.validate_comparison, comparison.select_report):
+        with pytest.raises(ValueError):
+            operation(built)
+    evidence.validate_comparison(sibling)
