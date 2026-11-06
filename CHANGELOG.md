@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — local reconciliation
+
+- Add explicit `impact cve-reconcile` verification, bounded offline scan/resume, immutable baseline and strict JSON/CSV reporting for official CVE snapshots. Preserve source/container evidence, current versus historical presence, missing references and unestablished coverage completeness. See the [local operator guide](docs/CVE_RECONCILIATION.md). No hosted activation, default-source change or publication is included; the website source pin remains released 0.10.1.
+
 ## 0.10.1 research preview candidate — 2026-11-06
 
 - Support the reviewed current F5 PHP PDF profile alongside its original revision, retaining paired engineering hotfix/base versions and source-bound backport context. Mixed or unreviewed sections still fail visibly. See the [profile review](docs/research/2026-11-05-f5-php-profile-revision.md).

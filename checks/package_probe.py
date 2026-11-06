@@ -50,6 +50,45 @@ def main():
         os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
     ).items():
         assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest, name
+    # Unreleased local reconciliation commands/resources work without checkout imports.
+    from infrastructure_impact.cli import main as cli_main
+    from infrastructure_impact.reconciliation.report import ReportError, validate_report
+    from infrastructure_impact.reconciliation.selectors import load_selectors
+
+    assert len(load_selectors()["families"]) == 3
+    try:
+        validate_report({})
+    except ReportError as error:
+        assert error.code == "invalid_report"
+    else:
+        raise AssertionError("Installed report schema accepted an invalid report")
+    with tempfile.TemporaryDirectory() as probe_directory:
+        probe = Path(probe_directory)
+        for command in ("verify", "scan", "baseline", "report"):
+            try:
+                cli_main(["cve-reconcile", command, "--help"])
+            except SystemExit as error:
+                assert error.code == 0
+        config = probe / "config.json"
+        config.write_text('{"vendors": []}')
+        database = probe / "vault.sqlite3"
+        with connect(database):
+            pass
+        cli_main(
+            [
+                "cve-reconcile",
+                "baseline",
+                "--database",
+                str(database),
+                "--config",
+                str(config),
+                "--output",
+                str(probe / "baseline.json"),
+            ]
+        )
+        from infrastructure_impact.reconciliation.baseline import load_baseline
+
+        assert load_baseline(probe / "baseline.json")["revisions"] == []
     configured = json.loads((package / "resources/sources.json").read_text())
     assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
         "source_id": "cisa-kev",

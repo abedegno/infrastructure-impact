@@ -25,6 +25,8 @@ def public_resource_fingerprints(root):
     names = [
         "schemas/comparison-eligibility-summary-v1.json",
         "schemas/coverage-gaps-v1.json",
+        "schemas/cve-reconciliation-v1.json",
+        "resources/cve-reconciliation-selectors.json",
         "web/kev.js",
         "schemas/kev-v1.json",
         "resources/sources.json",

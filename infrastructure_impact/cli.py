@@ -116,7 +116,27 @@ def main(argv=None):
     serve.add_argument("--publications", type=Path)
     backup = sub.add_parser("backup", help="Create an online, consistent SQLite vault backup")
     backup.add_argument("destination", type=Path)
+    reconcile = sub.add_parser("cve-reconcile", help="Local, offline official CVE reconciliation")
+    modes = reconcile.add_subparsers(dest="reconcile_mode", required=True)
+    for mode, arguments in {
+        "verify": ("repository", "commit", "receipt"),
+        "scan": ("repository", "commit", "receipt", "workspace", "start-date", "end-date"),
+        "baseline": ("database", "config", "output"),
+        "report": ("workspace", "baseline", "json-output", "csv-output"),
+    }.items():
+        command = modes.add_parser(mode)
+        for argument in arguments:
+            command.add_argument(
+                "--" + argument,
+                required=True,
+                type=str if argument in {"commit", "start-date", "end-date"} else Path,
+            )
+        if mode == "scan":
+            command.add_argument("--record-limit", type=int, default=5000)
+            command.add_argument("--byte-limit", type=int, default=250000000)
     args = parser.parse_args(argv)
+    if args.command == "cve-reconcile":
+        return _reconcile(args, parser)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     from .plugins.registry import default_registry
     from .settings import Paths
@@ -445,6 +465,54 @@ def main(argv=None):
         ):
             source.backup(target)
         print(args.destination)
+
+
+def _reconcile(args, parser):
+    """Explicit reconciliation dispatch before any ambient application startup."""
+    try:
+        if args.reconcile_mode == "verify":
+            from .reconciliation.snapshot import verify_snapshot
+
+            result = verify_snapshot(args.repository, args.commit, args.receipt)
+        elif args.reconcile_mode == "scan":
+            from .reconciliation.scan import scan_snapshot
+
+            result = scan_snapshot(
+                repository=args.repository,
+                commit=args.commit,
+                receipt_path=args.receipt,
+                workspace=args.workspace,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                record_limit=args.record_limit,
+                byte_limit=args.byte_limit,
+            )
+        elif args.reconcile_mode == "baseline":
+            from .reconciliation.baseline import export_baseline
+
+            exported = export_baseline(
+                database=args.database, config_path=args.config, output=args.output
+            )
+            result = {"fingerprint": exported["fingerprint"]}
+        else:
+            from .reconciliation.report import build_report, write_report
+
+            report = build_report(workspace=args.workspace, baseline_path=args.baseline)
+            write_report(
+                report,
+                json_path=args.json_output,
+                csv_path=args.csv_output,
+                workspace=args.workspace,
+                baseline_path=args.baseline,
+            )
+            result = {
+                "report_id": report["report_id"],
+                "scan_complete": report["scan"]["scan_complete"],
+                "coverage_complete": None,
+            }
+    except (ValueError, OSError) as error:
+        parser.error(getattr(error, "code", "reconciliation_failed"))
+    print(json.dumps(result, sort_keys=True))
 
 
 if __name__ == "__main__":
