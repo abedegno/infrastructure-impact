@@ -19,6 +19,8 @@ import zlib
 from contextlib import contextmanager
 from pathlib import Path
 
+from .snapshot import MAX_RECORD_BYTES
+
 MAX_FINDINGS = 100_000
 MAX_WORKSPACE_BYTES = 1_000_000_000
 _OVERHEAD = 65_536
@@ -32,6 +34,10 @@ _MAX_OUTCOME_BYTES = 24 * 2_000_000 + 16_384
 # More than zlib's default compressBound overhead, including incompressible input.
 _MAX_COMPRESSED_BYTES = _MAX_OUTCOME_BYTES + _MAX_OUTCOME_BYTES // 100 + 64
 _INITIAL_DATABASE_BYTES = 6 * _PAGE
+_CAPTURE_MAGIC = b"\x89CVEcap\n"
+_CAPTURE_HEADER_BYTES = 45
+_MAX_CAPTURE_STORAGE_BYTES = MAX_RECORD_BYTES + MAX_RECORD_BYTES // 100 + 64 + _CAPTURE_HEADER_BYTES
+_COMPACTION_STAGE = re.compile(r"pending\.compact-([0-9a-f]{64})\.capture\Z")
 _HASH = re.compile(r"[0-9a-f]{64}\Z")
 _OUTCOMES = (
     "parsed",
@@ -98,6 +104,54 @@ def _decode_outcome(encoded, length, sha):
         return row
     except (zlib.error, ValueError, UnicodeError, RecursionError):
         raise StateError("state_integrity") from None
+
+
+def _encode_capture(raw, *, force=False):
+    """Prefer smaller versioned frames; explicit compaction frames every legacy file."""
+    if len(raw) > MAX_RECORD_BYTES:
+        raise StateError("capture_integrity")
+    framed = (
+        _CAPTURE_MAGIC
+        + b"\x01"
+        + len(raw).to_bytes(4, "big")
+        + hashlib.sha256(raw).digest()
+        + zlib.compress(raw)
+    )
+    return framed if force or len(framed) < len(raw) else raw
+
+
+def _decode_capture(stored, source_sha256):
+    if (
+        not isinstance(source_sha256, str)
+        or not _HASH.fullmatch(source_sha256)
+        or len(stored) > _MAX_CAPTURE_STORAGE_BYTES
+    ):
+        raise StateError("capture_integrity")
+    raw = stored
+    if stored.startswith(_CAPTURE_MAGIC):
+        if len(stored) < _CAPTURE_HEADER_BYTES or stored[8] != 1:
+            raise StateError("capture_integrity")
+        length = int.from_bytes(stored[9:13], "big")
+        if length > MAX_RECORD_BYTES or stored[13:45].hex() != source_sha256:
+            raise StateError("capture_integrity")
+        try:
+            decoder = zlib.decompressobj()
+            raw = decoder.decompress(stored[_CAPTURE_HEADER_BYTES:], length + 1)
+        except zlib.error:
+            raise StateError("capture_integrity") from None
+        if len(raw) != length or not decoder.eof or decoder.unused_data or decoder.unconsumed_tail:
+            raise StateError("capture_integrity")
+    if len(raw) > MAX_RECORD_BYTES or digest(raw) != source_sha256:
+        raise StateError("capture_integrity")
+    return raw
+
+
+def _read_capture_file(path, source_sha256):
+    if _file(path) > _MAX_CAPTURE_STORAGE_BYTES:
+        raise StateError("capture_integrity")
+    with path.open("rb") as handle:
+        stored = handle.read(_MAX_CAPTURE_STORAGE_BYTES + 1)
+    return _decode_capture(stored, source_sha256)
 
 
 def _file(path):
@@ -289,17 +343,10 @@ class Workspace:
             yield {"position": position, "ordinal": ordinal, "finding": json.loads(payload)}
 
     def read_capture(self, source_sha256):
-        from .snapshot import MAX_RECORD_BYTES
-
         if not isinstance(source_sha256, str) or not _HASH.fullmatch(source_sha256):
             raise StateError("capture_integrity")
         path = self.path / "captures" / (source_sha256 + ".json")
-        if _file(path) > MAX_RECORD_BYTES:
-            raise StateError("capture_integrity")
-        raw = path.read_bytes()
-        if digest(raw) != source_sha256:
-            raise StateError("capture_integrity")
-        return raw
+        return _read_capture_file(path, source_sha256)
 
     @property
     def progress(self):
@@ -395,12 +442,15 @@ class Workspace:
         created = None
         try:
             if capture:
-                self._reserve(len(raw))
+                stored = _encode_capture(raw)
+                self._reserve(len(stored))
                 created = self.path / "captures" / (capture + ".json")
                 pending_capture = self.path / "pending.capture"
-                _write_new(pending_capture, raw)
+                _write_new(pending_capture, stored)
+                if _read_capture_file(pending_capture, capture) != raw:
+                    raise StateError("capture_integrity")
                 os.replace(pending_capture, created)
-                self._new_capture_bytes = len(raw)
+                self._new_capture_bytes = len(stored)
                 _sync_directory(created.parent)
             self._reserve()
             db_size = _file(self.path / "state.sqlite3")
@@ -623,5 +673,111 @@ def open_workspace(workspace: Path):
             if {item.name for item in (path / "captures").iterdir()} != committed:
                 raise StateError("capture_integrity")
             yield CommittedWorkspace(view, committed)
+        finally:
+            db.close()
+
+
+def compact_workspace_captures(
+    workspace: Path, *, record_limit: int = 5000, byte_limit: int = 250_000_000
+) -> dict:
+    """Verify committed state, then frame a bounded slice of legacy captures.
+
+    Full existing-state integrity verification precedes the conversion budget,
+    just as it does for scan resume and open_workspace. SQLite stays read-only.
+    Already-framed, verified captures do not consume the conversion slice. Every
+    processed legacy file is framed, even when its representation grows slightly,
+    so repeated small calls advance without modifying any scan state or cursor.
+    """
+    for value, ceiling in ((record_limit, 5000), (byte_limit, 250_000_000)):
+        if type(value) is not int or not 0 <= value <= ceiling:
+            raise ValueError("invalid_compaction_limit")
+    path = Path(workspace)
+    with _lock(path, write=True):
+        before = retained_bytes(path)
+        identity = _read_identity(path / "identity.json")
+        db = _connect(path.resolve() / "state.sqlite3", readonly=True)
+        try:
+            db.execute("BEGIN")
+            view = Workspace(path, db, identity)
+            committed = view.verify()
+            captures = path / "captures"
+            if {item.name for item in captures.iterdir()} != committed:
+                raise StateError("capture_integrity")
+            owned = {
+                row["capture_sha256"]: row["entry"]
+                for row in view.iter_outcomes()
+                if row["capture_sha256"]
+            }
+            # A process can leave partially written staging, but replacement is
+            # atomic and the original has just been fully verified. Discard only
+            # bounded, regular staging explicitly named for a committed capture.
+            for staged in path.glob("pending.compact-*"):
+                match = _COMPACTION_STAGE.fullmatch(staged.name)
+                if not match or match[1] not in owned or _file(staged) > _MAX_CAPTURE_STORAGE_BYTES:
+                    raise StateError("unsafe_compaction_staging")
+                staged.unlink()
+                _sync_directory(path)
+            legacy = []
+            for sha in sorted(owned):
+                with (captures / (sha + ".json")).open("rb") as handle:
+                    if handle.read(len(_CAPTURE_MAGIC)) != _CAPTURE_MAGIC:
+                        legacy.append(sha)
+            attempted = converted = consumed = 0
+            reason = "complete"
+            retained = retained_bytes(path)
+            for sha in legacy:
+                if attempted >= record_limit:
+                    reason = "record_limit"
+                    break
+                entry = owned[sha]
+                if consumed + entry["size"] > byte_limit:
+                    reason = "byte_limit"
+                    break
+                original = captures / (sha + ".json")
+                raw = view.read_capture(sha)
+                if (
+                    len(raw) != entry["size"]
+                    or hashlib.sha1(f"blob {len(raw)}\0".encode() + raw).hexdigest() != entry["oid"]
+                ):
+                    raise StateError("capture_integrity")
+                attempted += 1
+                consumed += len(raw)
+                stored = _encode_capture(raw, force=True)
+                # The old representation remains until rename. There is no
+                # SQLite write/journal: reserve the actual temporary bytes only.
+                if retained + len(stored) > MAX_WORKSPACE_BYTES:
+                    reason = "workspace_limit"
+                    break
+                staged = path / ("pending.compact-" + sha + ".capture")
+                old_size = _file(original)
+                try:
+                    _write_new(staged, stored)
+                    if _read_capture_file(staged, sha) != raw:
+                        raise StateError("capture_integrity")
+                    os.replace(staged, original)
+                    _sync_directory(captures)
+                    _sync_directory(path)
+                    converted += 1
+                    retained += len(stored) - old_size
+                except OSError:
+                    raise StateError("compaction_write_failed") from None
+                finally:
+                    staged.unlink(missing_ok=True)
+            after = retained_bytes(path)
+            return dict(
+                format_version=1,
+                total=len(owned),
+                attempted=attempted,
+                converted=converted,
+                skipped=len(owned) - len(legacy),
+                remaining=len(legacy) - converted,
+                decoded_bytes=consumed,
+                verification_records=len(owned),
+                verification_decoded_bytes=sum(entry["size"] for entry in owned.values()),
+                bytes_before=before,
+                bytes_after=after,
+                bytes_saved=before - after,
+                stop_reason=reason,
+            )
         finally:
             db.close()

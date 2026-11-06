@@ -645,3 +645,330 @@ def test_expanded_codec_declared_ceiling_is_checked_before_decompression(monkeyp
     monkeypatch.setattr(state.zlib, "decompressobj", forbidden)
     with pytest.raises(state.StateError, match="state_integrity"):
         state._decode_outcome(encoded, 48_016_385, hashlib.sha256(b"{}").hexdigest())
+
+
+def test_capture_codec_roundtrip_beneficial_and_legacy_bytes():
+    _, state = modules()
+    raw = b'{"literal":"' + b"x" * 10_000 + b'"}'
+    sha = hashlib.sha256(raw).hexdigest()
+    stored = state._encode_capture(raw)
+    assert stored.startswith(b"\x89CVEcap\n\x01")
+    assert len(stored) < len(raw)
+    assert state._decode_capture(stored, sha) == raw
+    assert state._decode_capture(raw, sha) == raw
+    incompressible = bytes(range(256))
+    assert state._encode_capture(incompressible) == incompressible
+
+
+def test_new_capture_storage_and_legacy_reader_preserve_exact_source(source):
+    scan, state = modules()
+    args, bodies = source
+    scan.scan_snapshot(**args)
+    before = (args["workspace"] / "state.sqlite3").read_bytes()
+    with state.open_workspace(args["workspace"]) as reader:
+        for raw in bodies:
+            sha = hashlib.sha256(raw).hexdigest()
+            stored = (args["workspace"] / "captures" / (sha + ".json")).read_bytes()
+            assert stored.startswith(b"\x89CVEcap\n\x01") and len(stored) < len(raw)
+            assert reader.read_capture(sha) == raw
+    # Legacy representation remains supported without changing committed state.
+    for raw in bodies:
+        (args["workspace"] / "captures" / (hashlib.sha256(raw).hexdigest() + ".json")).write_bytes(
+            raw
+        )
+    with state.open_workspace(args["workspace"]) as reader:
+        assert reader.read_capture(hashlib.sha256(bodies[0]).hexdigest()) == bodies[0]
+    assert (args["workspace"] / "state.sqlite3").read_bytes() == before
+
+
+@pytest.mark.parametrize(
+    "damage", ["truncated", "trailing", "corrupt", "version", "hash", "length", "bomb"]
+)
+def test_capture_frame_integrity_and_raw_ceiling(damage, monkeypatch):
+    import zlib
+
+    _, state = modules()
+    raw = b"x" * 10_000
+    sha = hashlib.sha256(raw).hexdigest()
+    stored = state._encode_capture(raw)
+    if damage == "truncated":
+        stored = stored[:-1]
+    elif damage == "trailing":
+        stored += b"x"
+    elif damage == "corrupt":
+        stored = stored[:-1] + bytes([stored[-1] ^ 1])
+    elif damage == "version":
+        stored = stored[:8] + b"\x02" + stored[9:]
+    elif damage == "hash":
+        stored = stored[:13] + b"\x00" * 32 + stored[45:]
+    elif damage == "length":
+        stored = stored[:9] + (2_000_001).to_bytes(4, "big") + stored[13:]
+
+        def forbidden():
+            raise AssertionError("capture decoder allocated before size check")
+
+        monkeypatch.setattr(state.zlib, "decompressobj", forbidden)
+    else:
+        stored = (
+            stored[:9] + (1).to_bytes(4, "big") + stored[13:45] + zlib.compress(b"x" * 2_000_001)
+        )
+    with pytest.raises(state.StateError, match="capture_integrity"):
+        state._decode_capture(stored, sha)
+
+
+def legacy_workspace(source):
+    scan, state = modules()
+    args, bodies = source
+    scan.scan_snapshot(**args)
+    for raw in bodies:
+        (args["workspace"] / "captures" / (hashlib.sha256(raw).hexdigest() + ".json")).write_bytes(
+            raw
+        )
+    return args, bodies, state
+
+
+def test_compaction_roundtrip_limits_and_committed_state_unchanged(source):
+    args, bodies, state = legacy_workspace(source)
+    files = {
+        name: (args["workspace"] / name).read_bytes() for name in ("state.sqlite3", "identity.json")
+    }
+    result = state.compact_workspace_captures(args["workspace"], byte_limit=287)
+    assert result["attempted"] == result["converted"] == 0
+    assert result["remaining"] == 3 and result["stop_reason"] == "byte_limit"
+    result = state.compact_workspace_captures(args["workspace"], record_limit=1, byte_limit=288)
+    assert result["attempted"] == result["converted"] == 1
+    assert result["decoded_bytes"] == 288 and result["remaining"] == 2
+    assert result["stop_reason"] == "record_limit" and result["bytes_saved"] > 0
+    result = state.compact_workspace_captures(args["workspace"], record_limit=1)
+    assert result["converted"] == 1 and result["skipped"] == 1 and result["remaining"] == 1
+    result = state.compact_workspace_captures(args["workspace"])
+    assert result["converted"] == 1 and result["skipped"] == 2 and result["remaining"] == 0
+    repeated = state.compact_workspace_captures(args["workspace"])
+    assert repeated["attempted"] == repeated["converted"] == 0
+    assert repeated["skipped"] == 3 and repeated["stop_reason"] == "complete"
+    assert repeated["bytes_before"] == repeated["bytes_after"]
+    for name, original in files.items():
+        assert (args["workspace"] / name).read_bytes() == original
+    with state.open_workspace(args["workspace"]) as reader:
+        for raw in bodies:
+            assert reader.read_capture(hashlib.sha256(raw).hexdigest()) == raw
+
+
+@pytest.mark.parametrize("keyword,value", [("record_limit", 0), ("byte_limit", 0)])
+def test_compaction_zero_limits_do_not_convert(source, keyword, value):
+    args, _, state = legacy_workspace(source)
+    before = {p.name: p.read_bytes() for p in (args["workspace"] / "captures").iterdir()}
+    result = state.compact_workspace_captures(args["workspace"], **{keyword: value})
+    assert result["attempted"] == result["converted"] == 0 and result["remaining"] == 3
+    assert {p.name: p.read_bytes() for p in (args["workspace"] / "captures").iterdir()} == before
+
+
+@pytest.mark.parametrize(
+    "keyword,value",
+    [("record_limit", 5001), ("byte_limit", 250000001), ("record_limit", True), ("byte_limit", -1)],
+)
+def test_compaction_rejects_invalid_limits_without_writes(source, keyword, value):
+    args, _, state = legacy_workspace(source)
+    with pytest.raises(ValueError, match="invalid_compaction_limit"):
+        state.compact_workspace_captures(args["workspace"], **{keyword: value})
+
+
+def test_compaction_quota_rejects_before_replacement(source, monkeypatch):
+    args, _, state = legacy_workspace(source)
+    before = {p.name: p.read_bytes() for p in (args["workspace"] / "captures").iterdir()}
+    total = sum(p.stat().st_size for p in args["workspace"].rglob("*") if p.is_file())
+    monkeypatch.setattr(state, "MAX_WORKSPACE_BYTES", total)
+    result = state.compact_workspace_captures(args["workspace"])
+    assert result["attempted"] == 1 and result["converted"] == 0
+    assert result["remaining"] == 3 and result["stop_reason"] == "workspace_limit"
+    assert result["bytes_before"] == result["bytes_after"] == total
+    assert {p.name: p.read_bytes() for p in (args["workspace"] / "captures").iterdir()} == before
+    assert not list(args["workspace"].glob("pending.compact-*"))
+
+
+@pytest.mark.parametrize("holder", ["report", "writer"])
+def test_compaction_excludes_other_workspace_readers_and_writers(source, holder):
+    args, _, state = legacy_workspace(source)
+    if holder == "report":
+        context = state.open_workspace(args["workspace"])
+    else:
+        context = state._lock(args["workspace"], write=True)
+    with context:
+        with pytest.raises(state.StateError, match="workspace_locked"):
+            state.compact_workspace_captures(args["workspace"])
+
+
+@pytest.mark.parametrize("when", ["before", "after"])
+def test_compaction_process_exit_before_and_after_rename_is_idempotent(source, when):
+    import subprocess
+    import sys
+
+    args, bodies, state = legacy_workspace(source)
+    before = (args["workspace"] / "state.sqlite3").read_bytes()
+    script = """
+import os
+from pathlib import Path
+from infrastructure_impact.reconciliation import state
+original = os.replace
+def interrupt(src, dst):
+    if Path(dst).parent.name == 'captures':
+        if WHEN == 'after':
+            original(src, dst)
+        os._exit(91)
+    return original(src, dst)
+state.os.replace = interrupt
+state.compact_workspace_captures(Path(WORKSPACE))
+""".replace("WHEN", repr(when)).replace("WORKSPACE", repr(str(args["workspace"])))
+    process = subprocess.run([sys.executable, "-c", script], check=False)
+    assert process.returncode == 91
+    result = state.compact_workspace_captures(args["workspace"])
+    assert result["remaining"] == 0
+    assert (args["workspace"] / "state.sqlite3").read_bytes() == before
+    with state.open_workspace(args["workspace"]) as reader:
+        for raw in bodies:
+            assert reader.read_capture(hashlib.sha256(raw).hexdigest()) == raw
+    assert not list(args["workspace"].glob("pending.compact-*"))
+
+
+def test_compaction_rejects_corrupt_already_framed_and_foreign_files(source):
+    args, _, state = legacy_workspace(source)
+    state.compact_workspace_captures(args["workspace"], record_limit=1)
+    framed = next(
+        p
+        for p in (args["workspace"] / "captures").iterdir()
+        if p.read_bytes().startswith(b"\x89CVEcap\n")
+    )
+    original = framed.read_bytes()
+    framed.write_bytes(original[:-1])
+    with pytest.raises(state.StateError, match="integrity"):
+        state.compact_workspace_captures(args["workspace"])
+    framed.write_bytes(original)
+    foreign = args["workspace"] / "captures" / ("a" * 64 + ".json")
+    foreign.write_bytes(b"foreign")
+    with pytest.raises(state.StateError, match="capture_integrity"):
+        state.compact_workspace_captures(args["workspace"])
+
+
+def test_compaction_forced_framing_keeps_nonbeneficial_source_bytes():
+    _, state = modules()
+    raw = bytes(range(256))
+    framed = state._encode_capture(raw, force=True)
+    assert len(framed) > len(raw)
+    assert state._decode_capture(framed, hashlib.sha256(raw).hexdigest()) == raw
+
+
+def test_nonbeneficial_compaction_advances_with_limit_one_and_reports_growth(source, monkeypatch):
+    args, _, state = legacy_workspace(source)
+    original = state.zlib.compress
+    # Valid stored DEFLATE blocks deliberately provide no compression benefit.
+    monkeypatch.setattr(state.zlib, "compress", lambda raw: original(raw, level=0))
+    for remaining in (2, 1, 0):
+        result = state.compact_workspace_captures(args["workspace"], record_limit=1)
+        assert result["converted"] == 1 and result["remaining"] == remaining
+        assert result["bytes_saved"] < 0
+    assert state.compact_workspace_captures(args["workspace"])["attempted"] == 0
+
+
+def test_capture_frame_allows_storage_overhead_but_never_overlarge_source():
+    _, state = modules()
+    raw = os.urandom(2_000_000)
+    frame = state._encode_capture(raw, force=True)
+    assert len(frame) > 2_000_000
+    assert state._decode_capture(frame, hashlib.sha256(raw).hexdigest()) == raw
+    with pytest.raises(state.StateError, match="capture_integrity"):
+        state._encode_capture(raw + b"x", force=True)
+
+
+def test_compaction_recovers_only_owned_partial_staging(source):
+    args, bodies, state = legacy_workspace(source)
+    stage = args["workspace"] / (
+        "pending.compact-" + hashlib.sha256(bodies[0]).hexdigest() + ".capture"
+    )
+    stage.write_bytes(b"partial frame")
+    result = state.compact_workspace_captures(args["workspace"], record_limit=0)
+    assert result["converted"] == 0 and not stage.exists()
+    foreign = args["workspace"] / ("pending.compact-" + "a" * 64 + ".capture")
+    foreign.write_bytes(b"foreign")
+    with pytest.raises(state.StateError, match="unsafe_compaction_staging"):
+        state.compact_workspace_captures(args["workspace"])
+    assert foreign.read_bytes() == b"foreign"
+
+
+def test_active_compaction_excludes_scan_and_report(source, monkeypatch):
+    args, _, state = legacy_workspace(source)
+    scan, _ = modules()
+    original = state._write_new
+    checked = []
+
+    def while_locked(path, raw):
+        if path.name.startswith("pending.compact-"):
+            with pytest.raises(state.StateError, match="workspace_locked"):
+                scan.scan_snapshot(**args)
+            with pytest.raises(state.StateError, match="workspace_locked"):
+                with state.open_workspace(args["workspace"]):
+                    pass
+            checked.append(True)
+        return original(path, raw)
+
+    monkeypatch.setattr(state, "_write_new", while_locked)
+    assert state.compact_workspace_captures(args["workspace"], record_limit=1)["converted"] == 1
+    assert checked == [True]
+
+
+def test_compaction_rejects_capture_alias_and_zero_limit_corruption(source):
+    args, _, state = legacy_workspace(source)
+    state.compact_workspace_captures(args["workspace"], record_limit=1)
+    framed = next(
+        p
+        for p in (args["workspace"] / "captures").iterdir()
+        if p.read_bytes().startswith(b"\x89CVEcap\n")
+    )
+    original = framed.read_bytes()
+    framed.write_bytes(original + b"trailing")
+    with pytest.raises(state.StateError, match="integrity"):
+        state.compact_workspace_captures(args["workspace"], record_limit=0)
+    framed.write_bytes(original)
+    os.link(framed, args["workspace"].parent / "capture-alias")
+    with pytest.raises(state.StateError, match="unsafe_workspace"):
+        state.compact_workspace_captures(args["workspace"])
+
+
+def test_capture_file_reader_rejects_aliases_and_oversized_storage(tmp_path):
+    _, state = modules()
+    raw = b'{"literal":"x"}'
+    sha = hashlib.sha256(raw).hexdigest()
+    original = tmp_path / "source"
+    original.write_bytes(raw)
+    alias = tmp_path / "alias"
+    alias.symlink_to(original)
+    with pytest.raises(state.StateError, match="unsafe_workspace"):
+        state._read_capture_file(alias, sha)
+    oversized = tmp_path / "oversized"
+    with oversized.open("wb") as handle:
+        handle.truncate(2_020_110)
+    with pytest.raises(state.StateError, match="capture_integrity"):
+        state._read_capture_file(oversized, sha)
+
+
+def test_capture_file_read_request_remains_bounded(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    _, state = modules()
+    raw = b'{"literal":"x"}'
+    path = tmp_path / "capture"
+    path.write_bytes(raw)
+    original = Path.open
+
+    @contextmanager
+    def bounded_open(self, *args, **kwargs):
+        with original(self, *args, **kwargs) as handle:
+
+            class Reader:
+                def read(self, size=-1):
+                    assert 0 <= size <= 2_020_110, "unbounded capture read"
+                    return handle.read(size)
+
+            yield Reader()
+
+    monkeypatch.setattr(Path, "open", bounded_open)
+    assert state._read_capture_file(path, hashlib.sha256(raw).hexdigest()) == raw
