@@ -106,3 +106,72 @@ unless recurring replay is deliberate. The reusable workflow template has the sa
 Hosted maintenance operates only on the runner's existing public-source vault.
 Do not upload a private native vault or review worksheet to perform it. Keep the
 independent human-review status and vendor comparison prerequisites pending.
+
+## Preview-bound reviewed Arista refresh
+
+An explicit profile refreshes only the reviewed SA-0099 and SA-0103 HTML pages
+and the SA-0103 advertised CSAF counterpart. It never enumerates feeds, archives,
+CVE records or KEV. Run against an explicitly selected public-source staging
+vault, keeping receipts and raw captures outside Git and public output:
+
+```sh
+impact maintenance preview --database /public-stage/intel.sqlite3 \
+  --profile arista-reviewed-2024-0099-0103-v1 --output /operator/preview.json
+impact maintenance apply --database /public-stage/intel.sqlite3 \
+  --profile arista-reviewed-2024-0099-0103-v1 --preview /operator/preview.json \
+  --output /operator/apply.json
+```
+
+Both output paths must be new regular-file destinations with no symlink
+components. Preview uses a read-only consistent database snapshot, performs no
+migration or HTTP request, and creates no writer lock. Its fingerprint binds the
+ordered latest record inventory, normalized payload digests, relevant latest
+selection facts, and installed profile, policy and normalizer identities. Its
+observation time does not affect the binding. This is a consistency check, not
+file authentication. Missing retained inputs appear as bounded issue codes.
+
+Apply validates the closed preview receipt before opening the writer database,
+then owns the same single process lock as collection. A changed latest revision,
+normalized payload, source selection, or installed identity requires a new
+preview; refusal happens before HTTP. The core `apply_profile` function expects
+its caller to own that lock and does not acquire a nested lock.
+
+Retrieval is limited to the three exact profile URLs, including every redirect,
+with an inclusive 2,000,000-byte per-document bound and the existing two-attempt
+transport limit. Each approved URL has one invocation cache entry for either
+bytes or failure. Both HTML primaries must independently validate their exact
+advisory identity and CVE set before any normalized write. SA-0099 retains
+CVE-2024-27890 and CVE-2024-27892; SA-0103 retains CVE-2024-6858. The fetched CSAF
+must independently prove the expected literal CVE-2023-5501 scope conflict during
+this invocation. A prior retained proof cannot hide a current HTTP or layout
+failure. No CVE identity is renamed or transferred between representations.
+
+Only `outcome: completed` accepts cleanup: it requires successful primary imports
+or unchanged results plus the reviewed policy's actual exclusion decision and no
+unresolved proof issues. With no exact reviewed legacy CSAF record in the vault,
+valid primary imports can still append, but the result is `failed_cleanup_proof`;
+zero exclusions never establish cleanup. A failed primary or alternate validation
+writes no normalized revisions. Source captures and failure observations may
+remain. Later storage failures return `failed_storage`; already committed
+independent revisions remain and require a fresh preview before retrying.
+
+Receipts contain primary and alternate outcomes, import/unchanged counts, before
+and after record keys, public decisions and proof fingerprints. They contain no
+source bodies or private policy context. `validate_receipt` and `receipt_bytes`
+provide the strict local apply-receipt boundary; decision counts over 1,000 or
+serialized receipts over 2,000,000 bytes fail instead of truncating. CLI apply
+returns 1 for failed cleanup or writer contention; its contention receipt has
+only `outcome: skipped_writer_lock` and the profile ID. No publication, hosted
+operation, release, source-pin activation or schedule change is performed by
+these commands.
+
+To keep preview strictly free of input-vault writes, it reads a disposable copy of
+an operator-provided stable, checkpointed database. It checks source file
+identity, size and modification/change times and journal presence before and
+after one streaming copy; concurrent changes fail without retrying or waiting.
+A nonempty WAL or rollback journal is rejected with
+`maintenance_checkpoint_required`. Provide a consistent checkpointed backup of a
+live vault before previewing it. Preview never opens the source with SQLite,
+creates source SQLite sidecars, performs a checkpoint, or takes the writer lock.
+The authenticated hosted restore supplies this checkpointed input. Apply still
+recomputes the same logical inventory binding under the caller's writer lock.
