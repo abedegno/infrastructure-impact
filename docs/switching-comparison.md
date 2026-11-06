@@ -279,6 +279,25 @@ An unresolved persistent request marker remains blocked and needs separate opera
 investigation; do not clear it to bypass quota safety. Keep operational receipts
 private. No schedule, production ingest or deployment is required by this workflow.
 
+### Corrected-source comparison acceptance
+
+For a retained-corpus repair, keep the original stage unchanged and replay reviewed
+captures into a separate stage before constructing study inputs. Record capture,
+configuration, database and frozen-definition fingerprints, the explicit observation
+end and phase timings outside Git. Source selection can remain partial when the
+reviewed primary is usable but an alternate disagrees; retain that issue rather
+than treating it as a successful alternate comparison.
+
+Use one all-vendor JSON/CSV pair for each of `all`, `pre`, `post` and calendar years
+2021–2026 at both `os_family` and `model_qualified` scopes: 18 pairs. Check the
+actual exported JSON with full schema and semantic validation, CSV counts and
+provenance, input immutability and deterministic representative reselections.
+Retain failed-phase receipts; a bounded profile or partial export is not complete
+corpus acceptance. Python public selection validates afresh on every call and
+returns isolated inputs and publication metadata, without a cross-call success
+cache. The [2026-11-06 repair observations](research/2026-11-06-arista-comparison-repair-observations.md)
+separate completed replay and bounded checks from full acceptance gates.
+
 
 ## Release and monitor checks
 
