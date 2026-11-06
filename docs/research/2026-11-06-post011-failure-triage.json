@@ -219,5 +219,11 @@
   },
   "review_status": "automated_source_review_independent_human_pending",
   "hosted_changed": false,
-  "comparison_limits": "Legacy Arista initial dates predate 2021; missing sources and incomplete model scope are not zero exposure or a vendor security rate."
+  "comparison_limits": "Legacy Arista initial dates predate 2021; missing sources and incomplete model scope are not zero exposure or a vendor security rate.",
+  "public_input_sha256": {
+    "manifest.json": "747f9af152ec629333c9b0f6d546d8f3cb37bc106b05a0d5e8dac86794f7b742",
+    "snapshot.json": "c5f92115b48305d8ea6a207af965adb87c3822bd191072eab0d3980b45a9ec4e",
+    "snapshot.json.gz": "45ec40385b7ec8d9ceec40bd04f943867e88fcdb32e4f59cdedcd2a0a65518ad",
+    "source-audit.json": "1f0436c59aa84562aec7e20a4c09575a113c7e21d598cb5bce13fd70ae61041a"
+  }
 }
