@@ -24,7 +24,9 @@ class PluginRegistry:
         for domain in plugin.domains:
             if not re.fullmatch(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?", domain) or "." not in domain:
                 raise ValueError(f"Invalid official domain: {domain}")
-        if plugin.normalizer_dependencies is not None:
+        if plugin.research_evidence is not None and not callable(plugin.research_evidence):
+            raise ValueError("Research evidence hook must be callable")
+        if plugin.normalizer_dependencies is not None or plugin.research_evidence is not None:
             from .fingerprints import sources
 
             sources(plugin)  # Fail early if an opted-in dependency cannot be tracked.
@@ -45,6 +47,19 @@ class PluginRegistry:
     def normalize(self, raw, url, vendor):
         plugin = self.get(vendor)
         return self.finalize(plugin.parse_document(raw, url, vendor), url, vendor)
+
+    def research_evidence(self, raw, url, vendor, document):
+        """Call an optional pure research hook with an isolated advisory copy."""
+        import copy
+        import json
+
+        hook = self.get(vendor).research_evidence
+        if hook is None:
+            return None
+        result = hook(raw, url, vendor, copy.deepcopy(document))
+        if not isinstance(result, dict) or result.get("schema_version") != 1:
+            raise ValueError("Research evidence requires schema_version 1")
+        return json.loads(json.dumps(result, allow_nan=False))
 
     def normalize_component_inventory(self, raw, url, vendor):
         """Validate optional component hooks before storage or research use."""
@@ -78,7 +93,12 @@ class PluginRegistry:
 
         source = inspect.getsourcefile(plugin.parse_document)
         code = Path(source).read_bytes() if source else plugin.version.encode()
-        return sha256(ADAPTER_VERSION.encode() + plugin.version.encode() + code).hexdigest()[:16]
+        payload = ADAPTER_VERSION.encode() + plugin.version.encode() + code
+        if plugin.research_evidence is not None:
+            from .fingerprints import fingerprint
+
+            payload += fingerprint(plugin).encode()
+        return sha256(payload).hexdigest()[:16]
 
     def fingerprint_scheme(self, vendor):
         if self.get(vendor).normalizer_dependencies is None:

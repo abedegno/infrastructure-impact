@@ -3,6 +3,7 @@
 import json
 import unittest
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from urllib.error import HTTPError
 
 from checks.operations_report import summarize
@@ -110,5 +111,55 @@ class ReleaseSourceTests(unittest.TestCase):
         self.assertTrue(late["storage_review_required"])
 
 
+def test_public_default_kev_configuration_and_resources_match():
+    from infrastructure_impact.collection.config import validate_config
+    from infrastructure_impact.settings import PACKAGE
+
+    root = Path(__file__).resolve().parent.parent
+    public = json.loads((root / "sources.json").read_text())
+    bundled = json.loads((PACKAGE / "resources/sources.json").read_text())
+    assert public == bundled
+    validate_config(public)
+    assert next(s for s in public["reference_sources"] if s["source_id"] == "cisa-kev") == {
+        "source_id": "cisa-kev",
+        "url": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json",
+        "enabled": True,
+    }
+    assert (PACKAGE / "web/kev.js").is_file()
+    schema = json.loads((PACKAGE / "schemas/kev-v1.json").read_text())
+    assert "publication" in schema["required"]
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_distribution_checks_switching_assets_against_installed_wheel():
+    from checks import distribution
+
+    root = Path(__file__).resolve().parent.parent
+    assert hasattr(distribution, "public_resource_fingerprints"), (
+        "Missing switching wheel resource gate"
+    )
+    resources = distribution.public_resource_fingerprints(root)
+    required = [
+        "web/switching-contracts.js",
+        "web/switching.js",
+        "web/switching-view.js",
+        "resources/switching-study.json",
+        "resources/switching-source-bindings.json",
+        "resources/switching-extraction-review.json",
+        "migrations/011_switching_collection.sql",
+        "schemas/switching-study-v1.json",
+        "schemas/switching-evidence-v1.json",
+        "schemas/switching-comparison-v1.json",
+        "schemas/switching-summary-v1.json",
+        "schemas/switching-inputs-v1.json",
+    ]
+    import hashlib
+
+    for name in required:
+        assert (
+            resources[name]
+            == hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
+        )

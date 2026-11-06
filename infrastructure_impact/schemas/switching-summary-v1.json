@@ -1,0 +1,63 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/schema_version"
+    },
+    "publication": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/publication"
+    },
+    "generated_at": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/generated_at"
+    },
+    "evaluated_at": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/evaluated_at"
+    },
+    "definition": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/definition"
+    },
+    "selection": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/selection"
+    },
+    "rows": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/rows"
+    },
+    "sources": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/sources"
+    },
+    "issues": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/issues"
+    },
+    "method": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/method"
+    },
+    "availability": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/availability"
+    },
+    "observation_end": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/observation_end"
+    },
+    "representation": {
+      "const": "summary"
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "evaluated_at",
+    "definition",
+    "selection",
+    "rows",
+    "sources",
+    "issues",
+    "method",
+    "availability",
+    "observation_end",
+    "representation"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-summary:1",
+  "title": "Explicit switching comparison summary v1"
+}

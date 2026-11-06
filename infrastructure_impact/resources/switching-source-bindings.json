@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+      "source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0",
+      "vendor": "cisco",
+      "publisher": {
+        "id": "cisco-sa-openssh-rce-2024",
+        "sequence": "1.16",
+        "status": "Final"
+      },
+      "initial_published_at": "2024-07-02T16:00:00Z",
+      "updated_at": "2024-09-13T14:43:00Z",
+      "claims": [
+        {
+          "cve_id": "CVE-2024-6387",
+          "product_id": null,
+          "product": "IOS XE Software with NETCONF enabled",
+          "family": "cisco-iosxe",
+          "status": "affected",
+          "scope": "cve_specific",
+          "conditions": [
+            "NETCONF enabled"
+          ],
+          "source_locator": "div#vulnerableproducts tr[33]",
+          "remediations": [
+            {
+              "publisher_id": "CSCwk61216",
+              "category": "vendor_fix",
+              "details": "17.15.1",
+              "product_ids": [],
+              "version_expressions": [
+                "17.15.1"
+              ],
+              "published_availability": "17.15.1",
+              "availability_date": null,
+              "source_locator": "div#vulnerableproducts tr[33]/td[2]",
+              "scope_binding": {
+                "basis": "same_source_row",
+                "cve_id": "CVE-2024-6387",
+                "source_locator": "div#vulnerableproducts tr[33]"
+              },
+              "availability": "vendor_reports_fixed"
+            }
+          ],
+          "conditional_affected": true
+        }
+      ]
+    },
+    {
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z",
+      "source_sha256": "7c1864e3d9746315f69ca6d2a40c4ffdd3f3d90d3b809117759697af930c07a7",
+      "vendor": "cisco",
+      "publisher": {
+        "id": "cisco-sa-dhcp-dos-T3CXPO9z",
+        "sequence": "1.0",
+        "status": "Final"
+      },
+      "initial_published_at": "2024-03-27T16:00:00Z",
+      "updated_at": null,
+      "claims": [
+        {
+          "cve_id": "CVE-2024-20259",
+          "product_id": null,
+          "product": "Catalyst 9000 Series Switches",
+          "family": "cisco-iosxe",
+          "status": "affected",
+          "scope": "cve_specific",
+          "conditions": [
+            "This vulnerability affects the following Cisco devices if they are running a vulnerable release of Cisco IOS XE Software and have DHCP snooping and endpoint analytics enabled:"
+          ],
+          "source_locator": "div#vulnerableproducts: first paragraph and Catalyst 9000 list item",
+          "remediations": [],
+          "conditional_affected": true
+        }
+      ]
+    },
+    {
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/viewErp.x?alertId=ERP-75056",
+      "source_sha256": "3ca993c5411757fe2567f966978c329f54c138b8139231b4d8161201e6563cb2",
+      "vendor": "cisco",
+      "bundle": {
+        "publisher_id": "ERP-75056",
+        "title": "March 2024 Semiannual Cisco IOS and IOS XE Software Security Advisory Bundled Publication",
+        "member_advisory_ids": [
+          "cisco-sa-aux-333WBz8f",
+          "cisco-sa-dhcp-dos-T3CXPO9z",
+          "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+          "cisco-sa-ikev1-NO2ccFWz",
+          "cisco-sa-ios-dos-Hq4d3tZG",
+          "cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG",
+          "cisco-sa-iosxe-ospf-dos-dR9Sfrxp",
+          "cisco-sa-iosxe-priv-esc-seAx6NLX",
+          "cisco-sa-iosxe-utd-cmd-JbL8KvHT",
+          "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+          "cisco-sa-isis-sGjyOUHX",
+          "cisco-sa-lisp-3gYXs3qP",
+          "cisco-sa-wlc-mdns-dos-4hv6pBGf"
+        ],
+        "published_at": "2024-03-27T16:00:00Z",
+        "source_locator": "Details table: HTML tr[3] through tr[15], linked advisory identities"
+      }
+    }
+  ]
+}

@@ -55,6 +55,16 @@ def main(argv=None):
     archive.add_argument("--document-limit", type=int)
     archive.add_argument("--refresh-pages", action="store_true")
     archive.add_argument("--retry-errors", action="store_true")
+    switching = sub.add_parser(
+        "switching-backfill", help="Resume staging switching discovery without publication"
+    )
+    switching.add_argument("--config", type=Path, required=True)
+    switching.add_argument("--vendor", choices=("cisco", "aruba", "arista"))
+    switching.add_argument("--start-date", required=True)
+    switching.add_argument("--end-date", required=True)
+    switching.add_argument("--page-limit", type=int, default=2)
+    switching.add_argument("--document-limit", type=int, default=8)
+    switching.add_argument("--score-limit", type=int, default=0)
     triage = sub.add_parser(
         "triage", help="Group a bounded pending/error archive sample by layout and parser outcome"
     )
@@ -66,12 +76,24 @@ def main(argv=None):
         help="Retrieve and retain official sources without ingesting or changing queue state",
     )
     triage.add_argument("--output", type=Path)
+    gaps = sub.add_parser(
+        "coverage-gaps", help="Read-only explicit-vault source coverage inventory"
+    )
+    gaps.add_argument("--database", type=Path, required=True)
+    gaps.add_argument("--config", type=Path, required=True)
+    gaps.add_argument("--vendor")
+    gaps.add_argument("--limit", type=int, default=32)
+    gaps.add_argument("--output", type=Path)
     bench = sub.add_parser("benchmark", help="Refresh the declared benchmark")
     bench.add_argument("--aruba-limit", type=int, default=200)
     evaluation = sub.add_parser(
         "evaluate", help="Evaluate primary-source-reviewed benchmark expectations"
     )
     evaluation.add_argument("--fail-on-disagreement", action="store_true")
+    switching_validation = sub.add_parser(
+        "switching-validation", help="Separate switching source review and blind packet"
+    )
+    switching_validation.add_argument("--packet", action="store_true")
     validation = sub.add_parser(
         "validation",
         help="Evaluate pinned source-led checks or emit a blind independent-review packet",
@@ -94,7 +116,27 @@ def main(argv=None):
     serve.add_argument("--publications", type=Path)
     backup = sub.add_parser("backup", help="Create an online, consistent SQLite vault backup")
     backup.add_argument("destination", type=Path)
+    reconcile = sub.add_parser("cve-reconcile", help="Local, offline official CVE reconciliation")
+    modes = reconcile.add_subparsers(dest="reconcile_mode", required=True)
+    for mode, arguments in {
+        "verify": ("repository", "commit", "receipt"),
+        "scan": ("repository", "commit", "receipt", "workspace", "start-date", "end-date"),
+        "baseline": ("database", "config", "output"),
+        "report": ("workspace", "baseline", "json-output", "csv-output"),
+    }.items():
+        command = modes.add_parser(mode)
+        for argument in arguments:
+            command.add_argument(
+                "--" + argument,
+                required=True,
+                type=str if argument in {"commit", "start-date", "end-date"} else Path,
+            )
+        if mode == "scan":
+            command.add_argument("--record-limit", type=int, default=5000)
+            command.add_argument("--byte-limit", type=int, default=250000000)
     args = parser.parse_args(argv)
+    if args.command == "cve-reconcile":
+        return _reconcile(args, parser)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     from .plugins.registry import default_registry
     from .settings import Paths
@@ -120,6 +162,21 @@ def main(argv=None):
                 indent=2,
             )
         )
+    elif args.command == "switching-validation":
+        from .application import switching_validation
+        from .application.source_scope import retained_scopes
+        from .storage.repository import latest
+
+        with closing(connect(read_only=True)) as db:
+            records = latest(db)
+            result = (
+                switching_validation.packet(records)
+                if args.packet
+                else switching_validation.report(
+                    records, retained_scopes(db, records, switching_validation.definition())
+                )
+            )
+        print(json.dumps(result, indent=2))
     elif args.command == "validation":
         from .application.extraction_validation import definition as review_definition
         from .application.extraction_validation import review_packet, validation_report
@@ -267,6 +324,69 @@ def main(argv=None):
         print(json.dumps(dict(imported=result[0], failed=result[1])))
         if result[1]:
             raise SystemExit(1)
+    elif args.command == "switching-backfill":
+        import os
+
+        from .collection.config import load_config
+        from .collection.switching_backfill import run as switching_run
+        from .storage.locking import writer_lock
+
+        if not os.environ.get("IMPACT_DATABASE"):
+            parser.error("Set IMPACT_DATABASE to an explicit staging vault")
+        config = load_config(args.config)
+        with writer_lock() as acquired:
+            if not acquired:
+                parser.error("Another collector holds the writer lock")
+            with closing(connect()) as db:
+                try:
+                    receipt = switching_run(
+                        db,
+                        config,
+                        vendor=args.vendor,
+                        start_date=args.start_date,
+                        end_date=args.end_date,
+                        page_limit=args.page_limit,
+                        document_limit=args.document_limit,
+                        score_limit=args.score_limit,
+                    )
+                except ValueError:
+                    parser.error("Invalid switching source, date or budget")
+        print(json.dumps(receipt, indent=2))
+    elif args.command == "coverage-gaps":
+        import sqlite3
+
+        from jsonschema import ValidationError
+
+        from .application.coverage_gaps import report as coverage_report
+        from .collection.config import load_config
+
+        try:
+            if not args.database.is_file() or not args.config.is_file():
+                raise ValueError("Missing explicit input")
+            protected = [args.database, args.config]
+            for database in (args.database.absolute(), args.database.resolve()):
+                protected.extend(
+                    database.with_name(database.name + suffix)
+                    for suffix in ("-wal", "-shm", "-journal")
+                )
+            if args.output and any(
+                args.output.resolve() == source.resolve()
+                or (args.output.exists() and source.exists() and args.output.samefile(source))
+                for source in protected
+            ):
+                raise ValueError("Output aliases an input")
+            config = load_config(args.config)
+            with closing(connect(args.database, read_only=True)) as db:
+                result = coverage_report(db, config, vendor=args.vendor, limit=args.limit)
+            raw = json.dumps(result, indent=2, ensure_ascii=False) + "\n"
+            if args.output:
+                args.output.write_text(raw, encoding="utf-8")
+            else:
+                print(raw, end="")
+        except (OSError, ValueError, TypeError, sqlite3.Error, ValidationError):
+            parser.error(
+                "Coverage inventory failed: check explicit inputs, output, vendor and limit"
+            )
     elif args.command == "triage":
         from .collection.triage import review_batch
         from .worker import writer_lock
@@ -345,6 +465,54 @@ def main(argv=None):
         ):
             source.backup(target)
         print(args.destination)
+
+
+def _reconcile(args, parser):
+    """Explicit reconciliation dispatch before any ambient application startup."""
+    try:
+        if args.reconcile_mode == "verify":
+            from .reconciliation.snapshot import verify_snapshot
+
+            result = verify_snapshot(args.repository, args.commit, args.receipt)
+        elif args.reconcile_mode == "scan":
+            from .reconciliation.scan import scan_snapshot
+
+            result = scan_snapshot(
+                repository=args.repository,
+                commit=args.commit,
+                receipt_path=args.receipt,
+                workspace=args.workspace,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                record_limit=args.record_limit,
+                byte_limit=args.byte_limit,
+            )
+        elif args.reconcile_mode == "baseline":
+            from .reconciliation.baseline import export_baseline
+
+            exported = export_baseline(
+                database=args.database, config_path=args.config, output=args.output
+            )
+            result = {"fingerprint": exported["fingerprint"]}
+        else:
+            from .reconciliation.report import build_report, write_report
+
+            report = build_report(workspace=args.workspace, baseline_path=args.baseline)
+            write_report(
+                report,
+                json_path=args.json_output,
+                csv_path=args.csv_output,
+                workspace=args.workspace,
+                baseline_path=args.baseline,
+            )
+            result = {
+                "report_id": report["report_id"],
+                "scan_complete": report["scan"]["scan_complete"],
+                "coverage_complete": None,
+            }
+    except (ValueError, OSError) as error:
+        parser.error(getattr(error, "code", "reconciliation_failed"))
+    print(json.dumps(result, sort_keys=True))
 
 
 if __name__ == "__main__":

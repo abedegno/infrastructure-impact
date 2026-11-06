@@ -1,5 +1,66 @@
 # Changelog
 
+## Unreleased — local reconciliation
+
+- Add explicit `impact cve-reconcile` verification, bounded offline scan/resume, immutable baseline and strict JSON/CSV reporting for official CVE snapshots. Preserve source/container evidence, current versus historical presence, missing references and unestablished coverage completeness. See the [local operator guide](docs/CVE_RECONCILIATION.md). No hosted activation, default-source change or publication is included; the website source pin remains released 0.10.1.
+- Correct the exact reviewed Arista SA-0099 CVE/version groups and select SA-0103 HTML from either reviewed entry URL while retaining its contradictory CSAF evidence and visible alternate issue. Existing wrong-scope historical revisions remain retained and cannot supply fresh research claims.
+- Reduce repeated switching comparison validation and copying while preserving fresh public validation, exact returned-input checks and independent publication snapshots. See the [repair observations](docs/research/2026-11-06-arista-comparison-repair-observations.md) for replay evidence, bounded measurements and outstanding acceptance limits; no release or hosted activation is included.
+
+## 0.10.1 research preview candidate — 2026-11-06
+
+- Support the reviewed current F5 PHP PDF profile alongside its original revision, retaining paired engineering hotfix/base versions and source-bound backport context. Mixed or unreviewed sections still fail visibly. See the [profile review](docs/research/2026-11-05-f5-php-profile-revision.md).
+- Restore the exact HPE-hosted canonical transport route for the reviewed Juniper OpenSSH reference, preserving its original source binding and release/platform scope without creating CVE assessments. See the [source observations](docs/research/2026-11-05-juniper-canonical-reference.md).
+
+## 0.10.0 research preview candidate — 2026-11-05
+
+- Parse the reviewed Aruba 2021 directory and two signed-text advisory structures, retaining shared product scope, per-CVE metrics and unresolved model/remediation bindings.
+- Preserve literal Arista affected, unaffected and triage groups with their configuration qualifications. Recognize reviewed Arista/Cisco advance notices without creating CVE assessments, and revisit later retained revisions.
+- Add an explicit, read-only `coverage-gaps` operator inventory with separate enumeration, retrieval, parsing, notice, error and bounded preview accounting; package its closed schema.
+- Verify source-to-publication/native/browser/JSON/CSV integration and an isolated public-only acceptance stage. See the [dated observations](docs/research/2026-11-05-coverage-repair-observations.md): Aruba parsed 2 of 19 listed documents; complete vendor history and authenticated Cisco coverage remain unestablished.
+- Track the actual requested and selected retained inputs during archive replay, recovering when missing linked documents arrive while skipping unchanged wrapped notices without consuming the document budget. Preserve immutable parser receipts, HTTP backoff and page-scope reporting.
+- Verify example vendor plugin 0.1.9 against the 0.10 release and extend its declared compatibility through the 0.10 series. Published v0.9.1 artifacts, frozen results, dependency pins, default sources, limits and hosted activation remain unchanged. See the [release notes](docs/releases/0.10.0.md) and [activation proposal](docs/rollouts/2026-11-05-coverage-010-activation-proposal.md).
+
+## 0.9.1 research preview candidate — 2026-11-05
+
+- Bound explicitly product-scoped CSAF scores and remediations to each claim's exact product ID after source/CVE/representation membership and score preference resolution. Retain every claim, including unresolved families, original source bytes/provenance and full valid score scope in ordinary advisory metrics.
+- Index original score candidates, cache exact ordered candidate groups within one extraction, and resolve remediation scopes once. Preserve empty/unbound and reviewed HTML scope, invalid/incomplete diagnostics and all non-scope facts.
+- Validate closed four-string source uniqueness with an index while preserving the schema's `uniqueItems` contract, strict independent writer validation and stock JSON equality for other shapes.
+- Emit flushed metadata-only timings at collection, benchmark coverage, report, query, projection, writing and backup boundaries, including failed phases without serializing errors or payloads.
+- Preserve all existing delivery/storage/monitor budgets, pinned dependencies, default sources and recovery settings. Example plugin 0.1.8 already admits 0.9.1. This is a replacement candidate for the published but rolled-back 0.9.0 source release; no new activation is claimed. See the [failed activation receipt](docs/rollouts/2026-11-05-switching-activation-failed.md) and [replacement proposal](docs/rollouts/2026-11-05-switching-091-proposal.md).
+
+## 0.9.0 research preview — 2026-11-04
+
+- Add a closed, generation-bound comparison-eligibility monitor summary with exact full-report fingerprints, complete vendor membership and unchanged suppression gates. Preserve full case evidence as an explicit download and bounded full-report checks for older publications.
+- Count all default monitor metadata, reports, parts and schemas against the unchanged 20,000,000-byte aggregate budget; retain existing per-asset limits and separate explicit archive verification. The unpublished replacement candidate requires renewed exact-commit approval before release or activation.
+- Add a separate campus/branch switching disclosure study for Cisco IOS XE, Aruba AOS-CX and Arista EOS, with explicit OS-family and model-qualified scopes, independent vendor/period controls and generation-bound JSON/CSV exports.
+- Add opt-in, bounded and resumable Cisco OpenVuln OAuth collection, retained Aruba/Arista archive enumeration and per-source coverage/error manifests. Credentials, hosted backfill and runtime activation remain separate operator actions.
+- Preserve source-linked platforms, versions, conditions, publisher identifiers, explicit bundles and remediation-publication events without automatic model/version matching or inferred fix dates.
+- Retain vendor-reported CVSS, separate advisory severity, official CVE/NVD fallback and full-study KEV status with explicit missingness and provider provenance. Reported scores are structurally checked, not independently rescored.
+- Validate study evidence and derived results consistently in Python and static delivery, including deterministic numeric claim fingerprints, source attribution and model/bundle/remediation scope. Unusable study dates remain unknown without blocking supported advisory-v2 publications.
+- Cache owned immutable study inputs and load detail in bounded pages. Real staged repeated selections improved from about nine seconds to tens of milliseconds; initial complete-study loading remains substantial.
+- Package strict study schemas/resources and extend compact monitoring, external-plugin and clean-export verification. Document actual partial backfill, drafts, unresolved models and automated validation separately from pending human review.
+- Verify example vendor plugin 0.1.8 against the 0.9 release and extend its declared compatibility through the 0.9 series. Keep advisory schema v2, frozen studies, default sources, schedules, permissions and hosted runtime pin unchanged.
+
+## 0.8.0 research preview — 2026-11-03
+
+- Add retained CISA Known Exploited Vulnerabilities enrichment from CISA's official mirror, with bounded strict parsing, source provenance, last-good revisions and verified-check freshness.
+- Publish a strict generation-bound KEV schema/report, complete CVE membership index and scoped publisher details. Missing, disabled, failed, stale and future checks remain explicit unknown states.
+- Add attributed KEV badges, outside-advisory membership context and a KEV-listed-only cohort filter. Preserve requested versus effective scope, vendor affectedness and frozen research contracts.
+- Align native/static selection and JSON/CSV/report exports, including legitimate empty intersections, same-generation downloads and rejection of unavailable filters. Keep accepted evidence and downloads coherent after stale, invalid or out-of-order requests.
+- Validate KEV identities, policy limits, source fingerprints and report scope in the standalone monitor and installed-wheel acceptance checks. Vendor rates, first disclosure and intentional concealment remain unestablished.
+- Separate scheduled service-operations evidence from public health; expose overdue collection/monitor cadence and storage-budget failures without turning missing receipts into success.
+- Verify example vendor plugin 0.1.7 against the 0.8 release and extend its declared compatibility through the 0.8 series.
+
+## 0.7.0 research preview — 2026-11-02
+
+- Add generation-bound CVE research dossiers inside Case files, combining exact-build publisher statements, source fingerprints, qualified chronology, disclosure context and explicit evidence gaps.
+- Curate an OpenSSH switching comparison for Arista EOS 4.32.2F and Aruba AOS-CX 10.13.1031, plus separate FortiProxy dossiers for CVE-2023-38545 and CVE-2023-38546. HPE Cray remains disclosure context only.
+- Preserve distinct assessment branches and their own locators, per-CVE product associations and exact source/build binding. Fixed-only statements do not establish prior affectedness.
+- Add strict dossier schemas, native report/API routes, static publication delivery, vendor/CVE selection and same-generation single-dossier JSON downloads. Older generations remain readable.
+- Validate dossier identity, fingerprints and fixed research limits in the standalone public monitor and installed-wheel acceptance probes. Vendor rates, verified fix delays, earliest disclosure and intentional concealment remain unestablished.
+- Verify example vendor plugin 0.1.6 against the 0.7 release and extend its declared compatibility through the 0.7 series.
+- Synchronize the generated build requirements with the reviewed Hatchling 1.33.0 update.
+
 ## 0.6.0 research preview — 2026-10-27
 
 - Add a ninth vendor plugin for two exact reviewed F5 PHP/OpenSSH article PDFs. Preserve shared-CVE tables, BIG-IP / BIG-IP Next distinctions, authentication, lifecycle limits and literal fix-column states; reject changed semantic scope and retain earlier evidence.

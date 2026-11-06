@@ -83,3 +83,7 @@ adjudication. The complete reviewed source URL/hash set must match the current
 lead. A changed source requests re-review and suppresses the earlier disposition;
 new sources, new CVEs or another bug number cannot inherit a prior result. The
 five independent evidence gates and concealment state remain unchanged.
+
+See [CVE research dossiers](RESEARCH_DOSSIERS.md) for the initial curated scope,
+strict report and definition schemas, selected JSON downloads, chronology meanings
+and fixed research limits.
