@@ -2,7 +2,7 @@
 const fs = require('fs'),
   assert = require('assert');
 const { browser } = require('./helpers/ui-browser.js');
-const { context, fixture } = require('./test_current_evidence.js');
+const { context, fixture, bundle, rewriteBootstrap } = require('./test_current_evidence.js');
 const c = context(),
   json = c.window.InfrastructureJSON;
 const base = JSON.parse(fs.readFileSync('tests/fixtures/kev-selection-cases.json')).base_report;
@@ -55,6 +55,62 @@ function state(id = 'a'.repeat(32)) {
     assert(b.nodes.get('#feedback').textContent.includes('last accepted'));
   }
   await test_mixed_generation_decision_report_is_rejected();
+  for (const fault of [
+    'missing-marker',
+    'missing-capability',
+    'marker-version',
+    'route-omission',
+    'route-misrouting',
+    'missing-summary',
+    'summary-decision',
+  ]) {
+    const broken = bundle(state('c'.repeat(32)));
+    if (fault === 'missing-marker')
+      rewriteBootstrap(broken, (common) => delete common.current_evidence_version);
+    if (fault === 'marker-version')
+      rewriteBootstrap(broken, (common) => (common.current_evidence_version = 2));
+    if (fault === 'missing-summary')
+      rewriteBootstrap(broken, (common) => (common.retained_index = []));
+    if (fault === 'summary-decision')
+      rewriteBootstrap(broken, (common) => (common.retained_index[0].decision_id = '0'.repeat(64)));
+    if (fault === 'missing-capability') delete broken.index.current_evidence;
+    if (fault.startsWith('route-'))
+      broken.index.current_evidence.retained[0].cve_ids =
+        fault === 'route-omission' ? [] : ['CVE-2024-6858'];
+    broken.files.set('/data/index.json', json.stringify(broken.index));
+    const transport = await c.createStaticDelivery(
+      async (path) => new Response(broken.files.get(path)),
+      '/',
+    );
+    const originalFetch = b.context.fetch,
+      refs = ['#json-export', '#csv-export'].map((id) => b.nodes.get(id).href),
+      summary = b.nodes.get('#summary').innerHTML;
+    b.context.fetch = async () => {
+      await transport([]);
+      return new Response(json.stringify(state('c'.repeat(32))));
+    };
+    await b.evaluate('load()');
+    b.context.fetch = originalFetch;
+    assert.strictEqual(b.evaluate('data'), before, fault + ' must preserve accepted state');
+    assert.deepStrictEqual(
+      ['#json-export', '#csv-export'].map((id) => b.nodes.get(id).href),
+      refs,
+      fault + ' must preserve download references',
+    );
+    assert.strictEqual(
+      b.nodes.get('#summary').innerHTML,
+      summary,
+      fault + ' must preserve rendered scope',
+    );
+    assert(b.nodes.get('#feedback').textContent.includes('last accepted'));
+    await b.nodes.get('#json-export').click();
+    await b.settle();
+    assert.strictEqual(
+      json.parse(await b.downloads.at(-1).blob.text()).publication.id,
+      'a'.repeat(32),
+    );
+  }
+
   b.evaluate('view="retained"; render()');
   assert(b.nodes.get('#view').innerHTML.includes('excluded_from_current'));
   assert(b.nodes.get('#view').innerHTML.includes('9007199254740993'));

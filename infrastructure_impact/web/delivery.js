@@ -78,10 +78,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
   async function currentEvidence() {
     if (!evidencePromise)
       evidencePromise = (async () => {
-        if (
-          common.current_evidence_version !== undefined &&
-          (common.current_evidence_version !== 1 || !Object.hasOwn(index, 'current_evidence'))
-        )
+        const hasCapability = Object.hasOwn(index, 'current_evidence'),
+          hasMarker = Object.hasOwn(common, 'current_evidence_version');
+        if (hasCapability !== hasMarker || (hasMarker && common.current_evidence_version !== 1))
           throw Error('Required current-evidence capability unavailable');
         if (!Object.hasOwn(index, 'current_evidence'))
           return window.InfrastructureCurrentEvidence.unavailable(
@@ -103,6 +102,40 @@ async function createStaticDelivery(fetchPart, siteBase) {
           expected.some((id) => !ids.includes(id))
         )
           throw Error('Incomplete retained part membership');
+        // Validate the complete routing catalogue before any descriptor can be
+        // skipped. Literal record validation still happens only on explicit load.
+        const catalogue = common.retained_index,
+          decisions = new Map(report.decisions.map((d) => [d.decision_id, d])),
+          routing = new Map();
+        if (
+          !Array.isArray(catalogue) ||
+          catalogue.length > 1000 ||
+          catalogue.length !== expected.length
+        )
+          throw Error('Incomplete retained routing catalogue');
+        for (const row of catalogue) {
+          const decision = decisions.get(row?.decision_id);
+          if (
+            !decision ||
+            routing.has(row.decision_id) ||
+            row.vendor !== decision.vendor ||
+            !Array.isArray(row.cves) ||
+            new Set(row.cves).size !== row.cves.length ||
+            row.cves.some((id) => typeof id !== 'string' || !/^CVE-\d{4}-\d{4,}$/.test(id)) ||
+            !Array.isArray(row.assessments) ||
+            row.assessments.some((a) => !a || !row.cves.includes(a.cve_id))
+          )
+            throw Error('Invalid retained routing catalogue membership');
+          routing.set(row.decision_id, row.cves);
+        }
+        for (const descriptor of capability.retained) {
+          const cves = [
+              ...new Set(descriptor.decision_ids.flatMap((id) => routing.get(id))),
+            ].sort(),
+            declared = [...descriptor.cve_ids].sort();
+          if (cves.length !== declared.length || cves.some((id, i) => id !== declared[i]))
+            throw Error('Retained CVE routing mismatch');
+        }
         return report;
       })().catch((error) => {
         evidencePromise = null;

@@ -923,3 +923,58 @@ def test_static_current_and_retained_api_native_parity(delivery, tmp_path):
             )
         else:
             assert json.loads(browser["body"]) == json.loads(native), url
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "missing_marker",
+        "marker_version",
+        "missing_capability",
+        "route_omission",
+        "route_misrouting",
+        "summary_membership",
+    ],
+)
+def test_corrupt_static_capability_and_routing_never_publish_empty_retained_results(
+    delivery, tmp_path, fault
+):
+    import hashlib
+
+    from test_kev_delivery import static_requests
+    from test_static_delivery import run
+
+    generation = publish(delivery, tmp_path)
+    index_path = generation / "data/index.json"
+    index = json.loads(index_path.read_text())
+    retained_paths = {entry["part"]["path"] for entry in index["current_evidence"]["retained"]}
+    bootstrap = json.loads((generation / index["bootstrap"]["path"]).read_text())
+    if fault == "missing_marker":
+        bootstrap["data"].pop("current_evidence_version")
+    elif fault == "marker_version":
+        bootstrap["data"]["current_evidence_version"] = 2
+    elif fault == "missing_capability":
+        index.pop("current_evidence")
+    elif fault == "summary_membership":
+        bootstrap["data"]["retained_index"][0]["decision_id"] = "0" * 64
+    else:
+        index["current_evidence"]["retained"][0]["cve_ids"] = (
+            [] if fault == "route_omission" else ["CVE-2025-999999"]
+        )
+    # Keep hashes/generations valid: the semantic catalogue check must catch the fault.
+    raw = (json.dumps(bootstrap, separators=(",", ":")) + "\n").encode()
+    digest = hashlib.sha256(raw).hexdigest()
+    part_path = "data/" + digest + ".json"
+    (generation / part_path).write_bytes(raw)
+    index["bootstrap"] = {"path": part_path, "sha256": digest, "bytes": len(raw)}
+    index_path.write_text(json.dumps(index))
+    result = run(generation, ids=[])
+    assert "error" in result, fault
+    assert not retained_paths.intersection(
+        path.removeprefix("/site/") for path in result["requests"]
+    )
+    replies = static_requests(
+        generation,
+        ["/api/v1/retained-advisories?cves=CVE-2023-5501&format=json"],
+    )
+    assert replies[0]["status"] == 503

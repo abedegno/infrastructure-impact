@@ -112,7 +112,64 @@ function fixture() {
     scorecards: { vendors: [] },
   };
 }
-module.exports = { context, fixture };
+function bundle(s) {
+  const json = context().window.InfrastructureJSON;
+  const files = new Map(),
+    identity = { schema_version: 1, publication: s.publication, generated_at: s.generated_at };
+  const part = (data) => {
+    const raw = json.stringify({ ...identity, data }) + '\n',
+      sha256 = createHash('sha256').update(raw).digest('hex'),
+      path = 'data/' + sha256 + '.json';
+    files.set('/' + path, raw);
+    return { path, sha256, bytes: Buffer.byteLength(raw) };
+  };
+  const { retained_advisories, current_evidence, ...common } = s;
+  common.current_evidence_version = 1;
+  common.retained_index = retained_advisories.map((w) => ({
+    decision_id: w.decision_id,
+    vendor: w.record.vendor,
+    cves: w.record.cves,
+    assessments: w.record.assessments.map((a) => ({
+      cve_id: a.cve_id,
+      product: a.product,
+      status: a.status,
+      search_text: a.product,
+    })),
+  }));
+  const retained = part(retained_advisories),
+    report = part(current_evidence);
+  const index = {
+    ...identity,
+    bootstrap: part(common),
+    cohorts: { 'CVE-2023-5501': [] },
+    changes: [],
+    full: { path: 'snapshot.json', sha256: 'a'.repeat(64), bytes: 1 },
+    current_evidence: {
+      schema_version: 1,
+      report,
+      retained: [
+        {
+          decision_ids: [current_evidence.decisions[0].decision_id],
+          cve_ids: ['CVE-2023-5501'],
+          part: retained,
+        },
+      ],
+    },
+  };
+  files.set('/data/index.json', json.stringify(index));
+  return { files, index, report, retained };
+}
+function rewriteBootstrap(b, mutate) {
+  const json = context().window.InfrastructureJSON;
+  const value = json.parse(b.files.get('/' + b.index.bootstrap.path));
+  mutate(value.data);
+  const raw = json.stringify(value) + '\n',
+    sha256 = createHash('sha256').update(raw).digest('hex');
+  b.index.bootstrap = { path: 'data/' + sha256 + '.json', sha256, bytes: Buffer.byteLength(raw) };
+  b.files.set('/' + b.index.bootstrap.path, raw);
+  b.files.set('/data/index.json', json.stringify(b.index));
+}
+module.exports = { context, fixture, bundle, rewriteBootstrap };
 if (require.main === module) {
   const c = context(),
     api = c.window.InfrastructureCurrentEvidence;
@@ -200,40 +257,69 @@ if (require.main === module) {
     9007199254740993n,
   );
   (async () => {
-    function bundle(s) {
-      const files = new Map(),
-        identity = { schema_version: 1, publication: s.publication, generated_at: s.generated_at };
-      const part = (data) => {
-        const raw = json.stringify({ ...identity, data }) + '\n',
-          sha256 = createHash('sha256').update(raw).digest('hex'),
-          path = 'data/' + sha256 + '.json';
-        files.set('/' + path, raw);
-        return { path, sha256, bytes: Buffer.byteLength(raw) };
-      };
-      const { retained_advisories, current_evidence, ...common } = s;
-      common.current_evidence_version = 1;
-      const retained = part(retained_advisories),
-        report = part(current_evidence);
-      const index = {
-        ...identity,
-        bootstrap: part(common),
-        cohorts: { 'CVE-2023-5501': [] },
-        changes: [],
-        full: { path: 'snapshot.json', sha256: 'a'.repeat(64), bytes: 1 },
-        current_evidence: {
-          schema_version: 1,
-          report,
-          retained: [
-            {
-              decision_ids: [current_evidence.decisions[0].decision_id],
-              cve_ids: ['CVE-2023-5501'],
-              part: retained,
-            },
-          ],
-        },
-      };
-      files.set('/data/index.json', json.stringify(index));
-      return { files, index, report, retained };
+    for (const fault of ['missing-marker', 'marker-version', 'marker-null', 'capability-version']) {
+      const b = bundle(json.clone(source)),
+        requests = [];
+      if (fault === 'capability-version') {
+        b.index.current_evidence.schema_version = 2;
+        b.files.set('/data/index.json', json.stringify(b.index));
+      } else
+        rewriteBootstrap(b, (common) => {
+          if (fault === 'missing-marker') delete common.current_evidence_version;
+          else common.current_evidence_version = fault === 'marker-null' ? null : 2;
+        });
+      const load = await c.createStaticDelivery(async (path) => {
+        requests.push(path);
+        return new Response(b.files.get(path));
+      }, '/');
+      await assert.rejects(() => load([]), undefined, fault + ' must reject before report load');
+      assert(!requests.includes('/' + b.report.path), fault + ' must fail before reading report');
+      assert(!requests.includes('/' + b.retained.path), 'marker failure must not hydrate records');
+    }
+    for (const fault of [
+      'route-omission',
+      'route-misrouting',
+      'missing-summary',
+      'duplicate-summary',
+      'unknown-summary-decision',
+      'summary-vendor',
+      'summary-cve',
+      'duplicate-summary-cve',
+      'oversized-summary',
+    ]) {
+      const b = bundle(json.clone(source)),
+        requests = [];
+      if (fault.startsWith('route-')) {
+        b.index.current_evidence.retained[0].cve_ids =
+          fault === 'route-omission' ? [] : ['CVE-2024-6858'];
+        b.files.set('/data/index.json', json.stringify(b.index));
+      } else
+        rewriteBootstrap(b, (common) => {
+          if (fault === 'missing-summary') common.retained_index = [];
+          if (fault === 'duplicate-summary') common.retained_index.push(common.retained_index[0]);
+          if (fault === 'unknown-summary-decision')
+            common.retained_index[0].decision_id = '0'.repeat(64);
+          if (fault === 'summary-vendor') common.retained_index[0].vendor = 'cisco';
+          if (fault === 'summary-cve') common.retained_index[0].cves = ['CVE-2024-6858'];
+          if (fault === 'duplicate-summary-cve')
+            common.retained_index[0].cves.push('CVE-2023-5501');
+          if (fault === 'oversized-summary')
+            common.retained_index = Array(1001).fill(common.retained_index[0]);
+        });
+      const load = await c.createStaticDelivery(async (path) => {
+        requests.push(path);
+        return new Response(b.files.get(path));
+      }, '/');
+      await assert.rejects(() => load([]), undefined, fault + ' must fail before routing');
+      await assert.rejects(
+        () => load.retained(['CVE-2023-5501']),
+        undefined,
+        fault + ' must not return an empty success',
+      );
+      assert(
+        !requests.includes('/' + b.retained.path),
+        'routing validation must preserve lazy record loading',
+      );
     }
     for (const fault of [
       null,
