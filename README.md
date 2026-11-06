@@ -14,7 +14,7 @@ retrieval, supported parsing and informational notices. The
 record the remaining gaps and pending human review; the v0.10.0 repairs do
 not establish complete vendor history or change the frozen benchmark.
 
-The unreleased [local CVE reconciliation workflow](docs/CVE_RECONCILIATION.md)
+The v0.11.0 candidate's [local CVE reconciliation workflow](docs/CVE_RECONCILIATION.md)
 compares a verified official snapshot with an explicit collection baseline,
 including partial scans and missing reference evidence. It has no hosted activation.
 

@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased — local reconciliation
+## 0.11.0 research preview candidate — 2026-11-06
 
 - Add explicit `impact cve-reconcile` verification, bounded offline scan/resume, immutable baseline and strict JSON/CSV reporting for official CVE snapshots. Preserve source/container evidence, current versus historical presence, missing references and unestablished coverage completeness. See the [local operator guide](docs/CVE_RECONCILIATION.md). No hosted activation, default-source change or publication is included; the website source pin remains released 0.10.1.
 - Correct the exact reviewed Arista SA-0099 CVE/version groups and select SA-0103 HTML from either reviewed entry URL while retaining its contradictory CSAF evidence and visible alternate issue. Existing wrong-scope historical revisions remain retained and cannot supply fresh research claims.
 - Reduce repeated switching comparison validation and copying while preserving fresh public validation, exact returned-input checks and independent publication snapshots. See the [repair observations](docs/research/2026-11-06-arista-comparison-repair-observations.md) for replay evidence, bounded measurements and outstanding acceptance limits; no release or hosted activation is included.
+- Update development tools to Ruff 0.17.3 and pytest 9.2.0, and the reader container to Python 3.15. Hosted collection retains its existing Python 3.13 workflow. Verify example plugin 0.1.10 against the candidate and extend its declared compatibility through the 0.11 series.
 
 ## 0.10.1 research preview candidate — 2026-11-06
 

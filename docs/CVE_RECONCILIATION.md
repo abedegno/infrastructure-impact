@@ -1,4 +1,4 @@
-# Local official CVE reconciliation (unreleased)
+# Local official CVE reconciliation (v0.11.0 candidate)
 
 This local feature compares a pinned official CVE List V5 snapshot with an explicit,
 immutable collection baseline. It discovers Cisco IOS XE, Aruba AOS-CX and Arista
