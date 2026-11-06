@@ -152,7 +152,9 @@ def test_default_and_external_plugins_without_hooks_pass_through(partition_case)
     assert result["current_evidence"]["decisions"] == []
     assert result["current_evidence"]["issues"] == []
     assert result["current_evidence"]["policies"] == []
-    assert all(p.current_evidence_policy is None for p in default_registry().all())
+    assert all(
+        p.current_evidence_policy is None for p in default_registry().all() if p.id != "arista"
+    )
 
 
 @pytest.mark.parametrize("revision", [True, False, None, 0, -1, [], {}])

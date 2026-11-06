@@ -36,6 +36,7 @@ from ..adapters.common import HTML
 from ..adapters.legacy_html import html_advisory
 from ..adapters.switching import extract
 from .archive_listings import arista as archive_listing
+from .arista_current_evidence import decide
 from .arista_selection import resolve
 from .contracts import VendorPlugin
 from .shared import is_json, structured
@@ -141,6 +142,7 @@ def plugin():
         ),
         parse_release_history=arista_release_history,
         research_evidence=research_evidence,
+        current_evidence_policy=decide,
         normalizer_dependencies=(
             reconciliation,
             current_scope,
