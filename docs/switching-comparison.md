@@ -298,7 +298,12 @@ Retain failed-phase receipts; a bounded profile or partial export is not complet
 corpus acceptance. Python public selection validates afresh on every call and
 returns isolated inputs and publication metadata, without a cross-call success
 cache. The [2026-11-06 repair observations](research/2026-11-06-arista-comparison-repair-observations.md)
-separate completed replay and bounded checks from full acceptance gates.
+record completed replay and all 18 accepted pairs, together with their bounded
+operator method and source/model limits. Every vendor's all-window model-qualified
+CVE count was zero in that stage: no supported model observations, not no exposure.
+Partial coverage and unknown expected advisory totals leave the platform comparison
+open. Comparison periods use vendor initial publication day, separate from registry
+discovery windows and CVE identifier years; 2026 remains partial.
 
 
 ## Release and monitor checks

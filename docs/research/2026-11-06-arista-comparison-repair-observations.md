@@ -65,24 +65,36 @@ profiles and differential receipts remain outside Git.
 
 ## Complete-corpus acceptance and remaining limits
 
-Complete-corpus acceptance is pending its final receipt. The matrix is one
-all-vendor JSON/CSV pair for each of nine windows (`all`, `pre`, `post` and
-2021–2026) at both OS-family and model-qualified scopes: 18 pairs. JSON exports
+Complete-corpus export acceptance passed for 225 latest normalized identities,
+91,396 research claims and 91,444 score-availability rows in this isolated public
+stage. The matrix contains one all-vendor JSON/CSV pair for each of nine windows
+(`all`, `pre`, `post` and 2021–2026) at both OS-family and model-qualified scopes:
+18 pairs, with 54 vendor summary rows. JSON exports
 use the existing `representation: "summary"` schema, backed by the hashed
 `full-report.json` containing complete retained inputs. They are summary exports,
 not standalone full reports for reselection.
 
 The complete corrected report built in 125.364 seconds and passed fresh full
-validation in 101.083 seconds. The first OS-family/all selection,
-output validation, summary export and deterministic reselection completed. The
-remaining 17 views use three bounded read-only operator workers with exclusive
-assignments and a 1,200-second deadline each. Each view still performs fresh
-full input and output validation from the hashed report; no API, validation
-cache or product limit changed. Per-view timings and the final cross-export
-checks remain pending. This mixed serial/parallel operator run cannot supply a
-serial before/after performance factor. Full shape/semantic checks, CSV
-provenance/counts, immutable input hashes and representative reselections must
-complete before reporting acceptance of all 18 pairs.
+validation in 101.083 seconds. A serial validated checkpoint and the first
+OS-family/all pair preceded three read-only operator workers with exclusive
+assignments and a 1,200-second bound per attempt. Verified accepted pairs were
+resumed in two-view batches to finish the remaining 17 views. Each attempt
+checked the checkpoint and performed fresh full input/output validation; no API,
+validation cache or product limit changed. Worker recorded-phase totals were
+2,331.300, 2,455.210 and 2,042.094 seconds. These exclude inactive gaps and
+interrupted unfinished phases; they are not wall times or a serial/parallel
+performance factor.
+
+The final merger accepted all 18 pairs after full shape/semantic validation,
+summary-schema checks, CSV regeneration and export hash checks. Production code,
+database and configuration hashes remained unchanged. Deterministic OS-family/all
+and model-qualified/post repeats passed. KEV was available under the existing
+policy. The outside-Git receipt SHA-256 is
+`a67491f532fe0dff82a2915e3e2ab17fd7cfe704bf297d8b4b5528d9a33f9f3e`;
+the full-report SHA-256 is
+`8a6e52a94c7257793f2a56bed46585f888843c0f480519a3cf8acf400515cb14`.
+The unchanged frozen-definition SHA-256 is
+`5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33`.
 See the [operator acceptance procedure](../switching-comparison.md#corrected-source-comparison-acceptance).
 
 The controller's full platform checks on final production code `6b43e54` passed:
@@ -93,8 +105,21 @@ including both new regression suites. The five Node checks and Prettier passed.
 Clean-export privacy and authored-fixture checks passed; both frozen dependency
 exports were byte-identical. The wheel contained the new Arista modules and
 license files, and the offline installed wheel/plugin/resource probe passed.
-These are automated controller-owned checks. Final whole-branch review remains
-a separate gate and independent human impact review remains pending.
+These are automated controller-owned checks. The final code audit approved the
+implementation with no findings; independent human impact review remains pending.
+
+All three vendors have zero supported model-qualified CVEs in the all-window
+selection of this bounded stage. That means no qualifying model observations,
+not zero vulnerabilities or unaffected platforms. Coverage remains `partial`,
+with `expected_advisories: null`. OS-family totals describe unequal bounded input
+sets; they do not supply a fair vendor comparison. The customer's platform
+comparison remains open pending model and coverage evidence.
+
+Comparison windows use the vendor's initial publication day for latest retained
+claims. This differs from the registry-publication discovery window and from a
+CVE identifier's year. Restoring the CVE-2024 Arista records does not itself
+establish a change after the 2026-04-07 cutoff or a Glasswing effect. The 2026
+calendar window remains partial.
 
 Unknown model applicability, unresolved product aliases, source-access and
 historical-coverage gaps remain visible. A source or bounded traversal ending
