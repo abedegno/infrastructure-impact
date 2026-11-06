@@ -16,7 +16,7 @@ import re
 import shutil
 import sqlite3
 import tempfile
-from contextlib import closing
+from contextlib import closing, redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -356,6 +356,181 @@ def backup_remote(
         return uploaded
 
 
+def workflow_effect(name, value="true"):
+    """Only call after the named validated mode or verified effect is established."""
+    destination = os.environ.get("GITHUB_OUTPUT")
+    if destination:
+        with open(destination, "a") as stream:
+            stream.write(f"{name}={value}\n")
+
+
+def backup_verified(state, database, encryption_key, *, store, args, limit):
+    """Keep the old pointer until the candidate authenticates and restores."""
+    if args.recovery_storage == "github-draft":
+        backup_remote(
+            state,
+            database,
+            encryption_key,
+            store=store,
+            compression=args.backup_compression,
+            vault_limit_bytes=limit,
+        )
+    else:
+        with tempfile.TemporaryDirectory(prefix="impact-verified-backup-") as directory:
+            candidate = Path(directory) / "state"
+            manifest = backup(
+                candidate,
+                database,
+                encryption_key,
+                compression=args.backup_compression,
+                vault_limit_bytes=limit,
+            )
+            validate_encrypted_state(candidate, encryption_key)
+            if not restore(
+                candidate,
+                Path(directory) / "readback.sqlite3",
+                encryption_key,
+                vault_limit_bytes=limit,
+            ):
+                raise RuntimeError("New backup was not available for recovery verification")
+            # Existing archives stay intact through verification and pointer promotion.
+            # The unchanged per-archive budget and three-copy retention still apply.
+            state.mkdir(parents=True, exist_ok=True)
+            archive = state / manifest["archive"]
+            pending_archive = state / ("." + manifest["archive"])
+            pending_pointer = state / ".current.json"
+            promoted = False
+            try:
+                shutil.copyfile(candidate / manifest["archive"], pending_archive)
+                if hashlib.sha256(pending_archive.read_bytes()).hexdigest() != manifest["sha256"]:
+                    raise ValueError("Promoted backup fingerprint mismatch")
+                pending_archive.replace(archive)
+                pending_pointer.write_bytes((candidate / "current.json").read_bytes())
+                pending_pointer.replace(state / "current.json")
+                promoted = True
+            finally:
+                pending_archive.unlink(missing_ok=True)
+                pending_pointer.unlink(missing_ok=True)
+                if not promoted:
+                    archive.unlink(missing_ok=True)
+            for previous in sorted(state.glob("vault-*"))[:-3]:
+                previous.unlink()
+    workflow_effect("recovery_ready")
+
+
+def apply_maintenance(args, selected, state, output, home, database, key, store, limit):
+    from infrastructure_impact.application import maintenance
+    from infrastructure_impact.application.publication import build
+    from infrastructure_impact.application.reporting import report
+    from infrastructure_impact.storage.audit import audit
+    from infrastructure_impact.storage.locking import writer_lock
+    from infrastructure_impact.storage.repository import connect, now
+
+    with writer_lock() as acquired:
+        if not acquired:
+            raise RuntimeError("Targeted maintenance could not acquire the writer lock")
+        # Refuse drift before a run record, writer connection or recovery mutation.
+        accepted = maintenance.preview(database, selected.profile_id)
+        if accepted["fingerprint"] != args.maintenance_preview_fingerprint:
+            raise maintenance.MaintenanceBaselineChanged("maintenance_baseline_changed")
+        receipt = None
+        stage = "apply"
+        candidate = home / "public-candidate"
+        try:
+            try:
+                with closing(connect(database)) as db:
+                    with db:
+                        started = now()
+                        run_id = db.execute(
+                            "INSERT INTO pipeline_runs(started_at,outcome,details) VALUES(?,'running',?)",
+                            (started, "Targeted maintenance; benchmark acquisition not run."),
+                        ).lastrowid
+                    try:
+                        with phase("maintenance.apply"):
+                            receipt = maintenance.apply_profile(
+                                db,
+                                selected,
+                                args.maintenance_preview_fingerprint,
+                            )
+                        maintenance.receipt_bytes(receipt)
+                        if receipt["outcome"] != "completed":
+                            raise RuntimeError("Targeted maintenance failed validation")
+                        # A reviewed alternate scope conflict remains visible as partial.
+                        with db:
+                            db.execute(
+                                "UPDATE pipeline_runs SET finished_at=?,outcome='partial',"
+                                "imported=?,failures=1,details=? WHERE id=?",
+                                (
+                                    now(),
+                                    receipt["imported"],
+                                    "Targeted maintenance completed; expected alternate scope conflict; "
+                                    "benchmark acquisition not run.",
+                                    run_id,
+                                ),
+                            )
+                        stage = "report"
+                        with phase("report"):
+                            report()
+                        stage = "audit"
+                        with phase("maintenance.audit"):
+                            audit()
+                        stage = "build"
+                        with phase("publication.build"), redirect_stdout(io.StringIO()):
+                            build(output=candidate)
+                    except Exception:
+                        with db:
+                            db.execute(
+                                "UPDATE pipeline_runs SET finished_at=?,outcome='error',"
+                                "imported=?,failures=1,details=? WHERE id=?",
+                                (
+                                    now(),
+                                    receipt["imported"] if receipt else 0,
+                                    "Targeted maintenance failed during "
+                                    + stage
+                                    + "; benchmark acquisition not run; previous deployment retained.",
+                                    run_id,
+                                ),
+                            )
+                        raise
+            finally:
+                # Failed real applies can preserve captures; no Pages effect is granted.
+                try:
+                    backup_verified(state, database, key, store=store, args=args, limit=limit)
+                except Exception:
+                    stage = "backup"
+                    raise
+            # Only a verified recovery copy permits the public candidate to escape.
+            shutil.copytree(candidate, output)
+        except Exception:
+            failure = {
+                "mode": "apply",
+                "outcome": "error",
+                "stage": stage,
+                "benchmark_acquisition": "not_run",
+            }
+            if receipt is not None and receipt["outcome"] != "completed":
+                # Core validation already closed and bounded this operational receipt.
+                failure["maintenance"] = receipt
+            print(json.dumps(failure))
+            raise
+        workflow_effect("publish_ready")
+        print(
+            json.dumps(
+                {
+                    "mode": "apply",
+                    "outcome": "partial",
+                    "maintenance": receipt,
+                    "benchmark_acquisition": "not_run",
+                    "private_backup": "saved",
+                    "private_recovery": "verified",
+                    "public_output": str(output),
+                    "vault_profile": args.vault_profile,
+                    "vault_limit_bytes": limit,
+                }
+            )
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--state-dir", type=Path, required=True)
@@ -368,6 +543,9 @@ def main():
     mode.add_argument("--restore-only", type=Path, metavar="DATABASE")
     parser.add_argument("--recovery-storage", choices=("git", "github-draft"), default="git")
     parser.add_argument("--recovery-repository")
+    parser.add_argument("--maintenance-profile", default="")
+    parser.add_argument("--maintenance-mode", choices=("", "preview", "apply"), default="")
+    parser.add_argument("--maintenance-preview-fingerprint", default="")
     parser.add_argument("--reparse-limit", type=int, default=0)
     parser.add_argument(
         "--reparse-vendor",
@@ -378,6 +556,41 @@ def main():
         "--schedule-utc", default="08:37", help="Declared daily schedule, HH:MM UTC"
     )
     args = parser.parse_args()
+    selected = None
+    if args.maintenance_profile:
+        from infrastructure_impact.collection.maintenance_profiles import profile
+
+        try:
+            selected = profile(args.maintenance_profile)
+        except ValueError as error:
+            parser.error(str(error))
+        if not args.maintenance_mode:
+            parser.error("A named profile requires an explicit maintenance mode")
+        if (
+            args.reparse_limit > 0
+            or args.reparse_vendor is not None
+            or args.validate_encrypted_state
+            or args.restore_only is not None
+        ):
+            parser.error("Profile modes conflict with generic replay or recovery-only controls")
+        if args.maintenance_mode == "apply":
+            if not re.fullmatch(r"[a-f0-9]{64}", args.maintenance_preview_fingerprint):
+                parser.error("Apply requires a valid accepted preview fingerprint")
+        elif args.maintenance_preview_fingerprint:
+            parser.error("Preview forbids an accepted fingerprint")
+        if not args.encrypted_state:
+            parser.error("Hosted maintenance requires authenticated encrypted state")
+        if args.output is None:
+            parser.error("Hosted maintenance requires --output")
+        if any(p.is_symlink() for p in (args.output, *args.output.parents)):
+            parser.error("Maintenance output must not use symbolic links")
+        if args.output.exists():
+            parser.error("Maintenance output must be a new directory")
+        state, output = args.state_dir.resolve(), args.output.resolve()
+        if state == output or state.is_relative_to(output) or output.is_relative_to(state):
+            parser.error("Private state and maintenance output must be separate directory trees")
+    elif args.maintenance_mode or args.maintenance_preview_fingerprint:
+        parser.error("Maintenance mode or fingerprint requires a maintenance profile")
     limit = vault_limit(args.vault_profile)
     if not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", args.schedule_utc):
         parser.error("Schedule must use HH:MM UTC")
@@ -427,10 +640,33 @@ def main():
     state, output = args.state_dir.resolve(), args.output.resolve()
     if state == output or state.is_relative_to(output) or output.is_relative_to(state):
         parser.error("Private state and public output must be separate directory trees")
+    workflow_effect("mode", args.maintenance_mode or "ordinary")
     with tempfile.TemporaryDirectory(prefix="impact-writer-") as directory:
         home = Path(directory)
         database = home / "data/intel.sqlite3"
-        restore_current(state, database, encryption_key, store=store, vault_limit_bytes=limit)
+        restored = restore_current(
+            state, database, encryption_key, store=store, vault_limit_bytes=limit
+        )
+        if selected and not restored:
+            raise RuntimeError("Targeted maintenance requires an existing recovery checkpoint")
+        if args.maintenance_mode == "preview":
+            from infrastructure_impact.application.maintenance import preview, preview_bytes
+
+            raw = preview_bytes(preview(database, selected.profile_id))
+            output.mkdir(parents=True, exist_ok=False)
+            (output / "maintenance-preview.json").write_bytes(raw)
+            workflow_effect("preview_ready")
+            print(
+                json.dumps(
+                    {
+                        "mode": "preview",
+                        "outcome": "preview",
+                        "receipt": "maintenance-preview.json",
+                        "benchmark_acquisition": "not_run",
+                    }
+                )
+            )
+            return
         os.environ.update(
             IMPACT_HOME=str(home),
             IMPACT_DATABASE=str(database),
@@ -453,6 +689,11 @@ def main():
         from infrastructure_impact.storage.audit import audit
         from infrastructure_impact.worker import collect_once
 
+        if args.maintenance_mode == "apply":
+            apply_maintenance(
+                args, selected, state, output, home, database, encryption_key, store, limit
+            )
+            return
         maintenance = None
         try:
             if args.reparse_limit:
@@ -500,9 +741,12 @@ def main():
                         raise RuntimeError(
                             "New private backup was not available for recovery verification"
                         )
+                workflow_effect("recovery_ready")
+        workflow_effect("publish_ready")
         print(
             json.dumps(
                 {
+                    "mode": "ordinary",
                     "outcome": result["outcome"],
                     "failures": result["failures"],
                     "public_output": str(output),

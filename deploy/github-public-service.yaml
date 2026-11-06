@@ -5,6 +5,18 @@ name: Collect and publish
 on:
   workflow_dispatch:
     inputs:
+      maintenance_profile:
+        description: 'Optional reviewed maintenance profile; requires explicit preview or apply mode'
+        required: false
+        type: string
+      maintenance_mode:
+        description: 'Optional profile mode: preview or apply'
+        required: false
+        type: string
+      maintenance_preview_fingerprint:
+        description: 'Accepted preview fingerprint; required only for apply'
+        required: false
+        type: string
       reparse_limit:
         description: 'Optional single-run replay budget; blank uses the repository variable'
         required: false
@@ -54,12 +66,17 @@ jobs:
         working-directory: source
         run: uv sync --frozen --no-dev --group hosted
       - name: Restore, collect, audit and back up privately
+        id: hosted
         working-directory: source
         env:
           IMPACT_SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
           PRIVATE_STATE: ${{ github.workspace }}/service/state
           PUBLIC_OUTPUT: ${{ runner.temp }}/public-publication
+          PREVIEW_OUTPUT: ${{ runner.temp }}/maintenance-preview
+          MAINTENANCE_PROFILE: ${{ inputs.maintenance_profile || '' }}
+          MAINTENANCE_MODE: ${{ inputs.maintenance_mode || '' }}
+          MAINTENANCE_PREVIEW_FINGERPRINT: ${{ inputs.maintenance_preview_fingerprint || '' }}
           BASE_PATH: /${{ github.event.repository.name }}/
           GH_TOKEN: ${{ github.token }}
           RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
@@ -81,9 +98,21 @@ jobs:
           if test -n "$REPARSE_VENDOR"; then
             recovery_args+=(--reparse-vendor "$REPARSE_VENDOR")
           fi
+          if test -n "$MAINTENANCE_PROFILE"; then
+            recovery_args+=(--maintenance-profile "$MAINTENANCE_PROFILE")
+          fi
+          if test -n "$MAINTENANCE_MODE"; then
+            recovery_args+=(--maintenance-mode "$MAINTENANCE_MODE")
+          fi
+          if test -n "$MAINTENANCE_PREVIEW_FINGERPRINT"; then
+            recovery_args+=(--maintenance-preview-fingerprint "$MAINTENANCE_PREVIEW_FINGERPRINT")
+          fi
+          if test "$MAINTENANCE_MODE" = preview; then
+            PUBLIC_OUTPUT="$PREVIEW_OUTPUT"
+          fi
           uv run --no-dev python ops/hosted_job.py --state-dir "$PRIVATE_STATE" --output "$PUBLIC_OUTPUT" --base-path "$BASE_PATH" --encrypted-state "${recovery_args[@]}"
       - name: Retain only encrypted recovery copies
-        if: always()
+        if: ${{ always() && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') }}
         working-directory: service
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
@@ -101,15 +130,26 @@ jobs:
               git push
             fi
           fi
+      - name: Upload bounded maintenance preview
+        if: ${{ success() && steps.hosted.outputs.mode == 'preview' && steps.hosted.outputs.preview_ready == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: maintenance-preview
+          path: ${{ runner.temp }}/maintenance-preview/maintenance-preview.json
+          if-no-files-found: error
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        if: ${{ success() && steps.hosted.outputs.publish_ready == 'true' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: ${{ success() && steps.hosted.outputs.publish_ready == 'true' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') }}
         with:
           path: ${{ runner.temp }}/public-publication
           include-hidden-files: true
       - name: Publish sanitized generation
+        if: ${{ success() && steps.hosted.outputs.publish_ready == 'true' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') }}
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
       - name: Verify public availability and freshness
+        if: ${{ success() && steps.hosted.outputs.publish_ready == 'true' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') }}
         env:
           PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
         working-directory: source
