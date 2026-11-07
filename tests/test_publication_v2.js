@@ -116,6 +116,7 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
         ),
       ),
     );
+    assert(catalog.switching.detail_indexes, 'publisher emits separate detail indexes');
     const sourcePage = await reader.switchingDetails(overview, { kind: 'sources', limit: 25 });
     assert(sourcePage.items.length <= 25);
     const diagnosticPage = await reader.switchingDetails(overview, {
@@ -442,6 +443,7 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
     const pageCatalog = JSON.parse(JSON.stringify(catalog)),
       sourceValue = 'x'.repeat(400),
       sourceText = JSON.stringify([{ value: sourceValue }, { value: sourceValue }]);
+    delete pageCatalog.switching.detail_indexes; // Legacy whole-array fixtures exercise fallback.
     pageCatalog.strings = [{ part: part('strings', [sourceValue]), first: 0, count: 1 }];
     pageCatalog.shapes = [{ part: part('shapes', [['value']]), first: 0, count: 1 }];
     pageCatalog.roots['review-page'] = wireRoot(
@@ -565,6 +567,218 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
       671,
     );
     assert(context.window.InfrastructureJSON.measure(excludedDiagnostic) > 1000 - 671);
+
+    // Optional detail metadata skips the excluded vendor's token page entirely.
+    const savedTokens = diagnosticTokens.slice();
+    diagnosticTokens.length = 0;
+    encodeDiagnostic(selectedDiagnostic);
+    const selectedTokenCount = diagnosticTokens.length;
+    diagnosticTokens.length = 0;
+    diagnosticTokens.push(...savedTokens);
+    const detailRows = [
+      {
+        ordinal: 0,
+        vendor: 'arista',
+        range: bound(
+          'filtered-diagnostics',
+          1,
+          1 + selectedTokenCount,
+          JSON.stringify(selectedDiagnostic),
+        ),
+      },
+      {
+        ordinal: 1,
+        vendor: 'cisco',
+        range: bound(
+          'filtered-diagnostics',
+          1 + selectedTokenCount,
+          savedTokens.length,
+          JSON.stringify(excludedDiagnostic),
+        ),
+      },
+    ];
+    const excludedTokens = part('tokens', savedTokens.slice(1 + selectedTokenCount)),
+      indexedCatalog = JSON.parse(JSON.stringify(filteredCatalog)),
+      indexedRoot = JSON.parse(overlay.get(indexedCatalog.roots['filtered-diagnostics'].path)).data;
+    indexedRoot.pages = [
+      {
+        part: part('tokens', savedTokens.slice(0, 1)),
+        first_token: 0,
+        count: 1,
+        decoded_upper_bound: 3,
+      },
+      {
+        part: part('tokens', savedTokens.slice(1, 1 + selectedTokenCount)),
+        first_token: 1,
+        count: selectedTokenCount,
+        decoded_upper_bound: Buffer.byteLength(JSON.stringify(selectedDiagnostic)),
+      },
+      {
+        part: excludedTokens,
+        first_token: 1 + selectedTokenCount,
+        count: savedTokens.length - 1 - selectedTokenCount,
+        decoded_upper_bound: Buffer.byteLength(JSON.stringify(excludedDiagnostic)),
+      },
+    ];
+    indexedCatalog.roots['filtered-diagnostics'] = part('root', indexedRoot);
+    indexedCatalog.switching.detail_indexes = {
+      sources: [],
+      diagnostics: [
+        {
+          first: 0,
+          count: 2,
+          vendors: { arista: 1, cisco: 1 },
+          part: part('detail_index', detailRows),
+        },
+      ],
+    };
+    const indexedReader = await api.open(
+      async (name, options) => {
+        assert.notStrictEqual(
+          name.replace(/^\//, ''),
+          excludedTokens.path,
+          'requested diagnostic page must not fetch excluded item tokens',
+        );
+        return virtualFetch(name, options);
+      },
+      indexedCatalog,
+      index,
+      { selected_bytes: 1000 },
+    );
+    const indexedOverview = await indexedReader.switchingOverview(index.generated_at),
+      indexedPage = await indexedReader.switchingDetails(indexedOverview, {
+        kind: 'diagnostics',
+        limit: 25,
+      });
+    assert.deepStrictEqual(
+      JSON.parse(JSON.stringify(indexedPage)),
+      JSON.parse(JSON.stringify(filteredPage)),
+    );
+
+    // Multiple metadata chunks retain native order and exact filtered totals.
+    function indexedArray(name, values, kind) {
+      diagnosticTokens.length = 0;
+      diagnosticTokens.push([-1, values.length]);
+      const rows = [],
+        pages = [
+          {
+            part: part('tokens', [[-1, values.length]]),
+            first_token: 0,
+            count: 1,
+            decoded_upper_bound: values.length + 1,
+          },
+        ];
+      for (let ordinal = 0; ordinal < values.length; ordinal++) {
+        const first = diagnosticTokens.length,
+          value = values[ordinal];
+        encodeDiagnostic(value);
+        const end = diagnosticTokens.length,
+          text = JSON.stringify(value);
+        rows.push({
+          ordinal,
+          range: bound(name, first, end, text),
+          ...(kind === 'diagnostics' ? { vendor: value.vendor } : {}),
+        });
+        pages.push({
+          part: part('tokens', diagnosticTokens.slice(first, end)),
+          first_token: first,
+          count: end - first,
+          decoded_upper_bound: Buffer.byteLength(text),
+        });
+      }
+      const text = JSON.stringify(values),
+        whole = bound(name, 0, diagnosticTokens.length, text),
+        chunks = [];
+      for (let first = 0; first < rows.length; first += 7) {
+        const slice = rows.slice(first, first + 7),
+          vendors = {};
+        if (kind === 'diagnostics')
+          for (const row of slice) vendors[row.vendor] = (vendors[row.vendor] || 0) + 1;
+        chunks.push({ first, count: slice.length, vendors, part: part('detail_index', slice) });
+      }
+      return {
+        whole,
+        chunks,
+        pages,
+        root: part('root', {
+          name,
+          token_count: diagnosticTokens.length,
+          logical: { bytes: whole.logical_bytes, sha256: whole.logical_sha256 },
+          pages,
+          ranges: [],
+        }),
+      };
+    }
+    const manyDiagnostics = Array.from({ length: 63 }, (_, i) => ({
+        vendor: i < 7 || i % 2 === 0 ? 'cisco' : 'arista',
+        unknown: ['🚀', String(i)],
+      })),
+      manySources = Array.from({ length: 63 }, (_, i) => ({
+        source: String(i),
+        unknown: ['🚀', String(i)],
+      }));
+    const diagnosticsIndex = indexedArray('page-diagnostics', manyDiagnostics, 'diagnostics'),
+      sourcesIndex = indexedArray('page-sources', manySources, 'sources'),
+      manyCatalog = JSON.parse(JSON.stringify(indexedCatalog));
+    manyCatalog.roots['page-diagnostics'] = diagnosticsIndex.root;
+    manyCatalog.roots['page-sources'] = sourcesIndex.root;
+    manyCatalog.strings = [{ part: part('strings', atoms), first: 0, count: atoms.length }];
+    manyCatalog.shapes = [{ part: part('shapes', layouts), first: 0, count: layouts.length }];
+    manyCatalog.switching.diagnostics = diagnosticsIndex.whole;
+    manyCatalog.switching.detail_indexes = {
+      sources: sourcesIndex.chunks,
+      diagnostics: diagnosticsIndex.chunks,
+    };
+    manyCatalog.switching.overview = altered(manyCatalog.switching.overview, (value) => {
+      value.data.detail_ranges.sources = sourcesIndex.whole;
+    });
+    const forbidden = new Set([
+      diagnosticsIndex.chunks[0].part.path,
+      ...diagnosticsIndex.pages
+        .slice(1)
+        .filter((_, i) => manyDiagnostics[i].vendor === 'cisco')
+        .map((page) => page.part.path),
+    ]);
+    const manyReader = await api.open(
+        async (name, options) => {
+          assert(
+            !forbidden.has(name.replace(/^\//, '')),
+            'excluded vendor chunks and items stay unread',
+          );
+          return virtualFetch(name, options);
+        },
+        manyCatalog,
+        index,
+        { selected_bytes: 10000 },
+      ),
+      manyOverview = await manyReader.switchingOverview(index.generated_at),
+      legacyManyCatalog = JSON.parse(JSON.stringify(manyCatalog));
+    delete legacyManyCatalog.switching.detail_indexes;
+    const legacyManyReader = await api.open(virtualFetch, legacyManyCatalog, index, {
+        selected_bytes: 10000,
+      }),
+      legacyManyOverview = await legacyManyReader.switchingOverview(index.generated_at);
+    for (const kind of ['diagnostics', 'sources']) {
+      const wanted =
+        kind === 'sources'
+          ? manySources
+          : manyDiagnostics.filter((value) => value.vendor === 'arista');
+      const seen = [];
+      let cursor = null;
+      do {
+        const request = { kind, cursor, limit: 25 },
+          actual = await manyReader.switchingDetails(manyOverview, request),
+          legacy = await legacyManyReader.switchingDetails(legacyManyOverview, request);
+        assert.strictEqual(
+          context.window.InfrastructureJSON.stringify(actual),
+          context.window.InfrastructureJSON.stringify(legacy),
+        );
+        assert.strictEqual(actual.total, wanted.length);
+        seen.push(...actual.items);
+        cursor = actual.next_cursor;
+      } while (cursor !== null);
+      assert.deepStrictEqual(JSON.parse(JSON.stringify(seen)), wanted);
+    }
 
     // R2: unresolved cancel must not retain a request slot or poison metadata.
     let unblockCodecCancel;

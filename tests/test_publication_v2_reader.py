@@ -666,3 +666,137 @@ def test_current_identity_projection_retains_overlap_detection(delivery_db, tmp_
                 "QUERY_STRING": "limit=1&cves=CVE-2099-9999",
             }
         )
+
+
+@pytest.fixture
+def detail_reader(generation, monkeypatch, tmp_path):
+    from infrastructure_impact.application import publication_v2
+
+    reader = PublicationReader(generation)
+    monkeypatch.setattr(publication_v2, "TARGET", 700)
+    writer = publication_v2.Writer(tmp_path, reader.identity)
+    expected = [
+        {"vendor": "arista" if i % 2 else "cisco", "unknown": ["🚀", i, i + 0.5]} for i in range(63)
+    ]
+    writer.root("snapshot.json", {"switching_comparison": {"sources": []}})
+    writer.root("switching-evidence.json", {"score_availability": expected})
+    writer.tables()
+    reader.directory = tmp_path
+    reader.catalog = {
+        **reader.catalog,
+        "roots": writer.roots,
+        "strings": writer.string_parts,
+        "shapes": writer.shape_parts,
+        "switching": {
+            "diagnostics": writer.root_ranges["switching-evidence.json"][("score_availability",)],
+            "detail_indexes": writer.detail_indexes(),
+        },
+    }
+    reader._strings = reader._shapes = None
+    reader._roots.clear()
+    reader._ranges.clear()
+    selected = {**reader.identity, "rows": [], "sources": [], "selection": {}}
+    return reader, selected, expected, writer
+
+
+def test_diagnostic_page_reads_only_requested_children(detail_reader, monkeypatch):
+    reader, selected, expected, _ = detail_reader
+
+    def no_array_scan(*args, **kwargs):
+        raise AssertionError("detail page scanned the complete diagnostic array")
+
+    monkeypatch.setattr(reader, "iter_array", no_array_scan)
+    page = reader.detail_page(selected, "diagnostics", limit=1)
+    assert page["items"] == expected[:1]
+    assert page["total"] == len(expected)
+
+
+def test_indexed_diagnostic_pages_match_legacy_bytes_and_budget(detail_reader):
+    reader, selected, expected, _ = detail_reader
+    indexes = reader.catalog["switching"]["detail_indexes"]
+    seen, cursor = [], None
+    while True:
+        page = reader.detail_page(selected, "diagnostics", cursor=cursor)
+        del reader.catalog["switching"]["detail_indexes"]
+        legacy = reader.detail_page(selected, "diagnostics", cursor=cursor)
+        reader.catalog["switching"]["detail_indexes"] = indexes
+        assert json.dumps(page, ensure_ascii=True) == json.dumps(legacy, ensure_ascii=True)
+        assert page["total"] == 63
+        seen.extend(page["items"])
+        cursor = page["next_cursor"]
+        if cursor is None:
+            break
+    assert seen == expected
+    page = reader.detail_page(selected, "diagnostics", limit=1)
+    size = len(json.dumps(page, ensure_ascii=True, separators=(",", ":")).encode())
+    reader.limits["selected"] = size
+    assert reader.detail_page(selected, "diagnostics", limit=1) == page
+    reader.limits["selected"] = size - 1
+    with pytest.raises(ValueError, match="budget"):
+        reader.detail_page(selected, "diagnostics", limit=1)
+
+
+@pytest.mark.parametrize("corruption", ["hash", "ordinal", "vendor"])
+def test_selected_detail_routing_and_hash_are_verified(detail_reader, corruption):
+    reader, selected, _, writer = detail_reader
+    descriptor = reader.catalog["switching"]["detail_indexes"]["diagnostics"][0]
+    entries = reader.fetch(descriptor["part"], kind="detail_index")
+    if corruption == "hash":
+        entries[0]["range"]["logical_sha256"] = "0" * 64
+    elif corruption == "ordinal":
+        entries[0]["ordinal"] = 1
+    else:
+        # Matching summary counts alone cannot substitute another item's vendor.
+        entries[0]["vendor"] = "arista"
+        descriptor["vendors"]["cisco"] -= 1
+        if not descriptor["vendors"]["cisco"]:
+            del descriptor["vendors"]["cisco"]
+        descriptor["vendors"]["arista"] = descriptor["vendors"].get("arista", 0) + 1
+    descriptor["part"] = writer.part("detail_index", entries)
+    with pytest.raises(ValueError, match="digest|routing|vendor"):
+        reader.detail_page(selected, "diagnostics", limit=1)
+
+
+def test_detail_indexes_are_separate_from_default_root_ranges(generation):
+    reader = PublicationReader(generation)
+    indexes = reader.catalog["switching"]["detail_indexes"]
+    assert set(indexes) == {"diagnostics", "sources"}
+    assert indexes["sources"]
+    assert not any(
+        len(p) == 2 and p[0] == "score_availability"
+        for p in reader.ranges("switching-evidence.json")
+    )
+    assert not any(
+        len(p) == 3 and p[:2] == ("switching_comparison", "sources")
+        for p in reader.ranges("snapshot.json")
+    )
+    for kind, descriptors in indexes.items():
+        for descriptor in descriptors:
+            rows = reader.fetch(descriptor["part"], kind="detail_index")
+            assert len(rows) == descriptor["count"]
+
+
+def test_projection_verification_accepts_optional_detail_membership(generation):
+    from infrastructure_impact.application.publication_v2 import verify_projection
+
+    reader = PublicationReader(generation)
+    projected = json.loads(b"".join(reader.stream_root("snapshot.json")))
+    projected["switching_comparison"] = json.loads(
+        b"".join(reader.stream_root("switching-comparison.json"))
+    )
+    projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    verify_projection(reader, projected)
+
+
+def test_projection_verification_checks_optional_detail_membership(generation):
+    from infrastructure_impact.application.publication_v2 import verify_projection
+
+    reader = PublicationReader(generation)
+    projected = json.loads(b"".join(reader.stream_root("snapshot.json")))
+    projected["switching_comparison"] = json.loads(
+        b"".join(reader.stream_root("switching-comparison.json"))
+    )
+    projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    reader.catalog["switching"]["detail_indexes"]["sources"][0]["count"] += 1
+    with pytest.raises(ValueError, match="detail"):
+        verify_projection(reader, projected)

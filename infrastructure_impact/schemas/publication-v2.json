@@ -98,6 +98,28 @@
         },
         "diagnostics": {
           "$ref": "#/$defs/range"
+        },
+        "detail_indexes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sources": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/detail_chunk"
+              }
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/detail_chunk"
+              }
+            }
+          },
+          "required": [
+            "sources",
+            "diagnostics"
+          ]
         }
       },
       "required": [
@@ -1016,6 +1038,49 @@
             "kind",
             "data"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "detail_index"
+            },
+            "data": {
+              "$ref": "#/$defs/detail_index"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
         }
       ]
     },
@@ -1089,6 +1154,64 @@
         "publication",
         "generated_at",
         "assets"
+      ]
+    },
+    "detail_index": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "range": {
+            "$ref": "#/$defs/range"
+          }
+        },
+        "required": [
+          "ordinal",
+          "range"
+        ]
+      },
+      "minItems": 1
+    },
+    "detail_chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "first": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "vendors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "part": {
+          "$ref": "#/$defs/part"
+        }
+      },
+      "required": [
+        "first",
+        "count",
+        "vendors",
+        "part"
       ]
     }
   },

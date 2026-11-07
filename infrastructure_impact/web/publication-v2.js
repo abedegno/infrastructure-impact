@@ -954,6 +954,100 @@
       quota.charge(json.measure({ items: [], next_cursor, total }));
       return { quota, next_cursor };
     }
+    async function indexedRangePage(kind, input, offset, limit, vendors, binding, options) {
+      const r = range(input),
+        chunks = catalog.switching.detail_indexes[kind];
+      let count = 0,
+        total = 0;
+      const selectedCount = (chunk) =>
+        vendors === null
+          ? chunk.count
+          : Object.entries(chunk.vendors).reduce(
+              (n, [vendor, number]) => n + (vendors.has(vendor) ? number : 0),
+              0,
+            );
+      for (const chunk of chunks) {
+        if (integer(chunk.first) !== count) fail('detail chunk order/count');
+        count += integer(chunk.count, 1);
+        const vendorCount = Object.values(chunk.vendors).reduce((n, v) => n + integer(v, 1), 0);
+        if (kind === 'diagnostics' ? vendorCount !== chunk.count : vendorCount !== 0)
+          fail('detail chunk vendor counts');
+        total += selectedCount(chunk);
+      }
+      const header = tokens(r.root, r.first_token, r.first_token + 1, options)[
+        Symbol.asyncIterator
+      ]();
+      try {
+        const first = (await header.next()).value;
+        if (!Array.isArray(first) || first.length !== 2 || first[0] !== -1 || first[1] !== count)
+          fail('detail index parent count');
+      } finally {
+        await header.return?.();
+      }
+      if (offset > total) fail('detail offset');
+      const { quota, next_cursor } = pageBudget(total, binding, offset, limit),
+        items = [];
+      let passed = 0;
+      for (const chunk of chunks) {
+        const selected = selectedCount(chunk),
+          start = passed;
+        passed += selected;
+        if (!selected || passed <= offset || start >= offset + limit) continue;
+        const entries = await read(chunk.part, 'detail_index', options),
+          actualVendors = {};
+        if (entries.length !== chunk.count) fail('detail chunk count');
+        let previous = null;
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i],
+            bound = range(entry.range),
+            ordinal = chunk.first + i;
+          if (
+            entry.ordinal !== ordinal ||
+            bound.root !== r.root ||
+            bound.first_token <= r.first_token ||
+            bound.end_token > r.end_token ||
+            (previous !== null && previous !== bound.first_token) ||
+            (ordinal === 0 && bound.first_token !== r.first_token + 1) ||
+            (ordinal === count - 1 && bound.end_token !== r.end_token)
+          )
+            fail('detail item routing');
+          previous = bound.end_token;
+          if (kind === 'diagnostics') {
+            if (typeof entry.vendor !== 'string') fail('detail vendor');
+            Object.defineProperty(actualVendors, entry.vendor, {
+              value:
+                (Object.hasOwn(actualVendors, entry.vendor) ? actualVendors[entry.vendor] : 0) + 1,
+              enumerable: true,
+              configurable: true,
+            });
+          } else if (Object.hasOwn(entry, 'vendor')) fail('source detail vendor');
+        }
+        if (
+          Object.keys(actualVendors).length !== Object.keys(chunk.vendors).length ||
+          Object.entries(actualVendors).some(([vendor, n]) => chunk.vendors[vendor] !== n)
+        )
+          fail('detail chunk vendor counts');
+        let local = start;
+        for (const entry of entries) {
+          if (vendors !== null && !vendors.has(entry.vendor)) continue;
+          const index = local++;
+          if (index < offset || index >= offset + limit) continue;
+          const value = await materializeRange(entry.range, {
+            ...options,
+            path:
+              kind === 'diagnostics'
+                ? ['score_availability', entry.ordinal]
+                : ['switching_comparison', 'sources', entry.ordinal],
+            max_bytes: Math.max(0, quota.remaining - (items.length ? 1 : 0)),
+          });
+          if (kind === 'diagnostics' && value.vendor !== entry.vendor)
+            fail('detail vendor identity');
+          quota.charge(json.measure(value, null, '', quota.remaining) + (items.length ? 1 : 0));
+          items.push(value);
+        }
+      }
+      return { items, total, next_cursor };
+    }
     async function rangePage(r, offset, limit, predicate, binding, options) {
       let total = 0;
       const positions = new Set();
@@ -1109,6 +1203,19 @@
         if (parsed.binding !== binding) fail('detail cursor generation');
         offset = integer(parsed.offset);
       }
+      if (
+        (kind === 'diagnostics' || (kind === 'sources' && !selection.sources)) &&
+        catalog.switching.detail_indexes
+      )
+        return indexedRangePage(
+          kind,
+          kind === 'diagnostics' ? catalog.switching.diagnostics : selection.detail_ranges.sources,
+          offset,
+          limit,
+          kind === 'diagnostics' ? new Set(selection.selection.effective_vendors) : null,
+          binding,
+          options,
+        );
       if (kind === 'diagnostics' || (kind === 'sources' && !selection.sources))
         return rangePage(
           kind === 'diagnostics' ? catalog.switching.diagnostics : selection.detail_ranges.sources,

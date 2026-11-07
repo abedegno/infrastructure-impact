@@ -71,6 +71,7 @@ class Writer:
         self.roots = {}
         self.root_data = {}
         self.root_ranges = {}
+        self.detail_entries = dict(sources=[], diagnostics=[])
         self.snapshot_tables = None
         self.snapshot_members = []
         self.claim_intervals = []
@@ -159,7 +160,18 @@ class Writer:
         def walk(node, path=(), depth=0):
             if depth > codec.MAX_DEPTH:
                 raise ValueError("encoder depth")
-            marked = self.ranged(name, path)
+            detail_kind = (
+                "sources"
+                if name == "snapshot.json"
+                and len(path) == 3
+                and path[:2] == ("switching_comparison", "sources")
+                else "diagnostics"
+                if name == "switching-evidence.json"
+                and len(path) == 2
+                and path[0] == "score_availability"
+                else None
+            )
+            marked = self.ranged(name, path) or detail_kind is not None
             marker = dict(path=path, first=position, hash=sha256(), size=0)
             if marked:
                 active.append(marker)
@@ -226,7 +238,12 @@ class Writer:
                     logical_bytes=marker["size"],
                     logical_sha256=marker["hash"].hexdigest(),
                 )
-                if not (
+                if detail_kind is not None:
+                    entry = dict(ordinal=path[-1], range=bound)
+                    if detail_kind == "diagnostics":
+                        entry["vendor"] = node["vendor"]
+                    self.detail_entries[detail_kind].append(entry)
+                elif not (
                     name == "switching-evidence.json" and len(path) == 2 and path[0] == "claims"
                 ):
                     ranges.append(dict(path=list(path), range=bound))
@@ -262,6 +279,41 @@ class Writer:
             ascii_hash.update(b"\n")
             self.legacy_snapshot = dict(bytes=ascii_bytes + 1, sha256=ascii_hash.hexdigest())
         return self.roots[name]
+
+    def detail_indexes(self):
+        """Optional paging metadata, deliberately absent from ordinary root ranges."""
+        indexes = {}
+        for kind, entries in self.detail_entries.items():
+            chunks, batch, size = [], [], 0
+
+            def flush():
+                nonlocal batch, size
+                if not batch:
+                    return
+                vendors = {}
+                for entry in batch:
+                    if "vendor" in entry:
+                        vendor = entry["vendor"]
+                        vendors[vendor] = vendors.get(vendor, 0) + 1
+                chunks.append(
+                    dict(
+                        first=batch[0]["ordinal"],
+                        count=len(batch),
+                        vendors=vendors,
+                        part=self.part("detail_index", batch),
+                    )
+                )
+                batch, size = [], 0
+
+            for entry in entries:
+                length = len(encode(entry))
+                if batch and size + length > TARGET:
+                    flush()
+                batch.append(entry)
+                size += length
+            flush()
+            indexes[kind] = chunks
+        return indexes
 
     def tables(self):
         for kind, values, boundary, result in [
@@ -507,6 +559,7 @@ def write_bundle(destination, data):
             definition_sha256=overview["selection"]["definition_sha256"],
             kev=writer.root_ranges["switching-comparison.json"][("inputs", "kev")],
             diagnostics=writer.root_ranges["switching-evidence.json"][("score_availability",)],
+            detail_indexes=writer.detail_indexes(),
         ),
         archive=writer.archive(routes["records"]),
     )
@@ -679,6 +732,47 @@ def verify_projection(reader, projected):
     }
     if set(views) != set(reader.catalog["roots"]):
         raise ValueError("missing or extra mandatory logical root")
+    if "detail_indexes" in reader.catalog["switching"]:
+
+        def token_count(value):
+            if isinstance(value, dict):
+                return 1 + sum(token_count(child) for child in value.values())
+            if isinstance(value, (list, tuple)):
+                return 1 + sum(token_count(child) for child in value)
+            return 1
+
+        # Membership and vendor identity come from fresh projected native facts.
+        for kind, items in (
+            ("sources", complete_summary["sources"]),
+            ("diagnostics", projected["switching_evidence"].get("score_availability", [])),
+        ):
+            parent, _, chunks, total = reader._detail_chunks(kind)
+            if total != len(items):
+                raise ValueError("detail index native count mismatch")
+            position, ordinal = parent["first_token"] + 1, 0
+            for chunk in chunks:
+                for entry in reader._detail_chunk(kind, chunk, parent, total):
+                    item = items[ordinal]
+                    raw = json.dumps(
+                        item, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+                    ).encode()
+                    end = position + token_count(item)
+                    expected = dict(
+                        root=parent["root"],
+                        first_token=position,
+                        end_token=end,
+                        logical_bytes=len(raw),
+                        logical_sha256=sha256(raw).hexdigest(),
+                    )
+                    if (
+                        entry["range"] != expected
+                        or entry["ordinal"] != ordinal
+                        or (kind == "diagnostics" and entry.get("vendor") != item["vendor"])
+                    ):
+                        raise ValueError("detail index native membership mismatch")
+                    position, ordinal = end, ordinal + 1
+            if ordinal != len(items) or position != parent["end_token"]:
+                raise ValueError("detail index native boundary mismatch")
     record_routes = reader.record_routes()
     expected_records = [
         dict(

@@ -597,6 +597,87 @@ class PublicationReader(codec.CatalogReader):
             codec.charge_value(result, codec.Budget(self.limits["selected"]))
             yield result
 
+    def _detail_chunks(self, kind):
+        """Check optional chunk counts against the authenticated parent array header."""
+        chunks = self.catalog["switching"]["detail_indexes"][kind]
+        if kind == "diagnostics":
+            bound = self.catalog["switching"]["diagnostics"]
+            path = ("score_availability",)
+        else:
+            bound = self.switching_overview()["detail_ranges"]["sources"]
+            path = ("switching_comparison", "sources")
+        codec.validate_range(bound)
+        total = 0
+        for chunk in chunks:
+            if chunk["first"] != total:
+                raise ValueError("detail chunk order/count")
+            total += codec.safe_int(chunk["count"], minimum=1)
+            if (kind == "diagnostics" and sum(chunk["vendors"].values()) != chunk["count"]) or (
+                kind == "sources" and chunk["vendors"]
+            ):
+                raise ValueError("detail chunk vendor counts")
+        tokens = self.iter_tokens(bound["root"], bound["first_token"], bound["first_token"] + 1)
+        try:
+            if next(tokens, None) != [-1, total]:
+                raise ValueError("detail index parent count")
+        finally:
+            tokens.close()
+        return bound, path, chunks, total
+
+    def _detail_chunk(self, kind, chunk, bound, total):
+        entries = self.fetch(chunk["part"], kind="detail_index")
+        if len(entries) != chunk["count"]:
+            raise ValueError("detail chunk count")
+        vendors, previous = {}, None
+        for index, entry in enumerate(entries, chunk["first"]):
+            r = codec.validate_range(entry["range"])
+            if (
+                entry["ordinal"] != index
+                or r["root"] != bound["root"]
+                or r["first_token"] <= bound["first_token"]
+                or r["end_token"] > bound["end_token"]
+                or (previous is not None and previous != r["first_token"])
+                or (index == 0 and r["first_token"] != bound["first_token"] + 1)
+                or (index == total - 1 and r["end_token"] != bound["end_token"])
+            ):
+                raise ValueError("detail item routing")
+            previous = r["end_token"]
+            if kind == "diagnostics":
+                vendor = entry.get("vendor")
+                if not isinstance(vendor, str):
+                    raise ValueError("detail vendor")
+                vendors[vendor] = vendors.get(vendor, 0) + 1
+            elif "vendor" in entry:
+                raise ValueError("source detail vendor")
+        if vendors != chunk["vendors"]:
+            raise ValueError("detail chunk vendor counts")
+        return entries
+
+    def _detail_item(self, entry, path, maximum):
+        from collections import deque
+
+        bound = entry["range"]
+        kinds, raw = deque(), bytearray()
+        for chunk in self._stream(
+            bound["root"],
+            bound["first_token"],
+            bound["end_token"],
+            dict(bytes=bound["logical_bytes"], sha256=bound["logical_sha256"]),
+            serialization="ascii",
+            maximum=maximum,
+            path=(*path, entry["ordinal"]),
+            number_observer=lambda number: kinds.append(number.kind),
+        ):
+            raw.extend(chunk)
+
+        def number(lexeme):
+            return int(lexeme) if kinds.popleft() == "i" else float(lexeme)
+
+        value = codec.strict_loads(raw, max_bytes=maximum, parse_int=number, parse_float=number)
+        if "vendor" in entry and value.get("vendor") != entry["vendor"]:
+            raise ValueError("detail vendor identity")
+        return value
+
     def detail_page(self, selection, kind, *, row_id=None, cursor=None, limit=25):
         import base64
 
@@ -636,6 +717,53 @@ class PublicationReader(codec.CatalogReader):
         )
         if row_id is not None and not rows:
             raise ValueError("unknown detail row")
+        if kind == "sources" or (
+            kind == "diagnostics" and "detail_indexes" in self.catalog["switching"]
+        ):
+            if kind == "sources":
+                total = len(selection["sources"])
+                entries = selection["sources"][offset : offset + limit]
+            else:
+                bound, path, chunks, total = self._detail_chunks(kind)
+                entries = []
+                for chunk in chunks:
+                    if (
+                        chunk["first"] >= offset + limit
+                        or chunk["first"] + chunk["count"] <= offset
+                    ):
+                        continue
+                    entries.extend(
+                        entry
+                        for entry in self._detail_chunk(kind, chunk, bound, total)
+                        if offset <= entry["ordinal"] < offset + limit
+                    )
+            if offset > total:
+                raise ValueError("detail cursor offset")
+            next_cursor = (
+                base64.urlsafe_b64encode(
+                    json.dumps(
+                        dict(binding=binding, offset=offset + limit), separators=(",", ":")
+                    ).encode()
+                ).decode()
+                if offset + limit < total
+                else None
+            )
+            envelope = dict(items=[], next_cursor=next_cursor, total=total)
+            quota = codec.Budget(self.limits["selected"])
+            codec.charge_value(envelope, quota)
+            for entry in entries:
+                comma = bool(envelope["items"])
+                value = (
+                    entry
+                    if kind == "sources"
+                    else self._detail_item(
+                        entry, path, self.limits["selected"] - quota.used - comma
+                    )
+                )
+                quota.charge(comma, comma)
+                codec.charge_value(value, quota)
+                envelope["items"].append(value)
+            return envelope
         if kind == "claims":
             used = {c for r in rows for c in r["claim_ids"]} | {
                 c for r in rows for e in r["events"] for c in e["claim_ids"]
