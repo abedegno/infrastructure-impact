@@ -87,6 +87,43 @@ and release exports. Receipts expose factual target metadata but no machine path
 or raw evidence. Treat the entire stage as private operator state; only the
 validated public subtree is suitable for the existing publication process.
 
+## Opt-in local publication v2
+
+Local `snapshot` and `target-import stage` accept `--publication-format v2`.
+The default remains `v1`; there is no environment setting or hosted activation
+for this option. Use the same preview, ownership and stage arguments above and
+add the format flag to the stage command. A different representation does not
+waive any audit, native parity, monitor or capacity gate.
+
+V2 publishes `publication-v2.json`, content-addressed bounded parts and a
+self-contained `snapshot-v2.json.gz`. The archive reconstructs every field in
+the original full snapshot's scope. Full research evidence and comparison
+inputs remain mandatory logical roots in the publication; they are not silently
+added to or removed from that archive scope. The catalog lists those roots and
+binds their ordered logical bytes to hashes.
+
+Browser JSON downloads are selected summaries. To export complete research
+inputs without materializing the whole document, use a new output file outside
+the publication directory:
+
+```sh
+impact publication-export --publication "$candidate_public" \
+  --root switching-evidence.json --output "$new_json_export"
+```
+
+`switching-comparison.json` and `snapshot.json` are also available as logical
+root names. Root exports enforce a 1,000,000,000-byte logical ceiling and a
+300-second operation deadline. Selected materializations remain bounded to
+128,000,000 bytes, including requested encoding expansion. Exporting a logical
+root can therefore succeed when loading it as one in-memory object would fail.
+Browser cohort reconstruction also budgets intermediate ordinary-part envelopes
+and rows. This conservative allowance can reject a selection whose final
+deduplicated JSON would be smaller than the limit; rejection remains explicit,
+and complete logical roots remain available through streaming export. The
+existing archive, part, index, default-read and complete-site limits remain
+unchanged. No local v2 result certifies the distinct hosted inventory or enables
+publication automatically.
+
 ## Retrieval, replay and activation
 
 Normal stage performs fresh bounded source acquisition, which records actual
