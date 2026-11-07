@@ -216,7 +216,10 @@ def public_projection(data, public_release_urls=()):
 
 
 @phase("publication.writing")
-def write_bundle(destination, data):
+def write_bundle(destination, data, *, publication_format="v1"):
+    from .publication_v2 import publication_format as validate_format
+
+    validate_format(publication_format)
     from .current_evidence import report_bytes
     from .current_views import validate_partition
     from .research_reports import validate
@@ -255,6 +258,10 @@ def write_bundle(destination, data):
             raise ValueError("Published switching evaluation must match generation time")
         if data["switching_evidence"] != data["switching_comparison"]["inputs"]["evidence"]:
             raise ValueError("Switching asset and comparison evidence disagree")
+    if publication_format == "v2":
+        from .publication_v2 import write_bundle as write_v2
+
+        return write_v2(destination, data)
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "current-evidence.json").write_bytes(report_bytes(data["current_evidence"]))
@@ -338,7 +345,27 @@ def write_bundle(destination, data):
         path = destination / "changes" / f"{change['id']}.json"
         path.parent.mkdir(exist_ok=True)
         path.write_text(json.dumps(change))
+    write_reader_assets(destination, data)
+    from .static_delivery import write_static_delivery
+
+    write_static_delivery(destination, data)
+    write_manifest(destination, data)
+
+
+def write_manifest(destination, data):
+    manifest = {
+        str(p.relative_to(destination)): sha256(p.read_bytes()).hexdigest()
+        for p in sorted(destination.rglob("*"))
+        if p.is_file()
+    }
+    (destination / "manifest.json").write_text(
+        json.dumps({"generation": data["publication"]["id"], "sha256": manifest}, indent=2)
+    )
+
+
+def write_reader_assets(destination, data, *, publication_format="v1"):
     for name in (
+        *(("publication-v2.js",) if publication_format == "v2" else ()),
         "lossless-json.js",
         "current-evidence.js",
         "app.js",
@@ -360,10 +387,17 @@ def write_bundle(destination, data):
             '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
+    if publication_format == "v2":
+        html = html.replace(
+            '<script defer src="/delivery.js">',
+            '<script defer src="/publication-v2.js"></script><script defer src="/delivery.js">',
+        )
+        html = html.replace("/snapshot.json.gz", "/snapshot-v2.json.gz")
     # Immutable script/style paths avoid mixing old cached readers with a new
     # delivery contract. Root names remain available for existing integrations.
     (destination / "assets").mkdir(exist_ok=True)
     for name in (
+        *(("publication-v2.js",) if publication_format == "v2" else ()),
         "lossless-json.js",
         "current-evidence.js",
         "app.js",
@@ -426,6 +460,11 @@ def write_bundle(destination, data):
         "extraction-review-v1.json",
         "review-submission-v1.json",
         "static-index-v1.json",
+        *(
+            ("static-index-v2.json", "publication-v2.json", "switching-overview-v2.json")
+            if publication_format == "v2"
+            else ()
+        ),
         "vendor-gaps-v1.json",
         "family-completeness-v1.json",
         "comparison-readiness-v1.json",
@@ -454,20 +493,12 @@ def write_bundle(destination, data):
     (destination / "_headers").write_text(
         "/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'\n"
     )
-    from .static_delivery import write_static_delivery
-
-    write_static_delivery(destination, data)
-    manifest = {
-        str(p.relative_to(destination)): sha256(p.read_bytes()).hexdigest()
-        for p in sorted(destination.rglob("*"))
-        if p.is_file()
-    }
-    (destination / "manifest.json").write_text(
-        json.dumps({"generation": data["publication"]["id"], "sha256": manifest}, indent=2)
-    )
 
 
-def publish(data, root=None, public_release_urls=()):
+def publish(data, root=None, public_release_urls=(), *, publication_format="v1"):
+    from .publication_v2 import publication_format as validate_format
+
+    validate_format(publication_format)
     root = Path(root or Paths.from_env().publications)
     generations = root / "generations"
     generations.mkdir(parents=True, exist_ok=True)
@@ -486,7 +517,7 @@ def publish(data, root=None, public_release_urls=()):
     data = public_projection(data, public_release_urls)
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:
-        write_bundle(stage, data)
+        write_bundle(stage, data, publication_format=publication_format)
         stage.chmod(0o755)  # The separate reader container mounts only this public directory.
         final = generations / generation
         stage.rename(final)
@@ -499,7 +530,7 @@ def publish(data, root=None, public_release_urls=()):
     return final
 
 
-def build(output=None):
+def build(output=None, *, publication_format="v1"):
     """Publish from the evidence vault and export a static reader bundle."""
     from ..collection.config import load_config
 
@@ -510,7 +541,9 @@ def build(output=None):
             db, data["records"], sorted(set(data["all_cves"]) | set(COHORT))
         )
     public_urls = [d["url"] for d in load_config().get("release_documents", [])]
-    generation = publish(data, public_release_urls=public_urls)
+    generation = publish(
+        data, public_release_urls=public_urls, publication_format=publication_format
+    )
     destination = Path(output or paths.snapshot)
     # Deployment archives need regular assets, not an external current symlink.
     destination.mkdir(parents=True, exist_ok=True)

@@ -123,3 +123,71 @@ def test_private_context_preserves_real_stat_nanoseconds():
             "anyOf"
         ][0]
         Draft202012Validator(subschema).validate(state)
+
+
+def test_ascii_del_is_charged_before_allocation():
+    with pytest.raises(ValueError, match="budget"):
+        codec.materialize_tokens([-2], [chr(127)], [], max_bytes=3, serialization="ascii")
+
+
+def test_alias_shares_budget_and_deadline_and_closes_cursor():
+    from time import monotonic
+
+    closed = []
+
+    def child():
+        try:
+            yield -2
+        finally:
+            closed.append(True)
+
+    tokens = [[0], [1], [-3, "switching-evidence.json"]]
+    shapes = [["inputs"], ["evidence"]]
+    with pytest.raises(ValueError, match="budget"):
+        b"".join(
+            codec.stream_tokens(
+                tokens,
+                ["x" * 100],
+                shapes,
+                root="switching-comparison.json",
+                aliases=lambda _: child(),
+                budget=codec.Budget(40),
+            )
+        )
+    assert closed == [True]
+    with pytest.raises(ValueError, match="deadline"):
+        b"".join(codec.stream_tokens([None], [], [], budget=codec.Budget(deadline=monotonic() - 1)))
+
+
+def test_consumer_close_closes_underlying_token_iterator():
+    closed = []
+
+    def tokens():
+        try:
+            yield [-1, 1]
+            yield None
+        finally:
+            closed.append(True)
+
+    stream = codec.stream_tokens(tokens(), [], [])
+    assert next(stream) == b"["
+    stream.close()
+    assert closed == [True]
+
+
+def test_charge_value_bounds_without_serializing_large_literals():
+    value = {"x": "🚀" * 10000}
+    with pytest.raises(ValueError, match="budget"):
+        codec.charge_value(value, codec.Budget(20))
+    assert codec.string_cost(chr(127), True) == 8
+
+
+def test_declared_logical_limit_rejects_before_literal_serialization(monkeypatch):
+    budget = codec.NodeBudget(codec.Budget(1000), 2)
+
+    def allocated(*args, **kwargs):
+        raise AssertionError("serialized past declared output bound")
+
+    monkeypatch.setattr(codec.json, "dumps", allocated)
+    with pytest.raises(ValueError, match="declared"):
+        list(codec.stream_tokens([-2], ["abcdef"], [], budget=budget))

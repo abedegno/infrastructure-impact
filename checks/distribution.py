@@ -48,6 +48,15 @@ def public_resource_fingerprints(root):
         "schemas/target-import-result-v1.json",
     ]
     names += [
+        "publication_codec.py",
+        "web/publication-v2.js",
+        "schemas/publication-v2.json",
+        "schemas/static-index-v2.json",
+        "schemas/switching-overview-v2.json",
+        "schemas/target-import-context-v2.json",
+        "schemas/target-import-result-v2.json",
+    ]
+    names += [
         "schemas/switching-" + name + "-v1.json"
         for name in ("study", "evidence", "comparison", "summary", "inputs")
     ]
@@ -61,6 +70,9 @@ def public_resource_fingerprints(root):
             for name in ("public_health.py", "switching_health.py")
         }
     )
+    resources["_standalone/publication_codec.py"] = hashlib.sha256(
+        (root / "infrastructure_impact/publication_codec.py").read_bytes()
+    ).hexdigest()
     return resources
 
 

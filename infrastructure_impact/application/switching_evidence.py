@@ -247,10 +247,65 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
     _validate_evidence_semantics(report, publication=publication, generated_at=generated_at)
 
 
-def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UNSET):
+def _validate_reviewed_link(claim, remediation, binding, claims):
+    vendor = claim["vendor"]
+    cid = claim["cve_id"]
+    row = binding["source"]["source_locator"]
+    locator = remediation["source"]["source_locator"]
+    fixed_source = binding["fixed_source"]
+    expected_url = "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
+    matching = [
+        c
+        for c in claims
+        if c["vendor"] == "arista"
+        and c["advisory_id"] == claim["advisory_id"]
+        and c["revision"] == claim["revision"]
+        and c["publisher"] == claim["publisher"]
+        and c["status"] == "fixed"
+        and c["scope"] == "cve_specific"
+        and c["cve_id"] == cid
+        and c["product"] == binding["fixed_product"]
+        and c["source"] == fixed_source
+    ]
+    if (
+        vendor != "arista"
+        or claim["advisory_id"] != "19904-security-advisory-0100"
+        or claim["source"]["source_url"] != expected_url
+        or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
+        or claim["status"] != "affected"
+        or claim["scope"] != "cve_specific"
+        or claim["product"] != "EOS release (source platform scope applies)"
+        or row != "Affected Software / EOS release (source platform scope applies)"
+        or locator != "Resolution / " + cid + " / Arista EOS-based products"
+        or fixed_source != remediation["source"]
+        or len(matching) != 1
+        or remediation["product_ids"]
+        or remediation["version_expressions"] != matching[0]["version_expressions"]
+        or not any(
+            all(
+                remediation.get(key) == fixed.get(key)
+                for key in (
+                    "publisher_id",
+                    "category",
+                    "details",
+                    "published_availability",
+                    "availability",
+                    "availability_date",
+                    "source",
+                )
+            )
+            for fixed in matching[0]["remediations"]
+        )
+    ):
+        raise ValueError("Reviewed section remediation requires exact retained EOS/CVE linkage")
+
+
+def _validate_evidence_semantics(
+    report, *, publication=_UNSET, generated_at=_UNSET, _study=None, _linkage=None
+):
     """Check evidence whose complete shape was validated by its enclosing boundary."""
     _publication(report, publication, generated_at)
-    study = definition()
+    study = definition() if _study is None else _study
     if report["definition_sha256"] != definition_sha256(study):
         raise ValueError("Evidence definition fingerprint does not match the packaged study")
     seen = set()
@@ -347,55 +402,10 @@ def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UN
                             "Same-row remediation requires identical source, row and CVE scope"
                         )
                 else:
-                    fixed_source = binding["fixed_source"]
-                    cid = claim["cve_id"]
-                    expected_url = "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
-                    matching = [
-                        c
-                        for c in report["claims"]
-                        if c["vendor"] == "arista"
-                        and c["advisory_id"] == claim["advisory_id"]
-                        and c["revision"] == claim["revision"]
-                        and c["publisher"] == claim["publisher"]
-                        and c["status"] == "fixed"
-                        and c["scope"] == "cve_specific"
-                        and c["cve_id"] == cid
-                        and c["product"] == binding["fixed_product"]
-                        and c["source"] == fixed_source
-                    ]
-                    if (
-                        vendor != "arista"
-                        or claim["advisory_id"] != "19904-security-advisory-0100"
-                        or claim["source"]["source_url"] != expected_url
-                        or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
-                        or claim["status"] != "affected"
-                        or claim["scope"] != "cve_specific"
-                        or claim["product"] != "EOS release (source platform scope applies)"
-                        or row != "Affected Software / EOS release (source platform scope applies)"
-                        or locator != "Resolution / " + cid + " / Arista EOS-based products"
-                        or fixed_source != remediation["source"]
-                        or len(matching) != 1
-                        or remediation["product_ids"]
-                        or remediation["version_expressions"] != matching[0]["version_expressions"]
-                        or not any(
-                            all(
-                                remediation.get(key) == fixed.get(key)
-                                for key in (
-                                    "publisher_id",
-                                    "category",
-                                    "details",
-                                    "published_availability",
-                                    "availability",
-                                    "availability_date",
-                                    "source",
-                                )
-                            )
-                            for fixed in matching[0]["remediations"]
-                        )
-                    ):
-                        raise ValueError(
-                            "Reviewed section remediation requires exact retained EOS/CVE linkage"
-                        )
+                    if _linkage is None:
+                        _validate_reviewed_link(claim, remediation, binding, report["claims"])
+                    else:
+                        _linkage.append((claim, remediation, binding))
             product_ids = remediation["product_ids"]
             if (
                 product_ids

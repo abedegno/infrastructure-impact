@@ -524,6 +524,9 @@ def target_import_candidate_probe(*, base_path="/"):
     from infrastructure_impact.settings import PACKAGE
 
     assert _monitor_path() == PACKAGE / "_standalone/public_health.py"
+    assert (PACKAGE / "publication_codec.py").read_bytes() == (
+        PACKAGE / "_standalone/publication_codec.py"
+    ).read_bytes()
     assert not any(Path(p).name == "checks" for p in sys.path)
     raw = {k: v.encode() for k, v in json.loads(os.environ["IMPACT_TARGET_IMPORT_PROBE"]).items()}
     urls = {
@@ -613,7 +616,7 @@ def missing_monitor_probe(root):
 
     from infrastructure_impact.settings import PACKAGE
 
-    for missing in ("public_health.py", "switching_health.py"):
+    for missing in ("public_health.py", "switching_health.py", "publication_codec.py"):
         isolated = root / ("broken-" + missing)
         package = isolated / "infrastructure_impact"
         shutil.copytree(PACKAGE, package, ignore=shutil.ignore_patterns("__pycache__"))

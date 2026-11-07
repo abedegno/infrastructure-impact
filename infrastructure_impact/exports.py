@@ -86,6 +86,10 @@ def select(
         "delays": [],
     }
 
+    if "draft_advisories_count" in data:
+        selected["comparison"]["draft_advisories_excluded"] = data["draft_advisories_count"]
+        for row in selected["comparison"]["vendors"]:
+            row["has_imported_advisories"] = row["vendor"] in data["non_draft_record_vendors"]
     if "research_dossiers" in data:
         selected["research_dossiers"] = select_research_dossiers(
             data["research_dossiers"], cohort, vendor

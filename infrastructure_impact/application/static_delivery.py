@@ -39,7 +39,7 @@ def product_label_context(records, vendor):
     }
 
 
-def write_static_delivery(destination, data):
+def write_static_delivery(destination, data, *, publication_v2=None):
     folder = destination / "data"
     folder.mkdir(exist_ok=True)
     identity = dict(
@@ -226,7 +226,8 @@ def write_static_delivery(destination, data):
             ],
         )
     if (
-        "switching_comparison" in data
+        publication_v2 is None
+        and "switching_comparison" in data
         and data["switching_comparison"].get("representation") != "summary"
     ):
         from .switching_comparison import summary
@@ -264,8 +265,12 @@ def write_static_delivery(destination, data):
             has_score_availability="score_availability" in evidence,
             kev_entries=chunks([dict(cve_id=k, entry=v) for k, v in kev["entries"].items()]),
         )
-    full = (destination / "snapshot.json").read_bytes()
-    index["full"] = dict(path="snapshot.json", sha256=sha256(full).hexdigest(), bytes=len(full))
+    if publication_v2 is None:
+        full = (destination / "snapshot.json").read_bytes()
+        index["full"] = dict(path="snapshot.json", sha256=sha256(full).hexdigest(), bytes=len(full))
+    else:
+        index["schema_version"] = 2
+        index["publication_v2"] = publication_v2
     if len(encode(index)) > MAX_INDEX_BYTES and index.get("switching", {}).get("claims"):
         study = index["switching"]
         study["claim_catalog"] = chunks(study.pop("claims"))
@@ -274,7 +279,16 @@ def write_static_delivery(destination, data):
     from ..settings import PACKAGE
 
     Draft202012Validator(
-        json.loads((PACKAGE / "schemas/static-index-v1.json").read_text()),
+        json.loads(
+            (
+                PACKAGE
+                / (
+                    "schemas/static-index-v2.json"
+                    if publication_v2
+                    else "schemas/static-index-v1.json"
+                )
+            ).read_text()
+        ),
         format_checker=FormatChecker(),
     ).validate(index)
     raw = encode(index)

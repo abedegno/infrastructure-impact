@@ -27,17 +27,33 @@ class PublicationStore:
         self._generation = None
         self._data = None
 
-    def read(self):
+    def open(self):
         generation = (self.root / "current").resolve(strict=True)
         if not generation.is_relative_to((self.root / "generations").resolve()):
             raise ValueError("Invalid publication pointer")
         with self._lock:
             if generation != self._generation:
-                candidate = json.loads((generation / "snapshot.json").read_text())
-                self._validate_candidate(generation, candidate)
+                index_path = generation / "data/index.json"
+                from .publication_codec import strict_loads
+
+                if index_path.is_file():
+                    with index_path.open("rb") as stream:
+                        index = strict_loads(stream.read(2_000_001), max_bytes=2_000_000)
+                else:
+                    index = {}
+                if type(index.get("schema_version")) is int and index["schema_version"] == 2:
+                    from .application.publication_reader import PublicationReader
+
+                    candidate = PublicationReader(generation)
+                else:
+                    candidate = json.loads((generation / "snapshot.json").read_text())
+                    self._validate_candidate(generation, candidate)
                 self._data = candidate
                 self._generation = generation
             return generation, self._data
+
+    def read(self):
+        return self.open()
 
     @staticmethod
     def _validate_candidate(generation, candidate):
@@ -129,7 +145,7 @@ class Application:
         }
         headers = [
             ("Content-Type", content_type + "; charset=utf-8"),
-            ("Content-Length", str(len(body))),
+            *([("Content-Length", str(len(body)))] if isinstance(body, bytes) else []),
             ("Cache-Control", "no-store"),
             ("X-Content-Type-Options", "nosniff"),
             ("Referrer-Policy", "no-referrer"),
@@ -141,16 +157,24 @@ class Application:
         if status == 405:
             headers.append(("Allow", "GET, HEAD"))
         start_response(f"{status} {statuses[status]}", headers)
-        return [b"" if environ.get("REQUEST_METHOD") == "HEAD" else body]
+        if environ.get("REQUEST_METHOD") == "HEAD":
+            if hasattr(body, "close"):
+                body.close()
+            return [b""]
+        return [body] if isinstance(body, bytes) else body
 
-    def route(self, environ):
+    def route(self, environ, *, _opened=None, _reader=None):
         if environ.get("REQUEST_METHOD") not in ("GET", "HEAD"):
             return 405, "application/json", b'{"error":"Read-only service"}'
         path = environ.get("PATH_INFO", "/")
         if path == "/health/live":
             return self.json({"status": "ok"})
         try:
-            generation, data = self.store.read()
+            generation, data = _opened if _opened is not None else self.store.open()
+            from .application.publication_reader import PublicationReader
+
+            if isinstance(data, PublicationReader):
+                return self._route_v2(environ, generation, data)
         except FileNotFoundError:
             return 503, "application/json", b'{"error":"Awaiting first successful publication"}'
         if path in ("/health/ready", "/api/v1/health"):
@@ -407,6 +431,23 @@ class Application:
             if path == "/api/v1/kev":
                 return self.json(selected["kev"])
             if path == "/api/state":
+                if _reader is not None:
+                    keys = (
+                        "kev",
+                        "comparison",
+                        "comparison_eligibility",
+                        "scorecards",
+                        "timeline",
+                        "casefiles",
+                        "coverage",
+                        "delays",
+                        "research_dossiers",
+                    )
+                    return (
+                        200,
+                        "application/json",
+                        _reader.stream_document({k: selected[k] for k in keys if k in selected}),
+                    )
                 return self.json(selected)
             if path in (
                 "/api/v1/scorecards",
@@ -451,6 +492,28 @@ class Application:
             if path.endswith(".csv"):
                 return 200, "text/csv", csv_export(selected).encode()
             if path == "/api/export.json":
+                if _reader is not None:
+                    keys = (
+                        "records",
+                        "research",
+                        "kev",
+                        "comparison",
+                        "comparison_eligibility",
+                        "scorecards",
+                        "timeline",
+                        "casefiles",
+                        "coverage",
+                        "delays",
+                        "research_dossiers",
+                    )
+                    return (
+                        200,
+                        "application/json",
+                        _reader.stream_document(
+                            {k: selected[k] for k in keys if k in selected},
+                            exclude={"retained_advisories"},
+                        ),
+                    )
                 return self.json(selected)
             records = selected["records"]
             if query.get("vendor"):
@@ -592,6 +655,94 @@ class Application:
             else mimetypes.guess_type(target)[0] or "application/octet-stream",
             target.read_bytes(),
         )
+
+    def _route_v2(self, environ, generation, reader):
+        path = environ.get("PATH_INFO", "/")
+        name = path.lstrip("/")
+        if name in reader.catalog["roots"] and name != "runtime-snapshot":
+            return 200, "application/json", reader.stream_root(name, serialization="ascii")
+        # Static access is independent of runtime materialization.
+        if not path.startswith("/api/") and not path.startswith("/health/"):
+            allowed = (
+                name
+                in {
+                    "publication-v2.json",
+                    "publication-v2.js",
+                    "snapshot-v2.json",
+                    "snapshot-v2.json.gz",
+                }
+                or re.fullmatch(r"data/v2/[a-f0-9]{64}\.json", name)
+                or name
+                in {
+                    "schemas/publication-v2.json",
+                    "schemas/static-index-v2.json",
+                    "schemas/switching-overview-v2.json",
+                }
+            )
+            if allowed:
+                target = generation / name
+                if not target.is_file() or not target.resolve().is_relative_to(generation):
+                    return 404, "application/json", b'{"error":"Not found"}'
+
+                def chunks():
+                    with target.open("rb") as stream:
+                        while chunk := stream.read(65536):
+                            yield chunk
+
+                return 200, mimetypes.guess_type(target)[0] or "application/octet-stream", chunks()
+            return self.route(environ, _opened=(generation, reader.metadata()))
+        query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        if path == "/api/v1/switching-comparison":
+            from .application.switching_comparison import query_options
+            from .exports import switching_csv
+
+            try:
+                overview = reader.switching_overview()
+                options, output = query_options(query, overview["observation_end"])
+            except ValueError as exc:
+                raise BadRequest("Invalid study query") from exc
+            report = reader.switching_selection(
+                options, evaluated_at=datetime.now(timezone.utc).isoformat()
+            )
+            if output == "csv":
+                return 200, "text/csv", switching_csv(report).encode()
+            return self.json(report)
+        bootstrap = reader.fetch(reader.index["bootstrap"], ordinary=True)
+        if path in ("/health/ready", "/api/v1/health"):
+            return self.route(environ, _opened=(generation, bootstrap))
+        ids = None
+        if "cves" in query or "cve" in query:
+            ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
+            if len(ids) > 200 or not all(CVE.fullmatch(c) for c in ids):
+                raise BadRequest("Invalid CVE cohort")
+        selection_paths = {
+            "/api/state",
+            "/api/export.json",
+            "/api/export.csv",
+            "/api/assessments",
+            "/api/v1/scorecards",
+            "/api/v1/comparison-eligibility",
+            "/api/v1/product-groups",
+            "/api/v1/casefiles",
+            "/api/v1/timeline",
+            "/api/v1/advisories",
+            "/api/v1/assessments",
+        }
+        if path in selection_paths:
+            data = reader.runtime_snapshot(cohort=ids if ids is not None else bootstrap["all_cves"])
+        else:
+            data = bootstrap
+            data["current_evidence"] = reader.fetch(
+                reader.index["current_evidence"]["report"], ordinary=True
+            )
+            if path == "/api/v1/retained-advisories":
+                data["retained_advisories"] = [
+                    w
+                    for p in reader.index["current_evidence"]["retained"]
+                    for w in reader.fetch(p["part"], ordinary=True)
+                    if ids is None or set(ids).intersection(w["record"]["cves"])
+                ]
+        return self.route(environ, _opened=(generation, data), _reader=reader)
 
     @staticmethod
     def json(data, status=200):

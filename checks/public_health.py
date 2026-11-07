@@ -13,9 +13,12 @@ from urllib.request import urlopen
 try:
     from checks.switching_health import (
         SCHEMAS,
+        open_publication_v2,
         validate_public_metrics,
         validate_schema,
+        validate_switching_overview,
         validate_switching_report,
+        verify_publication_v2_archive,
     )
 except ModuleNotFoundError:  # Direct standalone script, without an installed checkout.
     import runpy
@@ -26,6 +29,9 @@ except ModuleNotFoundError:  # Direct standalone script, without an installed ch
     validate_switching_report = _switching["validate_switching_report"]
     validate_schema = _switching["validate_schema"]
     validate_public_metrics = _switching["validate_public_metrics"]
+    open_publication_v2 = _switching["open_publication_v2"]
+    validate_switching_overview = _switching["validate_switching_overview"]
+    verify_publication_v2_archive = _switching["verify_publication_v2_archive"]
 
 
 def validate_dossier_limits(report: dict) -> None:
@@ -346,11 +352,17 @@ def check(origin, expected=None, *, verify_archive=False):
             raise
         index = None
     checked_parts = 0
+    v2 = (
+        index is not None
+        and type(index.get("schema_version")) is int
+        and index["schema_version"] == 2
+    )
+    v2_reader = None
     if index is None:
         raw = verified("snapshot.json", 30_000_000)
         data = json.loads(raw)
     else:
-        assert type(index["schema_version"]) is int and index["schema_version"] == 1, (
+        assert type(index["schema_version"]) is int and index["schema_version"] in (1, 2), (
             "Unsupported static index"
         )
         assert index["publication"]["id"] == manifest["generation"], "Mixed publication index"
@@ -488,6 +500,18 @@ def check(origin, expected=None, *, verify_archive=False):
             assert not set(identities) & targets, "Excluded record is current"
             current_availability, current_counts = report["availability"], report["counts"]
     switching_availability = "unavailable"
+    if v2:
+        schemas = {
+            name: json.loads(verified("schemas/" + name, 500_000))
+            for name in (
+                *SCHEMAS,
+                "publication-v2.json",
+                "static-index-v2.json",
+                "switching-overview-v2.json",
+            )
+        }
+        v2_reader = open_publication_v2(index, verified, manifest, schemas)
+        switching_availability = validate_switching_overview(v2_reader, schemas)["availability"]
     if index is not None and "switching" in index:
         switching = index["switching"]
         assert isinstance(switching, dict), "Malformed switching index"
@@ -673,6 +697,12 @@ def check(origin, expected=None, *, verify_archive=False):
         validate_public_metrics(record)
     compressed_bytes = 0
     compressed_verified = False
+    if v2 and verify_archive:
+        compressed = verified("snapshot-v2.json.gz", 8_000_000, archive=True)
+        compressed_bytes = len(compressed)
+        compressed_verified = verify_publication_v2_archive(
+            compressed, v2_reader.catalog, v2_reader.identity
+        )
     if (index is None or verify_archive) and "snapshot.json.gz" in manifest["sha256"]:
         compressed = verified("snapshot.json.gz", 8_000_000, archive=verify_archive)
         compressed_bytes = len(compressed)
@@ -693,7 +723,7 @@ def check(origin, expected=None, *, verify_archive=False):
         "publication": data["publication"]["id"],
         "generated_at": data["generated_at"],
         "advisories": data.get("counts", {}).get("advisories", len(data["records"])),
-        "delivery": "cohort_parts_v1" if index else "legacy_snapshot",
+        "delivery": "publication_v2" if v2 else "cohort_parts_v1" if index else "legacy_snapshot",
         "checked_default_bytes": checked_bytes,
         "comparison_eligibility_verification": eligibility_verification,
         "checked_parts": checked_parts,

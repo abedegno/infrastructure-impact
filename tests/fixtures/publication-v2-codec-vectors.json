@@ -119,6 +119,18 @@
       ],
       "logical": "{\"__proto__\":\"safe\",\"constructor\":true}",
       "ascii": "{\"__proto__\":\"safe\",\"constructor\":true}"
+    },
+    {
+      "name": "ascii-del",
+      "strings": [
+        "\u007f"
+      ],
+      "shapes": [],
+      "tokens": [
+        -2
+      ],
+      "logical": "\"\u007f\"",
+      "ascii": "\"\\u007f\""
     }
   ],
   "invalid": [

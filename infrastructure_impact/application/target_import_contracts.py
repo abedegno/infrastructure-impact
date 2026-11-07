@@ -41,8 +41,16 @@ def _bytes(value):
     return encoded
 
 
-def _validate(value, kind, selected=None):
-    _validate_schema(value, kind)
+def _validate(value, kind, selected=None, *, publication_format="v1"):
+    from .publication_v2 import publication_format as validate_format
+
+    validate_format(publication_format)
+    if kind == "result" and publication_format == "v2":
+        from .publication_v2 import validate
+
+        validate(value, "target-import-result-v2.json")
+    else:
+        _validate_schema(value, kind)
     if selected is None:
         selected = installed_profile(value["profile_id"])
     if (
@@ -69,7 +77,18 @@ def _validate(value, kind, selected=None):
         if value.get("candidate") is not None:
             from .import_candidate import validate_result
 
-            validate_result({**value["checks"], "candidate": value["candidate"]})
+            validate_result(
+                {
+                    **value["checks"],
+                    "candidate": value["candidate"],
+                    **(
+                        {"schema_version": 2, "publication_format": "v2"}
+                        if publication_format == "v2"
+                        else {}
+                    ),
+                },
+                publication_format=publication_format,
+            )
         for status in ("imported", "unchanged"):
             if value["counters"][status] != sum(t["status"] == status for t in value["targets"]):
                 raise ValueError("invalid_target_import_result_counters")
@@ -89,9 +108,9 @@ def preview_bytes(value: dict, *, selected=None) -> bytes:
     return encoded
 
 
-def result_bytes(value: dict, *, selected=None) -> bytes:
+def result_bytes(value: dict, *, selected=None, publication_format="v1") -> bytes:
     encoded = _bytes(value)
-    _validate(value, "result", selected)
+    _validate(value, "result", selected, publication_format=publication_format)
     return encoded
 
 

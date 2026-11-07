@@ -35,6 +35,7 @@ packages = ["infrastructure_impact"]
 [tool.hatch.build.targets.wheel.force-include]
 "checks/public_health.py" = "infrastructure_impact/_standalone/public_health.py"
 "checks/switching_health.py" = "infrastructure_impact/_standalone/switching_health.py"
+"infrastructure_impact/publication_codec.py" = "infrastructure_impact/_standalone/publication_codec.py"
 
 [tool.ruff]
 target-version = "py311"

@@ -4,12 +4,13 @@ Transport integers are never logical numbers. Streaming keeps number lexemes and
 object order; materialization is a separate, explicitly bounded operation.
 """
 
+import copy
 import json
 import math
 import re
 import time
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 
 SAFE_INTEGER = 9_007_199_254_740_991
@@ -157,6 +158,7 @@ class Budget:
     max_bytes: int = MAX_STREAM
     deadline: float | None = None
     used: int = 0
+    costs: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.max_bytes = min(safe_int(self.max_bytes), MAX_STREAM)
@@ -172,6 +174,30 @@ class Budget:
         self.used += cost
 
 
+class NodeBudget:
+    """A declared canonical bound nested in a shared requested-byte deadline."""
+
+    def __init__(self, parent, canonical_limit):
+        self.parent = parent
+        self.canonical_limit = safe_int(canonical_limit, minimum=1)
+        self.canonical_used = 0
+        self.costs = parent.costs
+
+    @property
+    def max_bytes(self):
+        return self.parent.max_bytes
+
+    @property
+    def used(self):
+        return self.parent.used
+
+    def charge(self, canonical, requested):
+        if canonical > self.canonical_limit - self.canonical_used:
+            raise ValueError("declared logical output bound")
+        self.parent.charge(canonical, requested)
+        self.canonical_used += canonical
+
+
 def string_cost(value, ascii=False):
     literal(value)
     total = 2
@@ -179,7 +205,7 @@ def string_cost(value, ascii=False):
         code = ord(char)
         if char in '"\\' or char in "\b\f\n\r\t":
             total += 2
-        elif code < 32 or (ascii and code >= 128):
+        elif code < 32 or (ascii and code >= 127):
             total += 12 if code > 0xFFFF else 6
         else:
             total += 1 if code < 128 else 2 if code < 0x800 else 3 if code < 0x10000 else 4
@@ -200,6 +226,7 @@ def stream_tokens(
     validate=True,
     observer=None,
     number_observer=None,
+    node_observer=None,
 ):
     """Validate/emit a single complete node; charge *before* encoding each literal.
 
@@ -213,6 +240,7 @@ def stream_tokens(
     budget = budget or Budget()
     tokens = iter(tokens)
     ascii = serialization == "ascii"
+    position = 0
 
     def emit(raw):
         budget.charge(len(raw), len(raw))
@@ -221,16 +249,23 @@ def stream_tokens(
         return raw
 
     def quoted(value):
-        budget.charge(string_cost(value), string_cost(value, ascii))
+        if value not in budget.costs:
+            budget.costs[value] = (string_cost(value), string_cost(value, True))
+        canonical, escaped = budget.costs[value]
+        budget.charge(canonical, escaped if ascii else canonical)
         if observer is not None:
             observer(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
         return json.dumps(value, ensure_ascii=ascii, separators=(",", ":")).encode("utf-8")
 
     def node(level, location):
+        nonlocal position
+        if node_observer is not None:
+            node_observer("start", location, position)
         if level > MAX_DEPTH:
             raise ValueError("decoder depth")
         try:
             token = next(tokens)
+            position += 1
         except StopIteration as exc:
             raise ValueError("truncated node") from exc
         if token is None or type(token) is bool:
@@ -307,13 +342,19 @@ def stream_tokens(
             )
         else:
             raise ValueError("invalid token")
+        if node_observer is not None:
+            node_observer("end", location, position)
 
-    yield from node(depth, tuple(path))
     try:
-        next(tokens)
-    except StopIteration:
-        return
-    raise ValueError("extra node or invalid range boundary")
+        yield from node(depth, tuple(path))
+        try:
+            next(tokens)
+        except StopIteration:
+            return
+        raise ValueError("extra node or invalid range boundary")
+    finally:
+        if hasattr(tokens, "close"):
+            tokens.close()
 
 
 def materialize_tokens(
@@ -430,3 +471,302 @@ def digest(chunks):
         size += len(chunk)
         hash.update(chunk)
     return {"bytes": size, "sha256": hash.hexdigest()}
+
+
+class CatalogReader:
+    """Shared stdlib bounded token reader; fetch verifies envelopes and wire bytes."""
+
+    def __init__(self, fetch, catalog, identity, limits):
+        self.fetch = fetch
+        self.catalog = catalog
+        self.identity = identity
+        self.limits = limits
+        self._strings = self._shapes = None
+        self._roots = {}
+        self._ranges = {}
+        self._validate_table_descriptors(catalog["strings"])
+        self._validate_table_descriptors(catalog["shapes"])
+
+    @staticmethod
+    def _validate_table_descriptors(descriptors):
+        first = 0
+        for item in descriptors:
+            if set(item) != {"part", "first", "count"} or safe_int(item["first"]) != first:
+                raise ValueError("table index gap/overlap/order")
+            first += safe_int(item["count"], minimum=1)
+            validate_descriptor(item["part"])
+
+    def metadata(self):
+        return dict(
+            **copy.deepcopy(self.identity),
+            schema_version=2,
+            publication_format="v2",
+            roots=list(self.catalog["roots"]),
+        )
+
+    def _tables(self):
+        if self._strings is not None:
+            return self._strings, self._shapes
+        values = []
+        for name in ("strings", "shapes"):
+            table = []
+            for item in self.catalog[name]:
+                part = self.fetch(item["part"], kind=name)
+                if len(part) != item["count"]:
+                    raise ValueError("literal table count")
+                table.extend(part)
+            values.append(table)
+        validate_tables(*values)
+        self._strings, self._shapes = values
+        self._literal_costs = [string_cost(value) for value in self._strings]
+        self._layout_costs = [
+            2 + max(0, len(keys) - 1) + sum(string_cost(key) + 1 for key in keys)
+            for keys in self._shapes
+        ]
+        return values
+
+    def root(self, name):
+        if name not in self.catalog["roots"]:
+            raise ValueError("unknown mandatory root")
+        if name not in self._roots:
+            root = self.fetch(self.catalog["roots"][name], kind="root")
+            if root["name"] != name:
+                raise ValueError("root name mismatch")
+            first = 0
+            for page in root["pages"]:
+                if safe_int(page["first_token"]) != first:
+                    raise ValueError("page gap/overlap/order")
+                first += safe_int(page["count"], minimum=1)
+                safe_int(page["decoded_upper_bound"], minimum=1)
+            safe_int(root["token_count"], minimum=1)
+            safe_int(root["logical"]["bytes"], minimum=1)
+            if first != root["token_count"]:
+                raise ValueError("root token count")
+            self._roots[name] = root
+        return self._roots[name]
+
+    def ranges(self, name):
+        if name not in self._ranges:
+            result = {}
+            previous = None
+            for part in self.root(name)["ranges"]:
+                for item in self.fetch(part, kind="ranges"):
+                    key = tuple(item["path"])
+                    bound = validate_range(item["range"])
+                    order = (bound["first_token"], -bound["end_token"])
+                    if (
+                        key in result
+                        or bound["root"] != name
+                        or bound["end_token"] > self.root(name)["token_count"]
+                        or (previous is not None and order < previous)
+                    ):
+                        raise ValueError("range identity/order")
+                    previous = order
+                    result[key] = bound
+            self._ranges[name] = result
+        return self._ranges[name]
+
+    def iter_tokens(self, name, first=0, end=None):
+        root = self.root(name)
+        end = root["token_count"] if end is None else end
+        if not 0 <= first < end <= root["token_count"]:
+            raise ValueError("token range bounds")
+        strings, shapes = self._tables()
+        for page in root["pages"]:
+            start, finish = page["first_token"], page["first_token"] + page["count"]
+            if finish <= first or start >= end:
+                continue
+            cached = getattr(self, "_token_page", None)
+            if cached is not None and cached[0] == page["part"]["sha256"]:
+                tokens, cost = cached[1], cached[2]
+            else:
+                tokens = self.fetch(page["part"], kind="tokens")
+                if len(tokens) != page["count"]:
+                    raise ValueError("token page count")
+                cost = 0
+                for token in tokens:
+                    if type(token) is int:
+                        index = -token - 2
+                        if index < 0 or index >= len(strings):
+                            raise ValueError("string reference")
+                        cost += self._literal_costs[index]
+                    elif isinstance(token, list) and len(token) == 1:
+                        index = safe_int(token[0])
+                        if index >= len(shapes):
+                            raise ValueError("shape reference")
+                        cost += self._layout_costs[index]
+                    elif isinstance(token, list) and token[0] == -1:
+                        cost += 2 + max(0, safe_int(token[1]) - 1)
+                    elif isinstance(token, list) and token[0] == -2:
+                        cost += len(LogicalNumber(token[1], token[2]).lexeme)
+                    elif isinstance(token, list) and token[0] == -3:
+                        cost += 1
+                    else:
+                        cost += 4 if token is None or token is True else 5
+                self._token_page = (page["part"]["sha256"], tokens, cost)
+            if len(tokens) != page["count"] or cost > page["decoded_upper_bound"]:
+                raise ValueError("page count/decoded upper bound")
+            for token in tokens[max(0, first - start) : min(len(tokens), end - start)]:
+                yield list(token) if isinstance(token, list) else token
+
+    def _stream(
+        self,
+        name,
+        first,
+        end,
+        expected,
+        *,
+        serialization,
+        maximum,
+        path=(),
+        budget=None,
+        number_observer=None,
+    ):
+        budget = budget or Budget(min(maximum, self.limits["stream"]))
+        strings, shapes = self._tables()
+        budget.charge(0, 0)
+        digest, size = sha256(), 0
+        declared = (
+            self.ranges(name)
+            if first == 0 and end == self.root(name)["token_count"] and not path
+            else {}
+        )
+        active, visited = [], set()
+
+        def node_event(event, location, position):
+            bound = declared.get(location)
+            if bound is None:
+                return
+            if event == "start":
+                if position != bound["first_token"]:
+                    raise ValueError("range path/start mismatch")
+                active.append([location, bound, sha256(), 0])
+                visited.add(location)
+            else:
+                current = active.pop()
+                if (
+                    current[0] != location
+                    or position != bound["end_token"]
+                    or current[3] != bound["logical_bytes"]
+                    or current[2].hexdigest() != bound["logical_sha256"]
+                ):
+                    raise ValueError("range path/end/digest mismatch")
+
+        def observe(raw):
+            nonlocal size
+            size += len(raw)
+            if size > expected["bytes"]:
+                raise ValueError("declared logical output bound")
+            digest.update(raw)
+            for current in active:
+                current[2].update(raw)
+                current[3] += len(raw)
+                if current[3] > current[1]["logical_bytes"]:
+                    raise ValueError("range declared byte bound")
+
+        budget = NodeBudget(budget, expected["bytes"])
+        yield from stream_tokens(
+            self.iter_tokens(name, first, end),
+            strings,
+            shapes,
+            serialization=serialization,
+            budget=budget,
+            root=name,
+            path=path,
+            aliases=lambda target: self.iter_tokens(target),
+            validate=False,
+            observer=observe,
+            number_observer=number_observer,
+            node_observer=node_event if declared else None,
+        )
+        if set(declared) != visited:
+            raise ValueError("unvisited range path")
+        if size != expected["bytes"] or (
+            expected["sha256"] is not None and digest.hexdigest() != expected["sha256"]
+        ):
+            raise ValueError("logical root/range digest mismatch")
+
+    def stream_root(self, name, serialization="logical"):
+        budget = Budget(self.limits["stream"])
+        root = self.root(name)
+        budget.charge(0, 0)
+        return self._stream(
+            name,
+            0,
+            root["token_count"],
+            root["logical"],
+            serialization=serialization,
+            maximum=self.limits["stream"],
+            budget=budget,
+        )
+
+    def materialize_range(self, bound, *, max_bytes=None, path=None, budget=None):
+        validate_range(bound)
+        maximum = min(max_bytes or self.limits["selected"], self.limits["selected"])
+        if bound["logical_bytes"] > maximum:
+            raise ValueError("selected byte budget")
+        if path is None:
+            matches = [p for p, r in self.ranges(bound["root"]).items() if r == bound]
+            if not matches:
+                raise ValueError("unbound range/path")
+            path = matches[0]
+        elif self.ranges(bound["root"]).get(tuple(path)) != bound:
+            raise ValueError("unbound range/path")
+        path = tuple(path)
+        raw = bytearray()
+        kinds = deque()
+        for chunk in self._stream(
+            bound["root"],
+            bound["first_token"],
+            bound["end_token"],
+            dict(bytes=bound["logical_bytes"], sha256=bound["logical_sha256"]),
+            serialization="logical",
+            maximum=maximum,
+            path=path,
+            number_observer=lambda number: kinds.append(number.kind),
+            budget=budget,
+        ):
+            raw.extend(chunk)
+
+        def number(lexeme):
+            return int(lexeme) if kinds.popleft() == "i" else float(lexeme)
+
+        return strict_loads(raw, max_bytes=maximum, parse_int=number, parse_float=number)
+
+    def field(self, root, *path):
+        return self.materialize_range(self.ranges(root)[tuple(path)], path=path)
+
+
+def charge_value(value, budget, *, ascii=True, depth=0):
+    """Precharge a logical value without constructing its encoded JSON string."""
+    if depth > MAX_DEPTH:
+        raise ValueError("value depth")
+    if isinstance(value, str):
+        if value not in budget.costs:
+            budget.costs[value] = (string_cost(value), string_cost(value, True))
+        canonical, escaped = budget.costs[value]
+        budget.charge(canonical, escaped if ascii else canonical)
+    elif value is None or type(value) is bool:
+        size = 4 if value is None or value else 5
+        budget.charge(size, size)
+    elif type(value) is int:
+        # A lower bound permits rejecting huge integers before decimal conversion.
+        lower = max(1, (value.bit_length() - 1) * 301 // 1000)
+        if lower > budget.max_bytes - budget.used:
+            raise ValueError("number byte budget")
+        size = len(str(value))
+        budget.charge(size, size)
+    elif type(value) is float:
+        if not math.isfinite(value):
+            raise ValueError("nonfinite number")
+        size = len(repr(value))
+        budget.charge(size, size)
+    elif isinstance(value, (dict, list, tuple)):
+        size = 2 + max(0, len(value) - 1)
+        budget.charge(size, size)
+        for key, item in value.items() if isinstance(value, dict) else enumerate(value):
+            if isinstance(value, dict):
+                budget.charge(string_cost(key) + 1, string_cost(key, ascii) + 1)
+            charge_value(item, budget, ascii=ascii, depth=depth + 1)
+    else:
+        raise ValueError("unsupported logical value")

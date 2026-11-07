@@ -102,11 +102,20 @@ def _environment(database, public, home, *, base_path="/"):
     return env
 
 
-def _empty(outcome="worker_failed"):
+def _empty(outcome="worker_failed", *, publication_format="v1"):
+    from .publication_v2 import publication_format as validate_format
+
+    validate_format(publication_format)
     return {
+        **({"schema_version": 2, "publication_format": "v2"} if publication_format == "v2" else {}),
         **dict.fromkeys(CHECKS),
         "candidate": {
             "outcome": outcome,
+            **(
+                {"archive_scope": "snapshot-v1", "representation": "publication-v2-physical"}
+                if publication_format == "v2"
+                else {}
+            ),
             "generation": None,
             "manifest_sha256": None,
             **dict.fromkeys(
@@ -124,12 +133,30 @@ def _empty(outcome="worker_failed"):
     }
 
 
-def validate_result(value):
+def validate_result(value, *, publication_format="v1"):
     """The worker may return only this finite, sanitized closed result."""
     from jsonschema import Draft202012Validator
 
-    schema = _read_json(PACKAGE / "schemas/target-import-result-v1.json", MAX_CONTEXT)
-    if not isinstance(value, dict) or set(value) != {*CHECKS, "candidate"}:
+    from .publication_v2 import publication_format as validate_format
+
+    validate_format(publication_format)
+    schema = _read_json(
+        PACKAGE
+        / (
+            "schemas/target-import-result-v2.json"
+            if publication_format == "v2"
+            else "schemas/target-import-result-v1.json"
+        ),
+        MAX_CONTEXT,
+    )
+    extra = {"schema_version", "publication_format"} if publication_format == "v2" else set()
+    if publication_format == "v2" and (
+        value.get("schema_version") != 2
+        or type(value.get("schema_version")) is not int
+        or value.get("publication_format") != "v2"
+    ):
+        raise ValueError("worker result format")
+    if not isinstance(value, dict) or set(value) != {*CHECKS, "candidate", *extra}:
         raise ValueError("worker result fields")
     for key in CHECKS:
         if value[key] is not None and type(value[key]) is not bool:
@@ -159,9 +186,9 @@ def validate_result(value):
     return value
 
 
-def verify(database: Path, public: Path, profile) -> dict:
+def verify(database: Path, public: Path, profile, *, publication_format="v1") -> dict:
     """Dispatch only the trusted installed module, with stage settings before imports."""
-    failure = _empty()
+    failure = _empty(publication_format=publication_format)
     try:
         database, public, home = _paths(database, public)
         if public.exists() or (home / "publications").exists() or (home / "benchmark").exists():
@@ -171,6 +198,8 @@ def verify(database: Path, public: Path, profile) -> dict:
             "schema_version": 1,
             "profile": profile.metadata(),
         }
+        if publication_format == "v2":
+            request.update(schema_version=2, publication_format="v2")
         raw = (json.dumps(request, allow_nan=False) + "\n").encode()
         if len(raw) > MAX_CONTEXT:
             raise CapacityFailure("request size")
@@ -182,7 +211,16 @@ def verify(database: Path, public: Path, profile) -> dict:
             raise ValueError("stale worker result")
         with (home / "target-import-worker.log").open("xb") as log:
             completed = subprocess.run(
-                [sys.executable, "-I", "-m", __name__, "--worker", str(database), str(public)],
+                [
+                    sys.executable,
+                    "-I",
+                    "-m",
+                    __name__,
+                    "--worker",
+                    str(database),
+                    str(public),
+                    *(["v2"] if publication_format == "v2" else []),
+                ],
                 cwd=home,
                 env=_environment(database, public, home, base_path=_base_path(home)),
                 stdout=log,
@@ -192,7 +230,9 @@ def verify(database: Path, public: Path, profile) -> dict:
             )
         if completed.returncode:
             return failure
-        return validate_result(_read_json(home / RESULT, MAX_RESULT))
+        return validate_result(
+            _read_json(home / RESULT, MAX_RESULT), publication_format=publication_format
+        )
     except Exception:
         return failure
 
@@ -213,20 +253,34 @@ def _monitor_path():
         for name in ("public_health.py", "switching_health.py")
     ):
         raise MonitorUnavailable("monitor pair missing")
+    canonical = PACKAGE / "publication_codec.py"
+    shipped = folder / "publication_codec.py" if folder.name == "_standalone" else canonical
+    if (
+        not shipped.is_file()
+        or shipped.is_symlink()
+        or shipped.read_bytes() != canonical.read_bytes()
+    ):
+        raise MonitorUnavailable("canonical codec missing or changed")
     return folder / "public_health.py"
 
 
-def _preserved(database, home, selected):
+def _preserved(database, home, selected, *, publication_format="v1"):
     from ..plugins.registry import default_registry
     from .evidence_identity import record_key
     from .target_import import binding_fingerprint, source_config_fingerprint
     from .target_import_stage import _pipeline_values, _quoted, _retained_rows
 
     context = _read_json(home / "target-import-context.json", MAX_CONTEXT)
+    if publication_format == "v2":
+        from .publication_v2 import validate
+
+        validate(context, "target-import-context-v2.json")
+    elif "publication_format" in context:
+        raise ValueError("context format")
     binding = context["binding"]
     if (
         context["format"] != "impact-target-import-context"
-        or context["schema_version"] != 1
+        or context["schema_version"] != (2 if publication_format == "v2" else 1)
         or _base_path(home) != os.environ.get("IMPACT_BASE_PATH", "/")
         or binding != context["observed_binding"]
         or binding["fingerprint"] != binding_fingerprint(binding)
@@ -601,8 +655,8 @@ def _monitors(public, home, facts, *, base_path="/"):
         thread.join()
 
 
-def _worker(database, public):
-    result = _empty("validation_failed")
+def _worker(database, public, *, publication_format="v1"):
+    result = _empty("validation_failed", publication_format=publication_format)
     database, public, home = _paths(database, public)
     os.environ.clear()
     os.environ.update(_environment(database, public, home, base_path=_base_path(home)))
@@ -611,13 +665,26 @@ def _worker(database, public):
 
         request = _read_json(home / REQUEST, MAX_CONTEXT)
         if (
-            set(request) != {"format", "schema_version", "profile"}
+            set(request)
+            != {
+                "format",
+                "schema_version",
+                "profile",
+                *({"publication_format"} if publication_format == "v2" else set()),
+            }
             or request["format"] != "impact-target-import-worker"
-            or request["schema_version"] != 1
+            or type(request["schema_version"]) is not int
+            or request["schema_version"] != (2 if publication_format == "v2" else 1)
+            or (publication_format == "v2" and request.get("publication_format") != "v2")
         ):
             raise ValueError("worker request")
         selected = from_manifest(request["profile"])
-        _preserved(database, home, selected)
+        _preserved(
+            database,
+            home,
+            selected,
+            **({"publication_format": "v2"} if publication_format == "v2" else {}),
+        )
         _monitor_path()
         from ..storage.audit import audit
 
@@ -637,12 +704,23 @@ def _worker(database, public):
         query.now = lambda: evaluated
         source_audit.now = lambda: evaluated
         report()
-        build(public)
-        snapshot = _inspect_bundle(public, result["candidate"])
-        _parity(database, public, home, snapshot)
+        build(public, **({"publication_format": "v2"} if publication_format == "v2" else {}))
+        if publication_format == "v2":
+            from .publication_v2 import inspect_bundle, native_parity
+
+            reader = inspect_bundle(public, result["candidate"])
+            native_parity(database, public, home, reader)
+        else:
+            snapshot = _inspect_bundle(public, result["candidate"])
+            _parity(database, public, home, snapshot)
         result["candidate"]["parity_passed"] = True
         _monitors(public, home, result["candidate"], base_path=_base_path(home))
-        _preserved(database, home, selected)
+        _preserved(
+            database,
+            home,
+            selected,
+            **({"publication_format": "v2"} if publication_format == "v2" else {}),
+        )
         result.update(capacity_passed=True, candidate_validated=True)
         result["candidate"]["outcome"] = "passed"
     except CapacityFailure:
@@ -660,10 +738,20 @@ def _worker(database, public):
 
 
 def main():
-    if len(sys.argv) != 4 or sys.argv[1] != "--worker":
+    if (
+        len(sys.argv) not in (4, 5)
+        or sys.argv[1] != "--worker"
+        or (len(sys.argv) == 5 and sys.argv[4] != "v2")
+    ):
         raise SystemExit("internal candidate worker only")
     database, public, home = _paths(Path(sys.argv[2]), Path(sys.argv[3]))
-    result = validate_result(_worker(database, public))
+    publication_format = "v2" if len(sys.argv) == 5 else "v1"
+    result = validate_result(
+        _worker(
+            database, public, **({"publication_format": "v2"} if publication_format == "v2" else {})
+        ),
+        publication_format=publication_format,
+    )
     raw = (json.dumps(result, allow_nan=False) + "\n").encode()
     if len(raw) > MAX_RESULT:
         raise ValueError("worker result size")

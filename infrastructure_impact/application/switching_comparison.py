@@ -524,7 +524,10 @@ def _selected_sources(evidence, rows):
 
     for c in evidence["claims"]:
         if c["claim_id"] in used:
-            collect(c)
+            if isinstance(c, ReducerClaim):
+                sources.extend(c.sources)
+            else:
+                collect(c)
     sources = list({contracts.definition_sha256(s): s for s in sources}.values())
     sources.sort(key=contracts._json)
     return sources
@@ -627,3 +630,154 @@ def query_options(query, observation_end):
     if output not in ("json", "csv"):
         raise ValueError("Invalid study format")
     return dict(vendor=vendor, scope_level=scope, window=window, cve_ids=ids), output
+
+
+class ReducerClaim:
+    """Private facts needed by the shared row reducer; never a v1 claim DTO.
+
+    Construct only after full claim shape, identity and source validation. Every
+    nested source is retained separately, including sources in unused context.
+    """
+
+    __slots__ = ("fields", "sources")
+
+    def __init__(self, fields, sources):
+        self.fields, self.sources = fields, sources
+
+    @classmethod
+    def from_validated(cls, claim):
+        sources = []
+
+        def visit(node):
+            if isinstance(node, dict):
+                if set(node) == {"source_url", "source_sha256", "retrieved_at", "source_locator"}:
+                    sources.append(node)
+                else:
+                    for value in node.values():
+                        visit(value)
+            elif isinstance(node, list):
+                for value in node:
+                    visit(value)
+
+        visit(claim)
+        fields = {
+            k: claim[k]
+            for k in (
+                "claim_id",
+                "vendor",
+                "advisory_id",
+                "cve_id",
+                "product_id",
+                "family",
+                "scope_level",
+                "status",
+                "scope",
+                "initial_published_at",
+                "conditional_affected",
+            )
+            if k in claim
+        }
+        fields["publisher"] = {"status": claim["publisher"]["status"]}
+        fields["bundle"] = (
+            None
+            if claim["bundle"] is None
+            else {k: claim["bundle"][k] for k in ("publisher_id", "published_at")}
+        )
+        for name, keys in [
+            ("remediations", ("category", "availability", "product_ids", "scope_binding")),
+            (
+                "scores",
+                (
+                    "scope",
+                    "cve_id",
+                    "version",
+                    "value",
+                    "provider",
+                    "origin",
+                    "preferred",
+                    "validation",
+                ),
+            ),
+            ("vendor_severity", ("rating", "scheme", "namespace")),
+        ]:
+            if name in claim:
+                fields[name] = [{k: row[k] for k in keys if k in row} for row in claim[name]]
+        return cls(fields, sources)
+
+    def __getitem__(self, key):
+        return self.fields[key]
+
+    def get(self, key, default=None):
+        return self.fields.get(key, default)
+
+
+def select_reducer_claims(
+    overview, claims, coverage, issues, kev, options, *, evaluated_at, max_bytes=128_000_000
+):
+    """Apply the same pure row/event reducer to validated private projections."""
+    vendor = options.get("vendor")
+    scope = options.get("scope_level", "os_family")
+    window = options.get("window", "all")
+    ids = options.get("cve_ids")
+    if set(options) - {"vendor", "scope_level", "window", "cve_ids"}:
+        raise ValueError("Unknown study selection option")
+    if vendor is not None and vendor not in VENDORS:
+        raise ValueError("Unknown study vendor")
+    if scope not in SCOPES:
+        raise ValueError("Unknown scope level")
+    if ids is not None and (
+        type(ids) is not list
+        or any(not isinstance(c, str) or not kev_reports.CVE.fullmatch(c) for c in ids)
+    ):
+        raise ValueError("CVE selection must be null or a list of canonical CVE IDs")
+    kev_reports._timestamp(evaluated_at)
+    _bounds(overview["definition"], overview["observation_end"], window)
+    requested = sorted(set(ids)) if ids is not None else None
+    vendors = [vendor] if vendor else list(VENDORS)
+    evidence = dict(claims=claims, coverage=coverage, issues=issues)
+    context = dict(
+        definition=overview["definition"],
+        observation_end=overview["observation_end"],
+        inputs=dict(evidence=evidence, kev=kev),
+    )
+    from ..publication_codec import Budget, charge_value
+
+    budget = Budget(max_bytes)
+    rows = []
+    for v in vendors:
+        row = _row(context, v, scope, window, requested, evaluated_at)
+        charge_value(row, budget)
+        rows.append(row)
+    result = {
+        k: copy.deepcopy(v)
+        for k, v in overview.items()
+        if k
+        not in (
+            "detail_ranges",
+            "rows",
+            "schema_version",
+            "representation",
+            "selection",
+            "evaluated_at",
+        )
+    }
+    result.update(
+        schema_version=1,
+        representation="summary",
+        rows=rows,
+        evaluated_at=evaluated_at,
+        sources=_selected_sources(evidence, rows),
+        selection=dict(
+            requested_vendor=vendor,
+            effective_vendors=vendors,
+            scope_level=scope,
+            requested_window=window,
+            effective_windows=[r["row_id"] for r in rows],
+            requested_cve_ids=requested,
+            effective_cve_ids=sorted({c for r in rows for c in r["cve_ids"]}),
+            definition_sha256=contracts.definition_sha256(overview["definition"]),
+        ),
+    )
+    charge_value({k: v for k, v in result.items() if k != "rows"}, budget)
+    contracts._validate(result, "switching-summary-v1.json")
+    return result

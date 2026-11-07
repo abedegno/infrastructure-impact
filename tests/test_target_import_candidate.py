@@ -691,3 +691,21 @@ def test_prefixed_monitor_refuses_extra_root_routes_and_private_paths(candidate,
     monkeypatch.setattr(module.subprocess, "run", checked_run)
     module._monitors(public, home, result["candidate"], base_path="/infrastructure-impact/")
     assert len(seen) == 2
+
+
+def test_explicit_v2_candidate_runs_complete_fresh_worker(candidate):
+    module = implementation()
+    database, public, selected = candidate
+    context_path = database.parent.parent / "home/target-import-context.json"
+    context = json.loads(context_path.read_bytes())
+    context.update(schema_version=2, publication_format="v2")
+    context_path.write_text(json.dumps(context))
+    result = module.verify(database, public, selected, publication_format="v2")
+    assert result["candidate_validated"] is True, (
+        result,
+        (database.parent.parent / "home/target-import-worker.log").read_text(),
+    )
+    assert result["publication_format"] == "v2" and result["schema_version"] == 2
+    assert result["candidate"]["archive_scope"] == "snapshot-v1"
+    assert result["candidate"]["representation"] == "publication-v2-physical"
+    assert not (public / "snapshot.json").exists()
