@@ -118,9 +118,12 @@ root names. Root exports enforce a 1,000,000,000-byte logical ceiling and a
 root can therefore succeed when loading it as one in-memory object would fail.
 Browser cohort reconstruction also budgets intermediate ordinary-part envelopes
 and rows. This conservative allowance can reject a selection whose final
-deduplicated JSON would be smaller than the limit; rejection remains explicit,
-and complete logical roots remain available through streaming export. The
-existing archive, part, index, default-read and complete-site limits remain
+deduplicated JSON would be smaller than the limit. Native study reducers also
+reserve intermediate construction space before growth, then check final output
+size separately. These conservative guards can reject below final JSON-only
+capacity; rejection remains explicit, and complete logical roots remain
+available through streaming export. The existing archive, part, index,
+default-read and complete-site limits remain
 unchanged. No local v2 result certifies the distinct hosted inventory or enables
 publication automatically.
 

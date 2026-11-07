@@ -16,6 +16,9 @@ acceptance gates. Test and replay acceptance must be reported separately.
 | Omit redundant per-claim range catalog entries and use normalized claim routes. | The duplicate metadata would add about 18 MB to default reads. Routes already carry identities, boundaries and logical lengths. | Membership and node boundaries need explicit validation. Content-addressed pages, root hashes, complete semantic validation and native full-root parity remain mandatory. |
 | Defer cross-owner/package execution to one combined integration after both owners stop editing. | Packaging mutable browser bytes would produce misleading receipts and repeated builds. | Installed-layout defects may be found later; acceptance remains blocked until the combined checks execute successfully. |
 | Use a conservative intermediate budget for ordinary browser cohort parts. | Charge shared envelopes and rows before decoding and retaining them. | A final deduplicated selection below 128 MB can still reject. The failure stays visible; complete logical roots remain available through streaming export. |
+| Correct the final retained-page identity regression locally instead of pausing for another approval. | The maintainer requested autonomous continuation, and a known availability defect cannot be treated as acceptance. Keep the correction restricted to identity projection and its regressions. | One additional bounded corrective iteration; no merge, deployment or wider feature scope. |
+
+Native reducer construction also reserves intermediate containers before growth; its allowance can reject below final JSON-only capacity. Exact final response sizing is checked separately, and retained-scale fit still requires the acceptance gate.
 
 All archive, transfer, materialization and complete-site limits remain unchanged.
 No decision permits dropping facts, declaring missing coverage complete, ranking
