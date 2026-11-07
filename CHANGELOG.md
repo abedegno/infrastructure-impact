@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12.1 research preview candidate — 2026-11-07
+
+- Fix the health monitor’s KEV scope for CVEs present only in labelled retained evidence, outside both current records and the benchmark. Derive extra context from validated retained wrappers; keep exact scope checks and reject missing or unproven CVEs. Cover indexed and full-snapshot readers.
+- Record the successful v0.12.0 Arista apply/deployment and its failed post-deployment monitor check. No repeat apply, new source acquisition, hosted configuration change or activation accompanies this candidate.
+
 ## 0.12.0 research preview candidate — 2026-11-07
 
 - Add a preview-bound, exact three-URL Arista maintenance profile and generation-bound current/retained evidence policy across native/static/browser and labelled JSON/CSV exports. Preserve immutable revisions and literal CVEs; retain the expected alternate scope conflict as a partial operational outcome. Add strict standalone monitoring, installed-plugin/resource probes and hosted protocol/effect gates, including the checksum-bound ordinary legacy bridge. Local acceptance does not authorize source-pin activation or hosted preview/apply.

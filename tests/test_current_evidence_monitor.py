@@ -13,11 +13,13 @@ from urllib.error import HTTPError
 
 import pytest
 from test_current_evidence_delivery import (  # noqa: F401
-    arista_case,
-    delivery_db,
+    arista_case as _arista_case,
 )
 from test_current_evidence_delivery import (
     delivery as _delivery,
+)
+from test_current_evidence_delivery import (
+    delivery_db as _delivery_db,
 )
 
 from checks.public_health import check
@@ -30,6 +32,8 @@ def publish_monitored(data, root):
 
 
 delivery = _delivery
+arista_case = _arista_case
+delivery_db = _delivery_db
 
 
 @contextmanager
@@ -301,4 +305,77 @@ def test_monitor_validates_root_report_types_before_index_equality(delivery, tmp
     report["schema_version"] = True
     rewrite(generation, "current-evidence.json", report)
     with serving(generation) as origin, pytest.raises(AssertionError):
+        check(origin)
+
+
+@pytest.fixture
+def retained_only_delivery(arista_case):
+    from test_arista_current_evidence import CSAF, URL, alternate_bytes, primary_bytes
+
+    from infrastructure_impact.application.query import state
+    from infrastructure_impact.collection.service import resolve_document, retain_resolution
+    from infrastructure_impact.plugins.shared import structured
+    from infrastructure_impact.storage.repository import connect, ingest
+
+    registry = arista_case["registry"]
+    primary, alternate = primary_bytes(), alternate_bytes()
+    with connect(":memory:") as db:
+        legacy = registry.finalize(structured(alternate, CSAF, "arista"), CSAF, "arista")
+        ingest(db, alternate, CSAF, lambda *_: legacy, "arista")
+        ingest(db, primary, URL, registry.normalize, "arista")
+        resolution = resolve_document(
+            db,
+            URL,
+            "arista",
+            fetcher=lambda _db, url, _vendor: primary if url == URL else alternate,
+        )
+        retain_resolution(db, "arista", URL, resolution)
+        return state(db, ["CVE-2024-6858"])
+
+
+@pytest.mark.parametrize("delivery_mode", ["parts", "full"])
+def test_monitor_keeps_kev_context_for_retained_only_cve(
+    retained_only_delivery, tmp_path, delivery_mode
+):
+    generation = publish_monitored(retained_only_delivery, tmp_path)
+    data = json.loads((generation / "snapshot.json").read_text())
+    assert data["all_cves"] == ["CVE-2024-6858"]
+    assert set(data["benchmark_cohort"]) == {"CVE-2024-6858"}
+    assert data["kev"]["selection"]["requested_cve_ids"] == ["CVE-2023-5501", "CVE-2024-6858"]
+    if delivery_mode == "full":
+        (generation / "data/index.json").unlink()
+        manifest = json.loads((generation / "manifest.json").read_text())
+        del manifest["sha256"]["data/index.json"]
+        (generation / "manifest.json").write_text(json.dumps(manifest))
+    with serving(generation) as origin:
+        health = check(origin)
+    assert health["status"] == "fresh"
+    assert health["current_evidence_counts"] == {"current": 1, "excluded": 1, "retained_total": 2}
+
+
+@pytest.mark.parametrize("fault", ["missing_retained", "extra_unproven"])
+def test_monitor_rejects_kev_scope_not_bound_to_retained_records(
+    retained_only_delivery, tmp_path, fault
+):
+    from infrastructure_impact.application.kev import select_report
+
+    generation = publish_monitored(retained_only_delivery, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    bootstrap = json.loads((generation / index["bootstrap"]["path"]).read_text())
+    scope = (
+        ["CVE-2024-6858"]
+        if fault == "missing_retained"
+        else ["CVE-2023-5501", "CVE-2024-6858", "CVE-2099-99999"]
+    )
+    report = select_report(bootstrap["data"]["kev"], scope, evaluated_at=bootstrap["generated_at"])
+    bootstrap["data"]["kev"] = report
+    if fault == "extra_unproven":
+        # An unbound metadata claim must not authorize an extra KEV CVE.
+        bootstrap["data"]["retained_cves"].append("CVE-2099-99999")
+    rewrite(generation, "kev.json", report)
+    rewrite_part(generation, index, index["bootstrap"], bootstrap)
+    with (
+        serving(generation) as origin,
+        pytest.raises(AssertionError, match="KEV selection differs from publication scope"),
+    ):
         check(origin)
