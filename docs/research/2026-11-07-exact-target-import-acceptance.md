@@ -1,8 +1,8 @@
 # Exact target import acceptance — 7 November 2026
 
-Status: Task 7 software/distribution verification completed; offline laboratory
-candidate evaluation remains in progress. Task review and final whole-branch
-review remain pending. No release, source-pin activation, hosted preview/apply,
+Status: Task 7 software/distribution verification completed; the offline
+laboratory candidate was rejected during static delivery construction. Task
+review and final whole-branch review remain pending. No release, source-pin activation, hosted preview/apply,
 dispatch, recovery access or publication is included. Independent human source
 review remains incomplete.
 
@@ -109,10 +109,41 @@ acquisition. Workflow scheduling/permissions and deployment controls are unchang
 
 ## Offline candidate result and remaining gates
 
-The fixed-deadline complete-candidate evaluation is still running. No accepted
-stage database/public path, capacity pass, real-data Node parity or hosted health
-is claimed before its strict result. Its completed phase timings and final
-measurements or rejection will replace this pending paragraph before commit.
+The **offline retained-evidence candidate failed** with overall
+`outcome=failed`, `failure_code=candidate_validation`, candidate
+`outcome=validation_failed`, `audit_passed=true`, `candidate_validated=false`
+and `capacity_passed=null`. The existing writer rejected the switching summary
+part: `Static evidence part exceeds 8 MB; split the oversized row before
+publication`. This is the unchanged 8,000,000-byte encoded static-part boundary.
+The rejected temporary publication was removed by the existing builder. No
+complete candidate exists, so an exact offending-part size, full public/archive
+sizes, generation/hash, monitor traffic and native/static/Node export parity are
+unavailable. None is represented as passing or extrapolated to hosted capacity.
+
+Measured phases were first query 195.732064 seconds, second query 144.721603,
+projection 459.769730 and writing 149.834937 before rejection. The fixed
+2,400-second worker deadline was neither reached nor expanded. This run exposes
+a real delivery blocker for the available laboratory input; publication
+restructuring would need a separate reviewed design. It does not establish the
+complete hosted union's size.
+
+The 32,176,699 distinct retained input bytes fit the acquisition-input bound;
+HTTP attempts and received bytes are both zero. The bounded preview is 117,778
+bytes and final failed receipt 91,001 bytes. The isolated database is 250,281,984
+bytes; that is a database-file measurement, not an expanded archive or encrypted
+recovery measurement. All 416 original evidence rows and 223 original revision
+rows remain byte-for-byte equivalent by the ordered full-row proof; 174 new
+normalization revisions give 397 total. All 174 capture dates remain unchanged.
+Source observations remain 416, collection runs 237 and evidence 416: no new
+retrieval success was invented. The only new pipeline row records actual scoped
+ingestion and is marked failed after candidate rejection. Existing selection,
+exclusion evidence and all other old table rows are preserved. The source copy
+hash is unchanged. Both accepted `staged_database` and `public_directory` are
+null; there is no public candidate directory, backup, promotion or publication.
+
+Real-data export and Node parity remain gated by this failed build; the passing
+synthetic and installed-wheel checks above are separate software evidence.
+Neither a larger limit nor evidence deletion was used to bypass the rejection.
 
 Source merge/release, exact-commit CI, runtime pin activation, authenticated
 complete-hosted-inventory preview, one explicitly authorized exact-profile apply,
