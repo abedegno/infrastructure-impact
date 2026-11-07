@@ -30,6 +30,10 @@ class PluginRegistry:
             from .fingerprints import sources
 
             sources(plugin)  # Fail early if an opted-in dependency cannot be tracked.
+        if plugin.current_evidence_policy is not None:
+            from ..application.current_evidence import policy_metadata
+
+            policy_metadata(plugin)
         self._plugins[plugin.id] = plugin
 
     def get(self, vendor: str) -> VendorPlugin:
@@ -60,6 +64,12 @@ class PluginRegistry:
         if not isinstance(result, dict) or result.get("schema_version") != 1:
             raise ValueError("Research evidence requires schema_version 1")
         return json.loads(json.dumps(result, allow_nan=False))
+
+    def current_evidence_decisions(self, vendor, records, selection_context):
+        """Validate and isolate the optional current-evidence policy boundary."""
+        from ..application.current_evidence import policy_decisions
+
+        return policy_decisions(self.get(vendor), records, selection_context)
 
     def normalize_component_inventory(self, raw, url, vendor):
         """Validate optional component hooks before storage or research use."""

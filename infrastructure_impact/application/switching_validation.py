@@ -32,8 +32,10 @@ def definition():
     return result
 
 
-def report(records: list[dict], scopes: list[dict]) -> dict:
-    result = extraction_validation.validation_report(records, review=definition(), scopes=scopes)
+def report(records: list[dict], scopes: list[dict], *, retained_advisories=()) -> dict:
+    result = extraction_validation.validation_report(
+        records, review=definition(), scopes=scopes, retained_advisories=retained_advisories
+    )
     result["study"] = "campus-branch-switching"
     result["vendor_results"] = []
     for vendor in VENDORS:

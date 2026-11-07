@@ -134,7 +134,18 @@ def main(argv=None):
         if mode == "scan":
             command.add_argument("--record-limit", type=int, default=5000)
             command.add_argument("--byte-limit", type=int, default=250000000)
+    maintenance = sub.add_parser("maintenance", help="Preview-bound reviewed target refresh")
+    maintenance_modes = maintenance.add_subparsers(dest="maintenance_mode", required=True)
+    for mode in ("preview", "apply"):
+        command = maintenance_modes.add_parser(mode)
+        command.add_argument("--database", type=Path, required=True)
+        command.add_argument("--profile", required=True)
+        command.add_argument("--output", type=Path, required=True)
+        if mode == "apply":
+            command.add_argument("--preview", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == "maintenance":
+        return _maintenance(args, parser)
     if args.command == "cve-reconcile":
         return _reconcile(args, parser)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -169,11 +180,17 @@ def main(argv=None):
 
         with closing(connect(read_only=True)) as db:
             records = latest(db)
+            from .application.query import current_partition
+
+            if not args.packet:
+                current, _ = current_partition(db, records)
             result = (
                 switching_validation.packet(records)
                 if args.packet
                 else switching_validation.report(
-                    records, retained_scopes(db, records, switching_validation.definition())
+                    current["records"],
+                    retained_scopes(db, records, switching_validation.definition()),
+                    retained_advisories=current["retained_advisories"],
                 )
             )
         print(json.dumps(result, indent=2))
@@ -201,6 +218,10 @@ def main(argv=None):
             else:
                 with closing(connect(read_only=True)) as db:
                     records = latest(db)
+                    from .application.query import current_partition
+
+                    if not (args.packet or args.submission or args.submission_template):
+                        current, _ = current_partition(db, records)
                     packet = review_packet(records)
                     result = (
                         audit_submission(read_review_file(args.submission), packet)
@@ -210,7 +231,9 @@ def main(argv=None):
                         else packet
                         if args.packet
                         else validation_report(
-                            records, scopes=retained_scopes(db, records, review_definition())
+                            current["records"],
+                            scopes=retained_scopes(db, records, review_definition()),
+                            retained_advisories=current["retained_advisories"],
                         )
                     )
         except ValueError as error:
@@ -416,10 +439,13 @@ def main(argv=None):
         print(run(args.aruba_limit))
     elif args.command == "evaluate":
         from .application.evaluation import evaluate
-        from .storage.repository import latest
+        from .application.query import current_partition
 
         with closing(connect(read_only=True)) as db:
-            result = evaluate(latest(db))
+            current, _ = current_partition(db)
+            result = evaluate(
+                current["records"], retained_advisories=current["retained_advisories"]
+            )
         print(json.dumps(result, indent=2))
         if args.fail_on_disagreement and result["passed"] != result["total"]:
             raise SystemExit(1)
@@ -465,6 +491,64 @@ def main(argv=None):
         ):
             source.backup(target)
         print(args.destination)
+
+
+def _maintenance(args, parser):
+    import os
+
+    from .application import maintenance
+    from .collection.maintenance_profiles import profile
+
+    try:
+        selected = profile(args.profile)
+        if any(p.is_symlink() for p in (args.output, *args.output.parents)) or args.output.exists():
+            raise ValueError("unsafe_output_path")
+        protected = [args.database]
+        if args.maintenance_mode == "apply":
+            protected.append(args.preview)
+        if any(
+            args.output.resolve() == Path(str(p.resolve()) + suffix)
+            for p in protected
+            for suffix in ("", "-wal", "-shm", "-journal")
+        ):
+            raise ValueError("unsafe_output_path")
+        if args.maintenance_mode == "preview":
+            result = maintenance.preview(args.database, selected.profile_id)
+        else:
+            from .storage.locking import writer_lock
+            from .storage.repository import connect
+
+            accepted = maintenance.load_preview(args.preview, selected)
+            with writer_lock() as acquired:
+                if not acquired:
+                    result = {"outcome": "skipped_writer_lock", "profile_id": selected.profile_id}
+                else:
+                    with closing(connect(args.database)) as db:
+                        result = maintenance.apply_profile(db, selected, accepted["fingerprint"])
+        if args.maintenance_mode == "preview":
+            payload = maintenance.preview_bytes(result).decode("utf-8")
+        elif result["outcome"] == "skipped_writer_lock":
+            payload = json.dumps(result, sort_keys=True, separators=(",", ":")) + "\n"
+        else:
+            payload = maintenance.receipt_bytes(result).decode("utf-8")
+        fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(payload)
+    except (ValueError, OSError) as error:
+        codes = {
+            "unknown_maintenance_profile",
+            "unsafe_output_path",
+            "invalid_maintenance_preview",
+            "maintenance_baseline_changed",
+            "unregistered_maintenance_profile",
+            "invalid_maintenance_receipt",
+            "maintenance_receipt_limit",
+            "maintenance_checkpoint_required",
+            "maintenance_input_missing",
+        }
+        parser.error(str(error) if str(error) in codes else "maintenance_failed")
+    print(payload, end="")
+    return 0 if args.maintenance_mode == "preview" or result["outcome"] == "completed" else 1
 
 
 def _reconcile(args, parser):

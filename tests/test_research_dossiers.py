@@ -27,6 +27,9 @@ from infrastructure_impact.storage.repository import connect
 def writer_seed():
     with closing(connect(":memory:")) as db:
         data = state(db)
+    # This fixture authors records below; it is not a supplied authoritative partition.
+    data.pop("current_evidence")
+    data.pop("retained_advisories")
     targets = json.loads((PACKAGE / "resources/build-pilot.json").read_text())["targets"]
     for index, target in enumerate(targets, 1):
         record = base(
@@ -550,6 +553,7 @@ def test_publication_scopes_earlier_document_products_by_cve(
             assessment("CVE-2023-38546", "FortiProxy second branch", "affected", "Second CVE row"),
         ],
         evidence_id=3,
+        revision_id=3,
         sha256="b" * 64,
         source_observed_at="2026-10-27T00:00:00Z",
         observed_at="2026-10-27T00:00:00Z",
@@ -1152,6 +1156,8 @@ def test_old_snapshot_keeps_existing_routes_and_dossier_is_unavailable(seed, tmp
 
     # Build a standalone old-format fixture, never edit an immutable generation.
     seed.pop("research_dossiers", None)
+    for key in ("current_evidence", "retained_advisories", "retained_cves", "evidence_scopes"):
+        seed.pop(key, None)
     seed["publication"] = {"id": "a" * 32, "advisory_schema_version": 2}
     generation = tmp_path / "generations" / ("a" * 32)
     generation.mkdir(parents=True)

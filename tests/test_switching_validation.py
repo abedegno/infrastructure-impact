@@ -161,3 +161,78 @@ def test_switching_validation_cli_uses_separate_packet(monkeypatch, tmp_path, ca
     assert "switching-validation.json" in packet["instructions"]
     main(["switching-validation"])
     assert json.loads(capsys.readouterr().out)["total"] == 16
+
+
+def test_excluded_changed_bytes_keep_reviewed_scope_outcome_and_provenance(monkeypatch):
+    import copy
+
+    from infrastructure_impact.application.extraction_validation import validation_report
+
+    review, records, _ = synthetic_review()
+    changed = copy.deepcopy(records[-1])
+    changed["sha256"] = "b" * 64
+    case = review["cases"][-1]
+    case["claim_context"] = [["feature", "management"]]
+    changed["assessments"][0]["product_context"] = [["feature", "management"]]
+    scopes = [
+        {
+            "source_url": changed["source_url"],
+            "source_sha256": changed["sha256"],
+            "scheme": case["reviewed_scope"]["scheme"],
+            "scope_sha256": case["reviewed_scope"]["sha256"],
+        }
+    ]
+    retained = [
+        {"record": changed, "decision_id": "d" * 64, "record_scope": "retained_latest_excluded"}
+    ]
+    monkeypatch.setattr(validation, "definition", lambda: review)
+    historical = validation_report([changed], review, scopes)["cases"][-1]
+    assert historical["outcome"] == "reviewed_scope_match_source_changed"
+    for report in (
+        validation_report([], review, scopes, retained_advisories=retained),
+        validation.report([], scopes, retained_advisories=retained),
+    ):
+        result = report["cases"][-1]
+        assert result["outcome"] == "current_scope_excluded"
+        assert result["historical_outcome"] == "reviewed_scope_match_source_changed"
+        assert result["historical_result"] == historical
+        assert result["decision_ids"] == ["d" * 64]
+        assert report["passed"] == report["scope_matches"] == 0
+    # Same source proof without the reviewed claim context cannot support this case.
+    changed["assessments"][0]["product_context"] = []
+    result = validation.report([], scopes, retained_advisories=retained)["cases"][-1]
+    assert result["outcome"] == "source_missing"
+    assert "decision_ids" not in result
+
+
+def test_excluded_pinned_source_requires_actual_nondraft_claim_support(monkeypatch):
+    import copy
+
+    review, records, _ = synthetic_review()
+    monkeypatch.setattr(validation, "definition", lambda: review)
+    for mismatch in ("cve", "product", "context", "draft"):
+        record = copy.deepcopy(records[0])
+        case = review["cases"][0]
+        case["claim_context"] = [["role", "reviewed"]]
+        record["assessments"][0]["product_context"] = [["role", "reviewed"]]
+        if mismatch == "cve":
+            record["assessments"][0]["cve_id"] = "CVE-2025-99999"
+        elif mismatch == "product":
+            record["assessments"][0]["product"] = "Unrelated product"
+        elif mismatch == "context":
+            record["assessments"][0]["product_context"] = []
+        else:
+            record["document_status"] = "draft"
+        report = validation.report(
+            [],
+            [],
+            retained_advisories=[
+                {
+                    "record": record,
+                    "decision_id": "d" * 64,
+                    "record_scope": "retained_latest_excluded",
+                }
+            ],
+        )
+        assert report["cases"][0]["outcome"] == "source_missing", mismatch
+        assert "decision_ids" not in report["cases"][0], mismatch

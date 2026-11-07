@@ -107,8 +107,39 @@ def write_static_delivery(destination, data):
         "changes",
         "switching_evidence",
         "switching_comparison",
+        "retained_advisories",
+        "current_evidence",
     }
     common = {k: v for k, v in data.items() if k not in omitted}
+    if "current_evidence" in data:
+        common["current_evidence_version"] = 1
+    common["retained_index"] = [
+        dict(
+            decision_id=w["decision_id"],
+            vendor=w["record"]["vendor"],
+            cves=w["record"]["cves"],
+            assessments=[
+                dict(
+                    cve_id=a["cve_id"],
+                    product=a["product"],
+                    status=a["status"],
+                    search_text=" ".join(
+                        (
+                            a["product"],
+                            json.dumps(
+                                a.get("versions", []), separators=(",", ":"), ensure_ascii=False
+                            ),
+                            " ".join(x[1] for x in a.get("product_context", []))
+                            if a.get("product_context") is not None
+                            else "undefined",
+                        )
+                    ),
+                )
+                for a in w["record"]["assessments"]
+            ],
+        )
+        for w in data.get("retained_advisories", [])
+    ]
     common["records"], common["coverage"], common["changes"] = [], [], []
     common["timeline"] = {**data["timeline"], "events": []}
     common["scorecards"] = {
@@ -150,6 +181,29 @@ def write_static_delivery(destination, data):
         cohorts={cid: chunks(rows) for cid, rows in by_cve.items()},
         changes=chunks(data["changes"]),
     )
+    if "current_evidence" in data:
+        retained_parts = chunks(data.get("retained_advisories", []))
+        index["current_evidence"] = dict(
+            schema_version=1,
+            report=write_part(data["current_evidence"]),
+            retained=[
+                dict(
+                    decision_ids=[
+                        w["decision_id"]
+                        for w in json.loads((destination / part["path"]).read_text())["data"]
+                    ],
+                    cve_ids=sorted(
+                        {
+                            cid
+                            for w in json.loads((destination / part["path"]).read_text())["data"]
+                            for cid in w["record"]["cves"]
+                        }
+                    ),
+                    part=part,
+                )
+                for part in retained_parts
+            ],
+        )
     if (
         "switching_comparison" in data
         and data["switching_comparison"].get("representation") != "summary"

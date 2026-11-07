@@ -133,3 +133,29 @@ source and membership counts, report fingerprint and health receipt. Verify read
 controls and exports against that generation. A manual run proves that run only;
 it does not establish scheduled cadence. Synthetic browser acceptance is not live
 activation or evidence of current catalogue contents.
+
+## Targeted refresh and current-evidence activation gates
+
+Run the full Python 3.11/3.13, exact CI Ruff commands, Node suites and Prettier;
+verify both frozen dependency exports, generated browser contracts, allowlisted
+source/privacy export, wheel licenses/resource hashes and the installed external
+plugin. Build/run the container and validate Compose from that clean source
+export. See the [dated acceptance](research/2026-11-06-targeted-refresh-acceptance.md)
+for actual inputs, outcomes and remaining limits.
+
+Source merge, source release, runtime source-pin activation, hosted read-only
+preview and one exact-profile application are separate gates. Keep the approved
+runtime pin until separately authorized. After activation, obtain a preview from
+the hosted checkpoint and recheck its fingerprint before any approved apply;
+scheduled collection can invalidate it. A local stage fingerprint is never a
+hosted fingerprint. Exact-profile refusal must not be replaced with generic replay
+or ordinary collection. Inspect partial outcomes, old-row preservation, current
+versus labelled retained exports, recovery readback and public health for the
+actual generation.
+
+Returning to pre-policy code after activation can re-expose the old retained CSAF
+as current even when the workflow wire protocol is compatible. Review downgrade
+semantics and recovery/public output together before changing the source pin.
+There is no automatic semantic rollback. This work changes no version, release,
+schedule, source defaults, capacity, permissions or delivery limits, and does not
+complete independent human review or fair vendor-rate prerequisites.

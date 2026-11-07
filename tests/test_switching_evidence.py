@@ -1038,3 +1038,34 @@ def test_patch_upgrade_event_retains_exact_product_binding_and_no_invented_date(
             ]
             == expected
         )
+
+
+def test_current_boundary_preserves_scores_from_unexcluded_alternate_representation():
+    from infrastructure_impact.application.publication import public_projection
+    from infrastructure_impact.application.query import state
+
+    alternate, core = tree(), tree()
+    alternate["vulnerabilities"][0]["scores"] = [
+        {
+            "products": ["p"],
+            "cvss_v3": {
+                "version": "3.1",
+                "baseScore": 9.8,
+                "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            },
+        }
+    ]
+    alternate_url = "https://support.hpe.com/security/alternate.json"
+    with connect(":memory:") as db:
+        ingest(db, json.dumps(alternate).encode(), alternate_url, standards.csaf, "aruba")
+        ingest(db, json.dumps(core).encode(), URL, standards.csaf, "aruba")
+        assert [r["source_url"] for r in latest(db)] == [URL]
+        data = state(db)
+    assert data["current_evidence"]["counts"]["excluded"] == 0
+    assert alternate_url in {s["source_url"] for s in data["research"]["score_input"]["advisories"]}
+    public = public_projection(data)
+    assert any(m["source"]["source_url"] == alternate_url for m in public["records"][0]["metrics"])
+    assert any(
+        s["source_url"] == alternate_url and s["state"] == "available"
+        for s in public["switching_evidence"]["score_availability"]
+    )

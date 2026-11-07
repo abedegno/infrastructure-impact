@@ -26,41 +26,48 @@ def definition():
     return value
 
 
-def validation_report(records, review=None, scopes=()):
+def _case_support(records, case, scopes):
+    """Use the same reviewed source and claim ownership rules in both scopes."""
+    current = [
+        r
+        for r in records
+        if r["vendor"] == case["vendor"] and r["source_url"] == case["source_url"]
+    ]
+    pinned = [
+        r
+        for r in current
+        if r["sha256"] == case["source_sha256"] and r.get("document_status") != "draft"
+    ]
+    scoped = [
+        r
+        for r in current
+        if r.get("document_status") != "draft"
+        and case.get("reviewed_scope")
+        and any(
+            s.get("source_url") == r["source_url"]
+            and s.get("source_sha256") == r["sha256"]
+            and s.get("scheme") == case["reviewed_scope"]["scheme"]
+            and s.get("scope_sha256") == case["reviewed_scope"]["sha256"]
+            for s in scopes
+        )
+    ]
+    claims = [
+        (r, a)
+        for r in pinned or scoped
+        for a in r["assessments"]
+        if a["cve_id"] == case["cve_id"]
+        and re.search(case["product_pattern"], a["product"])
+        and all(pair in a.get("product_context", []) for pair in case.get("claim_context", []))
+    ]
+    return current, pinned, scoped, claims
+
+
+def validation_report(records, review=None, scopes=(), *, retained_advisories=()):
     review = definition() if review is None else review
     cases = []
     for case in review["cases"]:
-        current = [
-            r
-            for r in records
-            if r["vendor"] == case["vendor"] and r["source_url"] == case["source_url"]
-        ]
-        pinned = [
-            r
-            for r in current
-            if r["sha256"] == case["source_sha256"] and r.get("document_status") != "draft"
-        ]
-        scoped = [
-            r
-            for r in current
-            if r.get("document_status") != "draft"
-            and case.get("reviewed_scope")
-            and any(
-                s.get("source_url") == r["source_url"]
-                and s.get("source_sha256") == r["sha256"]
-                and s.get("scheme") == case["reviewed_scope"]["scheme"]
-                and s.get("scope_sha256") == case["reviewed_scope"]["sha256"]
-                for s in scopes
-            )
-        ]
-        claims = [
-            a
-            for r in pinned or scoped
-            for a in r["assessments"]
-            if a["cve_id"] == case["cve_id"]
-            and re.search(case["product_pattern"], a["product"])
-            and all(pair in a.get("product_context", []) for pair in case.get("claim_context", []))
-        ]
+        current, pinned, scoped, supported = _case_support(records, case, scopes)
+        claims = [a for _, a in supported]
         valid = [
             a
             for a in claims
@@ -107,6 +114,30 @@ def validation_report(records, review=None, scopes=()):
                 matching_reviewed_scope=bool(scoped),
             )
         )
+    if retained_advisories:
+        historical = validation_report(
+            records + [w["record"] for w in retained_advisories], review, scopes
+        )
+        for result, previous in zip(cases, historical["cases"]):
+            _, _, _, supported = _case_support(
+                records + [w["record"] for w in retained_advisories], result, scopes
+            )
+            excluded = [
+                w
+                for w in retained_advisories
+                if any(record is w["record"] for record, _ in supported)
+            ]
+            if excluded and result["outcome"] in (
+                "source_missing",
+                "source_revision_unreviewed",
+                "product_scope_missing",
+            ):
+                result.update(
+                    outcome="current_scope_excluded",
+                    historical_outcome=previous["outcome"],
+                    historical_result=previous,
+                    decision_ids=sorted({w["decision_id"] for w in excluded}),
+                )
     return dict(
         schema_version=1,
         reviewed_at=review["reviewed_at"],

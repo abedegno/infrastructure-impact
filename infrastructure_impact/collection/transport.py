@@ -9,7 +9,9 @@ from ..storage.repository import evidence
 from .errors import SourceHTTPError, check_access_response
 
 
-def fetch(db, url, vendor, *, max_bytes=15_000_000):
+def fetch(db, url, vendor, *, max_bytes=15_000_000, allowed_urls: frozenset[str] | None = None):
+    if allowed_urls is not None and url not in allowed_urls:
+        raise ValueError("URL outside exact retrieval allowlist")
     if not allowed(url, vendor):
         raise ValueError("URL outside configured official vendor domains")
     cached = db.execute("SELECT * FROM http_cache WHERE url=?", (url,)).fetchone()
@@ -25,6 +27,8 @@ def fetch(db, url, vendor, *, max_bytes=15_000_000):
 
     class Redirects(HTTPRedirectHandler):
         def redirect_request(self, req, fp, code, msg, hdrs, newurl):
+            if allowed_urls is not None and newurl not in allowed_urls:
+                raise ValueError("redirect outside exact retrieval allowlist")
             if not allowed(newurl, vendor):
                 raise ValueError("Cross-domain redirect outside vendor allowlist")
             return super().redirect_request(req, fp, code, msg, hdrs, newurl)

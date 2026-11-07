@@ -58,7 +58,9 @@ def sources(plugin):
         ):
             include("research:" + name, PACKAGE / name)
     callbacks = [
-        getattr(plugin, f.name) for f in fields(plugin) if callable(getattr(plugin, f.name))
+        getattr(plugin, f.name)
+        for f in fields(plugin)
+        if f.name != "current_evidence_policy" and callable(getattr(plugin, f.name))
     ]
     for callback in callbacks + list(dependencies):
         module = getattr(callback, "__module__", None)

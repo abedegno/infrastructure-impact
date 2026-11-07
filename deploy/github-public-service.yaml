@@ -5,6 +5,18 @@ name: Collect and publish
 on:
   workflow_dispatch:
     inputs:
+      maintenance_profile:
+        description: 'Optional reviewed maintenance profile; requires explicit preview or apply mode'
+        required: false
+        type: string
+      maintenance_mode:
+        description: 'Optional profile mode: preview or apply'
+        required: false
+        type: string
+      maintenance_preview_fingerprint:
+        description: 'Accepted preview fingerprint; required only for apply'
+        required: false
+        type: string
       reparse_limit:
         description: 'Optional single-run replay budget; blank uses the repository variable'
         required: false
@@ -53,13 +65,81 @@ jobs:
       - name: Install locked source
         working-directory: source
         run: uv sync --frozen --no-dev --group hosted
-      - name: Restore, collect, audit and back up privately
+      - name: Check hosted helper protocol
+        id: protocol
         working-directory: source
         env:
+          MAINTENANCE_PROFILE: ${{ inputs.maintenance_profile || '' }}
+          MAINTENANCE_MODE: ${{ inputs.maintenance_mode || '' }}
+          MAINTENANCE_PREVIEW_FINGERPRINT: ${{ inputs.maintenance_preview_fingerprint || '' }}
+          RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
+          REPARSE_LIMIT: ${{ inputs.reparse_limit || vars.IMPACT_REPARSE_LIMIT || '0' }}
+          REPARSE_VENDOR: ${{ inputs.reparse_vendor || vars.IMPACT_REPARSE_VENDOR || '' }}
+          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
+        run: |
+          set -euo pipefail
+          uv run --no-dev python - <<'PY'
+          import ast
+          import hashlib
+          import os
+          import re
+          from pathlib import Path
+
+          raw = Path("ops/hosted_job.py").read_bytes()
+          tree = ast.parse(raw)
+          name = "HOSTED_WORKFLOW_PROTOCOL"
+          stores = [n for n in ast.walk(tree) if isinstance(n, ast.Name)
+                    and n.id == name and isinstance(n.ctx, ast.Store)]
+          declarations = [n for n in tree.body if isinstance(n, ast.Assign)
+                          and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name)
+                          and n.targets[0].id == name]
+          if stores:
+              if (len(stores) != 1 or len(declarations) != 1
+                      or not isinstance(declarations[0].value, ast.Constant)
+                      or declarations[0].value.value != "effects-v1"):
+                  raise SystemExit("Unsupported hosted helper protocol")
+              protocol = "effects-v1"
+          else:
+              # Exact approved v0.11.0 helper, source commit 57b76f7db3486588538dc93b3752327730643cce.
+              # This forward-transition bridge is not approval for semantic rollback.
+              legacy_sha256 = "9999089977439f4ca147de292c000d824808852641c5da1432afb6993b8c60f1"
+              if hashlib.sha256(raw).hexdigest() != legacy_sha256:
+                  raise SystemExit("Unrecognized hosted helper without a protocol")
+              if any(os.environ[key] for key in (
+                      "MAINTENANCE_PROFILE", "MAINTENANCE_MODE", "MAINTENANCE_PREVIEW_FINGERPRINT")):
+                  raise SystemExit("Pinned legacy helper does not support maintenance controls")
+              budget = os.environ["REPARSE_LIMIT"]
+              if not re.fullmatch(r"[0-9]+", budget) or not 0 <= int(budget) <= 10000:
+                  raise SystemExit("Invalid legacy replay budget")
+              if os.environ["RECOVERY_STORAGE"] not in ("git", "github-draft"):
+                  raise SystemExit("Unsupported recovery storage setting")
+              from infrastructure_impact.recovery_policy import VAULT_PROFILES
+              if os.environ["VAULT_PROFILE"] not in VAULT_PROFILES:
+                  raise SystemExit("Unsupported vault profile")
+              vendor = os.environ["REPARSE_VENDOR"]
+              if vendor:
+                  if not int(budget):
+                      raise SystemExit("Vendor-scoped maintenance requires a positive replay budget")
+                  from infrastructure_impact.plugins.registry import default_registry
+                  default_registry().get(vendor)
+              protocol = "legacy-ordinary-v0"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("protocol=" + protocol + "\n")
+          PY
+      - name: Restore, collect, audit and back up privately
+        id: hosted
+        if: ${{ success() && (steps.protocol.outputs.protocol == 'effects-v1' || steps.protocol.outputs.protocol == 'legacy-ordinary-v0') }}
+        working-directory: source
+        env:
+          HOSTED_PROTOCOL: ${{ steps.protocol.outputs.protocol }}
           IMPACT_SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
           PRIVATE_STATE: ${{ github.workspace }}/service/state
           PUBLIC_OUTPUT: ${{ runner.temp }}/public-publication
+          PREVIEW_OUTPUT: ${{ runner.temp }}/maintenance-preview
+          MAINTENANCE_PROFILE: ${{ inputs.maintenance_profile || '' }}
+          MAINTENANCE_MODE: ${{ inputs.maintenance_mode || '' }}
+          MAINTENANCE_PREVIEW_FINGERPRINT: ${{ inputs.maintenance_preview_fingerprint || '' }}
           BASE_PATH: /${{ github.event.repository.name }}/
           GH_TOKEN: ${{ github.token }}
           RECOVERY_STORAGE: ${{ vars.IMPACT_RECOVERY_STORAGE || 'git' }}
@@ -81,9 +161,42 @@ jobs:
           if test -n "$REPARSE_VENDOR"; then
             recovery_args+=(--reparse-vendor "$REPARSE_VENDOR")
           fi
+          if test -n "$MAINTENANCE_PROFILE"; then
+            recovery_args+=(--maintenance-profile "$MAINTENANCE_PROFILE")
+          fi
+          if test -n "$MAINTENANCE_MODE"; then
+            recovery_args+=(--maintenance-mode "$MAINTENANCE_MODE")
+          fi
+          if test -n "$MAINTENANCE_PREVIEW_FINGERPRINT"; then
+            recovery_args+=(--maintenance-preview-fingerprint "$MAINTENANCE_PREVIEW_FINGERPRINT")
+          fi
+          if test "$MAINTENANCE_MODE" = preview; then
+            PUBLIC_OUTPUT="$PREVIEW_OUTPUT"
+          fi
+          case "$HOSTED_PROTOCOL" in
+            effects-v1) ;;
+            legacy-ordinary-v0)
+              [[ -z "$MAINTENANCE_PROFILE" && -z "$MAINTENANCE_MODE" && -z "$MAINTENANCE_PREVIEW_FINGERPRINT" ]]
+              printf 'legacy_started=true\n' >> "$GITHUB_OUTPUT"
+              ;;
+            *) echo 'Unvalidated hosted helper protocol'; exit 1 ;;
+          esac
           uv run --no-dev python ops/hosted_job.py --state-dir "$PRIVATE_STATE" --output "$PUBLIC_OUTPUT" --base-path "$BASE_PATH" --encrypted-state "${recovery_args[@]}"
+      - name: Check hosted helper effects
+        if: ${{ success() && steps.protocol.outputs.protocol == 'effects-v1' }}
+        env:
+          MODE: ${{ steps.hosted.outputs.mode }}
+          RECOVERY_READY: ${{ steps.hosted.outputs.recovery_ready }}
+          PUBLISH_READY: ${{ steps.hosted.outputs.publish_ready }}
+          PREVIEW_READY: ${{ steps.hosted.outputs.preview_ready }}
+        run: |
+          set -euo pipefail
+          case "$MODE/$RECOVERY_READY/$PUBLISH_READY/$PREVIEW_READY" in
+            ordinary/true/true/|apply/true/true/|preview///true) ;;
+            *) echo 'Hosted helper effects contract failed'; exit 1 ;;
+          esac
       - name: Retain only encrypted recovery copies
-        if: always()
+        if: ${{ always() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply')) || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true')) }}
         working-directory: service
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
@@ -101,15 +214,26 @@ jobs:
               git push
             fi
           fi
+      - name: Upload bounded maintenance preview
+        if: ${{ success() && steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.mode == 'preview' && steps.hosted.outputs.preview_ready == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: maintenance-preview
+          path: ${{ runner.temp }}/maintenance-preview/maintenance-preview.json
+          if-no-files-found: error
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
         with:
           path: ${{ runner.temp }}/public-publication
           include-hidden-files: true
       - name: Publish sanitized generation
+        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
       - name: Verify public availability and freshness
+        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
         env:
           PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
         working-directory: source

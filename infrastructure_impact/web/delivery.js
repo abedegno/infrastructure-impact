@@ -5,7 +5,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
   const text = await response.text();
   if (new TextEncoder().encode(text).length > 2000000)
     throw Error('Publication index exceeds budget');
-  const index = JSON.parse(text);
+  const index = window.InfrastructureJSON.parse(text);
   if (
     index.schema_version !== 1 ||
     !/^[a-f0-9]{32}$/.test(index.publication?.id || '') ||
@@ -41,7 +41,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
             (b) => b.toString(16).padStart(2, '0'),
           ).join('');
           if (digest !== descriptor.sha256) throw Error('Evidence part fingerprint mismatch');
-          const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(raw));
+          const value = window.InfrastructureJSON.parse(
+            new TextDecoder('utf-8', { fatal: true }).decode(raw),
+          );
           if (
             value.publication?.id !== index.publication.id ||
             value.generated_at !== index.generated_at
@@ -72,16 +74,98 @@ async function createStaticDelivery(fetchPart, siteBase) {
     );
     return results.flat();
   }
+  let evidencePromise;
+  async function currentEvidence() {
+    if (!evidencePromise)
+      evidencePromise = (async () => {
+        const hasCapability = Object.hasOwn(index, 'current_evidence'),
+          hasMarker = Object.hasOwn(common, 'current_evidence_version');
+        if (hasCapability !== hasMarker || (hasMarker && common.current_evidence_version !== 1))
+          throw Error('Required current-evidence capability unavailable');
+        if (!Object.hasOwn(index, 'current_evidence'))
+          return window.InfrastructureCurrentEvidence.unavailable(
+            index.publication,
+            index.generated_at,
+          );
+        window.InfrastructureSwitchingContracts.validate('static-index-v1.json', index);
+        const capability = index.current_evidence;
+        const report = validateCurrentEvidence(
+          await read(capability.report),
+          index.publication,
+          index.generated_at,
+        );
+        const ids = capability.retained.flatMap((p) => p.decision_ids),
+          expected = report.decisions.map((d) => d.decision_id);
+        if (
+          new Set(ids).size !== ids.length ||
+          ids.length !== expected.length ||
+          expected.some((id) => !ids.includes(id))
+        )
+          throw Error('Incomplete retained part membership');
+        // Validate the complete routing catalogue before any descriptor can be
+        // skipped. Literal record validation still happens only on explicit load.
+        const catalogue = common.retained_index,
+          decisions = new Map(report.decisions.map((d) => [d.decision_id, d])),
+          routing = new Map();
+        if (
+          !Array.isArray(catalogue) ||
+          catalogue.length > 1000 ||
+          catalogue.length !== expected.length
+        )
+          throw Error('Incomplete retained routing catalogue');
+        for (const row of catalogue) {
+          const decision = decisions.get(row?.decision_id);
+          if (
+            !decision ||
+            routing.has(row.decision_id) ||
+            row.vendor !== decision.vendor ||
+            !Array.isArray(row.cves) ||
+            new Set(row.cves).size !== row.cves.length ||
+            row.cves.some((id) => typeof id !== 'string' || !/^CVE-\d{4}-\d{4,}$/.test(id)) ||
+            !Array.isArray(row.assessments) ||
+            row.assessments.some((a) => !a || !row.cves.includes(a.cve_id))
+          )
+            throw Error('Invalid retained routing catalogue membership');
+          routing.set(row.decision_id, row.cves);
+        }
+        for (const descriptor of capability.retained) {
+          const cves = [
+              ...new Set(descriptor.decision_ids.flatMap((id) => routing.get(id))),
+            ].sort(),
+            declared = [...descriptor.cve_ids].sort();
+          if (cves.length !== declared.length || cves.some((id, i) => id !== declared[i]))
+            throw Error('Retained CVE routing mismatch');
+        }
+        return report;
+      })().catch((error) => {
+        evidencePromise = null;
+        throw error;
+      });
+    return evidencePromise;
+  }
   const load = async function (ids, includeChanges = false) {
+    const report = await currentEvidence();
     const cohort = [...new Set(ids ?? Object.keys(common.benchmark_cohort))].sort();
     if (cohort.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))) throw Error('Invalid CVE cohort');
     // Selecting the entire archive is an explicit large download. The default and
     // custom cohorts never fetch the compatibility snapshot.
     if (
+      cohort.length > 0 &&
       cohort.length === common.all_cves.length &&
       cohort.every((id, i) => id === common.all_cves[i])
-    )
-      return read(index.full, true);
+    ) {
+      const full = await read(index.full, true);
+      if (Object.hasOwn(index, 'current_evidence')) {
+        validateCurrentEvidence(full.current_evidence, index.publication, index.generated_at);
+        if (
+          window.InfrastructureJSON.stringify(full.current_evidence) !==
+          window.InfrastructureJSON.stringify(report)
+        )
+          throw Error('Full current-evidence report mismatch');
+        window.InfrastructureCurrentEvidence.validatePartition(full, { completeCurrent: true });
+      } else full.current_evidence = report;
+      return window.InfrastructureJSON.clone(full);
+    }
     if (cohort.length > 200) throw Error('Select up to 200 CVEs, or the whole archive');
     if (
       cohort.some(
@@ -99,8 +183,12 @@ async function createStaticDelivery(fetchPart, siteBase) {
     for (const row of rows) {
       if (row.kind === 'record') {
         if (!records.has(row.index))
-          records.set(row.index, { record: row.record, assessments: new Map() });
-        for (const [i, a] of row.assessments) records.get(row.index).assessments.set(i, a);
+          records.set(row.index, {
+            record: window.InfrastructureJSON.clone(row.record),
+            assessments: new Map(),
+          });
+        for (const [i, a] of row.assessments)
+          records.get(row.index).assessments.set(i, window.InfrastructureJSON.clone(a));
       } else if (row.kind === 'timeline') events.set(row.index, row.value);
       else if (row.kind === 'coverage') coverage.push(row.value);
       else if (row.kind === 'scorecard') {
@@ -109,7 +197,8 @@ async function createStaticDelivery(fetchPart, siteBase) {
       } else throw Error('Unsupported evidence row');
     }
     return {
-      ...common,
+      ...window.InfrastructureJSON.clone(common),
+      current_evidence: window.InfrastructureJSON.clone(report),
       records: [...records]
         .sort(([a], [b]) => a - b)
         .map(([, r]) => ({
@@ -127,6 +216,43 @@ async function createStaticDelivery(fetchPart, siteBase) {
       },
       changes: includeChanges ? await parts(index.changes) : [],
     };
+  };
+  load.currentEvidence = async () => window.InfrastructureJSON.clone(await currentEvidence());
+  load.retained = async (ids = null) => {
+    const report = await currentEvidence();
+    if (!Object.hasOwn(index, 'current_evidence')) return [];
+    const selected = index.current_evidence.retained.filter(
+      (p) => ids === null || p.cve_ids.some((id) => ids.includes(id)),
+    );
+    const rows = [];
+    for (const entry of selected) {
+      const items = await read(entry.part);
+      if (
+        !Array.isArray(items) ||
+        items.length !== entry.decision_ids.length ||
+        items.some((w, i) => w.decision_id !== entry.decision_ids[i])
+      )
+        throw Error('Retained part membership mismatch');
+      const cves = [...new Set(items.flatMap((w) => w.record.cves))].sort();
+      if (
+        window.InfrastructureJSON.stringify(cves) !==
+        window.InfrastructureJSON.stringify(entry.cve_ids)
+      )
+        throw Error('Retained part CVE membership mismatch');
+      window.InfrastructureCurrentEvidence.validatePartition(
+        {
+          publication: index.publication,
+          generated_at: index.generated_at,
+          current_evidence: report,
+          retained_advisories: items,
+        },
+        { completeRetained: false },
+      );
+      rows.push(...items);
+    }
+    return window.InfrastructureJSON.clone(
+      rows.filter((w) => ids === null || w.record.cves.some((id) => ids.includes(id))),
+    );
   };
   load.publication = index.publication;
   load.generated_at = index.generated_at;

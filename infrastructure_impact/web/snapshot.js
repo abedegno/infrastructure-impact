@@ -590,13 +590,18 @@ function selectSnapshot(source, ids, options = {}) {
 function exportSnapshot(source) {
   const cohort = source.comparison.cohort;
   return {
-    ...source,
+    ...Object.fromEntries(
+      Object.entries(source).filter(
+        ([key]) =>
+          !['retained_advisories', 'retained_index', 'current_evidence_version'].includes(key),
+      ),
+    ),
     records: source.records
       .filter((r) => r.cves.some((c) => cohort.includes(c)))
       .map((r) => ({ ...r, assessments: r.assessments.filter((a) => cohort.includes(a.cve_id)) })),
   };
 }
-function snapshotCSV(source) {
+function snapshotCSV(source, extraFields = []) {
   const fields = [
     'cve_id',
     'vendor',
@@ -622,8 +627,14 @@ function snapshotCSV(source) {
     'publication_id',
     'publication_generated_at',
   ];
+  fields.push(...extraFields);
   const quote = (v) => {
-    v = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+    v =
+      v == null
+        ? ''
+        : typeof v === 'object'
+          ? (window.InfrastructureJSON?.stringify ?? JSON.stringify)(v)
+          : String(v);
     if (/^[=+\-@]/.test(v)) v = "'" + v;
     return '"' + v.replaceAll('"', '""') + '"';
   };
@@ -676,10 +687,15 @@ if (typeof document !== 'undefined') {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
     if (url.origin === location.origin && url.pathname === '/api/v1/switching-comparison') {
       const reply = (value, status = 200, type = 'application/json') =>
-        new Response(type === 'application/json' ? JSON.stringify(value) : value, {
-          status,
-          headers: { 'Content-Type': type },
-        });
+        new Response(
+          type === 'application/json'
+            ? (window.InfrastructureJSON?.stringify ?? JSON.stringify)(value)
+            : value,
+          {
+            status,
+            headers: { 'Content-Type': type },
+          },
+        );
       let load, summary;
       try {
         load = await delivery;
@@ -721,13 +737,107 @@ if (typeof document !== 'undefined') {
     }
     if (
       url.origin === location.origin &&
+      ['/api/v1/current-evidence', '/api/v1/retained-advisories'].includes(url.pathname)
+    ) {
+      const method = (options?.method ?? input?.method ?? 'GET').toUpperCase();
+      const reply = (value, status = 200, type = 'application/json') => {
+        const body =
+          type === 'application/json' ? window.InfrastructureJSON.stringify(value) : value;
+        return new Response(method === 'HEAD' ? null : body, {
+          status,
+          headers: {
+            'Content-Type': type,
+            'Content-Length': String(new TextEncoder().encode(body).length),
+          },
+        });
+      };
+      if (!['GET', 'HEAD'].includes(method)) return reply({ error: 'Method not allowed' }, 405);
+      try {
+        const load = await delivery;
+        const source = await load([]);
+        const params = url.searchParams;
+        const raw = params.has('cves')
+          ? params.getAll('cves')
+          : params.has('cve')
+            ? params.getAll('cve')
+            : null;
+        const ids =
+          raw === null ? null : [...new Set(raw.join(',').toUpperCase().split(','))].sort();
+        const vendors = params.getAll('vendor'),
+          formats = params.getAll('format');
+        if (
+          (ids !== null &&
+            (ids.length > 200 || ids.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id)))) ||
+          vendors.length > 1 ||
+          (vendors.length && !Object.hasOwn(source.vendors, vendors[0])) ||
+          formats.length > 1 ||
+          (formats.length && !['json', 'csv'].includes(formats[0]))
+        )
+          return reply({ error: 'Invalid request' }, 400);
+        if (url.pathname === '/api/v1/current-evidence') return reply(source.current_evidence);
+        let offset = 0,
+          limit = 100;
+        if (!formats.length) {
+          if (
+            ['limit', 'offset'].some(
+              (key) =>
+                params.getAll(key).length > 1 ||
+                (params.has(key) && !/^[-+]?\d+$/.test(params.get(key).trim())),
+            )
+          )
+            return reply({ error: 'Invalid request' }, 400);
+          const offsetText = (params.get('offset') ?? '0').trim();
+          offset = typeof BigInt === 'function' ? BigInt(offsetText) : Number(offsetText);
+          if (typeof offset === 'bigint' && offset <= Number.MAX_SAFE_INTEGER && offset >= 0)
+            offset = Number(offset);
+          limit = Number(params.get('limit') ?? 100);
+          if (
+            (typeof offset === 'number' && !Number.isSafeInteger(offset)) ||
+            !Number.isSafeInteger(limit) ||
+            offset < 0 ||
+            limit < 1 ||
+            limit > 500
+          )
+            return reply({ error: 'Invalid request' }, 400);
+        }
+        source.retained_advisories = await load.retained(ids);
+        const selected = selectRetainedSnapshot(source, ids, { vendor: vendors[0] });
+        if (formats[0] === 'json') return reply(exportRetainedSnapshot(selected));
+        if (formats[0] === 'csv') return reply(retainedSnapshotCSV(selected), 200, 'text/csv');
+        const selectedIds = new Set(selected.retained_advisories.map((w) => w.decision_id));
+        const items = source.retained_advisories.filter((w) => selectedIds.has(w.decision_id));
+        return reply({
+          schema_version: 1,
+          publication: source.publication,
+          generated_at: source.generated_at,
+          record_scope: 'retained_latest_excluded',
+          current_evidence: source.current_evidence,
+          total: items.length,
+          offset,
+          limit,
+          items: items.slice(
+            offset >= items.length ? items.length : Number(offset),
+            offset >= items.length ? items.length : Number(offset) + limit,
+          ),
+        });
+      } catch {
+        return reply({ error: 'Publication temporarily unavailable' }, 503);
+      }
+    }
+    if (
+      url.origin === location.origin &&
       ['/api/state', '/api/export.json', '/api/export.csv', '/api/v1/kev'].includes(url.pathname)
     ) {
       const reply = (value, status = 200, type = 'application/json') =>
-        new Response(type === 'application/json' ? JSON.stringify(value) : value, {
-          status,
-          headers: { 'Content-Type': type },
-        });
+        new Response(
+          type === 'application/json'
+            ? (window.InfrastructureJSON?.stringify ?? JSON.stringify)(value)
+            : value,
+          {
+            status,
+            headers: { 'Content-Type': type },
+          },
+        );
       const sequence = url.pathname === '/api/state' ? ++requestSequence : null;
       let ids, selection;
       try {
@@ -762,6 +872,8 @@ if (typeof document !== 'undefined') {
         ids,
         url.searchParams.get('view') === 'changes' || url.pathname === '/api/export.json',
       );
+      if (url.searchParams.get('view') === 'retained')
+        source.retained_advisories = await load.retained(ids);
       const vendors = url.searchParams.getAll('vendor');
       if (vendors.length && (vendors.length !== 1 || !Object.hasOwn(source.vendors, vendors[0])))
         return reply({ error: 'Invalid request' }, 400);
@@ -808,10 +920,10 @@ if (typeof document !== 'undefined') {
               changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
             };
       const content = kev
-        ? JSON.stringify(report, null, 2)
+        ? window.InfrastructureJSON.stringify(report, null, 2)
         : csv
           ? snapshotCSV(complete)
-          : JSON.stringify(exportSnapshot(complete), null, 2);
+          : window.InfrastructureJSON.stringify(exportSnapshot(complete), null, 2);
       const url = URL.createObjectURL(
         new Blob([content], { type: csv ? 'text/csv' : 'application/json' }),
       );

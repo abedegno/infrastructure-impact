@@ -68,7 +68,7 @@ const original=async(input)=>{
 };
 const c={window:{fetch:original},document:{baseURI:'https://example.test/site/',addEventListener:(name,callback)=>handlers[name]=callback,createElement:()=>({click(){}}),querySelector:()=>({textContent:''})},setTimeout:fn=>fn(),location:{origin:'https://example.test'},Set,Map,URL,Response,Blob,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
 vm.createContext(c);
-for(const f of ['kev.js','research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
+for(const f of ['lossless-json.js','switching-contracts.js','current-evidence.js','kev.js','research-dossiers.js','delivery.js','snapshot.js'])vm.runInContext(fs.readFileSync(x.web+'/'+f,'utf8'),c);
 (async()=>{if(x.race){await Promise.all(x.queries.map(q=>c.window.fetch(q)));await handlers.click({target:{closest:()=>({id:'json-export'})},preventDefault(){}});process.stdout.write(JSON.stringify(blobs.length?JSON.parse(await blobs[0].text()):null));return;}const out=[];for(const q of x.queries){const r=await c.window.fetch(q);out.push({status:r.status,body:await r.text()});}process.stdout.write(JSON.stringify(out));})();
 """
 
@@ -269,6 +269,7 @@ def test_legacy_native_and_static_missing_report_use_enclosing_identity(collecte
     data = public_projection(collected)
     data.pop("kev")
     data["publication"] = {"id": "b" * 32, "advisory_schema_version": 2}
+    data["current_evidence"]["publication"] = data["publication"]
     generation = tmp_path / "generations" / "legacy"
     generation.mkdir(parents=True)
     (generation / "snapshot.json").write_text(json.dumps(data))

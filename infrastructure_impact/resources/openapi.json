@@ -1291,6 +1291,112 @@
           }
         }
       }
+    },
+    "/api/v1/current-evidence": {
+      "get": {
+        "summary": "Current-evidence decisions, public proofs and current/excluded/retained-union counts",
+        "responses": {
+          "200": {
+            "description": "Available report for this generation, or unavailable with null counts for older publications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/current-evidence-v1.json"
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "summary": "Same metadata as GET without response body",
+        "responses": {
+          "200": {
+            "description": "Report metadata"
+          }
+        }
+      }
+    },
+    "/api/v1/retained-advisories": {
+      "get": {
+        "summary": "Excluded latest advisory evidence with decision references; never current vendor claims",
+        "parameters": [
+          {
+            "name": "cves",
+            "in": "query",
+            "description": "Comma-separated CVE IDs; at most 200. Omit for all published CVEs.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Explicit excluded-latest assessment download; omission returns paginated retained wrappers.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated wrappers or explicitly selected JSON/CSV assessment export. Each assessment carries record_scope, disposition, reason, decision_id, target_key and policy identity/fingerprint.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid cohort (at most 200 CVEs), vendor, format or pagination (100 default, 500 maximum)."
+          }
+        }
+      },
+      "head": {
+        "summary": "Same metadata as GET without response body",
+        "responses": {
+          "200": {
+            "description": "Report metadata"
+          }
+        }
+      }
     }
   }
 }

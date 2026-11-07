@@ -21,7 +21,7 @@ SCHEMAS = (
     "static-index-v1.json",
 )
 KEYWORDS = set(
-    "$defs $id $ref $schema additionalProperties allOf anyOf const description else enum format if items maxItems maxLength maxProperties maximum minItems minLength minimum not pattern properties propertyNames required then title type uniqueItems".split()
+    "$defs $id $ref $schema additionalProperties allOf anyOf const description else enum format if items maxItems maxLength maxProperties maximum minItems minLength minimum not oneOf pattern properties propertyNames required then title type uniqueItems".split()
 )
 
 
@@ -107,6 +107,8 @@ def validate_schema(value, schema, schemas):
             assert canonical(v) in [canonical(x) for x in s["enum"]], "Invalid switching enum"
         if "anyOf" in s:
             assert any(valid(v, x, root) for x in s["anyOf"]), "Invalid switching alternative"
+        if "oneOf" in s:
+            assert sum(valid(v, x, root) for x in s["oneOf"]) == 1, "Invalid exclusive alternative"
         for branch in s.get("allOf", []):
             check(v, branch, root)
         if "not" in s:

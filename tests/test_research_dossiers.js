@@ -162,6 +162,7 @@ for (const test of input.matrix)
     URL: appURL,
     URLSearchParams,
     Blob,
+    TextEncoder,
     location: { origin: 'https://example.test' },
     setTimeout: (fn) => fn(),
     document: {
@@ -178,27 +179,35 @@ for (const test of input.matrix)
   };
   get('#cohort').value = 'all';
   vm.createContext(app);
-  vm.runInContext(fs.readFileSync('infrastructure_impact/web/kev.js', 'utf8'), app);
+  for (const file of [
+    'lossless-json.js',
+    'switching-contracts.js',
+    'current-evidence.js',
+    'kev.js',
+  ])
+    vm.runInContext(fs.readFileSync('infrastructure_impact/web/' + file, 'utf8'), app);
   vm.runInContext(fs.readFileSync('infrastructure_impact/web/app.js', 'utf8'), app);
   vm.runInContext("view = 'casefiles'; load()", app);
   assert.strictEqual(pending.length, 2);
   const a = plain(input.state),
     b = plain(input.state);
-  a.publication.id = 'publication-A';
-  b.publication.id = 'publication-B';
-  pending[1]({ ok: true, json: async () => b });
+  a.publication.id = 'a'.repeat(32);
+  b.publication.id = 'b'.repeat(32);
+  a.current_evidence.publication = a.publication;
+  b.current_evidence.publication = b.publication;
+  pending[1](new Response(JSON.stringify(b)));
   await new Promise(setImmediate);
   const panel = get('#research-dossiers');
-  assert(panel.innerHTML.includes('publication-B'));
+  assert(panel.innerHTML.includes(b.publication.id));
   panel.querySelector('#dossier-download').listeners.click();
-  pending[0]({ ok: true, json: async () => a });
+  pending[0](new Response(JSON.stringify(a)));
   await new Promise(setImmediate);
-  assert(panel.innerHTML.includes('publication-B'));
-  assert(!panel.innerHTML.includes('publication-A'));
+  assert(panel.innerHTML.includes(b.publication.id));
+  assert(!panel.innerHTML.includes(a.publication.id));
   panel.querySelector('#dossier-download').listeners.click();
   assert.strictEqual(blobs.length, 2);
   for (const blob of blobs)
-    assert.strictEqual(JSON.parse(await blob.text()).publication.id, 'publication-B');
+    assert.strictEqual(JSON.parse(await blob.text()).publication.id, b.publication.id);
   assert.strictEqual(revoked.length, 2);
   assert(anchors.every((a) => a.download.endsWith('.json')));
   console.log(

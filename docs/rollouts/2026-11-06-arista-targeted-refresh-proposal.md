@@ -67,3 +67,61 @@ and explicit review: distinguish retained historical evidence from supported
 current assessments, expose the reason, and define catalogue/count behavior
 consistently across native/static/JSON/CSV views. This proposal does not implement
 that policy or certify a live cleanup.
+
+## Current implementation acceptance — 6 November 2026
+
+The sections above preserve the earlier preview and its then-current limitation.
+The integrated candidate now implements the reviewed exact-profile control and
+current-evidence policy, with local acceptance described in
+[the acceptance packet](../research/2026-11-06-targeted-refresh-acceptance.md).
+Implementation and independent review are separate: task/whole-branch review is
+pending, and independent human source/extraction review remains incomplete.
+No hosted preview/application, source-pin activation, release or dispatch occurred.
+
+The only acceptance input was a checkpointed copy of the earlier explicitly
+public-only preview stage, SHA-256
+`609109890fc7e962eaf67a45644be92b61847eec45d4de622bd00cf764058e62`,
+6,586,368 bytes, with a zero-byte WAL. It already contained the corrected HTML
+primaries and selection facts. Under the new policy **before apply**, its 12 latest
+identities partitioned into 11 current and one excluded retained identity. Those
+counts remained 11/1/12 after apply. Thus apply did not create that exclusion.
+All 17 old evidence rows and 13 old revision rows kept their complete row hashes;
+actual public HTTP added two evidence rows and two normalization revisions.
+Repeating those captured bytes under the same code imported zero revisions.
+
+The exact bounded profile retrieved only the two registered HTML URLs above and
+[the registered SA-0103 CSAF](https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_103.json).
+All three returned HTTP 200. The new HTML captures were:
+
+| Source | SHA-256 | Source capture UTC | Normalization UTC |
+| --- | --- | --- | --- |
+| SA-0099 HTML | `2d43fe824b08b7e2240e0bcb51224963afb8f2b6ea81b7288c3548af0892a595` | 2026-11-06T23:15:24.237031+00:00 | 2026-11-06T23:15:25.542173+00:00 |
+| SA-0103 HTML | `252f7bf5802913c4e438d081ac5a30353c1dc3430a8e512ddae4f9f615863a04` | 2026-11-06T23:15:25.081373+00:00 | 2026-11-06T23:15:25.542821+00:00 |
+
+CSAF bytes were identical to the retained hash
+`3491af5ed3486c8e74fd04cd432a5072bf0938733cd059d9d24e7f3f2355ef74`
+(8,073 bytes). Its original capture time stayed
+2026-11-06T13:12:43.166299+00:00; the separate real HTTP recheck was recorded at
+2026-11-06T23:15:25.520572+00:00. The old normalized identity/revision and literal
+CVE-2023-5501 were preserved. SA-0099 retained the six CVE-2024-27890 and eight
+CVE-2024-27892 literal version expressions; SA-0103 HTML retained its four
+CVE-2024-6858 expressions. These observation times are not publisher event dates.
+The complete core result was `completed`, with the expected alternate scope
+conflict, which hosted operational reporting would label `partial`.
+
+The local preview fingerprint was
+`d6b769d9c9fb88d37be7fe2cb94f1acc4c1c38b4db48d2b677fa25ea3b8f7c35`.
+It binds only this disposable public stage and installed code; it is not a hosted
+fingerprint and must never be forwarded to hosted apply. Source activation, a
+fresh hosted read-only preview, and one accepted-fingerprint application each
+still need their own authorization. Scheduled collection can invalidate a
+preview. Refusal must not trigger generic replay, broader source collection or
+an automatic pin change.
+
+The workflow recognizes the modern helper's `effects-v1` protocol and only the
+checksum-bound approved old helper's ordinary protocol. Merging the workflow
+preserves the existing source pin; maintenance stays disabled there. The bridge
+is wire compatibility, not a rollback plan: pre-policy code can expose the
+retained contradictory representation as current after activation. Any downgrade
+requires its own source/recovery/public-generation review. The read-only monitor
+can fail a generation but cannot restore Pages automatically.

@@ -4,7 +4,7 @@ const fs = require('fs'),
   assert = require('assert');
 const context = { window: {}, Set, URL, Response, Blob };
 vm.createContext(context);
-for (const f of ['kev.js', 'research-dossiers.js', 'snapshot.js'])
+for (const f of ['lossless-json.js', 'kev.js', 'research-dossiers.js', 'snapshot.js'])
   vm.runInContext(fs.readFileSync('infrastructure_impact/web/' + f, 'utf8'), context);
 const plain = (v) => JSON.parse(JSON.stringify(v));
 assert.strictEqual(context.window.InfrastructureKev.validateQuery([]), false);
@@ -141,7 +141,7 @@ console.log(
       new Promise((resolve) => reads.push({ ids, history, resolve })),
   };
   vm.createContext(installed);
-  for (const f of ['kev.js', 'research-dossiers.js', 'snapshot.js'])
+  for (const f of ['lossless-json.js', 'kev.js', 'research-dossiers.js', 'snapshot.js'])
     vm.runInContext(fs.readFileSync('infrastructure_impact/web/' + f, 'utf8'), installed);
   assert(
     installed.window.InfrastructureSnapshot?.commit,

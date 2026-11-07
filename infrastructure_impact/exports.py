@@ -96,7 +96,12 @@ def select(
 def assessment_export(data):
     cohort = set(data["comparison"]["cohort"])
     return {
-        **data,
+        **{k: v for k, v in data.items() if k != "retained_advisories"},
+        "research": {
+            k: v
+            for k, v in data.get("research", {}).items()
+            if k not in ("current_evidence_input", "score_input")
+        },
         "records": [
             {**r, "assessments": [a for a in r["assessments"] if a["cve_id"] in cohort]}
             for r in data["records"]
@@ -105,13 +110,14 @@ def assessment_export(data):
     }
 
 
-def csv_export(data):
+def csv_export(data, *, _fields=None):
     stream = io.StringIO()
-    writer = csv.DictWriter(stream, fieldnames=FIELDS)
+    fields = _fields or FIELDS
+    writer = csv.DictWriter(stream, fieldnames=fields)
     writer.writeheader()
     for record in assessment_export(data)["records"]:
         for assessment in record["assessments"]:
-            row = {field: assessment.get(field, record.get(field, "")) for field in FIELDS}
+            row = {field: assessment.get(field, record.get(field, "")) for field in fields}
             report = data.get("kev") or {}
             entry = report.get("entries", {}).get(assessment["cve_id"], {})
             row.update(
@@ -138,6 +144,61 @@ def csv_export(data):
                 row[key] = value
             writer.writerow(row)
     return stream.getvalue()
+
+
+RETAINED_FIELDS = [
+    "record_scope",
+    "disposition",
+    "reason",
+    "reason_text",
+    "decision_id",
+    "target_key",
+    "policy_id",
+    "policy_version",
+    "policy_fingerprint",
+]
+
+
+def retained_assessment_export(data) -> dict:
+    """Explicit excluded-latest export; every assessment carries its decision provenance."""
+    from .application.current_evidence import unavailable_report
+    from .application.current_views import validate_partition
+
+    report = data.get("current_evidence") or unavailable_report(
+        publication=data.get("publication"), generated_at=data["generated_at"]
+    )
+    if report["availability"] == "available":
+        validate_partition(data)
+    decisions = {d["decision_id"]: d for d in report["decisions"]}
+    records = []
+    for wrapper in data.get("retained_advisories", []):
+        decision = decisions[wrapper["decision_id"]]
+        metadata = {k: decision[k] for k in RETAINED_FIELDS if k != "record_scope"}
+        metadata["record_scope"] = wrapper["record_scope"]
+        r = wrapper["record"]
+        records.append(
+            {**r, **metadata, "assessments": [{**a, **metadata} for a in r["assessments"]]}
+        )
+    return {
+        "schema_version": 1,
+        "publication": data.get("publication"),
+        "generated_at": data["generated_at"],
+        "current_evidence": report,
+        "record_scope": "retained_latest_excluded",
+        "records": records,
+    }
+
+
+def retained_csv_export(data) -> str:
+    exported = retained_assessment_export(data)
+    return csv_export(
+        {
+            **exported,
+            "kev": data.get("kev"),
+            "comparison": {"cohort": sorted({c for r in exported["records"] for c in r["cves"]})},
+        },
+        _fields=FIELDS + RETAINED_FIELDS,
+    )
 
 
 SWITCHING_FIELDS = [

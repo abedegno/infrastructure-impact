@@ -259,3 +259,24 @@ article block and following guidance by separate fingerprints. A source change f
 an old product/version still appears. Publisher date changes remain day-precision
 claims. This deliberate narrowness is documented in the
 [F5 source review](research/f5-advisories-20261027.md); it is not general F5 support.
+
+## Optional current-evidence policy
+
+`VendorPlugin.current_evidence_policy(records, context)` defaults to `None`.
+Existing external plugins continue to normalize, persist and publish all their
+latest records as current without implementing a hook. The installed-wheel probe
+exercises this path through the separately packaged example vendor and checks
+new schemas, scripts, static capability, OpenAPI and native GET/HEAD routes.
+
+A policy is trusted, pure installed code. Declare bounded `policy_id`,
+`policy_version`, `reason_text`, exact official `proof_sources`, optional
+`proof_locators`, exact `proof_captures`, and inspectable `policy_dependencies`.
+Its fingerprint is separate from the normalizer fingerprint. Use
+`registry.current_evidence_decisions`; the registry validates isolated vendor
+records, hash-validated retained source frames and selection facts before
+calling the hook, then validates exact target membership and public proofs. It
+accepts only exclusion decisions or explicit `proof_unresolved` issues. Raw bytes
+and private policy context never cross the public boundary. A hook cannot invent
+a revision, borrow another vendor's proof, transfer CVEs, or supply its own
+unvalidated policy identity. A malformed hook fails publication; an unresolved
+proof leaves the record current with a visible issue.

@@ -154,7 +154,10 @@ def test_monitor_accepts_allowlisted_scores_but_rejects_private_fields(tmp_path,
     d["research"]["score_input"] = {
         "advisories": [
             dict(
-                vendor=record["vendor"], advisory_id=record["advisory_id"], claims=scores["claims"]
+                vendor=record["vendor"],
+                advisory_id=record["advisory_id"],
+                source_url=record["source_url"],
+                claims=scores["claims"],
             )
         ]
     }

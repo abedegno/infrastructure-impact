@@ -10,18 +10,24 @@ COHORT = json.loads((PACKAGE / "resources/benchmark-cohort.json").read_text())
 def coverage(db, records, cohort=None):
     from ..storage.repository import VENDORS
 
-    ids = sorted(cohort if cohort is not None else COHORT)
+    return coverage_from_checks(
+        records,
+        [dict(r) for r in db.execute("SELECT * FROM coverage_checks")],
+        cohort=cohort if cohort is not None else COHORT,
+        vendors=VENDORS,
+    )
+
+
+def coverage_from_checks(records, checks, *, cohort, vendors):
+    """Recompute claim-derived coverage using independent retained check facts."""
+    ids = sorted(cohort)
+    facts = checks
     # Index checks are persisted separately from advisory/product assessments.
     result = []
-    for vendor in VENDORS:
+    for vendor in vendors:
         for cid in ids:
             matches = [r for r in records if r["vendor"] == vendor and cid in r["cves"]]
-            checks = [
-                dict(r)
-                for r in db.execute(
-                    "SELECT * FROM coverage_checks WHERE vendor=? AND cve_id=?", (vendor, cid)
-                )
-            ]
+            checks = [c for c in facts if c["vendor"] == vendor and c["cve_id"] == cid]
             claims = [
                 a
                 for r in matches

@@ -13,6 +13,7 @@ NAMES = (
     "switching-inputs-v1.json",
     "kev-v1.json",
     "static-index-v1.json",
+    "current-evidence-v1.json",
 )
 
 

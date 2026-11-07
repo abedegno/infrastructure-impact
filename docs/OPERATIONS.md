@@ -281,3 +281,46 @@ For source boundaries, safe manual checks and unresolved scheduler delivery, see
 a vault key or downloads private state; both use read-only contents/actions
 permissions. This change requires no collector upgrade, package-version change,
 reparse or migration.
+
+## Current-evidence health and maintenance effects
+
+`python checks/public_health.py ORIGIN --generation GENERATION` is read-only and
+uses only the standard library. For a new capability it checks the fingerprinted
+root/report/schema, bootstrap payload publication identity/time against the
+index, policy and decision identities, full retained-fragment
+membership/targets, generation/time, exclusion/current disjointness in the loaded
+cohort, and the global count union. It checks every declared retained fragment
+within the existing 20,000,000-byte default monitor budget and unchanged
+8,000,000-byte part / 2,000,000-byte index/report bounds. It does not read the
+private vault or recompute publisher claims from source captures. Full current
+record hydration remains outside the default cohort monitor. A real legacy
+no-index manifest may use the full snapshot; a missing manifest-declared index
+fails instead of silently selecting that compatibility path. True old
+generations report unavailable dispositions with null counts.
+
+An unhealthy candidate fails checks; the monitor has no Pages rollback or
+publication action. Writer validation keeps the previously accepted local
+publication intact when candidate construction fails. A monitor failure after a
+hosted deployment requires operator investigation and a separately reviewed
+recovery decision.
+
+Named hosted maintenance uses `maintenance_profile`, `maintenance_mode` and
+`maintenance_preview_fingerprint` with the exact installed profile. Empty controls
+preserve ordinary collection. Preview authenticates a disposable checkpoint and
+writes only the bounded receipt; it does not lock, collect, back up or publish.
+Apply requires the accepted fingerprint, one writer lock, validated cleanup,
+audit, candidate build and authenticated recovery backup/readback before Pages
+readiness. Current successful apply is operationally `partial` because its
+expected CSAF scope conflict remains visible; the core receipt can still be
+`completed`. Failed apply never grants Pages readiness, though verified saved
+failure evidence can grant recovery retention. A later recovery commit/push
+failure also blocks publication.
+
+The workflow checks the independently pinned helper without executing it or
+opening keys. Modern `effects-v1` success requires exactly the matching preview
+or recovery/publication effects. Only the exact approved old helper checksum has
+the `legacy-ordinary-v0` bridge, with empty new controls and validated ordinary
+arguments before keys; actual invocation authorizes legacy cleanup and successful
+invocation authorizes publication. Missing modern effects never downgrade to
+legacy. This bridge preserves the existing source pin on merge; it does not
+activate maintenance or establish that older code is safe after policy rollout.

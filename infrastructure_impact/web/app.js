@@ -1,3 +1,4 @@
+const appJSON = window.InfrastructureJSON ?? JSON;
 const $ = (s) => document.querySelector(s);
 const esc = (v) =>
   String(v ?? '').replace(
@@ -68,7 +69,9 @@ function claims() {
 function stats() {
   const c = data.counts;
   $('#summary').innerHTML = [
-    ['Advisories', c.advisories],
+    ['Current advisories', data.current_evidence?.counts.current ?? 'Unavailable'],
+    ['Retained total', data.current_evidence?.counts.retained_total ?? 'Unavailable'],
+    ['Excluded from current', data.current_evidence?.counts.excluded ?? 'Unavailable'],
     ['CVEs in cohort', data.comparison.cohort.length],
     [
       'Vendors collected',
@@ -93,6 +96,22 @@ function selectionControls(selection) {
   $('#kev-only').checked = kevOnly;
 }
 function evaluateState(loaded, only) {
+  if (
+    loaded.current_evidence &&
+    (!window.InfrastructureJSON || !window.InfrastructureCurrentEvidence)
+  )
+    throw Error('Current-evidence reader assets unavailable');
+  if (window.InfrastructureCurrentEvidence) {
+    loaded = {
+      ...loaded,
+      current_evidence:
+        loaded.current_evidence ??
+        window.InfrastructureCurrentEvidence.unavailable(loaded.publication, loaded.generated_at),
+    };
+    window.InfrastructureCurrentEvidence.validatePartition(loaded, {
+      completeRetained: !window.snapshotMode,
+    });
+  }
   const kev = window.InfrastructureKev.selectReport(
     loaded.kev ?? null,
     loaded.kev?.selection.requested_cve_ids ?? loaded.comparison.cohort,
@@ -157,7 +176,7 @@ async function load() {
   const selection = {
     view,
     selectedCves: selectedCves?.slice() ?? null,
-    comparisonSelection: JSON.parse(JSON.stringify(comparisonSelection)),
+    comparisonSelection: appJSON.parse(appJSON.stringify(comparisonSelection)),
     kevOnly,
     cohortMode,
     customCves,
@@ -171,7 +190,7 @@ async function load() {
     for (const key of ['start', 'end', 'group'])
       if (selection.comparisonSelection[key]) params.set(key, selection.comparisonSelection[key]);
     if (selection.comparisonSelection.products)
-      params.set('products', JSON.stringify(selection.comparisonSelection.products));
+      params.set('products', appJSON.stringify(selection.comparisonSelection.products));
     const suffix = '?' + params.toString();
     const response = await fetch('/api/state' + suffix);
     if (!response.ok) {
@@ -181,7 +200,9 @@ async function load() {
       if (response.status === 503 && selection.kevOnly) error.code = 'kev_unavailable';
       throw error;
     }
-    const loaded = await response.json();
+    const loaded = window.InfrastructureJSON
+      ? window.InfrastructureJSON.parse(await response.text())
+      : await response.json();
     if (sequence !== loadSequence) return;
     if (selection.selectedCves === null && selection.cohortMode === 'benchmark') {
       selectedCves = Object.keys(loaded.benchmark_cohort);
@@ -222,6 +243,7 @@ function draw() {
   }
   ({
     matrix: renderMatrix,
+    retained: renderRetained,
     compare: renderComparison,
     coverage: renderCoverage,
     review: renderReview,
@@ -295,7 +317,7 @@ function drawMatrixRows() {
       (!matrixCve || a.cve_id === matrixCve) &&
       (!matrixVendor || r.vendor === matrixVendor) &&
       (!matrixStatus || a.status === matrixStatus) &&
-      `${a.product} ${JSON.stringify(a.versions)} ${a.product_context?.map((x) => x[1]).join(' ')}`
+      `${a.product} ${appJSON.stringify(a.versions)} ${a.product_context?.map((x) => x[1]).join(' ')}`
         .toLowerCase()
         .includes(matrixQuery.toLowerCase()),
   );
@@ -309,6 +331,14 @@ function drawMatrixRows() {
       .join(
         '',
       )}</tbody></table></div>${!rows.length ? '<p class="empty">No matching assessment in the collected dataset. This does not establish that the product is unaffected.</p>' : ''}${rows.length > shown ? '<button id="more">Show 150 more statements</button>' : ''}`;
+  if (!rows.length && retainedMatches().length) {
+    $('#matrix-results').innerHTML +=
+      '<p><button id="retained-results">View matching retained exclusions</button> · excluded from current evidence; retained for historical review.</p>';
+    $('#retained-results').addEventListener('click', () => {
+      view = 'retained';
+      load();
+    });
+  }
   $('#more')?.addEventListener('click', () => {
     shown += 150;
     matrixRows();
@@ -316,6 +346,57 @@ function drawMatrixRows() {
   document
     .querySelectorAll('[data-detail]')
     .forEach((b) => b.addEventListener('click', () => detail(rows[Number(b.dataset.detail)])));
+}
+function retainedMatches() {
+  if (data.current_evidence?.availability !== 'available') return [];
+  const inventory =
+    data.retained_advisories?.map((w) => ({ ...w.record, decision_id: w.decision_id })) ??
+    data.retained_index ??
+    [];
+  return inventory.flatMap((r) =>
+    r.assessments
+      .filter(
+        (a) =>
+          selected().has(a.cve_id) &&
+          (!matrixCve || matrixCve === a.cve_id) &&
+          (!matrixVendor || matrixVendor === r.vendor) &&
+          (!matrixStatus || matrixStatus === a.status) &&
+          (
+            a.search_text ??
+            `${a.product} ${appJSON.stringify(a.versions)} ${a.product_context?.map((x) => x[1]).join(' ')}`
+          )
+            .toLowerCase()
+            .includes(matrixQuery.toLowerCase()),
+      )
+      .map((a) => ({ r, a })),
+  );
+}
+function renderRetained() {
+  if (data.current_evidence?.availability !== 'available') {
+    $('#view').innerHTML =
+      '<h2>Retained exclusions</h2><p>Current-evidence dispositions unavailable for this publication.</p>';
+    return;
+  }
+  const selectedSource = selectRetainedSnapshot(data, data.comparison.cohort, {
+    vendor: matrixVendor || undefined,
+  });
+  const report = exportRetainedSnapshot(selectedSource);
+  $('#view').innerHTML =
+    `<h2>Retained exclusions</h2><p>Latest retained records excluded from current evidence by the published decisions. These historical statements do not establish current product impact.</p><p><button id="retained-json-export">Download retained exclusions JSON</button> <button id="retained-csv-export">Download retained exclusions CSV</button></p>${report.records.map((r) => `<article><h3>${esc(r.advisory_id)}</h3><p>${esc(r.record_scope)} · ${esc(r.disposition)}</p><p>${esc(r.reason_text)}</p><p>${link(r.source_url, 'Publisher source')} · revision ${esc(r.revision_id)}</p><code>${esc(r.target_key)}</code><p>Decision ${esc(r.decision_id)} · policy ${esc(r.policy_id)} version ${esc(r.policy_version)}</p><code>${esc(r.policy_fingerprint)}</code>${r.assessments.map((a) => `<p>${esc(a.cve_id)} · ${esc(a.product)} · historical ${esc(a.status)}</p>`).join('')}</article>`).join('') || '<p>No retained exclusions match this cohort/vendor selection.</p>'}`;
+  for (const csv of [false, true])
+    $('#retained-' + (csv ? 'csv' : 'json') + '-export').addEventListener('click', () => {
+      const content = csv
+        ? retainedSnapshotCSV(selectedSource)
+        : window.InfrastructureJSON.stringify(report, null, 2);
+      const url = URL.createObjectURL(
+        new Blob([content], { type: csv ? 'text/csv' : 'application/json' }),
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'retained-exclusions.' + (csv ? 'csv' : 'json');
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
 }
 function publisherScope(a) {
   const contexts = (a.exposure || []).filter(
@@ -345,7 +426,7 @@ function detail(row) {
 }
 function drawDetail({ a, r }) {
   $('#detail-body').innerHTML =
-    `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${kevContext(a.cve_id)}${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(JSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(JSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(JSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
+    `<div class="eyebrow">${esc(name(r.vendor))} / ${esc(a.cve_id)}</div><h2>${esc(a.product)}</h2>${kevContext(a.cve_id)}${badge(a.status)} <span class="muted">${esc(a.scope)}</span><p>${esc(r.title)}</p><div class="evidence-links">${link(r.advisory_url || r.source_url, 'Vendor advisory')} ${r.advisory_url && r.advisory_url !== r.source_url ? link(r.source_url, 'Captured source') : ''} ${link('/api/evidence/' + r.evidence_id, window.snapshotMode ? 'Evidence fingerprint JSON' : 'Archived evidence JSON')}</div><dl><dt>Published by vendor</dt><dd>${date(r.published_at)}</dd><dt>Updated by vendor</dt><dd>${date(r.updated_at)}</dd><dt>Source first captured</dt><dd>${date(r.source_observed_at)}</dd><dt>Normalized revision</dt><dd>${date(r.observed_at)}</dd><dt>Adapter fingerprint</dt><dd>${esc(r.adapter_version)}</dd><dt>Document status</dt><dd>${esc(r.document_status)}</dd><dt>Evidence locator</dt><dd>${esc(a.evidence_locator)}</dd></dl>${r.warnings.map((w) => `<p class="notice">${esc(w)}</p>`).join('')}<h3>Exact version / platform statement</h3><pre>${esc(appJSON.stringify({ versions: a.versions, context: a.product_context, relationship: a.relationship, source_statuses: a.source_statuses }, null, 2))}</pre><h3>Remediations and exposure</h3><pre>${esc(appJSON.stringify({ remediations: a.remediations, exposure: a.exposure }, null, 2))}</pre><details><summary>Vendor notes and score scenarios</summary><pre>${esc(appJSON.stringify({ notes: r.notes.filter((n) => !n.cve_id || n.cve_id === a.cve_id), metrics: r.metrics }, null, 2))}</pre></details><p class="fingerprint">SHA-256 ${esc(r.sha256)}</p>`;
   $('#detail').showModal();
 }
 function comparisonCoverage(v) {
@@ -373,7 +454,7 @@ function renderComparison() {
     if (!delivery || !accepted) throw Error('Study evidence unavailable');
     const loader = await delivery.promise;
     if (
-      JSON.stringify(loader.publication) !== JSON.stringify(accepted.publication) ||
+      appJSON.stringify(loader.publication) !== appJSON.stringify(accepted.publication) ||
       loader.generated_at !== accepted.generated_at
     )
       throw Error('Mixed publication generations');
@@ -419,7 +500,7 @@ async function loadSwitching(options = {}) {
   switchingError = '';
   if (view === 'compare' && comparisonMode === 'switching') renderComparison();
   try {
-    const key = JSON.stringify(identity);
+    const key = appJSON.stringify(identity);
     if (!switchingDelivery || switchingDelivery.key !== key) {
       const entry = {
         key,
@@ -438,10 +519,10 @@ async function loadSwitching(options = {}) {
     const full = await loader.switchingReport();
     if (sequence !== switchingSequence) return;
     if (
-      JSON.stringify(data.publication) !== JSON.stringify(identity.publication) ||
+      appJSON.stringify(data.publication) !== appJSON.stringify(identity.publication) ||
       data.generated_at !== identity.generated_at ||
       (full &&
-        (JSON.stringify(full.publication) !== JSON.stringify(identity.publication) ||
+        (appJSON.stringify(full.publication) !== appJSON.stringify(identity.publication) ||
           full.generated_at !== identity.generated_at))
     )
       throw Error('Mixed publication generations. Reload the page to select a new publication.');
@@ -465,7 +546,7 @@ function switchingDownload(format) {
     [
       format === 'csv'
         ? window.InfrastructureSwitching.csvExport(switchingReport)
-        : JSON.stringify(switchingReport, null, 2),
+        : appJSON.stringify(switchingReport, null, 2),
     ],
     { type: format === 'csv' ? 'text/csv' : 'application/json' },
   );
@@ -544,7 +625,7 @@ function renderBenchmarkComparison() {
   $('#comparison-scope-apply').addEventListener('click', () => {
     const selected = [...$('#comparison-products').selectedOptions].map((o) => o.value);
     const products = { ...c.product_selection, [vendor]: selected };
-    if (selected.length > 20 || new Blob([JSON.stringify(products)]).size > 4096) {
+    if (selected.length > 20 || new Blob([appJSON.stringify(products)]).size > 4096) {
       $('#feedback').textContent =
         'Select up to 20 labels per vendor and keep the full selection below 4 KB.';
       return;
@@ -562,7 +643,7 @@ function renderBenchmarkComparison() {
     const url = URL.createObjectURL(
       new Blob(
         [
-          JSON.stringify(
+          appJSON.stringify(
             { ...c, publication: data.publication, generated_at: data.generated_at },
             null,
             2,
@@ -584,11 +665,11 @@ function renderReview() {
     (s) => !s.cve_id || s.cve_id.split(/[,\s]+/).some((c) => selected().has(c)),
   );
   $('#view').innerHTML =
-    `<h2>Disclosure evidence review</h2><p>Investigate observable disclosure patterns. These signals do not establish intent or prove that a vendor concealed a vulnerability.</p><div class="review-types"><article><h3>Fix before a collected advisory</h3><p>Requires reviewed release evidence and a specific CVE, product, and fixed-version link. A future ETA is insufficient.</p></article><article><h3>CVE added in a later revision</h3><p>Compares locally observed source revisions. Parser changes are tracked separately.</p></article><article><h3>Security change without a CVE</h3><p>Flags security language in collected release notes lacking CVE references. It may describe hardening or an issue without a CVE.</p></article></div><div class="notice">Release-note collection must be configured per product. ${data.research.release_documents.length} release-note documents, ${(data.research.release_assets || []).length} dated release listings and ${data.research.fix_candidates.length} independently registered fix candidates are collected across the dataset. Signals below follow the selected cohort. No comprehensive release-note or binary analysis has been performed. Zero signals means no qualifying evidence in this dataset.</div>${publisherHistoryMarkup(data.publisher_history?.documents)}<h3>Independent release-listing metadata</h3><p>These records identify builds, platforms, publisher dates and artifact checksums. They do not establish CVE applicability, historical availability or download entitlement.</p><div class="table-wrap"><table><thead><tr><th>Product / build</th><th>Platforms</th><th>Publisher date</th><th>Publisher artifact SHA-256</th><th>Source</th></tr></thead><tbody>${(data.research.release_assets || []).map((a) => `<tr><td>${esc(a.product)}<small>${esc(a.version)}</small></td><td>${esc(a.platforms.join(', '))}</td><td>${esc(a.reported_published_at)}</td><td><code>${esc(a.artifact_sha256)}</code></td><td>${link(a.source_url, 'Listing')}</td></tr>`).join('')}</tbody></table></div><div class="signal-list">${reviewSignals.map((s) => `<article><div class="eyebrow">${esc(name(s.vendor))} / ${esc(s.confidence)}</div><h3>${esc(s.kind.replaceAll('_', ' '))}</h3><p>${esc(s.product || '')} ${esc(s.cve_id || '')}</p><p>${esc(s.explanation)}</p>${s.excerpt ? `<blockquote>${esc(s.excerpt)}</blockquote>` : ''}${s.released_at ? `<p>${s.confidence === 'unverified_release_date_candidate' ? 'Reported firmware date' : 'Reviewed release date'}: ${date(s.released_at)} · advisory: ${date(s.advisory_date)}</p>` : ''}${link(s.source_url, 'Evidence source')}${s.kind === 'reported_firmware_date_predates_bulletin' ? `<p>${link('/research/hpe-timing-investigation.txt', 'Read investigation record')}</p>` : ''}${s.details ? `<pre>${esc(JSON.stringify(s.details, null, 2))}</pre>` : ''}</article>`).join('') || '<p class="empty">No qualifying disclosure signals collected. No claim about hidden exposure can be made.</p>'}</div>`;
+    `<h2>Disclosure evidence review</h2><p>Investigate observable disclosure patterns. These signals do not establish intent or prove that a vendor concealed a vulnerability.</p><div class="review-types"><article><h3>Fix before a collected advisory</h3><p>Requires reviewed release evidence and a specific CVE, product, and fixed-version link. A future ETA is insufficient.</p></article><article><h3>CVE added in a later revision</h3><p>Compares locally observed source revisions. Parser changes are tracked separately.</p></article><article><h3>Security change without a CVE</h3><p>Flags security language in collected release notes lacking CVE references. It may describe hardening or an issue without a CVE.</p></article></div><div class="notice">Release-note collection must be configured per product. ${data.research.release_documents.length} release-note documents, ${(data.research.release_assets || []).length} dated release listings and ${data.research.fix_candidates.length} independently registered fix candidates are collected across the dataset. Signals below follow the selected cohort. No comprehensive release-note or binary analysis has been performed. Zero signals means no qualifying evidence in this dataset.</div>${publisherHistoryMarkup(data.publisher_history?.documents)}<h3>Independent release-listing metadata</h3><p>These records identify builds, platforms, publisher dates and artifact checksums. They do not establish CVE applicability, historical availability or download entitlement.</p><div class="table-wrap"><table><thead><tr><th>Product / build</th><th>Platforms</th><th>Publisher date</th><th>Publisher artifact SHA-256</th><th>Source</th></tr></thead><tbody>${(data.research.release_assets || []).map((a) => `<tr><td>${esc(a.product)}<small>${esc(a.version)}</small></td><td>${esc(a.platforms.join(', '))}</td><td>${esc(a.reported_published_at)}</td><td><code>${esc(a.artifact_sha256)}</code></td><td>${link(a.source_url, 'Listing')}</td></tr>`).join('')}</tbody></table></div><div class="signal-list">${reviewSignals.map((s) => `<article><div class="eyebrow">${esc(name(s.vendor))} / ${esc(s.confidence)}</div><h3>${esc(s.kind.replaceAll('_', ' '))}</h3><p>${esc(s.product || '')} ${esc(s.cve_id || '')}</p><p>${esc(s.explanation)}</p>${s.excerpt ? `<blockquote>${esc(s.excerpt)}</blockquote>` : ''}${s.released_at ? `<p>${s.confidence === 'unverified_release_date_candidate' ? 'Reported firmware date' : 'Reviewed release date'}: ${date(s.released_at)} · advisory: ${date(s.advisory_date)}</p>` : ''}${link(s.source_url, 'Evidence source')}${s.kind === 'reported_firmware_date_predates_bulletin' ? `<p>${link('/research/hpe-timing-investigation.txt', 'Read investigation record')}</p>` : ''}${s.details ? `<pre>${esc(appJSON.stringify(s.details, null, 2))}</pre>` : ''}</article>`).join('') || '<p class="empty">No qualifying disclosure signals collected. No claim about hidden exposure can be made.</p>'}</div>`;
 }
 function renderChanges() {
   $('#view').innerHTML =
-    `<h2>Observed source changes</h2><p>Changes are detected between local snapshots. Vendor-supplied historical timelines are retained in the evidence; they are not treated as observations made by this collector.</p>${data.changes.map((c) => `<article class="change"><div class="eyebrow">${date(c.observed_at)} · ${esc(name(c.vendor))}</div><h3>${esc(c.advisory_id)}</h3>${badge(c.kind)}<details><summary>Inspect changes</summary>${link('/api/changes/' + c.id, 'Complete archived diff')}<pre>${esc(JSON.stringify(c.details, null, 2))}</pre></details></article>`).join('') || '<p class="empty">No changes observed yet. Run the collector again after sources update.</p>'}`;
+    `<h2>Observed source changes</h2><p>Changes are detected between local snapshots. Vendor-supplied historical timelines are retained in the evidence; they are not treated as observations made by this collector.</p>${data.changes.map((c) => `<article class="change"><div class="eyebrow">${date(c.observed_at)} · ${esc(name(c.vendor))}</div><h3>${esc(c.advisory_id)}</h3>${badge(c.kind)}<details><summary>Inspect changes</summary>${link('/api/changes/' + c.id, 'Complete archived diff')}<pre>${esc(appJSON.stringify(c.details, null, 2))}</pre></details></article>`).join('') || '<p class="empty">No changes observed yet. Run the collector again after sources update.</p>'}`;
 }
 let healthVendor = '',
   healthResult = 'attention';
@@ -747,7 +828,7 @@ function renderCorrection() {
       return;
     }
     const url = URL.createObjectURL(
-      new Blob([JSON.stringify(proposal, null, 2)], { type: 'application/json' }),
+      new Blob([appJSON.stringify(proposal, null, 2)], { type: 'application/json' }),
     );
     const a = document.createElement('a');
     a.href = url;
@@ -897,7 +978,7 @@ function renderCasefiles() {
     },
     onDownload(payload) {
       const url = URL.createObjectURL(
-        new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }),
+        new Blob([appJSON.stringify(payload, null, 2)], { type: 'application/json' }),
       );
       const a = document.createElement('a');
       a.href = url;
@@ -1141,7 +1222,7 @@ function renderComponentStudies() {
                   (row) => row.cve_id === cid && row.family_id === member.id,
                 );
                 if (!cell) return '<td>Vendor unavailable in this publication</td>';
-                return `<td>${esc(labels[cell.state] || cell.state)}${cell.evidence.length ? `<details><summary>${cell.statements} publisher statement${cell.statements === 1 ? '' : 's'}</summary>${cell.evidence.map((evidence) => `<p><strong>${esc(evidence.product)}</strong> · ${esc(evidence.status)} · ${esc(evidence.scope.replaceAll('_', ' '))}</p><p>${esc(evidence.platforms.join('; ') || 'Platform equivalence unverified')}</p><p>Literal versions: ${esc(JSON.stringify(evidence.versions))}</p><p>Product context: ${esc(JSON.stringify(evidence.product_context))}</p><p>${esc(evidence.evidence_locator || 'Review the original product section')}. Exposure context retained by parser: ${evidence.exposure_context_present ? 'yes; review source prerequisites' : 'not supplied; prerequisites remain unverified'}.</p><p>${link(evidence.source_url, evidence.advisory_id)} · publisher date ${date(evidence.publisher_published_at)} · retained ${date(evidence.source_observed_at)}</p><code>${esc(evidence.source_sha256)}</code>`).join('')}${cell.evidence_truncated ? '<p>Latest dataset order bounded to twelve statements; count includes all matching statements.</p>' : ''}<p>Product-build equivalence and deployment exposure are not verified.</p></details>` : ''}</td>`;
+                return `<td>${esc(labels[cell.state] || cell.state)}${cell.evidence.length ? `<details><summary>${cell.statements} publisher statement${cell.statements === 1 ? '' : 's'}</summary>${cell.evidence.map((evidence) => `<p><strong>${esc(evidence.product)}</strong> · ${esc(evidence.status)} · ${esc(evidence.scope.replaceAll('_', ' '))}</p><p>${esc(evidence.platforms.join('; ') || 'Platform equivalence unverified')}</p><p>Literal versions: ${esc(appJSON.stringify(evidence.versions))}</p><p>Product context: ${esc(appJSON.stringify(evidence.product_context))}</p><p>${esc(evidence.evidence_locator || 'Review the original product section')}. Exposure context retained by parser: ${evidence.exposure_context_present ? 'yes; review source prerequisites' : 'not supplied; prerequisites remain unverified'}.</p><p>${link(evidence.source_url, evidence.advisory_id)} · publisher date ${date(evidence.publisher_published_at)} · retained ${date(evidence.source_observed_at)}</p><code>${esc(evidence.source_sha256)}</code>`).join('')}${cell.evidence_truncated ? '<p>Latest dataset order bounded to twelve statements; count includes all matching statements.</p>' : ''}<p>Product-build equivalence and deployment exposure are not verified.</p></details>` : ''}</td>`;
               })
               .join('')}</tr>`;
           })
@@ -1176,7 +1257,7 @@ function renderProductCohorts() {
           `<article class="change"><h3>${esc(c.name)}</h3><p>Research period: ${esc(c.period.start)} to ${esc(c.period.end)}. ${c.selected_scope_units} selected product scopes; confirmed build denominator unavailable. Comparisons blocked.</p>${c.units
             .map((r) => {
               const t = r.target;
-              return `<details><summary>${esc(name(r.vendor))} · ${esc(r.name)}${t.release_train ? ` · ${esc(t.release_train)}` : ''}</summary><p>Targets: firmware build ${esc(t.firmware_build || 'unspecified')}; hardware ${esc(t.hardware_model || 'unspecified')}; deployment ${esc(t.deployment || 'unspecified')}. ${esc(t.service.name)} enabled: ${t.service.enabled === null ? 'unknown' : t.service.enabled ? 'targeted enabled' : 'targeted disabled'}. Support window: ${esc(t.support_window ? `${t.support_window.start} to ${t.support_window.end}` : 'unknown')}.</p><h4>Bound component references</h4>${r.component_evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')} · retained ${date(e.observed_at)}</p><p>${esc(e.component_scope)}</p><p>${esc(JSON.stringify(e.components))}</p><p>${esc(e.locators.join('; '))}</p><code>${esc(e.source_sha256)}</code><p>Latest successful retrieval matches analyzed snapshot: ${e.latest_retrieval_matches_analyzed_snapshot === null ? 'unknown' : e.latest_retrieval_matches_analyzed_snapshot ? 'yes' : 'no; source review needed'}.</p>`).join('') || '<p>No component reference is bound to this product scope. Other products from the same vendor cannot fill this gap.</p>'}${r.source_checks.map((s) => `<p>${link(s.source_url, 'Source check')} · ${esc(s.outcome)} · ${date(s.checked_at)}${s.error_code ? ` · ${esc(s.error_code)}` : ''}</p>`).join('')}<h4>Still needed</h4><ul>${r.missing_dimensions.map((m) => `<li>${esc(m.replaceAll('_', ' '))}</li>`).join('')}</ul><p>Targets define research scope; they are not verified product facts. No affectedness rate is calculated.</p></details>`;
+              return `<details><summary>${esc(name(r.vendor))} · ${esc(r.name)}${t.release_train ? ` · ${esc(t.release_train)}` : ''}</summary><p>Targets: firmware build ${esc(t.firmware_build || 'unspecified')}; hardware ${esc(t.hardware_model || 'unspecified')}; deployment ${esc(t.deployment || 'unspecified')}. ${esc(t.service.name)} enabled: ${t.service.enabled === null ? 'unknown' : t.service.enabled ? 'targeted enabled' : 'targeted disabled'}. Support window: ${esc(t.support_window ? `${t.support_window.start} to ${t.support_window.end}` : 'unknown')}.</p><h4>Bound component references</h4>${r.component_evidence.map((e) => `<p>${link(e.source_url, 'Publisher source')} · retained ${date(e.observed_at)}</p><p>${esc(e.component_scope)}</p><p>${esc(appJSON.stringify(e.components))}</p><p>${esc(e.locators.join('; '))}</p><code>${esc(e.source_sha256)}</code><p>Latest successful retrieval matches analyzed snapshot: ${e.latest_retrieval_matches_analyzed_snapshot === null ? 'unknown' : e.latest_retrieval_matches_analyzed_snapshot ? 'yes' : 'no; source review needed'}.</p>`).join('') || '<p>No component reference is bound to this product scope. Other products from the same vendor cannot fill this gap.</p>'}${r.source_checks.map((s) => `<p>${link(s.source_url, 'Source check')} · ${esc(s.outcome)} · ${date(s.checked_at)}${s.error_code ? ` · ${esc(s.error_code)}` : ''}</p>`).join('')}<h4>Still needed</h4><ul>${r.missing_dimensions.map((m) => `<li>${esc(m.replaceAll('_', ' '))}</li>`).join('')}</ul><p>Targets define research scope; they are not verified product facts. No affectedness rate is calculated.</p></details>`;
             })
             .join('')}</article>`,
       )
@@ -1185,7 +1266,7 @@ function renderProductCohorts() {
     button.addEventListener('click', () => {
       const target = report.build_pilot.targets[Number(button.dataset.index)];
       const url = URL.createObjectURL(
-        new Blob([JSON.stringify(target.inventory_proposal_template, null, 2)], {
+        new Blob([appJSON.stringify(target.inventory_proposal_template, null, 2)], {
           type: 'application/json',
         }),
       );

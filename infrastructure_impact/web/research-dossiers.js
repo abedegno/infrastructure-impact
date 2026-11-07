@@ -1,6 +1,9 @@
 // Buildless reader for the current publication's public, allowlisted report.
 (() => {
-  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const clone = (value) =>
+    window.InfrastructureJSON
+      ? window.InfrastructureJSON.clone(value)
+      : JSON.parse(JSON.stringify(value));
   function select(report, ids, vendor = null) {
     if (report == null) return null;
     if (vendor !== null && !Object.hasOwn(report.vendors, vendor))
@@ -69,7 +72,7 @@
         v === null || v === undefined
           ? 'Not supplied'
           : typeof v === 'object'
-            ? JSON.stringify(v)
+            ? (window.InfrastructureJSON?.stringify ?? JSON.stringify)(v)
             : v,
       );
     const list = (rows, fn, empty = 'None retained; evidence remains unresolved.') =>

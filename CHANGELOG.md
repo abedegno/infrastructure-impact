@@ -2,6 +2,8 @@
 
 ## Unreleased — source gaps and model scope
 
+- Add a preview-bound, exact three-URL Arista maintenance profile and generation-bound current/retained evidence policy across native/static/browser and labelled JSON/CSV exports. Preserve immutable revisions and literal CVEs; retain the expected alternate scope conflict as a partial operational outcome. Add strict standalone monitoring, installed-plugin/resource probes and hosted protocol/effect gates, including the checksum-bound ordinary legacy bridge. Local acceptance does not authorize source-pin activation or hosted preview/apply.
+
 - Preserve the two exact reviewed Palo Alto informational HTML bulletins: a no-CVE NAT notice and 78 explicit MOVEit non-impact product/CVE statements. Block structured representation overrides of those policies and the existing reviewed configuration notice; preserve unrelated PAN advisory behavior.
 - Add a Cisco-only, exact-source fast-reload platform bridge for explicit 9300/9300L scope under each of two CVEs. Preserve all 89 original software branches, their CVE ownership, dates, versions, statuses and remediation boundaries; leave frozen studies and other platform gaps unchanged.
 - Reconcile the 15 hosted source failures and three missing-source benchmark cases, record the live two-advisory Arista preview and identify the separate exact-target maintenance/current-catalogue policy work needed before hosted application. No deployment or hosted maintenance is included.

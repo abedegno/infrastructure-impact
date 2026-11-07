@@ -33,9 +33,72 @@ class PublicationStore:
             raise ValueError("Invalid publication pointer")
         with self._lock:
             if generation != self._generation:
-                self._data = json.loads((generation / "snapshot.json").read_text())
+                candidate = json.loads((generation / "snapshot.json").read_text())
+                self._validate_candidate(generation, candidate)
+                self._data = candidate
                 self._generation = generation
             return generation, self._data
+
+    @staticmethod
+    def _validate_candidate(generation, candidate):
+        from .application.current_evidence import unavailable_report, validate_report
+        from .application.current_views import validate_partition
+
+        publication = candidate["publication"]
+        manifest_path = generation / "manifest.json"
+        manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+        if manifest and manifest.get("generation") != publication["id"]:
+            raise ValueError("Mixed publication manifest")
+        index_path = generation / "data/index.json"
+        if "data/index.json" in manifest.get("sha256", {}) and not index_path.is_file():
+            raise ValueError("Missing declared publication index")
+        index = json.loads(index_path.read_text()) if index_path.exists() else {}
+        if index and (
+            index.get("publication") != publication
+            or index.get("generated_at") != candidate["generated_at"]
+        ):
+            raise ValueError("Mixed publication index")
+        new_generation = (
+            "retained_advisories" in candidate
+            or "retained_cves" in candidate
+            or "current_evidence_version" in candidate
+            or "current_evidence" in index
+            or "current-evidence.json" in manifest.get("sha256", {})
+            or "schemas/current-evidence-v1.json" in manifest.get("sha256", {})
+            or (generation / "current-evidence.json").exists()
+        )
+        if "current_evidence" not in candidate and not new_generation and index.get("bootstrap"):
+            path = index["bootstrap"]["path"]
+            if not re.fullmatch(r"data/[a-f0-9]{64}\.json", path):
+                raise ValueError("Invalid bootstrap path")
+            bootstrap = json.loads((generation / path).read_text())
+            new_generation = "current_evidence_version" in bootstrap["data"]
+        if "current_evidence" in candidate:
+            # Validate the archived decision graph as published. No registry hook,
+            # current policy execution or evidence database belongs in a reader.
+            validate_partition(candidate, require_targets=True)
+            counts = candidate.get("counts", {})
+            expected = candidate["current_evidence"]["counts"]
+            for key, value in {"advisories": expected["current"], **expected}.items():
+                if type(counts.get(key)) is not int or counts[key] != value:
+                    raise ValueError("Inconsistent published current-evidence counts")
+            report_path = generation / "current-evidence.json"
+            if "current-evidence.json" in manifest.get("sha256", {}) and not report_path.is_file():
+                raise ValueError("Missing declared current-evidence report")
+            if report_path.exists():
+                report = json.loads(report_path.read_text())
+                validate_report(
+                    report, publication=publication, generated_at=candidate["generated_at"]
+                )
+                if report != candidate["current_evidence"]:
+                    raise ValueError("Mixed current-evidence assets")
+        elif new_generation:
+            raise ValueError("Missing current-evidence report")
+        else:
+            candidate["current_evidence"] = unavailable_report(
+                publication=publication, generated_at=candidate["generated_at"]
+            )
+            candidate["retained_advisories"] = []
 
 
 class Application:
@@ -199,6 +262,84 @@ class Application:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
             if len(ids) > 200 or not all(CVE.fullmatch(cid) for cid in ids):
                 raise BadRequest("Invalid CVE cohort")
+        if path == "/api/v1/current-evidence":
+            from .application.current_evidence import unavailable_report
+
+            return self.json(
+                data.get("current_evidence")
+                or unavailable_report(
+                    publication=data.get("publication"), generated_at=data["generated_at"]
+                )
+            )
+        if path == "/api/v1/retained-advisories":
+            from .application.current_evidence import unavailable_report
+            from .exports import retained_assessment_export
+
+            values = query.get("vendor", [])
+            if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                raise BadRequest("Unknown or repeated vendor")
+            formats = query.get("format", [])
+            if formats and formats not in (["json"], ["csv"]):
+                raise BadRequest("Invalid retained format")
+            items = [
+                w
+                for w in data.get("retained_advisories", [])
+                if (ids is None or set(ids).intersection(w["record"]["cves"]))
+                and (not values or w["record"]["vendor"] == values[0])
+            ]
+            if formats:
+                # Validate the complete envelope first; filters never fabricate a partition.
+                exported = retained_assessment_export(data)
+                keys = {w["decision_id"] for w in items}
+                exported["records"] = [r for r in exported["records"] if r["decision_id"] in keys]
+                if ids is not None:
+                    exported["records"] = [
+                        {**r, "assessments": [a for a in r["assessments"] if a["cve_id"] in ids]}
+                        for r in exported["records"]
+                    ]
+                if formats == ["json"]:
+                    return self.json(exported)
+                from .exports import FIELDS, RETAINED_FIELDS
+
+                csv_data = {
+                    **exported,
+                    "kev": data.get("kev"),
+                    "comparison": {
+                        "cohort": ids
+                        if ids is not None
+                        else sorted({c for r in exported["records"] for c in r["cves"]})
+                    },
+                }
+                return (
+                    200,
+                    "text/csv",
+                    csv_export(csv_data, _fields=FIELDS + RETAINED_FIELDS).encode(),
+                )
+            try:
+                if any(len(query.get(k, [])) > 1 for k in ("limit", "offset")):
+                    raise ValueError("Repeated pagination")
+                limit = int(query.get("limit", ["100"])[0])
+                offset = int(query.get("offset", ["0"])[0])
+                if not 1 <= limit <= 500 or offset < 0:
+                    raise ValueError("Pagination out of bounds")
+            except ValueError as error:
+                raise BadRequest("Invalid pagination") from error
+            return self.json(
+                {
+                    "schema_version": 1,
+                    "publication": data.get("publication"),
+                    "generated_at": data["generated_at"],
+                    "record_scope": "retained_latest_excluded",
+                    "current_evidence": data.get("current_evidence")
+                    or unavailable_report(
+                        publication=data.get("publication"), generated_at=data["generated_at"]
+                    ),
+                    "total": len(items),
+                    "offset": offset,
+                    "limit": limit,
+                    "items": items[offset : offset + limit],
+                }
+            )
         if path == "/api/v1/research-dossiers":
             from .application.research_dossiers import select_research_dossiers
 
@@ -357,6 +498,9 @@ class Application:
             "/",
             "/index.html",
             "/app.js",
+            "/current-evidence.json",
+            "/current-evidence.js",
+            "/lossless-json.js",
             "/research-dossiers.js",
             "/kev.js",
             "/switching-contracts.js",
@@ -400,6 +544,7 @@ class Application:
             "/release-assets.json",
             "/impact.csv",
             "/manifest.json",
+            "/schemas/current-evidence-v1.json",
             "/schemas/advisory-v2.json",
             "/schemas/release-asset-v1.json",
             "/schemas/comparison-eligibility-v1.json",

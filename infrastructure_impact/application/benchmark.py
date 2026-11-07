@@ -14,7 +14,7 @@ from ..collection.service import allowed, fetch, resolve_document, retain_resolu
 from ..phase_events import phase
 from ..plugins.registry import default_registry
 from ..settings import Paths
-from ..storage.repository import collection_result, connect, evidence, ingest, latest, now
+from ..storage.repository import collection_result, connect, evidence, ingest, now
 from .cohort import COHORT, coverage
 
 
@@ -161,7 +161,10 @@ def run(aruba_limit=200):
             collection_result(db, vendor, url, "error", str(e), failure_code(e))
             print("ERROR", vendor, url, str(e), flush=True)
     with phase("benchmark.coverage"), db:
-        result = coverage(db, latest(db))
+        from .query import current_partition
+
+        current, _ = current_partition(db)
+        result = coverage(db, current["records"])
     (Paths.from_env().home / "benchmark").mkdir(parents=True, exist_ok=True)
     (Paths.from_env().home / "benchmark/cohort-coverage.json").write_text(
         json.dumps({"generated_at": now(), "cohort": COHORT, "pairs": result}, indent=2) + "\n"

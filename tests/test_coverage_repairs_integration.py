@@ -64,6 +64,7 @@ def test_sources_to_study_notice_transition_and_all_delivery_routes(tmp_path, mo
         assert arista["metrics"] == []
         private = state(db)
         private["generated_at"] = AT
+        private["current_evidence"]["generated_at"] = AT
         generation = publish(private, tmp_path / "publications")
         old_files = {
             p.relative_to(generation): p.read_bytes() for p in generation.rglob("*") if p.is_file()
@@ -132,6 +133,7 @@ def test_sources_to_study_notice_transition_and_all_delivery_routes(tmp_path, mo
         assert len(latest(db)) == 3
         private = state(db)
         private["generated_at"] = AT
+        private["current_evidence"]["generated_at"] = AT
         publish(private, tmp_path / "publications")
     assert all((generation / p).read_bytes() == content for p, content in old_files.items())
 
