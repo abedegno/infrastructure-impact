@@ -350,6 +350,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
             const i = cursor++;
             const piece = await read(fragments.parts[i]);
             if (typeof piece !== 'string') throw Error('Invalid summary fragment type');
+            // Unicode mode treats paired surrogates as one code point, so this
+            // range matches only unpaired halves that TextEncoder would replace.
+            if (/[\uD800-\uDFFF]/u.test(piece)) throw Error('Invalid summary fragment Unicode');
             size += new TextEncoder().encode(piece).length;
             if (size > fragments.bytes || size > 128000000)
               throw Error('Summary reconstruction exceeds budget');
@@ -359,9 +362,11 @@ async function createStaticDelivery(fetchPart, siteBase) {
       );
       if (size !== fragments.bytes) throw Error('Summary reconstruction size mismatch');
       const text = pieces.join('');
-      const digest = Array.from(
-        new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))),
-        (b) => b.toString(16).padStart(2, '0'),
+      const raw = new TextEncoder().encode(text);
+      if (raw.length !== fragments.bytes || raw.length !== size)
+        throw Error('Summary reconstruction size mismatch');
+      const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', raw)), (b) =>
+        b.toString(16).padStart(2, '0'),
       ).join('');
       if (digest !== fragments.sha256) throw Error('Summary reconstruction fingerprint mismatch');
       result = window.InfrastructureJSON.parse(text);

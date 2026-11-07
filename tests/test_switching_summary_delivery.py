@@ -336,3 +336,46 @@ def test_fragment_fetches_use_six_workers(tmp_path, monkeypatch):
     result = measured_delivery(root, mode="summary")
     assert result.get("value") == summary(report), result.get("error")
     assert result["peak"] == 6
+
+
+@pytest.mark.parametrize("split_surrogates", [True, False])
+def test_summary_fragments_require_whole_unicode_codepoints(
+    tmp_path, monkeypatch, split_surrogates
+):
+    root = publish(dataset(), tmp_path)
+    index = json.loads((root / "data/index.json").read_text())
+    switching = index["switching"]
+    envelope = json.loads((root / switching.pop("summary")["path"]).read_text())
+    expected = envelope["data"]
+    expected["method"] = "Authored 😀 transport fixture"
+    raw = transport.encode(expected)
+    prefix, emoji, suffix = raw.decode("utf-8").partition("😀")
+    assert emoji == "😀"
+    pieces = (
+        [prefix + "\ud83d", "\ude00" + suffix] if split_surrogates else [prefix + emoji, suffix]
+    )
+    descriptors = []
+    for piece in pieces:
+        # ASCII JSON escapes permit lone UTF-16 surrogates in otherwise valid
+        # UTF-8 envelopes. Their individual browser replacement encodings cost
+        # six bytes; joining them produces the original four-byte emoji.
+        encoded = json.dumps(dict(envelope, data=piece), ensure_ascii=True).encode("ascii")
+        digest = hashlib.sha256(encoded).hexdigest()
+        descriptor = dict(path="data/" + digest + ".json", sha256=digest, bytes=len(encoded))
+        (root / descriptor["path"]).write_bytes(encoded)
+        descriptors.append(descriptor)
+    switching["summary_fragments"] = dict(
+        parts=descriptors,
+        sha256=hashlib.sha256(raw).hexdigest(),
+        bytes=len(raw) + (2 if split_surrogates else 0),
+    )
+    refresh_manifest(root, index)
+    browser = delivery(root, mode="summary")
+    serve(monkeypatch, root)
+    if split_surrogates:
+        assert "error" in browser, "Split escaped surrogate halves must fail closed"
+        with pytest.raises(UnicodeEncodeError):
+            health.check("https://example.test")
+    else:
+        assert browser.get("value") == expected, browser.get("error")
+        assert health.check("https://example.test")["switching_availability"] == "available"
