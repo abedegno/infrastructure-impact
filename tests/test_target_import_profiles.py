@@ -11,6 +11,17 @@ from infrastructure_impact.collection import target_import_profiles as profiles
 PROFILE = "campus-switching-public-gap-2026-11-07-v1"
 
 
+@pytest.mark.parametrize("offset", ["+00:99", "-00:99", "+00:60", "-00:60", "+24:00", "-24:00"])
+def test_timestamp_fallback_rejects_out_of_range_offsets(offset):
+    with pytest.raises(ValueError):
+        profiles._validate_times({"observed_at": f"2026-11-06T12:00:00{offset}"})
+
+
+@pytest.mark.parametrize("offset", ["Z", "+01:30", "-01:30", "+23:59", "-23:59"])
+def test_timestamp_fallback_accepts_valid_offsets(offset):
+    profiles._validate_times({"observed_at": f"2026-11-06T12:00:00{offset}"})
+
+
 def manifest():
     return {
         "format": "impact-target-import-manifest",
