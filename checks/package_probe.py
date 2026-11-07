@@ -547,6 +547,13 @@ def target_import_candidate_probe():
             )
         assert result["outcome"] == "completed", result
         assert result["candidate"]["archive_monitor_passed"] is True
+        published = json.loads((root / "stage/public/snapshot.json").read_bytes())
+        run = published["collector"]["last_run"]
+        details = json.loads(run["details"])
+        assert (run["outcome"], run["imported"], run["failures"]) == ("ok", 2, 0)
+        assert details["scope"] == "exact_target_ingestion"
+        assert details["unchanged"] == 0 and details["profile_id"] == selected.profile_id
+        assert set(details["acquisition"].values()) == {"not_run"}
         assert database.read_bytes() == before
         missing_monitor_probe(root)
         with closing(sqlite3.connect(root / "stage/private/data/intel.sqlite3")) as db:

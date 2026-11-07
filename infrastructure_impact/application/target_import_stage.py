@@ -112,6 +112,52 @@ def _retained_rows(db, selected, baseline=None):
     return result
 
 
+def _pipeline_values(selected, targets, fingerprint, started, finished):
+    """Describe actual target ingestion, separately from candidate acceptance."""
+    counts = {
+        status: sum(t["status"] == status for t in targets) for status in ("imported", "unchanged")
+    }
+    if sum(counts.values()) != len(selected.targets):
+        raise StageFailure("candidate_validation")
+    details = {
+        "operation": "target_import",
+        "scope": "exact_target_ingestion",
+        "profile_id": selected.profile_id,
+        "profile_version": selected.version,
+        "manifest_fingerprint": selected.fingerprint,
+        "request_fingerprint": fingerprint,
+        "target_count": len(selected.targets),
+        **counts,
+        "acquisition": dict.fromkeys(("benchmark", "feeds", "archive", "cve", "kev"), "not_run"),
+        "candidate_acceptance": "separate_stage_result",
+    }
+    return dict(
+        started_at=started,
+        finished_at=finished,
+        outcome="ok",
+        imported=counts["imported"],
+        failures=0,
+        details=canonical_json(details).decode(),
+    )
+
+
+def _pipeline_failure(database, run_id, values, failure_code):
+    """Only this stage's new row can change; failed candidates are never accepted."""
+    details = json.loads(values["details"])
+    details["failure"] = {"phase": "candidate_verification", "code": failure_code}
+    with closing(sqlite3.connect(database)) as db, db:
+        db.execute(
+            "UPDATE pipeline_runs SET started_at=:started_at,finished_at=:finished_at,"
+            "outcome=:outcome,imported=:imported,failures=:failures,details=:details WHERE id=:id",
+            {
+                **values,
+                "outcome": "error",
+                "details": canonical_json(details).decode(),
+                "id": run_id,
+            },
+        )
+
+
 def _initial_result(selected, accepted):
     return {
         "format": "impact-target-import-result",
@@ -278,6 +324,7 @@ def stage(
     result = _initial_result(profile, accepted)
     budget = PacedBudget(profile)
     source_before = None
+    pipeline_run_id = None
     try:
         if expected_fingerprint != accepted["fingerprint"]:
             raise StageFailure("stale_preview")
@@ -304,6 +351,7 @@ def stage(
                 baseline = _retained_rows(db, profile)
                 _preflight_existing(db, profile, result)
                 db.commit()
+                operation_started_at = target_import.now()
                 ready = _preflight(db, profile, result, budget)
                 for (target, raw, normalized), status in zip(ready, result["targets"]):
                     changed = ingest(
@@ -317,6 +365,20 @@ def stage(
                         (target.vendor, target.advisory_id),
                     ).fetchone()
                     status["after_keys"] = [record_key(dict(current))]
+                operation_finished_at = target_import.now()
+                pipeline_values = _pipeline_values(
+                    profile,
+                    result["targets"],
+                    result["fingerprint"],
+                    operation_started_at,
+                    operation_finished_at,
+                )
+                with db:
+                    pipeline_run_id = db.execute(
+                        "INSERT INTO pipeline_runs(started_at,finished_at,outcome,imported,failures,details) "
+                        "VALUES(:started_at,:finished_at,:outcome,:imported,:failures,:details)",
+                        pipeline_values,
+                    ).lastrowid
                 preserved = _retained_rows(db, profile, baseline) == baseline
                 source_after = _file_state(database)
                 source_unchanged = source_after == source_before
@@ -325,6 +387,9 @@ def stage(
                 context = {
                     "format": "impact-target-import-context",
                     "schema_version": 1,
+                    "operation_started_at": operation_started_at,
+                    "operation_finished_at": operation_finished_at,
+                    "pipeline_run_id": pipeline_run_id,
                     "binding": {k: result[k] for k in (*BINDING_FIELDS, "fingerprint")},
                     "observed_binding": observed_binding,
                     "targets": result["targets"],
@@ -395,6 +460,11 @@ def stage(
                     staged_database=None,
                     public_directory=None,
                 )
+    if result["outcome"] != "completed" and pipeline_run_id is not None:
+        try:
+            _pipeline_failure(staged, pipeline_run_id, pipeline_values, result["failure_code"])
+        except sqlite3.Error:
+            result["failure_code"] = "storage"
     result["counters"].update(http_attempts=budget.attempts, received_bytes=budget.received_bytes)
     for status in ("imported", "unchanged"):
         result["counters"][status] = sum(t["status"] == status for t in result["targets"])

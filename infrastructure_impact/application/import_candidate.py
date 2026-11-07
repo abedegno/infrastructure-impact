@@ -212,7 +212,7 @@ def _preserved(database, home, selected):
     from ..plugins.registry import default_registry
     from .evidence_identity import record_key
     from .target_import import binding_fingerprint, source_config_fingerprint
-    from .target_import_stage import _quoted, _retained_rows
+    from .target_import_stage import _pipeline_values, _quoted, _retained_rows
 
     context = _read_json(home / "target-import-context.json", MAX_CONTEXT)
     binding = context["binding"]
@@ -240,11 +240,33 @@ def _preserved(database, home, selected):
         db.row_factory = sqlite3.Row
         if _retained_rows(db, selected, proof["baseline_tables"]) != proof["baseline_tables"]:
             raise ValueError("retained rows changed")
+        from datetime import datetime
+
+        started = datetime.fromisoformat(context["operation_started_at"])
+        finished = datetime.fromisoformat(context["operation_finished_at"])
+        if started.tzinfo is None or finished.tzinfo is None or finished < started:
+            raise ValueError("pipeline timestamps")
+        if type(context["pipeline_run_id"]) is not int:
+            raise ValueError("pipeline identity")
+        expected_pipeline = {
+            "id": context["pipeline_run_id"],
+            **_pipeline_values(
+                selected,
+                context["targets"],
+                binding["fingerprint"],
+                context["operation_started_at"],
+                context["operation_finished_at"],
+            ),
+        }
         appendable = {"evidence", "source_observations", "http_cache", "revisions", "changes"}
         for table, baseline in proof["baseline_tables"].items():
             rows = db.execute(
                 f"SELECT * FROM {_quoted(table)} WHERE rowid>?", (baseline["max_rowid"],)
             ).fetchall()
+            if table == "pipeline_runs":
+                if len(rows) != 1 or dict(rows[0]) != expected_pipeline:
+                    raise ValueError("exact-target pipeline mismatch")
+                continue
             if rows and table not in appendable:
                 raise ValueError("unrequested table append")
             if table in ("evidence", "source_observations", "http_cache"):
@@ -300,6 +322,16 @@ def _preserved(database, home, selected):
                 or facts["after_keys"] != [record_key(dict(row))]
             ):
                 raise ValueError("target identity")
+            appended = db.execute(
+                "SELECT COUNT(*) FROM revisions WHERE rowid>? AND vendor=? AND advisory_id=?",
+                (
+                    proof["baseline_tables"]["revisions"]["max_rowid"],
+                    target.vendor,
+                    target.advisory_id,
+                ),
+            ).fetchone()[0]
+            if appended != (1 if facts["status"] == "imported" else 0):
+                raise ValueError("target ingestion status mismatch")
             normalized = json.loads(row["normalized"])
             if sorted(normalized["cves"]) != list(
                 target.cve_ids

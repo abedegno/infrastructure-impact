@@ -9,10 +9,14 @@ from hashlib import sha256
 
 import pytest
 from test_arista_current_evidence import arista_case  # noqa: F401
-from test_current_evidence_delivery import delivery_db  # noqa: F401
-from test_target_import_stage import receipt, serve, setup, snapshot  # noqa: F401
+from test_current_evidence_delivery import delivery_db as _delivery_db
+from test_target_import_stage import receipt, serve, snapshot
+from test_target_import_stage import setup as _setup
 
 from infrastructure_impact.application import target_import_stage
+
+delivery_db = _delivery_db
+setup = _setup
 
 
 def implementation():
@@ -40,6 +44,17 @@ def candidate(setup, monkeypatch, request):  # noqa: F811
         ingest(db, b"authored baseline", record["source_url"], lambda *a: record, "juniper")
         with db:
             db.execute(
+                "INSERT INTO pipeline_runs(started_at,finished_at,outcome,imported,failures,details) VALUES(?,?,?,?,?,?)",
+                (
+                    "2020-01-01T00:00:00Z",
+                    "2020-01-01T00:01:00Z",
+                    "partial",
+                    99,
+                    7,
+                    "prior full collection",
+                ),
+            )
+            db.execute(
                 "INSERT INTO correction_proposals(sha256,proposal,review_status) VALUES(?,?,?)",
                 ("f" * 64, "PRIVATE_PENDING_REVIEW", "pending"),
             )
@@ -62,20 +77,31 @@ def candidate(setup, monkeypatch, request):  # noqa: F811
                         "authored stale observation",
                     ),
                 )
+    if getattr(request, "param", None) == "unchanged_one":
+        from infrastructure_impact.plugins.registry import default_registry
+
+        target = selected.targets[0]
+        with closing(connect(database)) as db:
+            ingest(
+                db,
+                raws[target.vendor],
+                target.fetch_url,
+                default_registry().normalize,
+                target.vendor,
+            )
     serve(monkeypatch, selected, raws)
     accepted = receipt(database, selected)
     before = snapshot(database)
-    # Ingestion-only fixture leaves the authentic preservation context for the real gate.
+    # Save the pre-verification state; the injected gate failure must mark only
+    # the rejected fixture stage, not the checkpoint used for real worker tests.
+    checkpoint = []
+
+    def pending(database, *args):
+        checkpoint.append(database.read_bytes())
+        return {"audit_passed": None, "capacity_passed": None, "candidate_validated": False}
+
     with monkeypatch.context() as patch:
-        patch.setattr(
-            target_import_stage,
-            "verify",
-            lambda *a: {
-                "audit_passed": None,
-                "capacity_passed": None,
-                "candidate_validated": False,
-            },
-        )
+        patch.setattr(target_import_stage, "verify", pending)
         result = target_import_stage.stage(
             database,
             selected,
@@ -85,6 +111,7 @@ def candidate(setup, monkeypatch, request):  # noqa: F811
             accepted_preview=accepted,
         )
     assert result["staged_database"] is None
+    (output / "private/data/intel.sqlite3").write_bytes(checkpoint[0])
     yield output / "private/data/intel.sqlite3", output / "public", selected
     assert snapshot(database) == before
 
@@ -403,7 +430,9 @@ def test_worker_missing_or_malformed_result_fails_closed(candidate, monkeypatch,
 
 
 def test_native_public_gate_preserves_and_rejects_changed_exclusion(
-    delivery_db, tmp_path, monkeypatch  # noqa: F811
+    delivery_db,
+    tmp_path,
+    monkeypatch,  # noqa: F811
 ):
     from infrastructure_impact.application import query, source_audit
     from infrastructure_impact.application.publication import publish
@@ -428,3 +457,128 @@ def test_native_public_gate_preserves_and_rejects_changed_exclusion(
     snapshot["records"].append(snapshot["retained_advisories"][0]["record"])
     with pytest.raises(ValueError, match="native public facts differ"):
         module._parity(database, public, home, snapshot)
+
+
+@pytest.mark.parametrize("candidate", ["unchanged_one"], indirect=True)
+def test_candidate_reports_only_actual_exact_target_pipeline(candidate):
+    from datetime import datetime
+
+    module = implementation()
+    database, public, selected = candidate
+    result = module.verify(database, public, selected)
+    assert result["candidate_validated"] is True
+    context = json.loads((database.parent.parent / "home/target-import-context.json").read_bytes())
+    snapshot = json.loads((public / "snapshot.json").read_bytes())
+    run = snapshot["collector"]["last_run"]
+    assert run["id"] != 1, "candidate still exposes the prior full collection"
+    assert run["outcome"] == "ok" and run["imported"] == 1 and run["failures"] == 0
+    assert run["started_at"] == context["operation_started_at"]
+    assert run["finished_at"] == context["operation_finished_at"]
+    assert datetime.fromisoformat(run["started_at"]) <= datetime.fromisoformat(run["finished_at"])
+    details = json.loads(run["details"])
+    assert details == {
+        "operation": "target_import",
+        "scope": "exact_target_ingestion",
+        "profile_id": selected.profile_id,
+        "profile_version": selected.version,
+        "manifest_fingerprint": selected.fingerprint,
+        "request_fingerprint": context["binding"]["fingerprint"],
+        "target_count": 2,
+        "imported": 1,
+        "unchanged": 1,
+        "acquisition": dict.fromkeys(("benchmark", "feeds", "archive", "cve", "kev"), "not_run"),
+        "candidate_acceptance": "separate_stage_result",
+    }
+    with closing(sqlite3.connect(database)) as db:
+        assert db.execute("SELECT * FROM pipeline_runs WHERE id=1").fetchone() == (
+            1,
+            "2020-01-01T00:00:00Z",
+            "2020-01-01T00:01:00Z",
+            "partial",
+            99,
+            7,
+            "prior full collection",
+        )
+        assert db.execute("SELECT COUNT(*) FROM pipeline_runs").fetchone()[0] == 2
+    assert not (database.parent.parent / "home/benchmark/results.csv").exists()
+
+
+@pytest.mark.parametrize("damage", ["extra", "count", "scope", "timestamp", "context_status"])
+def test_pipeline_append_must_match_exact_target_work(candidate, damage):
+    module = implementation()
+    database, public, selected = candidate
+    with closing(sqlite3.connect(database)) as db, db:
+        rows = db.execute("SELECT id,details FROM pipeline_runs ORDER BY id").fetchall()
+        assert len(rows) == 2, "isolated exact-target pipeline row missing"
+        run_id, details = rows[-1]
+        if damage == "extra":
+            db.execute(
+                "INSERT INTO pipeline_runs(started_at,outcome) VALUES('2026-01-01T00:00:00Z','ok')"
+            )
+        elif damage == "count":
+            db.execute("UPDATE pipeline_runs SET imported=99 WHERE id=?", (run_id,))
+        elif damage == "scope":
+            value = json.loads(details)
+            value["acquisition"]["benchmark"] = "completed"
+            db.execute("UPDATE pipeline_runs SET details=? WHERE id=?", (json.dumps(value), run_id))
+        elif damage == "timestamp":
+            db.execute(
+                "UPDATE pipeline_runs SET started_at='2020-01-01T00:00:00Z' WHERE id=?", (run_id,)
+            )
+        else:
+            path = database.parent.parent / "home/target-import-context.json"
+            context = json.loads(path.read_bytes())
+            context["targets"][0]["status"] = "unchanged"
+            # Even mutually consistent context/run counts cannot fabricate unchanged work.
+            value = json.loads(details)
+            value.update(imported=1, unchanged=1)
+            db.execute(
+                "UPDATE pipeline_runs SET imported=1,details=? WHERE id=?",
+                (target_import_stage.canonical_json(value).decode(), run_id),
+            )
+            path.write_text(json.dumps(context))
+    assert module.verify(database, public, selected)["candidate_validated"] is False
+    assert not public.exists()
+
+
+@pytest.mark.parametrize("changed_start", [False, True])
+def test_failed_candidate_marks_only_owned_isolated_pipeline_error(
+    setup, monkeypatch, changed_start
+):  # noqa: F811
+    database, selected, raws, output, home = setup
+    with closing(sqlite3.connect(database)) as db, db:
+        db.execute(
+            "INSERT INTO pipeline_runs(started_at,outcome,details) VALUES(?,?,?)",
+            ("2020-01-01T00:00:00Z", "partial", "keep old row"),
+        )
+        prior = db.execute("SELECT * FROM pipeline_runs").fetchall()
+    accepted = receipt(database, selected)
+    original = snapshot(database)
+    serve(monkeypatch, selected, raws)
+
+    def reject(staged, *args):
+        if changed_start:
+            with closing(sqlite3.connect(staged)) as db, db:
+                db.execute("UPDATE pipeline_runs SET started_at='2020-02-01T00:00:00Z' WHERE id=2")
+        return {"audit_passed": True, "capacity_passed": False, "candidate_validated": False}
+
+    monkeypatch.setattr(target_import_stage, "verify", reject)
+    result = target_import_stage.stage(
+        database,
+        selected,
+        accepted["fingerprint"],
+        output,
+        lock_home=home,
+        accepted_preview=accepted,
+    )
+    assert result["failure_code"] == "candidate_capacity"
+    assert result["staged_database"] is result["public_directory"] is None
+    assert snapshot(database) == original
+    with closing(sqlite3.connect(output / "private/data/intel.sqlite3")) as db:
+        rows = db.execute("SELECT * FROM pipeline_runs ORDER BY id").fetchall()
+    assert rows[:1] == prior
+    assert len(rows) == 2, "failure has no owned scoped pipeline receipt"
+    assert rows[1][3:6] == ("error", 2, 0)
+    detail = json.loads(rows[1][6])
+    assert detail["failure"] == {"phase": "candidate_verification", "code": "candidate_capacity"}
+    assert detail["imported"] == 2 and detail["unchanged"] == 0
