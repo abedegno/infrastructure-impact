@@ -1,6 +1,6 @@
 # Targeted refresh/current evidence acceptance — 6 November 2026
 
-Status: implementation acceptance; fresh task and whole-branch review pending.
+Status: implementation acceptance and all seven task reviews complete; whole-branch findings resolved and scoped re-review clean on 7 November 2026.
 Independent human source/extraction review remains incomplete. No release,
 runtime activation, hosted preview/apply or dispatch is included.
 
@@ -153,8 +153,8 @@ passed** (295.47 seconds); **clean Gitless Python 3.11: 2,903 passed, 3 skipped,
 12 subtests passed** (284.91 seconds). The three skips remain exactly the original
 Git-only source parity case and the two optional original-package cases. All
 mandatory portable cases pass, and the Git-backed 3.13 suite executes both
-optional original-package cases. This is the latest functional verification;
-the initial matrix above is earlier evidence.
+optional original-package cases. This is the Task7 corrected functional verification;
+the final whole-branch fix verification below supersedes it.
 
 ## Limits and rollout decisions
 
@@ -174,3 +174,41 @@ whole-branch review, any completion ticks and the separately authorized push/PR.
 Source merge/release, runtime activation, hosted preview and one fingerprint-bound
 application remain separate decisions. No local fingerprint authorizes hosted
 apply, and no read-only health check performs automatic Pages rollback.
+
+
+## Final whole-branch verification — 7 November 2026
+
+Whole-branch review found three issues: current filtering removed safe historical
+CVSS, native readers accepted missing or mixed decision metadata, and monitor
+version checks accepted booleans rejected by the browser. Commit `043d32c`
+fixes all three. A single scoped re-review confirmed each addressed with no new
+breakage. Historical score enrichment remains source-bound and separate from
+current severity; invalid native candidates return 503 without replacing the
+accepted cache or changing the publication pointer. Root report versions and
+published counts are independently type-checked.
+
+Final functional manifest: **416 files**, SHA-256
+`2c9e537e6431fba6fbdd8cca4a74f9f2875f5505b215be6ab3a34debcd82ec8f`.
+Python 3.13: **2,966 passed, 12 subtests passed** (397.54 seconds).
+Clean Gitless Python 3.11: **2,963 passed, 3 expected Git-dependent skips,
+12 subtests passed** (373.68 seconds). Exact CI lint/format, seven Node suites,
+locked Prettier, frozen exports, generated-contract parity, clean source/privacy
+export and installed-wheel/external-plugin checks pass.
+
+The rebuilt wheel is 621,111 bytes/247 entries, SHA-256
+`6caffa225e48a5e434d180a82e42ba57347c331562d2f88a5dd4d65ef0ad8e69`.
+Final clean-source Docker image:
+`sha256:c7176da80048f552b6199c3363e750c9d276c59c34d5a992e9cfc3b969de0668`.
+Build, image inspection and Compose validation pass. A local Docker client
+stalled before process start; direct start of its already-created test container
+executed the final image's plugin command successfully (all nine plugins,
+exit zero). The original retry client encountered an auto-removal race. Only
+task-owned clients/containers were cleaned; no service reset or deployment occurred.
+
+Both public stages were rebuilt from fresh copies without HTTP, apply or replay.
+All old row hashes and source timestamps remain unchanged. Both retain historical
+CVSS 3.1=6.5 on revision10, remain 11 current/1 excluded/12 total, and pass all
+12 native/static comparisons plus full/gzip archive checks. Their default-cohort
+health still fails `Empty public dataset`. The original 6 November source capture
+and retrieval times above remain the acquisition evidence; these 7 November
+builds do not claim fresh retrieval or production coverage.
