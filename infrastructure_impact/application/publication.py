@@ -625,45 +625,57 @@ def switching_score_availability(score_input, switching_input, records):
         "network_error",
         "request_state_unresolved",
     }
+    # Resolve source contexts once rather than rescanning all study claims per entry.
+    contexts_by_source = {}
+    for claim in switching_input.get("claims", []):
+        key = (claim["vendor"], claim["advisory_id"], claim["source"]["source_url"])
+        contexts_by_source.setdefault(key, []).append(
+            (claim["cve_id"], claim["product_id"], "study_claim")
+        )
+    contexts_by_advisory = {}
+    for record in records:
+        key = (record["vendor"], record["advisory_id"])
+        contexts_by_advisory.setdefault(key, []).extend(
+            (cid, None, "source_only_unclassified") for cid in record["cves"]
+        )
+    fallback = score_input.get("fallback", {})
+    fallback_by_cve = {}
+    for score in fallback.get("claims", []):
+        if score.get("cve_id") is not None and score.get("scope") == "cve_specific":
+            fallback_by_cve.setdefault(score["cve_id"], []).append(score)
+    attempts_by_cve = {}
+    for attempt in fallback.get("attempts", []):
+        if attempt.get("source") in ("nvd", "cve_record") and attempt.get("state") in states:
+            attempts_by_cve.setdefault(attempt.get("cve_id"), []).append(attempt)
+
     result = []
     for entry in score_input.get("advisories", []):
         if entry["vendor"] not in ("cisco", "aruba", "arista"):
             continue
-        claims = [
-            c
-            for c in switching_input.get("claims", [])
-            if c["vendor"] == entry["vendor"]
-            and c["advisory_id"] == entry["advisory_id"]
-            and c["source"]["source_url"] == entry["source_url"]
-        ]
-        contexts = [(c["cve_id"], c["product_id"], "study_claim") for c in claims]
-        if not contexts:
-            contexts = [
-                (cid, None, "source_only_unclassified")
-                for r in records
-                if r["vendor"] == entry["vendor"] and r["advisory_id"] == entry["advisory_id"]
-                for cid in r["cves"]
-            ]
+        key = (entry["vendor"], entry["advisory_id"], entry["source_url"])
+        contexts = contexts_by_source.get(key) or contexts_by_advisory.get(key[:2], [])
+        entry_by_cve = {}
+        for score in entry.get("claims", []):
+            if score.get("cve_id") is not None and score.get("scope") == "cve_specific":
+                entry_by_cve.setdefault(score["cve_id"], []).append(score)
+        entry_issues = {
+            issue["code"]
+            for issue in entry.get("issues", [])
+            if isinstance(issue, dict) and issue.get("code") in allowed_issues
+        }
         for cid, product, context in sorted(
             set(contexts), key=lambda x: (x[0] or "", x[1] or "", x[2])
         ):
             candidates = [
-                s
-                for s in entry.get("claims", []) + score_input.get("fallback", {}).get("claims", [])
-                if cid is not None
-                and s.get("cve_id") == cid
-                and s.get("scope") == "cve_specific"
-                and (not s.get("product_ids") or product in s["product_ids"])
+                score
+                for score in entry_by_cve.get(cid, []) + fallback_by_cve.get(cid, [])
+                if (not score.get("product_ids") or product in score["product_ids"])
                 and (
-                    s.get("origin") != "vendor_advisory"
-                    or s["source"]["source_url"] == entry["source_url"]
+                    score.get("origin") != "vendor_advisory"
+                    or score["source"]["source_url"] == entry["source_url"]
                 )
             ]
-            issues = {
-                i["code"]
-                for i in entry.get("issues", [])
-                if isinstance(i, dict) and i.get("code") in allowed_issues
-            }
+            issues = set(entry_issues)
             issues.update(i for s in candidates for i in s.get("issues", []) if i in allowed_issues)
             state = (
                 "available"
@@ -678,10 +690,7 @@ def switching_score_availability(score_input, switching_input, records):
                 issues.add("score_unavailable")
             attempts = [
                 {k: a.get(k) for k in ("source", "cve_id", "state", "checked_at", "retry_at")}
-                for a in score_input.get("fallback", {}).get("attempts", [])
-                if a.get("cve_id") == cid
-                and a.get("source") in ("nvd", "cve_record")
-                and a.get("state") in states
+                for a in attempts_by_cve.get(cid, [])
             ]
             source = entry.get("source")
             source = (
