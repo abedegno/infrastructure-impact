@@ -1,0 +1,2140 @@
+{
+  "format": "impact-target-import-manifest",
+  "schema_version": 1,
+  "profile_id": "campus-switching-public-gap-2026-11-07-v1",
+  "version": "1",
+  "expected_target_count": 174,
+  "max_document_bytes": 3000000,
+  "max_input_bytes": 40000000,
+  "max_received_bytes": 80000000,
+  "max_attempts_per_target": 2,
+  "max_http_attempts": 348,
+  "min_request_interval_seconds": 1,
+  "allow_redirects": false,
+  "max_receipt_bytes": 2000000,
+  "targets": [
+    {
+      "vendor": "aruba",
+      "advisory_id": "ARUBA-PSA-2021-013",
+      "source_sha256": "699f8efd5c4987bbf8e43b98464e59da6a38c1d975fc1bab39f5d6d742c67ac1",
+      "cve_ids": [
+        "CVE-2020-25705",
+        "CVE-2021-29143",
+        "CVE-2021-29148",
+        "CVE-2021-29149"
+      ],
+      "source_observed_at": "2026-11-06T13:22:53.700734+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:53.708722+00:00",
+      "fetch_url": "https://csaf.arubanetworking.hpe.com/2021/hpe_aruba_networking_-_2021-013.txt",
+      "discovery_url": "https://csaf.arubanetworking.hpe.com/2021/hpe_aruba_networking_-_2021-013.txt"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-9800cl-openscep-SB4xtxzP",
+      "source_sha256": "4996ddde001dd9e74e752676cb25ec6263afffa27083276e4e3b98c49fdc6178",
+      "cve_ids": [
+        "CVE-2025-20293"
+      ],
+      "source_observed_at": "2026-11-06T13:15:49.373999+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:15:49.398878+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-9800cl-openscep-SB4xtxzP/csaf/cisco-sa-9800cl-openscep-SB4xtxzP.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-9800cl-openscep-SB4xtxzP"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-XE-ACE-75K3bRWe",
+      "source_sha256": "17a7f16f84237d2b5c2eabfe11bc51d99c1474e6e4904afb9e5dcdd7e39cd98b",
+      "cve_ids": [
+        "CVE-2021-1398"
+      ],
+      "source_observed_at": "2026-11-06T13:19:56.192727+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:56.227392+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-ACE-75K3bRWe/csaf/cisco-sa-XE-ACE-75K3bRWe.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-ACE-75K3bRWe"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-XE-BLKH-Ouvrnf2s",
+      "source_sha256": "48cc59e69381629d550f5fe262d5200535c6f878bd77e414e92732d1c10ec7b9",
+      "cve_ids": [
+        "CVE-2021-1381"
+      ],
+      "source_observed_at": "2026-11-06T13:19:58.466937+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:58.474890+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-BLKH-Ouvrnf2s/csaf/cisco-sa-XE-BLKH-Ouvrnf2s.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-BLKH-Ouvrnf2s"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-XE-FSM-Yj8qJbJc",
+      "source_sha256": "d31b9eef23f791a335fb6141343e2f3c03f0ec840042b6c231ee7e9f52368d2b",
+      "cve_ids": [
+        "CVE-2021-1391"
+      ],
+      "source_observed_at": "2026-11-06T13:20:00.825105+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:00.847518+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-FSM-Yj8qJbJc/csaf/cisco-sa-XE-FSM-Yj8qJbJc.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-FSM-Yj8qJbJc"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-XE-OFP-6Nezgn7b",
+      "source_sha256": "00b698a25c293c87e068ec7db52957cea1be615651d81d4a5e5b3b9247727036",
+      "cve_ids": [
+        "CVE-2021-1390"
+      ],
+      "source_observed_at": "2026-11-06T13:20:03.098176+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:03.114704+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-OFP-6Nezgn7b/csaf/cisco-sa-XE-OFP-6Nezgn7b.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-OFP-6Nezgn7b"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-XE-SAP-OPLbze68",
+      "source_sha256": "f533668ba5e7471d35cee8c06776c12241deefff4d2ab9f188925e29a8d74c26",
+      "cve_ids": [
+        "CVE-2021-1392"
+      ],
+      "source_observed_at": "2026-11-06T13:20:05.476221+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:05.511556+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-SAP-OPLbze68/csaf/cisco-sa-XE-SAP-OPLbze68.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-XE-SAP-OPLbze68"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-aaa-Yx47ZT8Q",
+      "source_sha256": "10b5bd1214b77f8d332020144cd5321bd91c24d0fb88a6d5a049c8f58c406da2",
+      "cve_ids": [
+        "CVE-2021-1619"
+      ],
+      "source_observed_at": "2026-11-06T13:20:07.886618+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:07.911911+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-aaa-Yx47ZT8Q/csaf/cisco-sa-aaa-Yx47ZT8Q.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-aaa-Yx47ZT8Q"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-aaascp-Tyj4fEJm",
+      "source_sha256": "d72e18a59dac48346b16746f1f5dca6c0010c5627dca0848a5c86d19c8c3bea8",
+      "cve_ids": [
+        "CVE-2023-20186"
+      ],
+      "source_observed_at": "2026-11-06T13:15:52.040503+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:15:52.191974+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-aaascp-Tyj4fEJm/csaf/cisco-sa-aaascp-Tyj4fEJm.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-aaascp-Tyj4fEJm"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-alg-dos-KU9Z8kFX",
+      "source_sha256": "92bb3806950dd2778704c6973ef7093371a6f030a5323e6f55668529e6ec43d1",
+      "cve_ids": [
+        "CVE-2022-20837"
+      ],
+      "source_observed_at": "2026-11-06T13:20:10.171559+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:10.184022+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-alg-dos-KU9Z8kFX/csaf/cisco-sa-alg-dos-KU9Z8kFX.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-alg-dos-KU9Z8kFX"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-alg-dos-hbBS7SZE",
+      "source_sha256": "ece0f65ab6d6e5c3de079332f5f70e07bb5e9b43c6dc1c10ba69f584305d4264",
+      "cve_ids": [
+        "CVE-2021-1446"
+      ],
+      "source_observed_at": "2026-11-06T13:20:12.561214+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:12.595954+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-alg-dos-hbBS7SZE/csaf/cisco-sa-alg-dos-hbBS7SZE.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-alg-dos-hbBS7SZE"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ap-secureboot-bypass-zT5vJkSD",
+      "source_sha256": "9adf984f048e0a9b775bc3e0d1b990c77bb34b2757548d9338fb178fe3d8efbb",
+      "cve_ids": [
+        "CVE-2024-20265"
+      ],
+      "source_observed_at": "2026-11-06T13:15:54.314397+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:15:54.320686+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ap-secureboot-bypass-zT5vJkSD/csaf/cisco-sa-ap-secureboot-bypass-zT5vJkSD.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ap-secureboot-bypass-zT5vJkSD"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-appnav-xe-dos-j5MXTR4",
+      "source_sha256": "84054a6970316f34ca82896df9b093f4557eb80cd2403fa32c0fcc6528217005",
+      "cve_ids": [
+        "CVE-2022-20678"
+      ],
+      "source_observed_at": "2026-11-06T13:20:14.997943+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:15.035534+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-appnav-xe-dos-j5MXTR4/csaf/cisco-sa-appnav-xe-dos-j5MXTR4.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-appnav-xe-dos-j5MXTR4"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-appqoe-utd-dos-p8O57p5y",
+      "source_sha256": "eb144bc5a92c6bbf9dff09fcdf8d6bf03209f332e572df56f17eefe727d57c74",
+      "cve_ids": [
+        "CVE-2023-20226"
+      ],
+      "source_observed_at": "2026-11-06T13:15:56.500524+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:15:56.505976+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-appqoe-utd-dos-p8O57p5y/csaf/cisco-sa-appqoe-utd-dos-p8O57p5y.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-appqoe-utd-dos-p8O57p5y"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-arp-mtfhBfjE",
+      "source_sha256": "2a2fc1353464b5f41fe2ae3b794076331a5af17152a6a1dd7928fbc2f1712038",
+      "cve_ids": [
+        "CVE-2021-1377"
+      ],
+      "source_observed_at": "2026-11-06T13:20:17.435508+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:17.483661+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-arp-mtfhBfjE/csaf/cisco-sa-arp-mtfhBfjE.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-arp-mtfhBfjE"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-asa-ftd-ios-dos-DOESHWHy",
+      "source_sha256": "ad3e09eb63f6c30f97a0a92f4db321b9f0bb413467c4509d12705d661ee349c5",
+      "cve_ids": [
+        "CVE-2025-20224",
+        "CVE-2025-20225",
+        "CVE-2025-20239",
+        "CVE-2025-20252",
+        "CVE-2025-20253",
+        "CVE-2025-20254"
+      ],
+      "source_observed_at": "2026-11-06T13:15:59.704249+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:01.624709+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asa-ftd-ios-dos-DOESHWHy/csaf/cisco-sa-asa-ftd-ios-dos-DOESHWHy.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asa-ftd-ios-dos-DOESHWHy"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-asa-ftd-ios-dos-kPEpQGGK",
+      "source_sha256": "aaed0f9269fda7adfd852b77bd0b74d02d4301e901cdd1b6d0ee6f0c8f99dd58",
+      "cve_ids": [
+        "CVE-2026-20012"
+      ],
+      "source_observed_at": "2026-11-06T13:16:04.708192+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:05.184173+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asa-ftd-ios-dos-kPEpQGGK/csaf/cisco-sa-asa-ftd-ios-dos-kPEpQGGK.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asa-ftd-ios-dos-kPEpQGGK"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-asaftdios-dhcpv6-cli-Zf3zTv",
+      "source_sha256": "7cf09e29893e350fa31a7d24073419c48f3c8af64948465e64876ebf1bbccd3e",
+      "cve_ids": [
+        "CVE-2023-20081"
+      ],
+      "source_observed_at": "2026-11-06T13:16:07.963059+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:08.277538+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asaftdios-dhcpv6-cli-Zf3zTv/csaf/cisco-sa-asaftdios-dhcpv6-cli-Zf3zTv.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asaftdios-dhcpv6-cli-Zf3zTv"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-asr900acl-UeEyCxkv",
+      "source_sha256": "3d0cf17dbb3b0eb7cf6e131400ad8ef7a3d35f3a08c2b78b137c0feeebb573ad",
+      "cve_ids": [
+        "CVE-2021-34696"
+      ],
+      "source_observed_at": "2026-11-06T13:20:19.844013+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:19.864075+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asr900acl-UeEyCxkv/csaf/cisco-sa-asr900acl-UeEyCxkv.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asr900acl-UeEyCxkv"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+      "source_sha256": "dd1f9a1a798e534fe387566918efb1e7f013526be5ae1f0f6daffefd1e557edf",
+      "cve_ids": [
+        "CVE-2025-20189"
+      ],
+      "source_observed_at": "2026-11-06T13:16:10.642749+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:10.667671+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ/csaf/cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-aux-333WBz8f",
+      "source_sha256": "c9da646d04f2c4e56666ad61929760d9d61e674f1e51846e60d38d63082077d9",
+      "cve_ids": [
+        "CVE-2024-20309"
+      ],
+      "source_observed_at": "2026-11-06T13:16:13.077856+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:13.136445+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-aux-333WBz8f/csaf/cisco-sa-aux-333WBz8f.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-aux-333WBz8f"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-bootp-WuBhNBxA",
+      "source_sha256": "bb94ed39a6951e5a473e484a05713186a322b7e6044e74c94627adf7f49db304",
+      "cve_ids": [
+        "CVE-2026-20084"
+      ],
+      "source_observed_at": "2026-11-06T13:16:15.528792+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:15.545863+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-bootp-WuBhNBxA/csaf/cisco-sa-bootp-WuBhNBxA.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-bootp-WuBhNBxA"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-bootstrap-KfgxYgdh",
+      "source_sha256": "5d9c37a510a926dbd8b194bc11f04fefce09f1f82a9e5c141f11818b02273d4d",
+      "cve_ids": [
+        "CVE-2025-20155"
+      ],
+      "source_observed_at": "2026-11-06T13:16:17.773956+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:17.780992+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-bootstrap-KfgxYgdh/csaf/cisco-sa-bootstrap-KfgxYgdh.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-bootstrap-KfgxYgdh"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9300-spi-ace-yejYgnNQ",
+      "source_sha256": "52c43d1e6c3510b2869197343d0e7bf9418c391bc9a26c3e9835bf1ec9643a08",
+      "cve_ids": [
+        "CVE-2023-20082"
+      ],
+      "source_observed_at": "2026-11-06T13:16:19.968310+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:19.972484+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9300-spi-ace-yejYgnNQ/csaf/cisco-sa-c9300-spi-ace-yejYgnNQ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9300-spi-ace-yejYgnNQ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9800-apjoin-dos-nXRHkt5",
+      "source_sha256": "188d1c721e6950b4e8ef70ac8fb9efeb5dc98107b499def7056afe3de45e6508",
+      "cve_ids": [
+        "CVE-2023-20100"
+      ],
+      "source_observed_at": "2026-11-06T13:16:22.211316+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:22.220058+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-apjoin-dos-nXRHkt5/csaf/cisco-sa-c9800-apjoin-dos-nXRHkt5.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-apjoin-dos-nXRHkt5"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9800-capwap-mdns-6PSn7gKU",
+      "source_sha256": "d183beb30a5f3b3a27f77319076e3c45c8815a07b537280a89651ab9f1133c23",
+      "cve_ids": [
+        "CVE-2022-20682"
+      ],
+      "source_observed_at": "2026-11-06T13:20:22.093650+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:22.105120+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-capwap-mdns-6PSn7gKU/csaf/cisco-sa-c9800-capwap-mdns-6PSn7gKU.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-capwap-mdns-6PSn7gKU"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9800-cwa-acl-nPSbHSnA",
+      "source_sha256": "7754b6c9e76e0e212b40fc6ffc7c7fe5ce881624ab5f21a8d71206c367a5ba12",
+      "cve_ids": [
+        "CVE-2024-20510"
+      ],
+      "source_observed_at": "2026-11-06T13:16:24.618456+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:24.659588+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-cwa-acl-nPSbHSnA/csaf/cisco-sa-c9800-cwa-acl-nPSbHSnA.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-cwa-acl-nPSbHSnA"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9800-fnf-dos-bOL5vLge",
+      "source_sha256": "582a21304278a7218c08695a7b093709c28458e6980dfee993836693b34adeb5",
+      "cve_ids": [
+        "CVE-2022-20683"
+      ],
+      "source_observed_at": "2026-11-06T13:20:24.393256+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:24.409441+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-fnf-dos-bOL5vLge/csaf/cisco-sa-c9800-fnf-dos-bOL5vLge.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-fnf-dos-bOL5vLge"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9800-mob-dos-342YAc6J",
+      "source_sha256": "76b2ceecd25d7e50370c4a72ee47e629857b5a2ed399334c96d78b15c4c230bf",
+      "cve_ids": [
+        "CVE-2022-20856"
+      ],
+      "source_observed_at": "2026-11-06T13:20:26.649534+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:26.660186+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-mob-dos-342YAc6J/csaf/cisco-sa-c9800-mob-dos-342YAc6J.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-mob-dos-342YAc6J"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-c9800-snmp-trap-dos-mjent3Ey",
+      "source_sha256": "51d84cd78d14ed523ba98f467b3b85b93443f3f01f5e7ee2e938c11613499fa4",
+      "cve_ids": [
+        "CVE-2022-20684"
+      ],
+      "source_observed_at": "2026-11-06T13:20:29.030167+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:29.035920+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-snmp-trap-dos-mjent3Ey/csaf/cisco-sa-c9800-snmp-trap-dos-mjent3Ey.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-c9800-snmp-trap-dos-mjent3Ey"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cat3k-dos-ZZA4Gb3r",
+      "source_sha256": "93b5f8b94bdbba578d133f64d849fd15141d15a47665d9b1666f7808a93f88d4",
+      "cve_ids": [
+        "CVE-2023-20033"
+      ],
+      "source_observed_at": "2026-11-06T13:16:26.895345+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:26.907298+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cat3k-dos-ZZA4Gb3r/csaf/cisco-sa-cat3k-dos-ZZA4Gb3r.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cat3k-dos-ZZA4Gb3r"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cat9k-PtmD7bgy",
+      "source_sha256": "5584d366e0ae5902908f09db2a059f858d0144ea2b9b941cb94ec26b675442cc",
+      "cve_ids": [
+        "CVE-2025-20311"
+      ],
+      "source_observed_at": "2026-11-06T13:16:29.255812+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:29.284606+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cat9k-PtmD7bgy/csaf/cisco-sa-cat9k-PtmD7bgy.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cat9k-PtmD7bgy"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cat9k-acl-L4K7VXgD",
+      "source_sha256": "5e2f9042b661675fc1b97b69b061b7dd0ce5ab2db546164bfa23d1000d1fe065",
+      "cve_ids": [
+        "CVE-2025-20316"
+      ],
+      "source_observed_at": "2026-11-06T13:16:31.629251+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:31.638074+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cat9k-acl-L4K7VXgD/csaf/cisco-sa-cat9k-acl-L4K7VXgD.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cat9k-acl-L4K7VXgD"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cbr8-cops-Vc2ZsJSx",
+      "source_sha256": "56666f67814b7abe84a56dd5fdb6ac829852d950738797b075c9e837873ffb4d",
+      "cve_ids": [
+        "CVE-2021-1622"
+      ],
+      "source_observed_at": "2026-11-06T13:20:31.276405+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:31.286505+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cbr8-cops-Vc2ZsJSx/csaf/cisco-sa-cbr8-cops-Vc2ZsJSx.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cbr8-cops-Vc2ZsJSx"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cbr8snmp-zGjkZ9Fc",
+      "source_sha256": "c2fab36572d73fc5a383fa50d40c0b29711118697734ffce063af2525ec30c0b",
+      "cve_ids": [
+        "CVE-2021-1623"
+      ],
+      "source_observed_at": "2026-11-06T13:20:33.530360+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:33.540820+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cbr8snmp-zGjkZ9Fc/csaf/cisco-sa-cbr8snmp-zGjkZ9Fc.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cbr8snmp-zGjkZ9Fc"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cpp-vfr-dos-nhHKGgO",
+      "source_sha256": "21433816a53e48febf84b4aaa2567b4f96602658a9ff79e36849e9619ca86658",
+      "cve_ids": [
+        "CVE-2024-20467"
+      ],
+      "source_observed_at": "2026-11-06T13:16:33.879871+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:33.883651+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cpp-vfr-dos-nhHKGgO/csaf/cisco-sa-cpp-vfr-dos-nhHKGgO.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cpp-vfr-dos-nhHKGgO"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cucm-imps-xss-quWkd9yF",
+      "source_sha256": "5e518ec6f0fe8bf44e5867a389a1eb84eb4b531c4bd17871a6284d723bb6b284",
+      "cve_ids": [
+        "CVE-2024-20310"
+      ],
+      "source_observed_at": "2026-11-06T13:16:36.005678+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:36.009653+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cucm-imps-xss-quWkd9yF/csaf/cisco-sa-cucm-imps-xss-quWkd9yF.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cucm-imps-xss-quWkd9yF"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-cwlc-snmpidv-rnyyQzUZ",
+      "source_sha256": "75fea4d24e2ce843c0f17287428d4b25d24b72b10f214e796d1d79babc915176",
+      "cve_ids": [
+        "CVE-2022-20810"
+      ],
+      "source_observed_at": "2026-11-06T13:20:35.799442+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:35.808434+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cwlc-snmpidv-rnyyQzUZ/csaf/cisco-sa-cwlc-snmpidv-rnyyQzUZ.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cwlc-snmpidv-rnyyQzUZ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-dhcp-dos-T3CXPO9z",
+      "source_sha256": "12b27df5cfedde1fc0c3f1359c26304e61a5ad8683ab594d5b1a441815fb09d7",
+      "cve_ids": [
+        "CVE-2024-20259"
+      ],
+      "source_observed_at": "2026-11-06T13:16:38.252449+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:38.266273+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z/csaf/cisco-sa-dhcp-dos-T3CXPO9z.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+      "source_sha256": "2b0af31253f6076a978d1ab315b00d59c775b887cb829caad12927e703fb473f",
+      "cve_ids": [
+        "CVE-2024-20316"
+      ],
+      "source_observed_at": "2026-11-06T13:16:40.618976+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:40.647748+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dmi-acl-bypass-Xv8FO8Vz/csaf/cisco-sa-dmi-acl-bypass-Xv8FO8Vz.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dmi-acl-bypass-Xv8FO8Vz"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewc-priv-esc-nderYLtK",
+      "source_sha256": "13d9facf54a0128152b47af095e9fed8f2e0d980fa8751540039b33d5e0b04c0",
+      "cve_ids": [
+        "CVE-2022-20855"
+      ],
+      "source_observed_at": "2026-11-06T13:20:38.092723+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:38.107521+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewc-priv-esc-nderYLtK/csaf/cisco-sa-ewc-priv-esc-nderYLtK.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewc-priv-esc-nderYLtK"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-capwap-dos-2OA3JgKS",
+      "source_sha256": "6a91a07b92a19b4a27bf6c3a8bf193a2c71cfd2834f298a1bd8b14eaadea2c58",
+      "cve_ids": [
+        "CVE-2021-1373"
+      ],
+      "source_observed_at": "2026-11-06T13:20:40.345424+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:40.351645+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-capwap-dos-2OA3JgKS/csaf/cisco-sa-ewlc-capwap-dos-2OA3JgKS.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-capwap-dos-2OA3JgKS"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-capwap-dos-gmNjdKOY",
+      "source_sha256": "b8d8902a3e146fa90d3c7261b72462100d9e302c5c0bbc79c951fe4d37e097a6",
+      "cve_ids": [
+        "CVE-2021-1565",
+        "CVE-2021-34768",
+        "CVE-2021-34769"
+      ],
+      "source_observed_at": "2026-11-06T13:20:42.680593+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:42.688147+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-capwap-dos-gmNjdKOY/csaf/cisco-sa-ewlc-capwap-dos-gmNjdKOY.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-capwap-dos-gmNjdKOY"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-capwap-rce-LYgj8Kf",
+      "source_sha256": "29f7b32d3a80cc01e4066b817f81c025a719d890d60510a7bb9f30420fdb2726",
+      "cve_ids": [
+        "CVE-2021-34770"
+      ],
+      "source_observed_at": "2026-11-06T13:20:44.927498+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:44.934307+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-capwap-rce-LYgj8Kf/csaf/cisco-sa-ewlc-capwap-rce-LYgj8Kf.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-capwap-rce-LYgj8Kf"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-cdp-dos-fpeks9K",
+      "source_sha256": "fea0595241e669c52e335cff5f0e2e49bf34e05708ebdd46524d9b2e7b9eb18e",
+      "cve_ids": [
+        "CVE-2025-20202"
+      ],
+      "source_observed_at": "2026-11-06T13:16:42.883406+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:42.895645+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-cdp-dos-fpeks9K/csaf/cisco-sa-ewlc-cdp-dos-fpeks9K.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-cdp-dos-fpeks9K"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-dos-wFujBHKw",
+      "source_sha256": "ef0a37afcd9c93d0060484a53660333477e392d462d0e7fc4de07adada0d64fc",
+      "cve_ids": [
+        "CVE-2023-20067"
+      ],
+      "source_observed_at": "2026-11-06T13:16:45.237010+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:45.249535+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-dos-wFujBHKw/csaf/cisco-sa-ewlc-dos-wFujBHKw.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-dos-wFujBHKw"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-gre-6u4ELzAT",
+      "source_sha256": "18ded803d71cfb53fe197657cb1a45c226aa59a48140b959a1d8e3a10b752e02",
+      "cve_ids": [
+        "CVE-2021-1611"
+      ],
+      "source_observed_at": "2026-11-06T13:20:47.283545+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:47.292142+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-gre-6u4ELzAT/csaf/cisco-sa-ewlc-gre-6u4ELzAT.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-gre-6u4ELzAT"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-ipv6-dos-NMYeCnZv",
+      "source_sha256": "7537fcaac764518cc535d27b3569f92dc1917ea440e7c2e8a24ec1fe973b7ce7",
+      "cve_ids": [
+        "CVE-2021-34767"
+      ],
+      "source_observed_at": "2026-11-06T13:20:49.529354+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:49.543932+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-ipv6-dos-NMYeCnZv/csaf/cisco-sa-ewlc-ipv6-dos-NMYeCnZv.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-ipv6-dos-NMYeCnZv"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-priv-esc-ybvHKO5",
+      "source_sha256": "eb53ba2a073c7e5914403622f6411cc99da6694414456cc91414984b5b18fc67",
+      "cve_ids": [
+        "CVE-2022-20681"
+      ],
+      "source_observed_at": "2026-11-06T13:20:51.780203+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:51.793105+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-priv-esc-ybvHKO5/csaf/cisco-sa-ewlc-priv-esc-ybvHKO5.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-priv-esc-ybvHKO5"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-user-del-hQxMpUDj",
+      "source_sha256": "bac8aa429d6226d9e5457c08b283543bf3884e8160fbe140d6a9f8b8d0ccfb50",
+      "cve_ids": [
+        "CVE-2025-20190"
+      ],
+      "source_observed_at": "2026-11-06T13:16:47.428250+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:47.433587+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-user-del-hQxMpUDj/csaf/cisco-sa-ewlc-user-del-hQxMpUDj.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-user-del-hQxMpUDj"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ewlc-xss-cAfMtCzv",
+      "source_sha256": "4d4f631f887e243184feec2d9f39633d4fb03af1152fb8568259a36b2565f917",
+      "cve_ids": [
+        "CVE-2021-1374"
+      ],
+      "source_observed_at": "2026-11-06T13:20:54.011821+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:54.027564+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-xss-cAfMtCzv/csaf/cisco-sa-ewlc-xss-cAfMtCzv.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ewlc-xss-cAfMtCzv"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-fast-Zqr6DD5",
+      "source_sha256": "e38453288e918dcba73661b7c7fa507c4521b695bd8cfdfd9099cd08af4bbe69",
+      "cve_ids": [
+        "CVE-2021-1375",
+        "CVE-2021-1376"
+      ],
+      "source_observed_at": "2026-11-06T13:20:56.255637+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:56.272097+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fast-Zqr6DD5/csaf/cisco-sa-fast-Zqr6DD5.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fast-Zqr6DD5"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-fxo-pattern-bypass-jUXgygYv",
+      "source_sha256": "923f81b5495f2404b2f6033046d2741a260d826f306a26c2244b1f66f1d26637",
+      "cve_ids": [
+        "CVE-2021-34705"
+      ],
+      "source_observed_at": "2026-11-06T13:20:59.016544+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:20:59.232518+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fxo-pattern-bypass-jUXgygYv/csaf/cisco-sa-fxo-pattern-bypass-jUXgygYv.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fxo-pattern-bypass-jUXgygYv"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-getvpn-rce-g8qR68sx",
+      "source_sha256": "cd5abcff0903b5a3d5e80e104c172be0911dcd02347d795e5a085cfbfacf991e",
+      "cve_ids": [
+        "CVE-2023-20109"
+      ],
+      "source_observed_at": "2026-11-06T13:16:50.165842+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:50.329809+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-getvpn-rce-g8qR68sx/csaf/cisco-sa-getvpn-rce-g8qR68sx.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-getvpn-rce-g8qR68sx"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-hardening-iosxe-V8NMuMZJ",
+      "source_sha256": "0f51863687793ec84cfa51289e3028b712ec0695061eafa576e6ea5f62fe8149",
+      "cve_ids": [
+        "CVE-2026-20267",
+        "CVE-2026-20268",
+        "CVE-2026-20269",
+        "CVE-2026-20270",
+        "CVE-2026-20271",
+        "CVE-2026-20272",
+        "CVE-2026-20273"
+      ],
+      "source_observed_at": "2026-11-06T13:16:52.941452+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:53.470000+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-hardening-iosxe-V8NMuMZJ/csaf/cisco-sa-hardening-iosxe-V8NMuMZJ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-hardening-iosxe-V8NMuMZJ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-http-code-exec-WmfP3h3O",
+      "source_sha256": "f26534006db09e8312484580c70b035ee8d8fb020d24fa9ad620e46959bf9aa8",
+      "cve_ids": [
+        "CVE-2025-20363"
+      ],
+      "source_observed_at": "2026-11-06T13:16:56.891333+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:16:57.649421+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-http-code-exec-WmfP3h3O/csaf/cisco-sa-http-code-exec-WmfP3h3O.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-http-code-exec-WmfP3h3O"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-http-dos-svOdkdBS",
+      "source_sha256": "b9158cff7fdc094e6b261115a012327d84f05fcf2b286d7e36df30de42b6d560",
+      "cve_ids": [
+        "CVE-2022-20697"
+      ],
+      "source_observed_at": "2026-11-06T13:21:01.586598+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:01.596810+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-http-dos-svOdkdBS/csaf/cisco-sa-http-dos-svOdkdBS.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-http-dos-svOdkdBS"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-httpsrvr-dos-yOZThut",
+      "source_sha256": "d84942bf18522c6ef61950d3bcd6c19676166d21b1b67733b313c00a4275eab1",
+      "cve_ids": [
+        "CVE-2024-20436"
+      ],
+      "source_observed_at": "2026-11-06T13:17:00.027532+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:00.068659+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-httpsrvr-dos-yOZThut/csaf/cisco-sa-httpsrvr-dos-yOZThut.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-httpsrvr-dos-yOZThut"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ikev1-NO2ccFWz",
+      "source_sha256": "f56c94b6a70eb57ad1cd97ac14760f59060d80c944fd512a6682d6883c0db221",
+      "cve_ids": [
+        "CVE-2024-20307",
+        "CVE-2024-20308"
+      ],
+      "source_observed_at": "2026-11-06T13:17:02.794209+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:03.166685+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ikev1-NO2ccFWz/csaf/cisco-sa-ikev1-NO2ccFWz.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ikev1-NO2ccFWz"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ikev2-ebFrwMPr",
+      "source_sha256": "55873fad814cd5731b096acb8eac5bb6f9eae33d5dea996c8b191d6934dd12ac",
+      "cve_ids": [
+        "CVE-2021-1620"
+      ],
+      "source_observed_at": "2026-11-06T13:21:04.211384+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:04.298718+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ikev2-ebFrwMPr/csaf/cisco-sa-ikev2-ebFrwMPr.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ikev2-ebFrwMPr"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-cli-EB7cZ6yO",
+      "source_sha256": "478d2894ef94a7cc1425f3659e7b9b9ef8c953e4b59c8a8ce2b36317bf9d80f8",
+      "cve_ids": [
+        "CVE-2025-20149"
+      ],
+      "source_observed_at": "2026-11-06T13:17:05.916694+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:06.109255+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-cli-EB7cZ6yO/csaf/cisco-sa-ios-cli-EB7cZ6yO.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-cli-EB7cZ6yO"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-gre-crash-p6nE5Sq5",
+      "source_sha256": "49e52d8d0a84f9ae3bd99f7f1b398fd1e14d96bc1b80853d684571b05b72b401",
+      "cve_ids": [
+        "CVE-2023-20072"
+      ],
+      "source_observed_at": "2026-11-06T13:17:08.347045+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:08.351198+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-gre-crash-p6nE5Sq5/csaf/cisco-sa-ios-gre-crash-p6nE5Sq5.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-gre-crash-p6nE5Sq5"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-http-dos-sbv8XRpL",
+      "source_sha256": "e657c96083b09778759fa445da36d25f4457df3e147bd57002adf3c757292463",
+      "cve_ids": [
+        "CVE-2026-20125"
+      ],
+      "source_observed_at": "2026-11-06T13:17:11.078239+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:11.238314+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-http-dos-sbv8XRpL/csaf/cisco-sa-ios-http-dos-sbv8XRpL.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-http-dos-sbv8XRpL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-nxos-xr-udld-dos-W5hGHgtQ",
+      "source_sha256": "311a756210f4bcb1a48c63dfa7903485f4084781aad731b14208509c7ccd7906",
+      "cve_ids": [
+        "CVE-2021-34714"
+      ],
+      "source_observed_at": "2026-11-06T13:21:06.943568+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:07.100026+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-nxos-xr-udld-dos-W5hGHgtQ/csaf/cisco-sa-ios-nxos-xr-udld-dos-W5hGHgtQ.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-nxos-xr-udld-dos-W5hGHgtQ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-tacacs-hdB7thJw",
+      "source_sha256": "1cfdacb29f45e60003163d5a5bd69b49f454f4c29c15cd93dd262c0218fb8da6",
+      "cve_ids": [
+        "CVE-2025-20160"
+      ],
+      "source_observed_at": "2026-11-06T13:17:13.752254+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:13.812597+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-tacacs-hdB7thJw/csaf/cisco-sa-ios-tacacs-hdB7thJw.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-tacacs-hdB7thJw"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-webui-HfwnRgk",
+      "source_sha256": "9dd069917a107c367b5466ab0659508746e05853f34e54daa3e7a34c7651b2bd",
+      "cve_ids": [
+        "CVE-2024-20414"
+      ],
+      "source_observed_at": "2026-11-06T13:17:16.313070+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:16.373391+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-webui-HfwnRgk/csaf/cisco-sa-ios-webui-HfwnRgk.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-webui-HfwnRgk"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-cat-verify-BQ5hrXgH",
+      "source_sha256": "e7718fb935e7032218d9e74370e8eb2e5e8aab8505da29824883cb48083db55c",
+      "cve_ids": [
+        "CVE-2021-1453"
+      ],
+      "source_observed_at": "2026-11-06T13:21:09.371220+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:09.381236+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cat-verify-BQ5hrXgH/csaf/cisco-sa-ios-xe-cat-verify-BQ5hrXgH.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cat-verify-BQ5hrXgH"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-cat-verify-D4NEQA6q",
+      "source_sha256": "c9b3b04fcbb0ccd52bf179142dba94e3c38933ba8aa1a2f14646fb871af20e5f",
+      "cve_ids": [
+        "CVE-2022-20944"
+      ],
+      "source_observed_at": "2026-11-06T13:21:11.687046+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:11.706196+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cat-verify-D4NEQA6q/csaf/cisco-sa-ios-xe-cat-verify-D4NEQA6q.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cat-verify-D4NEQA6q"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-cmd-inject-rPJM8BGL",
+      "source_sha256": "e90ea7e9dd05f33fe93a2010303710a7ee601ce404ec2fb7840ef95121717b9e",
+      "cve_ids": [
+        "CVE-2025-20334"
+      ],
+      "source_observed_at": "2026-11-06T13:17:18.625229+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:18.635553+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cmd-inject-rPJM8BGL/csaf/cisco-sa-ios-xe-cmd-inject-rPJM8BGL.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cmd-inject-rPJM8BGL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-evss-code-exe-8cw5VSvw",
+      "source_sha256": "be323d022715f847d2aa2ac0dadb53bd28cded06d341aa65bf44ca481b679356",
+      "cve_ids": [
+        "CVE-2021-1451"
+      ],
+      "source_observed_at": "2026-11-06T13:21:13.958886+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:13.970732+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-evss-code-exe-8cw5VSvw/csaf/cisco-sa-ios-xe-evss-code-exe-8cw5VSvw.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-evss-code-exe-8cw5VSvw"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-iot-codexec-k46EFF6q",
+      "source_sha256": "fb33938d1f28c5df6958b1d71a7b05208ffbfc023e4c6a7f338b7ba538a19fc7",
+      "cve_ids": [
+        "CVE-2021-1441"
+      ],
+      "source_observed_at": "2026-11-06T13:21:16.199363+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:16.207580+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-iot-codexec-k46EFF6q/csaf/cisco-sa-ios-xe-iot-codexec-k46EFF6q.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-iot-codexec-k46EFF6q"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-l2tp-dos-eB5tuFmV",
+      "source_sha256": "4e3fc3610bbe4072e1eae2a5cbf442b86ccaf8f05219e964da6cf075fe4a998a",
+      "cve_ids": [
+        "CVE-2023-20227"
+      ],
+      "source_observed_at": "2026-11-06T13:17:20.959014+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:20.976705+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-l2tp-dos-eB5tuFmV/csaf/cisco-sa-ios-xe-l2tp-dos-eB5tuFmV.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-l2tp-dos-eB5tuFmV"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-os-cmd-inj-Ef6TV5e9",
+      "source_sha256": "0844e39aa4545e0b27db86cf98aa48dd854dec98e5a947f84b8ec20a481dfc1e",
+      "cve_ids": [
+        "CVE-2021-1443"
+      ],
+      "source_observed_at": "2026-11-06T13:21:18.449257+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:18.462456+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-os-cmd-inj-Ef6TV5e9/csaf/cisco-sa-ios-xe-os-cmd-inj-Ef6TV5e9.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-os-cmd-inj-Ef6TV5e9"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-pnp-priv-esc-AmG3kuVL",
+      "source_sha256": "fc3db9566eb3747138d4d6430149770e7331cc78f394448ccac81b77d4b81d36",
+      "cve_ids": [
+        "CVE-2021-1442"
+      ],
+      "source_observed_at": "2026-11-06T13:21:20.884983+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:20.925745+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-pnp-priv-esc-AmG3kuVL/csaf/cisco-sa-ios-xe-pnp-priv-esc-AmG3kuVL.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-pnp-priv-esc-AmG3kuVL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-sda-edge-dos-MBcbG9k",
+      "source_sha256": "71def70bdc5027a36964c5634b70e4d515bdd52b2afc68652a9c28961d84b8dd",
+      "cve_ids": [
+        "CVE-2024-20480"
+      ],
+      "source_observed_at": "2026-11-06T13:17:23.317976+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:23.367813+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-sda-edge-dos-MBcbG9k/csaf/cisco-sa-ios-xe-sda-edge-dos-MBcbG9k.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-sda-edge-dos-MBcbG9k"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG",
+      "source_sha256": "aa1c0316f222001809ab1d6415bc6429cb997808ed414d631260bbfe5f9ec315",
+      "cve_ids": [
+        "CVE-2024-20314"
+      ],
+      "source_observed_at": "2026-11-06T13:17:25.717605+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:25.761567+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG/csaf/cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xe-sdwan-VQAhEjYw",
+      "source_sha256": "7684578468507a61da71ea514d4c7c6b9f96ebde24c27a60afed3503ef900d51",
+      "cve_ids": [
+        "CVE-2023-20035"
+      ],
+      "source_observed_at": "2026-11-06T13:17:28.113021+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:28.129106+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-sdwan-VQAhEjYw/csaf/cisco-sa-ios-xe-sdwan-VQAhEjYw.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-sdwan-VQAhEjYw"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ios-xmcp-thbAr34t",
+      "source_sha256": "86b2ae28a939dc4ae4e927a290aa14d16c167bb292fb9fd30d2efa4cb89031a0",
+      "cve_ids": [
+        "CVE-2026-20301"
+      ],
+      "source_observed_at": "2026-11-06T13:17:30.630718+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:30.699488+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xmcp-thbAr34t/csaf/cisco-sa-ios-xmcp-thbAr34t.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xmcp-thbAr34t"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-6vpe-dos-tJBtf5Zv",
+      "source_sha256": "bfa80735211c5a1f9e2e118cd674fb31889a136142fae7dec4ad907853265582",
+      "cve_ids": [
+        "CVE-2022-20915"
+      ],
+      "source_observed_at": "2026-11-06T13:21:23.259156+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:23.282536+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-6vpe-dos-tJBtf5Zv/csaf/cisco-sa-iosxe-6vpe-dos-tJBtf5Zv.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-6vpe-dos-tJBtf5Zv"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-arbfile-FUxskKDE",
+      "source_sha256": "3a375083c7b68f9570bd5ed55521743ada5e97d172fed43f36964a487dd881ee",
+      "cve_ids": [
+        "CVE-2021-1434"
+      ],
+      "source_observed_at": "2026-11-06T13:21:25.512803+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:25.520646+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-arbfile-FUxskKDE/csaf/cisco-sa-iosxe-arbfile-FUxskKDE.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-arbfile-FUxskKDE"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-arg-inject-EyDDbh4e",
+      "source_sha256": "66b41025a5360139a82eea5c9a38b5df7c3ce4f66dec51cb8d1e3913e909aee0",
+      "cve_ids": [
+        "CVE-2025-20338"
+      ],
+      "source_observed_at": "2026-11-06T13:17:33.162172+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:33.239446+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-arg-inject-EyDDbh4e/csaf/cisco-sa-iosxe-arg-inject-EyDDbh4e.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-arg-inject-EyDDbh4e"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-bing-MGHrFAkd",
+      "source_sha256": "f11559de5c450a6b5bec5bc64e4a14897c7500ec8c3b3514c7169db914a17e64",
+      "cve_ids": [
+        "CVE-2026-20263"
+      ],
+      "source_observed_at": "2026-11-06T13:17:35.577406+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:35.617873+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-bing-MGHrFAkd/csaf/cisco-sa-iosxe-bing-MGHrFAkd.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-bing-MGHrFAkd"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-buffover-CqdRWLc",
+      "source_sha256": "f27d62698b8467c6a4d991709ba231f300d27d220416869902de8b7e4395c788",
+      "cve_ids": [
+        "CVE-2021-1433"
+      ],
+      "source_observed_at": "2026-11-06T13:21:27.751245+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:27.758576+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-buffover-CqdRWLc/csaf/cisco-sa-iosxe-buffover-CqdRWLc.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-buffover-CqdRWLc"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-cip-dos-9rTbKLt9",
+      "source_sha256": "33484fe996c73737d225df77d1937088d4e42d3c80c65daa497e3a00511ef7b1",
+      "cve_ids": [
+        "CVE-2022-20919"
+      ],
+      "source_observed_at": "2026-11-06T13:21:30.067512+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:30.079594+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-cip-dos-9rTbKLt9/csaf/cisco-sa-iosxe-cip-dos-9rTbKLt9.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-cip-dos-9rTbKLt9"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-cswsh-FKk9AzT5",
+      "source_sha256": "f4a0b5b74070b507645a8c26c1740439472f76a3d2a5bc992214c51b6ebcdbb6",
+      "cve_ids": [
+        "CVE-2021-1403"
+      ],
+      "source_observed_at": "2026-11-06T13:21:32.469923+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:32.490684+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-cswsh-FKk9AzT5/csaf/cisco-sa-iosxe-cswsh-FKk9AzT5.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-cswsh-FKk9AzT5"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-decnet-dos-cuPWDkyL",
+      "source_sha256": "655375472e297270426ab63fad58b34092bd3b2cdec03ecd6b8b7be236984365",
+      "cve_ids": [
+        "CVE-2021-1352"
+      ],
+      "source_observed_at": "2026-11-06T13:21:34.793903+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:34.814668+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-decnet-dos-cuPWDkyL/csaf/cisco-sa-iosxe-decnet-dos-cuPWDkyL.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-decnet-dos-cuPWDkyL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks",
+      "source_sha256": "4424b1756da0dc7218df6c5bfb00c9a02f09904568ba984b241caaa65ef9aae9",
+      "cve_ids": [
+        "CVE-2025-20162"
+      ],
+      "source_observed_at": "2026-11-06T13:17:37.898664+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:37.914099+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks/csaf/cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-ewc-dos-g6JruHRT",
+      "source_sha256": "8e35094efe80387b87c1b9711e756b03823549b9aeaae34a77d9ccb41bd827df",
+      "cve_ids": [
+        "CVE-2021-1615"
+      ],
+      "source_observed_at": "2026-11-06T13:21:37.107868+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:37.117022+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-ewc-dos-g6JruHRT/csaf/cisco-sa-iosxe-ewc-dos-g6JruHRT.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-ewc-dos-g6JruHRT"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-h323alg-bypass-4vy2MP2Q",
+      "source_sha256": "a86965018e1a33f26c483249403571a21620cda2533a6e891cc0d545b88d5295",
+      "cve_ids": [
+        "CVE-2021-1616"
+      ],
+      "source_observed_at": "2026-11-06T13:21:39.513208+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:39.552220+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-h323alg-bypass-4vy2MP2Q/csaf/cisco-sa-iosxe-h323alg-bypass-4vy2MP2Q.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-h323alg-bypass-4vy2MP2Q"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-ikev1-dos-XHk3HzFC",
+      "source_sha256": "719767c17b34fd73d2a17a4ad52e88bd3f250d7e83c40c12f38def4c4faeddd6",
+      "cve_ids": [
+        "CVE-2025-20192"
+      ],
+      "source_observed_at": "2026-11-06T13:17:40.258301+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:40.293252+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-ikev1-dos-XHk3HzFC/csaf/cisco-sa-iosxe-ikev1-dos-XHk3HzFC.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-ikev1-dos-XHk3HzFC"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-info-disc-nrORXjO",
+      "source_sha256": "0c76d2a69914e2d6b257bd360e04d079e360d7e4d8fcf9f10bd9528108f8efeb",
+      "cve_ids": [
+        "CVE-2022-20864"
+      ],
+      "source_observed_at": "2026-11-06T13:21:41.904115+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:41.909577+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-info-disc-nrORXjO/csaf/cisco-sa-iosxe-info-disc-nrORXjO.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-info-disc-nrORXjO"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-lobby-privesc-KwxBqJy",
+      "source_sha256": "049fe4bee1b6fee2c5c852f822f5b53b60e7b4fe32df6f1b369363c740281386",
+      "cve_ids": [
+        "CVE-2026-20114"
+      ],
+      "source_observed_at": "2026-11-06T13:17:42.692958+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:42.720602+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-lobby-privesc-KwxBqJy/csaf/cisco-sa-iosxe-lobby-privesc-KwxBqJy.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-lobby-privesc-KwxBqJy"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-mntc-dos-LZweQcyq",
+      "source_sha256": "dc1e707d001250d526e35a45926d0456ca102bee52412b0d0b05144cb73cca5f",
+      "cve_ids": [
+        "CVE-2026-20110"
+      ],
+      "source_observed_at": "2026-11-06T13:17:45.075610+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:45.113235+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-mntc-dos-LZweQcyq/csaf/cisco-sa-iosxe-mntc-dos-LZweQcyq.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-mntc-dos-LZweQcyq"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-mpls-dos-Ab4OUL3",
+      "source_sha256": "b69ce4e4987ce07a81926c882df85c326fcccd311cfa59c7cf1cf3581e3e5982",
+      "cve_ids": [
+        "CVE-2022-20870"
+      ],
+      "source_observed_at": "2026-11-06T13:21:44.282340+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:44.302800+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-mpls-dos-Ab4OUL3/csaf/cisco-sa-iosxe-mpls-dos-Ab4OUL3.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-mpls-dos-Ab4OUL3"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-ospf-dos-dR9Sfrxp",
+      "source_sha256": "d09a227831b603aa55dc9f6318661608c84873b9f118b3ff0d4a3bae195d8d06",
+      "cve_ids": [
+        "CVE-2024-20313"
+      ],
+      "source_observed_at": "2026-11-06T13:17:47.456206+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:47.464647+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-ospf-dos-dR9Sfrxp/csaf/cisco-sa-iosxe-ospf-dos-dR9Sfrxp.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-ospf-dos-dR9Sfrxp"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-priv-esc-grbtubU",
+      "source_sha256": "4c9b3e764d37ecb10d05c0c01eb6c0ee6d40f2df1d965121656dec99c08ec757",
+      "cve_ids": [
+        "CVE-2022-20676"
+      ],
+      "source_observed_at": "2026-11-06T13:21:46.537832+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:46.545748+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-grbtubU/csaf/cisco-sa-iosxe-priv-esc-grbtubU.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-grbtubU"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-priv-esc-sABD8hcU",
+      "source_sha256": "fec2a77384af8d3981ce71e965b79186ed72d5d3463d4337fd4e6d6ac81d1f94",
+      "cve_ids": [
+        "CVE-2023-20029"
+      ],
+      "source_observed_at": "2026-11-06T13:17:49.590481+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:49.594271+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-sABD8hcU/csaf/cisco-sa-iosxe-priv-esc-sABD8hcU.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-sABD8hcU"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-priv-esc-seAx6NLX",
+      "source_sha256": "0e8dfd4ec66c8bbb6ab8002058a1c773b2a446aaee1eb8e8dce9731b26c99e0b",
+      "cve_ids": [
+        "CVE-2024-20278"
+      ],
+      "source_observed_at": "2026-11-06T13:17:51.833577+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:51.842846+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-seAx6NLX/csaf/cisco-sa-iosxe-priv-esc-seAx6NLX.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-seAx6NLX"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-privesc-su7scvdp",
+      "source_sha256": "3bea70029ded0f5f4895e302101cf5d3cef041f1598a60ffd065b4b8a714055d",
+      "cve_ids": [
+        "CVE-2025-20197",
+        "CVE-2025-20198",
+        "CVE-2025-20199",
+        "CVE-2025-20200",
+        "CVE-2025-20201"
+      ],
+      "source_observed_at": "2026-11-06T13:17:54.458374+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:54.768508+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-privesc-su7scvdp/csaf/cisco-sa-iosxe-privesc-su7scvdp.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-privesc-su7scvdp"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-romvar-cmd-inj-N56fYbrw",
+      "source_sha256": "ce4fa03261ca58df31df5c042e0adc44fecf668e60698ea8ae92f99d8612a254",
+      "cve_ids": [
+        "CVE-2021-1452"
+      ],
+      "source_observed_at": "2026-11-06T13:21:48.743902+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:48.747023+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-romvar-cmd-inj-N56fYbrw/csaf/cisco-sa-iosxe-romvar-cmd-inj-N56fYbrw.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-romvar-cmd-inj-N56fYbrw"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-rpki-dos-2EgCNeKE",
+      "source_sha256": "2ae8756edaec6c9e194c727920cf273cfade5cfe9b98d5bde77e63313c21edaa",
+      "cve_ids": [
+        "CVE-2022-20694"
+      ],
+      "source_observed_at": "2026-11-06T13:21:51.129123+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:51.160820+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-rpki-dos-2EgCNeKE/csaf/cisco-sa-iosxe-rpki-dos-2EgCNeKE.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-rpki-dos-2EgCNeKE"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-sdwarbcmdexec-sspOMUr3",
+      "source_sha256": "f6669ddc9ac79a450eef950107215e36e216a85005f443c8bebcf2ae9996a792",
+      "cve_ids": [
+        "CVE-2021-1432"
+      ],
+      "source_observed_at": "2026-11-06T13:21:53.407174+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:53.414648+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-sdwarbcmdexec-sspOMUr3/csaf/cisco-sa-iosxe-sdwarbcmdexec-sspOMUr3.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-sdwarbcmdexec-sspOMUr3"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-sdwdos-4zeEeC9w",
+      "source_sha256": "cefb81501af4fe0519962d8428fe95b187eeb3da16cd820d5266240172eeff59",
+      "cve_ids": [
+        "CVE-2021-1431"
+      ],
+      "source_observed_at": "2026-11-06T13:21:55.644527+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:55.652780+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-sdwdos-4zeEeC9w/csaf/cisco-sa-iosxe-sdwdos-4zeEeC9w.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-sdwdos-4zeEeC9w"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-sdwpathtrav-nsrue2Mt",
+      "source_sha256": "229f56cf00d6967e2bd13a8343191fde3168926117532c51b2c67dd4d961f4d1",
+      "cve_ids": [
+        "CVE-2021-1436"
+      ],
+      "source_observed_at": "2026-11-06T13:21:57.926060+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:21:57.934169+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-sdwpathtrav-nsrue2Mt/csaf/cisco-sa-iosxe-sdwpathtrav-nsrue2Mt.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-sdwpathtrav-nsrue2Mt"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-snmp-dos-ZAqNm4MD",
+      "source_sha256": "9326d4c7daa6eb739d2c7c32bef8a3d27a1eb3aa0f300eada15fa56011a533d9",
+      "cve_ids": [
+        "CVE-2026-20124"
+      ],
+      "source_observed_at": "2026-11-06T13:17:57.183701+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:57.247042+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-snmp-dos-ZAqNm4MD/csaf/cisco-sa-iosxe-snmp-dos-ZAqNm4MD.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-snmp-dos-ZAqNm4MD"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-tls-dos-TVgLDEZL",
+      "source_sha256": "b8c556e402ccc1fa7eed7b95a276d0478c40112061f37f07d644382e30a1bebc",
+      "cve_ids": [
+        "CVE-2026-20004"
+      ],
+      "source_observed_at": "2026-11-06T13:17:59.717259+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:17:59.749522+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-tls-dos-TVgLDEZL/csaf/cisco-sa-iosxe-tls-dos-TVgLDEZL.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-tls-dos-TVgLDEZL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-utd-cmd-JbL8KvHT",
+      "source_sha256": "cba0de49162bf75e665d4f1b1046949a9a2db8bbf870b3f1037a3a48596a56f7",
+      "cve_ids": [
+        "CVE-2024-20306"
+      ],
+      "source_observed_at": "2026-11-06T13:18:01.855486+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:01.860324+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-utd-cmd-JbL8KvHT/csaf/cisco-sa-iosxe-utd-cmd-JbL8KvHT.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-utd-cmd-JbL8KvHT"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-webcmdinjsh-UFJxTgZD",
+      "source_sha256": "88ca70a72e1209b0d62a9197546b0897843e04fa7348649bacbf6f89a04c98dd",
+      "cve_ids": [
+        "CVE-2021-1435"
+      ],
+      "source_observed_at": "2026-11-06T13:22:00.247903+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:00.255422+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-webcmdinjsh-UFJxTgZD/csaf/cisco-sa-iosxe-webcmdinjsh-UFJxTgZD.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-webcmdinjsh-UFJxTgZD"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-webui-privesc-j22SaA4z",
+      "source_sha256": "c27bc3b73d611673c84663b8cf2739d29aff49d572d3e71b4a13b8ba9fede4b1",
+      "cve_ids": [
+        "CVE-2023-20198",
+        "CVE-2023-20273"
+      ],
+      "source_observed_at": "2026-11-06T13:18:04.289516+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:04.342689+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-webui-privesc-j22SaA4z/csaf/cisco-sa-iosxe-webui-privesc-j22SaA4z.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-webui-privesc-j22SaA4z"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+      "source_sha256": "363a0544ae6bb44490d56c18fd94a461bd5237651ed9498cdf00fe3a4ae0a670",
+      "cve_ids": [
+        "CVE-2024-20324"
+      ],
+      "source_observed_at": "2026-11-06T13:18:06.578015+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:06.591903+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-wlc-privesc-RjSMrmPK/csaf/cisco-sa-iosxe-wlc-privesc-RjSMrmPK.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-wlc-privesc-RjSMrmPK"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxe_infodis-6J847uEB",
+      "source_sha256": "09393449f18c033eb2e39413f97757317a80b36fe6d6d7c15ec68c3b92c02235",
+      "cve_ids": [
+        "CVE-2026-20115"
+      ],
+      "source_observed_at": "2026-11-06T13:18:08.824169+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:08.833154+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe_infodis-6J847uEB/csaf/cisco-sa-iosxe_infodis-6J847uEB.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe_infodis-6J847uEB"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iosxesdwan-arbfileov-MVOF3ZZn",
+      "source_sha256": "9deb665460da3ab626d6a6b4b137589784062c6a64394707c2edd8aba3f958d7",
+      "cve_ids": [
+        "CVE-2021-34723"
+      ],
+      "source_observed_at": "2026-11-06T13:22:02.450586+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:02.457064+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxesdwan-arbfileov-MVOF3ZZn/csaf/cisco-sa-iosxesdwan-arbfileov-MVOF3ZZn.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxesdwan-arbfileov-MVOF3ZZn"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iox-cmdinj-RkSURGHG",
+      "source_sha256": "f12f57d84740413dae3b9b468ba8bb5692d29bac92d760282424f9d019304a2b",
+      "cve_ids": [
+        "CVE-2021-1384"
+      ],
+      "source_observed_at": "2026-11-06T13:22:04.807640+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:04.825759+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-cmdinj-RkSURGHG/csaf/cisco-sa-iox-cmdinj-RkSURGHG.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-cmdinj-RkSURGHG"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iox-crlf-NvgKTKJZ",
+      "source_sha256": "c40b8dd958eff3da1fac3183bcc511ddb75382c8e77adf3e04d696fa5cccc8a3",
+      "cve_ids": [
+        "CVE-2026-20113"
+      ],
+      "source_observed_at": "2026-11-06T13:18:11.207422+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:11.245997+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-crlf-NvgKTKJZ/csaf/cisco-sa-iox-crlf-NvgKTKJZ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-crlf-NvgKTKJZ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iox-dos-95Fqnf7b",
+      "source_sha256": "f17866d1ea08d1d0530aa90c9097863d1f4275d1c5b2e72bf5cba86a4308a4bf",
+      "cve_ids": [
+        "CVE-2025-20196"
+      ],
+      "source_observed_at": "2026-11-06T13:18:13.688689+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:13.714137+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-dos-95Fqnf7b/csaf/cisco-sa-iox-dos-95Fqnf7b.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-dos-95Fqnf7b"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iox-priv-escalate-Xg8zkyPk",
+      "source_sha256": "9a59a7c900a4f841cd8e59dbb97d83250ba43c4814cfb5537b7b898d2a6bac0d",
+      "cve_ids": [
+        "CVE-2023-20065"
+      ],
+      "source_observed_at": "2026-11-06T13:18:16.077633+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:16.087304+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-priv-escalate-Xg8zkyPk/csaf/cisco-sa-iox-priv-escalate-Xg8zkyPk.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-priv-escalate-Xg8zkyPk"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-iox-xss-LpGkzwtJ",
+      "source_sha256": "079fc3e3de54d80d705ee3afd9347b2631322d14004583b5cdee772aeee5d594",
+      "cve_ids": [
+        "CVE-2026-20112"
+      ],
+      "source_observed_at": "2026-11-06T13:18:18.442450+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:18.479082+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-xss-LpGkzwtJ/csaf/cisco-sa-iox-xss-LpGkzwtJ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iox-xss-LpGkzwtJ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ioxesdwan-clicmdinj-7bYX5k3",
+      "source_sha256": "637eb3580bcae916a95316fd7c209b44553fc55c87acd667bca8a07b9894e117",
+      "cve_ids": [
+        "CVE-2021-34729"
+      ],
+      "source_observed_at": "2026-11-06T13:22:07.008035+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:07.013464+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ioxesdwan-clicmdinj-7bYX5k3/csaf/cisco-sa-ioxesdwan-clicmdinj-7bYX5k3.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ioxesdwan-clicmdinj-7bYX5k3"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ipv4-vfr-dos-CXxtFacb",
+      "source_sha256": "0563a232f59be850219c72205f924a8bd8b9afdc51aea1f840fffeafcd619b0a",
+      "cve_ids": [
+        "CVE-2023-20027"
+      ],
+      "source_observed_at": "2026-11-06T13:18:20.828329+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:20.857567+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipv4-vfr-dos-CXxtFacb/csaf/cisco-sa-ipv4-vfr-dos-CXxtFacb.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipv4-vfr-dos-CXxtFacb"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-isis-sGjyOUHX",
+      "source_sha256": "e17aaecba975ed2983ce14af4d0d8cb0390fd293f13098f13404a044b3f66921",
+      "cve_ids": [
+        "CVE-2024-20312"
+      ],
+      "source_observed_at": "2026-11-06T13:18:23.474385+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:23.614811+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-isis-sGjyOUHX/csaf/cisco-sa-isis-sGjyOUHX.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-isis-sGjyOUHX"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-lisp-3gYXs3qP",
+      "source_sha256": "dd02da32f015d5ab6044c173ca7b54a9a39518b29e66e15304b5d184e5b65e37",
+      "cve_ids": [
+        "CVE-2024-20311"
+      ],
+      "source_observed_at": "2026-11-06T13:18:26.331180+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:26.448682+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-lisp-3gYXs3qP/csaf/cisco-sa-lisp-3gYXs3qP.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-lisp-3gYXs3qP"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-lldp-dos-sBnuHSjT",
+      "source_sha256": "d464fce3309029a2fb3cf5936b743c3c751f822a18a6b134b0def01403f0a17a",
+      "cve_ids": [
+        "CVE-2021-34703"
+      ],
+      "source_observed_at": "2026-11-06T13:22:09.634522+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:09.824451+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-lldp-dos-sBnuHSjT/csaf/cisco-sa-lldp-dos-sBnuHSjT.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-lldp-dos-sBnuHSjT"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-mlre-H93FswRz",
+      "source_sha256": "d98d3e812f0e3732575106ab2c14353cef901222634b099897fe5ffd8a270ddb",
+      "cve_ids": [
+        "CVE-2023-20187"
+      ],
+      "source_observed_at": "2026-11-06T13:18:28.973887+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:29.008656+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-mlre-H93FswRz/csaf/cisco-sa-mlre-H93FswRz.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-mlre-H93FswRz"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-multiprod-ikev2-dos-gPctUqv2",
+      "source_sha256": "67bd1dfab75f67500121816c292a1ac5a98b4d257a537e4828b8499f12fcbe0c",
+      "cve_ids": [
+        "CVE-2025-20182"
+      ],
+      "source_observed_at": "2026-11-06T13:18:31.994782+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:32.422177+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-multiprod-ikev2-dos-gPctUqv2/csaf/cisco-sa-multiprod-ikev2-dos-gPctUqv2.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-multiprod-ikev2-dos-gPctUqv2"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-nbar-dos-LAvwTmeT",
+      "source_sha256": "115b49210562e479f5a03fb750196c2d82519cf51dc512efb85fe4614dd3673c",
+      "cve_ids": [
+        "CVE-2025-20315"
+      ],
+      "source_observed_at": "2026-11-06T13:18:34.919836+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:34.972950+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-nbar-dos-LAvwTmeT/csaf/cisco-sa-nbar-dos-LAvwTmeT.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-nbar-dos-LAvwTmeT"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ncossh-dos-ZAkfOdq8",
+      "source_sha256": "b454f1d9e4cc9ff9fa2d524d57653db76ae1f7619f5097d47953053f060dbcc0",
+      "cve_ids": [
+        "CVE-2022-20692"
+      ],
+      "source_observed_at": "2026-11-06T13:22:12.167105+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:12.187250+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ncossh-dos-ZAkfOdq8/csaf/cisco-sa-ncossh-dos-ZAkfOdq8.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ncossh-dos-ZAkfOdq8"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ncs520-tcp-ZpzzOxB",
+      "source_sha256": "febabdc46e2e8f5f6e20ce2366b74a14b2cf433bf24cd47514c6adb4f00e7364",
+      "cve_ids": [
+        "CVE-2021-1394"
+      ],
+      "source_observed_at": "2026-11-06T13:22:14.429740+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:14.435462+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ncs520-tcp-ZpzzOxB/csaf/cisco-sa-ncs520-tcp-ZpzzOxB.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ncs520-tcp-ZpzzOxB"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-netconf-nacm-bypass-TGZV9pmQ",
+      "source_sha256": "497db89317f99552d9f4f4fbb76901aaef48149d2c9b5c263500f081868db29c",
+      "cve_ids": [
+        "CVE-2025-20214"
+      ],
+      "source_observed_at": "2026-11-06T13:18:37.090600+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:37.096387+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-netconf-nacm-bypass-TGZV9pmQ/csaf/cisco-sa-netconf-nacm-bypass-TGZV9pmQ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-netconf-nacm-bypass-TGZV9pmQ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-pim-APbVfySJ",
+      "source_sha256": "83fc4ca8abb65866ada1ace99c5e2c5d9d5370a875961500f06a6afda53d6bfb",
+      "cve_ids": [
+        "CVE-2024-20464"
+      ],
+      "source_observed_at": "2026-11-06T13:18:39.275802+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:39.279017+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-pim-APbVfySJ/csaf/cisco-sa-pim-APbVfySJ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-pim-APbVfySJ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-qfp-ipsec-GQmqvtqV",
+      "source_sha256": "437a00ba963834b2cf961f1058ff77fdeeec2307092ecebfcd6e29595750bb53",
+      "cve_ids": [
+        "CVE-2022-20679"
+      ],
+      "source_observed_at": "2026-11-06T13:22:16.680578+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:16.692046+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-qfp-ipsec-GQmqvtqV/csaf/cisco-sa-qfp-ipsec-GQmqvtqV.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-qfp-ipsec-GQmqvtqV"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-quewedge-69BsHUBW",
+      "source_sha256": "61dd5aba3eff0429fbdfd8f7d2d1355c3dbc6ce54206adcbd8a8ee1cdd971cf6",
+      "cve_ids": [
+        "CVE-2021-1621"
+      ],
+      "source_observed_at": "2026-11-06T13:22:19.054886+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:19.072032+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-quewedge-69BsHUBW/csaf/cisco-sa-quewedge-69BsHUBW.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-quewedge-69BsHUBW"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ratenat-pYVLA7wM",
+      "source_sha256": "151c8087406c73f85b68e130cbfafe894e2d12cb25602dc932842b21f701eaaf",
+      "cve_ids": [
+        "CVE-2021-1624"
+      ],
+      "source_observed_at": "2026-11-06T13:22:21.542010+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:21.589875+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ratenat-pYVLA7wM/csaf/cisco-sa-ratenat-pYVLA7wM.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ratenat-pYVLA7wM"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-rdocker-uATbukKn",
+      "source_sha256": "58d19fda1fcad91570135db14c32c0087fc6bb868f6cd6e4d1657fe5045eadc6",
+      "cve_ids": [
+        "CVE-2023-20235"
+      ],
+      "source_observed_at": "2026-11-06T13:18:41.525540+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:41.538029+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-rdocker-uATbukKn/csaf/cisco-sa-rdocker-uATbukKn.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-rdocker-uATbukKn"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-rsvp-dos-OypvgVZf",
+      "source_sha256": "4fca424530ee8157714b764c9027039133c751048fccd24a08252a606d4ef64a",
+      "cve_ids": [
+        "CVE-2024-20433"
+      ],
+      "source_observed_at": "2026-11-06T13:18:44.457065+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:44.938728+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-rsvp-dos-OypvgVZf/csaf/cisco-sa-rsvp-dos-OypvgVZf.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-rsvp-dos-OypvgVZf"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-scp-dos-duAdXtCg",
+      "source_sha256": "d1d8c1db7364e8c947394980b5312b986cc7aa0ebdb5dee1617990385e51fa97",
+      "cve_ids": [
+        "CVE-2026-20083"
+      ],
+      "source_observed_at": "2026-11-06T13:18:47.394516+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:47.443050+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-scp-dos-duAdXtCg/csaf/cisco-sa-scp-dos-duAdXtCg.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-scp-dos-duAdXtCg"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-sdwan-clipriv-9TO2QGVp",
+      "source_sha256": "a9bf397defe0aba1809a5c2c0c6cc05448e67e574943f276533c4a34bc2165e4",
+      "cve_ids": [
+        "CVE-2021-1281"
+      ],
+      "source_observed_at": "2026-11-06T13:22:23.855978+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:23.866503+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sdwan-clipriv-9TO2QGVp/csaf/cisco-sa-sdwan-clipriv-9TO2QGVp.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sdwan-clipriv-9TO2QGVp"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-sdwan-esc-rSNVvTf9",
+      "source_sha256": "79957db3606373541d97e7aa5f1db4c59235ef1ed53106c39f3f20d1efc4c30a",
+      "cve_ids": [
+        "CVE-2021-1371"
+      ],
+      "source_observed_at": "2026-11-06T13:22:26.102777+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:26.116706+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sdwan-esc-rSNVvTf9/csaf/cisco-sa-sdwan-esc-rSNVvTf9.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sdwan-esc-rSNVvTf9"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-sdwan-utd-dos-hDATqxs",
+      "source_sha256": "619c9879daefee64cebf12c9f9aec5b5a30e66ff340d6d79cc94366af065277e",
+      "cve_ids": [
+        "CVE-2024-20455"
+      ],
+      "source_observed_at": "2026-11-06T13:18:49.784399+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:49.803362+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sdwan-utd-dos-hDATqxs/csaf/cisco-sa-sdwan-utd-dos-hDATqxs.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sdwan-utd-dos-hDATqxs"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-secboot-UqFD8AvC",
+      "source_sha256": "d03d87f099b8e9edb00e3d04ac7695c31f133c90129e2d6ac5709973dd95d4d4",
+      "cve_ids": [
+        "CVE-2025-20313",
+        "CVE-2025-20314"
+      ],
+      "source_observed_at": "2026-11-06T13:18:52.146386+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:52.180680+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-secboot-UqFD8AvC/csaf/cisco-sa-secboot-UqFD8AvC.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-secboot-UqFD8AvC"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-sisf-dos-ZGwt4DdY",
+      "source_sha256": "c4f6905849617d69eca678192a93541c8406b29a683365e09f094c8b18e58ce0",
+      "cve_ids": [
+        "CVE-2025-20191"
+      ],
+      "source_observed_at": "2026-11-06T13:18:54.656686+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:54.720354+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sisf-dos-ZGwt4DdY/csaf/cisco-sa-sisf-dos-ZGwt4DdY.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sisf-dos-ZGwt4DdY"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-snmp-bypass-HHUVujdn",
+      "source_sha256": "9add6e400004737e10530dae55a2076fbbac5bcae32780c04033d35d8c4e5353",
+      "cve_ids": [
+        "CVE-2025-20221"
+      ],
+      "source_observed_at": "2026-11-06T13:18:56.946900+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:18:56.963153+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-bypass-HHUVujdn/csaf/cisco-sa-snmp-bypass-HHUVujdn.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-bypass-HHUVujdn"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-snmp-dos-sdxnSUcW",
+      "source_sha256": "e802183dbc3490e68be162a0de5b3d767a7dec4c21b9a0d79f9c3f23a3a6f0c0",
+      "cve_ids": [
+        "CVE-2025-20169",
+        "CVE-2025-20170",
+        "CVE-2025-20171",
+        "CVE-2025-20172",
+        "CVE-2025-20173",
+        "CVE-2025-20174",
+        "CVE-2025-20175",
+        "CVE-2025-20176"
+      ],
+      "source_observed_at": "2026-11-06T13:19:00.234603+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:02.185146+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-dos-sdxnSUcW/csaf/cisco-sa-snmp-dos-sdxnSUcW.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-dos-sdxnSUcW"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-snmp-uwBXfqww",
+      "source_sha256": "8923f440d885f87f4756f31521ddc6c0d9a9d2a58a7cec0569ce1f848a10b3dd",
+      "cve_ids": [
+        "CVE-2024-20373"
+      ],
+      "source_observed_at": "2026-11-06T13:19:04.616188+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:04.669945+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-uwBXfqww/csaf/cisco-sa-snmp-uwBXfqww.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-uwBXfqww"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-snmp-x4LPhte",
+      "source_sha256": "e9d2f947328cbe9250f99d7614d0e44dc9fcdd0d63ac3f02a2c749ff2e145315",
+      "cve_ids": [
+        "CVE-2025-20352"
+      ],
+      "source_observed_at": "2026-11-06T13:19:07.274613+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:07.413347+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-x4LPhte/csaf/cisco-sa-snmp-x4LPhte.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmp-x4LPhte"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-snmpv3-qKEYvzsy",
+      "source_sha256": "e6795167736cefbc67340110b8001a6e3a689f0d92e3c5a8964dfe2b1668227a",
+      "cve_ids": [
+        "CVE-2025-20151"
+      ],
+      "source_observed_at": "2026-11-06T13:19:10.655954+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:11.284733+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmpv3-qKEYvzsy/csaf/cisco-sa-snmpv3-qKEYvzsy.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmpv3-qKEYvzsy"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-snmpwred-x3MJyf5M",
+      "source_sha256": "ca0d55f6c8f732051dde870c8d422573eb3ee35272e8bab50e07f10089ed005a",
+      "cve_ids": [
+        "CVE-2025-20312"
+      ],
+      "source_observed_at": "2026-11-06T13:19:13.573972+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:13.592671+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmpwred-x3MJyf5M/csaf/cisco-sa-snmpwred-x3MJyf5M.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-snmpwred-x3MJyf5M"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-ssh-excpt-dos-FzOBQTnk",
+      "source_sha256": "c0d06c4e620ef6e2a6cd45ba5de2f13c9bb564ccfe11b950f4613a0db613ab05",
+      "cve_ids": [
+        "CVE-2022-20920"
+      ],
+      "source_observed_at": "2026-11-06T13:22:28.785533+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:28.958482+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ssh-excpt-dos-FzOBQTnk/csaf/cisco-sa-ssh-excpt-dos-FzOBQTnk.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ssh-excpt-dos-FzOBQTnk"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-trustsec-dos-7fuXDR2",
+      "source_sha256": "1a6b470e3d31b5166c2fd0e33e00170835f31753b18016bfa1f98bf1877e03e6",
+      "cve_ids": [
+        "CVE-2021-34699"
+      ],
+      "source_observed_at": "2026-11-06T13:22:31.567955+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:31.665844+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-trustsec-dos-7fuXDR2/csaf/cisco-sa-trustsec-dos-7fuXDR2.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-trustsec-dos-7fuXDR2"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-twamp-kV4FHugn",
+      "source_sha256": "d839b5d8f86213d0fbcb169beaac7a0052aca424cf788e83b527aed1b185db7d",
+      "cve_ids": [
+        "CVE-2025-20154"
+      ],
+      "source_observed_at": "2026-11-06T13:19:16.238438+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:16.408626+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-twamp-kV4FHugn/csaf/cisco-sa-twamp-kV4FHugn.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-twamp-kV4FHugn"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-utd-snort3-dos-bypas-b4OUEwxD",
+      "source_sha256": "6dc54248b0ed4706d32d3dd02433593d42b3fbde512b793d540f013da6a30730",
+      "cve_ids": [
+        "CVE-2024-20508"
+      ],
+      "source_observed_at": "2026-11-06T13:19:18.532545+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:18.536752+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-utd-snort3-dos-bypas-b4OUEwxD/csaf/cisco-sa-utd-snort3-dos-bypas-b4OUEwxD.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-utd-snort3-dos-bypas-b4OUEwxD"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-vlan-dos-27Pur5RT",
+      "source_sha256": "b38d22fe8bb63104ff11506abc7cc66f3a6b6c869f206cc9d0ce5556fc89bf73",
+      "cve_ids": [
+        "CVE-2024-20434"
+      ],
+      "source_observed_at": "2026-11-06T13:19:20.783846+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:20.802727+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-vlan-dos-27Pur5RT/csaf/cisco-sa-vlan-dos-27Pur5RT.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-vlan-dos-27Pur5RT"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-cmdij-FzZAeXAy",
+      "source_sha256": "b54e9f5b0f5406292db222489e55043ad28d8fac5179a78d0cb1f8bc5c0f015e",
+      "cve_ids": [
+        "CVE-2023-20231"
+      ],
+      "source_observed_at": "2026-11-06T13:19:23.043040+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:23.055330+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-cmdij-FzZAeXAy/csaf/cisco-sa-webui-cmdij-FzZAeXAy.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-cmdij-FzZAeXAy"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-cmdinj-Gje47EMn",
+      "source_sha256": "8500cbfe44b687f641e2387bfe7d921f746c04d6dbd9de6f3ec83e9886d672a7",
+      "cve_ids": [
+        "CVE-2022-20851"
+      ],
+      "source_observed_at": "2026-11-06T13:22:33.917249+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:33.938462+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-cmdinj-Gje47EMn/csaf/cisco-sa-webui-cmdinj-Gje47EMn.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-cmdinj-Gje47EMn"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-cmdinj-gVn3OKNC",
+      "source_sha256": "1f82f27842b8c6adc3edb12aa381efb097db7ae5a7d87a2aa604178439b09e34",
+      "cve_ids": [
+        "CVE-2025-20186"
+      ],
+      "source_observed_at": "2026-11-06T13:19:25.402669+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:25.415804+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-cmdinj-gVn3OKNC/csaf/cisco-sa-webui-cmdinj-gVn3OKNC.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-cmdinj-gVn3OKNC"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-csrf-ycUYxkKO",
+      "source_sha256": "95d69b6bfce1b65416badc488c50b2c07e72dc9358d1e3cadd18a1a79e508b5f",
+      "cve_ids": [
+        "CVE-2024-20437"
+      ],
+      "source_observed_at": "2026-11-06T13:19:27.659065+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:27.672525+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-csrf-ycUYxkKO/csaf/cisco-sa-webui-csrf-ycUYxkKO.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-csrf-ycUYxkKO"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-dos-qdc7qx3",
+      "source_sha256": "fa839f6aff98297cf9cc1c571a4ff8075d86cd89e8f35bdecd01178b25d36412",
+      "cve_ids": [
+        "CVE-2026-20308"
+      ],
+      "source_observed_at": "2026-11-06T13:19:30.038296+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:30.079437+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-dos-qdc7qx3/csaf/cisco-sa-webui-dos-qdc7qx3.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-dos-qdc7qx3"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-multi-ARNHM4v6",
+      "source_sha256": "9633c0ff05f12d734b4d90d57806cb60556e139234288a699a141314a89417d8",
+      "cve_ids": [
+        "CVE-2025-20193",
+        "CVE-2025-20194",
+        "CVE-2025-20195"
+      ],
+      "source_observed_at": "2026-11-06T13:19:32.548327+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:32.604843+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-multi-ARNHM4v6/csaf/cisco-sa-webui-multi-ARNHM4v6.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-multi-ARNHM4v6"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-pthtrv-es7GSb9V",
+      "source_sha256": "fcfecfddd7f01b39779400778a1e421303e0faa9626a342d99e9cd3a06081116",
+      "cve_ids": [
+        "CVE-2023-20066"
+      ],
+      "source_observed_at": "2026-11-06T13:19:34.994063+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:35.023066+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-pthtrv-es7GSb9V/csaf/cisco-sa-webui-pthtrv-es7GSb9V.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-pthtrv-es7GSb9V"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webui-xss-VWyDgjOU",
+      "source_sha256": "16ddf1bb77d7e2fdc7056d4723ac4abc80b4c358a2d157034b0b4c214a1e9a06",
+      "cve_ids": [
+        "CVE-2025-20240"
+      ],
+      "source_observed_at": "2026-11-06T13:19:37.585877+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:37.617759+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-xss-VWyDgjOU/csaf/cisco-sa-webui-xss-VWyDgjOU.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webui-xss-VWyDgjOU"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-webuiapi-inj-Nyrq92Od",
+      "source_sha256": "4faae28b2659ba00af7d61b59a09ea54bb705f969cb0a263c1b45b1523bea30b",
+      "cve_ids": [
+        "CVE-2022-20693"
+      ],
+      "source_observed_at": "2026-11-06T13:22:36.195925+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:36.207050+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webuiapi-inj-Nyrq92Od/csaf/cisco-sa-webuiapi-inj-Nyrq92Od.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-webuiapi-inj-Nyrq92Od"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-dhcp-dos-76pCjPxK",
+      "source_sha256": "270a7beeb0d6561d67470ce32aa03f7f8c10fba63f5b91716634106356c1b5d0",
+      "cve_ids": [
+        "CVE-2022-20847"
+      ],
+      "source_observed_at": "2026-11-06T13:22:38.513094+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:38.527237+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-dhcp-dos-76pCjPxK/csaf/cisco-sa-wlc-dhcp-dos-76pCjPxK.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-dhcp-dos-76pCjPxK"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-dos-hnX5KGOm",
+      "source_sha256": "1583345258aeeb37b12a01c95409169d87600655dbc136d48b84c86de2f28d88",
+      "cve_ids": [
+        "CVE-2026-20086"
+      ],
+      "source_observed_at": "2026-11-06T13:19:39.866076+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:39.870309+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-dos-hnX5KGOm/csaf/cisco-sa-wlc-dos-hnX5KGOm.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-dos-hnX5KGOm"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-file-uplpd-rHZG9UfC",
+      "source_sha256": "6899c1cd3e85ad514c3090fffa95dec31b4bf53653b6c5b5d74d28d64d91083a",
+      "cve_ids": [
+        "CVE-2025-20188"
+      ],
+      "source_observed_at": "2026-11-06T13:19:42.114632+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:42.119847+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-file-uplpd-rHZG9UfC/csaf/cisco-sa-wlc-file-uplpd-rHZG9UfC.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-file-uplpd-rHZG9UfC"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-mdns-dos-4hv6pBGf",
+      "source_sha256": "c4079276caddb07d39018f467707a21ac779799e288e51619910f89357974ff4",
+      "cve_ids": [
+        "CVE-2024-20303"
+      ],
+      "source_observed_at": "2026-11-06T13:19:44.485618+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:44.499238+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-mdns-dos-4hv6pBGf/csaf/cisco-sa-wlc-mdns-dos-4hv6pBGf.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-mdns-dos-4hv6pBGf"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-udp-dos-XDyEwhNz",
+      "source_sha256": "5f6a32e990b09c19c02ebc49e30599be67a98cf259836626d1347a74bf5ffb3f",
+      "cve_ids": [
+        "CVE-2022-20848"
+      ],
+      "source_observed_at": "2026-11-06T13:22:40.758026+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:40.763163+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-udp-dos-XDyEwhNz/csaf/cisco-sa-wlc-udp-dos-XDyEwhNz.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-udp-dos-XDyEwhNz"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-wncd-HFGMsfSD",
+      "source_sha256": "40efa065092d614f2527ae1aa1bdd4ebbc156a7bc1141e23c3335e36dd58b29e",
+      "cve_ids": [
+        "CVE-2023-20202"
+      ],
+      "source_observed_at": "2026-11-06T13:19:46.681022+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:46.685609+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-wncd-HFGMsfSD/csaf/cisco-sa-wlc-wncd-HFGMsfSD.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-wncd-HFGMsfSD"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-wlc-wncd-p6Gvt6HL",
+      "source_sha256": "fa0be26cf0772ab87ac9ac0456ec58ae24ddea81762d91ef9971af9d830cab67",
+      "cve_ids": [
+        "CVE-2025-20140"
+      ],
+      "source_observed_at": "2026-11-06T13:19:49.038243+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:49.068079+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-wncd-p6Gvt6HL/csaf/cisco-sa-wlc-wncd-p6Gvt6HL.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-wlc-wncd-p6Gvt6HL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-xe-secureboot-bypass-B6uYxYSZ",
+      "source_sha256": "78a2e0493892a1830caa589f722fa0a7d2af671137482af9916602c4a20bf0aa",
+      "cve_ids": [
+        "CVE-2026-20104"
+      ],
+      "source_observed_at": "2026-11-06T13:19:51.304075+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:51.315521+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xe-secureboot-bypass-B6uYxYSZ/csaf/cisco-sa-xe-secureboot-bypass-B6uYxYSZ.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-xe-webui-dos-PtAODAWW",
+      "source_sha256": "c3515aa425cda2de40afa61c615e9cf76def264f469be58aae6b5f09204d285d",
+      "cve_ids": [
+        "CVE-2026-20311"
+      ],
+      "source_observed_at": "2026-11-06T13:19:53.677300+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:19:53.703502+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xe-webui-dos-PtAODAWW/csaf/cisco-sa-xe-webui-dos-PtAODAWW.json",
+      "discovery_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xe-webui-dos-PtAODAWW"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-xe-webui-dos-z9yqYQAn",
+      "source_sha256": "ec157fc09b9158ae87de34a908c7168e8de1efa869c01425bc31a0987c51b607",
+      "cve_ids": [
+        "CVE-2021-1220",
+        "CVE-2021-1356"
+      ],
+      "source_observed_at": "2026-11-06T13:22:42.996165+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:43.005497+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xe-webui-dos-z9yqYQAn/csaf/cisco-sa-xe-webui-dos-z9yqYQAn.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xe-webui-dos-z9yqYQAn"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-xesdwcinj-t68PPW7m",
+      "source_sha256": "50a372aa9fcb74ba254e9081c4601b61e51c0f58311c1dd7666df9b1593de6df",
+      "cve_ids": [
+        "CVE-2021-1382"
+      ],
+      "source_observed_at": "2026-11-06T13:22:45.187044+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:45.195227+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xesdwcinj-t68PPW7m/csaf/cisco-sa-xesdwcinj-t68PPW7m.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xesdwcinj-t68PPW7m"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-xesdwpinj-V4weeqzU",
+      "source_sha256": "a765c48694012df2ebef4e39e3c5ddaeea5a356266127fb562cd1370946f0953",
+      "cve_ids": [
+        "CVE-2021-1383",
+        "CVE-2021-1454"
+      ],
+      "source_observed_at": "2026-11-06T13:22:47.436146+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:47.448812+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xesdwpinj-V4weeqzU/csaf/cisco-sa-xesdwpinj-V4weeqzU.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xesdwpinj-V4weeqzU"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-zbfw-pP9jfzwL",
+      "source_sha256": "cf6d7a51e433148cdfc9fd3e650ed0449f31fae9b6c0bd44641c2bed432f8e04",
+      "cve_ids": [
+        "CVE-2021-1625"
+      ],
+      "source_observed_at": "2026-11-06T13:22:49.836255+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:49.862060+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-zbfw-pP9jfzwL/csaf/cisco-sa-zbfw-pP9jfzwL.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-zbfw-pP9jfzwL"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_id": "cisco-sa-zbfw-tguGuYq",
+      "source_sha256": "7d0ecffd4befcc0834a2ffbe9e2a3f86dce8df535b8924cdf66c09e0ff161763",
+      "cve_ids": [
+        "CVE-2021-34697"
+      ],
+      "source_observed_at": "2026-11-06T13:22:52.055088+00:00",
+      "retained_collection_checked_at": "2026-11-06T13:22:52.061441+00:00",
+      "fetch_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-zbfw-tguGuYq/csaf/cisco-sa-zbfw-tguGuYq.json",
+      "discovery_url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-zbfw-tguGuYq"
+    }
+  ]
+}
