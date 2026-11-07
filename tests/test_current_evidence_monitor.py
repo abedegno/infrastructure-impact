@@ -243,13 +243,33 @@ def test_monitor_rejects_fresh_payload_with_stale_index_and_part_clocks(delivery
         check(origin)
 
 
-@pytest.mark.parametrize("version", [True, "1", 2])
-@pytest.mark.parametrize("boundary", ["index", "bootstrap", "records", "report", "retained"])
+@pytest.mark.parametrize(
+    ("boundary", "version"),
+    [
+        (boundary, version)
+        for boundary in ("index", "bootstrap", "records", "report", "retained")
+        for version in (True, "1", 3 if boundary == "index" else 2)
+    ],
+)
 @pytest.mark.parametrize("switching", [True, False])
 def test_monitor_browser_reject_same_invalid_transport_versions(
     delivery, tmp_path, version, boundary, switching
 ):
     """Python equality must not accept a version rejected by the real JS transport."""
+    assert_monitor_browser_reject_version(delivery, tmp_path, version, boundary, switching)
+
+
+@pytest.mark.parametrize("switching", [True, False])
+def test_monitor_browser_reject_v1_index_mislabeled_as_v2(delivery, tmp_path, switching):
+    # Version 2 is supported, but changing the header cannot supply its required assets.
+    assert_monitor_browser_reject_version(
+        delivery, tmp_path, 2, "index", switching, expected_error=(AssertionError, HTTPError)
+    )
+
+
+def assert_monitor_browser_reject_version(
+    delivery, tmp_path, version, boundary, switching, *, expected_error=AssertionError
+):
     from infrastructure_impact.settings import PACKAGE
 
     generation = publish_monitored(delivery, tmp_path)
@@ -260,7 +280,7 @@ def test_monitor_browser_reject_same_invalid_transport_versions(
     script = r"""
 const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
 const [root,web]=process.argv.slice(1),c={window:{},Response,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
-vm.createContext(c);for(const f of ['lossless-json.js','switching-contracts.js','current-evidence.js','delivery.js'])vm.runInContext(fs.readFileSync(web+'/'+f,'utf8'),c);
+vm.createContext(c);for(const f of ['lossless-json.js','publication-v2.js','switching-contracts.js','current-evidence.js','delivery.js'])vm.runInContext(fs.readFileSync(web+'/'+f,'utf8'),c);
 (async()=>{try{const load=await c.createStaticDelivery(async p=>new Response(fs.readFileSync(root+p)),'/');await load(['CVE-2024-6858']);await load.retained();console.log('accepted');}catch(e){console.log('rejected');}})();
 """
 
@@ -293,8 +313,11 @@ vm.createContext(c);for(const f of ['lossless-json.js','switching-contracts.js',
                     item.update(descriptor)
         rewrite(generation, "data/index.json", index)
     assert browser() == "rejected"
-    with serving(generation) as origin, pytest.raises(AssertionError):
+    with serving(generation) as origin, pytest.raises(expected_error) as rejected:
         check(origin)
+    if isinstance(rejected.value, HTTPError):
+        assert rejected.value.code == 404
+        assert rejected.value.url == origin + "/schemas/publication-v2.json"
 
 
 def test_monitor_validates_root_report_types_before_index_equality(delivery, tmp_path):
