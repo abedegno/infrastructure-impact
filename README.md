@@ -207,6 +207,7 @@ only after those dependencies have been cached.
 | [Plugins](docs/PLUGINS.md)                               | Add a vendor and package an extension                             |
 | [Schema](docs/SCHEMA.md)                                 | Normalization semantics and invariants                            |
 | [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
+| [Switching CVE comparison brief](docs/research/2026-11-07-vendor-comparison-brief.md) | Cisco/Aruba/Arista evidence, disclosure bias and patching limits |
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
 | [Security](SECURITY.md)                                  | Reporting vulnerabilities in this project                         |
