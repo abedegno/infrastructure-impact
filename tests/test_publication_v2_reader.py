@@ -528,3 +528,120 @@ def test_json_preflight_happens_before_encoder(monkeypatch):
     monkeypatch.setattr(http.json, "dumps", dumps)
     with pytest.raises(ValueError, match="budget"):
         Application.json(value, max_bytes=100)
+
+
+def test_empty_retained_page_independent_of_large_current_records(generation):
+    from infrastructure_impact.http import Application
+
+    app = Application(generation.parent.parent)
+    _, reader = app.store.open()
+    environ = {
+        "REQUEST_METHOD": "GET",
+        "PATH_INFO": "/api/v1/retained-advisories",
+        "QUERY_STRING": "limit=1&cves=CVE-2099-9999",
+    }
+    code, _, body = app.route(environ)
+    assert code == 200 and json.loads(body)["items"] == []
+    assert len(body) == 578
+    assert all(route["logical_bytes"] > len(body) for route in reader.record_routes())
+    reader.limits["selected"] = len(body)
+    assert app.route(environ)[2] == body
+    stream_limit = reader.ranges("snapshot.json")[("records",)]["logical_bytes"]
+    reader.limits["stream"] = stream_limit
+    assert app.route(environ)[2] == body
+    reader.limits["stream"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        app.route(environ)
+    reader.limits["stream"] = stream_limit
+    reader.limits["selected"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        app.route(environ)
+
+
+@pytest.mark.parametrize("tamper", ["payload", "identity"])
+def test_retained_identity_scan_rejects_tampering(generation, monkeypatch, tamper):
+    from infrastructure_impact.http import Application
+
+    app = Application(generation.parent.parent)
+    _, reader = app.store.open()
+    strings, _ = reader._tables()
+    original = reader.iter_tokens
+    old_value, new_value = (
+        ("Junos OS Evolved", "HPE ProLiant Compute DL325 Gen12")
+        if tamper == "payload"
+        else ("juniper", "hpe")
+    )
+    old = -strings.index(old_value) - 2
+    replacement = -strings.index(new_value) - 2
+
+    def tokens(name, first=0, end=None):
+        for token in original(name, first, end):
+            yield replacement if name == "snapshot.json" and token == old else token
+
+    monkeypatch.setattr(reader, "iter_tokens", tokens)
+    reader.limits["selected"] = 578
+    with pytest.raises(ValueError, match="digest"):
+        app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/retained-advisories",
+                "QUERY_STRING": "limit=1&cves=CVE-2099-9999",
+            }
+        )
+
+
+def test_current_identity_projection_retains_overlap_detection(delivery_db, tmp_path, monkeypatch):
+    from infrastructure_impact.application.query import state
+    from infrastructure_impact.http import Application
+
+    out = publish(
+        state(delivery_db, ["CVE-2023-5501", "CVE-2024-6858"]), tmp_path, publication_format="v2"
+    )
+    app = Application(out.parent.parent)
+    _, reader = app.store.open()
+    routes = reader.record_routes()
+    real_keys = list(reader._current_record_keys(routes))
+    assert len(real_keys) == len(set(real_keys)) == 2
+    from infrastructure_impact import publication_codec as codec
+
+    strings, shapes = reader._tables()
+    bound = reader.ranges("snapshot.json")[("records",)]
+    original = reader.iter_tokens
+    raw_tokens = list(original("snapshot.json", bound["first_token"], bound["end_token"]))
+    positions = {}
+    fields = {"vendor", "advisory_id", "revision_id", "source_url", "sha256"}
+
+    def observe(event, path, position):
+        if event == "start" and len(path) == 3 and path[2] in fields:
+            positions[(path[1], path[2])] = position
+
+    for _ in codec.stream_tokens(
+        raw_tokens, strings, shapes, path=("records",), node_observer=observe
+    ):
+        pass
+    replacements = {
+        bound["first_token"] + positions[(1, field)]: raw_tokens[positions[(0, field)]]
+        for field in fields
+    }
+
+    # Bind the substituted array to its actual length/digest. Thus this case
+    # requires the partition overlap check, not merely a hash mismatch.
+    altered = [
+        replacements.get(bound["first_token"] + i, token) for i, token in enumerate(raw_tokens)
+    ]
+    measured = codec.digest(codec.stream_tokens(altered, strings, shapes))
+    bound.update(logical_bytes=measured["bytes"], logical_sha256=measured["sha256"])
+
+    def tokens(name, first=0, end=None):
+        for position, token in enumerate(original(name, first, end), first):
+            yield replacements.get(position, token) if name == "snapshot.json" else token
+
+    monkeypatch.setattr(reader, "iter_tokens", tokens)
+    with pytest.raises(ValueError, match="Duplicate retained/current identity"):
+        app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/retained-advisories",
+                "QUERY_STRING": "limit=1&cves=CVE-2099-9999",
+            }
+        )

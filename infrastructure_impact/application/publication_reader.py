@@ -248,6 +248,112 @@ class PublicationReader(codec.CatalogReader):
         field("switching_overview", self.switching_overview())
         return {k: v for k, v in result.items() if fields is None or k in fields}
 
+    def _current_record_keys(self, routes):
+        """Hash/validate the full current array, retaining only scalar identities.
+
+        Metadata has its existing index allowance, independent of the requested
+        retained page. The codec still walks every other field under one stream
+        ceiling/deadline; no current record JSON string or object is assembled.
+        """
+        from .evidence_identity import record_key
+
+        bound = self.ranges("snapshot.json")[("records",)]
+        strings, shapes = self._tables()
+        stream_budget = codec.Budget(self.limits["stream"])
+        metadata_budget = codec.Budget(self.limits["index"], deadline=stream_budget.deadline)
+        fields = {"vendor", "advisory_id", "revision_id", "source_url", "sha256"}
+        location, identity, ready = (), None, None
+        digest, size, count = sha256(), 0, 0
+
+        def nodes(event, path, position):
+            nonlocal location, identity, ready, count
+            if event == "start":
+                location = path
+            if len(path) != 2:
+                return
+            index = path[1]
+            if index >= len(routes):
+                raise ValueError("current identity route count")
+            expected = routes[index]["first_token" if event == "start" else "end_token"]
+            if position + bound["first_token"] != expected:
+                raise ValueError("current identity route interval")
+            if event == "start":
+                metadata_budget.charge(2, 2)
+                identity = {}
+            else:
+                if set(identity) != fields:
+                    raise ValueError("current record identity fields")
+                key = record_key(identity)
+                codec.charge_value(key, metadata_budget)
+                ready = key
+                identity = None
+                count += 1
+
+        def tokens():
+            source = self.iter_tokens(bound["root"], bound["first_token"], bound["end_token"])
+            try:
+                for token in source:
+                    if location == ("records",) and token != [-1, len(routes)]:
+                        raise ValueError("current identity array count")
+                    if len(location) == 2 and not (isinstance(token, list) and len(token) == 1):
+                        raise ValueError("current record identity object")
+                    if len(location) == 3 and location[2] in fields:
+                        key = location[2]
+                        if type(token) is int:
+                            index = codec.safe_int(-token - 2)
+                            if index >= len(strings):
+                                raise ValueError("identity string reference")
+                            value = strings[index]
+                        elif (
+                            isinstance(token, list)
+                            and len(token) == 3
+                            and type(token[0]) is int
+                            and token[0] == -2
+                            and isinstance(token[2], str)
+                        ):
+                            # Reserve numeric conversion before allocating its int.
+                            metadata_budget.charge(len(token[2]), len(token[2]))
+                            value = codec.LogicalNumber(token[1], token[2]).value()
+                        else:
+                            raise ValueError("current record identity scalar")
+                        metadata_budget.charge(
+                            codec.string_cost(key) + 1 + bool(identity),
+                            codec.string_cost(key, True) + 1 + bool(identity),
+                        )
+                        codec.charge_value(value, metadata_budget)
+                        identity[key] = value
+                    yield token
+            finally:
+                source.close()
+
+        def observe(raw):
+            nonlocal size
+            size += len(raw)
+            if size > bound["logical_bytes"]:
+                raise ValueError("current record range digest/length")
+            digest.update(raw)
+
+        for _ in codec.stream_tokens(
+            tokens(),
+            strings,
+            shapes,
+            root=bound["root"],
+            path=("records",),
+            budget=stream_budget,
+            validate=False,
+            observer=observe,
+            node_observer=nodes,
+        ):
+            if ready is not None:
+                yield ready
+                ready = None
+        if (
+            count != len(routes)
+            or size != bound["logical_bytes"]
+            or digest.hexdigest() != bound["logical_sha256"]
+        ):
+            raise ValueError("current record range digest/length/count")
+
     def retained_selection(
         self, bootstrap, *, cves=None, vendor=None, offset=0, limit=100, export=False
     ):
@@ -286,11 +392,10 @@ class PublicationReader(codec.CatalogReader):
                 current=len(routes), excluded=len(index), retained_total=len(routes) + len(index)
             ):
                 raise ValueError("retained partition counts")
-            # Verify current identities one record at a time, without retaining
-            # the current collection or allowing overlap with excluded targets.
+            # Verify the complete current identities without hydrating unrelated
+            # payloads or allowing overlap with excluded targets.
             keys = {d["target_key"] for d in decisions.values()}
-            for record in self.iter_array(self.ranges("snapshot.json")[("records",)]):
-                key = record_key(record)
+            for key in self._current_record_keys(routes):
                 if key in keys:
                     raise ValueError("Duplicate retained/current identity")
                 keys.add(key)
