@@ -90,6 +90,7 @@ def main():
         from infrastructure_impact.reconciliation.baseline import load_baseline
 
         assert load_baseline(probe / "baseline.json")["revisions"] == []
+    target_import_candidate_probe()
     configured = json.loads((package / "resources/sources.json").read_text())
     assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
         "source_id": "cisa-kev",
@@ -467,6 +468,134 @@ def main():
             }
         )
     )
+
+
+def target_import_candidate_probe():
+    """Run the real worker from the isolated wheel using authored source bytes only."""
+    import sqlite3
+    import sys
+    from contextlib import closing
+
+    from infrastructure_impact.adapters.common import assessment, base
+    from infrastructure_impact.application import target_import, target_import_stage
+    from infrastructure_impact.application.import_candidate import _monitor_path
+    from infrastructure_impact.collection.target_import_profiles import (
+        TargetImportProfile,
+        TargetImportTarget,
+    )
+    from infrastructure_impact.settings import PACKAGE
+
+    assert _monitor_path() == PACKAGE / "_standalone/public_health.py"
+    assert not any(Path(p).name == "checks" for p in sys.path)
+    raw = {k: v.encode() for k, v in json.loads(os.environ["IMPACT_TARGET_IMPORT_PROBE"]).items()}
+    urls = {
+        "aruba": "https://csaf.arubanetworking.hpe.com/2021/hpe_aruba_networking_-_2021-013.txt",
+        "cisco": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fast-Zqr6DD5/csaf/cisco-sa-fast-Zqr6DD5.json",
+    }
+    targets = []
+    for vendor, url in urls.items():
+        normalized = default_registry().normalize(raw[vendor], url, vendor)
+        targets.append(
+            TargetImportTarget(
+                vendor,
+                normalized["advisory_id"],
+                url,
+                url.split("/csaf/")[0],
+                hashlib.sha256(raw[vendor]).hexdigest(),
+                tuple(sorted(normalized["cves"])),
+                "2026-11-06T12:00:00Z",
+                "2026-11-06T12:00:00Z",
+            )
+        )
+    selected = TargetImportProfile("synthetic-wheel-v1", "1", tuple(targets), 2)
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary).resolve()
+        home = root / "source"
+        database = home / "data/intel.sqlite3"
+        record = base(
+            "juniper",
+            "https://www.juniper.net/synthetic/retained",
+            "RETAINED",
+            "Authored baseline",
+            "2025-01-01T00:00:00Z",
+        )
+        record["cves"] = ["CVE-2024-6387"]
+        record["assessments"] = [assessment("CVE-2024-6387", "Junos OS", "affected", "Synthetic")]
+        with closing(connect(database)) as db:
+            ingest(db, b"authored baseline", record["source_url"], lambda *a: record, "juniper")
+        before = database.read_bytes()
+        with patch.object(target_import, "registered_profile", return_value=selected):
+            accepted = target_import.preview(database, selected.profile_id)
+        # Supplying authored bodies is the sole acquisition substitute. No external HTTP.
+        with (
+            patch.object(
+                target_import_stage.transport,
+                "fetch",
+                side_effect=lambda db, url, vendor, **kw: raw[vendor],
+            ),
+            patch.dict(
+                os.environ, {"PATH": str(root / "no-node"), "IMPACT_SOURCES": str(root / "HOSTILE")}
+            ),
+        ):
+            result = target_import_stage.stage(
+                database,
+                selected,
+                accepted["fingerprint"],
+                root / "stage",
+                lock_home=home,
+                accepted_preview=accepted,
+            )
+        assert result["outcome"] == "completed", result
+        assert result["candidate"]["archive_monitor_passed"] is True
+        assert database.read_bytes() == before
+        missing_monitor_probe(root)
+        with closing(sqlite3.connect(root / "stage/private/data/intel.sqlite3")) as db:
+            assert db.execute("SELECT COUNT(*) FROM revisions").fetchone()[0] == 3
+
+
+def missing_monitor_probe(root):
+    """A disposable installed-package copy missing either companion must fail closed."""
+    import shutil
+    import subprocess
+    import sys
+
+    from infrastructure_impact.settings import PACKAGE
+
+    for missing in ("public_health.py", "switching_health.py"):
+        isolated = root / ("broken-" + missing)
+        package = isolated / "infrastructure_impact"
+        shutil.copytree(PACKAGE, package, ignore=shutil.ignore_patterns("__pycache__"))
+        (package / "_standalone" / missing).unlink()
+        stage = isolated / "stage"
+        home = stage / "private/home"
+        home.mkdir(parents=True)
+        database = stage / "private/data/intel.sqlite3"
+        database.parent.mkdir()
+        shutil.copyfile(root / "stage/private/data/intel.sqlite3", database)
+        for name in ("target-import-context.json", "target-import-request.json"):
+            shutil.copyfile(root / "stage/private/home" / name, home / name)
+        # Test-only bootstrapping selects this disposable incomplete wheel layout.
+        code = "import sys;sys.path.insert(0,sys.argv.pop(1));sys.argv=sys.argv[1:];from infrastructure_impact.application.import_candidate import main;main()"
+        subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                "-c",
+                code,
+                str(isolated),
+                "probe",
+                "--worker",
+                str(database),
+                str(stage / "public"),
+            ],
+            cwd=isolated,
+            check=True,
+            capture_output=True,
+        )
+        failure = json.loads((home / "target-import-verification.json").read_bytes())
+        assert failure["candidate"]["outcome"] == "monitor_unavailable", failure
+        assert failure["candidate_validated"] is False
+        assert not (stage / "public").exists()
 
 
 if __name__ == "__main__":

@@ -167,6 +167,12 @@ def test_completed_result_requires_every_target_and_successful_checks():
     for target in value["targets"]:
         target["status"] = "unchanged"
     value["counters"]["unchanged"] = 2
+    with pytest.raises(ValueError):
+        contracts.result_bytes(value, selected=selected)
+    value["candidate"] = None
+    with pytest.raises(ValueError):
+        contracts.result_bytes(value, selected=selected)
+    value["candidate"] = passing_candidate()
     contracts.result_bytes(value, selected=selected)
     value["targets"].append(deepcopy(value["targets"][0]))
     with pytest.raises(ValueError):
@@ -217,3 +223,19 @@ def test_not_attempted_targets_are_retained_in_failure_receipts():
     for target in value["targets"]:
         target["status"] = "not_attempted"
     contracts.result_bytes(value, selected=selected)
+
+
+def passing_candidate():
+    """Authored orchestration result; real verifier tests use measured artifacts."""
+    return dict(
+        outcome="passed",
+        generation="a" * 32,
+        manifest_sha256="b" * 64,
+        public_bytes=2000,
+        expanded_bytes=1000,
+        compressed_bytes=100,
+        default_checked_bytes=500,
+        default_monitor_passed=True,
+        archive_monitor_passed=True,
+        parity_passed=True,
+    )

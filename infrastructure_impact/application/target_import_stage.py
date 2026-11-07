@@ -25,8 +25,9 @@ class StageFailure(ValueError):
 
 
 def verify(database, public, profile):
-    """Fail closed until the fresh-interpreter complete-candidate verifier lands."""
-    return {"audit_passed": None, "candidate_validated": False, "capacity_passed": None}
+    from .import_candidate import verify as verify_candidate
+
+    return verify_candidate(database, public, profile)
 
 
 class PacedBudget(TransportBudget):
@@ -138,6 +139,7 @@ def _initial_result(selected, accepted):
             ("http_attempts", "received_bytes", "input_bytes", "imported", "unchanged"), 0
         ),
         "checks": dict.fromkeys(("audit_passed", "candidate_validated", "capacity_passed")),
+        "candidate": None,
         "staged_database": None,
         "public_directory": None,
     }
@@ -339,6 +341,14 @@ def stage(
                     canonical_json(context) + b"\n"
                 )
             checked = verify(staged, output / "public", profile)
+            if "candidate" in checked or all(checked.get(k) is True for k in result["checks"]):
+                from .import_candidate import validate_result
+
+                try:
+                    validate_result(checked)
+                except Exception:
+                    raise StageFailure("candidate_validation") from None
+                result["candidate"] = checked["candidate"]
             result["checks"] = {
                 k: checked.get(k) if type(checked.get(k)) is bool else None
                 for k in result["checks"]

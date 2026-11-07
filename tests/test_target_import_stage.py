@@ -13,6 +13,7 @@ from urllib.error import HTTPError
 import pytest
 from test_aruba_text_coverage import signed_text
 from test_cisco_platform_scope import document
+from test_target_import_contracts import passing_candidate
 from test_target_import_profiles import manifest
 
 from infrastructure_impact.application import target_import
@@ -105,7 +106,12 @@ def passing_verifier(database, public, selected):
     assert (database.parent.parent / "home/target-import-context.json").is_file()
     public.mkdir(exist_ok=True)
     (public / "index.html").write_text("authored test candidate")
-    return {"audit_passed": True, "candidate_validated": True, "capacity_passed": True}
+    return {
+        "audit_passed": True,
+        "candidate_validated": True,
+        "capacity_passed": True,
+        "candidate": passing_candidate(),
+    }
 
 
 def run(setup, monkeypatch, *, verify=True, fingerprint=None):
@@ -238,7 +244,7 @@ def test_existing_identity_cannot_be_downgraded(setup, monkeypatch, conflict):
     assert result["counters"]["imported"] == 0
 
 
-def test_default_verifier_cannot_complete(setup, monkeypatch):
+def test_default_verifier_rejects_empty_monitor_cohort(setup, monkeypatch):
     _, selected, raws, _, _ = setup
     serve(monkeypatch, selected, raws)
     result = run(setup, monkeypatch, verify=False)

@@ -58,6 +58,10 @@ def _validate(value, kind, selected=None):
         ):
             raise ValueError("invalid_target_import_result_status")
     if kind == "result":
+        if value.get("candidate") is not None:
+            from .import_candidate import validate_result
+
+            validate_result({**value["checks"], "candidate": value["candidate"]})
         for status in ("imported", "unchanged"):
             if value["counters"][status] != sum(t["status"] == status for t in value["targets"]):
                 raise ValueError("invalid_target_import_result_counters")

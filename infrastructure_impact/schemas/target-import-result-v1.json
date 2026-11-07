@@ -263,6 +263,101 @@
         null,
         "public/"
       ]
+    },
+    "candidate": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "passed",
+            "audit_failed",
+            "capacity_failed",
+            "validation_failed",
+            "monitor_unavailable",
+            "worker_failed"
+          ]
+        },
+        "generation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "manifest_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "public_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expanded_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "compressed_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "default_checked_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "default_monitor_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "archive_monitor_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "parity_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "outcome",
+        "generation",
+        "manifest_sha256",
+        "public_bytes",
+        "expanded_bytes",
+        "compressed_bytes",
+        "default_checked_bytes",
+        "default_monitor_passed",
+        "archive_monitor_passed",
+        "parity_passed"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
@@ -344,8 +439,19 @@
                 }
               }
             }
+          },
+          "candidate": {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "const": "passed"
+              }
+            }
           }
-        }
+        },
+        "required": [
+          "candidate"
+        ]
       },
       "else": {
         "properties": {

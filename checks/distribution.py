@@ -47,10 +47,17 @@ def public_resource_fingerprints(root):
         "schemas/switching-" + name + "-v1.json"
         for name in ("study", "evidence", "comparison", "summary", "inputs")
     ]
-    return {
+    resources = {
         name: hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
         for name in names
     }
+    resources.update(
+        {
+            "_standalone/" + name: hashlib.sha256((root / "checks" / name).read_bytes()).hexdigest()
+            for name in ("public_health.py", "switching_health.py")
+        }
+    )
+    return resources
 
 
 def main():
@@ -74,6 +81,9 @@ def main():
     )["project"]["version"]
     environment["IMPACT_EXPECTED_NORMALIZER_FINGERPRINTS"] = json.dumps(expected)
     environment["IMPACT_EXPECTED_PUBLIC_RESOURCES"] = json.dumps(public_resource_fingerprints(root))
+    environment["IMPACT_TARGET_IMPORT_PROBE"] = (
+        root / "tests/fixtures/target-import-candidate.json"
+    ).read_text()
     with tempfile.TemporaryDirectory() as directory:
         subprocess.run(
             [
@@ -91,6 +101,7 @@ def main():
                 "--with",
                 str(root / "examples/vendor-plugin"),
                 "python",
+                "-I",
                 str(root / "checks/package_probe.py"),
             ],
             cwd=directory,
