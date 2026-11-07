@@ -42,3 +42,14 @@ The replay substitutes only the acquisition boundary with pinned retained bytes.
 ## Remaining limits
 
 This run cannot establish the complete hosted union's capacity, full historical vendor coverage, model applicability or comparative security quality. Source errors and pending human review remain visible. Counts describe retained disclosure evidence; higher counts can reflect more scrutiny or more complete collection. Neither vendor concealment nor equivalence follows from this work. Hosted inventory validation, release/pin activation and publication remain separate operational steps.
+
+## Additional guard after this replay
+
+A subsequent focused change enforces a conservative 1,000,000,000-byte aggregate
+Pages site bound in candidate inspection. Exactly 1 GB and one byte over were
+tested using eight sparse assets, all individually below 128 MB: the boundary
+passed and the overflow failed with retained measurements. All 45 candidate tests
+passed and the change received a clean independent review. A read-only probe of
+the existing diagnostic bundle rejected it immediately as `public site size`,
+retaining the same expanded/compressed/public sizes. This was not another stage
+run and does not clear any acceptance gate.
