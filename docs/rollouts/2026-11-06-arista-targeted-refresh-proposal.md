@@ -74,8 +74,10 @@ The sections above preserve the earlier preview and its then-current limitation.
 The integrated candidate now implements the reviewed exact-profile control and
 current-evidence policy, with local acceptance described in
 [the acceptance packet](../research/2026-11-06-targeted-refresh-acceptance.md).
-Implementation and independent review are separate: task/whole-branch review is
-pending, and independent human source/extraction review remains incomplete.
+All seven task reviews and the final whole-branch/scoped review are complete;
+PR #33 merged on 7 November. Independent human source/extraction review remains
+incomplete. The [v0.12.0 activation proposal](2026-11-07-current-evidence-0120-activation-proposal.md)
+records the separately gated next steps.
 No hosted preview/application, source-pin activation, release or dispatch occurred.
 
 The only acceptance input was a checkpointed copy of the earlier explicitly
