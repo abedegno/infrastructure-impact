@@ -978,3 +978,277 @@ def test_corrupt_static_capability_and_routing_never_publish_empty_retained_resu
         ["/api/v1/retained-advisories?cves=CVE-2023-5501&format=json"],
     )
     assert replies[0]["status"] == 503
+
+
+@pytest.mark.parametrize("shared_advisory_id", [False, True])
+def test_retained_vendor_score_survives_all_public_readers(
+    arista_case, monkeypatch, tmp_path, shared_advisory_id
+):
+    """Dropping excluded score inputs loses history; reusing them for current leaks claims."""
+    import gzip
+    import hashlib
+    import subprocess
+    import sys
+
+    import infrastructure_impact.plugins.arista_current_evidence as policy
+    from infrastructure_impact.exports import assessment_export, retained_assessment_export
+    from infrastructure_impact.settings import PACKAGE
+
+    document = json.loads(alternate_bytes())
+    document["vulnerabilities"][0]["scores"] = [
+        {
+            "products": ["eos"],
+            "cvss_v3": {
+                "version": "3.1",
+                "baseScore": 9.8,
+                "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            },
+        }
+    ]
+    raw = json.dumps(document).encode()
+    monkeypatch.setattr(sys.modules[__name__], "alternate_bytes", lambda: raw)
+    monkeypatch.setattr(policy, "REVIEWED_SHA256", hashlib.sha256(raw).hexdigest())
+    fixture = delivery_db.__wrapped__(arista_case)
+    with next(fixture) as db:
+        before_rows = list(db.iterdump())
+        data = state(db, ["CVE-2023-5501", "CVE-2024-6858"])
+        record = data["retained_advisories"][0]["record"]
+        if shared_advisory_id:
+            # A current interpretation can share vendor/ID/CVE while owning a
+            # different source. The excluded source's score still belongs only to history.
+            independent = next(
+                r for r in data["records"] if r["advisory_id"] == "UNRELATED-SAME-CVE"
+            )
+            independent["advisory_id"] = record["advisory_id"]
+        record["notes"] = [{"text": "PRIVATE_RETAINED_NOTES"}]
+        record["extensions"] = {"private": "PRIVATE_RETAINED_EXTENSION"}
+        record["metrics"] = [{"system": "UNTRUSTED", "value": 10}]
+        # Unknown enrichment members must never be serialized into an export.
+        data["research"]["score_input"]["private"] = "PRIVATE_SCORE_INPUT"
+        before = copy.deepcopy(data)
+        projected = public_projection(data)
+        metrics = projected["retained_advisories"][0]["record"]["metrics"]
+        assert len(metrics) == 1
+        assert metrics[0]["value"] == 9.8 and metrics[0]["origin"] == "vendor_advisory"
+        assert metrics[0]["source"]["source_sha256"] == hashlib.sha256(raw).hexdigest()
+        assert metrics[0]["revision"] == str(record["revision_id"])
+        assert all(not r["metrics"] for r in projected["records"])
+        assert CSAF not in json.dumps(projected["switching_evidence"])
+        assert "PRIVATE_SCORE_INPUT" not in json.dumps(assessment_export(data))
+        generation = publish(data, tmp_path)
+        assert data == before and list(db.iterdump()) == before_rows
+    fixture.close()
+    archive = json.loads(gzip.decompress((generation / "snapshot.json.gz").read_bytes()))
+    assert archive["retained_advisories"][0]["record"]["metrics"] == metrics
+    assert retained_assessment_export(archive)["records"][0]["metrics"] == metrics
+    app = Application(tmp_path)
+    for query in ("", "format=json"):
+        status, _, body = app.route(
+            {
+                "REQUEST_METHOD": "GET",
+                "PATH_INFO": "/api/v1/retained-advisories",
+                "QUERY_STRING": query,
+            }
+        )
+        assert status == 200
+        result = json.loads(body)
+        rows = result.get("records") or [w["record"] for w in result["items"]]
+        assert rows[0]["metrics"] == metrics
+    script = r"""
+const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
+const [root,web]=process.argv.slice(1),c={window:{},Response,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
+vm.createContext(c);for(const f of ['lossless-json.js','switching-contracts.js','current-evidence.js','delivery.js'])vm.runInContext(fs.readFileSync(web+'/'+f,'utf8'),c);
+(async()=>{const load=await c.createStaticDelivery(async p=>new Response(fs.readFileSync(root+p)),'/');process.stdout.write(c.window.InfrastructureJSON.stringify(await load.retained()));})();
+"""
+    static = json.loads(
+        subprocess.check_output(["node", "-e", script, str(generation), str(PACKAGE / "web")])
+    )
+    assert static[0]["record"]["metrics"] == metrics
+    for path in generation.rglob("*"):
+        if path.is_file():
+            assert b"PRIVATE_RETAINED" not in path.read_bytes()
+            assert b"PRIVATE_SCORE_INPUT" not in path.read_bytes()
+
+
+def test_current_severity_does_not_inherit_excluded_owner(delivery):
+    from infrastructure_impact.application.current_views import rebuild
+
+    record = delivery["retained_advisories"][0]["record"]
+    rating = {
+        "vendor": record["vendor"],
+        "advisory_id": record["advisory_id"],
+        "revision": str(record["revision_id"]),
+        "source": {"source_url": record["source_url"], "source_sha256": record["sha256"]},
+    }
+    delivery["research"]["score_input"]["vendor_severity"] = [rating]
+    current_record = delivery["records"][0]
+    delivery["research"]["switching_input"]["claims"] = [
+        {
+            "vendor": current_record["vendor"],
+            "advisory_id": current_record["advisory_id"],
+            "source": {
+                "source_url": current_record["source_url"],
+                "source_sha256": current_record["sha256"],
+            },
+            "vendor_severity": [rating],
+        }
+    ]
+    partition = {k: delivery[k] for k in ("records", "retained_advisories", "current_evidence")}
+    result = rebuild(delivery, partition)
+    assert result["research"]["score_input"]["vendor_severity"] == []
+    assert result["research"]["switching_input"]["claims"][0]["vendor_severity"] == []
+
+
+@pytest.mark.parametrize(
+    "fault",
+    ["missing", "publication", "time", "reference", "counts", "overlap", "manifest", "index_time"],
+)
+def test_native_rejects_bad_candidate_without_replacing_accepted_cache(delivery, tmp_path, fault):
+    from test_current_evidence_monitor import rewrite
+
+    accepted = publish(delivery, tmp_path)
+    app = Application(tmp_path)
+    _, previous = app.store.read()
+    candidate = publish(delivery, tmp_path)
+    data = json.loads((candidate / "snapshot.json").read_text())
+    if fault == "missing":
+        del data["current_evidence"]
+    elif fault == "publication":
+        data["current_evidence"]["publication"]["id"] = "0" * 32
+    elif fault == "time":
+        data["current_evidence"]["generated_at"] = "2000-01-01T00:00:00Z"
+    elif fault == "reference":
+        data["retained_advisories"][0]["target_key"] = "0" * 64
+    elif fault == "counts":
+        data["current_evidence"]["counts"]["current"] += 1
+    elif fault == "overlap":
+        data["records"][0] = data["retained_advisories"][0]["record"]
+    elif fault == "manifest":
+        path = candidate / "manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["generation"] = "0" * 32
+        path.write_text(json.dumps(manifest))
+    else:
+        index = json.loads((candidate / "data/index.json").read_text())
+        index["generated_at"] = "2000-01-01T00:00:00Z"
+        rewrite(candidate, "data/index.json", index)
+    rewrite(candidate, "snapshot.json", data)
+    for path in (
+        "/api/v1/current-evidence",
+        "/api/v1/retained-advisories",
+        "/snapshot.json",
+        "/api/v1/advisories",
+    ):
+        for method in ("GET", "HEAD"):
+            response = []
+            body = b"".join(
+                app(
+                    {
+                        "REQUEST_METHOD": method,
+                        "PATH_INFO": path,
+                        "QUERY_STRING": "limit=1&offset=0",
+                    },
+                    lambda status, headers: response.append((status, dict(headers))),
+                )
+            )
+            assert response[0][0].startswith("503")
+            assert body == (
+                b'{"error":"Publication temporarily unavailable"}' if method == "GET" else b""
+            )
+            assert int(response[0][1]["Content-Length"]) == len(
+                b'{"error":"Publication temporarily unavailable"}'
+            )
+            assert app.store._generation == accepted and app.store._data is previous
+            assert (tmp_path / "current").resolve() == candidate
+
+
+@pytest.mark.parametrize(
+    "marker", ["retained", "capability", "manifest", "bootstrap", "root_report"]
+)
+def test_native_missing_report_is_legacy_only_without_new_generation_markers(tmp_path, marker):
+    from infrastructure_impact.http import PublicationStore
+
+    generation = tmp_path / "generations" / ("a" * 32)
+    generation.mkdir(parents=True)
+    data = {
+        "publication": {"id": "a" * 32, "advisory_schema_version": 2},
+        "generated_at": AT,
+        "records": [],
+    }
+    if marker == "retained":
+        data["retained_advisories"] = []
+    elif marker == "manifest":
+        (generation / "manifest.json").write_text(
+            json.dumps({"generation": "a" * 32, "sha256": {"current-evidence.json": "b" * 64}})
+        )
+    elif marker == "root_report":
+        (generation / "current-evidence.json").write_text("{}")
+    else:
+        (generation / "data").mkdir()
+        index = {"publication": data["publication"], "generated_at": AT}
+        if marker == "capability":
+            index["current_evidence"] = {"schema_version": 1}
+        else:
+            index["bootstrap"] = {"path": "data/" + "b" * 64 + ".json"}
+            (generation / index["bootstrap"]["path"]).write_text(
+                json.dumps({"data": {"current_evidence_version": 1}})
+            )
+        (generation / "data/index.json").write_text(json.dumps(index))
+    (generation / "snapshot.json").write_text(json.dumps(data))
+    (tmp_path / "current").symlink_to(generation)
+    with pytest.raises(ValueError):
+        PublicationStore(tmp_path).read()
+
+
+def test_native_archive_validates_published_decisions_without_policy_execution(
+    delivery, tmp_path, monkeypatch
+):
+    import infrastructure_impact.application.current_evidence as policy
+    from infrastructure_impact.storage import repository
+
+    generation = publish(delivery, tmp_path)
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("Reader attempted to reinterpret a published generation")
+
+    monkeypatch.setattr(policy, "partition", forbidden)
+    monkeypatch.setattr(policy, "collect_policy_input", forbidden)
+    monkeypatch.setattr(repository, "connect", forbidden)
+    resolved, data = Application(tmp_path).store.read()
+    assert resolved == generation
+    assert data["current_evidence"]["counts"] == {"current": 2, "excluded": 1, "retained_total": 3}
+
+
+@pytest.mark.parametrize("fault", ["root_missing", "root_foreign", "root_version", "index_missing"])
+def test_native_rejects_incomplete_declared_generation(delivery, tmp_path, fault):
+    from test_current_evidence_monitor import rewrite
+
+    generation = publish(delivery, tmp_path)
+    if fault == "root_missing":
+        (generation / "current-evidence.json").unlink()
+    elif fault == "index_missing":
+        (generation / "data/index.json").unlink()
+    else:
+        report = json.loads((generation / "current-evidence.json").read_text())
+        if fault == "root_version":
+            report["schema_version"] = True
+        else:
+            report["publication"]["id"] = "0" * 32
+        rewrite(generation, "current-evidence.json", report)
+    with pytest.raises((ValueError, FileNotFoundError)):
+        Application(tmp_path).store.read()
+
+
+@pytest.mark.parametrize("field", ["advisories", "current", "excluded", "retained_total"])
+@pytest.mark.parametrize("value", [99, True])
+def test_native_rejects_top_level_counters_inconsistent_with_partition(
+    delivery, tmp_path, field, value
+):
+    from test_current_evidence_monitor import rewrite
+
+    generation = publish(delivery, tmp_path)
+    data = json.loads((generation / "snapshot.json").read_text())
+    data["counts"][field] = value
+    rewrite(generation, "snapshot.json", data)
+    with pytest.raises(ValueError):
+        Application(tmp_path).store.read()

@@ -1156,6 +1156,8 @@ def test_old_snapshot_keeps_existing_routes_and_dossier_is_unavailable(seed, tmp
 
     # Build a standalone old-format fixture, never edit an immutable generation.
     seed.pop("research_dossiers", None)
+    for key in ("current_evidence", "retained_advisories", "retained_cves", "evidence_scopes"):
+        seed.pop(key, None)
     seed["publication"] = {"id": "a" * 32, "advisory_schema_version": 2}
     generation = tmp_path / "generations" / ("a" * 32)
     generation.mkdir(parents=True)

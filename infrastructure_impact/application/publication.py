@@ -39,6 +39,7 @@ def public_projection(data, public_release_urls=()):
     from ..plugins.registry import default_registry
     from .current_evidence import partition
     from .current_views import rebuild, validate_partition
+    from .evidence_identity import record_key
 
     # Consume private frames before any general clone or public serialization.
     research = {k: v for k, v in data["research"].items() if k != "current_evidence_input"}
@@ -67,16 +68,27 @@ def public_projection(data, public_release_urls=()):
 
     has_score_input = "score_input" in data["research"]
     score_input = data["research"].pop("score_input", {})
+    current_keys = {record_key(r) for r in data["records"]}
     for record in data["records"] + [w["record"] for w in data["retained_advisories"]]:
         validate_advisory(record)
         record["notes"] = []
+        historical = record_key(record) not in current_keys
+        entries = score_input.get("retained_advisories" if historical else "advisories", [])
         scores = [
             c
-            for entry in score_input.get("advisories", [])
+            for entry in entries
             if entry.get("vendor") == record["vendor"]
             and entry.get("advisory_id") == record["advisory_id"]
             for c in entry.get("claims", [])
         ]
+        if historical:
+            scores = [
+                c
+                for c in scores
+                if c.get("source", {}).get("source_url") == record["source_url"]
+                and c.get("source", {}).get("source_sha256") == record["sha256"]
+                and c.get("revision") == str(record["revision_id"])
+            ]
         scores += score_input.get("fallback", {}).get("claims", [])
         record["metrics"] = public_metrics([c for c in scores if c.get("cve_id") in record["cves"]])
         record["timeline"] = []
@@ -210,8 +222,8 @@ def write_bundle(destination, data):
     from .research_reports import validate
 
     validate_partition(data, require_targets=True)
-    if "current_evidence_input" in data.get("research", {}):
-        raise ValueError("Private current-evidence input cannot be published")
+    if {"current_evidence_input", "score_input"}.intersection(data.get("research", {})):
+        raise ValueError("Private evidence input cannot be published")
     validate_kev(data["kev"])
     if (
         data["kev"]["publication"] != data["publication"]

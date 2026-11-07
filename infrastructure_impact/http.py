@@ -33,17 +33,72 @@ class PublicationStore:
             raise ValueError("Invalid publication pointer")
         with self._lock:
             if generation != self._generation:
-                self._data = json.loads((generation / "snapshot.json").read_text())
-                if "current_evidence" not in self._data:
-                    from .application.current_evidence import unavailable_report
-
-                    self._data["current_evidence"] = unavailable_report(
-                        publication=self._data.get("publication"),
-                        generated_at=self._data["generated_at"],
-                    )
-                    self._data.setdefault("retained_advisories", [])
+                candidate = json.loads((generation / "snapshot.json").read_text())
+                self._validate_candidate(generation, candidate)
+                self._data = candidate
                 self._generation = generation
             return generation, self._data
+
+    @staticmethod
+    def _validate_candidate(generation, candidate):
+        from .application.current_evidence import unavailable_report, validate_report
+        from .application.current_views import validate_partition
+
+        publication = candidate["publication"]
+        manifest_path = generation / "manifest.json"
+        manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+        if manifest and manifest.get("generation") != publication["id"]:
+            raise ValueError("Mixed publication manifest")
+        index_path = generation / "data/index.json"
+        if "data/index.json" in manifest.get("sha256", {}) and not index_path.is_file():
+            raise ValueError("Missing declared publication index")
+        index = json.loads(index_path.read_text()) if index_path.exists() else {}
+        if index and (
+            index.get("publication") != publication
+            or index.get("generated_at") != candidate["generated_at"]
+        ):
+            raise ValueError("Mixed publication index")
+        new_generation = (
+            "retained_advisories" in candidate
+            or "retained_cves" in candidate
+            or "current_evidence_version" in candidate
+            or "current_evidence" in index
+            or "current-evidence.json" in manifest.get("sha256", {})
+            or "schemas/current-evidence-v1.json" in manifest.get("sha256", {})
+            or (generation / "current-evidence.json").exists()
+        )
+        if "current_evidence" not in candidate and not new_generation and index.get("bootstrap"):
+            path = index["bootstrap"]["path"]
+            if not re.fullmatch(r"data/[a-f0-9]{64}\.json", path):
+                raise ValueError("Invalid bootstrap path")
+            bootstrap = json.loads((generation / path).read_text())
+            new_generation = "current_evidence_version" in bootstrap["data"]
+        if "current_evidence" in candidate:
+            # Validate the archived decision graph as published. No registry hook,
+            # current policy execution or evidence database belongs in a reader.
+            validate_partition(candidate, require_targets=True)
+            counts = candidate.get("counts", {})
+            expected = candidate["current_evidence"]["counts"]
+            for key, value in {"advisories": expected["current"], **expected}.items():
+                if type(counts.get(key)) is not int or counts[key] != value:
+                    raise ValueError("Inconsistent published current-evidence counts")
+            report_path = generation / "current-evidence.json"
+            if "current-evidence.json" in manifest.get("sha256", {}) and not report_path.is_file():
+                raise ValueError("Missing declared current-evidence report")
+            if report_path.exists():
+                report = json.loads(report_path.read_text())
+                validate_report(
+                    report, publication=publication, generated_at=candidate["generated_at"]
+                )
+                if report != candidate["current_evidence"]:
+                    raise ValueError("Mixed current-evidence assets")
+        elif new_generation:
+            raise ValueError("Missing current-evidence report")
+        else:
+            candidate["current_evidence"] = unavailable_report(
+                publication=publication, generated_at=candidate["generated_at"]
+            )
+            candidate["retained_advisories"] = []
 
 
 class Application:

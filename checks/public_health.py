@@ -350,7 +350,9 @@ def check(origin, expected=None, *, verify_archive=False):
         raw = verified("snapshot.json", 30_000_000)
         data = json.loads(raw)
     else:
-        assert index["schema_version"] == 1, "Unsupported static index"
+        assert type(index["schema_version"]) is int and index["schema_version"] == 1, (
+            "Unsupported static index"
+        )
         assert index["publication"]["id"] == manifest["generation"], "Mixed publication index"
 
         def part(descriptor):
@@ -365,7 +367,8 @@ def check(origin, expected=None, *, verify_archive=False):
             checked_parts += 1
             value = json.loads(raw)
             assert (
-                value["schema_version"] == 1
+                type(value["schema_version"]) is int
+                and value["schema_version"] == 1
                 and value["publication"] == index["publication"]
                 and value["generated_at"] == index["generated_at"]
             ), "Mixed evidence generations"
@@ -397,6 +400,7 @@ def check(origin, expected=None, *, verify_archive=False):
             report, data["publication"], data["generated_at"], schemas
         )
         root_report = json.loads(verified("current-evidence.json", 2_000_000))
+        validate_current_evidence(root_report, data["publication"], data["generated_at"], schemas)
         assert root_report == report, "Current-evidence root differs from index"
         retained = []
         membership = []

@@ -98,7 +98,9 @@ def assessment_export(data):
     return {
         **{k: v for k, v in data.items() if k != "retained_advisories"},
         "research": {
-            k: v for k, v in data.get("research", {}).items() if k != "current_evidence_input"
+            k: v
+            for k, v in data.get("research", {}).items()
+            if k not in ("current_evidence_input", "score_input")
         },
         "records": [
             {**r, "assessments": [a for a in r["assessments"] if a["cve_id"] in cohort]}

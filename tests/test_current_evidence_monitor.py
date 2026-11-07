@@ -237,3 +237,68 @@ def test_monitor_rejects_fresh_payload_with_stale_index_and_part_clocks(delivery
         pytest.raises(AssertionError, match="Mixed publication dates"),
     ):
         check(origin)
+
+
+@pytest.mark.parametrize("version", [True, "1", 2])
+@pytest.mark.parametrize("boundary", ["index", "bootstrap", "records", "report", "retained"])
+@pytest.mark.parametrize("switching", [True, False])
+def test_monitor_browser_reject_same_invalid_transport_versions(
+    delivery, tmp_path, version, boundary, switching
+):
+    """Python equality must not accept a version rejected by the real JS transport."""
+    from infrastructure_impact.settings import PACKAGE
+
+    generation = publish_monitored(delivery, tmp_path)
+    index = json.loads((generation / "data/index.json").read_text())
+    if not switching:
+        index.pop("switching", None)
+        rewrite(generation, "data/index.json", index)
+    script = r"""
+const fs=require('fs'),vm=require('vm'),{webcrypto}=require('crypto');
+const [root,web]=process.argv.slice(1),c={window:{},Response,TextEncoder,TextDecoder,Uint8Array,crypto:webcrypto};
+vm.createContext(c);for(const f of ['lossless-json.js','switching-contracts.js','current-evidence.js','delivery.js'])vm.runInContext(fs.readFileSync(web+'/'+f,'utf8'),c);
+(async()=>{try{const load=await c.createStaticDelivery(async p=>new Response(fs.readFileSync(root+p)),'/');await load(['CVE-2024-6858']);await load.retained();console.log('accepted');}catch(e){console.log('rejected');}})();
+"""
+
+    def browser():
+        return subprocess.check_output(
+            ["node", "-e", script, str(generation), str(PACKAGE / "web")], text=True
+        ).strip()
+
+    assert browser() == "accepted"
+    with serving(generation) as origin:
+        assert check(origin)["status"] == "fresh"
+    if boundary == "index":
+        index["schema_version"] = version
+        rewrite(generation, "data/index.json", index)
+    else:
+        descriptor = {
+            "bootstrap": index["bootstrap"],
+            "records": index["cohorts"]["CVE-2024-6858"][0],
+            "report": index["current_evidence"]["report"],
+            "retained": index["current_evidence"]["retained"][0]["part"],
+        }[boundary]
+        old_path = descriptor["path"]
+        envelope = json.loads((generation / old_path).read_text())
+        envelope["schema_version"] = version
+        rewrite_part(generation, index, descriptor, envelope)
+        # Every duplicate descriptor for the same cohort part follows the replacement.
+        for descriptors in index["cohorts"].values():
+            for item in descriptors:
+                if item["path"] == old_path:
+                    item.update(descriptor)
+        rewrite(generation, "data/index.json", index)
+    assert browser() == "rejected"
+    with serving(generation) as origin, pytest.raises(AssertionError):
+        check(origin)
+
+
+def test_monitor_validates_root_report_types_before_index_equality(delivery, tmp_path):
+    generation = publish_monitored(delivery, tmp_path)
+    with serving(generation) as origin:
+        assert check(origin)["status"] == "fresh"
+    report = json.loads((generation / "current-evidence.json").read_text())
+    report["schema_version"] = True
+    rewrite(generation, "current-evidence.json", report)
+    with serving(generation) as origin, pytest.raises(AssertionError):
+        check(origin)

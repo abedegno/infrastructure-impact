@@ -70,7 +70,7 @@ def state(db, cohort=None):
 
     research = {
         "switching_input": switching_inputs(db, records),
-        "score_input": score_inputs(db, records),
+        "score_input": score_inputs(db, retained),
         "study_inputs": reference_inputs(db, purpose="component_study"),
         "kev_input": enrichment_input(db, load_config(), "cisa-kev"),
         "release_assets": listings(db),

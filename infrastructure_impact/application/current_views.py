@@ -193,12 +193,26 @@ def rebuild(data: dict, partition_result: dict) -> dict:
     data.pop("switching_comparison", None)
     if switching is not None:
         switching["claims"] = [c for c in switching.get("claims", []) if current_source(c)]
+        for claim in switching["claims"]:
+            if "vendor_severity" in claim:
+                claim["vendor_severity"] = [
+                    rating for rating in claim["vendor_severity"] if current_source(rating)
+                ]
         if "score_availability" in switching:
             switching["score_availability"] = [
                 a for a in switching["score_availability"] if current_source(a)
             ]
     score_input = research.get("score_input")
     if score_input is not None:
+        # Keep excluded source enrichment inside the existing private boundary.
+        # Rebuild can run twice (query and projection); preserve the first partition.
+        score_input.setdefault(
+            "retained_advisories",
+            [a for a in score_input.get("advisories", []) if not current_source(a)],
+        )
+        score_input["vendor_severity"] = [
+            rating for rating in score_input.get("vendor_severity", []) if current_source(rating)
+        ]
         score_input["advisories"] = [
             a for a in score_input.get("advisories", []) if current_source(a)
         ]
