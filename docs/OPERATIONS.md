@@ -324,3 +324,14 @@ arguments before keys; actual invocation authorizes legacy cleanup and successfu
 invocation authorizes publication. Missing modern effects never downgrade to
 legacy. This bridge preserves the existing source pin on merge; it does not
 activate maintenance or establish that older code is safe after policy rollout.
+
+
+## Exact Cisco/Aruba target import
+
+See [exact target import](target-import.md) for local preview/stage commands,
+explicit lock ownership, pinned-byte refusal, private stage layout and exit codes.
+This installed-ID route shares hosted maintenance controls but has strict
+all-target completion semantics. The Arista expected-conflict partial outcome
+above is specific to that refresh and is not an accepted exact-import result.
+The [dated acceptance](research/2026-11-07-exact-target-import-acceptance.md) records
+offline laboratory evidence and the remaining complete hosted-union gate.

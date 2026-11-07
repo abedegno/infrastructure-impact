@@ -42,6 +42,10 @@ def public_resource_fingerprints(root):
         "resources/switching-source-bindings.json",
         "resources/switching-extraction-review.json",
         "migrations/011_switching_collection.sql",
+        "resources/target-imports/campus-switching-public-gap-2026-11-07-v1.json",
+        "schemas/target-import-manifest-v1.json",
+        "schemas/target-import-preview-v1.json",
+        "schemas/target-import-result-v1.json",
     ]
     names += [
         "schemas/switching-" + name + "-v1.json"

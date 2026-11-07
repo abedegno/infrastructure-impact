@@ -159,3 +159,25 @@ semantics and recovery/public output together before changing the source pin.
 There is no automatic semantic rollback. This work changes no version, release,
 schedule, source defaults, capacity, permissions or delivery limits, and does not
 complete independent human review or fair vendor-rate prerequisites.
+
+
+## Exact target import distribution and activation
+
+Follow [the operator guide](target-import.md) and
+[dated acceptance](research/2026-11-07-exact-target-import-acceptance.md). Build both
+wheel and sdist from a fresh allowlisted export (`python -m build --no-isolation`)
+and inspect the sdist as well as installing its rebuilt wheel outside the source
+tree. The isolated package probe requires the exact installed 174-target manifest,
+all three operation schemas, unchanged standalone monitor pair, root/project-prefix
+candidate validation and negative missing-companion cases. CI explicitly lints
+all target-import test modules. Keep authored fixtures and manifest generation
+reproducible; never package retained vendor captures or operator receipts.
+
+Offline cached dependency checks may use `checks/distribution.py --offline` with
+the frozen build/runtime requirements. This is dependency reuse, distinct from
+offline retained-evidence replay. Neither constitutes fresh hosted acquisition or
+acceptance. A passing software/distribution matrix does not clear measured
+capacity rejection or certify the missing complete hosted union. Keep source
+version, source configuration, runtime pin and activation unchanged until their
+separate release/authorization gates are satisfied. Whole-branch review remains
+required after task-level implementation acceptance.

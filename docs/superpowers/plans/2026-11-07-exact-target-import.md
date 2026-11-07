@@ -164,3 +164,42 @@ Please review this plan and confirm it captures the intended implementation.
 After approval, use the preserved **subagent-driven** method: one implementer and
 fresh task review per completed unit, followed by whole-branch review. Do not
 start product code until that plan review returns.
+
+
+## Approved execution amendments — 7 November 2026
+
+These notes preserve the original approved design above and record reviewed
+implementation interfaces; they do not authorize activation or hosted access.
+
+- `stage(..., *, lock_home, accepted_preview, base_path="/")` requires the full
+  validated accepted preview, rather than only a fingerprint. Receipt identity
+  always describes that request; the copied binding is independently rechecked.
+  The local CLI calls lock home `--home`; optional `--base-path` controls rendering.
+- The worker receives bounded parent-authored profile metadata through a private
+  request, validates it against private preservation context and uses explicit
+  staged settings before application imports. Public selection remains installed
+  ID only. It requires complete candidate evidence before returning completed.
+- Budgeted transport refuses redirects and conservatively rejects exhausted
+  allowance without proven EOF. Pacing applies to actual attempts including
+  retries. Acquisition counters exclude independent public-only loopback monitor
+  traffic; monitor limits remain unchanged.
+- The logical binding includes all vendors' latest source-selection facts. Old
+  rows are preserved, with only exact target HTTP cache rows exempted for genuine
+  retrieval updates. Evidence/revision/history rows are never rewritten.
+- Core owns exactly one new scoped pipeline row, with genuine ingestion times,
+  imported/unchanged counts and unrelated acquisition marked `not_run`.
+  Candidate acceptance remains the separate strict result; failed candidates
+  update only that isolated owned row and never promote accepted recovery.
+- Trusted hosted base path passes explicitly through stage/context/environment;
+  hostile ambient prefixes do not influence the fresh worker. No hosted workflow
+  inputs, scheduling, permissions or deployment controls were added.
+- Task 7 uses offline retained public evidence, not fresh retrieval. Its local
+  223-identity research input cannot establish capacity/acceptance for the full
+  966-record hosted inventory or projected 1,140-identity union. A failed lab
+  capacity result stays failed. Source merge/release, activation, authenticated
+  hosted preview/apply and independent human review remain separate gates.
+
+Task 7 implementation and validation receipts are in the dated acceptance note.
+Final whole-branch review is controller-owned and remains pending. The deferred
+Task 1 RFC3339 offset-minute validation Minor (`+00:99`) remains explicitly queued
+for that review; current installed timestamps are unaffected.

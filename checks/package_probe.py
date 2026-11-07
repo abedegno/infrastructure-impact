@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import tempfile
+from contextlib import closing
 from importlib.metadata import version
 from pathlib import Path
 from unittest.mock import patch
@@ -51,6 +52,20 @@ def main():
         os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
     ).items():
         assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest, name
+    # Exact import remains an installed-ID-only operator CLI, with closed schemas.
+    from infrastructure_impact.application.target_import_contracts import preview_bytes
+    from infrastructure_impact.collection.target_import_profiles import PROFILE_ID, profile
+
+    selected = profile(PROFILE_ID)
+    assert len(selected.targets) == 174
+    assert selected.metadata() == json.loads(
+        (package / "resources/target-imports" / (PROFILE_ID + ".json")).read_bytes()
+    )
+    assert {t.vendor for t in selected.targets} == {"aruba", "cisco"}
+    assert all(
+        (package / "schemas" / ("target-import-" + name + "-v1.json")).is_file()
+        for name in ("manifest", "preview", "result")
+    )
     # Unreleased local reconciliation commands/resources work without checkout imports.
     from infrastructure_impact.cli import main as cli_main
     from infrastructure_impact.reconciliation.report import ReportError, validate_report
@@ -64,7 +79,7 @@ def main():
     else:
         raise AssertionError("Installed report schema accepted an invalid report")
     with tempfile.TemporaryDirectory() as probe_directory:
-        probe = Path(probe_directory)
+        probe = Path(probe_directory).resolve()
         for command in ("verify", "scan", "baseline", "report"):
             try:
                 cli_main(["cve-reconcile", command, "--help"])
@@ -73,8 +88,8 @@ def main():
         config = probe / "config.json"
         config.write_text('{"vendors": []}')
         database = probe / "vault.sqlite3"
-        with connect(database):
-            pass
+        with closing(connect(database)) as probe_db:
+            probe_db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         cli_main(
             [
                 "cve-reconcile",
@@ -87,6 +102,28 @@ def main():
                 str(probe / "baseline.json"),
             ]
         )
+        for command in ("preview", "stage"):
+            try:
+                cli_main(["target-import", command, "--help"])
+            except SystemExit as error:
+                assert error.code == 0
+        target_preview = probe / "target-preview.json"
+        assert (
+            cli_main(
+                [
+                    "target-import",
+                    "preview",
+                    "--database",
+                    str(database),
+                    "--profile",
+                    PROFILE_ID,
+                    "--output",
+                    str(target_preview),
+                ]
+            )
+            == 0
+        )
+        assert preview_bytes(json.loads(target_preview.read_bytes())) == target_preview.read_bytes()
         from infrastructure_impact.reconciliation.baseline import load_baseline
 
         assert load_baseline(probe / "baseline.json")["revisions"] == []
@@ -113,8 +150,8 @@ def main():
 
     with tempfile.TemporaryDirectory() as directory:
         database = Path(directory) / "operator.sqlite3"
-        with connect(database):
-            pass
+        with closing(connect(database)) as probe_db:
+            probe_db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         before = database.read_bytes()
         with connect(database, read_only=True) as operator:
             inventory = coverage_report(operator, {"vendors": []}, vendor="acme")

@@ -273,3 +273,23 @@ model/version inventory matching; independent human adjudication; comparative
 patch rates, vendor quality rankings, equivalence, concealment and Glasswing
 causal claims. This feature supplies bounded acquisition and safe candidate
 construction, not those research conclusions.
+
+## Reviewed execution interface notes — 7 November 2026
+
+The original design above remains the approval record. Reviewed implementation
+adds required keyword-only `accepted_preview` and optional `base_path="/"` to
+`stage(..., *, lock_home, accepted_preview, base_path="/")`. Local flags are
+`--home`, `--preview` and optional `--base-path`; public profile selection remains
+installed-ID only. The bounded private worker protocol carries parent-authored
+profile metadata and preservation/pipeline facts, with explicit staged settings
+before imports. Completed results require the closed non-null passing candidate
+summary. Core owns one scoped ingestion pipeline row; final acceptance is the
+separate strict stage result. Approved binding, redirect/EOF/cache/pacing and
+validation-byte-scope details are recorded in the
+[plan execution amendments](../plans/2026-11-07-exact-target-import.md#approved-execution-amendments--7-november-2026)
+and [operator guide](../../target-import.md).
+
+Task implementation and laboratory verification do not authorize hosted preview,
+apply, source-pin activation or publication. Whole-branch review remains pending;
+the dated acceptance records the measured laboratory result and missing complete
+hosted-union check.

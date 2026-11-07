@@ -136,7 +136,9 @@ def fetch(
                 observe(db, vendor, url, cached["evidence_id"], 304)
                 return raw
             if attempt or e.code not in (429, 500, 502, 503, 504):
-                raise SourceHTTPError(e, url, e.read(15000) if budget is None else error_body) from e
+                raise SourceHTTPError(
+                    e, url, e.read(15000) if budget is None else error_body
+                ) from e
         except (OSError, TimeoutError):
             if attempt:
                 raise

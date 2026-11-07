@@ -7,6 +7,10 @@
 !pyproject.toml
 !requirements.lock
 !requirements-build.lock
+!checks/
+checks/**
+!checks/public_health.py
+!checks/switching_health.py
 !infrastructure_impact/
 !infrastructure_impact/**
 infrastructure_impact/**/__pycache__/

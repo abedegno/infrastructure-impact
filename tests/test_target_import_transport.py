@@ -28,6 +28,7 @@ def db(tmp_path):
 @pytest.fixture
 def install(monkeypatch):
     """Replace the network boundary while retaining retrieval and database behavior."""
+
     def setup(*outcomes):
         calls = []
         pending = iter(outcomes)
@@ -66,7 +67,9 @@ def test_refuses_every_redirect_before_a_second_open(db, monkeypatch, destinatio
         class Opener:
             def open(self, request, timeout):
                 calls.append(request.full_url)
-                next_request = handler.redirect_request(request, None, 302, "Found", {}, destination)
+                next_request = handler.redirect_request(
+                    request, None, 302, "Found", {}, destination
+                )
                 calls.append(next_request.full_url)
                 return Response(b"wrong")
 
@@ -234,9 +237,7 @@ def test_interrupted_retryable_error_body_retains_http_retry_classification(db, 
         def read(self, size):
             raise IncompleteRead(b"partial", 10)
 
-    calls = install(
-        HTTPError(URL, 503, "Unavailable", {}, Interrupted()), Response(b"success")
-    )
+    calls = install(HTTPError(URL, 503, "Unavailable", {}, Interrupted()), Response(b"success"))
     shared = budget()
     assert retrieve(db, shared) == b"success"
     assert shared.received_bytes == 14
