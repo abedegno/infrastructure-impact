@@ -135,6 +135,10 @@ def reference_status(study, inputs):
 
 def cell(data, family, cid):
     found = [(r, a) for r, a in statements(data, family) if a["cve_id"] == cid]
+    return _cell(data, family, cid, found)
+
+
+def _cell(data, family, cid, found):
     explicit = [(r, a) for r, a in found if a["scope"] == "cve_specific"]
     statuses = sorted({a["status"] for _, a in explicit})
     if not found:
@@ -215,13 +219,23 @@ def component_studies(data):
     inputs = public_inputs(data.get("research", {}).get("study_inputs", []))
     catalogue = family_definition()
     families = {f["id"]: f for f in catalogue["families"]}
+    family_claims = {}
+
+    def study_cell(fid, cid):
+        if fid not in family_claims:
+            grouped = {}
+            for record, claim in statements(data, families[fid]):
+                grouped.setdefault(claim["cve_id"], []).append((record, claim))
+            family_claims[fid] = grouped
+        return _cell(data, families[fid], cid, family_claims[fid].get(cid, []))
+
     studies = []
     for study in definitions():
         enrolled = [
             r["cve_id"] for r in study["candidate_reviews"] if r["enrollment"] == "included"
         ]
         cells = [
-            cell(data, families[fid], cid)
+            study_cell(fid, cid)
             for cid in enrolled
             for fid in study["families"]
             if families[fid]["vendor"] in data["vendors"]

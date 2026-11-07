@@ -25,6 +25,24 @@ def minimal():
     return {"vendors": {f["vendor"]: f["vendor"] for f in families()["families"]}, "records": []}
 
 
+def test_study_family_statements_are_scanned_once_per_report(monkeypatch):
+    import importlib
+    from collections import Counter
+
+    module = importlib.import_module("infrastructure_impact.application.component_studies")
+    original = module.statements
+    calls = Counter()
+
+    def counted(data, family):
+        calls[family["id"]] += 1
+        return original(data, family)
+
+    monkeypatch.setattr(module, "statements", counted)
+    report = component_studies(minimal())
+    assert report["studies"][0]["cells"]
+    assert calls and max(calls.values()) == 1
+
+
 def record(family, cid, status="affected", scope="cve_specific"):
     return {
         "vendor": family["vendor"],
