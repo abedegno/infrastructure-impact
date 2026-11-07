@@ -11,6 +11,7 @@
 checks/**
 !checks/public_health.py
 !checks/switching_health.py
+!checks/wheel_hook.py
 !infrastructure_impact/
 !infrastructure_impact/**
 infrastructure_impact/**/__pycache__/
