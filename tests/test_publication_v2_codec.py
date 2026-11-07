@@ -75,3 +75,51 @@ def test_encode_stream_preserves_python_numbers():
         b"".join(codec.stream_tokens(tokens, encoder.strings, encoder.shapes))
         == json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
     )
+
+
+def test_materialization_retains_explicit_numeric_kind_and_zero_sign():
+    import math
+
+    value = codec.materialize_tokens(
+        [[-1, 4], [-2, "f", "-0"], [-2, "f", "1"], [-2, "i", "1"], [-2, "i", "9007199254740993"]],
+        [],
+        [],
+    )
+    assert type(value[0]) is float and math.copysign(1, value[0]) == -1
+    assert type(value[1]) is float
+    assert type(value[2]) is int
+    assert value[3] == 9007199254740993
+
+
+def test_number_lexeme_charged_before_encoding():
+    class GuardedLexeme(str):
+        def encode(self, *args, **kwargs):
+            raise AssertionError("allocated before budget rejection")
+
+    with pytest.raises(ValueError, match="budget"):
+        list(
+            codec.stream_tokens(
+                [[-2, "i", GuardedLexeme("1" * 10000)]], [], [], budget=codec.Budget(1)
+            )
+        )
+
+
+def test_private_context_preserves_real_stat_nanoseconds():
+    from jsonschema import Draft202012Validator
+
+    schema = json.loads(
+        (
+            Path(__file__).parents[1]
+            / "infrastructure_impact/schemas/target-import-context-v2.json"
+        ).read_text()
+    )
+    stat = Path(__file__).stat()
+    state = {
+        k: getattr(stat, k) for k in ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+    }
+    state["sha256"] = "a" * 64
+    for key in ("source_before", "source_after"):
+        subschema = schema["properties"]["preservation"]["properties"][key]["properties"][""][
+            "anyOf"
+        ][0]
+        Draft202012Validator(subschema).validate(state)

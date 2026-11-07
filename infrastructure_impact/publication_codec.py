@@ -8,6 +8,7 @@ import json
 import math
 import re
 import time
+from collections import deque
 from dataclasses import dataclass
 from hashlib import sha256
 
@@ -37,7 +38,7 @@ def literal(value):
     return value
 
 
-def strict_loads(raw, *, max_bytes=MAX_PART):
+def strict_loads(raw, *, max_bytes=MAX_PART, parse_int=int, parse_float=float):
     if isinstance(raw, str):
         raw = raw.encode("utf-8", errors="strict")
     if len(raw) > max_bytes:
@@ -56,7 +57,11 @@ def strict_loads(raw, *, max_bytes=MAX_PART):
 
     try:
         value = json.loads(
-            raw.decode("utf-8", errors="strict"), object_pairs_hook=pairs, parse_constant=constant
+            raw.decode("utf-8", errors="strict"),
+            object_pairs_hook=pairs,
+            parse_constant=constant,
+            parse_int=parse_int,
+            parse_float=parse_float,
         )
     except (UnicodeError, RecursionError) as exc:
         raise ValueError("invalid JSON encoding/depth") from exc
@@ -193,6 +198,8 @@ def stream_tokens(
     aliases=None,
     depth=0,
     validate=True,
+    observer=None,
+    number_observer=None,
 ):
     """Validate/emit a single complete node; charge *before* encoding each literal.
 
@@ -209,10 +216,14 @@ def stream_tokens(
 
     def emit(raw):
         budget.charge(len(raw), len(raw))
+        if observer is not None:
+            observer(raw)
         return raw
 
     def quoted(value):
         budget.charge(string_cost(value), string_cost(value, ascii))
+        if observer is not None:
+            observer(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
         return json.dumps(value, ensure_ascii=ascii, separators=(",", ":")).encode("utf-8")
 
     def node(level, location):
@@ -261,8 +272,16 @@ def stream_tokens(
         elif (
             isinstance(token, list) and len(token) == 3 and type(token[0]) is int and token[0] == -2
         ):
+            if not isinstance(token[2], str):
+                raise ValueError("invalid numeric lexeme")
+            budget.charge(len(token[2]), len(token[2]))
             number = LogicalNumber(token[1], token[2])
-            yield emit(number.lexeme.encode("ascii"))
+            raw = number.lexeme.encode("ascii")
+            if observer is not None:
+                observer(raw)
+            if number_observer is not None:
+                number_observer(number)
+            yield raw
         elif (
             isinstance(token, list) and len(token) == 2 and type(token[0]) is int and token[0] == -3
         ):
@@ -283,6 +302,8 @@ def stream_tokens(
                 aliases=None,
                 depth=level,
                 validate=False,
+                observer=observer,
+                number_observer=number_observer,
             )
         else:
             raise ValueError("invalid token")
@@ -301,11 +322,22 @@ def materialize_tokens(
     budget = Budget(min(safe_int(max_bytes), MAX_SELECTED))
     # Each append is preceded by actual accounting, including ASCII expansion.
     raw = bytearray()
+    kinds = deque()
     for chunk in stream_tokens(
-        tokens, strings, shapes, serialization=serialization, budget=budget, **kwargs
+        tokens,
+        strings,
+        shapes,
+        serialization=serialization,
+        budget=budget,
+        number_observer=lambda number: kinds.append(number.kind),
+        **kwargs,
     ):
         raw.extend(chunk)
-    return strict_loads(raw, max_bytes=budget.max_bytes)
+
+    def number(lexeme):
+        return int(lexeme) if kinds.popleft() == "i" else float(lexeme)
+
+    return strict_loads(raw, max_bytes=budget.max_bytes, parse_int=number, parse_float=number)
 
 
 def claim_routes(parts, strings, *, expected_ids=None):
