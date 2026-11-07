@@ -28,6 +28,12 @@ requirement. Further table-layout/compression work is deferred in favor of impor
 correctness and useful comparison data. V1 retains its 20 MB ceiling. Archive,
 part, index, materialization and complete-site limits remain unchanged.
 
+Reducer working data has a separate 512 MB ceiling. Retained-scale queries
+exceeded 128 MB of intermediate projections while producing a small summary;
+using the response ceiling for both rejected a valid query. Individual values
+and returned responses retain the 128 MB limit. Working-data charges still
+precede allocation, and smaller caller-supplied working limits are enforced.
+
 The first retained replay timed out after 2,400 seconds and is not accepted.
 The runtime correction reuses the producer's database query for cohort reporting
 and composes validation of unchanged evidence, while retaining a fresh independent

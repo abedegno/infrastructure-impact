@@ -78,6 +78,27 @@ def test_claims_validate_full_shape_and_private_projection_is_distinct(generatio
     assert len(reduced.fields) < len(claims[0])
 
 
+def test_reducer_working_budget_is_separate_from_response_budget(generation, monkeypatch):
+    seen = []
+    original = comparison.ReducerClaim.from_validated
+
+    def capture(claim, *, budget=None):
+        seen.append(budget.max_bytes)
+        return original(claim, budget=budget)
+
+    monkeypatch.setattr(comparison.ReducerClaim, "from_validated", capture)
+    reader = PublicationReader(generation)
+    assert reader.switching_selection({}, evaluated_at=AT)["rows"]
+    assert seen and set(seen) == {512_000_000}
+    assert reader.limits["selected"] == 128_000_000
+    with pytest.raises(ValueError, match="budget"):
+        PublicationReader(generation, limits={"working": 1}).switching_selection(
+            {}, evaluated_at=AT
+        )
+    with pytest.raises(ValueError, match="increase"):
+        PublicationReader(generation, limits={"working": 512_000_001})
+
+
 def test_paged_details_bind_selection_generation_and_kind(generation):
     reader = PublicationReader(generation)
     selected = reader.switching_selection({}, evaluated_at=AT)
@@ -425,7 +446,7 @@ def test_projection_rejects_before_constructor(generation, monkeypatch):
 
     monkeypatch.setattr(comparison.ReducerClaim, "__init__", construct)
     monkeypatch.setattr(reader, "iter_claims", lambda: iter(claims))
-    reader.limits["selected"] = 32
+    reader.limits["working"] = 32
     with pytest.raises(ValueError, match="budget"):
         reader.switching_selection({}, evaluated_at=AT)
     assert built == []

@@ -12,6 +12,7 @@ DEFAULT_LIMITS = dict(
     part=8_000_000,
     index=2_000_000,
     selected=128_000_000,
+    working=512_000_000,
     cache=16_000_000,
     stream=1_000_000_000,
     default=32_000_000,
@@ -571,7 +572,8 @@ class PublicationReader(codec.CatalogReader):
         from .switching_comparison import ReducerClaim, select_reducer_claims
 
         claims = []
-        accumulator = codec.Budget(self.limits["selected"])
+        # Aggregate reducer state is larger than the selected response it produces.
+        accumulator = codec.Budget(self.limits["working"])
         accumulator.charge(2, 2)
         for claim in self.iter_claims():
             accumulator.charge(bool(claims), bool(claims))

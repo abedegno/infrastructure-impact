@@ -940,12 +940,24 @@
       vendor = options.vendor ?? null,
       scope = options.scope_level ?? options.scope ?? 'os_family';
     const json = window.InfrastructureJSON,
-      projectionQuota = json.budget(cap);
+      workingCap = limits.working_bytes ?? 512000000;
+    if (!Number.isSafeInteger(workingCap) || workingCap < 1 || workingCap > 512000000)
+      throw Error('Invalid reducer working budget');
+    const projectionQuota = {
+      remaining: workingCap,
+      charge(size) {
+        if (!Number.isSafeInteger(size) || size < 0 || size > this.remaining)
+          throw Error('Reducer working byte budget exceeded');
+        this.remaining -= size;
+      },
+    };
     projectionQuota.charge(2);
     let validationBytes = 0;
     const chargeProperty = (key, value) =>
       projectionQuota.charge(
-        json.stringBytes(key) + 1 + json.measure(value, null, '', projectionQuota.remaining),
+        json.stringBytes(key) +
+          1 +
+          json.measure(value, null, '', Math.min(128000000, projectionQuota.remaining)),
       );
     function pick(value, keys) {
       projectionQuota.charge(2);
@@ -1037,7 +1049,7 @@
             keys.includes('source_url')
           ) {
             projectionQuota.charge(
-              json.measure(v, null, '', projectionQuota.remaining) +
+              json.measure(v, null, '', Math.min(128000000, projectionQuota.remaining)) +
                 (projection.sources.length ? 1 : 0),
             );
             projection.sources.push(v);

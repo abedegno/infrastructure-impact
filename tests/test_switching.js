@@ -151,6 +151,22 @@ for (const value of [NaN, Infinity, -Infinity]) {
     );
   }
   console.log('Streamed private projection query parity passed');
+  const base = data.comparison_base_report;
+  for (const working_bytes of [1, 512000001])
+    await assert.rejects(
+      () =>
+        api.selectClaims(
+          base,
+          base.inputs.evidence,
+          base.inputs.kev,
+          (async function* () {
+            yield* base.inputs.evidence.claims;
+          })(),
+          {},
+          { working_bytes },
+        ),
+      /budget/,
+    );
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;
