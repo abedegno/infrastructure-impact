@@ -57,7 +57,7 @@ class PublicationReader(codec.CatalogReader):
         with self._path(path).open("rb") as stream:
             raw = stream.read(maximum + 1)
         self.read_bytes += len(raw)
-        return codec.strict_loads(raw, max_bytes=maximum)
+        return codec.strict_loads(raw, max_bytes=maximum, transport=True)
 
     def _identity(self, value):
         if any(value.get(k) != v for k, v in self.identity.items()):
@@ -93,7 +93,9 @@ class PublicationReader(codec.CatalogReader):
             self.cache_bytes += len(raw)
         if len(raw) <= self.limits["cache"]:
             self.cache[path] = raw
-        result = codec.strict_loads(raw, max_bytes=maximum)
+        result = codec.strict_loads(
+            raw, max_bytes=maximum, transport=not ordinary and kind != "overview"
+        )
         if kind is not None or ordinary:
             self._identity(result)
             if ordinary:
@@ -111,6 +113,8 @@ class PublicationReader(codec.CatalogReader):
                     or result["kind"] != kind
                 ):
                     raise ValueError("v2 part envelope")
+                if kind == "record_routes":
+                    codec.validate_record_routes(result["data"])
                 # Closed kind-specific schemas, including tokens and array counts.
                 from .publication_v2 import validators
 
@@ -163,10 +167,29 @@ class PublicationReader(codec.CatalogReader):
         # Ordinary cohort parts carry complete global catalogs/denominators in
         # bootstrap; selecting a cohort never triggers the giant runtime root.
         result = self.fetch(self.index["bootstrap"], ordinary=True)
+        result["coverage"] = []
+        result["retained_advisories"] = []
         accumulator = codec.Budget(self.limits["selected"])
         codec.charge_value(result, accumulator)
-        records, seen, timeline = {}, set(), {}
-        result["coverage"] = []
+
+        def entry(value, count):
+            # The empty container was charged with bootstrap. Charge its comma
+            # and the entire new value before retaining the next element.
+            accumulator.charge(bool(count), bool(count))
+            codec.charge_value(value, accumulator)
+
+        def field(key, value):
+            # These fields are absent from the ordinary bootstrap contract.
+            if key in result:
+                raise ValueError("duplicate assembled field")
+            accumulator.charge(
+                codec.string_cost(key) + 1 + bool(result),
+                codec.string_cost(key, True) + 1 + bool(result),
+            )
+            codec.charge_value(value, accumulator)
+            result[key] = value
+
+        records, assessments, seen, timeline = {}, {}, set(), {}
         for cid in sorted(set(cohort)):
             for desc in self.index["cohorts"].get(cid, []):
                 if desc["path"] in seen:
@@ -174,46 +197,47 @@ class PublicationReader(codec.CatalogReader):
                 seen.add(desc["path"])
                 for row in self.fetch(desc, ordinary=True):
                     if row["kind"] == "record":
-                        if row["index"] not in records:
-                            codec.charge_value(row["record"], accumulator)
-                        record = records.setdefault(
-                            row["index"], {**row["record"], "assessments": {}}
-                        )
-                        for index, assessment in row["assessments"]:
-                            if index not in record["assessments"]:
-                                codec.charge_value(assessment, accumulator)
-                                record["assessments"][index] = assessment
+                        index = row["index"]
+                        if index not in records:
+                            entry(row["record"], len(records))
+                            # Add the assessments key and empty list before
+                            # constructing the record that will retain them.
+                            extra = codec.string_cost("assessments") + 3 + bool(row["record"])
+                            accumulator.charge(extra, extra)
+                            records[index] = {**row["record"], "assessments": []}
+                            assessments[index] = {}
+                        for item_index, assessment in row["assessments"]:
+                            if item_index not in assessments[index]:
+                                entry(assessment, len(assessments[index]))
+                                assessments[index][item_index] = assessment
                     elif row["kind"] == "coverage":
-                        codec.charge_value(row["value"], accumulator)
+                        entry(row["value"], len(result["coverage"]))
                         result["coverage"].append(row["value"])
                     elif row["kind"] == "timeline":
                         if row["index"] not in timeline:
-                            codec.charge_value(row["value"], accumulator)
-                        timeline[row["index"]] = row["value"]
+                            entry(row["value"], len(timeline))
+                            timeline[row["index"]] = row["value"]
                     elif row["kind"] == "scorecard":
-                        codec.charge_value(row["value"], accumulator)
-                        next(
+                        cases = next(
                             v
                             for v in result["scorecards"]["vendors"]
                             if v["vendor"] == row["vendor"]
-                        )["cases"].append(row["value"])
-        result["records"] = [
-            {**r, "assessments": [a for _, a in sorted(r["assessments"].items())]}
-            for _, r in sorted(records.items())
-        ]
+                        )["cases"]
+                        entry(row["value"], len(cases))
+                        cases.append(row["value"])
+        for index, record in sorted(records.items()):
+            record["assessments"] = [a for _, a in sorted(assessments[index].items())]
+            result["records"].append(record)
         result["timeline"]["events"] = [e for _, e in sorted(timeline.items())]
-        result["retained_advisories"] = []
         current = self.index.get("current_evidence")
         if current:
-            current_report = self.fetch(current["report"], ordinary=True)
-            codec.charge_value(current_report, accumulator)
-            result["current_evidence"] = current_report
+            field("current_evidence", self.fetch(current["report"], ordinary=True))
             for part in current["retained"]:
                 if set(part["cve_ids"]).intersection(cohort):
-                    result["retained_advisories"].extend(self.fetch(part["part"], ordinary=True))
-        overview = self.switching_overview()
-        codec.charge_value(overview, accumulator)
-        result["switching_overview"] = overview
+                    for wrapper in self.fetch(part["part"], ordinary=True):
+                        entry(wrapper, len(result["retained_advisories"]))
+                        result["retained_advisories"].append(wrapper)
+        field("switching_overview", self.switching_overview())
         return {k: v for k, v in result.items() if fields is None or k in fields}
 
     def _claim_routes(self):

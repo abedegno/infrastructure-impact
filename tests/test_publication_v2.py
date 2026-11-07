@@ -4,6 +4,7 @@ import gzip
 import json
 from hashlib import sha256
 
+import pytest
 from test_static_delivery import dataset
 
 from infrastructure_impact.application.publication import publish
@@ -143,4 +144,60 @@ def test_archive_binds_every_scope_member_descriptor(tmp_path):
     catalog["archive"]["expanded"].update(bytes=len(raw), sha256=sha256(raw).hexdigest())
     catalog["archive"]["gzip"].update(bytes=len(compressed), sha256=sha256(compressed).hexdigest())
     with pytest.raises(AssertionError, match="member descriptor"):
+        verify_publication_v2_archive(compressed, catalog, reader.identity)
+
+
+@pytest.mark.parametrize("fault", ["kind", "missing", "index", "interval", "size", "float", "site"])
+def test_archive_record_route_authority(tmp_path, fault):
+    import copy
+
+    from checks.switching_health import verify_publication_v2_archive
+
+    out = publish(dataset(), tmp_path, publication_format="v2")
+    reader = PublicationReader(out)
+    catalog = copy.deepcopy(reader.catalog)
+    archive = json.loads((out / "snapshot-v2.json").read_bytes())
+    assets = {a["path"]: a for a in archive["assets"]}
+    scope_asset = assets[catalog["archive"]["manifest"]["path"]]
+    scope = scope_asset["data"]["data"]
+    original = scope["record_routes"][0]
+    route_asset = assets[original["path"]]
+
+    def rehash(asset):
+        encoded = (
+            json.dumps(asset["data"], ensure_ascii=False, separators=(",", ":")) + "\n"
+        ).encode()
+        asset.update(
+            bytes=len(encoded),
+            sha256=sha256(encoded).hexdigest(),
+            path="data/v2/" + sha256(encoded).hexdigest() + ".json",
+        )
+        return {k: asset[k] for k in ("path", "sha256", "bytes")}
+
+    if fault in ("kind", "missing"):
+        scope["record_routes"] = [scope["root"]] if fault == "kind" else []
+        scope["members"] = [d for d in scope["members"] if d != original]
+        archive["assets"].remove(route_asset)
+    elif fault == "site":
+        catalog["routes"]["records"] = []
+    else:
+        row = route_asset["data"]["data"][0]
+        field = {
+            "index": "record_index",
+            "interval": "first_token",
+            "size": "logical_bytes",
+            "float": "record_index",
+        }[fault]
+        row[field] = float(row[field]) if fault == "float" else row[field] + 1
+        descriptor = rehash(route_asset)
+        scope["record_routes"][0] = descriptor
+        scope["members"] = [descriptor if d == original else d for d in scope["members"]]
+        # Keep site bindings consistent: independently validate snapshot membership.
+        catalog["routes"]["records"][0] = descriptor
+    catalog["archive"]["manifest"] = rehash(scope_asset)
+    raw = (json.dumps(archive, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
+    compressed = gzip.compress(raw, mtime=0)
+    catalog["archive"]["expanded"].update(bytes=len(raw), sha256=sha256(raw).hexdigest())
+    catalog["archive"]["gzip"].update(bytes=len(compressed), sha256=sha256(compressed).hexdigest())
+    with pytest.raises((AssertionError, ValueError)):
         verify_publication_v2_archive(compressed, catalog, reader.identity)

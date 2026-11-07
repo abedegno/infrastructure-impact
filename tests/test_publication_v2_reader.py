@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 
 import pytest
+from test_current_evidence_delivery import arista_case  # noqa: F401
+from test_current_evidence_delivery import delivery_db as _delivery_db
 from test_static_delivery import CID, dataset
 
 from infrastructure_impact.application import switching_comparison as comparison
@@ -16,6 +18,9 @@ FIXTURE = json.loads(
     (Path(__file__).parent / "fixtures/publication-v2-query-vectors.json").read_text()
 )
 AT = "2026-11-07T18:00:00Z"
+
+# Reuse retained-evidence fixtures without launching their browser checks.
+delivery_db = _delivery_db
 
 
 @pytest.fixture(scope="module")
@@ -209,4 +214,75 @@ def test_query_projection_and_narrow_cohort_aggregate_bounds(generation):
     with pytest.raises(ValueError, match="budget"):
         reader.runtime_snapshot(cohort=[CID])
     with pytest.raises(ValueError, match="budget"):
-        PublicationReader(generation,limits={"selected":10000}).switching_selection({}, evaluated_at=AT)
+        PublicationReader(generation, limits={"selected": 10000}).switching_selection(
+            {}, evaluated_at=AT
+        )
+
+
+@pytest.mark.parametrize("maximum", [0, False])
+def test_explicit_zero_materialization_authority(generation, maximum):
+    reader = PublicationReader(generation)
+    with pytest.raises(ValueError):
+        reader.materialize_range(
+            reader.ranges("snapshot.json")[("generated_at",)], max_bytes=maximum
+        )
+
+
+@pytest.mark.parametrize("field", ["record_index", "first_token", "end_token", "logical_bytes"])
+@pytest.mark.parametrize("invalid", [0.0, True])
+def test_record_route_transport_types(generation, field, invalid):
+    from infrastructure_impact.application.publication_v2 import Writer
+
+    reader = PublicationReader(generation)
+    rows = reader.fetch(reader.catalog["routes"]["records"][0], kind="record_routes")
+    rows[0][field] = float(rows[0][field]) if type(invalid) is float else invalid
+    writer = Writer(generation, reader.identity)
+    descriptor = writer.part("record_routes", rows)
+    with pytest.raises(ValueError):
+        reader.fetch(descriptor, kind="record_routes")
+
+
+@pytest.mark.parametrize("invalid", [0.0, True, -1, 9007199254740992])
+def test_range_path_transport_types(generation, invalid):
+    reader = PublicationReader(generation)
+    original = reader.fetch
+
+    def fetch(desc, **kwargs):
+        value = original(desc, **kwargs)
+        if kwargs.get("kind") == "ranges":
+            for row in value:
+                if row["path"] == ["records", 0]:
+                    row["path"][1] = invalid
+        return value
+
+    reader.fetch = fetch
+    with pytest.raises(ValueError):
+        reader.ranges("snapshot.json")
+
+
+def test_cohort_complete_structure_budget(generation):
+    result = PublicationReader(generation).runtime_snapshot(cohort=[CID])
+    size = len(json.dumps(result, ensure_ascii=True, separators=(",", ":")).encode())
+    with pytest.raises(ValueError, match="budget"):
+        PublicationReader(generation, limits={"selected": size - 1}).runtime_snapshot(cohort=[CID])
+    assert (
+        PublicationReader(generation, limits={"selected": size}).runtime_snapshot(cohort=[CID])
+        == result
+    )
+
+
+def test_cohort_retained_wrapper_budget(delivery_db, tmp_path):
+    from infrastructure_impact.application.query import state
+
+    out = publish(
+        state(delivery_db, ["CVE-2023-5501", "CVE-2024-6858"]), tmp_path, publication_format="v2"
+    )
+    cohort = ["CVE-2023-5501"]
+    result = PublicationReader(out).runtime_snapshot(cohort=cohort)
+    assert result["retained_advisories"]
+    size = len(json.dumps(result, ensure_ascii=True, separators=(",", ":")).encode())
+    with pytest.raises(ValueError, match="budget"):
+        PublicationReader(out, limits={"selected": size - 1}).runtime_snapshot(cohort=cohort)
+    assert (
+        PublicationReader(out, limits={"selected": size}).runtime_snapshot(cohort=cohort) == result
+    )

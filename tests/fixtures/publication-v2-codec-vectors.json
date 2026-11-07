@@ -405,5 +405,11 @@
       "kind": "integer",
       "integer_decimal": "9007199254740993"
     }
+  ],
+  "invalid_transport_json": [
+    "{\"record_index\":0.0}",
+    "{\"first_token\":1e0}",
+    "[[-1,1.0]]",
+    "{\"bytes\":9007199254740992}"
   ]
 }

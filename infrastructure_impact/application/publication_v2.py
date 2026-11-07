@@ -669,11 +669,7 @@ def verify_projection(reader, projected):
     }
     if set(views) != set(reader.catalog["roots"]):
         raise ValueError("missing or extra mandatory logical root")
-    record_routes = [
-        row
-        for part in reader.catalog["routes"]["records"]
-        for row in reader.fetch(part, kind="record_routes")
-    ]
+    record_routes = reader.record_routes()
     expected_records = [
         dict(
             record_index=i,

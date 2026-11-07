@@ -191,3 +191,19 @@ def test_declared_logical_limit_rejects_before_literal_serialization(monkeypatch
     monkeypatch.setattr(codec.json, "dumps", allocated)
     with pytest.raises(ValueError, match="declared"):
         list(codec.stream_tokens([-2], ["abcdef"], [], budget=budget))
+
+
+@pytest.mark.parametrize("raw", VECTORS["invalid_transport_json"])
+def test_strict_transport_json(raw):
+    with pytest.raises(ValueError):
+        codec.strict_loads(raw, transport=True)
+
+
+def test_transport_mode_preserves_literal_boolean_tokens_and_logical_floats():
+    assert codec.strict_loads('[true,false,null,[-2,"f","1.0"]]', transport=True) == [
+        True,
+        False,
+        None,
+        [-2, "f", "1.0"],
+    ]
+    assert type(codec.strict_loads("1.0")) is float

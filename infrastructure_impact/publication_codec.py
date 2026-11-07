@@ -39,7 +39,7 @@ def literal(value):
     return value
 
 
-def strict_loads(raw, *, max_bytes=MAX_PART, parse_int=int, parse_float=float):
+def strict_loads(raw, *, max_bytes=MAX_PART, parse_int=int, parse_float=float, transport=False):
     if isinstance(raw, str):
         raw = raw.encode("utf-8", errors="strict")
     if len(raw) > max_bytes:
@@ -55,6 +55,14 @@ def strict_loads(raw, *, max_bytes=MAX_PART, parse_int=int, parse_float=float):
 
     def constant(value):
         raise ValueError("nonfinite JSON number")
+
+    if transport:
+
+        def parse_int(lexeme):
+            return safe_int(int(lexeme), minimum=-SAFE_INTEGER)
+
+        def parse_float(lexeme):
+            raise ValueError("noninteger transport lexeme")
 
     try:
         value = json.loads(
@@ -118,6 +126,35 @@ def validate_range(value):
     if not isinstance(value["logical_sha256"], str) or not HASH.fullmatch(value["logical_sha256"]):
         raise ValueError("range hash")
     return value
+
+
+def validate_record_routes(rows):
+    if not isinstance(rows, list):
+        raise ValueError("record routes array")
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != {
+            "record_index",
+            "first_token",
+            "end_token",
+            "logical_bytes",
+        }:
+            raise ValueError("record route fields")
+        safe_int(row["record_index"])
+        if safe_int(row["first_token"]) >= safe_int(row["end_token"], minimum=1):
+            raise ValueError("record route interval")
+        safe_int(row["logical_bytes"], minimum=1)
+    return rows
+
+
+def validate_path(path):
+    if not isinstance(path, (list, tuple)):
+        raise ValueError("range path array")
+    for component in path:
+        if isinstance(component, str):
+            literal(component)
+        else:
+            safe_int(component)
+    return tuple(path)
 
 
 def validate_tables(strings, shapes):
@@ -551,7 +588,7 @@ class CatalogReader:
             previous = None
             for part in self.root(name)["ranges"]:
                 for item in self.fetch(part, kind="ranges"):
-                    key = tuple(item["path"])
+                    key = validate_path(item["path"])
                     bound = validate_range(item["range"])
                     order = (bound["first_token"], -bound["end_token"])
                     if (
@@ -565,6 +602,37 @@ class CatalogReader:
                     result[key] = bound
             self._ranges[name] = result
         return self._ranges[name]
+
+    def record_routes(self):
+        """Bind typed routes to the complete snapshot record array and ranges."""
+        rows = []
+        for part in self.catalog["routes"]["records"]:
+            rows.extend(validate_record_routes(self.fetch(part, kind="record_routes")))
+        ranges = self.ranges("snapshot.json")
+        parent = ranges[("records",)]
+        tokens = self.iter_tokens("snapshot.json", parent["first_token"], parent["end_token"])
+        try:
+            header = next(tokens)
+        finally:
+            tokens.close()
+        if header != [-1, len(rows)] or type(header[1]) is not int:
+            raise ValueError("record route count")
+        paths = {path for path in ranges if len(path) == 2 and path[0] == "records"}
+        if paths != {("records", i) for i in range(len(rows))}:
+            raise ValueError("record route membership")
+        first = parent["first_token"] + 1
+        for index, row in enumerate(rows):
+            bound = ranges[("records", index)]
+            expected = dict(
+                record_index=index,
+                **{k: bound[k] for k in ("first_token", "end_token", "logical_bytes")},
+            )
+            if row != expected or row["first_token"] != first:
+                raise ValueError("record route membership/interval/size")
+            first = row["end_token"]
+        if first != parent["end_token"]:
+            raise ValueError("record route final interval")
+        return rows
 
     def iter_tokens(self, name, first=0, end=None):
         root = self.root(name)
@@ -702,7 +770,10 @@ class CatalogReader:
 
     def materialize_range(self, bound, *, max_bytes=None, path=None, budget=None):
         validate_range(bound)
-        maximum = min(max_bytes or self.limits["selected"], self.limits["selected"])
+        maximum = min(
+            self.limits["selected"] if max_bytes is None else safe_int(max_bytes),
+            self.limits["selected"],
+        )
         if bound["logical_bytes"] > maximum:
             raise ValueError("selected byte budget")
         if path is None:
@@ -710,7 +781,7 @@ class CatalogReader:
             if not matches:
                 raise ValueError("unbound range/path")
             path = matches[0]
-        elif self.ranges(bound["root"]).get(tuple(path)) != bound:
+        elif self.ranges(bound["root"]).get(validate_path(path)) != bound:
             raise ValueError("unbound range/path")
         path = tuple(path)
         raw = bytearray()

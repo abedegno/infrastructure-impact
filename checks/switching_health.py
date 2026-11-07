@@ -369,7 +369,7 @@ def open_publication_v2(index, verified, manifest, schemas):
                 cache_bytes -= len(old)
             cache_bytes += len(raw)
         cache[desc["path"]] = raw
-        value = codec.strict_loads(raw)
+        value = codec.strict_loads(raw, transport=kind != "overview")
         assert all(value.get(k) == v for k, v in identity.items()), "Mixed v2 generation"
         if kind is not None:
             assert (
@@ -531,7 +531,7 @@ def verify_publication_v2_archive(compressed, catalog, identity):
     assert len(raw) == desc["bytes"] and hashlib.sha256(raw).hexdigest() == desc["sha256"], (
         "Expanded archive mismatch"
     )
-    archive = codec.strict_loads(raw, max_bytes=128_000_000)
+    archive = codec.strict_loads(raw, max_bytes=128_000_000, transport=True)
     assert (
         set(archive)
         == {"schema_version", "representation", "publication", "generated_at", "assets"}
@@ -604,11 +604,18 @@ def verify_publication_v2_archive(compressed, catalog, identity):
     reader = codec.CatalogReader(
         fetch,
         dict(
-            roots={"snapshot.json": scope["root"]}, strings=scope["strings"], shapes=scope["shapes"]
+            roots={"snapshot.json": scope["root"]},
+            strings=scope["strings"],
+            shapes=scope["shapes"],
+            routes={"records": scope["record_routes"]},
         ),
         identity,
         dict(stream=1_000_000_000, selected=128_000_000),
     )
+    # Descriptor closure alone cannot prove the kind or membership of routes.
+    # Validate the archived authority independently, then bind it to the site.
+    reader.record_routes()
+    assert scope["record_routes"] == catalog["routes"]["records"], "Archive/site record routes"
     # Verify canonical root and original ASCII snapshot bytes, never hydrate it.
     for _ in reader.stream_root("snapshot.json"):
         pass

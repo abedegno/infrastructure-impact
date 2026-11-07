@@ -122,7 +122,7 @@
   {
     "file": "publication-v2-codec-vectors.json",
     "kind": "synthetic",
-    "sha256": "ef2dafbb008def8aca04eb5ab1f705c1b4f3e8781235b5cb4d64fda2bc305dee"
+    "sha256": "e2838ee92670370838c0ccd6a7ad77ec0a2a33b3e239677657fd2504b2b06f66"
   },
   {
     "file": "publication-v2-query-vectors.json",
