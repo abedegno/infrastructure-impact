@@ -143,7 +143,17 @@ def main(argv=None):
         command.add_argument("--output", type=Path, required=True)
         if mode == "apply":
             command.add_argument("--preview", type=Path, required=True)
+    target_import = sub.add_parser(
+        "target-import", help="Preview exact imports against an explicit vault"
+    )
+    target_modes = target_import.add_subparsers(dest="target_import_mode", required=True)
+    target_preview = target_modes.add_parser("preview")
+    target_preview.add_argument("--database", type=Path, required=True)
+    target_preview.add_argument("--profile", required=True)
+    target_preview.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.command == "target-import":
+        return _target_import(args, parser)
     if args.command == "maintenance":
         return _maintenance(args, parser)
     if args.command == "cve-reconcile":
@@ -491,6 +501,47 @@ def main(argv=None):
         ):
             source.backup(target)
         print(args.destination)
+
+
+def _target_import(args, parser):
+    """Dispatch before ambient settings, collector, recovery or configuration startup."""
+    import os
+    import sqlite3
+
+    from .application import target_import
+    from .application.target_import_contracts import preview_bytes
+    from .collection.target_import_profiles import profile
+
+    try:
+        selected = profile(args.profile)
+        if (
+            any(path.is_symlink() for path in (args.output, *args.output.parents))
+            or args.output.exists()
+        ):
+            raise ValueError("unsafe_output_path")
+        if any(
+            args.output.resolve() == Path(str(args.database.resolve()) + suffix)
+            for suffix in ("", "-wal", "-shm", "-journal")
+        ):
+            raise ValueError("unsafe_output_path")
+        result = target_import.preview(args.database, selected.profile_id)
+        payload = preview_bytes(result, selected=selected)
+        fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(payload)
+    except (ValueError, OSError, sqlite3.Error) as error:
+        codes = {
+            "unknown_target_import_profile",
+            "unsafe_input_path",
+            "unsafe_output_path",
+            "target_import_checkpoint_required",
+            "target_import_baseline_changed",
+            "target_import_input_missing",
+            "target_import_receipt_size",
+        }
+        parser.error(str(error) if str(error) in codes else "target_import_failed")
+    print(payload.decode("utf-8"), end="")
+    return 0
 
 
 def _maintenance(args, parser):
