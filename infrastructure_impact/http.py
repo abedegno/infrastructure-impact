@@ -166,9 +166,15 @@ class Application:
     def route(self, environ, *, _opened=None, _reader=None):
         if environ.get("REQUEST_METHOD") not in ("GET", "HEAD"):
             return 405, "application/json", b'{"error":"Read-only service"}'
+
+        def respond(data, status=200):
+            return self.json(
+                data, status, max_bytes=_reader.limits["selected"] if _reader else None
+            )
+
         path = environ.get("PATH_INFO", "/")
         if path == "/health/live":
-            return self.json({"status": "ok"})
+            return respond({"status": "ok"})
         try:
             generation, data = _opened if _opened is not None else self.store.open()
             from .application.publication_reader import PublicationReader
@@ -187,7 +193,7 @@ class Application:
                 if receipt_path.exists()
                 else (data.get("collector", {}).get("last_run"))
             )
-            return self.json(
+            return respond(
                 {
                     "status": "stale" if stale else "ready",
                     "stale": stale,
@@ -212,8 +218,8 @@ class Application:
         }:
             key = path.rsplit("/", 1)[-1].replace("-", "_")
             if key not in data:
-                return self.json({"error": "Report unavailable for this generation"}, status=404)
-            return self.json(
+                return respond({"error": "Report unavailable for this generation"}, status=404)
+            return respond(
                 {
                     **data[key],
                     "publication": data["publication"],
@@ -230,13 +236,13 @@ class Application:
                     **report,
                     "vendors": [v for v in report["vendors"] if v["vendor"] == values[0]],
                 }
-            return self.json(
+            return respond(
                 {**report, "publication": data["publication"], "generated_at": data["generated_at"]}
             )
         if path == "/api/v1/source-audit":
-            return self.json(data.get("source_audit", {}))
+            return respond(data.get("source_audit", {}))
         if path == "/api/v1/catalogue":
-            return self.json(data.get("catalogue", {}))
+            return respond(data.get("catalogue", {}))
         if path in (
             "/api/v1/extraction-validation",
             "/api/v1/review-packet",
@@ -244,8 +250,8 @@ class Application:
         ):
             key = path.rsplit("/", 1)[-1].replace("-", "_")
             if key not in data:
-                return self.json({"error": "Report unavailable for this generation"}, status=404)
-            return self.json(
+                return respond({"error": "Report unavailable for this generation"}, status=404)
+            return respond(
                 {
                     **data.get(key, {}),
                     "publication": data["publication"],
@@ -268,7 +274,7 @@ class Application:
                 raise BadRequest("Invalid study query") from error
             asset = generation / "switching-comparison.json"
             if not asset.exists():
-                return self.json({"error": "switching_unavailable"}, status=503)
+                return respond({"error": "switching_unavailable"}, status=503)
             from .application.switching_evidence import validate_comparison
 
             complete = json.loads(asset.read_text())
@@ -277,10 +283,10 @@ class Application:
             )
             report = select_report(complete, **options)
             if report["availability"] == "unavailable":
-                return self.json({"error": "switching_unavailable"}, status=503)
+                return respond({"error": "switching_unavailable"}, status=503)
             if output == "csv":
                 return 200, "text/csv", switching_csv(report).encode()
-            return self.json(summary(report))
+            return respond(summary(report))
         ids = None
         if "cves" in query or "cve" in query:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
@@ -289,7 +295,7 @@ class Application:
         if path == "/api/v1/current-evidence":
             from .application.current_evidence import unavailable_report
 
-            return self.json(
+            return respond(
                 data.get("current_evidence")
                 or unavailable_report(
                     publication=data.get("publication"), generated_at=data["generated_at"]
@@ -322,7 +328,7 @@ class Application:
                         for r in exported["records"]
                     ]
                 if formats == ["json"]:
-                    return self.json(exported)
+                    return respond(exported)
                 from .exports import FIELDS, RETAINED_FIELDS
 
                 csv_data = {
@@ -348,7 +354,7 @@ class Application:
                     raise ValueError("Pagination out of bounds")
             except ValueError as error:
                 raise BadRequest("Invalid pagination") from error
-            return self.json(
+            return respond(
                 {
                     "schema_version": 1,
                     "publication": data.get("publication"),
@@ -371,10 +377,10 @@ class Application:
             if values and (len(values) != 1 or values[0] not in data["vendors"]):
                 raise BadRequest("Unknown or repeated vendor")
             if "research_dossiers" not in data:
-                return self.json({"error": "Report unavailable for this generation"}, status=404)
+                return respond({"error": "Report unavailable for this generation"}, status=404)
             report = data["research_dossiers"]
             cohort = ids if ids is not None else [d["cve_id"] for d in report["dossiers"]]
-            return self.json(
+            return respond(
                 {
                     **select_research_dossiers(report, cohort, values[0] if values else None),
                     "publication": data["publication"],
@@ -429,7 +435,7 @@ class Application:
             except (ValueError, TypeError) as error:
                 raise BadRequest("Invalid comparison selection") from error
             if path == "/api/v1/kev":
-                return self.json(selected["kev"])
+                return respond(selected["kev"])
             if path == "/api/state":
                 if _reader is not None:
                     keys = (
@@ -448,7 +454,7 @@ class Application:
                         "application/json",
                         _reader.stream_document({k: selected[k] for k in keys if k in selected}),
                     )
-                return self.json(selected)
+                return respond(selected)
             if path in (
                 "/api/v1/scorecards",
                 "/api/v1/timeline",
@@ -481,7 +487,7 @@ class Application:
                                 e for e in result.get("events", []) if e["vendor"] == vendor
                             ],
                         }
-                return self.json(
+                return respond(
                     {
                         **result,
                         "publication": data["publication"],
@@ -490,7 +496,13 @@ class Application:
                 )
             selected = assessment_export(selected)
             if path.endswith(".csv"):
-                return 200, "text/csv", csv_export(selected).encode()
+                return (
+                    200,
+                    "text/csv",
+                    csv_export(
+                        selected, max_bytes=_reader.limits["selected"] if _reader else None
+                    ).encode(),
+                )
             if path == "/api/export.json":
                 if _reader is not None:
                     keys = (
@@ -514,7 +526,7 @@ class Application:
                             exclude={"retained_advisories"},
                         ),
                     )
-                return self.json(selected)
+                return respond(selected)
             records = selected["records"]
             if query.get("vendor"):
                 vendor = query["vendor"][0]
@@ -522,7 +534,7 @@ class Application:
                     raise BadRequest("Unknown vendor")
                 records = [r for r in records if r["vendor"] == vendor]
             if path == "/api/assessments":
-                return self.json(records)
+                return respond(records)
             items = (
                 records
                 if path.endswith("advisories")
@@ -545,7 +557,7 @@ class Application:
                 raise BadRequest("Invalid pagination") from exc
             if not 1 <= limit <= 500 or offset < 0:
                 raise BadRequest("Invalid pagination")
-            return self.json(
+            return respond(
                 {
                     "schema_version": 2,
                     "publication": data["publication"],
@@ -705,11 +717,15 @@ class Application:
                 options, evaluated_at=datetime.now(timezone.utc).isoformat()
             )
             if output == "csv":
-                return 200, "text/csv", switching_csv(report).encode()
-            return self.json(report)
+                return (
+                    200,
+                    "text/csv",
+                    switching_csv(report, max_bytes=reader.limits["selected"]).encode(),
+                )
+            return self.json(report, max_bytes=reader.limits["selected"])
         bootstrap = reader.fetch(reader.index["bootstrap"], ordinary=True)
         if path in ("/health/ready", "/api/v1/health"):
-            return self.route(environ, _opened=(generation, bootstrap))
+            return self.route(environ, _opened=(generation, bootstrap), _reader=reader)
         ids = None
         if "cves" in query or "cve" in query:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
@@ -736,14 +752,57 @@ class Application:
                 reader.index["current_evidence"]["report"], ordinary=True
             )
             if path == "/api/v1/retained-advisories":
-                data["retained_advisories"] = [
-                    w
-                    for p in reader.index["current_evidence"]["retained"]
-                    for w in reader.fetch(p["part"], ordinary=True)
-                    if ids is None or set(ids).intersection(w["record"]["cves"])
-                ]
+                values = query.get("vendor", [])
+                formats = query.get("format", [])
+                if values and (len(values) != 1 or values[0] not in data["vendors"]):
+                    raise BadRequest("Unknown or repeated vendor")
+                if formats and formats not in (["json"], ["csv"]):
+                    raise BadRequest("Invalid retained format")
+                try:
+                    if any(len(query.get(k, [])) > 1 for k in ("limit", "offset")):
+                        raise ValueError("Repeated pagination")
+                    limit = int(query.get("limit", ["100"])[0])
+                    offset = int(query.get("offset", ["0"])[0])
+                    if not 1 <= limit <= 500 or offset < 0:
+                        raise ValueError("Pagination out of bounds")
+                except ValueError as error:
+                    raise BadRequest("Invalid pagination") from error
+                result = reader.retained_selection(
+                    bootstrap,
+                    cves=ids,
+                    vendor=values[0] if values else None,
+                    offset=offset,
+                    limit=limit,
+                    export=bool(formats),
+                )
+                if formats == ["csv"]:
+                    from .exports import FIELDS, RETAINED_FIELDS
+
+                    csv_data = {
+                        **result,
+                        "kev": data.get("kev"),
+                        "comparison": {
+                            "cohort": ids
+                            if ids is not None
+                            else sorted({c for r in result["records"] for c in r["cves"]})
+                        },
+                    }
+                    return (
+                        200,
+                        "text/csv",
+                        csv_export(
+                            csv_data,
+                            _fields=FIELDS + RETAINED_FIELDS,
+                            max_bytes=reader.limits["selected"],
+                        ).encode(),
+                    )
+                return self.json(result, max_bytes=reader.limits["selected"])
         return self.route(environ, _opened=(generation, data), _reader=reader)
 
     @staticmethod
-    def json(data, status=200):
+    def json(data, status=200, *, max_bytes=None):
+        if max_bytes is not None:
+            from .publication_codec import Budget, charge_value
+
+            charge_value(data, Budget(max_bytes), spaced=True)
         return status, "application/json", json.dumps(data).encode()

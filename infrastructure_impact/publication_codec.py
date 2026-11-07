@@ -196,11 +196,17 @@ class Budget:
     deadline: float | None = None
     used: int = 0
     costs: dict = field(default_factory=dict)
+    parent: "Budget | None" = None
 
     def __post_init__(self):
         self.max_bytes = min(safe_int(self.max_bytes), MAX_STREAM)
         if self.deadline is None:
-            self.deadline = time.monotonic() + 300
+            self.deadline = (
+                self.parent.deadline if self.parent is not None else time.monotonic() + 300
+            )
+        if self.parent is not None:
+            self.deadline = min(self.deadline, self.parent.deadline)
+            self.costs = self.parent.costs
 
     def charge(self, canonical, requested):
         if time.monotonic() > self.deadline:
@@ -208,6 +214,8 @@ class Budget:
         cost = max(canonical, requested)
         if cost > self.max_bytes - self.used:
             raise ValueError("decoded byte budget")
+        if self.parent is not None:
+            self.parent.charge(canonical, requested)
         self.used += cost
 
 
@@ -690,7 +698,7 @@ class CatalogReader:
         budget=None,
         number_observer=None,
     ):
-        budget = budget or Budget(min(maximum, self.limits["stream"]))
+        budget = Budget(min(maximum, self.limits["stream"]), parent=budget)
         strings, shapes = self._tables()
         budget.charge(0, 0)
         digest, size = sha256(), 0
@@ -768,7 +776,9 @@ class CatalogReader:
             budget=budget,
         )
 
-    def materialize_range(self, bound, *, max_bytes=None, path=None, budget=None):
+    def materialize_range(
+        self, bound, *, max_bytes=None, path=None, budget=None, serialization="logical"
+    ):
         validate_range(bound)
         maximum = min(
             self.limits["selected"] if max_bytes is None else safe_int(max_bytes),
@@ -791,7 +801,7 @@ class CatalogReader:
             bound["first_token"],
             bound["end_token"],
             dict(bytes=bound["logical_bytes"], sha256=bound["logical_sha256"]),
-            serialization="logical",
+            serialization=serialization,
             maximum=maximum,
             path=path,
             number_observer=lambda number: kinds.append(number.kind),
@@ -808,7 +818,7 @@ class CatalogReader:
         return self.materialize_range(self.ranges(root)[tuple(path)], path=path)
 
 
-def charge_value(value, budget, *, ascii=True, depth=0):
+def charge_value(value, budget, *, ascii=True, depth=0, spaced=False):
     """Precharge a logical value without constructing its encoded JSON string."""
     if depth > MAX_DEPTH:
         raise ValueError("value depth")
@@ -834,10 +844,10 @@ def charge_value(value, budget, *, ascii=True, depth=0):
         budget.charge(size, size)
     elif isinstance(value, (dict, list, tuple)):
         size = 2 + max(0, len(value) - 1)
-        budget.charge(size, size)
+        budget.charge(size, size + (max(0, len(value) - 1) if spaced else 0))
         for key, item in value.items() if isinstance(value, dict) else enumerate(value):
             if isinstance(value, dict):
-                budget.charge(string_cost(key) + 1, string_cost(key, ascii) + 1)
-            charge_value(item, budget, ascii=ascii, depth=depth + 1)
+                budget.charge(string_cost(key) + 1, string_cost(key, ascii) + 1 + spaced)
+            charge_value(item, budget, ascii=ascii, depth=depth + 1, spaced=spaced)
     else:
         raise ValueError("unsupported logical value")

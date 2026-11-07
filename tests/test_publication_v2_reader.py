@@ -286,3 +286,245 @@ def test_cohort_retained_wrapper_budget(delivery_db, tmp_path):
     assert (
         PublicationReader(out, limits={"selected": size}).runtime_snapshot(cohort=cohort) == result
     )
+
+
+def test_reducer_rejects_before_row_allocation(generation, monkeypatch):
+    reader = PublicationReader(generation)
+    claims = [comparison.ReducerClaim.from_validated(c) for c in reader.iter_claims()]
+    original = comparison._row
+    built = []
+
+    def row(*args, **kwargs):
+        value = original(*args, **kwargs)
+        built.append(value)
+        return value
+
+    monkeypatch.setattr(comparison, "_row", row)
+    with pytest.raises(ValueError, match="budget"):
+        comparison.select_reducer_claims(
+            reader.switching_overview(),
+            claims,
+            reader.field("switching-evidence.json", "coverage"),
+            reader.field("switching-evidence.json", "issues"),
+            reader.materialize_range(reader.catalog["switching"]["kev"]),
+            {},
+            evaluated_at=AT,
+            max_bytes=32,
+        )
+    assert built == []
+
+
+@pytest.mark.parametrize("kind", ["sources", "claims"])
+def test_detail_full_envelope_exact_bound(generation, kind):
+    reader = PublicationReader(generation)
+    selected = reader.switching_selection({}, evaluated_at=AT)
+    expected = reader.detail_page(selected, kind, limit=1)
+    size = len(json.dumps(expected, ensure_ascii=True, separators=(",", ":")).encode())
+    reader.limits["selected"] = size
+    assert reader.detail_page(selected, kind, limit=1) == expected
+    reader.limits["selected"] = size - 1
+    with pytest.raises(ValueError, match="budget"):
+        reader.detail_page(selected, kind, limit=1)
+
+
+def test_http_json_actual_bytes_bound(generation):
+    from infrastructure_impact.http import Application
+
+    app = Application(generation.parent.parent)
+    _, reader = app.store.open()
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/v1/current-evidence"}
+    code, _, body = app.route(environ)
+    assert code == 200
+    reader.limits["selected"] = len(body)
+    assert app.route(environ)[2] == body
+    reader.limits["selected"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        app.route(environ)
+
+
+def test_retained_page_bound_and_missing_cohort_skips_parts(delivery_db, tmp_path):
+    from infrastructure_impact.application.query import state
+    from infrastructure_impact.http import Application
+
+    out = publish(
+        state(delivery_db, ["CVE-2023-5501", "CVE-2024-6858"]), tmp_path, publication_format="v2"
+    )
+    app = Application(out.parent.parent)
+    _, reader = app.store.open()
+    environ = {
+        "REQUEST_METHOD": "GET",
+        "PATH_INFO": "/api/v1/retained-advisories",
+        "QUERY_STRING": "limit=1",
+    }
+    code, _, body = app.route(environ)
+    assert code == 200 and json.loads(body)["items"]
+    reader.limits["selected"] = len(body)
+    assert app.route(environ)[2] == body
+    reader.limits["selected"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        app.route(environ)
+    reader.limits["selected"] = 128_000_000
+    original = reader.fetch
+    reads = []
+
+    def fetch(desc, **kwargs):
+        reads.append(desc["path"])
+        return original(desc, **kwargs)
+
+    reader.fetch = fetch
+    environ["QUERY_STRING"] = "limit=1&cves=CVE-2099-9999"
+    assert json.loads(app.route(environ)[2])["total"] == 0
+    assert not set(reads).intersection(
+        p["part"]["path"] for p in reader.index["current_evidence"]["retained"]
+    )
+
+
+@pytest.mark.parametrize("exporter", ["switching", "retained"])
+def test_csv_requested_bytes_preflight(generation, exporter):
+    from infrastructure_impact.exports import csv_export
+    from infrastructure_impact.http import Application
+
+    if exporter == "switching":
+        report = PublicationReader(generation).switching_selection({}, evaluated_at=AT)
+
+        def encode(bound):
+            return switching_csv(report, max_bytes=bound)
+
+        expected = switching_csv(report)
+    else:
+        data = {
+            "records": [{"cves": [CID], "assessments": [{"cve_id": CID, "product": 'é,"' * 30}]}],
+            "comparison": {"cohort": [CID]},
+        }
+
+        def encode(bound):
+            return csv_export(data, max_bytes=bound)
+
+        expected = csv_export(data)
+    size = len(expected.encode())
+    assert encode(size) == expected
+    with pytest.raises(ValueError, match="budget"):
+        encode(size - 1)
+    # Native materialized response must enforce the exact spaced ASCII form too.
+    value = {"values": ['é,"' * 20, None, True]}
+    size = len(json.dumps(value).encode())
+    assert len(Application.json(value, max_bytes=size)[2]) == size
+    with pytest.raises(ValueError, match="budget"):
+        Application.json(value, max_bytes=size - 1)
+
+
+def test_projection_rejects_before_constructor(generation, monkeypatch):
+    reader = PublicationReader(generation)
+    claims = list(reader.iter_claims())
+    original = comparison.ReducerClaim.__init__
+    built = []
+
+    def construct(self, fields, sources):
+        built.append(fields)
+        original(self, fields, sources)
+
+    monkeypatch.setattr(comparison.ReducerClaim, "__init__", construct)
+    monkeypatch.setattr(reader, "iter_claims", lambda: iter(claims))
+    reader.limits["selected"] = 32
+    with pytest.raises(ValueError, match="budget"):
+        reader.switching_selection({}, evaluated_at=AT)
+    assert built == []
+
+
+def test_runtime_fields_shared_ascii_envelope_bound(generation):
+    reader = PublicationReader(generation)
+    fields = ["generated_at", "publication", "vendors"]
+    expected = reader.runtime_snapshot(fields=fields)
+    size = len(json.dumps(expected, ensure_ascii=True, separators=(",", ":")).encode())
+    reader.limits["selected"] = size
+    assert reader.runtime_snapshot(fields=fields) == expected
+    reader.limits["selected"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        reader.runtime_snapshot(fields=fields)
+
+
+def test_retained_export_filter_page_and_partition_parity(delivery_db, tmp_path):
+    from infrastructure_impact.application.query import state
+    from infrastructure_impact.exports import retained_assessment_export, retained_csv_export
+    from infrastructure_impact.http import Application
+
+    out = publish(
+        state(delivery_db, ["CVE-2023-5501", "CVE-2024-6858"]), tmp_path, publication_format="v2"
+    )
+    app = Application(out.parent.parent)
+    _, reader = app.store.open()
+    snapshot = json.loads(b"".join(reader.stream_root("snapshot.json")))
+    base = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/v1/retained-advisories"}
+    expected = retained_assessment_export(snapshot)
+    assert json.loads(app.route({**base, "QUERY_STRING": "format=json"})[2]) == expected
+    assert (
+        app.route({**base, "QUERY_STRING": "format=csv"})[2]
+        == retained_csv_export(snapshot).encode()
+    )
+    page = json.loads(app.route({**base, "QUERY_STRING": "offset=1&limit=1"})[2])
+    assert page["items"] == [] and page["total"] == 1
+    filtered = json.loads(app.route({**base, "QUERY_STRING": "format=json&cves=CVE-2023-5501"})[2])
+    assert all(
+        a["cve_id"] == "CVE-2023-5501" for r in filtered["records"] for a in r["assessments"]
+    )
+    body = app.route({**base, "QUERY_STRING": "format=json"})[2]
+    reader.limits["selected"] = len(body)
+    assert app.route({**base, "QUERY_STRING": "format=json"})[2] == body
+    reader.limits["selected"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        app.route({**base, "QUERY_STRING": "format=json"})
+    reader.limits["selected"] = 128_000_000
+    reader.index["current_evidence"]["retained"][0]["cve_ids"] = []
+    with pytest.raises(ValueError, match="membership"):
+        app.route({**base, "QUERY_STRING": "cves=CVE-2099-9999"})
+
+
+def test_delegated_http_csv_exact_response_bytes(generation, monkeypatch):
+    from datetime import datetime
+
+    from infrastructure_impact.application import kev
+    from infrastructure_impact.http import Application
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls.fromisoformat("2026-11-07T18:00:00+00:00")
+
+    monkeypatch.setattr(kev, "datetime", Clock)
+    app = Application(generation.parent.parent)
+    _, reader = app.store.open()
+    snapshot = json.loads(b"".join(reader.stream_root("snapshot.json")))
+    environ = {
+        "REQUEST_METHOD": "GET",
+        "PATH_INFO": "/api/export.csv",
+        "QUERY_STRING": "cves=" + CID,
+    }
+
+    # Exercise the real legacy-route delegation used by v2, with its already
+    # validated input. Isolate the response allowance from the larger input view.
+    def response():
+        return app.route(environ, _opened=(generation, snapshot), _reader=reader)
+
+    code, mime, body = response()
+    assert code == 200 and mime == "text/csv"
+    reader.limits["selected"] = len(body)
+    assert response()[2] == body
+    reader.limits["selected"] -= 1
+    with pytest.raises(ValueError, match="budget"):
+        response()
+
+
+def test_json_preflight_happens_before_encoder(monkeypatch):
+    from infrastructure_impact import http
+    from infrastructure_impact.http import Application
+
+    value = {"large": "é" * 100}
+    original = http.json.dumps
+
+    def dumps(obj, *args, **kwargs):
+        assert obj is not value, "response string allocated before budget rejection"
+        return original(obj, *args, **kwargs)
+
+    monkeypatch.setattr(http.json, "dumps", dumps)
+    with pytest.raises(ValueError, match="budget"):
+        Application.json(value, max_bytes=100)

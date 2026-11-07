@@ -156,13 +156,21 @@ class PublicationReader(codec.CatalogReader):
             if fields is None:
                 return self.materialize_range(ranges[()])
             result = {}
-            used = 2
+            accumulator = codec.Budget(self.limits["selected"])
+            accumulator.charge(2, 2)
             for key in fields:
-                bound = ranges[(key,)]
-                used += bound["logical_bytes"] + codec.string_cost(key) + 2
-                if used > self.limits["selected"]:
-                    raise ValueError("selected byte budget")
-                result[key] = self.materialize_range(bound)
+                if key in result:
+                    continue
+                accumulator.charge(
+                    codec.string_cost(key) + 1 + bool(result),
+                    codec.string_cost(key, True) + 1 + bool(result),
+                )
+                result[key] = self.materialize_range(
+                    ranges[(key,)],
+                    budget=accumulator,
+                    max_bytes=accumulator.max_bytes - accumulator.used,
+                    serialization="ascii",
+                )
             return result
         # Ordinary cohort parts carry complete global catalogs/denominators in
         # bootstrap; selecting a cohort never triggers the giant runtime root.
@@ -240,6 +248,131 @@ class PublicationReader(codec.CatalogReader):
         field("switching_overview", self.switching_overview())
         return {k: v for k, v in result.items() if fields is None or k in fields}
 
+    def retained_selection(
+        self, bootstrap, *, cves=None, vendor=None, offset=0, limit=100, export=False
+    ):
+        """Validate index authority, scan only routed parts, and retain one page.
+
+        Untouched parts are represented by the complete ordered descriptor and
+        bootstrap memberships. Every touched part is checked in full, including
+        wrappers outside the requested page. No persistent validation cache.
+        """
+        from ..exports import RETAINED_FIELDS
+        from .current_evidence import validate_report
+        from .evidence_identity import record_key
+
+        current = self.index["current_evidence"]
+        report = self.fetch(current["report"], ordinary=True)
+        validate_report(report, **self.identity)
+        decisions = {d["decision_id"]: d for d in report["decisions"]}
+        index = bootstrap["retained_index"]
+        indexed = {r["decision_id"]: r for r in index}
+        order = [r["decision_id"] for r in index]
+        declared = [identity for part in current["retained"] for identity in part["decision_ids"]]
+        if len(indexed) != len(index) or declared != order or set(indexed) != set(decisions):
+            raise ValueError("retained partition membership/order")
+        for part in current["retained"]:
+            expected = sorted(
+                {c for identity in part["decision_ids"] for c in indexed[identity]["cves"]}
+            )
+            if part["cve_ids"] != expected:
+                raise ValueError("retained descriptor CVE membership")
+        for entry in index:
+            if entry["vendor"] != decisions[entry["decision_id"]]["vendor"]:
+                raise ValueError("retained index vendor")
+        if report["availability"] == "available":
+            routes = self.record_routes()
+            if report["counts"] != dict(
+                current=len(routes), excluded=len(index), retained_total=len(routes) + len(index)
+            ):
+                raise ValueError("retained partition counts")
+            # Verify current identities one record at a time, without retaining
+            # the current collection or allowing overlap with excluded targets.
+            keys = {d["target_key"] for d in decisions.values()}
+            for record in self.iter_array(self.ranges("snapshot.json")[("records",)]):
+                key = record_key(record)
+                if key in keys:
+                    raise ValueError("Duplicate retained/current identity")
+                keys.add(key)
+
+        cohort = set(cves) if cves is not None else None
+
+        def matches(entry):
+            return (cohort is None or cohort.intersection(entry["cves"])) and (
+                vendor is None or entry["vendor"] == vendor
+            )
+
+        total = sum(bool(matches(entry)) for entry in index)
+        result = dict(
+            schema_version=1,
+            **self.identity,
+            record_scope="retained_latest_excluded",
+            current_evidence=report,
+        )
+        if export:
+            result["records"] = []
+            items = result["records"]
+        else:
+            result.update(total=total, offset=offset, limit=limit, items=[])
+            items = result["items"]
+        budget = codec.Budget(self.limits["selected"])
+        codec.charge_value(result, budget, spaced=True)
+        position = 0
+        for part in current["retained"]:
+            if cohort is not None and not cohort.intersection(part["cve_ids"]):
+                continue
+            if vendor is not None and not any(
+                indexed[i]["vendor"] == vendor for i in part["decision_ids"]
+            ):
+                continue
+            wrappers = self.fetch(part["part"], ordinary=True)
+            if [w["decision_id"] for w in wrappers] != part["decision_ids"]:
+                raise ValueError("retained part membership/order")
+            for wrapper in wrappers:
+                decision = decisions[wrapper["decision_id"]]
+                record = wrapper["record"]
+                entry = indexed[wrapper["decision_id"]]
+                key = record_key(record)
+                if (
+                    wrapper.get("record_scope") != "retained_latest_excluded"
+                    or wrapper.get("target_key") != key
+                    or decision["target_key"] != key
+                    or decision["vendor"] != record["vendor"]
+                    or entry["cves"] != record["cves"]
+                ):
+                    raise ValueError("Invalid retained decision reference")
+                if not matches(entry):
+                    continue
+                take = export or offset <= position < offset + limit
+                position += 1
+                if not take:
+                    continue
+                budget.charge(bool(items), 2 * bool(items))
+                if not export:
+                    codec.charge_value(wrapper, budget, spaced=True)
+                    items.append(wrapper)
+                else:
+                    metadata = {k: decision[k] for k in RETAINED_FIELDS if k != "record_scope"}
+                    metadata["record_scope"] = wrapper["record_scope"]
+                    # Preflight expanded assessments before allocating copies.
+                    fields = {**record, **metadata, "assessments": []}
+                    codec.charge_value(fields, budget, spaced=True)
+                    assessments = []
+                    for assessment in record["assessments"]:
+                        if cohort is not None and assessment["cve_id"] not in cohort:
+                            continue
+                        budget.charge(bool(assessments), 2 * bool(assessments))
+                        # Fixed metadata key set, values remain references until
+                        # the entire new assessment's requested cost is accepted.
+                        pairs = {**assessment, **metadata}
+                        codec.charge_value(pairs, budget, spaced=True)
+                        assessments.append(pairs)
+                    fields["assessments"] = assessments
+                    items.append(fields)
+        if position != total:
+            raise ValueError("retained filtered count")
+        return result
+
     def _claim_routes(self):
         strings, _ = self._tables()
         result = codec.claim_routes(
@@ -257,7 +390,7 @@ class PublicationReader(codec.CatalogReader):
             raise ValueError("missing claim routes")
         return result
 
-    def iter_claims(self):
+    def iter_claims(self, *, max_bytes=None):
         from . import switching_evidence as contracts
 
         metadata = {
@@ -281,15 +414,23 @@ class PublicationReader(codec.CatalogReader):
 
             kinds = deque()
             raw = bytearray()
-            if route[3] > self.limits["selected"]:
+            maximum = min(
+                self.limits["selected"],
+                max_bytes(route[0])
+                if callable(max_bytes)
+                else max_bytes
+                if max_bytes is not None
+                else self.limits["selected"],
+            )
+            if route[3] > maximum:
                 raise ValueError("claim byte budget")
             for chunk in self._stream(
                 "switching-evidence.json",
                 route[1],
                 route[2],
                 dict(bytes=route[3], sha256=None),
-                serialization="logical",
-                maximum=self.limits["selected"],
+                serialization="ascii",
+                maximum=maximum,
                 path=("claims", i),
                 budget=stream_budget,
                 number_observer=lambda number: kinds.append(number.kind),
@@ -299,9 +440,7 @@ class PublicationReader(codec.CatalogReader):
             def number(lexeme):
                 return int(lexeme) if kinds.popleft() == "i" else float(lexeme)
 
-            claim = codec.strict_loads(
-                raw, max_bytes=self.limits["selected"], parse_int=number, parse_float=number
-            )
+            claim = codec.strict_loads(raw, max_bytes=maximum, parse_int=number, parse_float=number)
             if claim["claim_id"] != route[0]:
                 raise ValueError("claim identity mismatch")
             claim_validator.validate(claim)
@@ -328,9 +467,10 @@ class PublicationReader(codec.CatalogReader):
 
         claims = []
         accumulator = codec.Budget(self.limits["selected"])
+        accumulator.charge(2, 2)
         for claim in self.iter_claims():
-            projection = ReducerClaim.from_validated(claim)
-            codec.charge_value([projection.fields, projection.sources], accumulator)
+            accumulator.charge(bool(claims), bool(claims))
+            projection = ReducerClaim.from_validated(claim, budget=accumulator)
             claims.append(projection)
         overview = self.switching_overview()
         coverage = self.field("switching-evidence.json", "coverage")
@@ -393,22 +533,46 @@ class PublicationReader(codec.CatalogReader):
             used = {c for r in rows for c in r["claim_ids"]} | {
                 c for r in rows for e in r["events"] for c in e["claim_ids"]
             }
-            iterable = (c for c in self.iter_claims() if c["claim_id"] in used)
+
+            def values():
+                return (
+                    c for c in self.iter_claims(max_bytes=claim_allowance) if c["claim_id"] in used
+                )
         elif kind == "sources":
-            iterable = selection["sources"]
+
+            def values():
+                return iter(selection["sources"])
         elif kind in ("events", "status_buckets"):
-            iterable = (item for row in rows for item in row[kind])
+
+            def values():
+                return (item for row in rows for item in row[kind])
         elif kind == "diagnostics":
-            iterable = self.iter_array(self.catalog["switching"]["diagnostics"])
+
+            def values():
+                return self.iter_array(
+                    self.catalog["switching"]["diagnostics"], max_bytes=item_allowance
+                )
         else:
             raise ValueError("unknown detail kind")
-        items, total = [], 0
-        accumulator = codec.Budget(self.limits["selected"])
-        for i, item in enumerate(iterable):
+        # Count/validate first without retaining the collection. The complete
+        # envelope (including a non-null cursor) is known before page assembly.
+        total = 0
+        item_cost = codec.Budget(self.limits["selected"])
+        chosen_claims = set()
+        remaining = self.limits["selected"]
+
+        def claim_allowance(identity):
+            return remaining if identity in chosen_claims else self.limits["selected"]
+
+        def item_allowance(index):
+            return remaining if offset <= index < offset + limit else self.limits["selected"]
+
+        for i, item in enumerate(values()):
             total += 1
             if offset <= i < offset + limit:
-                codec.charge_value(item, accumulator)
-                items.append(item)
+                codec.charge_value(item, item_cost)
+                if kind == "claims":
+                    chosen_claims.add(item["claim_id"])
         if offset > total:
             raise ValueError("detail cursor offset")
         next_cursor = (
@@ -420,9 +584,21 @@ class PublicationReader(codec.CatalogReader):
             if offset + limit < total
             else None
         )
-        return dict(items=items, next_cursor=next_cursor, total=total)
+        envelope = dict(items=[], next_cursor=next_cursor, total=total)
+        accumulator = codec.Budget(self.limits["selected"])
+        codec.charge_value(envelope, accumulator)
+        count = min(limit, max(0, total - offset))
+        accumulator.charge(item_cost.used + max(0, count - 1), item_cost.used + max(0, count - 1))
+        remaining = self.limits["selected"] - (accumulator.used - item_cost.used)
+        for i, item in enumerate(values()):
+            if offset <= i < offset + limit:
+                cost = codec.Budget(remaining)
+                codec.charge_value(item, cost)
+                remaining -= cost.used
+                envelope["items"].append(item)
+        return envelope
 
-    def iter_array(self, bound):
+    def iter_array(self, bound, *, max_bytes=None):
         """Scan a complete bound array, materializing only one child at a time."""
         codec.validate_range(bound)
         strings, shapes = self._tables()
@@ -463,6 +639,9 @@ class PublicationReader(codec.CatalogReader):
         observe(b"[")
         budget.charge(1, 1)
         for i in range(count):
+            maximum = min(
+                self.limits["selected"], max_bytes(i) if max_bytes else self.limits["selected"]
+            )
             if i:
                 observe(b",")
                 budget.charge(1, 1)
@@ -471,15 +650,16 @@ class PublicationReader(codec.CatalogReader):
                 take(),
                 strings,
                 shapes,
-                budget=budget,
+                budget=codec.Budget(maximum, parent=budget),
+                serialization="ascii",
                 root=bound["root"],
                 validate=False,
                 observer=observe,
             ):
-                if len(raw) + len(chunk) > self.limits["selected"]:
+                if len(raw) + len(chunk) > maximum:
                     raise ValueError("array child byte budget")
                 raw.extend(chunk)
-            yield codec.strict_loads(raw, max_bytes=self.limits["selected"])
+            yield codec.strict_loads(raw, max_bytes=maximum)
         observe(b"]")
         budget.charge(1, 1)
         if (

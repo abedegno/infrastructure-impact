@@ -207,3 +207,17 @@ def test_transport_mode_preserves_literal_boolean_tokens_and_logical_floats():
         [-2, "f", "1.0"],
     ]
     assert type(codec.strict_loads("1.0")) is float
+
+
+def test_child_allocation_budget_shares_stream_ceiling_and_deadline():
+    parent = codec.Budget(20)
+    child = codec.Budget(8, parent=parent)
+    codec.charge_value("é", child)
+    assert child.used == parent.used == 8
+    assert child.deadline == parent.deadline
+    with pytest.raises(ValueError, match="budget"):
+        child.charge(1, 1)
+    assert parent.used == 8
+    second = codec.Budget(20, parent=parent)
+    with pytest.raises(ValueError, match="budget"):
+        second.charge(13, 13)
