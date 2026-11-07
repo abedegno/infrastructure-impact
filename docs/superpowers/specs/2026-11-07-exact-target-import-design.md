@@ -1,7 +1,8 @@
 # Bounded Cisco/Aruba target import design
 
-Date: 2026-11-07. Status: design for approval; product implementation and hosted
-activation have not started.
+Date: 2026-11-07. Status: approved by the maintainer on 7 November 2026.
+The [implementation plan](../plans/2026-11-07-exact-target-import.md) awaits review;
+product implementation and hosted activation have not started.
 
 ## Intent and approved direction
 
