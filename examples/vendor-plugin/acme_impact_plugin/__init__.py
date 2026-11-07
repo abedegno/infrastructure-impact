@@ -33,6 +33,6 @@ def plugin():
         parse_document=structured,
         parse_archive=archive,
         parse_component_inventory=component_inventory,
-        version="0.1.10",
+        version="0.1.11",
         capabilities=("csaf", "cve-json", "component-inventory"),
     )
