@@ -27,7 +27,9 @@
 ## Task 1: Repair transport and verify affected integration
 
 - [ ] Write authored RED tests exercising the existing >8 MB failure, legacy compatibility and each review-focus case. Avoid adding vendor captures.
-- [ ] Implement minimal publisher fragmentation, static-index schema one-of capability, browser lossless reconstruction and standalone monitor reconstruction. Reuse shared helpers only where responsibility is clear. Regenerate browser contracts from their canonical source.
+- [ ] Implement minimal publisher fragmentation and external claim catalogs, static-index mutually exclusive capabilities, browser lossless reconstruction and standalone monitor reconstruction/catalog validation. Reuse shared helpers only where responsibility is clear. Regenerate browser contracts from their canonical source.
 - [ ] Verify affected Python delivery/monitor/contracts/candidate and installed monitor coverage, exact applicable Ruff/format and Node checks. No repeated whole release matrix without a new identified risk.
 - [ ] Document the transport capability and actual validation; commit small source/tests/docs changes. Fresh review checks whole fix once.
 - [ ] After focused success run one retained-evidence laboratory acceptance with no HTTP observations; keep cache/report diagnostics outside Git. Record actual gate and measurements even on failure; no weakened limits. Update a reviewable PR with the result. Do not merge or activate.
+
+Confirmed adjacent index boundary: 34,923 quoted claim IDs alone exceed2MB. The design amendment covers bounded external claim_catalog parts with backward-compatible inline catalogs and all four summary/catalog combinations. This stays one transport repair, not a new product feature.

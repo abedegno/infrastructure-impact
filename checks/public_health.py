@@ -491,12 +491,31 @@ def check(origin, expected=None, *, verify_archive=False):
     if index is not None and "switching" in index:
         switching = index["switching"]
         assert isinstance(switching, dict), "Malformed switching index"
-        report = part(switching["summary"])
         schemas = {}
         for name in SCHEMAS:
             raw = verified("schemas/" + name, 500_000)
             schemas[name] = json.loads(raw)
         validate_schema(index, "static-index-v1.json", schemas)
+        if "summary" in switching:
+            report = part(switching["summary"])
+        else:
+            fragments = switching["summary_fragments"]
+            pieces, size = [], 0
+            for descriptor in fragments["parts"]:
+                piece = part(descriptor)
+                assert isinstance(piece, str), "Invalid summary fragment type"
+                raw = piece.encode("utf-8")
+                size += len(raw)
+                assert size <= fragments["bytes"] and size <= 128_000_000, (
+                    "Summary reconstruction exceeds budget"
+                )
+                pieces.append(raw)
+            assert size == fragments["bytes"], "Summary reconstruction size mismatch"
+            raw = b"".join(pieces)
+            assert hashlib.sha256(raw).hexdigest() == fragments["sha256"], (
+                "Summary reconstruction fingerprint mismatch"
+            )
+            report = json.loads(raw)
 
         def descriptors(value):
             if isinstance(value, dict):
@@ -515,6 +534,16 @@ def check(origin, expected=None, *, verify_archive=False):
                     descriptors(item)
 
         descriptors(switching)
+        catalog = switching.get("claims")
+        if catalog is None:
+            catalog = []
+            for descriptor in switching["claim_catalog"]:
+                entries = part(descriptor)
+                validate_schema(entries, "static-index-v1.json", schemas, "/$defs/claim_entries")
+                descriptors(entries)
+                catalog.extend(entries)
+        membership = [identity for entry in catalog for identity in entry["claim_ids"]]
+        assert len(membership) == len(set(membership)), "Duplicate declared study claims"
         validate_switching_report(report, data["publication"], data["generated_at"], schemas)
         switching_availability = report["availability"]
     published = datetime.fromisoformat(data["generated_at"].replace("Z", "+00:00"))

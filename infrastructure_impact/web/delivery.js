@@ -27,12 +27,12 @@ async function createStaticDelivery(fetchPart, siteBase) {
         (descriptor.bytes > 8000000 || descriptor.path !== `data/${descriptor.sha256}.json`))
     )
       throw Error('Invalid evidence part descriptor');
-    const key = descriptor.path;
+    const key = `${descriptor.path}:${descriptor.sha256}:${descriptor.bytes}`;
     if (!cache.has(key))
       cache.set(
         key,
         (async () => {
-          const r = await fetchPart(siteBase + key);
+          const r = await fetchPart(siteBase + descriptor.path);
           if (!r.ok) throw Error('Evidence part unavailable. Reload after deployment.');
           const raw = new Uint8Array(await r.arrayBuffer());
           if (raw.length !== descriptor.bytes) throw Error('Evidence part size mismatch');
@@ -46,6 +46,8 @@ async function createStaticDelivery(fetchPart, siteBase) {
           );
           if (
             value.publication?.id !== index.publication.id ||
+            value.publication?.advisory_schema_version !==
+              index.publication.advisory_schema_version ||
             value.generated_at !== index.generated_at
           )
             throw Error('Mixed publication generations. Reload after deployment.');
@@ -260,9 +262,47 @@ async function createStaticDelivery(fetchPart, siteBase) {
     if (!Object.hasOwn(index, 'switching')) return null;
     const contracts = window.InfrastructureSwitchingContracts;
     contracts.validate('static-index-v1.json', index);
-    const declared = index.switching.claims.flatMap((part) => part.claim_ids);
-    if (new Set(declared).size !== declared.length) throw Error('Duplicate declared study claims');
+    if (index.switching.claims) validateClaimEntries(index.switching.claims);
     return index.switching;
+  }
+  function validateClaimEntries(entries) {
+    window.InfrastructureSwitchingContracts.validate(
+      'static-index-v1.json',
+      entries,
+      '/$defs/claim_entries',
+    );
+    const declared = entries.flatMap((entry) => entry.claim_ids);
+    if (new Set(declared).size !== declared.length) throw Error('Duplicate declared study claims');
+    if (entries.some((entry) => entry.part.path !== `data/${entry.part.sha256}.json`))
+      throw Error('Non-addressed study claim part');
+    return entries;
+  }
+  let catalogPromise;
+  async function claimEntries(study) {
+    if (study.claims) return study.claims;
+    if (!catalogPromise)
+      catalogPromise = (async () => {
+        const results = new Array(study.claim_catalog.length);
+        let cursor = 0;
+        await Promise.all(
+          Array.from({ length: Math.min(6, results.length) }, async () => {
+            while (cursor < results.length) {
+              const i = cursor++;
+              results[i] = await read(study.claim_catalog[i]);
+              window.InfrastructureSwitchingContracts.validate(
+                'static-index-v1.json',
+                results[i],
+                '/$defs/claim_entries',
+              );
+            }
+          }),
+        );
+        return validateClaimEntries(results.flat());
+      })().catch((error) => {
+        catalogPromise = null;
+        throw error;
+      });
+    return catalogPromise;
   }
   async function readClaims(entry) {
     const rows = await read(entry.part);
@@ -296,7 +336,36 @@ async function createStaticDelivery(fetchPart, siteBase) {
   load.switchingSummary = async () => {
     const study = studyIndex();
     if (!study) return null;
-    const result = await read(study.summary);
+    let result;
+    if (Object.hasOwn(study, 'summary')) result = await read(study.summary);
+    else {
+      const fragments = study.summary_fragments;
+      const pieces = new Array(fragments.parts.length);
+      let cursor = 0,
+        size = 0;
+      // Preserve every position, including repeated content-addressed parts.
+      await Promise.all(
+        Array.from({ length: Math.min(6, fragments.parts.length) }, async () => {
+          while (cursor < fragments.parts.length) {
+            const i = cursor++;
+            const piece = await read(fragments.parts[i]);
+            if (typeof piece !== 'string') throw Error('Invalid summary fragment type');
+            size += new TextEncoder().encode(piece).length;
+            if (size > fragments.bytes || size > 128000000)
+              throw Error('Summary reconstruction exceeds budget');
+            pieces[i] = piece;
+          }
+        }),
+      );
+      if (size !== fragments.bytes) throw Error('Summary reconstruction size mismatch');
+      const text = pieces.join('');
+      const digest = Array.from(
+        new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))),
+        (b) => b.toString(16).padStart(2, '0'),
+      ).join('');
+      if (digest !== fragments.sha256) throw Error('Summary reconstruction fingerprint mismatch');
+      result = window.InfrastructureJSON.parse(text);
+    }
     window.InfrastructureSwitchingContracts.summary(result, index);
     return JSON.parse(JSON.stringify(result));
   };
@@ -309,7 +378,8 @@ async function createStaticDelivery(fetchPart, siteBase) {
     )
       throw Error('Invalid study claim IDs');
     const requested = new Set(ids);
-    const selected = study.claims.filter((p) => p.claim_ids.some((id) => requested.has(id)));
+    const entries = await claimEntries(study);
+    const selected = entries.filter((p) => p.claim_ids.some((id) => requested.has(id)));
     const rows = await claimParts(selected);
     const found = rows.filter((c) => requested.has(c.claim_id));
     if (found.length !== requested.size) throw Error('Missing study claims');
@@ -322,7 +392,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     const summary = await load.switchingSummary();
     const metadata = await read(study.inputs);
     contracts.header(metadata, index, summary.selection.definition_sha256);
-    const claims = await claimParts(study.claims);
+    const claims = await claimParts(await claimEntries(study));
     const entries = await parts(study.kev_entries, true);
     if (
       entries.some(

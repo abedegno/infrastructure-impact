@@ -34,6 +34,24 @@ parts in memory and limits parallel retrieval to six requests. Failed requests d
 not become an empty successful result. A missing known-CVE index entry fails.
 Unknown valid CVEs retain the explicit not-checked/no-retained-statement behavior.
 
+Switching delivery retains the legacy `switching.summary` descriptor when its
+publication envelope fits. Otherwise `switching.summary_fragments` contains ordered
+`parts`, the original UTF-8 JSON `bytes`, and its `sha256`. Each ordinary part holds
+a JSON string fragment. Readers preserve repeated positions, validate every part,
+then verify the complete byte count and hash before parsing the unchanged summary.
+Declared and accumulated reconstruction are bounded to 128 MB before joining.
+Exactly one summary form is permitted; the 8 MB part limit remains unchanged.
+
+Small switching claim catalogs remain inline as `switching.claims`. If the index
+would exceed 2 MB, `switching.claim_catalog` instead lists ordered metadata parts
+containing the same `{claim_ids, part}` entries. Exactly one catalog form is
+permitted. The browser loads external catalogs only for claim drilldown or full
+report hydration, validates all membership and descriptors, and fetches at most
+six parts concurrently. The monitor checks catalog metadata and manifest bindings
+without loading all claim bodies. All actual monitor reads, including repeated
+fragment responses, count toward the existing 20 MB default budget; reaching any
+remaining limit still fails publication or monitoring visibly.
+
 Scripts and styles also use content-addressed paths. Old root asset URLs remain
 available for integrations. A cached index whose parts disappeared during a
 Pages deployment yields a reload message; it cannot silently mix generations.
