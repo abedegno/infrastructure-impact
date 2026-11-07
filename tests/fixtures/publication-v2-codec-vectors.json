@@ -1,0 +1,34 @@
+{
+  "format": "publication-v2-codec-vectors",
+  "version": 1,
+  "valid": [
+    {"name":"astral-and-null","strings":["🚀","é"],"shapes":[["text","value"],["text"]],"tokens":[[0],-2,null],"logical":"{\"text\":\"🚀\",\"value\":null}","ascii":"{\"text\":\"\\ud83d\\ude80\",\"value\":null}"},
+    {"name":"missing-is-distinct","strings":["🚀"],"shapes":[["text"]],"tokens":[[0],-2],"logical":"{\"text\":\"🚀\"}","ascii":"{\"text\":\"\\ud83d\\ude80\"}"},
+    {"name":"integer-float-zero-exponent-identity","strings":[],"shapes":[],"tokens":[[-1,8],[-2,"i","1"],[-2,"f","1.0"],[-2,"f","-0.0"],[-2,"f","1e+03"],[-2,"i","9007199254740993"],[-2,"i","-9007199254740993"],[-2,"f","5e-324"],[-2,"f","-0"]],"logical":"[1,1.0,-0.0,1e+03,9007199254740993,-9007199254740993,5e-324,-0]","ascii":"[1,1.0,-0.0,1e+03,9007199254740993,-9007199254740993,5e-324,-0]"},
+    {"name":"literal-prototype-keys","strings":["safe"],"shapes":[["__proto__","constructor"]],"tokens":[[0],-2,true],"logical":"{\"__proto__\":\"safe\",\"constructor\":true}","ascii":"{\"__proto__\":\"safe\",\"constructor\":true}"}
+  ],
+  "invalid": [
+    {"name":"unsafe-array-count","strings":[],"shapes":[],"tokens":[[-1,9007199254740992]]},
+    {"name":"boolean-array-count","strings":[],"shapes":[],"tokens":[[-1,true]]},
+    {"name":"boolean-shape","strings":[],"shapes":[[]],"tokens":[[true]]},
+    {"name":"unsafe-string-index","strings":[],"shapes":[],"tokens":[-9007199254740992]},
+    {"name":"untagged-positive","strings":[],"shapes":[],"tokens":[1]},
+    {"name":"untagged-zero","strings":[],"shapes":[],"tokens":[0]},
+    {"name":"infinite-float","strings":[],"shapes":[],"tokens":[[-2,"f","1e999"]]},
+    {"name":"nan","strings":[],"shapes":[],"tokens":[[-2,"f","NaN"]]},
+    {"name":"integer-fraction","strings":[],"shapes":[],"tokens":[[-2,"i","1.0"]]},
+    {"name":"leading-zero","strings":[],"shapes":[],"tokens":[[-2,"f","01"]]},
+    {"name":"plus","strings":[],"shapes":[],"tokens":[[-2,"i","+1"]]},
+    {"name":"bad-exponent","strings":[],"shapes":[],"tokens":[[-2,"f","1e"]]},
+    {"name":"duplicate-layout-keys","strings":[],"shapes":[["a","a"]],"tokens":[[0],null,null]},
+    {"name":"duplicate-layout","strings":[],"shapes":[["a"],["a"]],"tokens":[[0],null]},
+    {"name":"surrogate","strings":["\ud800"],"shapes":[],"tokens":[-2]},
+    {"name":"string-reference","strings":[],"shapes":[],"tokens":[-2]},
+    {"name":"shape-reference","strings":[],"shapes":[],"tokens":[[0]]},
+    {"name":"missing-child","strings":[],"shapes":[],"tokens":[[-1,1]]},
+    {"name":"extra-node","strings":[],"shapes":[],"tokens":[null,null]},
+    {"name":"forbidden-alias","strings":[],"shapes":[],"tokens":[[-3,"switching-evidence.json"]]}
+  ],
+  "invalid_json": ["{\"a\":1,\"a\":2}","{\"a\":NaN}","{\"a\":Infinity}","\"\\ud800\""],
+  "invalid_paths": ["../x","/x","data/%2e%2e/x","https://x","data/v2/a.json?x","data//x","data\\x"]
+}

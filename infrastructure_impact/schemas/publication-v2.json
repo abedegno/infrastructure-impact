@@ -1,0 +1,1097 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "representation": {
+      "const": "publication-catalog"
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "advisory_schema_version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "advisory_schema_version": {
+          "const": 2
+        }
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "codec": {
+      "const": "json-token-v1"
+    },
+    "strings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/table"
+      }
+    },
+    "shapes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/table"
+      }
+    },
+    "roots": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\\.json)?$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/part"
+      },
+      "required": [
+        "snapshot.json",
+        "runtime-snapshot",
+        "switching-evidence.json",
+        "switching-comparison.json"
+      ]
+    },
+    "routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        }
+      },
+      "required": [
+        "claims",
+        "records"
+      ]
+    },
+    "switching": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "overview": {
+          "$ref": "#/$defs/part"
+        },
+        "definition_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "kev": {
+          "$ref": "#/$defs/range"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/range"
+        }
+      },
+      "required": [
+        "overview",
+        "definition_sha256",
+        "kev",
+        "diagnostics"
+      ]
+    },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "const": "snapshot-v1"
+        },
+        "manifest": {
+          "$ref": "#/$defs/part"
+        },
+        "expanded": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "snapshot-v2.json"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 128000000
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "bytes"
+          ]
+        },
+        "gzip": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "const": "snapshot-v2.json.gz"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8000000
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "bytes"
+          ]
+        }
+      },
+      "required": [
+        "scope",
+        "manifest",
+        "expanded",
+        "gzip"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "representation",
+    "publication",
+    "generated_at",
+    "codec",
+    "strings",
+    "shapes",
+    "roots",
+    "routes",
+    "switching",
+    "archive"
+  ],
+  "$defs": {
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^data/v2/[a-f0-9]{64}\\.json$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8000000
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ]
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\\.json)?$"
+        },
+        "first_token": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "end_token": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "logical_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "logical_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "root",
+        "first_token",
+        "end_token",
+        "logical_bytes",
+        "logical_sha256"
+      ]
+    },
+    "logical": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "bytes",
+        "sha256"
+      ]
+    },
+    "table": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "part": {
+          "$ref": "#/$defs/part"
+        },
+        "first": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "part",
+        "first",
+        "count"
+      ]
+    },
+    "path": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        ]
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "part": {
+          "$ref": "#/$defs/part"
+        },
+        "first_token": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "decoded_upper_bound": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "part",
+        "first_token",
+        "count",
+        "decoded_upper_bound"
+      ]
+    },
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\\.json)?$"
+        },
+        "token_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "logical": {
+          "$ref": "#/$defs/logical"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/page"
+          },
+          "minItems": 1
+        },
+        "ranges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "token_count",
+        "logical",
+        "pages",
+        "ranges"
+      ]
+    },
+    "claim_routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "final_end": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            ],
+            "items": false,
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "base",
+        "final_end",
+        "rows"
+      ]
+    },
+    "record_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "record_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "first_token": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "end_token": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "logical_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "record_index",
+          "first_token",
+          "end_token",
+          "logical_bytes"
+        ]
+      }
+    },
+    "ranges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "$ref": "#/$defs/path"
+          },
+          "range": {
+            "$ref": "#/$defs/range"
+          }
+        },
+        "required": [
+          "path",
+          "range"
+        ]
+      }
+    },
+    "strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "shapes": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "token": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": -2
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          ],
+          "items": false,
+          "minItems": 1,
+          "maxItems": 1
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": -1
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": -2
+            },
+            {
+              "enum": [
+                "i",
+                "f"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$"
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": -3
+            },
+            {
+              "const": "switching-evidence.json"
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      ]
+    },
+    "tokens": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/token"
+      },
+      "minItems": 1
+    },
+    "archive_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "const": "snapshot-v1"
+        },
+        "root": {
+          "$ref": "#/$defs/part"
+        },
+        "strings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "shapes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "record_routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          },
+          "minItems": 1
+        },
+        "legacy_snapshot": {
+          "$ref": "#/$defs/logical"
+        }
+      },
+      "required": [
+        "scope",
+        "root",
+        "strings",
+        "shapes",
+        "record_routes",
+        "members",
+        "legacy_snapshot"
+      ]
+    },
+    "envelope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "strings"
+            },
+            "data": {
+              "$ref": "#/$defs/strings"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "shapes"
+            },
+            "data": {
+              "$ref": "#/$defs/shapes"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "tokens"
+            },
+            "data": {
+              "$ref": "#/$defs/tokens"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "root"
+            },
+            "data": {
+              "$ref": "#/$defs/root"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "claim_routes"
+            },
+            "data": {
+              "$ref": "#/$defs/claim_routes"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "record_routes"
+            },
+            "data": {
+              "$ref": "#/$defs/record_routes"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "ranges"
+            },
+            "data": {
+              "$ref": "#/$defs/ranges"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "overview"
+            },
+            "data": {
+              "$ref": "urn:infrastructure-impact:switching-overview:2"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema_version": {
+              "const": 2
+            },
+            "publication": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "advisory_schema_version": {
+                  "const": 2
+                }
+              }
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "kind": {
+              "const": "archive"
+            },
+            "data": {
+              "$ref": "#/$defs/archive_scope"
+            }
+          },
+          "required": [
+            "schema_version",
+            "publication",
+            "generated_at",
+            "kind",
+            "data"
+          ]
+        }
+      ]
+    },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "representation": {
+          "const": "snapshot-archive"
+        },
+        "publication": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "const": 2
+            }
+          }
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^data/v2/[a-f0-9]{64}\\.json$"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8000000
+              },
+              "data": {
+                "$ref": "#/$defs/envelope"
+              }
+            },
+            "required": [
+              "path",
+              "sha256",
+              "bytes",
+              "data"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "representation",
+        "publication",
+        "generated_at",
+        "assets"
+      ]
+    }
+  },
+  "$id": "urn:infrastructure-impact:publication:2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
