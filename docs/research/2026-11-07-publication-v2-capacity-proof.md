@@ -22,3 +22,50 @@ Literal and object-key tables cannot reference other encoded objects. Bounded pr
 The prototype includes old browser assets and is deliberately non-deployable. Production numeric grammar, schemas, readers, bounded caches, streaming selectors and adversarial checks still need implementation. The default-read figure includes existing non-switching dependencies, but is a read-plan measurement, **not a successful monitor run**. Its headroom is 837,573 bytes; production assets and grammar changes must be remeasured. Native/Python/JavaScript parity, real monitors and a fresh completed candidate are still required.
 
 The local input is not the complete hosted inventory. This experiment establishes neither hosted-union capacity nor source-history completeness, model applicability, vendor security quality or concealment. Independent human evidence review remains pending. GitHub's [published-site limit is 1 GB](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits); no hosting limit or permission was changed.
+
+## Retained implementation checks
+
+The measurements above describe the historical prototype. Following the
+maintainer's course correction, further table-layout work was deferred. The local
+v2 default-download safety ceiling is now 32 MB; v1 remains at 20 MB. These are
+operational targets, separate from Pages' site-size limit. See the
+[implementation decisions](2026-11-07-publication-v2-decisions.md).
+
+The latest generated diagnostic tree measures **437,319,773 bytes**, with a
+39,411,194-byte expanded archive and a 5,037,170-byte gzip. Its generation is
+`dd37f363728b4faeaeb46373436c203e`. These are physical measurements of an
+**unaccepted** candidate, not successful end-to-end validation or hosted capacity.
+
+Three separate replay outcomes remain preserved outside Git:
+
+- The initial implementation replay reached the 2,400-second worker timeout.
+- The next replay reached complete native-root and impact-CSV comparison, then
+  failed when intermediate reducer projections hit the 128 MB response limit.
+  A separate 512 MB logical working-data allowance corrected that conflation;
+  individual values and responses remain limited to 128 MB.
+- The corrected-backend replay also timed out at 2,400 seconds. Its producer
+  query/projection/write phases took 131.72/281.04/685.59 seconds; the independent
+  native query/projection took 352.97/880.13 seconds. Root/query/monitor acceptance
+  did not finish. Its receipt reports `worker_failed`, with acceptance flags
+  unset. No result is promoted to a successful import.
+
+All 174 retained targets were normalized in the disposable stages. The source
+database was unchanged, existing rows/history and all 174 original capture dates
+were preserved, and no HTTP attempts or new retrieval observations were made.
+The local sample contains 223 identities; it is not the hosted union.
+
+Separately, the default browser view transferred 24,642,098 bytes, and the Python
+default monitor completed at 28,367,753 bytes against a preserved diagnostic
+generation. The corrected default browser selection's complete JSON and
+4,942-byte CSV matched the Python reference. The browser-only correction was
+tested against those same retained facts; it is not included in the frozen
+backend replay above. Large custom selections and source/diagnostic paging still
+have measured five-minute deadline failures. Full browser acceptance remains
+incomplete; the interactive timeout was not increased.
+
+The final source commit's six GitHub checks passed. The final wheel independently
+matched all 264 required package files and passed isolated installed-worker audit,
+native parity and both monitors on synthetic evidence. Those checks establish
+software/distribution correctness for their tested scope, not retained-scale
+runtime acceptance. No merge, release, source-pin change or hosted activation
+was performed.
