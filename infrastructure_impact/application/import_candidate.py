@@ -374,6 +374,9 @@ def _inspect_bundle(public, facts):
     ):
         if name in files:
             facts[key] = files[name].stat().st_size
+    # This closed importer targets GitHub Pages; cap the whole published site.
+    if facts["public_bytes"] > 1_000_000_000:
+        raise CapacityFailure("public site size")
     total = 0
     for name, path in files.items():
         limit = 8_000_000 if name == "snapshot.json.gz" else 128_000_000

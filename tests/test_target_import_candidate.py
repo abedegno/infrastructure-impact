@@ -394,6 +394,56 @@ def test_complete_artifact_capacity_retains_failure_measurements(candidate, name
     assert facts["public_bytes"] >= size
 
 
+@pytest.mark.parametrize("extra_byte", [0, 1])
+def test_aggregate_public_capacity_boundary_retains_measurements(candidate, extra_byte):
+    module = implementation()
+    assert module.verify(*candidate)["candidate_validated"] is True
+    public = candidate[1]
+    manifest_path = public / "manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+
+    # Eight sparse assets exceed the Pages bound together, never the per-file bound.
+    # Hash zeros once for the seven equal assets without allocating a GB of RAM/disk.
+    chunk = b"\0" * 1_000_000
+
+    def zero_digest(size):
+        digest = sha256()
+        full, remainder = divmod(size, len(chunk))
+        for _ in range(full):
+            digest.update(chunk)
+        digest.update(chunk[:remainder])
+        return digest.hexdigest()
+
+    common_hash = zero_digest(125_000_000)
+    for number in range(8):
+        name = f"padding-{number}.bin"
+        with (public / name).open("wb") as stream:
+            stream.truncate(125_000_000)
+        manifest["sha256"][name] = common_hash
+    manifest_path.write_text(json.dumps(manifest))
+    total = sum(path.stat().st_size for path in public.rglob("*") if path.is_file())
+    last = public / "padding-7.bin"
+    final_size = 125_000_000 + 1_000_000_000 + extra_byte - total
+    with last.open("wb") as stream:
+        stream.truncate(final_size)
+    manifest["sha256"][last.name] = zero_digest(final_size)
+    manifest_path.write_text(json.dumps(manifest))
+    assert all(path.stat().st_size < 128_000_000 for path in public.rglob("*") if path.is_file())
+    facts = module._empty()["candidate"]
+    if extra_byte:
+        with pytest.raises(module.CapacityFailure, match="public site"):
+            module._inspect_bundle(public, facts)
+        assert facts["parity_passed"] is facts["default_monitor_passed"] is None
+        assert facts["archive_monitor_passed"] is None
+    else:
+        assert module._inspect_bundle(public, facts)["publication"]["id"] == manifest["generation"]
+    assert facts["public_bytes"] == 1_000_000_000 + extra_byte
+    assert facts["generation"] == manifest["generation"]
+    assert facts["manifest_sha256"] == sha256(manifest_path.read_bytes()).hexdigest()
+    assert facts["expanded_bytes"] == (public / "snapshot.json").stat().st_size
+    assert facts["compressed_bytes"] == (public / "snapshot.json.gz").stat().st_size
+
+
 def test_receipt_rejects_forged_candidate_outcome():
     from test_target_import_contracts import result
     from test_target_import_profiles import manifest
