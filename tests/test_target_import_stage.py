@@ -640,3 +640,35 @@ def test_cli_stage_writes_bounded_result_with_private_permissions(setup, monkeyp
     assert code == 0 and json.loads(capsys.readouterr().out) == json.loads(result_path.read_bytes())
     assert result_path.stat().st_mode & 0o777 == 0o600
     assert snapshot(database) == before
+
+
+@pytest.mark.parametrize(
+    "base_path",
+    [
+        "https://external.invalid/",
+        "//host/",
+        "/../",
+        "/x/./",
+        "/x?y/",
+        "/x#y/",
+        "/x%2fy/",
+        "/missing-slash",
+        None,
+    ],
+)
+def test_invalid_render_prefix_refused_before_lock_or_source(setup, monkeypatch, base_path):
+    database, selected, _, output, home = setup
+    accepted = receipt(database, selected)
+    module = implementation()
+    monkeypatch.setattr(module, "writer_lock", lambda **kw: pytest.fail("invalid prefix lock"))
+    with pytest.raises(ValueError, match="base_path"):
+        module.stage(
+            database,
+            selected,
+            accepted["fingerprint"],
+            output,
+            lock_home=home,
+            accepted_preview=accepted,
+            base_path=base_path,
+        )
+    assert not output.exists()

@@ -82,7 +82,14 @@ def _paths(database, public):
     return database.resolve(), public.resolve(), home.resolve()
 
 
-def _environment(database, public, home):
+def _base_path(home):
+    from .target_import_contracts import validate_base_path
+
+    context = _read_json(home / "target-import-context.json", MAX_CONTEXT)
+    return validate_base_path(context["base_path"])
+
+
+def _environment(database, public, home, *, base_path="/"):
     env = {k: v for k, v in os.environ.items() if not k.startswith(("IMPACT_", "PYTHON"))}
     env.update(
         IMPACT_HOME=str(home),
@@ -90,6 +97,7 @@ def _environment(database, public, home):
         IMPACT_SOURCES=str(PACKAGE / "resources/sources.json"),
         IMPACT_SNAPSHOT=str(public),
         IMPACT_PUBLICATIONS=str(home / "publications"),
+        IMPACT_BASE_PATH=base_path,
     )
     return env
 
@@ -176,7 +184,7 @@ def verify(database: Path, public: Path, profile) -> dict:
             completed = subprocess.run(
                 [sys.executable, "-I", "-m", __name__, "--worker", str(database), str(public)],
                 cwd=home,
-                env=_environment(database, public, home),
+                env=_environment(database, public, home, base_path=_base_path(home)),
                 stdout=log,
                 stderr=log,
                 timeout=2400,
@@ -219,6 +227,7 @@ def _preserved(database, home, selected):
     if (
         context["format"] != "impact-target-import-context"
         or context["schema_version"] != 1
+        or _base_path(home) != os.environ.get("IMPACT_BASE_PATH", "/")
         or binding != context["observed_binding"]
         or binding["fingerprint"] != binding_fingerprint(binding)
         or binding["manifest_fingerprint"] != selected.fingerprint
@@ -498,14 +507,45 @@ def _parity(database, public, home, snapshot):
             raise ValueError("complete public bundle parity")
 
 
-def _monitors(public, home, facts):
+def _monitors(public, home, facts, *, base_path="/"):
     from functools import partial
     from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
     from threading import Thread
+    from urllib.parse import unquote, urlsplit
 
+    from .target_import_contracts import validate_base_path
+
+    base_path = validate_base_path(base_path)
     monitor = _monitor_path()
 
     class Handler(SimpleHTTPRequestHandler):
+        def _scoped(self):
+            parsed = urlsplit(self.path)
+            path = unquote(parsed.path, errors="strict")
+            if (
+                self.headers.get("Host") != f"127.0.0.1:{self.server.server_port}"
+                or parsed.scheme
+                or parsed.netloc
+                or parsed.query
+                or parsed.fragment
+                or not path.startswith(base_path)
+                or "\\" in path
+                or "\0" in path
+                or any(part in (".", "..") for part in path.split("/"))
+            ):
+                self.send_error(404)
+                return False
+            self.path = path[len(base_path) - 1 :]
+            return True
+
+        def do_GET(self):
+            if self._scoped():
+                super().do_GET()
+
+        def do_HEAD(self):
+            if self._scoped():
+                super().do_HEAD()
+
         def log_message(self, *args):
             pass
 
@@ -520,7 +560,7 @@ def _monitors(public, home, facts):
                         sys.executable,
                         "-I",
                         str(monitor),
-                        "http://127.0.0.1:" + str(server.server_port),
+                        "http://127.0.0.1:" + str(server.server_port) + base_path,
                         "--generation",
                         facts["generation"],
                         *(["--verify-archive"] if archive else []),
@@ -562,7 +602,7 @@ def _worker(database, public):
     result = _empty("validation_failed")
     database, public, home = _paths(database, public)
     os.environ.clear()
-    os.environ.update(_environment(database, public, home))
+    os.environ.update(_environment(database, public, home, base_path=_base_path(home)))
     try:
         from ..collection.target_import_profiles import from_manifest
 
@@ -598,7 +638,7 @@ def _worker(database, public):
         snapshot = _inspect_bundle(public, result["candidate"])
         _parity(database, public, home, snapshot)
         result["candidate"]["parity_passed"] = True
-        _monitors(public, home, result["candidate"])
+        _monitors(public, home, result["candidate"], base_path=_base_path(home))
         _preserved(database, home, selected)
         result.update(capacity_passed=True, candidate_validated=True)
         result["candidate"]["outcome"] = "passed"

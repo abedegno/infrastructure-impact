@@ -155,6 +155,7 @@ def main(argv=None):
         if mode == "stage":
             command.add_argument("--preview", type=Path, required=True)
             command.add_argument("--home", type=Path, required=True)
+            command.add_argument("--base-path", default="/")
     args = parser.parse_args(argv)
     if args.command == "target-import":
         return _target_import(args, parser)
@@ -539,6 +540,7 @@ def _target_import(args, parser):
                 args.output,
                 lock_home=args.home,
                 accepted_preview=accepted,
+                base_path=args.base_path,
             )
             payload = result_bytes(result, selected=selected)
             if args.output.is_dir():

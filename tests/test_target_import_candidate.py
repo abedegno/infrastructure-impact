@@ -582,3 +582,62 @@ def test_failed_candidate_marks_only_owned_isolated_pipeline_error(
     detail = json.loads(rows[1][6])
     assert detail["failure"] == {"phase": "candidate_verification", "code": "candidate_capacity"}
     assert detail["imported"] == 2 and detail["unchanged"] == 0
+
+
+@pytest.mark.parametrize("base_path", ["/", "/infrastructure-impact/"])
+def test_fresh_worker_uses_private_explicit_render_prefix(candidate, monkeypatch, base_path):
+    module = implementation()
+    database, public, selected = candidate
+    path = database.parent.parent / "home/target-import-context.json"
+    context = json.loads(path.read_bytes())
+    context["base_path"] = base_path
+    path.write_text(json.dumps(context))
+    monkeypatch.setenv("IMPACT_BASE_PATH", "https://hostile.invalid/elsewhere/")
+    result = module.verify(database, public, selected)
+    assert result["candidate_validated"] is True, result
+    html = (public / "index.html").read_text()
+    assert 'href="' + base_path + "assets/" in html
+    assert "hostile.invalid" not in html
+
+
+def test_prefixed_monitor_refuses_extra_root_routes_and_private_paths(candidate, monkeypatch):
+    from urllib.error import HTTPError
+    from urllib.request import Request, urlopen
+
+    module = implementation()
+    database, public, selected = candidate
+    home = database.parent.parent / "home"
+    path = home / "target-import-context.json"
+    context = json.loads(path.read_bytes())
+    context["base_path"] = "/infrastructure-impact/"
+    path.write_text(json.dumps(context))
+    result = module.verify(database, public, selected)
+    assert result["candidate_validated"] is True
+    real = module.subprocess.run
+    seen = []
+
+    def checked_run(argv, **kwargs):
+        origin = argv[3]
+        assert origin.endswith("/infrastructure-impact/")
+        host = origin.removesuffix("/infrastructure-impact/")
+        for route in (
+            "/",
+            "/manifest.json",
+            "/private/data/intel.sqlite3",
+            "/infrastructure-impact/../private/data/intel.sqlite3",
+            "/infrastructure-impact/%2e%2e/private/data/intel.sqlite3",
+        ):
+            with pytest.raises(HTTPError) as error:
+                urlopen(host + route, timeout=5)
+            assert error.value.code == 404
+        with pytest.raises(HTTPError) as error:
+            urlopen(
+                Request(origin + "manifest.json", headers={"Host": "external.invalid"}), timeout=5
+            )
+        assert error.value.code == 404
+        seen.append(origin)
+        return real(argv, **kwargs)
+
+    monkeypatch.setattr(module.subprocess, "run", checked_run)
+    module._monitors(public, home, result["candidate"], base_path="/infrastructure-impact/")
+    assert len(seen) == 2

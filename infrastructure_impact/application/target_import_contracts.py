@@ -1,6 +1,7 @@
 """Finite, closed, bounded operational receipts for exact-target imports."""
 
 import json
+import re
 from hashlib import sha256
 from pathlib import Path
 
@@ -16,6 +17,13 @@ BINDING_FIELDS = (
     "source_config_fingerprint",
     "normalizer_fingerprints",
 )
+
+
+def validate_base_path(value: str) -> str:
+    """Accept the existing publication builder's local directory-prefix grammar."""
+    if not isinstance(value, str) or not re.fullmatch(r"/(?:[A-Za-z0-9_-]+/)*", value):
+        raise ValueError("invalid_target_import_base_path")
+    return value
 
 
 def binding_fingerprint(value: dict) -> str:

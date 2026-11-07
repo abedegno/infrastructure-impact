@@ -312,6 +312,7 @@ def stage(
     *,
     lock_home: Path,
     accepted_preview: dict,
+    base_path: str = "/",
 ) -> dict:
     """Hold one collector lock, validate all targets, then ingest only a private copy.
 
@@ -320,7 +321,10 @@ def stage(
     receipts raise before filesystem access. Source paths never enter receipts.
     """
     database, output, home = Path(database), Path(output), Path(lock_home)
+    from .target_import_contracts import validate_base_path
+
     accepted = validate_preview(accepted_preview, profile)
+    base_path = validate_base_path(base_path)
     result = _initial_result(profile, accepted)
     budget = PacedBudget(profile)
     source_before = None
@@ -390,6 +394,7 @@ def stage(
                     "operation_started_at": operation_started_at,
                     "operation_finished_at": operation_finished_at,
                     "pipeline_run_id": pipeline_run_id,
+                    "base_path": base_path,
                     "binding": {k: result[k] for k in (*BINDING_FIELDS, "fingerprint")},
                     "observed_binding": observed_binding,
                     "targets": result["targets"],

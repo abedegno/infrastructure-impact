@@ -90,7 +90,8 @@ def main():
         from infrastructure_impact.reconciliation.baseline import load_baseline
 
         assert load_baseline(probe / "baseline.json")["revisions"] == []
-    target_import_candidate_probe()
+    for base_path in ("/", "/infrastructure-impact/"):
+        target_import_candidate_probe(base_path=base_path)
     configured = json.loads((package / "resources/sources.json").read_text())
     assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
         "source_id": "cisa-kev",
@@ -470,7 +471,7 @@ def main():
     )
 
 
-def target_import_candidate_probe():
+def target_import_candidate_probe(*, base_path="/"):
     """Run the real worker from the isolated wheel using authored source bytes only."""
     import sqlite3
     import sys
@@ -534,7 +535,12 @@ def target_import_candidate_probe():
                 side_effect=lambda db, url, vendor, **kw: raw[vendor],
             ),
             patch.dict(
-                os.environ, {"PATH": str(root / "no-node"), "IMPACT_SOURCES": str(root / "HOSTILE")}
+                os.environ,
+                {
+                    "PATH": str(root / "no-node"),
+                    "IMPACT_SOURCES": str(root / "HOSTILE"),
+                    "IMPACT_BASE_PATH": "https://hostile.invalid/",
+                },
             ),
         ):
             result = target_import_stage.stage(
@@ -544,9 +550,11 @@ def target_import_candidate_probe():
                 root / "stage",
                 lock_home=home,
                 accepted_preview=accepted,
+                base_path=base_path,
             )
         assert result["outcome"] == "completed", result
         assert result["candidate"]["archive_monitor_passed"] is True
+        assert 'src="' + base_path + "assets/" in (root / "stage/public/index.html").read_text()
         published = json.loads((root / "stage/public/snapshot.json").read_bytes())
         run = published["collector"]["last_run"]
         details = json.loads(run["details"])

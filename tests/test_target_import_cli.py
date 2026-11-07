@@ -247,3 +247,51 @@ def test_fresh_stage_startup_never_resolves_ambient_paths(tmp_path, operation):
     assert result.stdout == "isolated startup confirmed\n"
     if operation == "invalid_receipt_cli":
         assert "target_import_failed" in result.stderr
+
+
+@pytest.mark.parametrize("base_path", ["/", "/infrastructure-impact/"])
+def test_local_stage_passes_explicit_render_prefix(tmp_path, monkeypatch, capsys, base_path):
+    from test_target_import_stage import passing_verifier, serve
+    from test_target_import_stage import setup as stage_setup
+
+    from infrastructure_impact.application import target_import, target_import_stage
+    from infrastructure_impact.application.target_import_contracts import preview_bytes
+    from infrastructure_impact.collection import target_import_profiles
+
+    database, selected, raws, output, home = stage_setup.__wrapped__(tmp_path, monkeypatch)
+    accepted = target_import.preview(database, selected.profile_id)
+    preview_path = tmp_path / "preview.json"
+    preview_path.write_bytes(preview_bytes(accepted, selected=selected))
+    monkeypatch.setattr(target_import_profiles, "profile", lambda _: selected)
+    serve(monkeypatch, selected, raws)
+
+    def checked(database, public, selected):
+        context = json.loads(
+            (database.parent.parent / "home/target-import-context.json").read_bytes()
+        )
+        assert context["base_path"] == base_path
+        return passing_verifier(database, public, selected)
+
+    monkeypatch.setattr(target_import_stage, "verify", checked)
+    assert (
+        main(
+            [
+                "target-import",
+                "stage",
+                "--database",
+                str(database),
+                "--profile",
+                selected.profile_id,
+                "--output",
+                str(output),
+                "--preview",
+                str(preview_path),
+                "--home",
+                str(home),
+                "--base-path",
+                base_path,
+            ]
+        )
+        == 0
+    )
+    assert json.loads(capsys.readouterr().out)["outcome"] == "completed"
