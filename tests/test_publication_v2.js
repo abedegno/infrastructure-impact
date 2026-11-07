@@ -392,7 +392,7 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
     );
     await assert.rejects(async () => {
       for await (const chunk of pendingBody.streamRoot('switching-comparison.json', {
-        deadline: Date.now() + 20,
+        deadline: Date.now() + 200,
       })) {
       }
     }, /deadline|cancelled/);
@@ -445,6 +445,254 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
       () => pageReader.switchingDetails(pageOverview, { kind: 'sources', limit: 2 }),
       /budget/,
     );
+    // R1: excluded diagnostics remain independently bounded, not page-budgeted.
+    const filteredCatalog = JSON.parse(JSON.stringify(pageCatalog));
+    function diagnostic(vendor, domain) {
+      const value = {
+        vendor,
+        advisory_id: 'synthetic',
+        source_url: `https://www.${domain}/synthetic`,
+        source: {
+          source_url: `https://www.${domain}/synthetic`,
+          source_sha256: 'a'.repeat(64),
+          retrieved_at: '2026-11-04T12:00:00Z',
+          source_locator: '',
+        },
+        cve_id: null,
+        product_id: null,
+        context: 'source_only_unclassified',
+        state: 'unavailable',
+        issues: [],
+        attempts: [],
+      };
+      value.source.source_locator = 'x'.repeat(
+        671 -
+          context.window.InfrastructureJSON.measure({
+            items: [value],
+            next_cursor: null,
+            total: 1,
+          }),
+      );
+      return value;
+    }
+    const selectedDiagnostic = diagnostic('arista', 'arista.com'),
+      excludedDiagnostic = diagnostic('cisco', 'cisco.com');
+    const diagnosticValues = [selectedDiagnostic, excludedDiagnostic],
+      diagnosticText = JSON.stringify(diagnosticValues);
+    context.window.InfrastructureSwitchingContracts.validate(
+      'switching-evidence-v1.json',
+      diagnosticValues,
+      '/properties/score_availability',
+    );
+    const atoms = [],
+      layouts = [],
+      diagnosticTokens = [];
+    function encodeDiagnostic(value) {
+      if (value === null || typeof value === 'boolean') diagnosticTokens.push(value);
+      else if (typeof value === 'string') {
+        let atom = atoms.indexOf(value);
+        if (atom < 0) {
+          atom = atoms.length;
+          atoms.push(value);
+        }
+        diagnosticTokens.push(-atom - 2);
+      } else if (Array.isArray(value)) {
+        diagnosticTokens.push([-1, value.length]);
+        for (const child of value) encodeDiagnostic(child);
+      } else {
+        const keys = Object.keys(value);
+        let shape = layouts.findIndex((entry) => JSON.stringify(entry) === JSON.stringify(keys));
+        if (shape < 0) {
+          shape = layouts.length;
+          layouts.push(keys);
+        }
+        diagnosticTokens.push([shape]);
+        for (const key of keys) encodeDiagnostic(value[key]);
+      }
+    }
+    encodeDiagnostic(diagnosticValues);
+    filteredCatalog.strings = [{ part: part('strings', atoms), first: 0, count: atoms.length }];
+    filteredCatalog.shapes = [{ part: part('shapes', layouts), first: 0, count: layouts.length }];
+    filteredCatalog.roots['filtered-diagnostics'] = wireRoot(
+      'filtered-diagnostics',
+      diagnosticTokens,
+      diagnosticText,
+      Buffer.byteLength(diagnosticText),
+    );
+    filteredCatalog.switching.diagnostics = bound(
+      'filtered-diagnostics',
+      0,
+      diagnosticTokens.length,
+      diagnosticText,
+    );
+    filteredCatalog.switching.overview = altered(filteredCatalog.switching.overview, (v) => {
+      v.data.selection.effective_vendors = ['arista'];
+    });
+    const filteredReader = await api.open(virtualFetch, filteredCatalog, index, {
+        selected_bytes: 1000,
+      }),
+      filteredOverview = await filteredReader.switchingOverview(index.generated_at);
+    const filteredPage = await filteredReader.switchingDetails(filteredOverview, {
+      kind: 'diagnostics',
+      limit: 25,
+    });
+    assert.strictEqual(context.window.InfrastructureJSON.measure(filteredPage), 671);
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(filteredPage.items)), [selectedDiagnostic]);
+    assert.strictEqual(
+      context.window.InfrastructureJSON.measure({
+        items: [excludedDiagnostic],
+        next_cursor: null,
+        total: 1,
+      }),
+      671,
+    );
+    assert(context.window.InfrastructureJSON.measure(excludedDiagnostic) > 1000 - 671);
+
+    // R2: unresolved cancel must not retain a request slot or poison metadata.
+    let unblockCodecCancel;
+    const codecCancel = new Promise((resolve) => (unblockCodecCancel = resolve));
+    let metadataAttempts = 0,
+      metadataReleases = 0,
+      slots = 0;
+    const recoveringReader = await api.open(
+      async (name) => {
+        metadataAttempts++;
+        if (metadataAttempts === 1)
+          return {
+            ok: true,
+            body: {
+              getReader: () => ({
+                read: () => new Promise(() => {}),
+                cancel: () => codecCancel,
+                releaseLock: () => metadataReleases++,
+              }),
+            },
+          };
+        return virtualFetch(name);
+      },
+      short,
+      index,
+      {
+        requestSlots: {
+          acquire: async () => {
+            slots++;
+          },
+          release: () => {
+            slots--;
+          },
+        },
+      },
+    );
+    try {
+      await assert.rejects(async () => {
+        for await (const chunk of recoveringReader.streamRoot('snapshot.json', {
+          deadline: Date.now() + 20,
+        })) {
+        }
+      }, /deadline|cancelled/);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      assert.strictEqual(
+        metadataReleases,
+        1,
+        'unsettled cancellation still releases metadata reader',
+      );
+      assert.strictEqual(slots, 0, 'unsettled cancellation still releases request slots');
+      await assert.rejects(async () => {
+        for await (const chunk of recoveringReader.streamRoot('snapshot.json', {
+          deadline: Date.now() + 200,
+        })) {
+        }
+      }, /canonical byte budget/);
+      assert(metadataAttempts >= 2, 'retry fetches fresh metadata after unresolved cancel');
+    } finally {
+      unblockCodecCancel();
+    }
+
+    let unblockFacadeCancel;
+    const facadeCancel = new Promise((resolve) => (unblockFacadeCancel = resolve));
+    const firstCohort = Object.keys(index.cohorts).find((id) => index.cohorts[id].length),
+      blockedPart = index.cohorts[firstCohort][0].path;
+    let facadeAttempts = 0,
+      facadeReleases = 0,
+      blockFacade = true;
+    const recoveringFacade = await context.createStaticDelivery(async (name) => {
+      if (name === blockedPart) {
+        facadeAttempts++;
+        if (blockFacade)
+          return {
+            ok: true,
+            body: {
+              getReader: () => ({
+                read: () => new Promise(() => {}),
+                cancel: () => facadeCancel,
+                releaseLock: () => facadeReleases++,
+              }),
+            },
+          };
+      }
+      return fetch(name);
+    }, '');
+    try {
+      let timer;
+      const failed = await Promise.race([
+        recoveringFacade
+          .runtimeSnapshot({
+            cohort: [firstCohort],
+            fields: ['records'],
+            deadline: Date.now() + 20,
+          })
+          .then(
+            () => ({ success: true }),
+            (error) => ({ error }),
+          ),
+        new Promise((resolve) => {
+          timer = setTimeout(() => resolve({ stuck: true }), 200);
+        }),
+      ]);
+      clearTimeout(timer);
+      assert(!failed.stuck, 'facade cleanup cannot await an unsettled cancel');
+      assert.match(failed.error.message, /deadline|cancelled/);
+      assert.strictEqual(facadeReleases, 1);
+      blockFacade = false;
+      assert(
+        Array.isArray(
+          (await recoveringFacade.runtimeSnapshot({ cohort: [firstCohort], fields: ['records'] }))
+            .records,
+        ),
+      );
+      assert(facadeAttempts >= 2, 'facade retry starts a fresh transfer');
+    } finally {
+      unblockFacadeCancel();
+    }
+    const rejectingBody = (label) => ({
+      ok: true,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            throw Error('original ' + label + ' read failure');
+          },
+          cancel: async () => {
+            throw Error('cleanup cancellation rejection');
+          },
+          releaseLock: () => {},
+        }),
+      },
+    });
+    const rejectingCodec = await api.open(async () => rejectingBody('codec'), short, index);
+    await assert.rejects(async () => {
+      for await (const chunk of rejectingCodec.streamRoot('snapshot.json')) {
+      }
+    }, /original codec read failure/);
+    const rejectingFacade = await context.createStaticDelivery(
+      async (name) => (name === blockedPart ? rejectingBody('facade') : fetch(name)),
+      '',
+    );
+    await assert.rejects(
+      () => rejectingFacade.runtimeSnapshot({ cohort: [firstCohort], fields: ['records'] }),
+      /original facade read failure/,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0)); // unhandled cancel rejection would fail Node
+    console.log('Filtered fitting page and unsettled cancellation retry regressions passed');
     const cohortFields = ['counts', 'vendors'],
       singleMax = Math.max(
         ...cohortFields.map((k) =>

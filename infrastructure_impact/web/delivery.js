@@ -14,25 +14,30 @@ async function createStaticDelivery(fetchPart, siteBase) {
     }
     const reader = response.body.getReader(),
       chunks = [];
-    let size = 0;
+    let size = 0,
+      complete = false;
     try {
       for (;;) {
         const entry = await (options.operation
           ? options.operation.run(reader.read())
           : reader.read());
-        if (entry.done) break;
-        size += entry.value.length;
-        if (size > max) {
-          await reader.cancel();
-          throw Error('Evidence response exceeds budget');
+        if (entry.done) {
+          complete = true;
+          break;
         }
+        size += entry.value.length;
+        if (size > max) throw Error('Evidence response exceeds budget');
         chunks.push(entry.value);
       }
     } finally {
+      if (!complete) options.operation?.close();
+      // A response's cancel promise is advisory, not a cleanup dependency.
       try {
-        await reader.cancel();
+        Promise.resolve(reader.cancel()).catch(() => {});
       } catch {}
-      reader.releaseLock();
+      try {
+        reader.releaseLock();
+      } catch {}
     }
     const raw = new Uint8Array(size);
     let offset = 0;

@@ -461,10 +461,7 @@
                   : Promise.race([reader.read(), expired]));
                 if (part.done) break;
                 size += part.value.length;
-                if (size > d.bytes) {
-                  await reader.cancel();
-                  fail('part size');
-                }
+                if (size > d.bytes) fail('part size');
                 pieces.push(part.value);
               }
               value = new Uint8Array(size);
@@ -474,10 +471,15 @@
                 offset += piece.length;
               }
             } finally {
+              controller.abort();
+              // Cancellation is advisory: an uncooperative response must not
+              // retain the request slot or poison the pending metadata cache.
               try {
-                await reader.cancel();
+                Promise.resolve(reader.cancel()).catch(() => {});
               } catch {}
-              reader.releaseLock();
+              try {
+                reader.releaseLock();
+              } catch {}
             }
           } else
             value = new Uint8Array(
@@ -896,6 +898,23 @@
               yield t;
             }
           }
+          if (options.skipValue?.(index)) {
+            // Validate/hash excluded values as bounded streams without creating
+            // a JSON string or object under the selected page's allowance.
+            const valueState = {
+              used: 0,
+              max: Math.min(limits.selected_bytes ?? 128000000, 128000000),
+            };
+            ownedValues.add(valueState);
+            for await (const chunk of streamTokens(one(), strings, shapes, {
+              ...options,
+              state,
+              valueState,
+              observer: (chunk) => hash.update(chunk),
+            })) {
+            }
+            continue;
+          }
           const allowance = Math.min(
             options.valueLimit?.(index) ?? limits.selected_bytes ?? 128000000,
             128000000,
@@ -908,7 +927,7 @@
           });
           const size = encoder.encode(text).length;
           options.beforeValue?.(size, index);
-          yield { value: json.parseStrict(text), bytes: size };
+          yield { value: json.parseStrict(text), bytes: size, index };
         }
         hash.update(']');
         if (
@@ -937,24 +956,24 @@
     }
     async function rangePage(r, offset, limit, predicate, binding, options) {
       let total = 0;
-      for await (const { value } of arrayItems(r, options)) if (predicate(value)) total++;
+      const positions = new Set();
+      for await (const { value, index } of arrayItems(r, options))
+        if (predicate(value)) {
+          if (total >= offset && positions.size < limit) positions.add(index);
+          total++;
+        }
       if (offset > total) fail('detail offset');
       const { quota, next_cursor } = pageBudget(total, binding, offset, limit),
         items = [];
-      let index = 0;
-      for await (const { value } of arrayItems(r, {
-        ...options,
-        valueLimit: () =>
-          index >= offset && items.length < limit
-            ? quota.remaining - (items.length ? 1 : 0)
-            : selectedMax,
-      })) {
-        if (!predicate(value)) continue;
-        if (index++ >= offset && items.length < limit) {
+      if (positions.size)
+        for await (const { value } of arrayItems(r, {
+          ...options,
+          skipValue: (index) => !positions.has(index),
+          valueLimit: () => quota.remaining - (items.length ? 1 : 0),
+        })) {
           quota.charge(json.measure(value, null, '', quota.remaining) + (items.length ? 1 : 0));
           items.push(value);
         }
-      }
       return { items, total, next_cursor };
     }
     const accepted = new WeakSet();
