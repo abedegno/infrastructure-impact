@@ -97,3 +97,50 @@ def test_local_stream_export_never_overwrites(tmp_path):
         export_root(out, "snapshot.json", target)
     with pytest.raises(ValueError):
         export_root(out, "snapshot.json", out / "new-export.json")
+
+
+def test_archive_binds_compressed_descriptor(tmp_path):
+    import copy
+
+    import pytest
+
+    from checks.switching_health import verify_publication_v2_archive
+
+    out = publish(dataset(), tmp_path, publication_format="v2")
+    reader = PublicationReader(out)
+    catalog = copy.deepcopy(reader.catalog)
+    catalog["archive"]["gzip"]["sha256"] = "0" * 64
+    with pytest.raises(AssertionError, match="Compressed archive"):
+        verify_publication_v2_archive(
+            (out / "snapshot-v2.json.gz").read_bytes(), catalog, reader.identity
+        )
+
+
+def test_archive_binds_every_scope_member_descriptor(tmp_path):
+    import copy
+
+    import pytest
+
+    from checks.switching_health import verify_publication_v2_archive
+
+    out = publish(dataset(), tmp_path, publication_format="v2")
+    reader = PublicationReader(out)
+    catalog = copy.deepcopy(reader.catalog)
+    archive = json.loads((out / "snapshot-v2.json").read_bytes())
+    scope = next(
+        a for a in archive["assets"] if a["path"] == catalog["archive"]["manifest"]["path"]
+    )
+    scope["data"]["data"]["members"][0]["bytes"] += 1
+    encoded = (json.dumps(scope["data"], ensure_ascii=False, separators=(",", ":")) + "\n").encode()
+    scope.update(
+        bytes=len(encoded),
+        sha256=sha256(encoded).hexdigest(),
+        path="data/v2/" + sha256(encoded).hexdigest() + ".json",
+    )
+    catalog["archive"]["manifest"] = {k: scope[k] for k in ("path", "sha256", "bytes")}
+    raw = (json.dumps(archive, ensure_ascii=False, separators=(",", ":")) + "\n").encode()
+    compressed = gzip.compress(raw, mtime=0)
+    catalog["archive"]["expanded"].update(bytes=len(raw), sha256=sha256(raw).hexdigest())
+    catalog["archive"]["gzip"].update(bytes=len(compressed), sha256=sha256(compressed).hexdigest())
+    with pytest.raises(AssertionError, match="member descriptor"):
+        verify_publication_v2_archive(compressed, catalog, reader.identity)

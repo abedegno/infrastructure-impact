@@ -518,6 +518,12 @@ def verify_publication_v2_archive(compressed, catalog, identity):
 
     codec = publication_codec()
     assert len(compressed) <= 8_000_000
+    compressed_descriptor = catalog["archive"]["gzip"]
+    codec.validate_descriptor(compressed_descriptor, paths={"snapshot-v2.json.gz"})
+    assert (
+        len(compressed) == compressed_descriptor["bytes"]
+        and hashlib.sha256(compressed).hexdigest() == compressed_descriptor["sha256"]
+    ), "Compressed archive descriptor mismatch"
     with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as stream:
         raw = stream.read(128_000_001)
     assert len(raw) <= 128_000_000
@@ -576,6 +582,12 @@ def verify_publication_v2_archive(compressed, catalog, identity):
     assert len(members) == len(scope["members"]) and set(members) == set(assets) - {
         scope_desc["path"]
     }
+    for descriptor in scope["members"]:
+        codec.validate_descriptor(descriptor)
+        assert all(
+            assets[descriptor["path"]][key] == descriptor[key]
+            for key in ("path", "sha256", "bytes")
+        ), "Archive member descriptor mismatch"
     root = fetch(scope["root"], kind="root")
     closure = {
         d["path"]

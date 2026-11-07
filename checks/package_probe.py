@@ -508,7 +508,7 @@ def main():
     )
 
 
-def target_import_candidate_probe(*, base_path="/"):
+def target_import_candidate_probe(*, base_path="/", publication_format="v1"):
     """Run the real worker from the isolated wheel using authored source bytes only."""
     import sqlite3
     import sys
@@ -591,11 +591,21 @@ def target_import_candidate_probe(*, base_path="/"):
                 lock_home=home,
                 accepted_preview=accepted,
                 base_path=base_path,
+                publication_format=publication_format,
             )
         assert result["outcome"] == "completed", result
         assert result["candidate"]["archive_monitor_passed"] is True
         assert 'src="' + base_path + "assets/" in (root / "stage/public/index.html").read_text()
-        published = json.loads((root / "stage/public/snapshot.json").read_bytes())
+        if publication_format == "v2":
+            from infrastructure_impact.application.publication_reader import PublicationReader
+
+            assert result["schema_version"] == 2 and result["publication_format"] == "v2"
+            assert result["candidate"]["archive_scope"] == "snapshot-v1"
+            published = json.loads(
+                b"".join(PublicationReader(root / "stage/public").stream_root("snapshot.json"))
+            )
+        else:
+            published = json.loads((root / "stage/public/snapshot.json").read_bytes())
         run = published["collector"]["last_run"]
         details = json.loads(run["details"])
         assert (run["outcome"], run["imported"], run["failures"]) == ("ok", 2, 0)
@@ -603,12 +613,12 @@ def target_import_candidate_probe(*, base_path="/"):
         assert details["unchanged"] == 0 and details["profile_id"] == selected.profile_id
         assert set(details["acquisition"].values()) == {"not_run"}
         assert database.read_bytes() == before
-        missing_monitor_probe(root)
+        missing_monitor_probe(root, publication_format=publication_format)
         with closing(sqlite3.connect(root / "stage/private/data/intel.sqlite3")) as db:
             assert db.execute("SELECT COUNT(*) FROM revisions").fetchone()[0] == 3
 
 
-def missing_monitor_probe(root):
+def missing_monitor_probe(root, *, publication_format="v1"):
     """A disposable installed-package copy missing either companion must fail closed."""
     import shutil
     import subprocess
@@ -642,6 +652,7 @@ def missing_monitor_probe(root):
                 "--worker",
                 str(database),
                 str(stage / "public"),
+                *(["v2"] if publication_format == "v2" else []),
             ],
             cwd=isolated,
             check=True,
