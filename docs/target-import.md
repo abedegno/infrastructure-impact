@@ -159,4 +159,7 @@ The closed Pages-target import route also rejects a complete public file tree ab
 1,000,000,000 bytes, before artifact inspection or recovery promotion. This is a
 conservative enforcement of the existing GitHub Pages site-size limit; the
 receipt retains generation and byte measurements on rejection. It does not
-change the other archive, part, index or monitor budgets.
+change the other archive, part or index budgets. The opt-in local v2 monitor uses
+a 32 MB default-download safety ceiling; v1 retains 20 MB. This download budget
+is separate from GitHub Pages' site-size limit. Further compression is deferred
+once the complete candidate fits, so import correctness and coverage take priority.

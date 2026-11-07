@@ -316,16 +316,17 @@ def check(origin, expected=None, *, verify_archive=False):
     with urlopen(origin, timeout=20) as response:
         assert response.status == 200, "Dashboard unavailable"
     checked_bytes = 0
+    default_budget = 20_000_000
 
     def read(path, budget, *, archive=False):
         nonlocal checked_bytes
         # Bound the actual read by both limits, including the one-byte overflow sentinel.
-        limit = budget if archive else min(budget, 20_000_000 - checked_bytes)
+        limit = budget if archive else min(budget, default_budget - checked_bytes)
         with urlopen(origin + path, timeout=30) as response:
             raw = response.read(limit + 1)
         if not archive:
             checked_bytes += len(raw)
-            assert checked_bytes <= 20_000_000, "Default publication exceeds monitor budget"
+            assert checked_bytes <= default_budget, "Default publication exceeds monitor budget"
         assert len(raw) <= budget, (
             "Publication manifest exceeds monitor budget"
             if path == "manifest.json"
@@ -358,6 +359,9 @@ def check(origin, expected=None, *, verify_archive=False):
         and index["schema_version"] == 2
     )
     v2_reader = None
+    if v2:
+        # Operational download ceiling, independent of GitHub Pages' site-size limit.
+        default_budget = 32_000_000
     if index is None:
         raw = verified("snapshot.json", 30_000_000)
         data = json.loads(raw)

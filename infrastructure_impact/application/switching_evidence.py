@@ -7,6 +7,7 @@ validation never guesses applicability from an OS family or model-like string.
 import hashlib
 import json
 import re
+from dataclasses import dataclass
 from decimal import Decimal
 from functools import lru_cache
 from importlib.resources import files
@@ -245,6 +246,32 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
     """
     _validate(report, "switching-evidence-v1.json")
     _validate_evidence_semantics(report, publication=publication, generated_at=generated_at)
+
+
+def _fingerprint(value):
+    """Strict JSON types plus exact canonical bytes; never Python equality."""
+    raw = _json(value)
+    return len(raw), hashlib.sha256(raw).digest()
+
+
+@dataclass(frozen=True, init=False)
+class _ValidatedEvidence:
+    """Invocation-local capability minted only after full evidence validation."""
+
+    _value: tuple
+    _context: bytes
+
+    def __init__(self, report, *, publication, generated_at):
+        validate_evidence(report, publication=publication, generated_at=generated_at)
+        object.__setattr__(self, "_value", _fingerprint(report))
+        object.__setattr__(self, "_context", _json([publication, generated_at]))
+
+    def require(self, report, *, publication, generated_at):
+        if (
+            _json([publication, generated_at]) != self._context
+            or _fingerprint(report) != self._value
+        ):
+            raise ValueError("Fresh evidence proof does not match complete value/context")
 
 
 def _validate_reviewed_link(claim, remediation, binding, claims):
@@ -499,6 +526,13 @@ def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET
                 _official(source["source_url"])
             except ValueError:
                 _official(source["source_url"], reference=True)
+
+
+def _validate_comparison_evidence(report, standalone, *, publication, generated_at):
+    """Compose standalone evidence from this call's full comparison proof."""
+    validate_comparison(report, publication=publication, generated_at=generated_at)
+    if _fingerprint(standalone) != _fingerprint(report["inputs"]["evidence"]):
+        raise ValueError("Switching asset and comparison evidence disagree")
 
 
 def _latest_retained_source(db, vendor, url):
@@ -778,6 +812,19 @@ def _attach_scores(claims, score_data):
 
 def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dict:
     """Allowlist every nested public field, then validate the complete contract."""
+    result = _project(inputs, publication=publication, generated_at=generated_at)
+    validate_evidence(result, publication=publication, generated_at=generated_at)
+    return result
+
+
+def _project_with_proof(inputs, *, publication, generated_at):
+    result = _project(inputs, publication=publication, generated_at=generated_at)
+    proof = _ValidatedEvidence(result, publication=publication, generated_at=generated_at)
+    return result, proof
+
+
+def _project(inputs: dict, *, publication: dict | None, generated_at: str) -> dict:
+    """Construct allowlisted fields; the validating wrappers own the boundary."""
     schema = json.loads(
         files("infrastructure_impact").joinpath("schemas/switching-evidence-v1.json").read_text()
     )
@@ -872,7 +919,6 @@ def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dic
         claims[claim["claim_id"]] = claim
     result["claims"] = list(claims.values())
     result["issues"] = sorted(set(result["issues"]))
-    validate_evidence(result, publication=publication, generated_at=generated_at)
     return result
 
 

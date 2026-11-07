@@ -179,7 +179,7 @@ def validate_result(value, *, publication_format="v1"):
         for key, limit in (
             ("expanded_bytes", 128_000_000),
             ("compressed_bytes", 8_000_000),
-            ("default_checked_bytes", 20_000_000),
+            ("default_checked_bytes", 32_000_000 if publication_format == "v2" else 20_000_000),
         )
     ):
         raise ValueError("worker capacity result")
@@ -703,7 +703,8 @@ def _worker(database, public, *, publication_format="v1"):
         evaluated = now()
         query.now = lambda: evaluated
         source_audit.now = lambda: evaluated
-        report()
+        if publication_format != "v2":
+            report()
         build(public, **({"publication_format": "v2"} if publication_format == "v2" else {}))
         if publication_format == "v2":
             from .publication_v2 import inspect_bundle, native_parity

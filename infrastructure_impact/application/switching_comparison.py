@@ -536,7 +536,50 @@ def build_report(
     generated_at: str,
     observation_end: str,
 ) -> dict:
-    contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
+    return _build_report(
+        evidence,
+        kev,
+        definition=definition,
+        publication=publication,
+        generated_at=generated_at,
+        observation_end=observation_end,
+    )
+
+
+def _project_comparison(inputs, kev, *, definition, publication, generated_at, observation_end):
+    """V2-only fresh projection/build composition; no proof crosses invocations."""
+    evidence, proof = contracts._project_with_proof(
+        inputs, publication=publication, generated_at=generated_at
+    )
+    result = _build_report(
+        evidence,
+        kev,
+        definition=definition,
+        publication=publication,
+        generated_at=generated_at,
+        observation_end=observation_end,
+        evidence_proof=proof,
+    )
+    proof.require(evidence, publication=publication, generated_at=generated_at)
+    return evidence, result
+
+
+def _build_report(
+    evidence: dict,
+    kev: dict,
+    *,
+    definition: dict,
+    publication: dict | None,
+    generated_at: str,
+    observation_end: str,
+    evidence_proof=None,
+) -> dict:
+    if evidence_proof is None:
+        contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
+    elif type(evidence_proof) is contracts._ValidatedEvidence:
+        evidence_proof.require(evidence, publication=publication, generated_at=generated_at)
+    else:
+        raise TypeError("Expected a fresh validated evidence capability")
     contracts._validate_definition(definition)
     if evidence["definition_sha256"] != contracts.definition_sha256(definition):
         raise ValueError("Evidence and comparison definitions differ")
@@ -549,6 +592,9 @@ def build_report(
     kev_reports.validate_report(kev)
     if kev["publication"] != publication or kev["generated_at"] != generated_at:
         raise ValueError("KEV and evidence must share their enclosing generation")
+    validated_inputs_json = (
+        contracts._json(dict(evidence=evidence, kev=kev)) if evidence_proof is not None else None
+    )
     report = dict(
         schema_version=1,
         publication=publication,
@@ -570,7 +616,11 @@ def build_report(
         ),
     )
     # _select_report makes the sole isolated copy before constructing output.
-    return _select_report(report, evaluated_at=generated_at)
+    return _select_report(
+        report,
+        evaluated_at=generated_at,
+        validated_inputs_json=validated_inputs_json,
+    )
 
 
 def select_report(
@@ -605,6 +655,25 @@ def select_report(
         generated_at=generated_at,
         validated_inputs_json=validated_inputs_json,
     )
+
+
+def _select_summaries(report, selections, *, evaluated_at):
+    """Eager native v2 batch with one fresh, complete source validation."""
+    contracts.validate_comparison(report)
+    source_proof = contracts._fingerprint(report)
+    inputs_proof = contracts._json(report["inputs"]) if report["inputs"] is not None else None
+    results = []
+    for options in selections:
+        if contracts._fingerprint(report) != source_proof:
+            raise ValueError("Native comparison source changed while selecting")
+        selected = _select_report(
+            report, **options, evaluated_at=evaluated_at, validated_inputs_json=inputs_proof
+        )
+        if contracts._fingerprint(report) != source_proof:
+            raise ValueError("Native comparison source changed while selecting")
+        results.append(summary(selected))
+        del selected  # Keep at most one full isolated input copy alive.
+    return results
 
 
 def _select_report(
@@ -686,10 +755,11 @@ def _select_report(
 def _validate_selection_output(result, validated_inputs_json):
     """Compose full input validation with validation of every generated field.
 
-    Only public selection supplies a proof, after fresh full comparison shape
-    and semantic validation in the same call. Build and other private callers
-    retain full output validation. The byte comparison is type-aware (unlike
-    Python equality, where True == 1) and also rejects any deepcopy/reducer
+    Public selection proves inputs through fresh full comparison validation.
+    The private v2 builder proves them through fresh evidence and KEV validation
+    plus definition/context checks; its proof predates every isolation copy.
+    Other callers retain full output validation. The byte comparison is type-aware
+    (unlike Python equality, where True == 1) and also rejects any deepcopy/reducer
     mutation. The nullable proxy is only for checking the other fields against
     the original schema; the returned report keeps its complete isolated inputs.
     """

@@ -249,6 +249,28 @@ def test_worker_pass_cannot_exceed_capacity_contract():
         module.validate_result(value)
 
 
+@pytest.mark.parametrize("publication_format,budget", [("v1", 20_000_000), ("v2", 32_000_000)])
+def test_worker_default_download_budget_boundary(publication_format, budget):
+    module = implementation()
+    value = module._empty("passed", publication_format=publication_format)
+    value.update(audit_passed=True, capacity_passed=True, candidate_validated=True)
+    value["candidate"].update(
+        generation="a" * 32,
+        manifest_sha256="b" * 64,
+        public_bytes=437_319_066,
+        expanded_bytes=39_411_194,
+        compressed_bytes=5_037_429,
+        default_checked_bytes=budget,
+        default_monitor_passed=True,
+        archive_monitor_passed=True,
+        parity_passed=True,
+    )
+    assert module.validate_result(value, publication_format=publication_format) == value
+    value["candidate"]["default_checked_bytes"] += 1
+    with pytest.raises(ValueError, match="capacity"):
+        module.validate_result(value, publication_format=publication_format)
+
+
 @pytest.mark.parametrize(
     "damage", ["manifest", "part", "schema", "csv", "selection", "switching", "private_extra"]
 )

@@ -20,6 +20,19 @@ acceptance gates. Test and replay acceptance must be reported separately.
 
 Native reducer construction also reserves intermediate containers before growth; its allowance can reject below final JSON-only capacity. Exact final response sizing is checked separately, and retained-scale fit still requires the acceptance gate.
 
-All archive, transfer, materialization and complete-site limits remain unchanged.
+After the maintainer's course correction, the opt-in v2 default-download ceiling
+is 32 MB rather than 20 MB. The retained generation already fits the 1 GB Pages
+site limit (437,319,066 bytes); its measured browser default download is
+24,642,098 bytes. The 20 MB ceiling was our operational target, not a GitHub
+requirement. Further table-layout/compression work is deferred in favor of import
+correctness and useful comparison data. V1 retains its 20 MB ceiling. Archive,
+part, index, materialization and complete-site limits remain unchanged.
+
+The first retained replay timed out after 2,400 seconds and is not accepted.
+The runtime correction reuses the producer's database query for cohort reporting
+and composes validation of unchanged evidence, while retaining a fresh independent
+native query and full-root parity checks. A new replay must pass independently;
+the old failed result is preserved.
+
 No decision permits dropping facts, declaring missing coverage complete, ranking
 vendor security by disclosure counts, or alleging concealed fixes.

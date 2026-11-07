@@ -34,13 +34,15 @@ from .release_assets import validate_asset
 
 
 @phase("publication.projection")
-def public_projection(data, public_release_urls=()):
+def public_projection(data, public_release_urls=(), *, publication_format="v1"):
     """The publication boundary never copies raw evidence or private review notes."""
     from ..plugins.registry import default_registry
     from .current_evidence import partition
     from .current_views import rebuild, validate_partition
     from .evidence_identity import record_key
+    from .publication_v2 import publication_format as validate_format
 
+    validate_format(publication_format)
     # Consume private frames before any general clone or public serialization.
     research = {k: v for k, v in data["research"].items() if k != "current_evidence_input"}
     context = data["research"].get("current_evidence_input", {"selections": [], "sources": []})
@@ -118,17 +120,31 @@ def public_projection(data, public_release_urls=()):
             switching_input["score_availability"] = switching_score_availability(
                 score_input, switching_input, data["records"]
             )
-        data["switching_evidence"] = project(
-            switching_input, publication=data.get("publication"), generated_at=data["generated_at"]
-        )
-        data["switching_comparison"] = build_switching(
-            data["switching_evidence"],
-            data["kev"],
-            definition=definition(),
-            publication=data.get("publication"),
-            generated_at=data["generated_at"],
-            observation_end=observation_end,
-        )
+        if publication_format == "v2":
+            from .switching_comparison import _project_comparison
+
+            data["switching_evidence"], data["switching_comparison"] = _project_comparison(
+                switching_input,
+                data["kev"],
+                definition=definition(),
+                publication=data.get("publication"),
+                generated_at=data["generated_at"],
+                observation_end=observation_end,
+            )
+        else:
+            data["switching_evidence"] = project(
+                switching_input,
+                publication=data.get("publication"),
+                generated_at=data["generated_at"],
+            )
+            data["switching_comparison"] = build_switching(
+                data["switching_evidence"],
+                data["kev"],
+                definition=definition(),
+                publication=data.get("publication"),
+                generated_at=data["generated_at"],
+                observation_end=observation_end,
+            )
     data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
     data["research"]["release_assets"] = [
@@ -241,16 +257,26 @@ def write_bundle(destination, data, *, publication_format="v1"):
     from .switching_evidence import validate_comparison, validate_evidence
 
     if "switching_comparison" in data:
-        validate_comparison(
-            data["switching_comparison"],
-            publication=data["publication"],
-            generated_at=data["generated_at"],
-        )
-        validate_evidence(
-            data["switching_evidence"],
-            publication=data["publication"],
-            generated_at=data["generated_at"],
-        )
+        if publication_format == "v2":
+            from .switching_evidence import _validate_comparison_evidence
+
+            _validate_comparison_evidence(
+                data["switching_comparison"],
+                data["switching_evidence"],
+                publication=data["publication"],
+                generated_at=data["generated_at"],
+            )
+        else:
+            validate_comparison(
+                data["switching_comparison"],
+                publication=data["publication"],
+                generated_at=data["generated_at"],
+            )
+            validate_evidence(
+                data["switching_evidence"],
+                publication=data["publication"],
+                generated_at=data["generated_at"],
+            )
         if (
             data["switching_comparison"]["evaluated_at"] != data["generated_at"]
             or data["switching_comparison"]["inputs"]["kev"]["evaluated_at"] != data["generated_at"]
@@ -514,7 +540,11 @@ def publish(data, root=None, public_release_urls=(), *, publication_format="v1")
     data = {**data, "publication": {"id": generation, "advisory_schema_version": 2}}
     if "current_evidence" in data:
         data["current_evidence"] = {**data["current_evidence"], "publication": data["publication"]}
-    data = public_projection(data, public_release_urls)
+    data = public_projection(
+        data,
+        public_release_urls,
+        **({"publication_format": "v2"} if publication_format == "v2" else {}),
+    )
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:
         write_bundle(stage, data, publication_format=publication_format)
@@ -540,6 +570,10 @@ def build(output=None, *, publication_format="v1"):
         data["coverage"] = coverage(
             db, data["records"], sorted(set(data["all_cves"]) | set(COHORT))
         )
+    if publication_format == "v2":
+        from .reporting import _report_from_state
+
+        _report_from_state(data)
     public_urls = [d["url"] for d in load_config().get("release_documents", [])]
     generation = publish(
         data, public_release_urls=public_urls, publication_format=publication_format

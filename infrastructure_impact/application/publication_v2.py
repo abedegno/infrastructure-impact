@@ -188,7 +188,12 @@ class Writer:
                 for i, (key, child) in enumerate(node.items()):
                     if i:
                         logical(b",")
-                    logical(json.dumps(key, ensure_ascii=False).encode(), json.dumps(key).encode())
+                    raw = json.dumps(key, ensure_ascii=False).encode()
+                    # ensure_ascii also escapes DEL, although it is an ASCII byte.
+                    ascii_raw = (
+                        raw if raw.isascii() and b"\x7f" not in raw else json.dumps(key).encode()
+                    )
+                    logical(raw, ascii_raw)
                     logical(b":")
                     walk(child, path + (key,), depth + 1)
                 logical(b"}")
@@ -206,7 +211,12 @@ class Writer:
                     node, ensure_ascii=False, allow_nan=False, separators=(",", ":")
                 ).encode()
                 token(item, len(raw))
-                logical(raw, json.dumps(node, allow_nan=False, separators=(",", ":")).encode())
+                ascii_raw = (
+                    raw
+                    if raw.isascii() and b"\x7f" not in raw
+                    else json.dumps(node, allow_nan=False, separators=(",", ":")).encode()
+                )
+                logical(raw, ascii_raw)
             if marked:
                 active.pop()
                 bound = dict(
@@ -592,14 +602,16 @@ def native_parity(database, directory, home, reader):
     from ..storage.repository import connect
     from .publication import public_projection
     from .query import state
-    from .switching_comparison import select_report, summary
+    from .switching_comparison import _select_summaries
 
     with closing(connect(database, read_only=True)) as db:
         native = state(db)
     native["publication"] = reader.identity["publication"]
     native["current_evidence"]["publication"] = reader.identity["publication"]
     projected = public_projection(
-        native, [d["url"] for d in load_config().get("release_documents", [])]
+        native,
+        [d["url"] for d in load_config().get("release_documents", [])],
+        publication_format="v2",
     )
     verify_projection(reader, projected)
     if (Path(directory) / "impact.csv").read_bytes() != csv_export(projected).encode():
@@ -608,14 +620,12 @@ def native_parity(database, directory, home, reader):
     actuals = reader.switching_selections(
         [dict(scope_level=scope) for scope in scopes], evaluated_at=projected["generated_at"]
     )
-    for scope, actual in zip(scopes, actuals, strict=True):
-        expected = summary(
-            select_report(
-                projected["switching_comparison"],
-                scope_level=scope,
-                evaluated_at=projected["generated_at"],
-            )
-        )
+    expected_summaries = _select_summaries(
+        projected["switching_comparison"],
+        [dict(scope_level=scope) for scope in scopes],
+        evaluated_at=projected["generated_at"],
+    )
+    for expected, actual in zip(expected_summaries, actuals, strict=True):
         if codec.digest(
             c.encode()
             for c in json.JSONEncoder(

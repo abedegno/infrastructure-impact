@@ -14,7 +14,7 @@ DEFAULT_LIMITS = dict(
     selected=128_000_000,
     cache=16_000_000,
     stream=1_000_000_000,
-    default=20_000_000,
+    default=32_000_000,
 )
 
 
