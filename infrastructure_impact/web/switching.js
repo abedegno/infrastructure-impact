@@ -808,6 +808,105 @@
       throw Error('Invalid full study envelope');
     return accept(selectUnchecked(report, options));
   }
+  // Full claims are validated once at the stream boundary, then discarded.
+  // This private projection is never passed off as a v1 evidence document.
+  async function selectClaims(metadata, evidence, kev, claims, options = {}) {
+    const reduced = [],
+      cap = 128000000,
+      validation = window.InfrastructureSwitchingContracts.evidenceStream(
+        evidence,
+        metadata.definition,
+      );
+    // Validate controls before reading the claim stream; retain all candidate
+    // dates because explicit bundle dates can select a claim outside its window.
+    const controlReport = {
+      ...metadata,
+      schema_version: 1,
+      inputs: { evidence: { ...evidence, claims: [] }, kev },
+    };
+    delete controlReport.representation;
+    delete controlReport.detail_ranges;
+    selectUnchecked(controlReport, options);
+    const requested = options.cve_ids ?? options.cveIds ?? null,
+      vendor = options.vendor ?? null,
+      scope = options.scope_level ?? options.scope ?? 'os_family';
+    let used = 0;
+    const pick = (value, keys) =>
+      Object.fromEntries(keys.filter((k) => Object.hasOwn(value, k)).map((k) => [k, value[k]]));
+    for await (const sourceClaim of claims) {
+      const claim = ownedJSON(sourceClaim);
+      validation.add(claim);
+      if (
+        (vendor !== null && claim.vendor !== vendor) ||
+        (requested !== null && !requested.includes(claim.cve_id)) ||
+        (scope === 'model_qualified' && claim.scope_level !== 'model_qualified')
+      )
+        continue;
+      const projection = pick(claim, [
+        'claim_id',
+        'vendor',
+        'advisory_id',
+        'cve_id',
+        'product_id',
+        'family',
+        'scope_level',
+        'status',
+        'scope',
+        'initial_published_at',
+        'conditional_affected',
+      ]);
+      projection.publisher = pick(claim.publisher, ['status']);
+      projection.bundle =
+        claim.bundle === null ? null : pick(claim.bundle, ['publisher_id', 'published_at']);
+      projection.remediations = claim.remediations.map((r) =>
+        pick(r, ['category', 'availability', 'product_ids', 'scope_binding']),
+      );
+      projection.scores = claim.scores.map((r) =>
+        pick(r, [
+          'scope',
+          'cve_id',
+          'version',
+          'value',
+          'provider',
+          'origin',
+          'preferred',
+          'validation',
+        ]),
+      );
+      projection.vendor_severity = (claim.vendor_severity || []).map((r) =>
+        pick(r, ['rating', 'scheme', 'namespace']),
+      );
+      projection.sources = [];
+      function collect(v) {
+        if (Array.isArray(v)) v.forEach(collect);
+        else if (v && typeof v === 'object') {
+          if (
+            Object.keys(v).sort().join(',') ===
+            'retrieved_at,source_locator,source_sha256,source_url'
+          )
+            projection.sources.push(v);
+          else Object.values(v).forEach(collect);
+        }
+      }
+      collect(claim);
+      used += new TextEncoder().encode(JSON.stringify(projection)).length;
+      if (used + validation.bytes > cap) throw Error('Study projection exceeds byte budget');
+      reduced.push(projection);
+    }
+    validation.finish();
+    const report = {
+      ...metadata,
+      schema_version: 1,
+      inputs: { evidence: { ...evidence, claims: reduced }, kev },
+    };
+    delete report.representation;
+    delete report.detail_ranges;
+    const selected = summary(selectUnchecked(report, options));
+    if (new TextEncoder().encode(JSON.stringify(selected)).length > cap)
+      throw Error('Study selection exceeds byte budget');
+    window.InfrastructureSwitchingContracts.summary(selected, metadata);
+    return selected;
+  }
   function summary(report) {
     const r = clone(report);
     delete r.inputs;
@@ -840,6 +939,7 @@
     prepareReport,
     severityBand,
     summary,
+    selectClaims,
     queryOptions,
     render: (...args) => window.InfrastructureSwitchingView.render(...args),
   };

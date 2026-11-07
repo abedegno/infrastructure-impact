@@ -1,6 +1,6 @@
 /* Exact JSON integers without reviver context, rawJSON, dependencies or global patches. */
 (() => {
-  function parse(text) {
+  function parse(text, strict = false) {
     let i = 0;
     const fail = () => {
       throw Error('Invalid lossless JSON');
@@ -8,14 +8,19 @@
     const space = () => {
       while (/[\x20\t\r\n]/.test(text[i] ?? '') && i < text.length) i++;
     };
-    function value(key = '') {
+    function value(key = '', depth = 0) {
+      if (strict && depth > 64) fail();
       space();
       const start = i,
         ch = text[i];
       if (ch === '"') {
         i++;
         while (i < text.length) {
-          if (text[i++] === '"') return JSON.parse(text.slice(start, i));
+          if (text[i++] === '"') {
+            const result = JSON.parse(text.slice(start, i));
+            if (strict && /[\uD800-\uDFFF]/u.test(result)) fail();
+            return result;
+          }
           if (text[i - 1] === '\\') i++;
         }
         fail();
@@ -34,11 +39,12 @@
           if (object) {
             space();
             if (text[i] !== '"') fail();
-            name = value();
+            name = value('', depth + 1);
+            if (strict && Object.hasOwn(result, name)) fail();
             space();
             if (text[i++] !== ':') fail();
           }
-          const v = value(object ? name : '');
+          const v = value(object ? name : '', depth + 1);
           if (object)
             Object.defineProperty(result, name, {
               value: v,
@@ -111,5 +117,10 @@
     }
     return encode(value, '', 0);
   }
-  window.InfrastructureJSON = { parse, stringify, clone: (value) => parse(stringify(value)) };
+  window.InfrastructureJSON = {
+    parse,
+    parseStrict: (text) => parse(text, true),
+    stringify,
+    clone: (value) => parse(stringify(value)),
+  };
 })();

@@ -271,8 +271,55 @@ console.log(
   assert.strictEqual(read().report.availability, 'unavailable');
   assert.strictEqual(context.switchingDownload('json'), null);
   assert.strictEqual(loaderCreations, 3, 'a new enclosing generation creates a new loader');
+  const overview = JSON.parse(JSON.stringify(report));
+  delete overview.inputs;
+  overview.schema_version = 2;
+  overview.representation = 'switching-overview';
+  let exportRequest, resolveExport;
+  const boundedDelivery = {
+    promise: Promise.resolve({
+      publication: report.publication,
+      generated_at: report.generated_at,
+      switchingSelection: (options, evaluatedAt) => {
+        exportRequest = { options, evaluatedAt };
+        return new Promise((resolve) => (resolveExport = resolve));
+      },
+    }),
+  };
+  const exporting = context.switchingExport('json', overview, boundedDelivery);
+  await tick();
+  const selectedSummary = api.summary(select());
+  resolveExport(selectedSummary);
+  assert.deepStrictEqual(
+    JSON.parse(await (await exporting).text()),
+    JSON.parse(JSON.stringify(selectedSummary)),
+  );
+  assert.strictEqual(
+    exportRequest.evaluatedAt,
+    overview.evaluated_at,
+    'export uses accepted evaluation clock',
+  );
+  assert.deepStrictEqual(
+    JSON.parse(JSON.stringify(exportRequest.options.cve_ids)),
+    overview.selection.requested_cve_ids,
+  );
+  context.createStaticDelivery = async () => ({
+    publication: report.publication,
+    generated_at: report.generated_at,
+    switchingOverview: async () => overview,
+    switchingSelection: async (options) => api.summary(select(options)),
+    switchingReport: () => {
+      throw Error('v2 must not hydrate full report');
+    },
+  });
+  vm.runInContext('switchingDelivery=null;', context);
+  await context.loadSwitching();
+  assert.strictEqual(read().report.representation, 'switching-overview');
+  await context.loadSwitching({ vendor: 'arista' });
+  assert.strictEqual(read().report.representation, 'summary');
+  assert.strictEqual(read().report.selection.requested_vendor, 'arista');
   console.log(
-    'Actual app ordering, failed/foreign generations, full-study isolation and accepted exports passed.',
+    'Actual app v1/v2 ordering, generations, default overview and accepted summary exports passed.',
   );
 })().catch((e) => {
   console.error(e);
@@ -353,6 +400,61 @@ assert(lazyHtml.includes('data-switching-detail="claims"'));
   await s.body.more();
   assert.strictEqual(batches[1].length, 25);
   assert(s.body.html.includes('50 of 61 shown'));
+  await s.body.more();
+  assert.strictEqual(batches[2].length, 11);
+  assert.strictEqual(s.body.button, null, 'all 61 claims accessible in three pages');
+  const diagnostics = surface('diagnostics'),
+    requests = [];
+  const summaryOnly = JSON.parse(JSON.stringify(many));
+  delete summaryOnly.inputs;
+  context.window.InfrastructureSwitchingView.mount(
+    diagnostics.root,
+    summaryOnly,
+    async () => {
+      throw Error('claims not requested');
+    },
+    async (request) => {
+      requests.push(request);
+      return {
+        items: [
+          { marker: 'FULL_DIAGNOSTIC_CALLBACK', attempts: Array.from({ length: 40 }, (_, i) => i) },
+        ],
+        next_cursor: request.cursor ? null : 'accepted-cursor',
+        total: 2,
+      };
+    },
+  );
+  diagnostics.detail.toggle();
+  await tick();
+  assert(diagnostics.body.html.includes('FULL_DIAGNOSTIC_CALLBACK'));
+  assert(diagnostics.body.html.includes('39'), 'diagnostics retain nested facts');
+  await diagnostics.body.more();
+  assert.strictEqual(requests[1].cursor, 'accepted-cursor');
+  assert.strictEqual(requests[1].limit, 25);
+  const staleSurface = surface('sources');
+  let finishStale;
+  context.window.InfrastructureSwitchingView.mount(
+    staleSurface.root,
+    summaryOnly,
+    async () => [],
+    () => new Promise((resolve) => (finishStale = resolve)),
+  );
+  staleSurface.detail.toggle();
+  staleSurface.detail.isConnected = false;
+  finishStale({
+    items: [
+      {
+        source_url: 'https://example.com/LATE_CALLBACK',
+        retrieved_at: null,
+        source_locator: null,
+        source_sha256: 'x',
+      },
+    ],
+    next_cursor: null,
+    total: 1,
+  });
+  await tick();
+  assert(!staleSurface.body.html.includes('LATE_CALLBACK'));
   const fail = surface('claims');
   let resolve;
   context.window.InfrastructureSwitchingView.mount(

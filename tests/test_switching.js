@@ -1,7 +1,7 @@
 const fs = require('fs'),
   vm = require('vm'),
   assert = require('assert');
-const context = { window: {}, console };
+const context = { window: {}, console, TextEncoder };
 vm.createContext(context);
 for (const name of ['kev', 'switching-contracts', 'switching'])
   vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), context);
@@ -130,4 +130,81 @@ for (const value of [NaN, Infinity, -Infinity]) {
     'nonfinite scores rejected before copy normalization',
   );
   assert.throws(() => contracts.fingerprint({ value }));
+}
+(async () => {
+  assert.strictEqual(typeof api.selectClaims, 'function', 'streamed reducer required');
+  for (const c of data.comparison_cases) {
+    const base = data.comparison_base_report;
+    const selected = await api.selectClaims(
+      base,
+      base.inputs.evidence,
+      base.inputs.kev,
+      (async function* () {
+        yield* base.inputs.evidence.claims;
+      })(),
+      c.options,
+    );
+    assert.deepStrictEqual(
+      JSON.parse(JSON.stringify(selected)),
+      JSON.parse(JSON.stringify(api.summary(api.selectReport(base, c.options)))),
+      c.name,
+    );
+  }
+  console.log('Streamed private projection query parity passed');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+(async () => {
+  const vectors = JSON.parse(fs.readFileSync('tests/fixtures/publication-v2-query-vectors.json'));
+  for (const c of vectors.cases) {
+    const base = vectors.report;
+    const selected = await api.selectClaims(
+      base,
+      base.inputs.evidence,
+      base.inputs.kev,
+      (async function* () {
+        yield* base.inputs.evidence.claims;
+      })(),
+      { ...c.options, evaluated_at: c.evaluated_at },
+    );
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(selected)), c.summary, c.name);
+    assert.strictEqual(api.csvExport(selected), c.csv, c.name + ' CSV');
+  }
+  console.log('Publication v2 shared cross-language query JSON and CSV vectors passed');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+(async () => {
+  const base = data.comparison_base_report,
+    claim = JSON.parse(JSON.stringify(base.inputs.evidence.claims[0]));
+  claim.product += ' tampered';
+  await assert.rejects(
+    () =>
+      api.selectClaims(
+        base,
+        base.inputs.evidence,
+        base.inputs.kev,
+        (async function* () {
+          yield claim;
+        })(),
+        {},
+      ),
+    /claim IDs/,
+  );
+  console.log('Streamed semantic identity validation passed');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+{
+  const evidence = JSON.parse(fs.readFileSync('tests/fixtures/publication-v2-reviewed-link.json'));
+  const validator = contracts.evidenceStream(evidence, data.comparison_base_report.definition);
+  for (const claim of evidence.claims) validator.add(claim);
+  validator.finish();
+  const missing = contracts.evidenceStream(evidence, data.comparison_base_report.definition);
+  for (const claim of evidence.claims.filter((c) => c.status !== 'fixed')) missing.add(claim);
+  assert.throws(() => missing.finish(), /reviewed section/);
+  console.log('Streamed reviewed-section cross-claim linkage passed');
 }
