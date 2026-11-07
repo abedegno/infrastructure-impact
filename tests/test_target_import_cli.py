@@ -196,3 +196,54 @@ def test_stage_cli_validates_preview_before_stage(tmp_path, monkeypatch, capsys)
             ]
         )
     assert error.value.code == 2 and not output.exists()
+
+
+@pytest.mark.parametrize("operation", ["import", "invalid_receipt_cli"])
+def test_fresh_stage_startup_never_resolves_ambient_paths(tmp_path, operation):
+    """Catch import-time roots that already-imported in-process sentinels miss."""
+    import subprocess
+    import sys
+    import textwrap
+
+    receipt = tmp_path / "invalid.json"
+    receipt.write_text('{"invalid": "preview"}')
+    script = textwrap.dedent("""
+        import os
+        import sys
+        from pathlib import Path
+        from infrastructure_impact.settings import Paths
+
+        def forbidden():
+            raise AssertionError("ambient Paths.from_env invoked during fresh startup")
+
+        Paths.from_env = forbidden
+        before = dict(os.environ)
+        root = Path(sys.argv[1])
+        if sys.argv[2] == "import":
+            import infrastructure_impact.application.target_import_stage
+        else:
+            from infrastructure_impact.cli import main
+            from infrastructure_impact.collection.target_import_profiles import PROFILE_ID
+            try:
+                main(["target-import", "stage", "--database", str(root / "source/data/intel.sqlite3"),
+                      "--profile", PROFILE_ID, "--output", str(root / "stage"),
+                      "--preview", str(root / "invalid.json"), "--home", str(root / "source")])
+            except SystemExit as error:
+                assert error.code == 2
+            else:
+                raise AssertionError("invalid preview was accepted")
+        assert dict(os.environ) == before
+        assert sorted(p.name for p in root.iterdir()) == ["invalid.json"]
+        print("isolated startup confirmed")
+    """)
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", script, str(tmp_path), operation],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "isolated startup confirmed\n"
+    if operation == "invalid_receipt_cli":
+        assert "target_import_failed" in result.stderr
