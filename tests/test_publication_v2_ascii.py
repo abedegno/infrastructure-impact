@@ -13,6 +13,27 @@ IDENTITY = {
 }
 
 
+def test_root_hash_work_scales_with_ranges_not_unindexed_values(tmp_path, monkeypatch):
+    from infrastructure_impact.application import publication_v2
+
+    empty_hashes = []
+    original = publication_v2.sha256
+
+    def measured(raw=b""):
+        if not raw:
+            empty_hashes.append(None)
+        return original(raw)
+
+    monkeypatch.setattr(publication_v2, "sha256", measured)
+    value = {"values": ["ordinary-value"] * 200}
+    writer = Writer(tmp_path, IDENTITY)
+    writer.root("ordinary.json", value)
+    logical = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode()
+    assert writer.root_data["ordinary.json"]["logical"]["sha256"] == sha256(logical).hexdigest()
+    assert writer.root_ranges["ordinary.json"][()]["logical_sha256"] == sha256(logical).hexdigest()
+    assert len(empty_hashes) <= 4
+
+
 def test_ascii_keys_and_strings_are_serialized_once(tmp_path, monkeypatch):
     original = json.dumps
     calls = []

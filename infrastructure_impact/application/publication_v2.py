@@ -117,14 +117,16 @@ class Writer:
     def root(self, name, value, *, alias=None):
         pages, ranges, active = [], [], []
         tokens, encoded, decoded, position, page_first = [], 0, 0, 0, 0
-        root_hash, root_bytes, ascii_hash, ascii_bytes = sha256(), 0, sha256(), 0
+        root_hash, root_bytes, ascii_bytes = sha256(), 0, 0
+        ascii_hash = sha256() if name == "snapshot.json" else None
 
         def logical(raw, ascii_raw=None):
             nonlocal root_bytes, ascii_bytes
             ascii_raw = raw if ascii_raw is None else ascii_raw
             root_hash.update(raw)
             root_bytes += len(raw)
-            ascii_hash.update(ascii_raw)
+            if ascii_hash is not None:
+                ascii_hash.update(ascii_raw)
             ascii_bytes += len(ascii_raw)
             if root_bytes > SITE or ascii_bytes > SITE:
                 raise ValueError("root stream exceeds 1 GB")
@@ -172,9 +174,12 @@ class Writer:
                 else None
             )
             marked = self.ranged(name, path) or detail_kind is not None
-            marker = dict(path=path, first=position, hash=sha256(), size=0)
             if marked:
-                active.append(marker)
+                marker = dict(
+                    path=path, first=position, hash=sha256() if path else root_hash, size=0
+                )
+                if path:
+                    active.append(marker)
             if alias is not None and path == ("inputs", "evidence"):
                 token([-3, "switching-evidence.json"], 1)
                 # Exact equality is proved by caller. Stream canonical literals
@@ -230,12 +235,13 @@ class Writer:
                 )
                 logical(raw, ascii_raw)
             if marked:
-                active.pop()
+                if path:
+                    active.pop()
                 bound = dict(
                     root=name,
                     first_token=marker["first"],
                     end_token=position,
-                    logical_bytes=marker["size"],
+                    logical_bytes=marker["size"] if path else root_bytes,
                     logical_sha256=marker["hash"].hexdigest(),
                 )
                 if detail_kind is not None:
