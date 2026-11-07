@@ -89,7 +89,8 @@
         "backup",
         "input_budget",
         "received_budget",
-        "attempt_budget"
+        "attempt_budget",
+        "existing_identity_conflict"
       ]
     },
     "targets": {
@@ -144,7 +145,8 @@
               "backup",
               "input_budget",
               "received_budget",
-              "attempt_budget"
+              "attempt_budget",
+              "existing_identity_conflict"
             ]
           },
           "before_keys": {

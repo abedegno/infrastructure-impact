@@ -80,7 +80,7 @@ def test_unknown_profile_has_no_filesystem_startup(tmp_path, monkeypatch):
     assert error.value.code == 2 and list(tmp_path.iterdir()) == []
 
 
-def test_stage_is_not_yet_runnable(tmp_path):
+def test_stage_requires_explicit_arguments(tmp_path):
     with pytest.raises(SystemExit) as error:
         main(["target-import", "stage"])
     assert error.value.code == 2 and list(tmp_path.iterdir()) == []
@@ -141,3 +141,58 @@ def test_explicit_home_lock_contends_with_real_collector(tmp_path, monkeypatch):
     with writer_lock() as ordinary:
         assert ordinary
     assert not (home / "custom.sqlite3").exists()
+
+
+def test_stage_cli_validates_preview_before_stage(tmp_path, monkeypatch, capsys):
+    from infrastructure_impact.application import target_import_stage
+    from infrastructure_impact.application.target_import import preview
+    from infrastructure_impact.application.target_import_contracts import preview_bytes
+
+    database = tmp_path / "source/data/intel.sqlite3"
+    with closing(connect(database)):
+        pass
+    preview_path = tmp_path / "preview.json"
+    preview_path.write_bytes(preview_bytes(preview(database, PROFILE_ID)))
+    output = tmp_path / "stage"
+    with writer_lock(home=database.parent.parent):
+        code = main(
+            [
+                "target-import",
+                "stage",
+                "--database",
+                str(database),
+                "--profile",
+                PROFILE_ID,
+                "--output",
+                str(output),
+                "--preview",
+                str(preview_path),
+                "--home",
+                str(database.parent.parent),
+            ]
+        )
+    result = json.loads(capsys.readouterr().out)
+    assert code != 0 and result["outcome"] == "skipped_writer_lock"
+    assert not output.exists()
+    preview_path.write_text('{"private":"invalid receipt"}')
+    monkeypatch.setattr(
+        target_import_stage, "stage", lambda *a, **kw: pytest.fail("invalid receipt reached stage")
+    )
+    with pytest.raises(SystemExit) as error:
+        main(
+            [
+                "target-import",
+                "stage",
+                "--database",
+                str(database),
+                "--profile",
+                PROFILE_ID,
+                "--output",
+                str(output),
+                "--preview",
+                str(preview_path),
+                "--home",
+                str(database.parent.parent),
+            ]
+        )
+    assert error.value.code == 2 and not output.exists()

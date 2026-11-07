@@ -147,10 +147,14 @@ def main(argv=None):
         "target-import", help="Preview exact imports against an explicit vault"
     )
     target_modes = target_import.add_subparsers(dest="target_import_mode", required=True)
-    target_preview = target_modes.add_parser("preview")
-    target_preview.add_argument("--database", type=Path, required=True)
-    target_preview.add_argument("--profile", required=True)
-    target_preview.add_argument("--output", type=Path, required=True)
+    for mode in ("preview", "stage"):
+        command = target_modes.add_parser(mode)
+        command.add_argument("--database", type=Path, required=True)
+        command.add_argument("--profile", required=True)
+        command.add_argument("--output", type=Path, required=True)
+        if mode == "stage":
+            command.add_argument("--preview", type=Path, required=True)
+            command.add_argument("--home", type=Path, required=True)
     args = parser.parse_args(argv)
     if args.command == "target-import":
         return _target_import(args, parser)
@@ -509,7 +513,7 @@ def _target_import(args, parser):
     import sqlite3
 
     from .application import target_import
-    from .application.target_import_contracts import preview_bytes
+    from .application.target_import_contracts import load_preview, preview_bytes, result_bytes
     from .collection.target_import_profiles import profile
 
     try:
@@ -524,6 +528,28 @@ def _target_import(args, parser):
             for suffix in ("", "-wal", "-shm", "-journal")
         ):
             raise ValueError("unsafe_output_path")
+        if args.target_import_mode == "stage":
+            from .application.target_import_stage import stage
+
+            accepted = load_preview(args.preview, selected)
+            result = stage(
+                args.database,
+                selected,
+                accepted["fingerprint"],
+                args.output,
+                lock_home=args.home,
+                accepted_preview=accepted,
+            )
+            payload = result_bytes(result, selected=selected)
+            if args.output.is_dir():
+                receipt_path = args.output / "result.json"
+                fd = os.open(
+                    receipt_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600
+                )
+                with os.fdopen(fd, "wb") as stream:
+                    stream.write(payload)
+            print(payload.decode("utf-8"), end="")
+            return 0 if result["outcome"] == "completed" else 1
         result = target_import.preview(args.database, selected.profile_id)
         payload = preview_bytes(result, selected=selected)
         fd = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
