@@ -385,6 +385,7 @@ def check(origin, expected=None, *, verify_archive=False):
     assert data["publication"]["id"] == manifest["generation"], "Mixed publication manifest"
     current_availability = "unavailable"
     current_counts = dict(current=None, excluded=None, retained_total=None)
+    retained = []
     capability = index.get("current_evidence") if index is not None else None
     marker = data.get("current_evidence_version")
     if capability is not None or marker is not None:
@@ -402,7 +403,6 @@ def check(origin, expected=None, *, verify_archive=False):
         root_report = json.loads(verified("current-evidence.json", 2_000_000))
         validate_current_evidence(root_report, data["publication"], data["generated_at"], schemas)
         assert root_report == report, "Current-evidence root differs from index"
-        retained = []
         membership = []
         assert len(capability["retained"]) <= 1000, "Oversized retained index"
         for fragment in capability["retained"]:
@@ -478,6 +478,7 @@ def check(origin, expected=None, *, verify_archive=False):
                 assert json.dumps(identity, sort_keys=True) == json.dumps(
                     decision["target"], sort_keys=True
                 )
+                retained.append(wrapper["record"])
             fields = ("vendor", "advisory_id", "revision_id", "source_url", "sha256")
             identities = [
                 json.dumps({k: r[k] for k in fields}, sort_keys=True) for r in data["records"]
@@ -526,6 +527,18 @@ def check(origin, expected=None, *, verify_archive=False):
     if "kev" in data or "kev.json" in manifest["sha256"]:
         report = json.loads(verified("kev.json", 8_000_000))
         scope = set(data.get("all_cves", [])) | set(data.get("benchmark_cohort", {}))
+        # KEV context also covers excluded historical records. Derive it from the
+        # verified retained wrappers, never an unbound retained_cves declaration.
+        for record in retained:
+            cves = record.get("cves")
+            assert (
+                isinstance(cves, list)
+                and all(
+                    isinstance(cid, str) and re.fullmatch(r"CVE-\d{4}-\d{4,}", cid) for cid in cves
+                )
+                and len(cves) == len(set(cves))
+            ), "Malformed retained CVE scope"
+            scope.update(cves)
         validate_kev_report(report, data["publication"], data["generated_at"], scope)
         assert report == data.get("kev"), "KEV report differs from bootstrap"
         kev_availability = report["source"]["availability"]

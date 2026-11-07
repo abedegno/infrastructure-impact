@@ -18,9 +18,10 @@ The [local CVE reconciliation workflow](docs/CVE_RECONCILIATION.md)
 compares a verified official snapshot with an explicit collection baseline,
 including partial scans and missing reference evidence. It has no hosted activation.
 
-The [v0.12.0 candidate](docs/releases/0.12.0.md) adds exact-target refresh and
+The [v0.12.0 release](docs/releases/0.12.0.md) adds exact-target refresh and
 visible current-evidence dispositions while preserving labelled historical records.
-Source release and hosted activation remain separate review steps.
+The [v0.12.1 candidate](docs/releases/0.12.1.md) corrects monitoring of retained-only
+KEV context. Source release and hosted activation remain separate review steps.
 
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.
