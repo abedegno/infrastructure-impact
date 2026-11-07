@@ -5,7 +5,7 @@ const fs = require('fs'),
 const fixture = JSON.parse(fs.readFileSync('tests/fixtures/switching-cases.json'));
 const context = { window: {}, URL, console, Blob, setTimeout };
 vm.createContext(context);
-for (const file of ['kev', 'switching-contracts', 'switching'])
+for (const file of ['lossless-json', 'kev', 'switching-contracts', 'switching'])
   vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${file}.js`, 'utf8'), context);
 assert.strictEqual(
   typeof context.window.InfrastructureSwitching.render,
@@ -289,6 +289,25 @@ console.log(
   const exporting = context.switchingExport('json', overview, boundedDelivery);
   await tick();
   const selectedSummary = api.summary(select());
+  const jsonApi = context.window.InfrastructureJSON,
+    compactBytes = jsonApi.measure(selectedSummary);
+  assert(jsonApi.measure(selectedSummary, null, 2) > compactBytes);
+  const originalBlob = context.Blob;
+  let blobAllocations = 0;
+  context.Blob = function () {
+    blobAllocations++;
+    throw Error('unexpected Blob allocation');
+  };
+  try {
+    assert.throws(
+      () => context.switchingDownload('json', selectedSummary, { max_bytes: compactBytes }),
+      /budget/,
+    );
+    assert.strictEqual(blobAllocations, 0);
+  } finally {
+    context.Blob = originalBlob;
+  }
+
   resolveExport(selectedSummary);
   assert.deepStrictEqual(
     JSON.parse(await (await exporting).text()),

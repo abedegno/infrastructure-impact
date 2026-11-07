@@ -2,9 +2,13 @@
 async function createStaticDelivery(fetchPart, siteBase) {
   const response = await fetchPart(siteBase + 'data/index.json', { cache: 'no-cache' });
   if (!response.ok) throw Error('Publication index unavailable. Reload after deployment.');
-  async function boundedBytes(response, max) {
+  async function boundedBytes(response, max, options = {}) {
     if (!response.body?.getReader) {
-      const raw = new Uint8Array(await response.arrayBuffer());
+      const raw = new Uint8Array(
+        await (options.operation
+          ? options.operation.run(response.arrayBuffer())
+          : response.arrayBuffer()),
+      );
       if (raw.length > max) throw Error('Evidence response exceeds budget');
       return raw;
     }
@@ -13,7 +17,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
     let size = 0;
     try {
       for (;;) {
-        const entry = await reader.read();
+        const entry = await (options.operation
+          ? options.operation.run(reader.read())
+          : reader.read());
         if (entry.done) break;
         size += entry.value.length;
         if (size > max) {
@@ -23,6 +29,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
         chunks.push(entry.value);
       }
     } finally {
+      try {
+        await reader.cancel();
+      } catch {}
       reader.releaseLock();
     }
     const raw = new Uint8Array(size);
@@ -41,7 +50,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
   const decodedIndex = window.InfrastructureJSON.parse(text),
     index =
       decodedIndex.schema_version === 2
-        ? window.InfrastructureJSON.parseStrict(text)
+        ? window.InfrastructureJSON.parseStrict(text, { transport: true })
         : decodedIndex;
   if (
     ![1, 2].includes(index.schema_version) ||
@@ -51,20 +60,8 @@ async function createStaticDelivery(fetchPart, siteBase) {
   )
     throw Error('Invalid publication index');
   const cache = new Map(),
-    waiting = [];
-  let requests = 0;
-  const requestSlots = {
-    async acquire() {
-      if (requests >= 6) await new Promise((resolve) => waiting.push(resolve));
-      else requests++;
-    },
-    release() {
-      const next = waiting.shift();
-      if (next) next();
-      else requests--;
-    },
-  };
-  async function read(descriptor, full = false) {
+    requestSlots = index.schema_version === 2 ? window.InfrastructureJSON.requestPool() : null;
+  async function read(descriptor, full = false, options = {}) {
     if (
       !descriptor ||
       !(full
@@ -82,13 +79,16 @@ async function createStaticDelivery(fetchPart, siteBase) {
       cache.set(
         key,
         (async () => {
-          if (index.schema_version === 2) await requestSlots.acquire();
+          if (index.schema_version === 2) await requestSlots.acquire(options.operation?.signal);
           try {
-            const r = await fetchPart(siteBase + descriptor.path);
+            const request = fetchPart(siteBase + descriptor.path, {
+              signal: options.operation?.signal,
+            });
+            const r = await (options.operation ? options.operation.run(request) : request);
             if (!r.ok) throw Error('Evidence part unavailable. Reload after deployment.');
             const raw =
               index.schema_version === 2
-                ? await boundedBytes(r, full === 'catalog' ? 2000000 : descriptor.bytes)
+                ? await boundedBytes(r, full === 'catalog' ? 2000000 : descriptor.bytes, options)
                 : new Uint8Array(await r.arrayBuffer());
             if (full === 'catalog' && raw.length > 2000000)
               throw Error('Publication catalog exceeds budget');
@@ -102,7 +102,12 @@ async function createStaticDelivery(fetchPart, siteBase) {
               index.schema_version === 2
                 ? window.InfrastructureJSON.parseStrict
                 : window.InfrastructureJSON.parse
-            )(new TextDecoder('utf-8', { fatal: true }).decode(raw));
+            )(
+              new TextDecoder('utf-8', { fatal: true }).decode(raw),
+              index.schema_version === 2
+                ? { transport: full === 'catalog' ? true : (path) => path[0] !== 'data' }
+                : undefined,
+            );
             if (
               value.publication?.id !== index.publication.id ||
               value.publication?.advisory_schema_version !==
@@ -140,10 +145,8 @@ async function createStaticDelivery(fetchPart, siteBase) {
       index,
       {
         requestSlots,
-        cohortReader: async ({ cohort, fields }) => {
-          const value = await load(cohort);
-          return fields ? Object.fromEntries(fields.map((k) => [k, value[k]])) : value;
-        },
+        cohortReader: ({ cohort, fields, ...options }) =>
+          boundedCohort(cohort, false, fields, options),
       },
     );
   }
@@ -164,7 +167,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     return results.flat();
   }
   let evidencePromise;
-  async function currentEvidence() {
+  async function currentEvidence(options = {}) {
     if (!evidencePromise)
       evidencePromise = (async () => {
         const hasCapability = Object.hasOwn(index, 'current_evidence'),
@@ -182,7 +185,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
         );
         const capability = index.current_evidence;
         const report = validateCurrentEvidence(
-          await read(capability.report),
+          await read(capability.report, false, options),
           index.publication,
           index.generated_at,
         );
@@ -235,7 +238,125 @@ async function createStaticDelivery(fetchPart, siteBase) {
       });
     return evidencePromise;
   }
+  async function boundedCohort(ids, includeChanges = false, fields = null, options = {}) {
+    if (!options.operation)
+      return window.InfrastructurePublicationV2.consume(options, (next) =>
+        boundedCohort(ids, includeChanges, fields, next),
+      );
+    const json = window.InfrastructureJSON,
+      max = Math.min(options.max_bytes ?? 128000000, 128000000),
+      quota = json.budget(max);
+    const cohort = [...new Set(ids ?? Object.keys(common.benchmark_cohort))].sort();
+    if (cohort.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))) throw Error('Invalid CVE cohort');
+    const whole =
+      cohort.length > 0 &&
+      cohort.length === common.all_cves.length &&
+      cohort.every((id, i) => id === common.all_cves[i]);
+    if (whole && !fields)
+      return publicationV2.materializeRoot('snapshot.json', { ...options, max_bytes: max });
+    if (cohort.length > 200 && !whole) throw Error('Select up to 200 CVEs, or the whole archive');
+    if (
+      cohort.some(
+        (id) =>
+          (common.all_cves.includes(id) || Object.hasOwn(common.benchmark_cohort, id)) &&
+          !Object.hasOwn(index.cohorts, id),
+      )
+    )
+      throw Error('Publication cohort index is incomplete');
+    const wanted = fields ? new Set(fields) : null,
+      needs = (k) => !wanted || wanted.has(k),
+      result = {};
+    quota.charge(2);
+    let fieldCount = 0;
+    function add(key, value) {
+      quota.charge(
+        json.stringBytes(key) +
+          1 +
+          (fieldCount++ ? 1 : 0) +
+          json.measure(value, null, '', quota.remaining),
+      );
+      Object.defineProperty(result, key, {
+        value: json.clone(value),
+        enumerable: true,
+        writable: true,
+      });
+    }
+    const dynamic = new Set([
+      'records',
+      'coverage',
+      'timeline',
+      'scorecards',
+      'changes',
+      'current_evidence',
+    ]);
+    for (const key of Object.keys(common))
+      if (!dynamic.has(key) && needs(key)) add(key, common[key]);
+    if (needs('current_evidence')) add('current_evidence', await currentEvidence(options));
+    if (needs('records')) add('records', []);
+    if (needs('coverage')) add('coverage', []);
+    if (needs('changes')) add('changes', []);
+    if (needs('timeline')) add('timeline', { ...common.timeline, events: [] });
+    if (needs('scorecards'))
+      add('scorecards', {
+        ...common.scorecards,
+        vendors: common.scorecards.vendors.map((v) => ({ ...v, cases: [] })),
+      });
+    if (wanted)
+      for (const key of wanted)
+        if (!Object.hasOwn(result, key)) throw Error('Unknown runtime field');
+    const records = new Map(),
+      events = new Map(),
+      cases = new Map();
+    const routeKinds =
+      needs('records') || needs('coverage') || needs('timeline') || needs('scorecards');
+    const descriptors = routeKinds
+      ? [
+          ...new Map(
+            cohort.flatMap((id) => index.cohorts[id] || []).map((d) => [d.path, d]),
+          ).values(),
+        ]
+      : [];
+    for (const d of descriptors) {
+      // Ordinary parts contain literal JSON (no reference expansion). Their
+      // complete encoded envelope bounds every retained row before parsing.
+      quota.charge(d.bytes + 128);
+      const rows = await read(d, false, options);
+      for (const row of rows) {
+        if (row.kind === 'record' && needs('records')) {
+          if (!records.has(row.index))
+            records.set(row.index, { record: json.clone(row.record), assessments: new Map() });
+          for (const [i, a] of row.assessments)
+            records.get(row.index).assessments.set(i, json.clone(a));
+        } else if (row.kind === 'timeline' && needs('timeline')) events.set(row.index, row.value);
+        else if (row.kind === 'coverage' && needs('coverage')) result.coverage.push(row.value);
+        else if (row.kind === 'scorecard' && needs('scorecards')) {
+          if (!cases.has(row.vendor)) cases.set(row.vendor, []);
+          cases.get(row.vendor).push(row.value);
+        } else if (!['record', 'timeline', 'coverage', 'scorecard'].includes(row.kind))
+          throw Error('Unsupported evidence row');
+      }
+    }
+    if (needs('records'))
+      result.records = [...records]
+        .sort(([a], [b]) => a - b)
+        .map(([, r]) => ({
+          ...r.record,
+          assessments: [...r.assessments].sort(([a], [b]) => a - b).map(([, a]) => a),
+        }));
+    if (needs('timeline'))
+      result.timeline.events = [...events].sort(([a], [b]) => a - b).map(([, event]) => event);
+    if (needs('scorecards'))
+      for (const vendor of result.scorecards.vendors) vendor.cases = cases.get(vendor.vendor) || [];
+    if (includeChanges && needs('changes'))
+      for (const d of index.changes) {
+        quota.charge(d.bytes + 1);
+        for (const value of await read(d, false, options)) result.changes.push(value);
+      }
+    json.measure(result, null, '', max);
+    return result;
+  }
   const load = async function (ids, includeChanges = false) {
+    if (publicationV2) return boundedCohort(ids, includeChanges);
     const report = await currentEvidence();
     const cohort = [...new Set(ids ?? Object.keys(common.benchmark_cohort))].sort();
     if (cohort.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))) throw Error('Invalid CVE cohort');
@@ -312,15 +433,24 @@ async function createStaticDelivery(fetchPart, siteBase) {
     };
   };
   load.currentEvidence = async () => window.InfrastructureJSON.clone(await currentEvidence());
-  load.retained = async (ids = null) => {
-    const report = await currentEvidence();
+  load.retained = async (ids = null, options = {}) => {
+    if (publicationV2 && !options.operation)
+      return window.InfrastructurePublicationV2.consume(options, (next) =>
+        load.retained(ids, next),
+      );
+    const quota = publicationV2
+      ? window.InfrastructureJSON.budget(Math.min(options.max_bytes ?? 128000000, 128000000))
+      : null;
+    quota?.charge(2);
+    const report = await currentEvidence(options);
     if (!Object.hasOwn(index, 'current_evidence')) return [];
     const selected = index.current_evidence.retained.filter(
       (p) => ids === null || p.cve_ids.some((id) => ids.includes(id)),
     );
     const rows = [];
     for (const entry of selected) {
-      const items = await read(entry.part);
+      quota?.charge(entry.part.bytes + 1);
+      const items = await read(entry.part, false, options);
       if (
         !Array.isArray(items) ||
         items.length !== entry.decision_ids.length ||
@@ -551,11 +681,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     load.switchingSelection = publicationV2.switchingSelection;
     load.switchingClaims = publicationV2.switchingClaims;
     load.switchingDetails = publicationV2.switchingDetails;
-    load.runtimeSnapshot = async ({ cohort = null, fields = null } = {}) => {
-      const value =
-        cohort === null ? await publicationV2.runtimeSnapshot({ fields }) : await load(cohort);
-      return fields ? Object.fromEntries(fields.map((k) => [k, value[k]])) : value;
-    };
+    load.runtimeSnapshot = (options) => publicationV2.runtimeSnapshot(options);
     load.streamRoot = publicationV2.streamRoot;
     load.materializeRange = publicationV2.materializeRange;
     load.factCatalog = index.publication_v2.path;

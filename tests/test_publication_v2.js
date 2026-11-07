@@ -78,9 +78,11 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
     for (const name of ['kev', 'switching-contracts', 'switching', 'current-evidence', 'delivery'])
       vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), context);
     const reads = [];
+    let transferred = 0;
     const fetch = async (name) => {
       reads.push(name);
       const raw = fs.readFileSync(path.join(dir, name.replace(/^\//, '')));
+      transferred += raw.length;
       return { ok: true, arrayBuffer: async () => raw, text: async () => raw.toString() };
     };
     const index = JSON.parse(fs.readFileSync(path.join(dir, 'data/index.json'))),
@@ -102,11 +104,7 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
       !reads.includes(catalog.roots['switching-evidence.json'].path),
       'overview does not open full evidence root',
     );
-    const defaultBytes = [...new Set(reads)].reduce(
-      (n, name) => n + fs.statSync(path.join(dir, name)).size,
-      0,
-    );
-    assert(defaultBytes <= 20000000, 'actual default reads fit budget');
+    assert(transferred <= 20000000, 'actual direct overview transfers fit synthetic budget');
     const fixture = JSON.parse(fs.readFileSync('tests/fixtures/switching-cases.json'));
     let streamed = '';
     for await (const chunk of reader.streamRoot('switching-evidence.json')) streamed += chunk;
@@ -146,11 +144,17 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
         c.name,
       );
     }
+    transferred = 0;
     const loader = await context.createStaticDelivery(fetch, '');
+    await loader();
     assert(loader.switchingSelection);
     assert.strictEqual(
       (await loader.switchingOverview(index.generated_at)).representation,
       'switching-overview',
+    );
+    assert(
+      transferred <= 20000000,
+      'actual facade default includes every index/catalog/bootstrap/cohort/current-evidence/overview transfer',
     );
     const cohort = await loader([Object.keys(index.cohorts)[0]]);
     assert(Array.isArray(cohort.records));
@@ -179,7 +183,9 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
     const { createHash } = require('crypto'),
       overlay = new Map();
     function altered(descriptor, change) {
-      const value = JSON.parse(fs.readFileSync(path.join(dir, descriptor.path)));
+      const value = JSON.parse(
+        overlay.get(descriptor.path) || fs.readFileSync(path.join(dir, descriptor.path)),
+      );
       change(value);
       const raw = Buffer.from(JSON.stringify(value));
       const sha256 = createHash('sha256').update(raw).digest('hex');
@@ -252,8 +258,227 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
         /cursor generation/,
       );
     }
+    // All review fixtures remain content-addressed, generation-bound envelopes.
+    function part(kind, data) {
+      const raw = Buffer.from(
+        JSON.stringify({
+          schema_version: 2,
+          publication: index.publication,
+          generated_at: index.generated_at,
+          kind,
+          data,
+        }),
+      );
+      const sha256 = createHash('sha256').update(raw).digest('hex'),
+        d = { path: `data/v2/${sha256}.json`, sha256, bytes: raw.length };
+      overlay.set(d.path, raw);
+      return d;
+    }
+    function wireRoot(name, tokens, text, cost, ranges = []) {
+      return part('root', {
+        name,
+        token_count: tokens.length,
+        logical: {
+          bytes: Buffer.byteLength(text),
+          sha256: createHash('sha256').update(text).digest('hex'),
+        },
+        pages: [
+          {
+            part: part('tokens', tokens),
+            first_token: 0,
+            count: tokens.length,
+            decoded_upper_bound: cost,
+          },
+        ],
+        ranges: ranges.length ? [part('ranges', ranges)] : [],
+      });
+    }
+    function bound(name, first, end, text) {
+      return {
+        root: name,
+        first_token: first,
+        end_token: end,
+        logical_bytes: Buffer.byteLength(text),
+        logical_sha256: createHash('sha256').update(text).digest('hex'),
+      };
+    }
+    const transportCatalog = JSON.parse(JSON.stringify(catalog));
+    const transportRoot = transportCatalog.roots['snapshot.json'];
+    const floatRaw = Buffer.from(
+      fs
+        .readFileSync(path.join(dir, transportRoot.path), 'utf8')
+        .replace('"first_token":0', '"first_token":0.0'),
+    );
+    const floatHash = createHash('sha256').update(floatRaw).digest('hex');
+    transportCatalog.roots['snapshot.json'] = {
+      path: `data/v2/${floatHash}.json`,
+      sha256: floatHash,
+      bytes: floatRaw.length,
+    };
+    overlay.set(transportCatalog.roots['snapshot.json'].path, floatRaw);
+    const floatReader = await api.open(virtualFetch, transportCatalog, index);
+    await assert.rejects(() => floatReader.materializeRoot('snapshot.json'), /transport/);
+    const short = JSON.parse(JSON.stringify(catalog));
+    short.strings = [];
+    short.shapes = [];
+    short.roots['snapshot.json'] = altered(
+      wireRoot('snapshot.json', [null], 'null', 4),
+      (v) => (v.data.logical.bytes = 1),
+    );
+    const shortReader = await api.open(virtualFetch, short, index);
+    let emitted = '';
+    await assert.rejects(async () => {
+      for await (const chunk of shortReader.streamRoot('snapshot.json')) emitted += chunk;
+    }, /canonical byte budget/);
+    assert.strictEqual(emitted, '', 'no bytes beyond declared length escape root reader');
+    let aborted = false;
+    const stalled = await api.open(
+      (name, { signal }) => {
+        signal.addEventListener('abort', () => (aborted = true), { once: true });
+        return new Promise(() => {});
+      },
+      short,
+      index,
+    );
+    await assert.rejects(async () => {
+      for await (const chunk of stalled.streamRoot('snapshot.json', { deadline: Date.now() + 5 })) {
+      }
+    }, /deadline|cancelled/);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    assert(aborted, 'operation deadline aborts metadata fetch');
+    const comparisonCatalog = JSON.parse(JSON.stringify(short));
+    comparisonCatalog.shapes = [
+      { part: part('shapes', [['inputs'], ['evidence']]), first: 0, count: 2 },
+    ];
+    comparisonCatalog.roots['switching-evidence.json'] = wireRoot(
+      'switching-evidence.json',
+      [null],
+      'null',
+      4,
+    );
+    comparisonCatalog.roots['switching-comparison.json'] = wireRoot(
+      'switching-comparison.json',
+      [[0], [1], [-3, 'switching-evidence.json']],
+      '{"inputs":{"evidence":null}}',
+      25,
+    );
+    const evidenceMeta = JSON.parse(
+      overlay.get(comparisonCatalog.roots['switching-evidence.json'].path),
+    ).data;
+    let bodyAborted = false,
+      bodyCancelled = false,
+      bodyReleased = false;
+    const pendingBody = await api.open(
+      async (name, { signal }) => {
+        if (name !== evidenceMeta.pages[0].part.path) return virtualFetch(name);
+        signal.addEventListener('abort', () => (bodyAborted = true), { once: true });
+        return {
+          ok: true,
+          body: {
+            getReader: () => ({
+              read: () => new Promise(() => {}),
+              cancel: async () => {
+                bodyCancelled = true;
+              },
+              releaseLock: () => {
+                bodyReleased = true;
+              },
+            }),
+          },
+        };
+      },
+      comparisonCatalog,
+      index,
+    );
+    await assert.rejects(async () => {
+      for await (const chunk of pendingBody.streamRoot('switching-comparison.json', {
+        deadline: Date.now() + 20,
+      })) {
+      }
+    }, /deadline|cancelled/);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    assert(
+      bodyAborted && bodyCancelled && bodyReleased,
+      'nested alias body aborts, cancels and releases on operation deadline',
+    );
+
+    const fieldsCatalog = JSON.parse(JSON.stringify(catalog)),
+      textValue = 'x'.repeat(60),
+      quoted = JSON.stringify(textValue),
+      fieldText = JSON.stringify({ a: textValue, b: textValue });
+    fieldsCatalog.strings = [{ part: part('strings', [textValue]), first: 0, count: 1 }];
+    fieldsCatalog.shapes = [{ part: part('shapes', [['a', 'b']]), first: 0, count: 1 }];
+    fieldsCatalog.roots['runtime-snapshot'] = wireRoot(
+      'runtime-snapshot',
+      [[0], -2, -2],
+      fieldText,
+      Buffer.byteLength(fieldText),
+      [
+        { path: ['a'], range: bound('runtime-snapshot', 1, 2, quoted) },
+        { path: ['b'], range: bound('runtime-snapshot', 2, 3, quoted) },
+      ],
+    );
+    const fieldReader = await api.open(virtualFetch, fieldsCatalog, index, { selected_bytes: 100 });
+    assert.strictEqual((await fieldReader.runtimeSnapshot({ fields: ['a'] })).a, textValue);
+    await assert.rejects(() => fieldReader.runtimeSnapshot({ fields: ['a', 'b'] }), /budget/);
+    const pageCatalog = JSON.parse(JSON.stringify(catalog)),
+      sourceValue = 'x'.repeat(400),
+      sourceText = JSON.stringify([{ value: sourceValue }, { value: sourceValue }]);
+    pageCatalog.strings = [{ part: part('strings', [sourceValue]), first: 0, count: 1 }];
+    pageCatalog.shapes = [{ part: part('shapes', [['value']]), first: 0, count: 1 }];
+    pageCatalog.roots['review-page'] = wireRoot(
+      'review-page',
+      [[-1, 2], [0], -2, [0], -2],
+      sourceText,
+      Buffer.byteLength(sourceText),
+    );
+    pageCatalog.roots['review-kev'] = wireRoot('review-kev', [null], 'null', 4);
+    pageCatalog.switching.kev = bound('review-kev', 0, 1, 'null');
+    pageCatalog.switching.overview = altered(
+      pageCatalog.switching.overview,
+      (v) => (v.data.detail_ranges.sources = bound('review-page', 0, 5, sourceText)),
+    );
+    const pageReader = await api.open(virtualFetch, pageCatalog, index, { selected_bytes: 800 }),
+      pageOverview = await pageReader.switchingOverview(index.generated_at);
+    await pageReader.switchingDetails(pageOverview, { kind: 'sources', limit: 1 });
+    await assert.rejects(
+      () => pageReader.switchingDetails(pageOverview, { kind: 'sources', limit: 2 }),
+      /budget/,
+    );
+    const cohortFields = ['counts', 'vendors'],
+      singleMax = Math.max(
+        ...cohortFields.map((k) =>
+          context.window.InfrastructureJSON.measure({ [k]: bootstrap[k] }),
+        ),
+      );
+    await assert.rejects(
+      () =>
+        loader.runtimeSnapshot({
+          cohort: [Object.keys(index.cohorts)[0]],
+          fields: cohortFields,
+          max_bytes: singleMax,
+        }),
+      /budget/,
+    );
+    const cohortParts = [
+      ...new Map(
+        Object.values(index.cohorts)
+          .flat()
+          .map((d) => [d.path, d]),
+      ).values(),
+    ];
+    if (cohortParts.length > 1)
+      await assert.rejects(
+        () =>
+          loader.runtimeSnapshot({
+            cohort: Object.keys(index.cohorts),
+            fields: ['records'],
+            max_bytes: Math.max(...cohortParts.map((d) => d.bytes)) + 160,
+          }),
+        /budget/,
+      );
     console.log(
-      'Actual Python v2 publication browser overview, root, selection, paging, tamper and bound checks passed',
+      'Actual Python v2 publication plus aggregate/declaration/underlying cancellation review regressions passed',
     );
   } finally {
     if (temporary) fs.rmSync(temporary, { recursive: true, force: true });
@@ -325,3 +550,131 @@ for (const v of vectors.materialization ?? [])
   console.error(e);
   process.exitCode = 1;
 });
+// Review regressions: cost before allocation and close owned token cursors.
+(async () => {
+  assert.strictEqual(
+    typeof context.window.InfrastructureJSON.measure,
+    'function',
+    'bounded JSON cost pass',
+  );
+  assert.throws(
+    () => context.window.InfrastructureJSON.measure({ a: [1, 2, 3] }, null, 2, 20),
+    /budget/,
+  );
+  const value = { a: [1, 2, 3] },
+    compact = context.window.InfrastructureJSON.measure(value);
+  assert(compact < 20);
+  assert.throws(
+    () => context.window.InfrastructureJSON.stringifyBounded(value, null, 2, 20),
+    /budget/,
+  );
+  let closed = false;
+  async function* owned() {
+    try {
+      yield -2;
+      yield null;
+    } finally {
+      closed = true;
+    }
+  }
+  await assert.rejects(() => api.decodeTokens(owned(), ['abcdef'], [], { max_bytes: 3 }), /budget/);
+  assert(closed, 'overflow closes owned iterator');
+  let emitted = '';
+  try {
+    for await (const chunk of api.streamTokens([null], [], [], { canonical_bytes: 1 }))
+      emitted += chunk;
+  } catch {}
+  assert.strictEqual(emitted, '', 'declared canonical length checked before yield');
+  console.log('Review cost, canonical allowance and iterator cleanup regressions passed');
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});
+(async () => {
+  const json = context.window.InfrastructureJSON;
+  for (const value of [
+    { a: ['é', '🚀', '"', '\n', '\ud800'] },
+    [null, undefined, 1n],
+    {},
+    { nested: { a: 1 } },
+  ])
+    for (const gap of ['', 2, '•'])
+      assert.strictEqual(
+        json.measure(value, null, gap),
+        Buffer.byteLength(json.stringify(value, null, gap)),
+      );
+  const pool = json.requestPool();
+  for (let i = 0; i < 6; i++) await pool.acquire();
+  const controller = new AbortController(),
+    pending = pool.acquire(controller.signal);
+  controller.abort();
+  await assert.rejects(() => pending, /cancelled/);
+  for (let i = 0; i < 6; i++) pool.release();
+  await pool.acquire();
+  pool.release();
+  let outerClosed = false,
+    aliasClosed = false;
+  async function* parent() {
+    try {
+      yield [0];
+      yield [1];
+      yield [-3, 'switching-evidence.json'];
+    } finally {
+      outerClosed = true;
+    }
+  }
+  async function* alias() {
+    try {
+      yield -2;
+      yield null;
+    } finally {
+      aliasClosed = true;
+    }
+  }
+  await assert.rejects(
+    () =>
+      api.decodeTokens(parent(), ['a'.repeat(100)], [['inputs'], ['evidence']], {
+        root: 'switching-comparison.json',
+        aliases: () => alias(),
+        max_bytes: 30,
+      }),
+    /budget/,
+  );
+  assert(outerClosed && aliasClosed, 'failure closes parent and alias iterators');
+  let returned = false;
+  async function* early() {
+    try {
+      yield [-1, 1];
+      yield null;
+    } finally {
+      returned = true;
+    }
+  }
+  for await (const chunk of api.streamTokens(early(), [], [])) break;
+  assert(returned, 'consumer return closes nested owned iterator');
+  console.log('Exact JSON costing, queued cancellation and alias/consumer finalization passed');
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});
+{
+  const json = context.window.InfrastructureJSON;
+  for (const raw of [
+    ...[
+      '{"record_index":0.0}',
+      '{"first_token":1e0}',
+      '[[-1,1.0]]',
+      '{"first_token":9007199254740992}',
+    ],
+    ...vectors.invalid_transport_json,
+  ])
+    assert.throws(() => json.parseStrict(raw, { transport: true }), /transport/);
+  assert.strictEqual(json.parseStrict('1.0'), 1, 'logical floats remain supported');
+  assert.strictEqual(
+    json.parseStrict('{"schema_version":2,"data":{"value":1.0}}', {
+      transport: (path) => path[0] !== 'data',
+    }).data.value,
+    1,
+  );
+  console.log('Raw fractional/exponent transport lexeme rejection passed');
+}

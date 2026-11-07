@@ -598,13 +598,16 @@
           true,
         );
         if (seen.has(c.claim_id)) fail('deterministic unique claim IDs');
+        const identityCost = c.claim_id.length + 3;
+        if (identityCost > 128000000 - bytes) fail('study semantic accumulator byte budget');
         seen.add(c.claim_id);
-        bytes += c.claim_id.length + 3;
+        bytes += identityCost;
         if (
           (c.vendor === 'arista' && c.advisory_id === '19904-security-advisory-0100') ||
           c.remediations.some((r) => r.scope_binding?.basis === 'reviewed_source_sections')
         ) {
-          bytes += JSON.stringify(c).length * 3;
+          const cost = window.InfrastructureJSON.measure(c, null, '', 128000000 - bytes);
+          bytes += cost;
           reviewed.push(c);
         }
         if (bytes > 128000000) fail('study semantic accumulator byte budget');

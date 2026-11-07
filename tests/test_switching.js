@@ -3,7 +3,7 @@ const fs = require('fs'),
   assert = require('assert');
 const context = { window: {}, console, TextEncoder };
 vm.createContext(context);
-for (const name of ['kev', 'switching-contracts', 'switching'])
+for (const name of ['lossless-json', 'kev', 'switching-contracts', 'switching'])
   vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), context);
 const data = JSON.parse(fs.readFileSync('tests/fixtures/switching-cases.json'));
 const api = context.window.InfrastructureSwitching;
@@ -208,3 +208,40 @@ for (const value of [NaN, Infinity, -Infinity]) {
   assert.throws(() => missing.finish(), /reviewed section/);
   console.log('Streamed reviewed-section cross-claim linkage passed');
 }
+(async () => {
+  const base = data.comparison_base_report;
+  await assert.rejects(
+    () =>
+      api.selectClaims(
+        base,
+        base.inputs.evidence,
+        base.inputs.kev,
+        (async function* () {
+          yield* base.inputs.evidence.claims;
+        })(),
+        {},
+        { max_bytes: 400 },
+      ),
+    /budget/,
+  );
+  const selected = api.summary(api.selectReport(base)),
+    csv = api.csvExport(selected),
+    bytes = Buffer.byteLength(csv);
+  assert.strictEqual(api.csvExport(selected, { max_bytes: bytes }), csv);
+  assert.throws(() => api.csvExport(selected, { max_bytes: bytes - 1 }), /budget/);
+  vm.runInContext(
+    `const originalStringify=JSON.stringify;JSON.stringify=(value,...rest)=>{if(value?.inputs)throw Error('full inputs serialization forbidden');return originalStringify(value,...rest);};`,
+    context,
+  );
+  try {
+    api.summary(base);
+  } finally {
+    vm.runInContext('JSON.stringify=originalStringify;', context);
+  }
+  console.log(
+    'Projection/reducer limits, CSV exact allowance and no full-input summary clone passed',
+  );
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

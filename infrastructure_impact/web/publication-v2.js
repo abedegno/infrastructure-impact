@@ -13,7 +13,9 @@
     if (typeof s !== 'string' || /[\uD800-\uDFFF]/u.test(s)) fail('invalid Unicode');
     return s;
   }
-  const ownedTables = new WeakMap();
+  const ownedTables = new WeakMap(),
+    ownedStates = new WeakSet(),
+    ownedValues = new WeakSet();
   function tables(strings, shapes) {
     if (!Array.isArray(strings) || !Array.isArray(shapes)) fail('invalid tables');
     strings.forEach(literal);
@@ -58,134 +60,218 @@
         )
       : raw;
   }
-  async function* streamTokens(tokens, strings, shapes, options = {}) {
-    if (ownedTables.get(strings) !== shapes) tables(strings, shapes);
-    const state = options.state || {
-      used: 0,
-      max: Math.min(integer(options.max_bytes ?? 1000000000), 1000000000),
-      deadline: options.deadline ?? Date.now() + 300000,
-    };
-    const iterator = tokens[Symbol.asyncIterator]?.() || tokens[Symbol.iterator]();
-    const ascii = options.serialization === 'ascii';
-    if (options.serialization && !['logical', 'ascii'].includes(options.serialization))
-      fail('serialization');
-    function charge(size) {
-      if (options.signal?.aborted) fail('cancelled');
-      if (Date.now() > state.deadline) fail('stream deadline');
-      if (size > state.max - state.used) fail('decoded byte budget');
-      state.used += size;
-    }
-    function emit(raw, canonical = raw) {
-      if (options.signal?.aborted) fail('cancelled');
-      if (Date.now() > state.deadline) fail('stream deadline');
-      const size = Math.max(encoder.encode(raw).length, encoder.encode(canonical).length);
-      charge(size);
-      options.observer?.(canonical);
-      return raw;
-    }
-    function quoted(s) {
-      charge(Math.max(stringCost(s), stringCost(s, ascii)));
-      const raw = quote(s, ascii);
-      options.observer?.(quote(s, false));
-      return raw;
-    }
-    async function nextToken() {
-      if (options.signal?.aborted) fail('cancelled');
-      const remaining = state.deadline - Date.now();
-      if (remaining <= 0) fail('stream deadline');
-      let timer, abort;
-      try {
-        return await Promise.race([
-          iterator.next(),
-          new Promise((_, reject) => {
-            timer = setTimeout(() => reject(Error('Publication v2: stream deadline')), remaining);
-            if (options.signal) {
-              abort = () => reject(Error('Publication v2: cancelled'));
-              options.signal.addEventListener('abort', abort, { once: true });
-            }
-          }),
-        ]);
-      } finally {
-        clearTimeout(timer);
-        if (abort) options.signal.removeEventListener('abort', abort);
-      }
-    }
-    async function* node(depth, path) {
-      if (depth > 64) fail('decoder depth');
-      const entry = await nextToken();
-      if (entry.done) fail('truncated node');
-      const t = entry.value;
-      if (t === null || typeof t === 'boolean') yield emit(String(t));
-      else if (typeof t === 'number') {
-        integer(-t - 2);
-        if (t < -Number.MAX_SAFE_INTEGER || -t - 2 >= strings.length) fail('string reference');
-        const s = strings[-t - 2];
-        yield quoted(s);
-      } else if (Array.isArray(t) && t.length === 1) {
-        const i = integer(t[0]);
-        if (i >= shapes.length) fail('shape reference');
-        const keys = shapes[i];
-        if (keys.length * 5 + 2 > state.max - state.used) fail('object minimum budget');
-        yield emit('{');
-        for (let k = 0; k < keys.length; k++) {
-          if (k) yield emit(',');
-          yield quoted(keys[k]);
-          yield emit(':');
-          yield* node(depth + 1, [...path, keys[k]]);
+  let operationId = 0;
+  function operation(options = {}) {
+    if (options.operation) return options.operation;
+    const controller = new AbortController(),
+      deadline = Math.min(options.deadline ?? Infinity, Date.now() + 300000);
+    const abort = () => controller.abort();
+    options.signal?.addEventListener('abort', abort, { once: true });
+    if (options.signal?.aborted) abort();
+    let rejectAbort;
+    const interrupted = new Promise((_, reject) => {
+      rejectAbort = reject;
+    });
+    const onAbort = () =>
+      rejectAbort(
+        Error(
+          Date.now() >= deadline ? 'Publication v2: stream deadline' : 'Publication v2: cancelled',
+        ),
+      );
+    controller.signal.addEventListener('abort', onAbort, { once: true });
+    // Attach a handler immediately: abort may happen between awaited reads.
+    interrupted.catch(() => {});
+    const timer = setTimeout(abort, Math.max(0, deadline - Date.now()));
+    return {
+      id: ++operationId,
+      signal: controller.signal,
+      deadline,
+      run(promise) {
+        if (Date.now() >= deadline) {
+          abort();
+          return Promise.reject(Error('Publication v2: stream deadline'));
         }
-        yield emit('}');
-      } else if (Array.isArray(t) && t.length === 2 && t[0] === -1) {
-        const n = integer(t[1]);
-        if ((n ? n * 2 + 1 : 2) > state.max - state.used) fail('array minimum budget');
-        yield emit('[');
-        for (let i = 0; i < n; i++) {
-          if (i) yield emit(',');
-          yield* node(depth + 1, [...path, i]);
-        }
-        yield emit(']');
-      } else if (Array.isArray(t) && t.length === 3 && t[0] === -2) {
-        const [_, kind, lexeme] = t;
-        if (typeof lexeme !== 'string') fail('numeric lexeme');
-        charge(lexeme.length);
-        const grammar =
-          kind === 'i'
-            ? /^-?(?:0|[1-9]\d*)$/
-            : kind === 'f'
-              ? /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/
-              : null;
-        if (
-          typeof lexeme !== 'string' ||
-          !grammar?.test(lexeme) ||
-          (kind === 'f' && !Number.isFinite(Number(lexeme)))
-        )
-          fail('numeric lexeme');
-        options.observer?.(lexeme);
-        yield lexeme;
-      } else if (Array.isArray(t) && t.length === 2 && t[0] === -3) {
-        if (
-          options.root !== 'switching-comparison.json' ||
-          JSON.stringify(path) !== '["inputs","evidence"]' ||
-          t[1] !== 'switching-evidence.json' ||
-          !options.aliases
-        )
-          fail('forbidden root alias');
-        yield* streamTokens(await options.aliases(t[1]), strings, shapes, {
-          ...options,
-          state,
-          root: t[1],
-          aliases: null,
-          depth,
+        if (controller.signal.aborted) return Promise.reject(Error('Publication v2: cancelled'));
+        return Promise.race([promise, interrupted]).then((value) => {
+          if (Date.now() >= deadline) {
+            abort();
+            throw Error('Publication v2: stream deadline');
+          }
+          if (controller.signal.aborted) throw Error('Publication v2: cancelled');
+          return value;
         });
-      } else fail('invalid token');
+      },
+      close() {
+        abort();
+        clearTimeout(timer);
+        options.signal?.removeEventListener('abort', abort);
+        controller.signal.removeEventListener('abort', onAbort);
+      },
+    };
+  }
+  async function scoped(options, fn) {
+    const op = operation(options);
+    try {
+      const result = await fn({
+        ...options,
+        operation: op,
+        signal: op.signal,
+        deadline: op.deadline,
+      });
+      return await op.run(Promise.resolve(result));
+    } finally {
+      if (!options?.operation) op.close();
     }
-    yield* node(options.depth ?? 0, options.path ?? []);
-    if (!(await nextToken()).done) fail('extra node');
+  }
+  async function* streamTokens(tokens, strings, shapes, options = {}) {
+    const ownsOperation = !options.operation,
+      op = operation(options);
+    options = { ...options, operation: op, signal: op.signal, deadline: op.deadline };
+    let iterator,
+      completed = false;
+    try {
+      iterator = tokens?.[Symbol.asyncIterator]?.() || tokens?.[Symbol.iterator]?.();
+      if (!iterator) fail('invalid token iterator');
+      if (ownedTables.get(strings) !== shapes) tables(strings, shapes);
+      const state = (ownedStates.has(options.state) ? options.state : null) || {
+        used: 0,
+        max: Math.min(integer(options.max_bytes ?? 1000000000), 1000000000),
+        deadline: op.deadline,
+        canonicalUsed: 0,
+        canonicalMax: Math.min(integer(options.canonical_bytes ?? 1000000000), 1000000000),
+      };
+      ownedStates.add(state);
+      if (options.valueState && !ownedValues.has(options.valueState)) options.valueState = null;
+      const ascii = options.serialization === 'ascii';
+      if (options.serialization && !['logical', 'ascii'].includes(options.serialization))
+        fail('serialization');
+      function charge(size, canonical = size) {
+        if (options.signal?.aborted) fail('cancelled');
+        if (Date.now() > state.deadline) fail('stream deadline');
+        if (size > state.max - state.used) fail('decoded byte budget');
+        if (canonical > (state.canonicalMax ?? 1000000000) - (state.canonicalUsed ?? 0))
+          fail('declared canonical byte budget');
+        if (options.valueState && size > options.valueState.max - options.valueState.used)
+          fail('materialized value byte budget');
+        state.used += size;
+        state.canonicalUsed = (state.canonicalUsed ?? 0) + canonical;
+        if (options.valueState) options.valueState.used += size;
+      }
+      function emit(raw, canonical = raw) {
+        if (options.signal?.aborted) fail('cancelled');
+        if (Date.now() > state.deadline) fail('stream deadline');
+        const size = Math.max(encoder.encode(raw).length, encoder.encode(canonical).length);
+        charge(size);
+        options.observer?.(canonical);
+        return raw;
+      }
+      function quoted(s) {
+        charge(Math.max(stringCost(s), stringCost(s, ascii)), stringCost(s));
+        const raw = quote(s, ascii);
+        options.observer?.(quote(s, false));
+        return raw;
+      }
+      async function nextToken() {
+        return op.run(iterator.next());
+      }
+      async function* node(depth, path) {
+        if (depth > 64) fail('decoder depth');
+        const entry = await nextToken();
+        if (entry.done) fail('truncated node');
+        const t = entry.value;
+        if (t === null || typeof t === 'boolean') yield emit(String(t));
+        else if (typeof t === 'number') {
+          integer(-t - 2);
+          if (t < -Number.MAX_SAFE_INTEGER || -t - 2 >= strings.length) fail('string reference');
+          const s = strings[-t - 2];
+          yield quoted(s);
+        } else if (Array.isArray(t) && t.length === 1) {
+          const i = integer(t[0]);
+          if (i >= shapes.length) fail('shape reference');
+          const keys = shapes[i];
+          if (keys.length * 5 + 2 > state.max - state.used) fail('object minimum budget');
+          yield emit('{');
+          for (let k = 0; k < keys.length; k++) {
+            if (k) yield emit(',');
+            yield quoted(keys[k]);
+            yield emit(':');
+            yield* node(depth + 1, [...path, keys[k]]);
+          }
+          yield emit('}');
+        } else if (Array.isArray(t) && t.length === 2 && t[0] === -1) {
+          const n = integer(t[1]);
+          if ((n ? n * 2 + 1 : 2) > state.max - state.used) fail('array minimum budget');
+          yield emit('[');
+          for (let i = 0; i < n; i++) {
+            if (i) yield emit(',');
+            yield* node(depth + 1, [...path, i]);
+          }
+          yield emit(']');
+        } else if (Array.isArray(t) && t.length === 3 && t[0] === -2) {
+          const [_, kind, lexeme] = t;
+          if (typeof lexeme !== 'string') fail('numeric lexeme');
+          charge(lexeme.length);
+          const grammar =
+            kind === 'i'
+              ? /^-?(?:0|[1-9]\d*)$/
+              : kind === 'f'
+                ? /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/
+                : null;
+          if (
+            typeof lexeme !== 'string' ||
+            !grammar?.test(lexeme) ||
+            (kind === 'f' && !Number.isFinite(Number(lexeme)))
+          )
+            fail('numeric lexeme');
+          options.observer?.(lexeme);
+          yield lexeme;
+        } else if (Array.isArray(t) && t.length === 2 && t[0] === -3) {
+          if (
+            options.root !== 'switching-comparison.json' ||
+            JSON.stringify(path) !== '["inputs","evidence"]' ||
+            t[1] !== 'switching-evidence.json' ||
+            !options.aliases
+          )
+            fail('forbidden root alias');
+          yield* streamTokens(await options.aliases(t[1]), strings, shapes, {
+            ...options,
+            state,
+            root: t[1],
+            aliases: null,
+            depth,
+          });
+        } else fail('invalid token');
+      }
+      yield* node(options.depth ?? 0, options.path ?? []);
+      if (!(await nextToken()).done) fail('extra node');
+      completed = true;
+    } finally {
+      if (ownsOperation || !completed) op.close();
+      // Abort owned I/O first, then request cursor finalization. A hostile caller
+      // iterator cannot keep cleanup blocked after ignoring cancellation.
+      if (iterator?.return)
+        await Promise.race([
+          Promise.resolve(iterator.return()).catch(() => {}),
+          new Promise((resolve) => setTimeout(resolve, 0)),
+        ]);
+    }
   }
   async function decodeTokens(tokens, strings, shapes, options = {}) {
+    const valueState = ownedValues.has(options.valueState)
+      ? options.valueState
+      : {
+          used: 0,
+          max: Math.min(
+            integer(options.value_max_bytes ?? options.max_bytes ?? 128000000),
+            128000000,
+          ),
+        };
+    ownedValues.add(valueState);
     const pieces = [];
     for await (const chunk of streamTokens(tokens, strings, shapes, {
       max_bytes: 128000000,
       ...options,
+      valueState,
     }))
       pieces.push(chunk);
     return pieces.join('');
@@ -321,31 +407,29 @@
       fail('mixed generations');
     const cache = new Map(),
       pending = new Map(),
-      waiters = [];
-    let active = 0,
-      bytes = 0;
+      pool = json.requestPool();
+    let bytes = 0;
     const maxCache = Math.min(integer(limits.cache_bytes ?? 16000000), 16000000);
-    async function acquire() {
-      if (active >= 6) await new Promise((resolve) => waiters.push(resolve));
-      else active++;
-    }
-    function release() {
-      const next = waiters.shift();
-      if (next) next();
-      else active--;
-    }
-    async function raw(d, signal) {
-      descriptor(d);
+    async function raw(d, options = {}) {
+      const op = options.operation,
+        signal = op?.signal ?? options.signal;
+      d = Object.freeze({ ...descriptor(d) });
       if (cache.has(d.path)) {
         const value = cache.get(d.path);
         cache.delete(d.path);
         cache.set(d.path, value);
         return value;
       }
-      if (pending.has(d.path)) return pending.get(d.path);
+      const pendingKey = String(op?.id ?? '') + ':' + d.path;
+      if (pending.has(pendingKey)) return pending.get(pendingKey);
       const promise = (async () => {
-        await acquire();
-        await limits.requestSlots?.acquire();
+        await pool.acquire(signal);
+        try {
+          await limits.requestSlots?.acquire(signal);
+        } catch (error) {
+          pool.release();
+          throw error;
+        }
         const controller = new AbortController();
         const abort = () => controller.abort();
         signal?.addEventListener('abort', abort, { once: true });
@@ -361,10 +445,9 @@
         });
         try {
           if (signal?.aborted) fail('cancelled');
-          const response = await Promise.race([
-            fetchPart(d.path, { signal: controller.signal }),
-            expired,
-          ]);
+          const response = await (op
+            ? op.run(Promise.race([fetchPart(d.path, { signal: controller.signal }), expired]))
+            : Promise.race([fetchPart(d.path, { signal: controller.signal }), expired]));
           if (!response.ok) fail('part unavailable');
           let value;
           if (response.body?.getReader) {
@@ -373,7 +456,9 @@
             let size = 0;
             try {
               for (;;) {
-                const part = await Promise.race([reader.read(), expired]);
+                const part = await (op
+                  ? op.run(Promise.race([reader.read(), expired]))
+                  : Promise.race([reader.read(), expired]));
                 if (part.done) break;
                 size += part.value.length;
                 if (size > d.bytes) {
@@ -389,10 +474,21 @@
                 offset += piece.length;
               }
             } finally {
+              try {
+                await reader.cancel();
+              } catch {}
               reader.releaseLock();
             }
-          } else value = new Uint8Array(await Promise.race([response.arrayBuffer(), expired]));
-          if (value.length !== d.bytes || (await digest(value)) !== d.sha256)
+          } else
+            value = new Uint8Array(
+              await (op
+                ? op.run(Promise.race([response.arrayBuffer(), expired]))
+                : Promise.race([response.arrayBuffer(), expired])),
+            );
+          if (
+            value.length !== d.bytes ||
+            (await (op ? op.run(digest(value)) : digest(value))) !== d.sha256
+          )
             fail('part fingerprint');
           if (value.length <= maxCache) {
             while (bytes + value.length > maxCache) {
@@ -400,6 +496,7 @@
               bytes -= cache.get(key).length;
               cache.delete(key);
             }
+            if (cache.has(d.path)) bytes -= cache.get(d.path).length;
             cache.set(d.path, value);
             bytes += value.length;
           }
@@ -408,19 +505,21 @@
           clearTimeout(timer);
           signal?.removeEventListener('abort', abort);
           limits.requestSlots?.release();
-          release();
+          pool.release();
         }
       })();
-      pending.set(d.path, promise);
+      pending.set(pendingKey, promise);
       try {
         return await promise;
       } finally {
-        pending.delete(d.path);
+        pending.delete(pendingKey);
       }
     }
-    async function read(d, kind, signal) {
+    async function read(d, kind, options = {}) {
+      if (!options.operation) return scoped(options, (next) => read(d, kind, next));
       const value = json.parseStrict(
-        new TextDecoder('utf-8', { fatal: true }).decode(await raw(d, signal)),
+        new TextDecoder('utf-8', { fatal: true }).decode(await raw(d, options)),
+        { transport: kind === 'overview' ? (path) => path[0] !== 'data' : true },
       );
       window.InfrastructureSwitchingContracts.validate(
         'publication-v2.json',
@@ -438,7 +537,7 @@
       return value.data;
     }
     let tablePromise;
-    async function getTables() {
+    async function getTables(options = {}) {
       if (!tablePromise)
         tablePromise = (async () => {
           const result = [];
@@ -450,7 +549,7 @@
             let size = 0;
             for (const entry of entries) {
               if (entry.first !== rows.length) fail('table contiguity');
-              const data = await read(entry.part, kind);
+              const data = await read(entry.part, kind, options);
               if (data.length !== entry.count) fail('table count');
               for (const item of data) {
                 size += encoder.encode(JSON.stringify(item)).length;
@@ -465,16 +564,21 @@
           ownedTables.set(result[0], result[1]);
           return result;
         })();
-      return tablePromise;
+      try {
+        return await tablePromise;
+      } catch (error) {
+        tablePromise = null;
+        throw error;
+      }
     }
     const roots = new Map();
-    async function root(name) {
+    async function root(name, options = {}) {
       if (!Object.hasOwn(catalog.roots, name)) fail('unknown root');
       if (!roots.has(name))
         roots.set(
           name,
           (async () => {
-            const data = await read(catalog.roots[name], 'root');
+            const data = await read(catalog.roots[name], 'root', options);
             if (data.name !== name) fail('root name');
             let end = 0;
             for (const page of data.pages) {
@@ -483,14 +587,19 @@
               end += integer(page.count, 1);
             }
             if (end !== data.token_count) fail('root token count');
-            return data;
+            return freeze(data);
           })(),
         );
-      return roots.get(name);
+      try {
+        return await roots.get(name);
+      } catch (error) {
+        roots.delete(name);
+        throw error;
+      }
     }
     let tokenPage = null; // One verified decoded page, never an unbounded page cache.
     async function* tokens(name, first = 0, end = null, options = {}) {
-      const r = await root(name);
+      const r = await root(name, options);
       end ??= r.token_count;
       integer(first);
       integer(end, 1);
@@ -500,9 +609,9 @@
         if (page.decoded_upper_bound > Math.min(limits.page_bytes ?? 128000000, 128000000))
           fail('page expansion bound');
         const memo = tokenPage?.path === page.part.path ? tokenPage : null;
-        const data = memo?.data ?? (await read(page.part, 'tokens', options.signal));
+        const data = memo?.data ?? (await read(page.part, 'tokens', options));
         if (data.length !== page.count) fail('page count');
-        const [strings, shapes] = await getTables();
+        const [strings, shapes] = await getTables(options);
         let cost = memo?.cost ?? 0;
         if (!memo)
           for (const t of data) {
@@ -533,29 +642,38 @@
       }
     }
     async function* streamRoot(name, options = {}) {
-      const [strings, shapes] = await getTables(),
-        r = await root(name),
-        hash = createHash();
-      let size = 0;
-      yield* streamTokens(tokens(name, 0, null, options), strings, shapes, {
-        ...options,
-        observer: (chunk) => {
-          hash.update(chunk);
-          size += encoder.encode(chunk).length;
-          options.observer?.(chunk);
-        },
-        root: name,
-        aliases: (n) => tokens(n),
-      });
-      if (size !== r.logical.bytes || hash.digest() !== r.logical.sha256)
-        fail('root logical fingerprint');
+      const ownsOperation = !options.operation,
+        op = operation(options);
+      options = { ...options, operation: op, signal: op.signal, deadline: op.deadline };
+      try {
+        const [strings, shapes] = await op.run(getTables(options)),
+          r = await op.run(root(name, options)),
+          hash = createHash();
+        let size = 0;
+        yield* streamTokens(tokens(name, 0, null, options), strings, shapes, {
+          ...options,
+          observer: (chunk) => {
+            hash.update(chunk);
+            size += encoder.encode(chunk).length;
+            options.observer?.(chunk);
+          },
+          root: name,
+          canonical_bytes: r.logical.bytes,
+          aliases: (n) => tokens(n, 0, null, options),
+        });
+        if (size !== r.logical.bytes || hash.digest() !== r.logical.sha256)
+          fail('root logical fingerprint');
+      } finally {
+        if (ownsOperation) op.close();
+      }
     }
     async function materializeRange(input, options = {}) {
-      const r = range(input),
-        max = Math.min(integer(options.max_bytes ?? 128000000), 128000000);
+      if (!options.operation) return scoped(options, (next) => materializeRange(input, next));
+      const r = freeze(json.clone(range(input))),
+        max = Math.min(integer(options.max_bytes ?? limits.selected_bytes ?? 128000000), 128000000);
       if (r.logical_bytes > max) fail('selected byte budget');
       let canonicalBytes = 0;
-      const [strings, shapes] = await getTables(),
+      const [strings, shapes] = await getTables(options),
         hash = createHash(),
         text = await decodeTokens(
           tokens(r.root, r.first_token, r.end_token, options),
@@ -564,13 +682,14 @@
           {
             ...options,
             max_bytes: max,
+            canonical_bytes: r.logical_bytes,
             root: r.root,
             path: options.path,
             observer: (chunk) => {
               hash.update(chunk);
               canonicalBytes += encoder.encode(chunk).length;
             },
-            aliases: (n) => tokens(n),
+            aliases: (n) => tokens(n, 0, null, options),
           },
         );
       if (canonicalBytes !== r.logical_bytes || hash.digest() !== r.logical_sha256)
@@ -578,7 +697,8 @@
       return json.parseStrict(text);
     }
     async function materializeRoot(name, options = {}) {
-      const r = await root(name);
+      if (!options.operation) return scoped(options, (next) => materializeRoot(name, next));
+      const r = await root(name, options);
       return materializeRange(
         {
           root: name,
@@ -591,19 +711,19 @@
       );
     }
     const rangeMaps = new Map();
-    async function findRange(name, path) {
+    async function findRange(name, path, options = {}) {
       if (!rangeMaps.has(name))
         rangeMaps.set(
           name,
           (async () => {
-            const r = await root(name),
+            const r = await root(name, options),
               map = new Map();
             let size = 0;
             for (const d of r.ranges) {
-              for (const entry of await read(d, 'ranges')) {
-                const key = JSON.stringify(entry.path);
-                size += encoder.encode(JSON.stringify(entry)).length;
-                if (size > 128000000) fail('range metadata byte budget');
+              for (const entry of await read(d, 'ranges', options)) {
+                size += json.measure(entry, null, '', 128000000 - size);
+                const key = json.stringifyBounded(entry.path);
+                freeze(entry.range);
                 range(entry.range);
                 if (entry.range.root !== name || map.has(key)) fail('range location');
                 map.set(key, entry.range);
@@ -612,24 +732,31 @@
             return map;
           })(),
         );
-      const found = (await rangeMaps.get(name)).get(JSON.stringify(path));
+      let map;
+      try {
+        map = await rangeMaps.get(name);
+      } catch (error) {
+        rangeMaps.delete(name);
+        throw error;
+      }
+      const found = map.get(JSON.stringify(path));
       if (!found) fail('missing range');
       return found;
     }
-    async function field(name, path) {
-      return materializeRange(await findRange(name, path), { path });
+    async function field(name, path, options = {}) {
+      return materializeRange(await findRange(name, path, options), { ...options, path });
     }
     let routesPromise;
-    async function claimRoutes() {
+    async function claimRoutes(options = {}) {
       if (!routesPromise)
         routesPromise = (async () => {
-          const [strings] = await getTables(),
+          const [strings] = await getTables(options),
             rows = [],
             seen = new Set();
           let previous = null,
             sizeUsed = 0;
           for (const d of catalog.routes.claims) {
-            const data = await read(d, 'claim_routes');
+            const data = await read(d, 'claim_routes', options);
             let start = integer(data.base),
               end = integer(data.final_end, 1);
             if (end <= start || (previous !== null && previous !== start)) fail('route contiguity');
@@ -652,8 +779,8 @@
               rows.push({ ...local[i], end: local[i + 1]?.first ?? end });
             previous = end;
           }
-          const bound = await findRange('switching-evidence.json', ['claims']);
-          const head = tokens(bound.root, bound.first_token, bound.first_token + 1)[
+          const bound = await findRange('switching-evidence.json', ['claims'], options);
+          const head = tokens(bound.root, bound.first_token, bound.first_token + 1, options)[
             Symbol.asyncIterator
           ]();
           const header = (await head.next()).value;
@@ -669,16 +796,21 @@
             fail('incomplete claim route membership');
           return rows;
         })();
-      return routesPromise;
+      try {
+        return await routesPromise;
+      } catch (error) {
+        routesPromise = null;
+        throw error;
+      }
     }
     async function claimAt(route, options = {}) {
       if (route.size > 128000000) fail('claim byte budget');
-      const [strings, shapes] = await getTables();
+      const [strings, shapes] = await getTables(options);
       const text = await decodeTokens(
         tokens('switching-evidence.json', route.first, route.end, options),
         strings,
         shapes,
-        { max_bytes: 128000000, ...options },
+        { max_bytes: 128000000, ...options, canonical_bytes: route.size },
       );
       if (encoder.encode(text).length !== route.size) fail('claim size');
       const value = json.parseStrict(text);
@@ -690,88 +822,150 @@
       if (value.claim_id !== route.id) fail('claim identity');
       return value;
     }
-    async function switchingClaims(ids) {
+    async function switchingClaims(ids, options = {}) {
+      if (!options.operation) return scoped(options, (next) => switchingClaims(ids, next));
       if (
         !Array.isArray(ids) ||
         ids.some((id) => typeof id !== 'string' || !/^[a-f0-9]{64}$/.test(id))
       )
         fail('claim ids');
-      const byId = new Map((await claimRoutes()).map((r) => [r.id, r]));
-      const result = [];
+      const byId = new Map((await claimRoutes(options)).map((r) => [r.id, r]));
+      const result = [],
+        quota = options.budget ?? json.budget(selectedMax);
+      if (!options.budget) quota.charge(2);
       let size = 0;
       for (const id of new Set(ids)) {
         if (!byId.has(id)) fail('missing claim');
         size += byId.get(id).size;
         if (size > 128000000) fail('selected byte budget');
-        result.push(await claimAt(byId.get(id)));
+        quota.charge(byId.get(id).size + (result.length ? 1 : 0));
+        result.push(await claimAt(byId.get(id), { ...options, max_bytes: byId.get(id).size }));
       }
       return result;
     }
-    async function* arrayItems(r) {
-      range(r);
-      const iterator = tokens(r.root, r.first_token, r.end_token)[Symbol.asyncIterator](),
-        first = await iterator.next();
-      if (
-        first.done ||
-        !Array.isArray(first.value) ||
-        first.value.length !== 2 ||
-        first.value[0] !== -1
-      )
-        fail('array range');
-      const count = integer(first.value[1]),
-        [strings, shapes] = await getTables(),
-        hash = createHash();
-      hash.update('[');
-      let total = 2,
-        deadline = Date.now() + 300000;
-      for (let index = 0; index < count; index++) {
-        async function* one() {
-          let pending = 1;
-          while (pending) {
-            const entry = await iterator.next();
-            if (entry.done) fail('truncated array');
-            const t = entry.value;
-            pending--;
-            if (Array.isArray(t) && t.length === 1) {
-              const shape = shapes[integer(t[0])];
-              if (!shape) fail('shape');
-              pending += shape.length;
-            } else if (Array.isArray(t) && t[0] === -1) pending += integer(t[1]);
-            yield t;
+    async function* arrayItems(r, options = {}) {
+      const owns = !options.operation,
+        op = operation(options);
+      options = { ...options, operation: op, signal: op.signal, deadline: op.deadline };
+      let iterator,
+        completed = false;
+      try {
+        range(r);
+        iterator = tokens(r.root, r.first_token, r.end_token, options)[Symbol.asyncIterator]();
+        const first = await op.run(iterator.next());
+        if (
+          first.done ||
+          !Array.isArray(first.value) ||
+          first.value.length !== 2 ||
+          first.value[0] !== -1
+        )
+          fail('array range');
+        const count = integer(first.value[1]),
+          [strings, shapes] = await op.run(getTables(options)),
+          hash = createHash();
+        const state = {
+          used: 2,
+          canonicalUsed: 2,
+          max: 1000000000,
+          canonicalMax: r.logical_bytes,
+          deadline: op.deadline,
+        };
+        ownedStates.add(state);
+        if (r.logical_bytes < 2) fail('declared canonical byte budget');
+        hash.update('[');
+        for (let index = 0; index < count; index++) {
+          if (index) {
+            if (state.canonicalUsed >= state.canonicalMax || state.used >= state.max)
+              fail('array byte budget');
+            state.used++;
+            state.canonicalUsed++;
+            hash.update(',');
           }
+          async function* one() {
+            let pending = 1;
+            while (pending) {
+              const entry = await op.run(iterator.next());
+              if (entry.done) fail('truncated array');
+              const t = entry.value;
+              pending--;
+              if (Array.isArray(t) && t.length === 1) {
+                const shape = shapes[integer(t[0])];
+                if (!shape) fail('shape');
+                pending += shape.length;
+              } else if (Array.isArray(t) && t[0] === -1) pending += integer(t[1]);
+              yield t;
+            }
+          }
+          const allowance = Math.min(
+            options.valueLimit?.(index) ?? limits.selected_bytes ?? 128000000,
+            128000000,
+          );
+          const text = await decodeTokens(one(), strings, shapes, {
+            ...options,
+            state,
+            value_max_bytes: allowance,
+            observer: (chunk) => hash.update(chunk),
+          });
+          const size = encoder.encode(text).length;
+          options.beforeValue?.(size, index);
+          yield { value: json.parseStrict(text), bytes: size };
         }
-        if (index) hash.update(',');
-        const text = await decodeTokens(one(), strings, shapes, {
-          max_bytes: 128000000,
-          deadline,
-          observer: (chunk) => hash.update(chunk),
-        });
-        total += encoder.encode(text).length + (index ? 1 : 0);
-        if (total > 1000000000) fail('array stream budget');
-        yield json.parseStrict(text);
+        hash.update(']');
+        if (
+          !(await op.run(iterator.next())).done ||
+          state.canonicalUsed !== r.logical_bytes ||
+          hash.digest() !== r.logical_sha256
+        )
+          fail('array range boundary or fingerprint');
+        completed = true;
+      } finally {
+        if (owns || !completed) op.close();
+        if (iterator?.return)
+          await Promise.race([
+            Promise.resolve(iterator.return()).catch(() => {}),
+            new Promise((resolve) => setTimeout(resolve, 0)),
+          ]);
       }
-      hash.update(']');
-      if (
-        !(await iterator.next()).done ||
-        total !== r.logical_bytes ||
-        hash.digest() !== r.logical_sha256
-      )
-        fail('array range boundary or fingerprint');
     }
-    async function rangePage(r, offset, limit, predicate = () => true) {
+    const selectedMax = Math.min(integer(limits.selected_bytes ?? 128000000, 1), 128000000);
+    function pageBudget(total, binding, offset, limit) {
+      const next = Math.min(total, offset + limit),
+        next_cursor = next < total ? JSON.stringify({ binding, offset: next }) : null;
+      const quota = json.budget(selectedMax);
+      quota.charge(json.measure({ items: [], next_cursor, total }));
+      return { quota, next_cursor };
+    }
+    async function rangePage(r, offset, limit, predicate, binding, options) {
       let total = 0;
-      const items = [];
-      for await (const item of arrayItems(r)) {
-        if (!predicate(item)) continue;
-        if (total >= offset && items.length < limit) items.push(item);
-        total++;
+      for await (const { value } of arrayItems(r, options)) if (predicate(value)) total++;
+      if (offset > total) fail('detail offset');
+      const { quota, next_cursor } = pageBudget(total, binding, offset, limit),
+        items = [];
+      let index = 0;
+      for await (const { value } of arrayItems(r, {
+        ...options,
+        valueLimit: () =>
+          index >= offset && items.length < limit
+            ? quota.remaining - (items.length ? 1 : 0)
+            : selectedMax,
+      })) {
+        if (!predicate(value)) continue;
+        if (index++ >= offset && items.length < limit) {
+          quota.charge(json.measure(value, null, '', quota.remaining) + (items.length ? 1 : 0));
+          items.push(value);
+        }
       }
-      return { items, total };
+      return { items, total, next_cursor };
     }
     const accepted = new WeakSet();
-    async function switchingOverview(evaluatedAt = new Date().toISOString()) {
-      const overview = await read(catalog.switching.overview, 'overview'),
-        kev = await materializeRange(catalog.switching.kev, { path: ['inputs', 'kev'] });
+    async function switchingOverview(evaluatedAt = new Date().toISOString(), options = {}) {
+      if (!options.operation)
+        return scoped(options, (next) => switchingOverview(evaluatedAt, next));
+      const overview = await read(catalog.switching.overview, 'overview', options),
+        kev = await materializeRange(catalog.switching.kev, {
+          ...options,
+          path: ['inputs', 'kev'],
+        });
       const value = json.clone(overview);
       for (const row of value.rows) {
         const k = window.InfrastructureKev.selectReport(kev, row.affected_cve_ids, { evaluatedAt });
@@ -794,19 +988,28 @@
       accepted.add(value);
       return value;
     }
-    async function switchingSelection(options = {}, evaluatedAt = new Date().toISOString()) {
-      const overview = await switchingOverview(evaluatedAt);
+    async function switchingSelection(
+      options = {},
+      evaluatedAt = new Date().toISOString(),
+      consumption = {},
+    ) {
+      if (!consumption.operation)
+        return scoped(consumption, (next) => switchingSelection(options, evaluatedAt, next));
+      const overview = await switchingOverview(evaluatedAt, consumption);
       const evidence = {};
       for (const key of ['publication', 'generated_at', 'definition_sha256', 'coverage', 'issues'])
-        evidence[key] = await field('switching-evidence.json', [key]);
-      const kev = await materializeRange(catalog.switching.kev, { path: ['inputs', 'kev'] });
+        evidence[key] = await field('switching-evidence.json', [key], consumption);
+      const kev = await materializeRange(catalog.switching.kev, {
+        ...consumption,
+        path: ['inputs', 'kev'],
+      });
       async function* claims() {
         let size = 2;
-        const deadline = Date.now() + 300000;
-        for (const route of await claimRoutes()) {
+        const deadline = consumption.deadline;
+        for (const route of await claimRoutes(consumption)) {
           size += route.size + 1;
           if (size > 1000000000) fail('claim stream byte budget');
-          yield await claimAt(route, { deadline });
+          yield await claimAt(route, { ...consumption, deadline });
         }
       }
       const result = await window.InfrastructureSwitching.selectClaims(
@@ -820,12 +1023,18 @@
       accepted.add(result);
       return result;
     }
-    async function switchingDetails(selection, { kind, row_id = null, cursor = null, limit = 25 }) {
+    const selectionIds = new WeakMap();
+    let nextSelectionId = 0;
+    async function switchingDetails(selection, request, options = {}) {
+      if (!options.operation)
+        return scoped(options, (next) => switchingDetails(selection, request, next));
+      const { kind, row_id = null, cursor = null, limit = 25 } = request;
       if (!accepted.has(selection) || selection.publication.id !== identity.publication.id)
         fail('unaccepted detail generation');
       integer(limit, 1);
       if (limit > 25) fail('detail limit');
-      const binding = JSON.stringify([identity, selection.selection, kind, row_id]);
+      if (!selectionIds.has(selection)) selectionIds.set(selection, ++nextSelectionId);
+      const binding = JSON.stringify([identity, selectionIds.get(selection), kind, row_id]);
       let offset = 0;
       if (cursor !== null) {
         let parsed;
@@ -837,45 +1046,43 @@
         if (parsed.binding !== binding) fail('detail cursor generation');
         offset = integer(parsed.offset);
       }
-      if (kind === 'diagnostics' || (kind === 'sources' && !selection.sources)) {
-        const page = await rangePage(
+      if (kind === 'diagnostics' || (kind === 'sources' && !selection.sources))
+        return rangePage(
           kind === 'diagnostics' ? catalog.switching.diagnostics : selection.detail_ranges.sources,
           offset,
           limit,
           kind === 'diagnostics'
             ? (s) => selection.selection.effective_vendors.includes(s.vendor)
             : () => true,
+          binding,
+          options,
         );
-        if (offset > page.total) fail('detail offset');
-        const next = offset + page.items.length;
-        return {
-          ...page,
-          next_cursor: next < page.total ? JSON.stringify({ binding, offset: next }) : null,
-        };
-      }
-      async function* rowArray(row, key) {
+      async function* rowArray(row, key, allowance) {
         if (row[key]) yield* row[key];
-        else yield* arrayItems(row.detail_ranges[key]);
+        else
+          for await (const { value } of arrayItems(row.detail_ranges[key], {
+            ...options,
+            valueLimit: allowance,
+          }))
+            yield value;
       }
-      async function* values() {
+      async function* values(allowance = () => selectedMax) {
         if (kind === 'sources') yield* selection.sources;
         else if (kind === 'claims') {
-          const seen = new Set();
-          let size = 0;
+          const seen = new Set(),
+            quota = json.budget(selectedMax);
           for (const row of selection.rows) {
-            for await (const id of rowArray(row, 'claim_ids')) {
+            for await (const id of rowArray(row, 'claim_ids', () => selectedMax)) {
               if (!seen.has(id)) {
-                size += id.length + 3;
-                if (size > 128000000) fail('detail membership budget');
+                quota.charge(json.stringBytes(id) + 1);
                 seen.add(id);
                 yield id;
               }
             }
-            for await (const event of rowArray(row, 'events'))
+            for await (const event of rowArray(row, 'events', () => selectedMax))
               for (const id of event.claim_ids) {
                 if (!seen.has(id)) {
-                  size += id.length + 3;
-                  if (size > 128000000) fail('detail membership budget');
+                  quota.charge(json.stringBytes(id) + 1);
                   seen.add(id);
                   yield id;
                 }
@@ -885,41 +1092,62 @@
           const row = selection.rows.find((r) => r.row_id === row_id);
           if (!row) fail('detail row');
           for (const value of row.status_buckets) yield { status_bucket: value };
-          for await (const value of rowArray(row, 'events')) yield { event: value };
+          for await (const value of rowArray(row, 'events', () => Math.max(0, allowance() - 10)))
+            yield { event: value };
           yield { issues: row.issues };
         } else fail('detail kind');
       }
-      const items = [];
       let total = 0;
-      for await (const value of values()) {
-        if (total >= offset && items.length < limit) items.push(value);
-        total++;
-      }
+      for await (const value of values()) total++;
       if (offset > total) fail('detail offset');
-      const next = offset + items.length;
+      const { quota, next_cursor } = pageBudget(total, binding, offset, limit),
+        items = [];
+      let index = 0;
+      for await (const value of values(() =>
+        index >= offset && items.length < limit
+          ? quota.remaining - (items.length ? 1 : 0)
+          : selectedMax,
+      )) {
+        if (index++ < offset || items.length >= limit) continue;
+        if (kind === 'claims') items.push(value);
+        else {
+          quota.charge(json.measure(value, null, '', quota.remaining) + (items.length ? 1 : 0));
+          items.push(value);
+        }
+      }
       return {
-        items: kind === 'claims' ? await switchingClaims(items) : items,
-        next_cursor: next < total ? JSON.stringify({ binding, offset: next }) : null,
+        items:
+          kind === 'claims' ? await switchingClaims(items, { ...options, budget: quota }) : items,
+        next_cursor,
         total,
       };
     }
-    async function runtimeSnapshot({ cohort = null, fields = null } = {}) {
-      if (cohort !== null) {
-        if (!limits.cohortReader) fail('cohort runtime requires static delivery');
-        return limits.cohortReader({ cohort, fields });
-      }
+    async function runtimeSnapshot({ cohort = null, fields = null, ...options } = {}) {
+      if (cohort !== null && !limits.cohortReader) fail('cohort runtime requires static delivery');
+      if (!options.operation)
+        return scoped(options, (next) => runtimeSnapshot({ cohort, fields, ...next }));
+      const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1));
+      if (cohort !== null)
+        return limits.cohortReader({ cohort, fields, ...options, max_bytes: max });
       if (fields) {
-        const result = {};
-        for (const key of fields) {
+        const result = {},
+          quota = json.budget(max);
+        quota.charge(2);
+        let count = 0;
+        for (const key of new Set(fields)) {
           literal(key);
-          Object.defineProperty(result, key, {
-            value: await field('runtime-snapshot', [key]),
-            enumerable: true,
+          const bound = await findRange('runtime-snapshot', [key], options);
+          quota.charge(json.stringBytes(key) + 1 + (count++ ? 1 : 0) + bound.logical_bytes);
+          const value = await materializeRange(bound, {
+            ...options,
+            path: [key],
+            max_bytes: bound.logical_bytes,
           });
+          Object.defineProperty(result, key, { value, enumerable: true });
         }
         return result;
       }
-      return materializeRoot('runtime-snapshot');
+      return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
     return {
       metadata: () => json.clone(catalog),
@@ -939,5 +1167,12 @@
       cacheBytes: () => bytes,
     };
   }
-  window.InfrastructurePublicationV2 = { open, streamTokens, decodeTokens, descriptor, range };
+  window.InfrastructurePublicationV2 = {
+    open,
+    streamTokens,
+    decodeTokens,
+    descriptor,
+    range,
+    consume: scoped,
+  };
 })();

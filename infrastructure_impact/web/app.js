@@ -589,13 +589,19 @@ async function switchingExport(
   }
   return switchingDownload(format, report);
 }
-function switchingDownload(format, report = switchingReport) {
+function switchingDownload(format, report = switchingReport, limits = {}) {
   if (!report || report.availability !== 'available') return null;
+  const maxBytes = Math.min(limits.max_bytes ?? 128000000, 128000000);
   return new Blob(
     [
       format === 'csv'
-        ? window.InfrastructureSwitching.csvExport(report)
-        : appJSON.stringify(report, null, 2),
+        ? window.InfrastructureSwitching.csvExport(
+            report,
+            report.representation ? { max_bytes: maxBytes } : {},
+          )
+        : report.representation
+          ? appJSON.stringifyBounded(report, null, 2, maxBytes)
+          : appJSON.stringify(report, null, 2),
     ],
     { type: format === 'csv' ? 'text/csv' : 'application/json' },
   );

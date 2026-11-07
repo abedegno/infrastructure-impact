@@ -323,9 +323,59 @@
     }
     return left.length - right.length;
   };
-  const sorted = (values) => [...new Set(values)].sort(compareText);
-  const canonical = (v) =>
-    JSON.stringify(v, (_, x) =>
+  let allocationQuota = null,
+    outputQuota = null,
+    outputRows = 0;
+  function boundedObject(entries, quota = null) {
+    const json = window.InfrastructureJSON;
+    if (quota) {
+      quota.charge(2);
+      let count = 0;
+      for (const [key, value] of entries)
+        quota.charge(
+          json.stringBytes(key) +
+            1 +
+            (count++ ? 1 : 0) +
+            json.measure(value, null, '', quota.remaining),
+        );
+    }
+    return Object.fromEntries(entries);
+  }
+  function outputRow(entries) {
+    if (outputQuota && outputRows++) outputQuota.charge(1);
+    return boundedObject(entries, outputQuota);
+  }
+
+  const retain = (value, extra = 0) => {
+    if (allocationQuota)
+      allocationQuota.charge(
+        window.InfrastructureJSON.measure(value, null, '', allocationQuota.remaining) + extra,
+      );
+    return value;
+  };
+  const append = (array, value) => {
+    retain(value, array.length ? 1 : 2);
+    array.push(value);
+  };
+  const sorted = (values) => {
+    const unique = new Set();
+    if (allocationQuota) allocationQuota.charge(2);
+    for (const value of values)
+      if (!unique.has(value)) {
+        retain(value, unique.size ? 1 : 0);
+        unique.add(value);
+      }
+    return [...unique].sort(compareText);
+  };
+  const canonical = (v, prepaid = false) => {
+    if (allocationQuota)
+      window.InfrastructureJSON.measure(
+        v,
+        null,
+        '',
+        prepaid ? 128000000 : allocationQuota.remaining,
+      );
+    return JSON.stringify(v, (_, x) =>
       x && typeof x === 'object' && !Array.isArray(x)
         ? Object.fromEntries(
             Object.keys(x)
@@ -334,6 +384,7 @@
           )
         : x,
     );
+  };
   const order = (a, b) => compareText(canonical(a), canonical(b));
   const day = (v) =>
     v === null ? null : /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : new Date(v).toISOString().slice(0, 10);
@@ -386,7 +437,8 @@
       ? ['all', 'undated'].includes(window)
       : window !== 'undated' && start <= value && value <= end;
   function events(claims) {
-    const groups = new Map();
+    const groups = [],
+      buckets = new Map();
     for (const c of claims) {
       if (
         !explicit(c) ||
@@ -399,47 +451,68 @@
       )
         continue;
       const b = c.bundle,
-        key = c.vendor + ':' + (b ? 'bundle:' + b.publisher_id : 'unbundled:' + c.advisory_id);
-      if (!groups.has(key))
-        groups.set(key, {
-          event_id: key,
+        publisher = b ? b.publisher_id : c.advisory_id,
+        prefix = c.vendor + ':' + (b ? 'bundle:' : 'unbundled:');
+      if (!buckets.has(prefix)) buckets.set(prefix, new Map());
+      const bucket = buckets.get(prefix);
+      if (!bucket.has(publisher)) {
+        // Reserve both event identity and publisher value before concatenation.
+        if (allocationQuota)
+          allocationQuota.charge(
+            2 * window.InfrastructureJSON.measure(publisher, null, '', allocationQuota.remaining) +
+              prefix.length +
+              128,
+          );
+        const event = {
+          event_id: prefix + publisher,
           kind: b ? 'bundle' : 'unbundled',
-          publisher_id: b ? b.publisher_id : c.advisory_id,
+          publisher_id: publisher,
           dates: [],
           claim_ids: [],
           advisory_ids: [],
           cve_ids: [],
-        });
-      const e = groups.get(key);
-      e.dates.push(day(b ? b.published_at : c.initial_published_at));
+        };
+        bucket.set(publisher, event);
+        groups.push(event);
+      }
+      const e = bucket.get(publisher);
+      append(e.dates, day(b ? b.published_at : c.initial_published_at));
       for (const [k, v] of [
         ['claim_ids', c.claim_id],
         ['advisory_ids', c.advisory_id],
         ['cve_ids', c.cve_id],
       ])
-        e[k].push(v);
+        append(e[k], v);
     }
-    return [...groups.values()]
+    return groups
       .map((e) => {
         const dates = [...new Set(e.dates)];
         delete e.dates;
-        return {
-          ...e,
-          published_at: dates.length === 1 ? dates[0] : null,
-          issues:
-            dates.length > 1
-              ? ['event_publication_date_conflicting']
-              : dates[0] === null
-                ? ['event_publication_date_missing']
-                : [],
-          claim_ids: sorted(e.claim_ids),
-          advisory_ids: sorted(e.advisory_ids),
-          cve_ids: sorted(e.cve_ids),
-        };
+        return boundedObject(
+          [
+            ['event_id', e.event_id],
+            ['kind', e.kind],
+            ['publisher_id', e.publisher_id],
+            ['claim_ids', sorted(e.claim_ids)],
+            ['advisory_ids', sorted(e.advisory_ids)],
+            ['cve_ids', sorted(e.cve_ids)],
+            ['published_at', dates.length === 1 ? dates[0] : null],
+            [
+              'issues',
+              dates.length > 1
+                ? ['event_publication_date_conflicting']
+                : dates[0] === null
+                  ? ['event_publication_date_missing']
+                  : [],
+            ],
+          ],
+          allocationQuota ? window.InfrastructureJSON.budget(128000000) : null,
+        );
       })
       .sort((a, b) => compareText(a.event_id, b.event_id));
   }
   function row(report, vendor, scope, window, requested, evaluated) {
+    if (allocationQuota) allocationQuota.charge(2048);
     const [start, end] = bounds(report.definition, report.observation_end, window);
     const families = report.definition.targets
       .filter((t) => t.vendor === vendor)
@@ -477,14 +550,18 @@
           band: severityBand(s.version, s.validation === 'incomplete' ? null : s.value),
         };
         const key = canonical(f);
-        if (!facets.has(key)) facets.set(key, { ...f, cve_ids: [] });
-        facets.get(key).cve_ids.push(c.cve_id);
+        if (!facets.has(key)) {
+          retain(key, 128);
+          facets.set(key, { ...f, cve_ids: [] });
+        }
+        append(facets.get(key).cve_ids, c.cve_id);
       }
     }
     for (const c of active) {
       for (const r of c.vendor_severity || []) {
         const key = canonical([r.rating, r.scheme, r.namespace]);
-        if (!ratings.has(key))
+        if (!ratings.has(key)) {
+          retain(key, 128);
           ratings.set(key, {
             rating: r.rating,
             scheme: r.scheme,
@@ -492,10 +569,12 @@
             scope: 'advisory',
             advisory_ids: [],
           });
-        ratings.get(key).advisory_ids.push(c.advisory_id);
+        }
+        append(ratings.get(key).advisory_ids, c.advisory_id);
       }
       const key = canonical([c.status, c.scope]);
       if (!statuses.has(key)) statuses.set(key, []);
+      retain(c.claim_id, 1);
       statuses.get(key).push(c);
     }
     const severity = [...facets.values()]
@@ -562,54 +641,66 @@
       ).length,
       model_unresolved_claims: active.filter((c) => c.scope_level !== 'model_qualified').length,
     };
-    return {
-      row_id: `${vendor}:${scope}:${window}`,
-      vendor,
-      scope_level: scope,
-      window,
-      period_start: start,
-      period_end: end,
-      date_basis: 'initial_publisher_date_utc_day',
-      event_date_basis: 'explicit_bundle_initial_else_advisory_initial',
-      advisory_ids: advisoryIds,
-      affected_advisory_ids: affectedAdvisoryIds,
-      cve_ids: selectedCves,
-      claim_ids: claimIds,
-      affected_cve_ids: affectedIds,
-      conditional_cve_ids: conditional,
-      event_ids: selectedEvents.map((e) => e.event_id),
-      events: selectedEvents,
-      counts,
-      status_buckets: buckets,
-      severity,
-      vendor_severity: vendorSeverity,
-      kev: {
-        availability: k.source.availability,
-        listed_cve_ids: listed,
-        unknown_cve_ids: unknown,
-        listed_count: listed.length,
-        unknown_count: unknown.length,
-        denominator: affectedIds.length,
-      },
-      coverage: {
-        state: sources.length ? 'partial' : 'unknown',
-        expected_advisories: null,
-        observed_advisories: advisoryIds.length,
-        basis: 'retained_source_windows_not_period_completeness',
-        sources,
-      },
-      denominators: {
-        affected_cves: affectedIds.length,
-        observed_advisories: advisoryIds.length,
-        expected_advisories: null,
-      },
-      issues: sorted([
-        ...report.inputs.evidence.issues,
-        'period_coverage_unknown',
-        'sets_nonadditive',
-        ...(counts.model_unresolved_claims ? ['model_binding_unresolved'] : []),
-      ]),
-    };
+    return outputRow([
+      ['row_id', `${vendor}:${scope}:${window}`],
+      ['vendor', vendor],
+      ['scope_level', scope],
+      ['window', window],
+      ['period_start', start],
+      ['period_end', end],
+      ['date_basis', 'initial_publisher_date_utc_day'],
+      ['event_date_basis', 'explicit_bundle_initial_else_advisory_initial'],
+      ['advisory_ids', advisoryIds],
+      ['affected_advisory_ids', affectedAdvisoryIds],
+      ['cve_ids', selectedCves],
+      ['claim_ids', claimIds],
+      ['affected_cve_ids', affectedIds],
+      ['conditional_cve_ids', conditional],
+      ['event_ids', selectedEvents.map((e) => e.event_id)],
+      ['events', selectedEvents],
+      ['counts', counts],
+      ['status_buckets', buckets],
+      ['severity', severity],
+      ['vendor_severity', vendorSeverity],
+      [
+        'kev',
+        {
+          availability: k.source.availability,
+          listed_cve_ids: listed,
+          unknown_cve_ids: unknown,
+          listed_count: listed.length,
+          unknown_count: unknown.length,
+          denominator: affectedIds.length,
+        },
+      ],
+      [
+        'coverage',
+        {
+          state: sources.length ? 'partial' : 'unknown',
+          expected_advisories: null,
+          observed_advisories: advisoryIds.length,
+          basis: 'retained_source_windows_not_period_completeness',
+          sources,
+        },
+      ],
+      [
+        'denominators',
+        {
+          affected_cves: affectedIds.length,
+          observed_advisories: advisoryIds.length,
+          expected_advisories: null,
+        },
+      ],
+      [
+        'issues',
+        sorted([
+          ...report.inputs.evidence.issues,
+          'period_coverage_unknown',
+          'sets_nonadditive',
+          ...(counts.model_unresolved_claims ? ['model_binding_unresolved'] : []),
+        ]),
+      ],
+    ]);
   }
   const windowObject = window;
   function selectUnchecked(report, options = {}) {
@@ -650,7 +741,7 @@
       selectedIds = requested === null ? null : sorted(requested);
     result.evaluated_at = evaluated;
     result.rows = selectedVendors.map((v) => row(result, v, scope, window, selectedIds, evaluated));
-    result.selection = {
+    const nextSelection = {
       requested_vendor: vendor,
       effective_vendors: [...selectedVendors],
       scope_level: scope,
@@ -660,6 +751,13 @@
       effective_cve_ids: sorted(result.rows.flatMap((r) => r.cve_ids)),
       definition_sha256: report.selection.definition_sha256,
     };
+    if (outputQuota)
+      outputQuota.charge(
+        windowObject.InfrastructureJSON.stringBytes('selection') +
+          2 +
+          windowObject.InfrastructureJSON.measure(nextSelection, null, '', outputQuota.remaining),
+      );
+    result.selection = nextSelection;
     const used = new Set(
         result.rows.flatMap((r) => [...r.claim_ids, ...r.events.flatMap((e) => e.claim_ids)]),
       ),
@@ -669,12 +767,23 @@
       else if (v && typeof v === 'object') {
         if (
           Object.keys(v).sort().join(',') === 'retrieved_at,source_locator,source_sha256,source_url'
-        )
-          sources.set(canonical(v), v);
-        else Object.values(v).forEach(collect);
+        ) {
+          retain(v, 2);
+          retain(v, 2);
+          sources.set(canonical(v, true), v);
+        } else Object.values(v).forEach(collect);
       }
     }
     result.inputs.evidence.claims.filter((c) => used.has(c.claim_id)).forEach(collect);
+    if (allocationQuota) allocationQuota.charge(2);
+    if (outputQuota) {
+      let count = 0;
+      for (const value of sources.values())
+        outputQuota.charge(
+          windowObject.InfrastructureJSON.measure(value, null, '', outputQuota.remaining) +
+            (count++ ? 1 : 0),
+        );
+    }
     result.sources = [...sources.values()].sort(order);
     return result;
   }
@@ -810,9 +919,9 @@
   }
   // Full claims are validated once at the stream boundary, then discarded.
   // This private projection is never passed off as a v1 evidence document.
-  async function selectClaims(metadata, evidence, kev, claims, options = {}) {
+  async function selectClaims(metadata, evidence, kev, claims, options = {}, limits = {}) {
     const reduced = [],
-      cap = 128000000,
+      cap = Math.min(limits.max_bytes ?? 128000000, 128000000),
       validation = window.InfrastructureSwitchingContracts.evidenceStream(
         evidence,
         metadata.definition,
@@ -830,18 +939,48 @@
     const requested = options.cve_ids ?? options.cveIds ?? null,
       vendor = options.vendor ?? null,
       scope = options.scope_level ?? options.scope ?? 'os_family';
-    let used = 0;
-    const pick = (value, keys) =>
-      Object.fromEntries(keys.filter((k) => Object.hasOwn(value, k)).map((k) => [k, value[k]]));
+    const json = window.InfrastructureJSON,
+      projectionQuota = json.budget(cap);
+    projectionQuota.charge(2);
+    let validationBytes = 0;
+    const chargeProperty = (key, value) =>
+      projectionQuota.charge(
+        json.stringBytes(key) + 1 + json.measure(value, null, '', projectionQuota.remaining),
+      );
+    function pick(value, keys) {
+      projectionQuota.charge(2);
+      const result = {};
+      let count = 0;
+      for (const key of keys)
+        if (Object.hasOwn(value, key)) {
+          chargeProperty(key, value[key]);
+          if (count++) projectionQuota.charge(1);
+          result[key] = value[key];
+        }
+      return result;
+    }
+    function arrayProperty(target, key, values, keys) {
+      projectionQuota.charge(json.stringBytes(key) + 4);
+      const result = [];
+      for (const value of values) {
+        if (result.length) projectionQuota.charge(1);
+        result.push(pick(value, keys));
+      }
+      target[key] = result;
+    }
     for await (const sourceClaim of claims) {
+      json.measure(sourceClaim, null, '', 128000000);
       const claim = ownedJSON(sourceClaim);
       validation.add(claim);
+      projectionQuota.charge(validation.bytes - validationBytes);
+      validationBytes = validation.bytes;
       if (
         (vendor !== null && claim.vendor !== vendor) ||
         (requested !== null && !requested.includes(claim.cve_id)) ||
         (scope === 'model_qualified' && claim.scope_level !== 'model_qualified')
       )
         continue;
+      if (reduced.length) projectionQuota.charge(1);
       const projection = pick(claim, [
         'claim_id',
         'vendor',
@@ -855,42 +994,57 @@
         'initial_published_at',
         'conditional_affected',
       ]);
+      projectionQuota.charge(json.stringBytes('publisher') + 2);
       projection.publisher = pick(claim.publisher, ['status']);
-      projection.bundle =
-        claim.bundle === null ? null : pick(claim.bundle, ['publisher_id', 'published_at']);
-      projection.remediations = claim.remediations.map((r) =>
-        pick(r, ['category', 'availability', 'product_ids', 'scope_binding']),
-      );
-      projection.scores = claim.scores.map((r) =>
-        pick(r, [
-          'scope',
-          'cve_id',
-          'version',
-          'value',
-          'provider',
-          'origin',
-          'preferred',
-          'validation',
-        ]),
-      );
-      projection.vendor_severity = (claim.vendor_severity || []).map((r) =>
-        pick(r, ['rating', 'scheme', 'namespace']),
-      );
+      projectionQuota.charge(json.stringBytes('bundle') + 2);
+      if (claim.bundle === null) {
+        projectionQuota.charge(4);
+        projection.bundle = null;
+      } else projection.bundle = pick(claim.bundle, ['publisher_id', 'published_at']);
+      arrayProperty(projection, 'remediations', claim.remediations, [
+        'category',
+        'availability',
+        'product_ids',
+        'scope_binding',
+      ]);
+      arrayProperty(projection, 'scores', claim.scores, [
+        'scope',
+        'cve_id',
+        'version',
+        'value',
+        'provider',
+        'origin',
+        'preferred',
+        'validation',
+      ]);
+      arrayProperty(projection, 'vendor_severity', claim.vendor_severity || [], [
+        'rating',
+        'scheme',
+        'namespace',
+      ]);
+      projectionQuota.charge(json.stringBytes('sources') + 4);
       projection.sources = [];
       function collect(v) {
-        if (Array.isArray(v)) v.forEach(collect);
-        else if (v && typeof v === 'object') {
+        if (Array.isArray(v)) {
+          for (const child of v) collect(child);
+        } else if (v && typeof v === 'object') {
+          const keys = Object.keys(v);
           if (
-            Object.keys(v).sort().join(',') ===
-            'retrieved_at,source_locator,source_sha256,source_url'
-          )
+            keys.length === 4 &&
+            keys.includes('retrieved_at') &&
+            keys.includes('source_locator') &&
+            keys.includes('source_sha256') &&
+            keys.includes('source_url')
+          ) {
+            projectionQuota.charge(
+              json.measure(v, null, '', projectionQuota.remaining) +
+                (projection.sources.length ? 1 : 0),
+            );
             projection.sources.push(v);
-          else Object.values(v).forEach(collect);
+          } else for (const key of keys) collect(v[key]);
         }
       }
       collect(claim);
-      used += new TextEncoder().encode(JSON.stringify(projection)).length;
-      if (used + validation.bytes > cap) throw Error('Study projection exceeds byte budget');
       reduced.push(projection);
     }
     validation.finish();
@@ -901,16 +1055,39 @@
     };
     delete report.representation;
     delete report.detail_ranges;
-    const selected = summary(selectUnchecked(report, options));
-    if (new TextEncoder().encode(JSON.stringify(selected)).length > cap)
-      throw Error('Study selection exceeds byte budget');
+    let selected;
+    const previousQuota = allocationQuota,
+      previousOutput = outputQuota,
+      previousRows = outputRows;
+    allocationQuota = json.budget(cap);
+    outputQuota = json.budget(cap);
+    outputRows = 0;
+    try {
+      const { inputs, rows, sources, selection, ...header } = report;
+      const base = {
+        ...header,
+        evaluated_at: options.evaluated_at ?? options.evaluatedAt ?? new Date().toISOString(),
+        rows: [],
+        sources: [],
+        representation: 'summary',
+      };
+      const size = json.measure(base, null, '', cap);
+      allocationQuota.charge(size);
+      outputQuota.charge(size);
+      selected = summary(selectUnchecked(report, options));
+    } finally {
+      allocationQuota = previousQuota;
+      outputQuota = previousOutput;
+      outputRows = previousRows;
+    }
     window.InfrastructureSwitchingContracts.summary(selected, metadata);
     return selected;
   }
   function summary(report) {
-    const r = clone(report);
-    delete r.inputs;
-    r.representation = 'summary';
+    const { inputs, ...body } = report;
+    body.representation = 'summary';
+    if (window.InfrastructureJSON?.measure) window.InfrastructureJSON.measure(body);
+    const r = clone(body);
     return r;
   }
   function queryOptions(params, end) {
@@ -984,12 +1161,31 @@
     'coverage_issues',
     'source_window_states',
   ];
-  function csvExport(report) {
+  function csvExport(report, options = {}) {
+    const quota =
+      options.max_bytes === undefined ? null : window.InfrastructureJSON.budget(options.max_bytes);
+    function cellBytes(value) {
+      let size = 2,
+        first = true,
+        formula = false;
+      for (const c of value) {
+        if (first && !/\s/u.test(c)) {
+          formula = /[=+\-@]/.test(c);
+          first = false;
+        }
+        const n = c.codePointAt(0);
+        size += c === '"' ? 2 : n < 128 ? 1 : n < 2048 ? 2 : n < 65536 ? 3 : 4;
+      }
+      if (formula || /^[\t\r\n]/.test(value)) size++;
+      return size;
+    }
     const cell = (value) => {
       let v = value == null ? '' : String(value);
+      quota?.charge(cellBytes(v));
       if (/^[=+\-@]/.test(v.trimStart()) || /^[\t\r\n]/.test(v)) v = "'" + v;
       return '"' + v.replaceAll('"', '""') + '"';
     };
+    quota?.charge(fields.join(',').length);
     const lines = [fields.join(',')];
     for (const r of report.rows) {
       const c = r.counts,
@@ -1022,7 +1218,8 @@
         c.conditional_cves,
         c.conditionality_unclassified_cves,
       ];
-      for (const f of r.severity.length ? r.severity : [{ band: 'Unknown', count: 0 }])
+      for (const f of r.severity.length ? r.severity : [{ band: 'Unknown', count: 0 }]) {
+        quota?.charge(fields.length - 1 + 2);
         lines.push(
           [
             ...common,
@@ -1042,6 +1239,7 @@
             .map(cell)
             .join(','),
         );
+      }
     }
     return lines.join('\r\n');
   }
