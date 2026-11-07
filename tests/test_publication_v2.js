@@ -127,6 +127,24 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
       reader.switchingDetails(JSON.parse(JSON.stringify(overview)), { kind: 'sources', limit: 25 }),
     );
     const full = await reader.materializeRoot('switching-comparison.json');
+    const originalSelectClaims = context.window.InfrastructureSwitching.selectClaims;
+    context.window.InfrastructureSwitching.selectClaims = () => {
+      throw Error('default selection must use the published comparison');
+    };
+    try {
+      const selected = await reader.switchingSelection({}, index.generated_at);
+      const expected = context.window.InfrastructureSwitching.summary(
+        context.window.InfrastructureSwitching.selectReport(full, {
+          evaluated_at: index.generated_at,
+        }),
+      );
+      assert.deepStrictEqual(
+        JSON.parse(JSON.stringify(selected)),
+        JSON.parse(JSON.stringify(expected)),
+      );
+    } finally {
+      context.window.InfrastructureSwitching.selectClaims = originalSelectClaims;
+    }
     for (const c of fixture.comparison_cases) {
       const got = await reader.switchingSelection(
         c.options,

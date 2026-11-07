@@ -1007,6 +1007,38 @@
       accepted.add(value);
       return value;
     }
+    async function publishedSelection(overview, consumption) {
+      const { detail_ranges, rows, ...header } = json.clone(overview),
+        quota = json.budget(selectedMax),
+        result = { ...header, schema_version: 1, representation: 'summary', rows: [], sources: [] };
+      quota.charge(json.measure(result, null, '', quota.remaining));
+      for (let index = 0; index < rows.length; index++) {
+        const { detail_ranges: fields, ...row } = rows[index];
+        quota.charge(json.measure(row, null, '', quota.remaining) + 1);
+        for (const [key, bound] of Object.entries(fields)) {
+          quota.charge(json.stringBytes(key) + 2);
+          const value = await materializeRange(bound, {
+            ...consumption,
+            path: ['switching_comparison', 'rows', index, key],
+            max_bytes: quota.remaining,
+          });
+          quota.charge(json.measure(value, null, '', quota.remaining));
+          row[key] = value;
+        }
+        result.rows.push(row);
+      }
+      result.sources = await materializeRange(detail_ranges.sources, {
+        ...consumption,
+        path: ['switching_comparison', 'sources'],
+        max_bytes: quota.remaining,
+      });
+      quota.charge(json.measure(result.sources, null, '', quota.remaining));
+      json.measure(result, null, '', selectedMax);
+      window.InfrastructureSwitchingContracts.summary(result, overview);
+      freeze(result);
+      accepted.add(result);
+      return result;
+    }
     async function switchingSelection(
       options = {},
       evaluatedAt = new Date().toISOString(),
@@ -1015,6 +1047,18 @@
       if (!consumption.operation)
         return scoped(consumption, (next) => switchingSelection(options, evaluatedAt, next));
       const overview = await switchingOverview(evaluatedAt, consumption);
+      // The ordinary default already has publisher-computed rows and details.
+      // Reuse them; custom selections still run the complete claim reducer.
+      if (
+        Object.keys(options).every((key) =>
+          ['vendor', 'scope_level', 'window', 'cve_ids'].includes(key),
+        ) &&
+        options.vendor == null &&
+        options.cve_ids == null &&
+        (options.scope_level === undefined || options.scope_level === 'os_family') &&
+        (options.window === undefined || options.window === 'all')
+      )
+        return publishedSelection(overview, consumption);
       const evidence = {};
       for (const key of ['publication', 'generated_at', 'definition_sha256', 'coverage', 'issues'])
         evidence[key] = await field('switching-evidence.json', [key], consumption);

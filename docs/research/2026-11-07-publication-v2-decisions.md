@@ -28,11 +28,19 @@ requirement. Further table-layout/compression work is deferred in favor of impor
 correctness and useful comparison data. V1 retains its 20 MB ceiling. Archive,
 part, index, materialization and complete-site limits remain unchanged.
 
-Reducer working data has a separate 512 MB ceiling. Retained-scale queries
+Reducer working data has a separate 512 MB logical-byte ceiling. Retained-scale queries
 exceeded 128 MB of intermediate projections while producing a small summary;
 using the response ceiling for both rejected a valid query. Individual values
 and returned responses retain the 128 MB limit. Working-data charges still
 precede allocation, and smaller caller-supplied working limits are enforced.
+
+The browser's default selection hydrates the existing published comparison
+instead of recalculating all 91,393 claims. Its complete selected JSON and
+4,942-byte CSV matched the Python reader on the retained diagnostic generation.
+The KEV evaluation clock is still refreshed; custom selections retain the claim
+reducer. Retained-scale detail paging and custom selections can exceed the
+five-minute deadline and remain performance limitations. The timeout was not
+raised, and these failures are not reported as browser acceptance.
 
 The first retained replay timed out after 2,400 seconds and is not accepted.
 The runtime correction reuses the producer's database query for cohort reporting
