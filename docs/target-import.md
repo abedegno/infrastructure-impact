@@ -208,3 +208,52 @@ change the other archive, part or index budgets. The opt-in local v2 monitor use
 a 32 MB default-download safety ceiling; v1 retains 20 MB. This download budget
 is separate from GitHub Pages' site-size limit. Further compression is deferred
 once the complete candidate fits, so import correctness and coverage take priority.
+
+## Inactive full hosted certification template
+
+`deploy/github-candidate-certification.yaml` is an **inactive template**, outside
+`.github/workflows`. No workflow has been installed or dispatched by adding it.
+After separate user approval to install and run this read-only check:
+
+1. Review the proposed source commit and the template, then copy the template to
+   `.github/workflows/candidate-certification.yaml` on the repository's default
+   branch. Keep its `contents: read` and `actions: read` permissions. The existing
+   `IMPACT_STATE_KEY` secret and `publication-state` accepted pointer must be
+   available; the job's read token downloads the GitHub draft recovery archive.
+2. In Actions, select **Certify full hosted candidate**, then **Run workflow**.
+   Enter the reviewed full 40-character lowercase hexadecimal `source_commit`.
+   Leave `previous_capture_run_id` blank for normal exact acquisition on the
+   first run. The source commit must include this CLI and hosted helper support.
+3. To reuse a prior certification's captures, enter that run's numeric ID while
+   its `candidate-certification-captures` artifact remains available (14 days).
+   Download or authentication failure rejects the run; it never silently falls
+   back to fresh acquisition. Each cache lookup rehashes bytes against the fixed
+   installed profile's target SHA before reuse.
+4. Review the workflow conclusion and `candidate-certification-result` artifact.
+   Only a successful stage with `outcome: completed` certifies the full restored
+   hosted baseline plus `campus-switching-public-gap-2026-11-07-v1` under the
+   explicit v2 format and `/infrastructure-impact/` base path. A failed job and
+   its failure code/timings identify a blocker, not an accepted candidate.
+
+The job restores accepted encrypted state to a temporary private home, previews
+that exact inventory, and stages a new isolated candidate through the existing
+full audit, capacity, parity and standalone monitor gates. This measures the
+complete authenticated hosted inventory; a smaller local research sample cannot
+establish those facts. Source commit and preview fingerprint bind the result to
+that run, not future accepted checkpoints.
+
+Capture persistence is a separate encrypted **acquisition** checkpoint, produced
+with the existing local backup/authentication/readback facilities after stage,
+including a failed stage when a cache exists. It never replaces accepted recovery.
+Only that encrypted directory and a separate bounded, allowlisted result summary
+(including validated acquisition counters, checks, phase resource measurements
+and terminal worker classification when emitted) are uploaded. Plaintext
+SQLite files, publisher bytes, worker logs, full receipts and the candidate tree
+remain private temporary files. A hard kill before the always-run checkpoint
+step can lose new captures; cancellation and runner loss cannot guarantee an
+artifact. Metadata may be absent if execution fails before stage.
+
+Installation or a passing certification does not change the live runtime source
+pin, accepted recovery, publishing workflow, schedule or live permissions. Source
+activation and any promotion/public deployment still require separate approval;
+this template contains no promotion or publication step.

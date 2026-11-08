@@ -31,8 +31,8 @@ WORKER_PHASES = (
 )
 
 
-def _worker_diagnostics(log, state, started, returncode=None):
-    """Retain bounded, closed metadata only; diagnostics never affect acceptance."""
+def parse_worker_diagnostics(raw, *, include_terminal=True):
+    """Project bounded untrusted logs to closed phase/resource and terminal metadata."""
 
     def pairs(items):
         value = {}
@@ -45,44 +45,68 @@ def _worker_diagnostics(log, state, started, returncode=None):
     def elapsed(value):
         return type(value) in (int, float) and 0 <= value <= 86_400
 
+    events = []
+    phases = 0
+    terminal = False
+    for line in raw[:65_536].splitlines():
+        try:
+            value = json.loads(line, object_pairs_hook=pairs)
+            if not isinstance(value, dict) or not elapsed(value.get("elapsed_seconds")):
+                continue
+            if value.get("event") == "candidate_worker":
+                if (
+                    not include_terminal
+                    or terminal
+                    or value.get("state") not in ("completed", "timeout", "launch_error", "nonzero")
+                ):
+                    continue
+                event = {
+                    "event": "candidate_worker",
+                    "state": value["state"],
+                    "elapsed_seconds": round(value["elapsed_seconds"], 6),
+                }
+                code = value.get("returncode")
+                if type(code) is int and -(2**31) <= code < 2**31:
+                    event["returncode"] = code
+                terminal = True
+            else:
+                if (
+                    phases == 32
+                    or value.get("event") != "phase"
+                    or value.get("phase") not in WORKER_PHASES
+                    or value.get("state") not in ("started", "completed", "failed")
+                ):
+                    continue
+                event = {
+                    "event": "phase",
+                    "phase": value["phase"],
+                    "state": value["state"],
+                    "elapsed_seconds": round(value["elapsed_seconds"], 6),
+                }
+                cpu = value.get("process_cpu_seconds")
+                if elapsed(cpu):
+                    event["process_cpu_seconds"] = round(cpu, 6)
+                peak = value.get("peak_resident_bytes")
+                if type(peak) is int and 0 <= peak <= 2**50:
+                    event["peak_resident_bytes"] = peak
+                phases += 1
+            events.append(event)
+        except (ValueError, TypeError, RecursionError):
+            continue
+    return events
+
+
+def _worker_diagnostics(log, state, started, returncode=None):
+    """Retain bounded, closed metadata only; diagnostics never affect acceptance."""
     try:
-        events = []
         try:
             log.flush()
             log.seek(0)
             raw = log.read(65_536)
         except (OSError, ValueError):
             raw = b""
-        for line in raw.splitlines():
-            try:
-                value = json.loads(line, object_pairs_hook=pairs)
-                if (
-                    not isinstance(value, dict)
-                    or value.get("event") != "phase"
-                    or value.get("phase") not in WORKER_PHASES
-                    or value.get("state") not in ("started", "completed", "failed")
-                    or not elapsed(value.get("elapsed_seconds"))
-                ):
-                    continue
-                events.append(
-                    {
-                        "event": "phase",
-                        "phase": value["phase"],
-                        "state": value["state"],
-                        "elapsed_seconds": round(value["elapsed_seconds"], 6),
-                    }
-                )
-                # Optional measurements come from child events, never parent RUSAGE_CHILDREN.
-                cpu = value.get("process_cpu_seconds")
-                if elapsed(cpu):
-                    events[-1]["process_cpu_seconds"] = round(cpu, 6)
-                peak = value.get("peak_resident_bytes")
-                if type(peak) is int and 0 <= peak <= 2**50:
-                    events[-1]["peak_resident_bytes"] = peak
-            except (ValueError, TypeError, RecursionError):
-                continue
-            if len(events) == 32:
-                break
+        # Child logs cannot supply a terminal summary for their supervising parent.
+        events = parse_worker_diagnostics(raw, include_terminal=False)
         duration = perf_counter() - started
         summary = {
             "event": "candidate_worker",
