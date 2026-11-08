@@ -37,6 +37,8 @@ Evidence/source-context duplication, overlapping logical roots and repeated full
 
 Hard runner termination before an encrypted acquisition checkpoint can still lose in-flight acquisition. Local caches have no automatic eviction policy. Independent human extraction review, historical coverage completeness and the interpretation of vendor disclosure counts remain separate research limitations.
 
+The final review recorded a nonblocking provenance limitation: original HTTP observation rows (`checked_at` and response status) remain in rejected stages. The durable cache preserves the capture timestamp and validators, but replay restores evidence without those check-history rows. Cache replay is not a fresh reachability check; missing check history must remain unknown. Preserving original check events with stable identities and correct chronological replay is follow-up work.
+
 ## Verification
 
 The complete local suite passed **3,711 tests and 12 subtests in 398.98 seconds**, with application credentials and configuration overrides removed and synthetic loopback monitors enabled. All eight JavaScript suites, the explicit CI Ruff/format scope, Prettier and workflow actionlint checks passed.
@@ -44,3 +46,5 @@ The complete local suite passed **3,711 tests and 12 subtests in 398.98 seconds*
 The wheel built and its offline isolated installed-package probe passed, including external plugins, resources, API views and real candidate monitors. That probe initially failed because its authored fetch stub bypassed transport evidence/budget side effects; it now substitutes HTTP responses at the opener boundary and asserts the actual acquisition counters. Production provenance requirements were retained.
 
 The public-source export checked 641 files, synthetic fixture integrity and private-artifact exclusions. Actual hosted evidence/key access, certification and activation were not performed. The [inactive certification template](../../deploy/github-candidate-certification.yaml) is the next reviewable measurement step.
+
+An internal operational report was removed from unpublished history before any push. The release exporter now checks the Git inventory before copying files, rejecting tracked workspace artifacts that its positive export allowlist would otherwise omit. All 15 focused release tests pass; the new branch history was separately audited against the public inventory. This checkout guard is not a complete historical secret scanner.

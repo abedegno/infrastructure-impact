@@ -94,6 +94,12 @@
     "ruff_and_format": "passed",
     "installed_wheel_probe": "passed offline, all installed-package/plugin/API checks true",
     "public_source_files_checked": 641,
-    "hosted_certification": "not run; inactive template prepared"
-  }
+    "hosted_certification": "not run; inactive template prepared",
+    "release_inventory_tests_passed": 15
+  },
+  "known_cache_limitations": [
+    "Original HTTP checked_at/status observation rows in rejected stages are not checkpointed; capture timestamp/bytes/validators survive; replay does not imply fresh reachability",
+    "Hard runner termination before encrypted checkpoint may lose in-flight captures",
+    "No automatic local cache eviction"
+  ]
 }
