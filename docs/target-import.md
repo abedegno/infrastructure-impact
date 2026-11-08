@@ -222,15 +222,17 @@ limit.
 The first two hosted attempts failed before staging: GitHub returned HTTP 403
 while restoring the draft recovery release. GitHub documents that viewing draft
 releases requires push access ([release API documentation](https://docs.github.com/en/rest/releases/releases#list-releases)).
-The proposed workflow therefore requests `contents: write` solely to read that
+The workflow therefore requests `contents: write` solely to read that
 private draft, plus `actions: read` for optional capture reuse. This is a
 write-capable credential even though the workflow performs no remote writes.
-**Activation of this broader permission requires separate maintainer approval.**
-The installed main-branch workflow remains read-only until that approval.
+The maintainer explicitly approved this broader permission on 8 November 2026;
+[PR #43](https://github.com/abedegno/infrastructure-impact/pull/43) installed it.
+This approval covers certification only, with no source activation, recovery
+promotion or public deployment.
 
-After permission approval, to run the check:
+To run the approved check:
 
-1. Review the proposed source commit and installed workflow. The proposed
+1. Review the proposed source commit and installed workflow. The
    `contents: write` and `actions: read` permissions must have been explicitly
    approved. The existing `IMPACT_STATE_KEY` secret and `publication-state`
    accepted pointer must be available. The GitHub token is passed only to the

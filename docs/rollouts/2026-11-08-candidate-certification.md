@@ -61,8 +61,9 @@ so the existing authenticated draft recovery reader can operate. It retains
 no remote-write commands and no publication or promotion steps. The stage step
 receives neither the GitHub token nor the recovery key.
 
-This proposal is **not approved or activated**. It must not be merged or dispatched
-until the maintainer approves the broader credential scope. No fallback to an
+The maintainer explicitly approved this broader credential scope on 8 November
+2026. [PR #43](https://github.com/abedegno/infrastructure-impact/pull/43) merged as
+`4cbcfde0391615641ba417a24f21c0c7c3758d06` at `17:12:40Z`. No fallback to an
 older recovery checkpoint or public recovery release is proposed. A passing
 workflow contract test cannot establish that hosted restore or certification has
 succeeded; that requires an approved hosted run.
@@ -81,3 +82,54 @@ the public index SHA-256 remained
 `0f150ee5d7470de53575d03e6fde827e14d9ccfb685b03d132510cf1a15a7127`;
 and the live source pin remained
 `d473d60ec46783750fcaa1795035603ca43a9100`.
+
+## Approved certification retry
+
+[Run 42503815667](https://github.com/abedegno/infrastructure-impact/actions/runs/42503815667)
+uses workflow revision `4cbcfde0391615641ba417a24f21c0c7c3758d06` and the same reviewed
+source `3c6652a7d5eedfb9292f1a701938677054dbec6e`. Accepted-state restore succeeded
+in three seconds (`17:13:04Z` to `17:13:07Z`), confirming the permission fix.
+Preview passed; staging ran from `17:13:08Z` to `17:56:02Z`. The final job failed
+with `failure_code: candidate_validation` and `candidate_validated: false`.
+The allowlisted result was inspected; actual encrypted capture bytes and private
+state remained on GitHub.
+
+All **174 targets imported**, using 174 HTTP attempts and 32,176,699 received/input
+bytes. The import audit passed. The worker completed normally (return code 0)
+after **2,368.08 seconds**, with candidate rejection recorded in its result; this
+was neither the outer 40-minute worker timeout nor a failed recovery/download.
+Its native/static query-comparison phase failed; the existing sanitized events
+do not disclose which internal check or exception caused that failure. Do not
+claim a proven semantic mismatch, capacity failure or OOM from these events.
+
+| Phase | Elapsed seconds | Peak resident bytes |
+| --- | ---: | ---: |
+| Initial native query | 87.50 | 2,574,475,264 |
+| Initial public projection | 281.60 | 5,732,397,056 |
+| Publication writing | 522.32 | 5,732,397,056 |
+| Physical inspection | 17.92 | 5,732,397,056 |
+| Independent native query | 94.27 | 5,732,397,056 |
+| Independent public projection | 288.02 | 5,750,542,336 |
+| Native root verification | 509.41 | 5,750,542,336 |
+| Native query comparison (failed) | 521.19 | 5,868,761,088 |
+
+CPU time closely tracks wall time in these phases. Validation consumed about
+92% of the staging step. The worker's failure came before standalone monitor and
+final capacity acceptance, so those checks remain unproven. The result does not
+justify raising limits or activating the source pin.
+
+Both artifacts uploaded successfully. The encrypted acquisition checkpoint is
+480,275 bytes and can be reused on the GitHub runner via
+`previous_capture_run_id=42503815667` within its 14-day retention. A retry must
+first address or diagnose the failed comparison; repeating unchanged work would
+spend another validation run without new evidence.
+
+Accepted-manifest and public-index hashes and the live source pin were rechecked
+after completion and match the unchanged values recorded above. No accepted
+recovery, live source activation or public publication was performed.
+
+Next engineering work should isolate the failure inside
+`publication.native_queries` with a bounded, closed error classification and a
+small reproducer, then address the measured CPU and memory costs. Raw worker
+tracebacks, paths, evidence bodies and secrets must remain private. Root
+verification passed; removing its checks merely to reduce runtime is not a fix.
