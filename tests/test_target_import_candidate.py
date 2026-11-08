@@ -249,6 +249,28 @@ def test_worker_pass_cannot_exceed_capacity_contract():
         module.validate_result(value)
 
 
+@pytest.mark.parametrize("publication_format,budget", [("v1", 20_000_000), ("v2", 32_000_000)])
+def test_worker_default_download_budget_boundary(publication_format, budget):
+    module = implementation()
+    value = module._empty("passed", publication_format=publication_format)
+    value.update(audit_passed=True, capacity_passed=True, candidate_validated=True)
+    value["candidate"].update(
+        generation="a" * 32,
+        manifest_sha256="b" * 64,
+        public_bytes=437_319_066,
+        expanded_bytes=39_411_194,
+        compressed_bytes=5_037_429,
+        default_checked_bytes=budget,
+        default_monitor_passed=True,
+        archive_monitor_passed=True,
+        parity_passed=True,
+    )
+    assert module.validate_result(value, publication_format=publication_format) == value
+    value["candidate"]["default_checked_bytes"] += 1
+    with pytest.raises(ValueError, match="capacity"):
+        module.validate_result(value, publication_format=publication_format)
+
+
 @pytest.mark.parametrize(
     "damage", ["manifest", "part", "schema", "csv", "selection", "switching", "private_extra"]
 )
@@ -691,3 +713,21 @@ def test_prefixed_monitor_refuses_extra_root_routes_and_private_paths(candidate,
     monkeypatch.setattr(module.subprocess, "run", checked_run)
     module._monitors(public, home, result["candidate"], base_path="/infrastructure-impact/")
     assert len(seen) == 2
+
+
+def test_explicit_v2_candidate_runs_complete_fresh_worker(candidate):
+    module = implementation()
+    database, public, selected = candidate
+    context_path = database.parent.parent / "home/target-import-context.json"
+    context = json.loads(context_path.read_bytes())
+    context.update(schema_version=2, publication_format="v2")
+    context_path.write_text(json.dumps(context))
+    result = module.verify(database, public, selected, publication_format="v2")
+    assert result["candidate_validated"] is True, (
+        result,
+        (database.parent.parent / "home/target-import-worker.log").read_text(),
+    )
+    assert result["publication_format"] == "v2" and result["schema_version"] == 2
+    assert result["candidate"]["archive_scope"] == "snapshot-v1"
+    assert result["candidate"]["representation"] == "publication-v2-physical"
+    assert not (public / "snapshot.json").exists()

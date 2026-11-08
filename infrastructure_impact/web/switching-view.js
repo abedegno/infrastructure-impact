@@ -89,30 +89,28 @@
         `<p>Study ${esc(report.definition.id)} · version ${esc(report.definition.version)}. Publication ${text(report.publication?.id)} · generated ${text(report.generated_at)}.</p><p class="empty">Switching study unavailable for this publication. Older publications may not contain study assets; missing evidence is unknown.</p>`
       );
     const selected = new Set(
-      report.rows.flatMap((r) => [...r.claim_ids, ...r.events.flatMap((e) => e.claim_ids)]),
+      report.rows.flatMap((r) => [
+        ...(r.claim_ids || []),
+        ...(r.events || []).flatMap((e) => e.claim_ids),
+      ]),
     );
     return (
       title +
       controls(report) +
       status +
-      `<p><strong>Study ${esc(report.definition.id)} · version ${esc(report.definition.version)}</strong> · ${esc(report.definition.start_date)} through ${esc(report.observation_end)}. Cutoff ${esc(report.definition.cutoff_date)} belongs to post. 2026 is partial; the observation-end year is partial.</p><p>Publication ${text(report.publication?.id)} · generated ${text(report.generated_at)} · evaluated ${text(report.evaluated_at)}</p><p class="fingerprint">Definition SHA-256 ${esc(report.selection.definition_sha256)}</p><p><button id="switching-json">Download accepted study JSON (complete inputs)</button> <button id="switching-csv">Download accepted study CSV summary</button></p><p class="notice">Sets are nonadditive across years, severity facets and OS-family/model-qualified scopes. Do not sum overlapping counts. Unequal declared model sets do not establish equivalent exposure.</p>${report.rows.map(rowMarkup).join('')}<details><summary>Method, target models and review limits</summary><p>${esc(report.method)}</p><p>Latest retained claims grouped by initial publication date. Remediation-publication events describe explicit publisher fix statements and bundle membership, not actual upgrades. No fix-delay estimate, vendor ranking, equivalence verdict, causal interpretation or automatic no-difference conclusion.</p><p>Independent human review pending. The separate 16-case switching validation set checks extraction behavior; the original global extraction set does not validate this study.</p><p>7050X3 has a broader data-center product role; inclusion does not establish equal campus exposures. Arista 750 is not 7500. Lifecycle, historical inventory and release-train coverage remain unresolved.</p>${report.definition.targets.map((t) => `<p>${esc(t.vendor)} / ${esc(t.family)}: ${esc(t.models.join(', '))} · ${esc(t.issues.join('; '))}</p>`).join('')}<h4>Declared target references</h4>${report.definition.references.map((r) => `<p>${link(r.source_url, r.id)} · ${esc(r.source_locator)} · reviewed ${esc(r.reviewed_at)}</p>`).join('')}</details>${lazySection('claims', 'Trace selected claims (' + selected.size + ')')}${lazySection('diagnostics', 'Score availability and source diagnostics')}${lazySection('sources', 'Selected provenance (' + report.sources.length + ')')}`
+      `<p><strong>Study ${esc(report.definition.id)} · version ${esc(report.definition.version)}</strong> · ${esc(report.definition.start_date)} through ${esc(report.observation_end)}. Cutoff ${esc(report.definition.cutoff_date)} belongs to post. 2026 is partial; the observation-end year is partial.</p><p>Publication ${text(report.publication?.id)} · generated ${text(report.generated_at)} · evaluated ${text(report.evaluated_at)}</p><p class="fingerprint">Definition SHA-256 ${esc(report.selection.definition_sha256)}</p><p><button id="switching-json">Download accepted study summary / overview JSON</button> <button id="switching-csv">Download accepted study CSV summary</button></p>${state.factCatalog ? '<p>Complete facts: <a href="publication-v2.json">publication fact catalog</a>. Local complete export: <code>publication-export --publication DIR --root NAME --output FILE</code>.</p>' : ''}<p class="notice">Sets are nonadditive across years, severity facets and OS-family/model-qualified scopes. Do not sum overlapping counts. Unequal declared model sets do not establish equivalent exposure.</p>${report.rows.map(rowMarkup).join('')}<details><summary>Method, target models and review limits</summary><p>${esc(report.method)}</p><p>Latest retained claims grouped by initial publication date. Remediation-publication events describe explicit publisher fix statements and bundle membership, not actual upgrades. No fix-delay estimate, vendor ranking, equivalence verdict, causal interpretation or automatic no-difference conclusion.</p><p>Independent human review pending. The separate 16-case switching validation set checks extraction behavior; the original global extraction set does not validate this study.</p><p>7050X3 has a broader data-center product role; inclusion does not establish equal campus exposures. Arista 750 is not 7500. Lifecycle, historical inventory and release-train coverage remain unresolved.</p>${report.definition.targets.map((t) => `<p>${esc(t.vendor)} / ${esc(t.family)}: ${esc(t.models.join(', '))} · ${esc(t.issues.join('; '))}</p>`).join('')}<h4>Declared target references</h4>${report.definition.references.map((r) => `<p>${link(r.source_url, r.id)} · ${esc(r.source_locator)} · reviewed ${esc(r.reviewed_at)}</p>`).join('')}</details>${lazySection('claims', 'Trace selected claims (' + selected.size + ')')}${lazySection('diagnostics', 'Score availability and source diagnostics')}${lazySection('sources', 'Selected provenance (' + (report.sources || []).length + ')')}`
     );
   }
   // Each expansion is tied to this accepted report, never pending form values.
   // Native details/summary and buttons retain keyboard behavior without custom keys.
   const PAGE_SIZE = 25;
-  function bounded(value) {
-    if (Array.isArray(value)) return value.slice(0, PAGE_SIZE).map(bounded);
-    if (value && typeof value === 'object')
-      return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, bounded(v)]));
-    return value;
-  }
-  function mount(root, report, loadClaims) {
+  function mount(root, report, loadClaims, loadDetails = null) {
     if (!report || report.availability !== 'available') return;
     for (const detail of root.querySelectorAll('[data-switching-detail]')) {
       let offset = 0,
         busy = false,
-        values;
+        values,
+        cursor = null;
       const kind = detail.dataset.switchingDetail,
         body = detail.querySelector('[data-switching-body]');
       async function more() {
@@ -120,6 +118,42 @@
         busy = true;
         body.querySelector('button')?.remove();
         try {
+          if (loadDetails) {
+            const request = kind.startsWith('status:')
+              ? {
+                  kind: 'status',
+                  row_id: report.rows[Number(kind.split(':')[1])].row_id,
+                  cursor,
+                  limit: PAGE_SIZE,
+                }
+              : { kind, cursor, limit: PAGE_SIZE };
+            const result = await loadDetails(request);
+            if (result) {
+              if (!detail.isConnected) return;
+              body.insertAdjacentHTML(
+                'beforeend',
+                result.items
+                  .map((v) =>
+                    kind === 'claims'
+                      ? claimMarkup(v)
+                      : kind === 'sources'
+                        ? source(v)
+                        : `<pre>${esc(JSON.stringify(v, null, 2))}</pre>`,
+                  )
+                  .join('') || '<p>No retained detail in this selection.</p>',
+              );
+              cursor = result.next_cursor;
+              offset += result.items.length;
+              if (cursor) {
+                body.insertAdjacentHTML(
+                  'beforeend',
+                  `<button type="button">Show ${PAGE_SIZE} more (${offset} of ${result.total} shown)</button>`,
+                );
+                body.querySelector('button').addEventListener('click', more);
+              }
+              return;
+            }
+          }
           if (!values) {
             if (kind === 'claims')
               values = [
@@ -132,7 +166,7 @@
               ];
             else if (kind === 'sources') values = report.sources;
             else if (kind === 'diagnostics')
-              values = (report.inputs.evidence.score_availability || []).filter((s) =>
+              values = (report.inputs?.evidence?.score_availability || []).filter((s) =>
                 report.selection.effective_vendors.includes(s.vendor),
               );
             else {
@@ -155,7 +189,7 @@
                   ? claimMarkup(v)
                   : kind === 'sources'
                     ? source(v)
-                    : `<pre>${esc(JSON.stringify(bounded(v), null, 2))}</pre>`,
+                    : `<pre>${esc(JSON.stringify(v, null, 2))}</pre>`,
               )
               .join('') || '<p>No retained detail in this selection.</p>',
           );
@@ -190,7 +224,7 @@
                   : kind === 'diagnostics'
                     ? '<p>Source-only unclassified records do not establish study applicability.</p>'
                     : '') +
-                  '<p>Source context, not additional impact counts. Lists show up to 25 entries per item; complete details remain in the accepted JSON download.</p>',
+                  '<p>Source context, not additional impact counts. Pages show 25 entries; complete facts remain in the publication fact catalog and local publication-export CLI.</p>',
           );
           more();
         }

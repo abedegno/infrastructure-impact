@@ -9,6 +9,7 @@ import sys
 import tempfile
 import tomllib
 from pathlib import Path
+from zipfile import ZipFile
 
 
 def release_wheel(root):
@@ -22,34 +23,13 @@ def release_wheel(root):
 
 
 def public_resource_fingerprints(root):
+    # Derive the required set from source, independently of wheel contents.
+    # Checking only files that happened to ship cannot detect omitted modules.
+    package = root / "infrastructure_impact"
     names = [
-        "schemas/comparison-eligibility-summary-v1.json",
-        "schemas/coverage-gaps-v1.json",
-        "schemas/cve-reconciliation-v1.json",
-        "resources/cve-reconciliation-selectors.json",
-        "web/kev.js",
-        "schemas/kev-v1.json",
-        "schemas/current-evidence-v1.json",
-        "schemas/static-index-v1.json",
-        "resources/openapi.json",
-        "web/lossless-json.js",
-        "web/current-evidence.js",
-        "resources/sources.json",
-        "web/switching-contracts.js",
-        "web/switching.js",
-        "web/switching-view.js",
-        "resources/switching-study.json",
-        "resources/switching-source-bindings.json",
-        "resources/switching-extraction-review.json",
-        "migrations/011_switching_collection.sql",
-        "resources/target-imports/campus-switching-public-gap-2026-11-07-v1.json",
-        "schemas/target-import-manifest-v1.json",
-        "schemas/target-import-preview-v1.json",
-        "schemas/target-import-result-v1.json",
-    ]
-    names += [
-        "schemas/switching-" + name + "-v1.json"
-        for name in ("study", "evidence", "comparison", "summary", "inputs")
+        path.relative_to(package).as_posix()
+        for path in package.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
     ]
     resources = {
         name: hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
@@ -61,7 +41,31 @@ def public_resource_fingerprints(root):
             for name in ("public_health.py", "switching_health.py")
         }
     )
+    resources["_standalone/publication_codec.py"] = hashlib.sha256(
+        (root / "infrastructure_impact/publication_codec.py").read_bytes()
+    ).hexdigest()
     return resources
+
+
+def verify_wheel_inventory(root, wheel):
+    expected = public_resource_fingerprints(root)
+    prefix = "infrastructure_impact/"
+    with ZipFile(wheel) as archive:
+        names = [n for n in archive.namelist() if n.startswith(prefix) and not n.endswith("/")]
+        if len(names) != len(set(names)):
+            raise ValueError("Duplicate wheel package member")
+        actual = {n.removeprefix(prefix) for n in names}
+        if actual != set(expected):
+            raise ValueError(
+                "Wheel package inventory mismatch: missing="
+                + repr(sorted(set(expected) - actual))
+                + "; unexpected="
+                + repr(sorted(actual - set(expected)))
+            )
+        for name, digest in expected.items():
+            if hashlib.sha256(archive.read(prefix + name)).hexdigest() != digest:
+                raise ValueError("Wheel package bytes mismatch: " + name)
+    return len(expected)
 
 
 def main():
@@ -72,6 +76,7 @@ def main():
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
     wheel = release_wheel(root)
+    verify_wheel_inventory(root, wheel)
     from infrastructure_impact.plugins.builtin import builtin_plugins
     from infrastructure_impact.plugins.registry import default_registry
 

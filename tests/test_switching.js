@@ -1,9 +1,9 @@
 const fs = require('fs'),
   vm = require('vm'),
   assert = require('assert');
-const context = { window: {}, console };
+const context = { window: {}, console, TextEncoder };
 vm.createContext(context);
-for (const name of ['kev', 'switching-contracts', 'switching'])
+for (const name of ['lossless-json', 'kev', 'switching-contracts', 'switching'])
   vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), context);
 const data = JSON.parse(fs.readFileSync('tests/fixtures/switching-cases.json'));
 const api = context.window.InfrastructureSwitching;
@@ -131,3 +131,133 @@ for (const value of [NaN, Infinity, -Infinity]) {
   );
   assert.throws(() => contracts.fingerprint({ value }));
 }
+(async () => {
+  assert.strictEqual(typeof api.selectClaims, 'function', 'streamed reducer required');
+  for (const c of data.comparison_cases) {
+    const base = data.comparison_base_report;
+    const selected = await api.selectClaims(
+      base,
+      base.inputs.evidence,
+      base.inputs.kev,
+      (async function* () {
+        yield* base.inputs.evidence.claims;
+      })(),
+      c.options,
+    );
+    assert.deepStrictEqual(
+      JSON.parse(JSON.stringify(selected)),
+      JSON.parse(JSON.stringify(api.summary(api.selectReport(base, c.options)))),
+      c.name,
+    );
+  }
+  console.log('Streamed private projection query parity passed');
+  const base = data.comparison_base_report;
+  for (const working_bytes of [1, 512000001])
+    await assert.rejects(
+      () =>
+        api.selectClaims(
+          base,
+          base.inputs.evidence,
+          base.inputs.kev,
+          (async function* () {
+            yield* base.inputs.evidence.claims;
+          })(),
+          {},
+          { working_bytes },
+        ),
+      /budget/,
+    );
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+(async () => {
+  const vectors = JSON.parse(fs.readFileSync('tests/fixtures/publication-v2-query-vectors.json'));
+  for (const c of vectors.cases) {
+    const base = vectors.report;
+    const selected = await api.selectClaims(
+      base,
+      base.inputs.evidence,
+      base.inputs.kev,
+      (async function* () {
+        yield* base.inputs.evidence.claims;
+      })(),
+      { ...c.options, evaluated_at: c.evaluated_at },
+    );
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(selected)), c.summary, c.name);
+    assert.strictEqual(api.csvExport(selected), c.csv, c.name + ' CSV');
+  }
+  console.log('Publication v2 shared cross-language query JSON and CSV vectors passed');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+(async () => {
+  const base = data.comparison_base_report,
+    claim = JSON.parse(JSON.stringify(base.inputs.evidence.claims[0]));
+  claim.product += ' tampered';
+  await assert.rejects(
+    () =>
+      api.selectClaims(
+        base,
+        base.inputs.evidence,
+        base.inputs.kev,
+        (async function* () {
+          yield claim;
+        })(),
+        {},
+      ),
+    /claim IDs/,
+  );
+  console.log('Streamed semantic identity validation passed');
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
+{
+  const evidence = JSON.parse(fs.readFileSync('tests/fixtures/publication-v2-reviewed-link.json'));
+  const validator = contracts.evidenceStream(evidence, data.comparison_base_report.definition);
+  for (const claim of evidence.claims) validator.add(claim);
+  validator.finish();
+  const missing = contracts.evidenceStream(evidence, data.comparison_base_report.definition);
+  for (const claim of evidence.claims.filter((c) => c.status !== 'fixed')) missing.add(claim);
+  assert.throws(() => missing.finish(), /reviewed section/);
+  console.log('Streamed reviewed-section cross-claim linkage passed');
+}
+(async () => {
+  const base = data.comparison_base_report;
+  await assert.rejects(
+    () =>
+      api.selectClaims(
+        base,
+        base.inputs.evidence,
+        base.inputs.kev,
+        (async function* () {
+          yield* base.inputs.evidence.claims;
+        })(),
+        {},
+        { max_bytes: 400 },
+      ),
+    /budget/,
+  );
+  const selected = api.summary(api.selectReport(base)),
+    csv = api.csvExport(selected),
+    bytes = Buffer.byteLength(csv);
+  assert.strictEqual(api.csvExport(selected, { max_bytes: bytes }), csv);
+  assert.throws(() => api.csvExport(selected, { max_bytes: bytes - 1 }), /budget/);
+  vm.runInContext(
+    `const originalStringify=JSON.stringify;JSON.stringify=(value,...rest)=>{if(value?.inputs)throw Error('full inputs serialization forbidden');return originalStringify(value,...rest);};`,
+    context,
+  );
+  try {
+    api.summary(base);
+  } finally {
+    vm.runInContext('JSON.stringify=originalStringify;', context);
+  }
+  console.log(
+    'Projection/reducer limits, CSV exact allowance and no full-input summary clone passed',
+  );
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

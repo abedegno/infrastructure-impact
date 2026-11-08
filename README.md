@@ -139,10 +139,17 @@ flowchart LR
   Publication --> Reader[Read-only API and dashboard]
 ```
 
-The static browser loads selected CVE evidence in verified parts. Explicit JSON
-and compressed JSON downloads contain the whole publication, independent of the
-selected cohort. See [static delivery](docs/STATIC_DELIVERY.md) for integrity checks
-and transfer budgets.
+The static browser loads selected CVE evidence in verified parts. Snapshot
+archives retain the complete snapshot scope, independent of the selected cohort.
+See [static delivery](docs/STATIC_DELIVERY.md) for integrity checks and transfer
+budgets. Local publication v2 is opt-in: it uses bounded parts and a self-contained
+snapshot archive, while full research inputs remain separate mandatory logical
+roots. Study JSON downloads are summaries; the local streaming export command
+retrieves complete roots. See [target import and v2 export](docs/target-import.md).
+The [174-document local retained replay](docs/research/2026-11-08-runtime-and-paging-verification.md#accepted-local-retained-replay)
+passed audit, capacity, native parity and both HTTP monitors; hosted activation
+remains a separate step.
+Hosted publication remains on the existing format unless separately activated.
 
 The supported topology is one writer with SQLite/WAL and one or more readers on
 shared POSIX storage. Data publication does not require reader restart or code
@@ -207,6 +214,7 @@ only after those dependencies have been cached.
 | [Plugins](docs/PLUGINS.md)                               | Add a vendor and package an extension                             |
 | [Schema](docs/SCHEMA.md)                                 | Normalization semantics and invariants                            |
 | [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
+| [Exact target import](docs/target-import.md) | Preview, isolated staging and opt-in v2 root export |
 | [Switching CVE comparison brief](docs/research/2026-11-07-vendor-comparison-brief.md) | Cisco/Aruba/Arista evidence, disclosure bias and patching limits |
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |

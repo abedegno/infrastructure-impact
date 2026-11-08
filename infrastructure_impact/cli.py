@@ -39,6 +39,13 @@ def main(argv=None):
         "snapshot", help="Publish a validated generation and export static assets"
     )
     snap.add_argument("--output", type=Path)
+    snap.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
+    export = sub.add_parser(
+        "publication-export", help="Stream a complete logical v2 root to a new local file"
+    )
+    export.add_argument("--publication", type=Path, required=True)
+    export.add_argument("--root", required=True)
+    export.add_argument("--output", type=Path, required=True)
     collect = sub.add_parser("collect", help="Collect evidence and publish new data")
     collect.add_argument("--dry-run", action="store_true")
     collect.add_argument("--watch", action="store_true")
@@ -156,7 +163,13 @@ def main(argv=None):
             command.add_argument("--preview", type=Path, required=True)
             command.add_argument("--home", type=Path, required=True)
             command.add_argument("--base-path", default="/")
+            command.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
     args = parser.parse_args(argv)
+    if args.command == "publication-export":
+        from .application.publication_reader import export_root
+
+        export_root(args.publication, args.root, args.output)
+        return 0
     if args.command == "target-import":
         return _target_import(args, parser)
     if args.command == "maintenance":
@@ -300,7 +313,9 @@ def main(argv=None):
     elif args.command == "snapshot":
         from .application.publication import build
 
-        build(args.output)
+        build(
+            args.output, **({"publication_format": "v2"} if args.publication_format == "v2" else {})
+        )
     elif args.command == "collect":
         if args.dry_run:
             print(
@@ -541,8 +556,11 @@ def _target_import(args, parser):
                 lock_home=args.home,
                 accepted_preview=accepted,
                 base_path=args.base_path,
+                **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
             )
-            payload = result_bytes(result, selected=selected)
+            payload = result_bytes(
+                result, selected=selected, publication_format=args.publication_format
+            )
             if args.output.is_dir():
                 receipt_path = args.output / "result.json"
                 fd = os.open(

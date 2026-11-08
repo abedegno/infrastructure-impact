@@ -86,6 +86,10 @@ def select(
         "delays": [],
     }
 
+    if "draft_advisories_count" in data:
+        selected["comparison"]["draft_advisories_excluded"] = data["draft_advisories_count"]
+        for row in selected["comparison"]["vendors"]:
+            row["has_imported_advisories"] = row["vendor"] in data["non_draft_record_vendors"]
     if "research_dossiers" in data:
         selected["research_dossiers"] = select_research_dossiers(
             data["research_dossiers"], cohort, vendor
@@ -110,13 +114,42 @@ def assessment_export(data):
     }
 
 
-def csv_export(data, *, _fields=None):
-    stream = io.StringIO()
+def _utf8_cost(value):
+    return sum(
+        1 if ord(c) < 128 else 2 if ord(c) < 2048 else 3 if ord(c) < 65536 else 4 for c in value
+    )
+
+
+def csv_export(data, *, _fields=None, max_bytes=None):
     fields = _fields or FIELDS
+    if max_bytes is not None:
+        from .publication_codec import Budget
+
+        budget = Budget(max_bytes)
+        for row in _assessment_csv_rows(data, fields, max_bytes):
+            budget.charge(len(fields) - 1 + 2, len(fields) - 1 + 2)
+            for key in fields:
+                value = "" if row[key] is None else str(row[key])
+                cost = _utf8_cost(value) + value.count('"')
+                if any(c in value for c in ',"\r\n'):
+                    cost += 2
+                budget.charge(cost, cost)
+    stream = io.StringIO()
     writer = csv.DictWriter(stream, fieldnames=fields)
-    writer.writeheader()
-    for record in assessment_export(data)["records"]:
+    for row in _assessment_csv_rows(data, fields, max_bytes):
+        writer.writerow(row)
+    return stream.getvalue()
+
+
+def _assessment_csv_rows(data, fields, max_bytes=None):
+    yield dict(zip(fields, fields))
+    cohort = set(data["comparison"]["cohort"])
+    for record in data["records"]:
+        if not cohort.intersection(record["cves"]):
+            continue
         for assessment in record["assessments"]:
+            if assessment["cve_id"] not in cohort:
+                continue
             row = {field: assessment.get(field, record.get(field, "")) for field in fields}
             report = data.get("kev") or {}
             entry = report.get("entries", {}).get(assessment["cve_id"], {})
@@ -138,12 +171,15 @@ def csv_export(data, *, _fields=None):
             )
             for key, value in row.items():
                 if isinstance(value, (dict, list)):
+                    if max_bytes is not None:
+                        from .publication_codec import Budget, charge_value
+
+                        charge_value(value, Budget(max_bytes), ascii=False)
                     value = json.dumps(value, separators=(",", ":"), ensure_ascii=False)
                 if isinstance(value, str) and value.startswith(("=", "+", "-", "@")):
                     value = "'" + value
                 row[key] = value
-            writer.writerow(row)
-    return stream.getvalue()
+            yield row
 
 
 RETAINED_FIELDS = [
@@ -242,7 +278,7 @@ SWITCHING_FIELDS = [
 ]
 
 
-def switching_csv(report: dict) -> str:
+def switching_csv(report: dict, *, max_bytes=None) -> str:
     """Summary facets; repeated observed totals are explicitly nonadditive."""
 
     def cell(value):
@@ -253,7 +289,35 @@ def switching_csv(report: dict) -> str:
             value = "'" + value
         return '"' + value.replace('"', '""') + '"'
 
+    if max_bytes is not None:
+        from .publication_codec import Budget
+
+        budget = Budget(max_bytes)
+        size = sum(len(field) for field in SWITCHING_FIELDS) + len(SWITCHING_FIELDS) - 1
+        budget.charge(size, size)
+        for values in _switching_csv_rows(report):
+            budget.charge(2 + len(values) - 1, 2 + len(values) - 1)
+            for value in values:
+                value = (
+                    ""
+                    if value is None
+                    else str(value).lower()
+                    if isinstance(value, bool)
+                    else str(value)
+                )
+                cost = 2 + _utf8_cost(value) + value.count('"')
+                if value.lstrip().startswith(("=", "+", "-", "@")) or value.startswith(
+                    ("\t", "\r", "\n")
+                ):
+                    cost += 1
+                budget.charge(cost, cost)
     lines = [",".join(SWITCHING_FIELDS)]
+    for values in _switching_csv_rows(report):
+        lines.append(",".join(cell(v) for v in values))
+    return "\r\n".join(lines)
+
+
+def _switching_csv_rows(report):
     for row in report["rows"]:
         c, k, coverage = row["counts"], row["kev"], row["coverage"]
         issues = sorted(
@@ -313,5 +377,4 @@ def switching_csv(report: dict) -> str:
                     ),
                 ]
             )
-            lines.append(",".join(cell(v) for v in values))
-    return "\r\n".join(lines)
+            yield values

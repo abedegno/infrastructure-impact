@@ -21,7 +21,7 @@ SCHEMAS = (
     "static-index-v1.json",
 )
 KEYWORDS = set(
-    "$defs $id $ref $schema additionalProperties allOf anyOf const description else enum format if items maxItems maxLength maxProperties maximum minItems minLength minimum not oneOf pattern properties propertyNames required then title type uniqueItems".split()
+    "$defs $id $ref $schema additionalProperties allOf anyOf const description else enum format if items prefixItems maxItems maxLength maxProperties maximum minItems minLength minimum not oneOf pattern properties propertyNames required then title type uniqueItems".split()
 )
 
 
@@ -76,6 +76,9 @@ def validate_schema(value, schema, schemas, pointer=""):
             return False
 
     def check(v, s, root):
+        if type(s) is bool:
+            assert s, "Forbidden schema value"
+            return
         assert isinstance(s, dict) and not set(s) - KEYWORDS, "Unsupported switching schema keyword"
         if "$ref" in s:
             base, _, fragment = s["$ref"].partition("#")
@@ -134,8 +137,10 @@ def validate_schema(value, schema, schemas, pointer=""):
             assert s.get("minItems", 0) <= len(v) <= s.get("maxItems", len(v))
             if s.get("uniqueItems"):
                 assert len({canonical(x) for x in v}) == len(v), "Duplicate switching items"
-            for item in v:
-                if "items" in s:
+            for i, item in enumerate(v):
+                if i < len(s.get("prefixItems", [])):
+                    check(item, s["prefixItems"][i], root)
+                elif "items" in s:
                     check(item, s["items"], root)
         if type(v) is str:
             assert s.get("minLength", 0) <= len(v) <= s.get("maxLength", len(v))
@@ -321,3 +326,305 @@ def validate_public_metrics(record):
                 assert isinstance(product[field], list) and all(
                     isinstance(v, str) for v in product[field]
                 )
+
+
+def publication_codec():
+    """Load the shipped canonical stdlib codec; never maintain a monitor fork."""
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    path = Path(__file__).with_name("publication_codec.py")
+    if not path.is_file():
+        path = Path(__file__).parents[1] / "infrastructure_impact/publication_codec.py"
+    assert path.is_file() and not path.is_symlink(), "Canonical publication codec missing"
+    spec = importlib.util.spec_from_file_location("_impact_publication_codec", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def open_publication_v2(index, verified, manifest, schemas):
+    from collections import OrderedDict
+
+    codec = publication_codec()
+    identity = {k: index[k] for k in ("publication", "generated_at")}
+    cache, cache_bytes = OrderedDict(), 0
+
+    def fetch(desc, *, kind=None):
+        nonlocal cache_bytes
+        codec.validate_descriptor(
+            desc,
+            paths={"publication-v2.json"} if kind is None else None,
+            max_bytes=2_000_000 if kind is None else 8_000_000,
+        )
+        assert manifest["sha256"].get(desc["path"]) == desc["sha256"], "Unbound v2 part"
+        raw = cache.pop(desc["path"], None)
+        if raw is None:
+            raw = verified(desc["path"], desc["bytes"])
+            assert len(raw) == desc["bytes"], "V2 part size"
+            while cache and cache_bytes + len(raw) > 16_000_000:
+                _, old = cache.popitem(last=False)
+                cache_bytes -= len(old)
+            cache_bytes += len(raw)
+        cache[desc["path"]] = raw
+        value = codec.strict_loads(raw, transport=kind != "overview")
+        assert all(value.get(k) == v for k, v in identity.items()), "Mixed v2 generation"
+        if kind is not None:
+            assert (
+                set(value) == {"schema_version", "publication", "generated_at", "kind", "data"}
+                and type(value["schema_version"]) is int
+                and value["schema_version"] == 2
+                and value["kind"] == kind
+            ), "V2 envelope"
+            if kind not in ("strings", "shapes", "tokens"):
+                validate_schema(value, "publication-v2.json", schemas, "/$defs/envelope")
+            return value["data"]
+        return value
+
+    validate_schema(index, "static-index-v2.json", schemas)
+    catalog = fetch(index["publication_v2"])
+    validate_schema(catalog, "publication-v2.json", schemas)
+    reader = codec.CatalogReader(
+        fetch,
+        catalog,
+        identity,
+        dict(
+            part=8_000_000,
+            index=2_000_000,
+            selected=128_000_000,
+            cache=16_000_000,
+            stream=1_000_000_000,
+            default=32_000_000,
+        ),
+    )
+    return reader
+
+
+def validate_switching_overview(reader, schemas):
+    codec = publication_codec()
+    report = reader.fetch(reader.catalog["switching"]["overview"], kind="overview")
+    validate_schema(report, "switching-overview-v2.json", schemas)
+    assert (
+        report["publication"] == reader.identity["publication"]
+        and report["generated_at"] == report["evaluated_at"] == reader.identity["generated_at"]
+    )
+    assert (
+        hashlib.sha256(canonical(report["definition"]).encode()).hexdigest()
+        == reader.catalog["switching"]["definition_sha256"]
+        == report["selection"]["definition_sha256"]
+        == DEFINITION_SHA256
+    )
+    selection = report["selection"]
+    assert selection["requested_vendor"] is None and selection["requested_cve_ids"] is None
+    assert selection["scope_level"] == "os_family" and selection["requested_window"] == "all"
+    assert selection["effective_vendors"] == ["cisco", "aruba", "arista"]
+    strings, _ = reader._tables()
+    routes = codec.claim_routes(
+        [reader.fetch(p, kind="claim_routes") for p in reader.catalog["routes"]["claims"]], strings
+    )
+    claim_ids = {r[0] for r in routes}
+    # Bind every declared claim interval against the independently paged range catalog.
+    ranges = reader.ranges("switching-evidence.json")
+    parent = ranges[("claims",)]
+    first = next(
+        reader.iter_tokens("switching-evidence.json", parent["first_token"], parent["end_token"])
+    )
+    assert first == [-1, len(routes)], "Incomplete claim routing"
+    if routes:
+        assert routes[0][1] == parent["first_token"] + 1 and routes[-1][2] == parent["end_token"]
+    snapshot_ranges = reader.ranges("snapshot.json")
+
+    def binding(bound, path):
+        assert bound == snapshot_ranges[tuple(path)], "Overview range binding"
+        first = next(reader.iter_tokens(bound["root"], bound["first_token"], bound["end_token"]))
+        assert isinstance(first, list) and len(first) == 2 and first[0] == -1, (
+            "Overview array boundary"
+        )
+        return codec.safe_int(first[1])
+
+    binding(report["detail_ranges"]["sources"], ("switching_comparison", "sources"))
+    for i, row in enumerate(report["rows"]):
+        counts = row["counts"]
+        assert row["row_id"] == row["vendor"] + ":os_family:all"
+        assert row["scope_level"] == "os_family" and row["window"] == "all"
+        for counter, key in [
+            ("advisories", "advisory_ids"),
+            ("affected_advisories", "affected_advisory_ids"),
+            ("cves", "cve_ids"),
+            ("claims", "claim_ids"),
+            ("conditional_cves", "conditional_cve_ids"),
+            ("remediation_events", "event_ids"),
+        ]:
+            assert counts[counter] == binding(
+                row["detail_ranges"][key], ("switching_comparison", "rows", i, key)
+            ), "Overview count mismatch"
+        assert counts["remediation_events"] == binding(
+            row["detail_ranges"]["events"], ("switching_comparison", "rows", i, "events")
+        )
+        assert counts["affected_cves"] == len(row["affected_cve_ids"])
+        assert (
+            counts["bundled_events"] + counts["unbundled_publications"]
+            == counts["remediation_events"]
+        )
+        for bucket in row["status_buckets"]:
+            assert (
+                bucket["count"] == len(bucket["cve_ids"]) and set(bucket["claim_ids"]) <= claim_ids
+            )
+        for facet in row["severity"]:
+            assert facet["count"] == len(facet["cve_ids"]) and set(facet["cve_ids"]) <= set(
+                row["affected_cve_ids"]
+            )
+        for field in (
+            "draft_advisories",
+            "fixed_only_claims",
+            "planned_fix_claims",
+            "workaround_claims",
+            "model_unresolved_claims",
+        ):
+            assert counts[field] <= counts["claims"]
+        assert counts["conditionality_unclassified_cves"] <= counts["affected_cves"]
+        kev = row["kev"]
+        affected = set(row["affected_cve_ids"])
+        assert (
+            kev["listed_count"] == len(kev["listed_cve_ids"])
+            and kev["unknown_count"] == len(kev["unknown_cve_ids"])
+            and kev["denominator"] == len(affected)
+        )
+        listed, unknown = set(kev["listed_cve_ids"]), set(kev["unknown_cve_ids"])
+        assert listed <= affected and unknown <= affected and not listed & unknown
+        assert (
+            (not unknown)
+            if kev["availability"] == "available"
+            else (not listed and unknown == affected)
+        )
+        assert (
+            row["coverage"]["expected_advisories"] is None
+            and row["coverage"]["observed_advisories"] == counts["advisories"]
+        )
+        assert row["denominators"] == dict(
+            affected_cves=counts["affected_cves"],
+            observed_advisories=counts["advisories"],
+            expected_advisories=None,
+        )
+    assert [r["row_id"] for r in report["rows"]] == selection["effective_windows"]
+    return report
+
+
+def verify_publication_v2_archive(compressed, catalog, identity):
+    import gzip
+    import io
+
+    codec = publication_codec()
+    assert len(compressed) <= 8_000_000
+    compressed_descriptor = catalog["archive"]["gzip"]
+    codec.validate_descriptor(compressed_descriptor, paths={"snapshot-v2.json.gz"})
+    assert (
+        len(compressed) == compressed_descriptor["bytes"]
+        and hashlib.sha256(compressed).hexdigest() == compressed_descriptor["sha256"]
+    ), "Compressed archive descriptor mismatch"
+    with gzip.GzipFile(fileobj=io.BytesIO(compressed)) as stream:
+        raw = stream.read(128_000_001)
+    assert len(raw) <= 128_000_000
+    desc = catalog["archive"]["expanded"]
+    assert len(raw) == desc["bytes"] and hashlib.sha256(raw).hexdigest() == desc["sha256"], (
+        "Expanded archive mismatch"
+    )
+    archive = codec.strict_loads(raw, max_bytes=128_000_000, transport=True)
+    assert (
+        set(archive)
+        == {"schema_version", "representation", "publication", "generated_at", "assets"}
+        and type(archive["schema_version"]) is int
+        and archive["schema_version"] == 2
+        and archive["representation"] == "snapshot-archive"
+    )
+    assert all(archive[k] == v for k, v in identity.items())
+    assets = {}
+    for asset in archive["assets"]:
+        assert set(asset) == {"path", "sha256", "bytes", "data"}
+        desc = {k: asset[k] for k in ("path", "sha256", "bytes")}
+        codec.validate_descriptor(desc)
+        assert desc["path"] not in assets, "Duplicate archive asset"
+        encoded = (
+            json.dumps(asset["data"], ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+            + "\n"
+        ).encode()
+        assert (
+            len(encoded) == desc["bytes"] and hashlib.sha256(encoded).hexdigest() == desc["sha256"]
+        )
+        assets[desc["path"]] = asset
+
+    def fetch(desc, *, kind):
+        codec.validate_descriptor(desc)
+        assert desc["path"] in assets, "External archive reference"
+        asset = assets[desc["path"]]
+        assert all(asset[k] == desc[k] for k in ("path", "sha256", "bytes"))
+        part = asset["data"]
+        assert (
+            set(part) == {"schema_version", "publication", "generated_at", "kind", "data"}
+            and type(part["schema_version"]) is int
+            and part["schema_version"] == 2
+            and part["kind"] == kind
+            and all(part[k] == v for k, v in identity.items())
+        )
+        return part["data"]
+
+    scope_desc = catalog["archive"]["manifest"]
+    scope = fetch(scope_desc, kind="archive")
+    assert (
+        set(scope)
+        == {"scope", "root", "strings", "shapes", "record_routes", "members", "legacy_snapshot"}
+        and scope["scope"] == "snapshot-v1"
+    )
+    assert scope["root"] == catalog["roots"]["snapshot.json"]
+    members = {d["path"]: d for d in scope["members"]}
+    assert len(members) == len(scope["members"]) and set(members) == set(assets) - {
+        scope_desc["path"]
+    }
+    for descriptor in scope["members"]:
+        codec.validate_descriptor(descriptor)
+        assert all(
+            assets[descriptor["path"]][key] == descriptor[key]
+            for key in ("path", "sha256", "bytes")
+        ), "Archive member descriptor mismatch"
+    root = fetch(scope["root"], kind="root")
+    closure = {
+        d["path"]
+        for d in [
+            scope["root"],
+            *scope["record_routes"],
+            *root["ranges"],
+            *(p["part"] for p in root["pages"]),
+            *(p["part"] for p in scope["strings"]),
+            *(p["part"] for p in scope["shapes"]),
+        ]
+    }
+    assert closure == set(members), "Archive closure mismatch"
+    reader = codec.CatalogReader(
+        fetch,
+        dict(
+            roots={"snapshot.json": scope["root"]},
+            strings=scope["strings"],
+            shapes=scope["shapes"],
+            routes={"records": scope["record_routes"]},
+        ),
+        identity,
+        dict(stream=1_000_000_000, selected=128_000_000),
+    )
+    # Descriptor closure alone cannot prove the kind or membership of routes.
+    # Validate the archived authority independently, then bind it to the site.
+    reader.record_routes()
+    assert scope["record_routes"] == catalog["routes"]["records"], "Archive/site record routes"
+    # Verify canonical root and original ASCII snapshot bytes, never hydrate it.
+    for _ in reader.stream_root("snapshot.json"):
+        pass
+    expected = scope["legacy_snapshot"]
+    digest, size = hashlib.sha256(), 0
+    for chunk in reader.stream_root("snapshot.json", "ascii"):
+        size += len(chunk)
+        digest.update(chunk)
+    digest.update(b"\n")
+    size += 1
+    assert dict(bytes=size, sha256=digest.hexdigest()) == expected, "Legacy snapshot parity"
+    return True

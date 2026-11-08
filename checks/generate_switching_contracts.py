@@ -13,6 +13,9 @@ NAMES = (
     "switching-inputs-v1.json",
     "kev-v1.json",
     "static-index-v1.json",
+    "static-index-v2.json",
+    "publication-v2.json",
+    "switching-overview-v2.json",
     "current-evidence-v1.json",
 )
 

@@ -447,19 +447,29 @@ function renderComparison() {
   $('#comparison-content').innerHTML = window.InfrastructureSwitching.render(switchingReport, {
     loading: switchingLoading,
     error: switchingError,
+    factCatalog: switchingAcceptedDelivery?.factCatalog,
   });
   const accepted = switchingReport,
     delivery = switchingAcceptedDelivery;
-  window.InfrastructureSwitchingView.mount($('#comparison-content'), accepted, async (ids) => {
-    if (!delivery || !accepted) throw Error('Study evidence unavailable');
-    const loader = await delivery.promise;
-    if (
-      appJSON.stringify(loader.publication) !== appJSON.stringify(accepted.publication) ||
-      loader.generated_at !== accepted.generated_at
-    )
-      throw Error('Mixed publication generations');
-    return loader.switchingClaims(ids);
-  });
+  window.InfrastructureSwitchingView.mount(
+    $('#comparison-content'),
+    accepted,
+    async (ids) => {
+      if (!delivery || !accepted) throw Error('Study evidence unavailable');
+      const loader = await delivery.promise;
+      if (
+        appJSON.stringify(loader.publication) !== appJSON.stringify(accepted.publication) ||
+        loader.generated_at !== accepted.generated_at
+      )
+        throw Error('Mixed publication generations');
+      return loader.switchingClaims(ids);
+    },
+    async (request) => {
+      const loader = await delivery.promise;
+      if (!loader.switchingDetails) return null;
+      return loader.switchingDetails(accepted, request);
+    },
+  );
   $('#switching-apply').addEventListener('click', () =>
     loadSwitching({
       vendor: $('#switching-vendor').value || null,
@@ -481,13 +491,19 @@ function renderComparison() {
     );
   });
   for (const format of ['json', 'csv'])
-    $('#switching-' + format)?.addEventListener('click', () => {
-      const blob = switchingDownload(format);
+    $('#switching-' + format)?.addEventListener('click', async () => {
+      const accepted = switchingReport,
+        delivery = switchingAcceptedDelivery;
+      const blob = await switchingExport(format, accepted, delivery).catch((error) => {
+        switchingError = 'Study export rejected: ' + error.message;
+        if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+        return null;
+      });
       if (!blob) return;
       const url = URL.createObjectURL(blob),
         a = document.createElement('a');
       a.href = url;
-      a.download = 'switching-' + switchingReport.publication?.id + '.' + format;
+      a.download = 'switching-' + accepted.publication?.id + '.' + format;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
@@ -516,7 +532,12 @@ async function loadSwitching(options = {}) {
     }
     const delivery = switchingDelivery;
     const loader = await delivery.promise;
-    const full = await loader.switchingReport();
+    const bounded = Boolean(loader.switchingSelection);
+    const full = bounded
+      ? await (Object.keys(options).length
+          ? loader.switchingSelection(options)
+          : loader.switchingOverview())
+      : await loader.switchingReport();
     if (sequence !== switchingSequence) return;
     if (
       appJSON.stringify(data.publication) !== appJSON.stringify(identity.publication) ||
@@ -526,11 +547,14 @@ async function loadSwitching(options = {}) {
           full.generated_at !== identity.generated_at))
     )
       throw Error('Mixed publication generations. Reload the page to select a new publication.');
-    const accepted = window.InfrastructureSwitching.selectReport(full, {
-      ...options,
-      ...(full ? {} : identity),
-    });
+    const accepted = bounded
+      ? full
+      : window.InfrastructureSwitching.selectReport(full, {
+          ...options,
+          ...(full ? {} : identity),
+        });
     switchingReport = accepted;
+    delivery.factCatalog = loader.factCatalog;
     switchingAcceptedDelivery = delivery;
     switchingLoading = false;
   } catch (error) {
@@ -540,13 +564,44 @@ async function loadSwitching(options = {}) {
   }
   if (view === 'compare' && comparisonMode === 'switching') renderComparison();
 }
-function switchingDownload(format) {
-  if (!switchingReport || switchingReport.availability !== 'available') return null;
+async function switchingExport(
+  format,
+  report = switchingReport,
+  delivery = switchingAcceptedDelivery,
+) {
+  if (format === 'json' && report?.representation === 'switching-overview') {
+    const loader = await delivery.promise;
+    if (
+      appJSON.stringify(loader.publication) !== appJSON.stringify(report.publication) ||
+      loader.generated_at !== report.generated_at
+    )
+      throw Error('Mixed publication generations');
+    const selected = await loader.switchingSelection(
+      {
+        vendor: report.selection.requested_vendor,
+        scope_level: report.selection.scope_level,
+        window: report.selection.requested_window,
+        cve_ids: report.selection.requested_cve_ids,
+      },
+      report.evaluated_at,
+    );
+    return switchingDownload(format, selected);
+  }
+  return switchingDownload(format, report);
+}
+function switchingDownload(format, report = switchingReport, limits = {}) {
+  if (!report || report.availability !== 'available') return null;
+  const maxBytes = Math.min(limits.max_bytes ?? 128000000, 128000000);
   return new Blob(
     [
       format === 'csv'
-        ? window.InfrastructureSwitching.csvExport(switchingReport)
-        : appJSON.stringify(switchingReport, null, 2),
+        ? window.InfrastructureSwitching.csvExport(
+            report,
+            report.representation ? { max_bytes: maxBytes } : {},
+          )
+        : report.representation
+          ? appJSON.stringifyBounded(report, null, 2, maxBytes)
+          : appJSON.stringify(report, null, 2),
     ],
     { type: format === 'csv' ? 'text/csv' : 'application/json' },
   );

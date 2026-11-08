@@ -76,8 +76,14 @@ def scorecards(records, coverage, catalogue, health, cohort, vendors, at):
         included = [
             r for r in records if r["vendor"] == vendor and r.get("document_status") != "draft"
         ]
+        claims_by_cve, sources_by_cve = {}, {}
+        for record in included:
+            for claim in record["assessments"]:
+                claims_by_cve.setdefault(claim["cve_id"], []).append(claim)
+            for cid in record["cves"]:
+                sources_by_cve.setdefault(cid, set()).add(record["source_url"])
         for cid in sorted(set(cohort)):
-            claims = [a for r in included for a in r["assessments"] if a["cve_id"] == cid]
+            claims = claims_by_cve.get(cid, [])
             cases.append(
                 dict(
                     cve_id=cid,
@@ -87,7 +93,7 @@ def scorecards(records, coverage, catalogue, health, cohort, vendors, at):
                     cve_specific_statements=sum(a["scope"] == "cve_specific" for a in claims),
                     shared_bulletin_statements=sum(a["scope"] == "bulletin_shared" for a in claims),
                     coverage_state=covered.get((vendor, cid), {}).get("state", "not_checked"),
-                    source_urls=sorted({r["source_url"] for r in included if cid in r["cves"]}),
+                    source_urls=sorted(sources_by_cve.get(cid, ())),
                 )
             )
         cards.append(

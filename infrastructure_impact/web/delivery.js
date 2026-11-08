@@ -2,23 +2,75 @@
 async function createStaticDelivery(fetchPart, siteBase) {
   const response = await fetchPart(siteBase + 'data/index.json', { cache: 'no-cache' });
   if (!response.ok) throw Error('Publication index unavailable. Reload after deployment.');
-  const text = await response.text();
+  async function boundedBytes(response, max, options = {}) {
+    if (!response.body?.getReader) {
+      const raw = new Uint8Array(
+        await (options.operation
+          ? options.operation.run(response.arrayBuffer())
+          : response.arrayBuffer()),
+      );
+      if (raw.length > max) throw Error('Evidence response exceeds budget');
+      return raw;
+    }
+    const reader = response.body.getReader(),
+      chunks = [];
+    let size = 0,
+      complete = false;
+    try {
+      for (;;) {
+        const entry = await (options.operation
+          ? options.operation.run(reader.read())
+          : reader.read());
+        if (entry.done) {
+          complete = true;
+          break;
+        }
+        size += entry.value.length;
+        if (size > max) throw Error('Evidence response exceeds budget');
+        chunks.push(entry.value);
+      }
+    } finally {
+      if (!complete) options.operation?.close();
+      // A response's cancel promise is advisory, not a cleanup dependency.
+      try {
+        Promise.resolve(reader.cancel()).catch(() => {});
+      } catch {}
+      try {
+        reader.releaseLock();
+      } catch {}
+    }
+    const raw = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) {
+      raw.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return raw;
+  }
+  const text = response.body?.getReader
+    ? new TextDecoder('utf-8', { fatal: true }).decode(await boundedBytes(response, 2000000))
+    : await response.text();
   if (new TextEncoder().encode(text).length > 2000000)
     throw Error('Publication index exceeds budget');
-  const index = window.InfrastructureJSON.parse(text);
+  const decodedIndex = window.InfrastructureJSON.parse(text),
+    index =
+      decodedIndex.schema_version === 2
+        ? window.InfrastructureJSON.parseStrict(text, { transport: true })
+        : decodedIndex;
   if (
-    index.schema_version !== 1 ||
+    ![1, 2].includes(index.schema_version) ||
     !/^[a-f0-9]{32}$/.test(index.publication?.id || '') ||
     !index.generated_at ||
     !index.cohorts
   )
     throw Error('Invalid publication index');
-  const cache = new Map();
-  async function read(descriptor, full = false) {
+  const cache = new Map(),
+    requestSlots = index.schema_version === 2 ? window.InfrastructureJSON.requestPool() : null;
+  async function read(descriptor, full = false, options = {}) {
     if (
       !descriptor ||
       !(full
-        ? descriptor.path === 'snapshot.json'
+        ? descriptor.path === (full === 'catalog' ? 'publication-v2.json' : 'snapshot.json')
         : /^data\/[a-f0-9]{64}\.json$/.test(descriptor.path)) ||
       !/^[a-f0-9]{64}$/.test(descriptor.sha256) ||
       !Number.isInteger(descriptor.bytes) ||
@@ -32,33 +84,76 @@ async function createStaticDelivery(fetchPart, siteBase) {
       cache.set(
         key,
         (async () => {
-          const r = await fetchPart(siteBase + descriptor.path);
-          if (!r.ok) throw Error('Evidence part unavailable. Reload after deployment.');
-          const raw = new Uint8Array(await r.arrayBuffer());
-          if (raw.length !== descriptor.bytes) throw Error('Evidence part size mismatch');
-          const digest = Array.from(
-            new Uint8Array(await crypto.subtle.digest('SHA-256', raw)),
-            (b) => b.toString(16).padStart(2, '0'),
-          ).join('');
-          if (digest !== descriptor.sha256) throw Error('Evidence part fingerprint mismatch');
-          const value = window.InfrastructureJSON.parse(
-            new TextDecoder('utf-8', { fatal: true }).decode(raw),
-          );
-          if (
-            value.publication?.id !== index.publication.id ||
-            value.publication?.advisory_schema_version !==
-              index.publication.advisory_schema_version ||
-            value.generated_at !== index.generated_at
-          )
-            throw Error('Mixed publication generations. Reload after deployment.');
-          if (!full && value.schema_version !== 1) throw Error('Unsupported evidence part version');
-          return full ? value : value.data;
+          if (index.schema_version === 2) await requestSlots.acquire(options.operation?.signal);
+          try {
+            const request = fetchPart(siteBase + descriptor.path, {
+              signal: options.operation?.signal,
+            });
+            const r = await (options.operation ? options.operation.run(request) : request);
+            if (!r.ok) throw Error('Evidence part unavailable. Reload after deployment.');
+            const raw =
+              index.schema_version === 2
+                ? await boundedBytes(r, full === 'catalog' ? 2000000 : descriptor.bytes, options)
+                : new Uint8Array(await r.arrayBuffer());
+            if (full === 'catalog' && raw.length > 2000000)
+              throw Error('Publication catalog exceeds budget');
+            if (raw.length !== descriptor.bytes) throw Error('Evidence part size mismatch');
+            const digest = Array.from(
+              new Uint8Array(await crypto.subtle.digest('SHA-256', raw)),
+              (b) => b.toString(16).padStart(2, '0'),
+            ).join('');
+            if (digest !== descriptor.sha256) throw Error('Evidence part fingerprint mismatch');
+            const value = (
+              index.schema_version === 2
+                ? window.InfrastructureJSON.parseStrict
+                : window.InfrastructureJSON.parse
+            )(
+              new TextDecoder('utf-8', { fatal: true }).decode(raw),
+              index.schema_version === 2
+                ? { transport: full === 'catalog' ? true : (path) => path[0] !== 'data' }
+                : undefined,
+            );
+            if (
+              value.publication?.id !== index.publication.id ||
+              value.publication?.advisory_schema_version !==
+                index.publication.advisory_schema_version ||
+              value.generated_at !== index.generated_at
+            )
+              throw Error('Mixed publication generations. Reload after deployment.');
+            if (!full && value.schema_version !== 1)
+              throw Error('Unsupported evidence part version');
+            return full ? value : value.data;
+          } finally {
+            if (index.schema_version === 2) requestSlots.release();
+          }
         })().catch((error) => {
           cache.delete(key);
           throw error;
         }),
       );
+    if (index.schema_version === 2) {
+      try {
+        return await cache.get(key);
+      } finally {
+        cache.delete(key);
+      }
+    }
     return cache.get(key);
+  }
+  let publicationV2 = null;
+  if (index.schema_version === 2) {
+    window.InfrastructureSwitchingContracts.validate('static-index-v2.json', index);
+    const catalog = await read(index.publication_v2, 'catalog');
+    publicationV2 = await window.InfrastructurePublicationV2.open(
+      (path, options) => fetchPart(siteBase + path, options),
+      catalog,
+      index,
+      {
+        requestSlots,
+        cohortReader: ({ cohort, fields, ...options }) =>
+          boundedCohort(cohort, false, fields, options),
+      },
+    );
   }
   const common = await read(index.bootstrap);
   async function parts(descriptors, requireArray = false) {
@@ -77,7 +172,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     return results.flat();
   }
   let evidencePromise;
-  async function currentEvidence() {
+  async function currentEvidence(options = {}) {
     if (!evidencePromise)
       evidencePromise = (async () => {
         const hasCapability = Object.hasOwn(index, 'current_evidence'),
@@ -89,10 +184,13 @@ async function createStaticDelivery(fetchPart, siteBase) {
             index.publication,
             index.generated_at,
           );
-        window.InfrastructureSwitchingContracts.validate('static-index-v1.json', index);
+        window.InfrastructureSwitchingContracts.validate(
+          index.schema_version === 2 ? 'static-index-v2.json' : 'static-index-v1.json',
+          index,
+        );
         const capability = index.current_evidence;
         const report = validateCurrentEvidence(
-          await read(capability.report),
+          await read(capability.report, false, options),
           index.publication,
           index.generated_at,
         );
@@ -145,7 +243,125 @@ async function createStaticDelivery(fetchPart, siteBase) {
       });
     return evidencePromise;
   }
+  async function boundedCohort(ids, includeChanges = false, fields = null, options = {}) {
+    if (!options.operation)
+      return window.InfrastructurePublicationV2.consume(options, (next) =>
+        boundedCohort(ids, includeChanges, fields, next),
+      );
+    const json = window.InfrastructureJSON,
+      max = Math.min(options.max_bytes ?? 128000000, 128000000),
+      quota = json.budget(max);
+    const cohort = [...new Set(ids ?? Object.keys(common.benchmark_cohort))].sort();
+    if (cohort.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))) throw Error('Invalid CVE cohort');
+    const whole =
+      cohort.length > 0 &&
+      cohort.length === common.all_cves.length &&
+      cohort.every((id, i) => id === common.all_cves[i]);
+    if (whole && !fields)
+      return publicationV2.materializeRoot('snapshot.json', { ...options, max_bytes: max });
+    if (cohort.length > 200 && !whole) throw Error('Select up to 200 CVEs, or the whole archive');
+    if (
+      cohort.some(
+        (id) =>
+          (common.all_cves.includes(id) || Object.hasOwn(common.benchmark_cohort, id)) &&
+          !Object.hasOwn(index.cohorts, id),
+      )
+    )
+      throw Error('Publication cohort index is incomplete');
+    const wanted = fields ? new Set(fields) : null,
+      needs = (k) => !wanted || wanted.has(k),
+      result = {};
+    quota.charge(2);
+    let fieldCount = 0;
+    function add(key, value) {
+      quota.charge(
+        json.stringBytes(key) +
+          1 +
+          (fieldCount++ ? 1 : 0) +
+          json.measure(value, null, '', quota.remaining),
+      );
+      Object.defineProperty(result, key, {
+        value: json.clone(value),
+        enumerable: true,
+        writable: true,
+      });
+    }
+    const dynamic = new Set([
+      'records',
+      'coverage',
+      'timeline',
+      'scorecards',
+      'changes',
+      'current_evidence',
+    ]);
+    for (const key of Object.keys(common))
+      if (!dynamic.has(key) && needs(key)) add(key, common[key]);
+    if (needs('current_evidence')) add('current_evidence', await currentEvidence(options));
+    if (needs('records')) add('records', []);
+    if (needs('coverage')) add('coverage', []);
+    if (needs('changes')) add('changes', []);
+    if (needs('timeline')) add('timeline', { ...common.timeline, events: [] });
+    if (needs('scorecards'))
+      add('scorecards', {
+        ...common.scorecards,
+        vendors: common.scorecards.vendors.map((v) => ({ ...v, cases: [] })),
+      });
+    if (wanted)
+      for (const key of wanted)
+        if (!Object.hasOwn(result, key)) throw Error('Unknown runtime field');
+    const records = new Map(),
+      events = new Map(),
+      cases = new Map();
+    const routeKinds =
+      needs('records') || needs('coverage') || needs('timeline') || needs('scorecards');
+    const descriptors = routeKinds
+      ? [
+          ...new Map(
+            cohort.flatMap((id) => index.cohorts[id] || []).map((d) => [d.path, d]),
+          ).values(),
+        ]
+      : [];
+    for (const d of descriptors) {
+      // Ordinary parts contain literal JSON (no reference expansion). Their
+      // complete encoded envelope bounds every retained row before parsing.
+      quota.charge(d.bytes + 128);
+      const rows = await read(d, false, options);
+      for (const row of rows) {
+        if (row.kind === 'record' && needs('records')) {
+          if (!records.has(row.index))
+            records.set(row.index, { record: json.clone(row.record), assessments: new Map() });
+          for (const [i, a] of row.assessments)
+            records.get(row.index).assessments.set(i, json.clone(a));
+        } else if (row.kind === 'timeline' && needs('timeline')) events.set(row.index, row.value);
+        else if (row.kind === 'coverage' && needs('coverage')) result.coverage.push(row.value);
+        else if (row.kind === 'scorecard' && needs('scorecards')) {
+          if (!cases.has(row.vendor)) cases.set(row.vendor, []);
+          cases.get(row.vendor).push(row.value);
+        } else if (!['record', 'timeline', 'coverage', 'scorecard'].includes(row.kind))
+          throw Error('Unsupported evidence row');
+      }
+    }
+    if (needs('records'))
+      result.records = [...records]
+        .sort(([a], [b]) => a - b)
+        .map(([, r]) => ({
+          ...r.record,
+          assessments: [...r.assessments].sort(([a], [b]) => a - b).map(([, a]) => a),
+        }));
+    if (needs('timeline'))
+      result.timeline.events = [...events].sort(([a], [b]) => a - b).map(([, event]) => event);
+    if (needs('scorecards'))
+      for (const vendor of result.scorecards.vendors) vendor.cases = cases.get(vendor.vendor) || [];
+    if (includeChanges && needs('changes'))
+      for (const d of index.changes) {
+        quota.charge(d.bytes + 1);
+        for (const value of await read(d, false, options)) result.changes.push(value);
+      }
+    json.measure(result, null, '', max);
+    return result;
+  }
   const load = async function (ids, includeChanges = false) {
+    if (publicationV2) return boundedCohort(ids, includeChanges);
     const report = await currentEvidence();
     const cohort = [...new Set(ids ?? Object.keys(common.benchmark_cohort))].sort();
     if (cohort.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id))) throw Error('Invalid CVE cohort');
@@ -156,7 +372,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
       cohort.length === common.all_cves.length &&
       cohort.every((id, i) => id === common.all_cves[i])
     ) {
-      const full = await read(index.full, true);
+      const full = publicationV2
+        ? await publicationV2.materializeRoot('snapshot.json')
+        : await read(index.full, true);
       if (Object.hasOwn(index, 'current_evidence')) {
         validateCurrentEvidence(full.current_evidence, index.publication, index.generated_at);
         if (
@@ -220,15 +438,24 @@ async function createStaticDelivery(fetchPart, siteBase) {
     };
   };
   load.currentEvidence = async () => window.InfrastructureJSON.clone(await currentEvidence());
-  load.retained = async (ids = null) => {
-    const report = await currentEvidence();
+  load.retained = async (ids = null, options = {}) => {
+    if (publicationV2 && !options.operation)
+      return window.InfrastructurePublicationV2.consume(options, (next) =>
+        load.retained(ids, next),
+      );
+    const quota = publicationV2
+      ? window.InfrastructureJSON.budget(Math.min(options.max_bytes ?? 128000000, 128000000))
+      : null;
+    quota?.charge(2);
+    const report = await currentEvidence(options);
     if (!Object.hasOwn(index, 'current_evidence')) return [];
     const selected = index.current_evidence.retained.filter(
       (p) => ids === null || p.cve_ids.some((id) => ids.includes(id)),
     );
     const rows = [];
     for (const entry of selected) {
-      const items = await read(entry.part);
+      quota?.charge(entry.part.bytes + 1);
+      const items = await read(entry.part, false, options);
       if (
         !Array.isArray(items) ||
         items.length !== entry.decision_ids.length ||
@@ -261,7 +488,10 @@ async function createStaticDelivery(fetchPart, siteBase) {
   function studyIndex() {
     if (!Object.hasOwn(index, 'switching')) return null;
     const contracts = window.InfrastructureSwitchingContracts;
-    contracts.validate('static-index-v1.json', index);
+    contracts.validate(
+      index.schema_version === 2 ? 'static-index-v2.json' : 'static-index-v1.json',
+      index,
+    );
     if (index.switching.claims) validateClaimEntries(index.switching.claims);
     return index.switching;
   }
@@ -450,5 +680,19 @@ async function createStaticDelivery(fetchPart, siteBase) {
       });
     return switchingPromise;
   };
+  if (publicationV2) {
+    load.switchingOverview = publicationV2.switchingOverview;
+    load.switchingSummary = publicationV2.switchingOverview;
+    load.switchingSelection = publicationV2.switchingSelection;
+    load.switchingClaims = publicationV2.switchingClaims;
+    load.switchingDetails = publicationV2.switchingDetails;
+    load.runtimeSnapshot = (options) => publicationV2.runtimeSnapshot(options);
+    load.streamRoot = publicationV2.streamRoot;
+    load.materializeRange = publicationV2.materializeRange;
+    load.factCatalog = index.publication_v2.path;
+    load.switchingReport = () => {
+      throw Error('Use bounded switchingSelection for publication v2');
+    };
+  }
   return load;
 }

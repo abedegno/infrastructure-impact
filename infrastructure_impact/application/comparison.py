@@ -12,6 +12,7 @@ def compare(records, cohort=None, vendors=None):
 
         names = default_registry().names()
     cohort = sorted(set(cohort if cohort is not None else (c for r in records for c in r["cves"])))
+    cohort_ids = set(cohort)
     # Interim advisories contain useful investigation states; drafts alone are excluded.
     excluded = [r for r in records if r.get("document_status") == "draft"]
     records = [r for r in records if r.get("document_status") != "draft"]
@@ -22,9 +23,11 @@ def compare(records, cohort=None, vendors=None):
             for r in records
             if r["vendor"] == vendor
             for a in r["assessments"]
-            if a["cve_id"] in cohort
+            if a["cve_id"] in cohort_ids
         ]
-        by_cve = {cid: [a for a in claims if a["cve_id"] == cid] for cid in cohort}
+        by_cve = {cid: [] for cid in cohort}
+        for assessment in claims:
+            by_cve[assessment["cve_id"]].append(assessment)
         assessed = [
             cid
             for cid, aa in by_cve.items()

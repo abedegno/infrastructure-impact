@@ -85,6 +85,8 @@ def controls(data, start=None, end=None, products=None):
             if r["vendor"] == vendor and r.get("document_status") != "draft"
             for a in r["assessments"]
         }
+        if "product_label_index" in data:
+            available = set(data["product_label_index"][vendor]["all"])
         if any(not isinstance(label, str) or label not in available for label in labels):
             raise ValueError("Product selectors must use exact retained publisher labels")
     return as_at, start, end, {v: sorted(set(labels)) for v, labels in sorted(products.items())}
@@ -120,6 +122,9 @@ def eligibility(data, cohort=None, *, start=None, end=None, products=None, group
                 if in_group(vendor, a)
             }
         )
+        if "product_label_index" in data:
+            context = data["product_label_index"][vendor]
+            available = sorted(context["groups"].get(group, []) if group else context["all"])
         labels = sorted(set(products.get(vendor, available)) & set(available))
         label_set = set(labels)
         pool = {cid: [] for cid in cohort}

@@ -7,6 +7,7 @@ validation never guesses applicability from an OS family or model-like string.
 import hashlib
 import json
 import re
+from dataclasses import dataclass
 from decimal import Decimal
 from functools import lru_cache
 from importlib.resources import files
@@ -247,10 +248,91 @@ def validate_evidence(report: dict, *, publication=_UNSET, generated_at=_UNSET) 
     _validate_evidence_semantics(report, publication=publication, generated_at=generated_at)
 
 
-def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UNSET):
+def _fingerprint(value):
+    """Strict JSON types plus exact canonical bytes; never Python equality."""
+    raw = _json(value)
+    return len(raw), hashlib.sha256(raw).digest()
+
+
+@dataclass(frozen=True, init=False)
+class _ValidatedEvidence:
+    """Invocation-local capability minted only after full evidence validation."""
+
+    _value: tuple
+    _context: bytes
+
+    def __init__(self, report, *, publication, generated_at):
+        validate_evidence(report, publication=publication, generated_at=generated_at)
+        object.__setattr__(self, "_value", _fingerprint(report))
+        object.__setattr__(self, "_context", _json([publication, generated_at]))
+
+    def require(self, report, *, publication, generated_at):
+        if (
+            _json([publication, generated_at]) != self._context
+            or _fingerprint(report) != self._value
+        ):
+            raise ValueError("Fresh evidence proof does not match complete value/context")
+
+
+def _validate_reviewed_link(claim, remediation, binding, claims):
+    vendor = claim["vendor"]
+    cid = claim["cve_id"]
+    row = binding["source"]["source_locator"]
+    locator = remediation["source"]["source_locator"]
+    fixed_source = binding["fixed_source"]
+    expected_url = "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
+    matching = [
+        c
+        for c in claims
+        if c["vendor"] == "arista"
+        and c["advisory_id"] == claim["advisory_id"]
+        and c["revision"] == claim["revision"]
+        and c["publisher"] == claim["publisher"]
+        and c["status"] == "fixed"
+        and c["scope"] == "cve_specific"
+        and c["cve_id"] == cid
+        and c["product"] == binding["fixed_product"]
+        and c["source"] == fixed_source
+    ]
+    if (
+        vendor != "arista"
+        or claim["advisory_id"] != "19904-security-advisory-0100"
+        or claim["source"]["source_url"] != expected_url
+        or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
+        or claim["status"] != "affected"
+        or claim["scope"] != "cve_specific"
+        or claim["product"] != "EOS release (source platform scope applies)"
+        or row != "Affected Software / EOS release (source platform scope applies)"
+        or locator != "Resolution / " + cid + " / Arista EOS-based products"
+        or fixed_source != remediation["source"]
+        or len(matching) != 1
+        or remediation["product_ids"]
+        or remediation["version_expressions"] != matching[0]["version_expressions"]
+        or not any(
+            all(
+                remediation.get(key) == fixed.get(key)
+                for key in (
+                    "publisher_id",
+                    "category",
+                    "details",
+                    "published_availability",
+                    "availability",
+                    "availability_date",
+                    "source",
+                )
+            )
+            for fixed in matching[0]["remediations"]
+        )
+    ):
+        raise ValueError("Reviewed section remediation requires exact retained EOS/CVE linkage")
+
+
+def _validate_evidence_semantics(
+    report, *, publication=_UNSET, generated_at=_UNSET, _study=None, _linkage=None
+):
     """Check evidence whose complete shape was validated by its enclosing boundary."""
     _publication(report, publication, generated_at)
-    study = definition()
+    study = definition() if _study is None else _study
     if report["definition_sha256"] != definition_sha256(study):
         raise ValueError("Evidence definition fingerprint does not match the packaged study")
     seen = set()
@@ -347,55 +429,10 @@ def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UN
                             "Same-row remediation requires identical source, row and CVE scope"
                         )
                 else:
-                    fixed_source = binding["fixed_source"]
-                    cid = claim["cve_id"]
-                    expected_url = "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
-                    matching = [
-                        c
-                        for c in report["claims"]
-                        if c["vendor"] == "arista"
-                        and c["advisory_id"] == claim["advisory_id"]
-                        and c["revision"] == claim["revision"]
-                        and c["publisher"] == claim["publisher"]
-                        and c["status"] == "fixed"
-                        and c["scope"] == "cve_specific"
-                        and c["cve_id"] == cid
-                        and c["product"] == binding["fixed_product"]
-                        and c["source"] == fixed_source
-                    ]
-                    if (
-                        vendor != "arista"
-                        or claim["advisory_id"] != "19904-security-advisory-0100"
-                        or claim["source"]["source_url"] != expected_url
-                        or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
-                        or claim["status"] != "affected"
-                        or claim["scope"] != "cve_specific"
-                        or claim["product"] != "EOS release (source platform scope applies)"
-                        or row != "Affected Software / EOS release (source platform scope applies)"
-                        or locator != "Resolution / " + cid + " / Arista EOS-based products"
-                        or fixed_source != remediation["source"]
-                        or len(matching) != 1
-                        or remediation["product_ids"]
-                        or remediation["version_expressions"] != matching[0]["version_expressions"]
-                        or not any(
-                            all(
-                                remediation.get(key) == fixed.get(key)
-                                for key in (
-                                    "publisher_id",
-                                    "category",
-                                    "details",
-                                    "published_availability",
-                                    "availability",
-                                    "availability_date",
-                                    "source",
-                                )
-                            )
-                            for fixed in matching[0]["remediations"]
-                        )
-                    ):
-                        raise ValueError(
-                            "Reviewed section remediation requires exact retained EOS/CVE linkage"
-                        )
+                    if _linkage is None:
+                        _validate_reviewed_link(claim, remediation, binding, report["claims"])
+                    else:
+                        _linkage.append((claim, remediation, binding))
             product_ids = remediation["product_ids"]
             if (
                 product_ids
@@ -489,6 +526,13 @@ def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET
                 _official(source["source_url"])
             except ValueError:
                 _official(source["source_url"], reference=True)
+
+
+def _validate_comparison_evidence(report, standalone, *, publication, generated_at):
+    """Compose standalone evidence from this call's full comparison proof."""
+    validate_comparison(report, publication=publication, generated_at=generated_at)
+    if _fingerprint(standalone) != _fingerprint(report["inputs"]["evidence"]):
+        raise ValueError("Switching asset and comparison evidence disagree")
 
 
 def _latest_retained_source(db, vendor, url):
@@ -768,6 +812,19 @@ def _attach_scores(claims, score_data):
 
 def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dict:
     """Allowlist every nested public field, then validate the complete contract."""
+    result = _project(inputs, publication=publication, generated_at=generated_at)
+    validate_evidence(result, publication=publication, generated_at=generated_at)
+    return result
+
+
+def _project_with_proof(inputs, *, publication, generated_at):
+    result = _project(inputs, publication=publication, generated_at=generated_at)
+    proof = _ValidatedEvidence(result, publication=publication, generated_at=generated_at)
+    return result, proof
+
+
+def _project(inputs: dict, *, publication: dict | None, generated_at: str) -> dict:
+    """Construct allowlisted fields; the validating wrappers own the boundary."""
     schema = json.loads(
         files("infrastructure_impact").joinpath("schemas/switching-evidence-v1.json").read_text()
     )
@@ -862,7 +919,6 @@ def project(inputs: dict, *, publication: dict | None, generated_at: str) -> dic
         claims[claim["claim_id"]] = claim
     result["claims"] = list(claims.values())
     result["issues"] = sorted(set(result["issues"]))
-    validate_evidence(result, publication=publication, generated_at=generated_at)
     return result
 
 

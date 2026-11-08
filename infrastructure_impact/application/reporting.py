@@ -19,6 +19,23 @@ def report():
         records = data["records"]
         pairs = [p for p in data["coverage"] if p["cve_id"] in COHORT]
         comparison = data["comparison"]
+    return _write_report(records, pairs, comparison)
+
+
+def _report_from_state(data):
+    """Render the cohort artifacts from the v2 build's fresh native snapshot."""
+    from .comparison import compare
+
+    return _write_report(
+        data["records"],
+        [p for p in data["coverage"] if p["cve_id"] in COHORT],
+        compare(data["records"], COHORT, vendors=data["vendors"]),
+    )
+
+
+def _write_report(records, pairs, comparison):
+    root = Paths.from_env().home
+    (root / "benchmark").mkdir(parents=True, exist_ok=True)
     result = {"generated_at": now(), "cohort": COHORT, "pairs": pairs}
     (root / "benchmark/cohort-coverage.json").write_text(json.dumps(result, indent=2) + "\n")
     with (root / "benchmark/cohort-coverage.csv").open("w", newline="") as f:

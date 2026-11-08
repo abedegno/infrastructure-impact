@@ -1,0 +1,485 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "impact-target-import-result",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 2,
+      "type": "integer"
+    },
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,127}$"
+    },
+    "profile_version": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "manifest_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "source_config_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "normalizer_fingerprints": {
+      "type": "object",
+      "properties": {
+        "aruba": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{16}|[0-9a-f]{64})$"
+        },
+        "cisco": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{16}|[0-9a-f]{64})$"
+        }
+      },
+      "required": [
+        "aruba",
+        "cisco"
+      ],
+      "additionalProperties": false
+    },
+    "baseline_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time",
+      "maxLength": 64,
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "outcome": {
+      "enum": [
+        "completed",
+        "failed",
+        "skipped_writer_lock"
+      ]
+    },
+    "failure_code": {
+      "enum": [
+        null,
+        "source_drift",
+        "source_access",
+        "normalization",
+        "identity",
+        "stale_preview",
+        "writer_lock",
+        "storage",
+        "audit",
+        "candidate_capacity",
+        "candidate_validation",
+        "backup",
+        "input_budget",
+        "received_budget",
+        "attempt_budget",
+        "existing_identity_conflict"
+      ]
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "vendor": {
+            "enum": [
+              "aruba",
+              "cisco"
+            ]
+          },
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "fetch_url": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "status": {
+            "enum": [
+              "not_attempted",
+              "validated",
+              "imported",
+              "unchanged",
+              "failed"
+            ]
+          },
+          "failure_code": {
+            "enum": [
+              null,
+              "source_drift",
+              "source_access",
+              "normalization",
+              "identity",
+              "stale_preview",
+              "writer_lock",
+              "storage",
+              "audit",
+              "candidate_capacity",
+              "candidate_validation",
+              "backup",
+              "input_budget",
+              "received_budget",
+              "attempt_budget",
+              "existing_identity_conflict"
+            ]
+          },
+          "before_keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "uniqueItems": true
+          },
+          "after_keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "vendor",
+          "advisory_id",
+          "fetch_url",
+          "source_sha256",
+          "status",
+          "failure_code",
+          "before_keys",
+          "after_keys"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 174
+    },
+    "counters": {
+      "type": "object",
+      "properties": {
+        "http_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 348
+        },
+        "received_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 80000000
+        },
+        "input_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 40000000
+        },
+        "imported": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 174
+        },
+        "unchanged": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 174
+        }
+      },
+      "required": [
+        "http_attempts",
+        "received_bytes",
+        "input_bytes",
+        "imported",
+        "unchanged"
+      ],
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "audit_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "candidate_validated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "capacity_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "audit_passed",
+        "candidate_validated",
+        "capacity_passed"
+      ],
+      "additionalProperties": false
+    },
+    "staged_database": {
+      "enum": [
+        null,
+        "private/data/intel.sqlite3"
+      ]
+    },
+    "public_directory": {
+      "enum": [
+        null,
+        "public/"
+      ]
+    },
+    "candidate": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "passed",
+            "audit_failed",
+            "capacity_failed",
+            "validation_failed",
+            "monitor_unavailable",
+            "worker_failed"
+          ]
+        },
+        "generation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "manifest_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "public_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expanded_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "compressed_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "default_checked_bytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "default_monitor_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "archive_monitor_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "parity_passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "archive_scope": {
+          "const": "snapshot-v1"
+        },
+        "representation": {
+          "const": "publication-v2-physical"
+        }
+      },
+      "required": [
+        "outcome",
+        "generation",
+        "manifest_sha256",
+        "public_bytes",
+        "expanded_bytes",
+        "compressed_bytes",
+        "default_checked_bytes",
+        "default_monitor_passed",
+        "archive_monitor_passed",
+        "parity_passed",
+        "archive_scope",
+        "representation"
+      ],
+      "additionalProperties": false
+    },
+    "publication_format": {
+      "const": "v2"
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "profile_id",
+    "profile_version",
+    "manifest_fingerprint",
+    "source_config_fingerprint",
+    "normalizer_fingerprints",
+    "baseline_fingerprint",
+    "fingerprint",
+    "observed_at",
+    "outcome",
+    "failure_code",
+    "targets",
+    "counters",
+    "checks",
+    "staged_database",
+    "public_directory",
+    "publication_format"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "completed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failure_code": {
+            "type": "null"
+          },
+          "staged_database": {
+            "const": "private/data/intel.sqlite3",
+            "type": "string"
+          },
+          "public_directory": {
+            "const": "public/",
+            "type": "string"
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "audit_passed": {
+                "const": true,
+                "type": "boolean"
+              },
+              "candidate_validated": {
+                "const": true,
+                "type": "boolean"
+              },
+              "capacity_passed": {
+                "const": true,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "audit_passed",
+              "candidate_validated",
+              "capacity_passed"
+            ],
+            "additionalProperties": false
+          },
+          "targets": {
+            "items": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "imported",
+                    "unchanged"
+                  ]
+                },
+                "failure_code": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "candidate": {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "const": "passed"
+              }
+            }
+          }
+        },
+        "required": [
+          "candidate"
+        ]
+      },
+      "else": {
+        "properties": {
+          "staged_database": {
+            "type": "null"
+          },
+          "public_directory": {
+            "type": "null"
+          },
+          "failure_code": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

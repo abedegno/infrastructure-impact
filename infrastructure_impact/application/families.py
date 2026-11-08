@@ -3,6 +3,7 @@
 import json
 import re
 from collections import Counter
+from functools import lru_cache
 
 from ..settings import PACKAGE
 
@@ -11,18 +12,21 @@ def definition():
     return json.loads((PACKAGE / "resources/product-families.json").read_text())
 
 
+@lru_cache(maxsize=256)
+def _prefix_pattern(prefix):
+    return re.compile(re.escape(prefix.casefold()) + r"(?=$|[\s(/])")
+
+
 def matches(family, claim):
     labels = [claim.get("product", ""), claim.get("product_family") or ""] + [
         value
         for category, value in claim.get("product_context", [])
         if category in {"product_name", "product_family"}
     ]
+    labels = [label.strip().casefold() for label in labels]
     prefixes = family["prefixes"]
     named = any(
-        re.match(re.escape(prefix.casefold()) + r"(?=$|[\s(/])", label.strip().casefold())
-        is not None
-        for label in labels
-        for prefix in prefixes
+        _prefix_pattern(prefix).match(label) is not None for label in labels for prefix in prefixes
     )
     platforms = claim.get("platforms", [])
     required = family["platform_prefixes"]

@@ -120,6 +120,21 @@
     "sha256": "7c83204e20e75672b44473e27d907f5161b59f25628ef6ee1d63b211c78e1480"
   },
   {
+    "file": "publication-v2-codec-vectors.json",
+    "kind": "synthetic",
+    "sha256": "e2838ee92670370838c0ccd6a7ad77ec0a2a33b3e239677657fd2504b2b06f66"
+  },
+  {
+    "file": "publication-v2-query-vectors.json",
+    "kind": "synthetic",
+    "sha256": "058b5828155ec7aa8dcc936608803465d79cbe4382bd20d0a935df0945ea3871"
+  },
+  {
+    "file": "publication-v2-reviewed-link.json",
+    "kind": "synthetic",
+    "sha256": "4328faf377e1ba5e008ac0b908e44133f4d936e4f1a2680c78c09f5c76a503d0"
+  },
+  {
     "file": "switching-arista-bridge.json",
     "kind": "synthetic",
     "sha256": "76343b3366ad75ded2419c77c5eea5ca2ab0f201e18f580ead5b61da2f67ac9a"

@@ -24,10 +24,15 @@ class StageFailure(ValueError):
     """Only locally assigned, closed receipt codes cross this boundary."""
 
 
-def verify(database, public, profile):
+def verify(database, public, profile, *, publication_format="v1"):
     from .import_candidate import verify as verify_candidate
 
-    return verify_candidate(database, public, profile)
+    return verify_candidate(
+        database,
+        public,
+        profile,
+        **({"publication_format": "v2"} if publication_format == "v2" else {}),
+    )
 
 
 class PacedBudget(TransportBudget):
@@ -313,6 +318,7 @@ def stage(
     lock_home: Path,
     accepted_preview: dict,
     base_path: str = "/",
+    publication_format: str = "v1",
 ) -> dict:
     """Hold one collector lock, validate all targets, then ingest only a private copy.
 
@@ -321,11 +327,15 @@ def stage(
     receipts raise before filesystem access. Source paths never enter receipts.
     """
     database, output, home = Path(database), Path(output), Path(lock_home)
+    from .publication_v2 import publication_format as validate_format
     from .target_import_contracts import validate_base_path
 
+    validate_format(publication_format)
     accepted = validate_preview(accepted_preview, profile)
     base_path = validate_base_path(base_path)
     result = _initial_result(profile, accepted)
+    if publication_format == "v2":
+        result.update(schema_version=2, publication_format="v2")
     budget = PacedBudget(profile)
     source_before = None
     pipeline_run_id = None
@@ -407,15 +417,25 @@ def stage(
                         "allowed_cache_urls": sorted(profile.allowed_urls),
                     },
                 }
+                if publication_format == "v2":
+                    from .publication_v2 import validate
+
+                    context.update(schema_version=2, publication_format="v2")
+                    validate(context, "target-import-context-v2.json")
                 (stage_home / "target-import-context.json").write_bytes(
                     canonical_json(context) + b"\n"
                 )
-            checked = verify(staged, output / "public", profile)
+            checked = verify(
+                staged,
+                output / "public",
+                profile,
+                **({"publication_format": "v2"} if publication_format == "v2" else {}),
+            )
             if "candidate" in checked or all(checked.get(k) is True for k in result["checks"]):
                 from .import_candidate import validate_result
 
                 try:
-                    validate_result(checked)
+                    validate_result(checked, publication_format=publication_format)
                 except Exception:
                     raise StageFailure("candidate_validation") from None
                 result["candidate"] = checked["candidate"]
@@ -473,5 +493,5 @@ def stage(
     result["counters"].update(http_attempts=budget.attempts, received_bytes=budget.received_bytes)
     for status in ("imported", "unchanged"):
         result["counters"][status] = sum(t["status"] == status for t in result["targets"])
-    result_bytes(result, selected=profile)
+    result_bytes(result, selected=profile, publication_format=publication_format)
     return result
