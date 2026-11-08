@@ -5,6 +5,21 @@ publication. The reviewed source pin remains the sole source-code authority;
 there is no branch, source override, alternate manifest or secret-bearing preview
 bypass. The local full replay and complete hosted inventory are separate gates.
 
+## Local verification available
+
+The [core retained replay](../research/2026-11-08-runtime-and-paging-verification.md#accepted-local-retained-replay)
+passed all 174 retained targets using frozen code `ca27f6c`, within the existing
+2,400-second worker limit. Audit, capacity, native parity and both HTTP monitors
+passed; existing rows and capture dates were preserved with zero HTTP attempts.
+Its [machine-readable proof](../research/2026-11-08-retained-import-acceptance.json)
+records the exact software, input and accepted-generation identities.
+
+The default-off hosted wiring passed 217 focused tests, including fresh workers,
+legacy-helper compatibility, mirrored workflow equality and remote-recovery
+failure handling. Its installed package also passed the synthetic worker and
+both monitors. These checks do not cover live source reachability or certify the
+complete hosted inventory. Independent human evidence review remains pending.
+
 ## Wiring and compatibility
 
 `ops/hosted_job.py --publication-format v2` explicitly selects the existing v2
