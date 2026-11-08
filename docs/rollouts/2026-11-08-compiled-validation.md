@@ -92,3 +92,39 @@ The 142 targeted compiled-validation and reader tests passed, and the freshly
 installed v2 worker and standalone/missing-monitor probe passed. Independent
 review found no critical or important findings. Full-suite/platform checks and
 another complete same-checkpoint certification remain required.
+
+## Claim-path certification result
+
+[Run 42526370751](https://github.com/abedegno/infrastructure-impact/actions/runs/42526370751)
+used source `6b7086df2c5a168d7cf1b3f590f2a8a8fdbfb294`. Before dispatch, accepted
+checkpoint `6caac484839968a047668080a126062a63528545` was confirmed unchanged.
+All 3,818 local tests and 12 subtests passed; Python 3.11/3.13 and container CI
+passed, as did the refreshed installed v2 worker/monitor probe.
+
+**The performance/parity blocker is resolved for this run; complete certification
+still failed.** The worker returned normally in 1,353.67 seconds (22.56 minutes).
+Native root verification and native/static query comparison both passed. The
+audit passed and all 174 targets were imported with zero HTTP attempts/received
+bytes. The later capacity gate rejected the candidate with `candidate_capacity`;
+`capacity_passed` and `candidate_validated` were false.
+
+The native query comparison completed in 280.98 seconds; it had previously
+failed with an inner stream deadline. Root verification completed in 321.00
+seconds, and the first/independent projections completed in 153.09/162.15 seconds.
+Whole-run timing differences also reflect runner variation; do not attribute
+all of this reduction to one code change. Peak resident memory reached
+6,134,284,288 bytes, so memory remains a separate architectural concern.
+
+The rejection occurred after native parity. Inspection of the worker's capacity
+classification identifies the standalone monitor's download/part-size gates.
+The retained summary does not identify the particular request or exact monitor
+assertion; do not claim a precise overflowing file from this result alone.
+A local saved-public-sample replay passed the default monitor after reading
+28,392,401 bytes against its 32,000,000-byte v2 transfer limit, showing limited
+headroom but not reproducing the complete hosted failure.
+
+PR #44 remains draft. Do not raise limits, weaken monitor checks, activate the
+source pin or promote this rejected candidate. The next investigation must
+identify the exact monitor budget/request and reduce the default payload or
+reorganize validation while retaining complete-data checks. No further
+unchanged full certification is justified merely to repeat the known rejection.
