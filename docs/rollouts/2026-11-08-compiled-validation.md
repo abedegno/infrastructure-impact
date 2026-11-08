@@ -144,3 +144,19 @@ metadata; hostile-input tests verify sanitization. The 173 focused tests, built
 wheel/offline distribution checks, isolated installed v2 worker/monitor probe,
 Ruff and source export passed. Independent review found no important issues.
 The complete suite also passed: 3,819 tests and 12 subtests in 363.92 seconds.
+
+## Reject monitor capacity before native parity
+
+After physical inspection, the worker now runs both existing standalone monitor
+modes before the independent native comparison, for v1 and v2. Both gates and
+preservation checks remain mandatory before acceptance. A rejected monitor leaves
+native parity unattempted, rather than spending its CPU budget on a candidate
+already known to fail capacity. This changes verification order only, with no
+budget, schema, publication, schedule, permission or activation change.
+
+Four orchestration cases verify failure skips parity and successful candidates
+still pass all gates. They failed against the former order before the change.
+All 145 focused tests passed; the complete suite passed 3,821 tests and 12
+subtests in 332.44 seconds. Independent review confirmed failed receipts allow
+unattempted gate values and still fail closed. Run 42530463587 was dispatched
+before this reorder and continues to use source `5b9de3fe88dc2b212286becf257aad3ff160fab8`.

@@ -865,12 +865,16 @@ def _worker(database, public, *, publication_format="v1"):
             from .publication_v2 import inspect_bundle, native_parity
 
             reader = inspect_bundle(public, result["candidate"])
-            native_parity(database, public, home, reader)
         else:
             snapshot = _inspect_bundle(public, result["candidate"])
+        # Reject download/part-capacity failures before the expensive independent
+        # comparison. Every gate remains mandatory for an accepted candidate.
+        _monitors(public, home, result["candidate"], base_path=_base_path(home))
+        if publication_format == "v2":
+            native_parity(database, public, home, reader)
+        else:
             _parity(database, public, home, snapshot)
         result["candidate"]["parity_passed"] = True
-        _monitors(public, home, result["candidate"], base_path=_base_path(home))
         _preserved(
             database,
             home,

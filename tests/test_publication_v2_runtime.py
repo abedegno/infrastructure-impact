@@ -288,9 +288,8 @@ def test_v2_public_projection_matches_v1_and_composes(monkeypatch):
 
 
 @pytest.mark.parametrize("fmt", ["v1", "v2"])
-def test_worker_preserves_native_parity_and_monitors_when_reusing_report(
-    tmp_path, monkeypatch, fmt
-):
+@pytest.mark.parametrize("monitor_failure", [False, True])
+def test_worker_checks_capacity_before_native_parity(tmp_path, monkeypatch, fmt, monitor_failure):
     import os
 
     from infrastructure_impact.application import import_candidate as worker
@@ -325,13 +324,29 @@ def test_worker_preserves_native_parity_and_monitors_when_reusing_report(
     monkeypatch.setattr(publication_v2, "native_parity", lambda *args: calls.append("native"))
     monkeypatch.setattr(worker, "_inspect_bundle", lambda *args: object())
     monkeypatch.setattr(worker, "_parity", lambda *args: calls.append("native"))
-    monkeypatch.setattr(worker, "_monitors", lambda *args, **kw: calls.append("monitors"))
+
+    def monitors(*args, **kwargs):
+        calls.append("monitors")
+        if monitor_failure:
+            raise worker.CapacityFailure("monitor capacity")
+
+    monkeypatch.setattr(worker, "_monitors", monitors)
     # Worker deliberately assigns these clock functions; restore them after this fixture.
     monkeypatch.setattr(query, "now", query.now)
     monkeypatch.setattr(source_audit, "now", source_audit.now)
     result = worker._worker(tmp_path / "db", tmp_path / "public", publication_format=fmt)
-    assert result["candidate"]["outcome"] == "passed"
-    assert calls == ([] if fmt == "v2" else ["report"]) + ["build", "native", "monitors"]
+    prefix = ([] if fmt == "v2" else ["report"]) + ["build", "monitors"]
+    if monitor_failure:
+        assert calls == prefix
+        assert result["candidate"]["outcome"] == "capacity_failed"
+        assert result["candidate_validated"] is False
+        assert result["capacity_passed"] is False
+        assert result["candidate"]["parity_passed"] is None
+    else:
+        assert calls == prefix + ["native"]
+        assert result["candidate"]["outcome"] == "passed"
+        assert result["candidate_validated"] is True
+        assert result["candidate"]["parity_passed"] is True
 
 
 def test_v2_build_copies_identical_fresh_cohort_report_asset(tmp_path, monkeypatch):
