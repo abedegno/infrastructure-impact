@@ -114,3 +114,9 @@ check; do not reconstruct missing raw histories from public snapshot rows.
 Independent human review, partial-history caveats, source conflicts and fair
 vendor-rate prerequisites remain unresolved by this import. See the
 [dated acceptance record](research/2026-11-07-exact-target-import-acceptance.md).
+
+The closed Pages-target import route also rejects a complete public file tree above
+1,000,000,000 bytes, before artifact inspection or recovery promotion. This is a
+conservative enforcement of the existing GitHub Pages site-size limit; the
+receipt retains generation and byte measurements on rejection. It does not
+change the other archive, part, index or monitor budgets.

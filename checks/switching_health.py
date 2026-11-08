@@ -63,7 +63,7 @@ def uri(value):
     return parsed
 
 
-def validate_schema(value, schema, schemas):
+def validate_schema(value, schema, schemas, pointer=""):
     """Validate exactly the offline contracts' supported schema vocabulary."""
     registry = {s["$id"]: s for s in schemas.values() if "$id" in s}
     registry["urn:infrastructure-impact:kev:1"] = schemas["kev-v1.json"]
@@ -156,7 +156,11 @@ def validate_schema(value, schema, schemas):
         if type(v) in (int, float):
             assert s.get("minimum", v) <= v <= s.get("maximum", v)
 
-    check(value, schemas[schema], schemas[schema])
+    root = schemas[schema]
+    target = root
+    for key in pointer.lstrip("/").split("/") if pointer else []:
+        target = target[key.replace("~1", "/").replace("~0", "~")]
+    check(value, target, root)
 
 
 def validate_switching_report(report, publication, generated_at, schemas):

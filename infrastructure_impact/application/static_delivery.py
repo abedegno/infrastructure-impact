@@ -11,6 +11,7 @@ from hashlib import sha256
 TARGET_BYTES = 512_000
 MAX_PART_BYTES = 8_000_000
 MAX_INDEX_BYTES = 2_000_000
+MAX_SUMMARY_BYTES = 128_000_000
 
 
 def encode(value):
@@ -68,6 +69,26 @@ def write_static_delivery(destination, data):
         if batch:
             parts.append(write_part(batch))
         return parts
+
+    def summary_delivery(value):
+        if len(encode(dict(**identity, data=value))) <= MAX_PART_BYTES:
+            return dict(summary=write_part(value))
+        raw = encode(value)
+        if len(raw) > MAX_SUMMARY_BYTES:
+            raise ValueError("Switching summary exceeds 128 MB reconstruction budget")
+        text = raw.decode("utf-8")
+        # Unicode code points remain whole. A JSON string costs at most six
+        # UTF-8 bytes per code point, including escaping, plus its envelope.
+        width = min(TARGET_BYTES, (MAX_PART_BYTES - len(encode(dict(**identity, data="")))) // 6)
+        if width < 1:
+            raise ValueError("Static summary fragment envelope exceeds 8 MB")
+        return dict(
+            summary_fragments=dict(
+                parts=[write_part(text[i : i + width]) for i in range(0, len(text), width)],
+                sha256=sha256(raw).hexdigest(),
+                bytes=len(raw),
+            )
+        )
 
     by_cve = {
         cid: []
@@ -230,7 +251,7 @@ def write_static_delivery(destination, data):
         )
         _validate(metadata, "switching-inputs-v1.json")
         index["switching"] = dict(
-            summary=write_part(summary(report)),
+            **summary_delivery(summary(report)),
             inputs=write_part(metadata),
             claims=claim_index,
             evidence_metadata=chunks(
@@ -245,6 +266,9 @@ def write_static_delivery(destination, data):
         )
     full = (destination / "snapshot.json").read_bytes()
     index["full"] = dict(path="snapshot.json", sha256=sha256(full).hexdigest(), bytes=len(full))
+    if len(encode(index)) > MAX_INDEX_BYTES and index.get("switching", {}).get("claims"):
+        study = index["switching"]
+        study["claim_catalog"] = chunks(study.pop("claims"))
     from jsonschema import Draft202012Validator, FormatChecker
 
     from ..settings import PACKAGE
