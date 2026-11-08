@@ -3,7 +3,6 @@
 import io
 import json
 import math
-import resource
 import sys
 
 import pytest
@@ -26,18 +25,22 @@ class FlushedEvents(io.StringIO):
 def events(sink):
     result = [json.loads(line) for line in sink.getvalue().splitlines()]
     for event in result:
-        assert set(event) == {
-            "event",
-            "phase",
-            "state",
-            "elapsed_seconds",
-            "process_cpu_seconds",
-            "peak_resident_bytes",
-        }
-        assert math.isfinite(event["process_cpu_seconds"])
-        assert 0 <= event["process_cpu_seconds"] <= 86_400
-        assert type(event["peak_resident_bytes"]) is int
-        assert 0 <= event["peak_resident_bytes"] <= 2**50
+        expected = {"event", "phase", "state", "elapsed_seconds"}
+        try:
+            phase_events.process_time()
+        except (NotImplementedError, OSError, ValueError):
+            pass
+        else:
+            expected.add("process_cpu_seconds")
+        if phase_events.resource is not None and sys.platform in ("darwin", "linux"):
+            expected.add("peak_resident_bytes")
+        assert set(event) == expected
+        if "process_cpu_seconds" in event:
+            assert math.isfinite(event["process_cpu_seconds"])
+            assert 0 <= event["process_cpu_seconds"] <= 86_400
+        if "peak_resident_bytes" in event:
+            assert type(event["peak_resident_bytes"]) is int
+            assert 0 <= event["peak_resident_bytes"] <= 2**50
         assert event["event"] == "phase"
         assert event["state"] in {"started", "completed", "failed"}
         assert 0 <= event["elapsed_seconds"] < 60
@@ -120,10 +123,10 @@ def test_phase_resources_use_process_cpu_and_platform_rss_units(
     monkeypatch.setattr(phase_events.sys, "platform", platform)
 
     def usage(who):
-        assert who == resource.RUSAGE_SELF
+        assert who == 0
         return SimpleNamespace(ru_maxrss=rss)
 
-    monkeypatch.setattr(resource, "getrusage", usage)
+    monkeypatch.setattr(phase_events, "resource", SimpleNamespace(RUSAGE_SELF=0, getrusage=usage))
     with phase_events.phase("publication.query"):
         pass
     receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
@@ -135,7 +138,11 @@ def test_phase_resources_use_process_cpu_and_platform_rss_units(
 def test_phase_omits_invalid_resource_measurements(monkeypatch, capsys, rss):
     from types import SimpleNamespace
 
-    monkeypatch.setattr(resource, "getrusage", lambda who: SimpleNamespace(ru_maxrss=rss))
+    monkeypatch.setattr(
+        phase_events,
+        "resource",
+        SimpleNamespace(RUSAGE_SELF=0, getrusage=lambda who: SimpleNamespace(ru_maxrss=rss)),
+    )
     with phase_events.phase("publication.query"):
         pass
     receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
@@ -147,7 +154,7 @@ def test_phase_resource_unavailable_does_not_fail_operation(monkeypatch, capsys)
     monkeypatch.setattr(phase_events, "resource", None, raising=False)
     with phase_events.phase("publication.query"):
         pass
-    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    receipt = events(io.StringIO(capsys.readouterr().err))
     assert all("peak_resident_bytes" not in event for event in receipt)
     assert receipt[-1]["state"] == "completed"
 
@@ -156,9 +163,25 @@ def test_phase_resource_platform_error_does_not_fail_operation(monkeypatch, caps
     def unavailable(who):
         raise NotImplementedError("PRIVATE PLATFORM DETAIL")
 
-    monkeypatch.setattr(resource, "getrusage", unavailable)
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        phase_events, "resource", SimpleNamespace(RUSAGE_SELF=0, getrusage=unavailable)
+    )
     with phase_events.phase("publication.query"):
         pass
     receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
     assert all("peak_resident_bytes" not in event for event in receipt)
+    assert receipt[-1]["state"] == "completed"
+
+
+def test_phase_cpu_unavailable_does_not_fail_operation(monkeypatch, capsys):
+    def unavailable():
+        raise NotImplementedError("PRIVATE PLATFORM DETAIL")
+
+    monkeypatch.setattr(phase_events, "process_time", unavailable)
+    with phase_events.phase("publication.query"):
+        pass
+    receipt = events(io.StringIO(capsys.readouterr().err))
+    assert all("process_cpu_seconds" not in event for event in receipt)
     assert receipt[-1]["state"] == "completed"

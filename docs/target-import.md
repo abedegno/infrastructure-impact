@@ -49,9 +49,11 @@ responses, two attempts per target and 348 attempts total. All redirects are
 refused. Attempts are sequential and spaced by at least one second; ordinary
 25-second transport timeout and retry classification remain in force. Reaching
 the received-byte cap without proven EOF is refused. These are acquisition
-bounds, independent of the hosted 40-minute job timeout.
+bounds, independent of the 40-minute worker bound and the 60-minute outer
+hosted job allowance.
 
-Stage writes only a new private laboratory tree:
+Stage writes a new private laboratory tree and durable private capture state
+under the collector home (or an explicitly supplied cache path):
 
 - `private/data/intel.sqlite3`: disposable staged database;
 - `private/home/`: bounded worker request/context/result, private diagnostics,
@@ -138,8 +140,26 @@ publication automatically.
 
 ## Retrieval, replay and activation
 
-Normal stage performs fresh bounded source acquisition, which records actual
-HTTP observations separately from retained capture dates. Offline acceptance
+Local stage defaults to `HOME/captures/PROFILE_FINGERPRINT.sqlite3` under
+`--home`; `--capture-cache PATH` selects a different private cache file outside
+the source database and stage output. Successful exact URL/SHA captures persist
+under the collector lock even when later target acquisition or candidate gates
+fail. A retry reuses verified bytes through current normalizers without
+inventing a new HTTP observation or changing the original capture time. The
+cache holds raw private evidence, not accepted normalized results; every stage
+still validates all targets and the complete candidate before acceptance.
+A retained capture can also be reused from the source vault. Missing captures
+require fresh bounded source acquisition, which records actual HTTP observations
+separately from retained capture dates.
+
+The hosted helper's `--acquisition-cache` is an explicit opt-in restricted to
+exact target-import apply with `--encrypted-state`. It restores and checkpoints
+a separate encrypted acquisition recovery stream; rejected candidates gain no
+accepted-vault recovery or publication readiness from these captures. Without
+that flag, a hosted run may reuse its local captures during that runner's
+lifetime, but they are not backed up for subsequent runners. Workflow wiring
+and activation remain separately gated; the collector workflow does not enable
+this option by default. Offline acceptance
 may replay verified retained bytes through current normalizers in a disposable
 lab; it must preserve original capture dates, add no HTTP successes and explicitly
 say **offline retained evidence**. The public CLI has no offline acquisition

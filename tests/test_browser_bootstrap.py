@@ -53,6 +53,8 @@ const b=browser(true, {static:x.static,fetch:async(path)=>{
    b.nodes.get('#apply').fire('click');
    await settle();
  }
+ for(let i=0;i<5000 && !b.evaluate('data') && b.nodes.get('#feedback').textContent==='Loading evidence…';i++)
+   await new Promise(r=>setTimeout(r,1));
  assert(b.evaluate('data'),'startup must accept selected evidence: '+b.nodes.get('#feedback').textContent);
  assert.deepStrictEqual(JSON.parse(b.evaluate('JSON.stringify(data.comparison.cohort)')),[x.cid]);
  assert(b.nodes.get('#matrix-results').innerHTML.includes(x.cid));
@@ -139,3 +141,77 @@ def test_bootstrap_metadata_does_not_hydrate_state_and_unspecified_api_scope_sta
     assert status == 200
     state = json.loads(raw if isinstance(raw, bytes) else b"".join(raw))
     assert state["comparison"]["cohort"] == state["all_cves"]
+
+
+@pytest.mark.parametrize("publication_format", ["v1", "v2"])
+def test_bootstrap_http_methods_headers_and_minimal_body(tmp_path, publication_format):
+    """Static and native bootstrap clients share the read-only HTTP contract."""
+    root = publish(dataset(), tmp_path, publication_format=publication_format)
+    app = Application(tmp_path)
+    for method in ("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"):
+        captured = []
+        body = b"".join(
+            app(
+                dict(REQUEST_METHOD=method, PATH_INFO="/api/v1/bootstrap"),
+                lambda status, headers: captured.append((status, dict(headers))),
+            )
+        )
+        status, headers = captured[0]
+        assert status.startswith("200" if method in ("GET", "HEAD") else "405")
+        assert headers["Content-Type"].startswith("application/json")
+        if method == "HEAD":
+            assert body == b""
+        elif method == "GET":
+            assert set(json.loads(body)) == {"publication", "generated_at", "benchmark_cohort"}
+        else:
+            assert headers["Allow"] == "GET, HEAD"
+
+    script = r"""
+const fs=require('fs'),assert=require('assert');
+const {browser}=require('./tests/helpers/ui-browser.js');
+const root=process.argv[1];
+const b=browser(true,{static:true,fetch:async path=>new Response(fs.readFileSync(root+path))});
+(async()=>{
+ for(const method of ['GET','HEAD','POST','PUT','DELETE','OPTIONS']) {
+  const input={url:b.context.location.origin+'/api/v1/bootstrap',method};
+  const response=await b.context.window.fetch(input);
+  assert.strictEqual(response.status,['GET','HEAD'].includes(method)?200:405,method);
+  assert(response.headers.get('Content-Type').startsWith('application/json'),method);
+  const text=await response.text();
+  if(method==='HEAD') assert.strictEqual(text,'');
+  else if(method==='GET') assert.deepStrictEqual(Object.keys(JSON.parse(text)).sort(),
+    ['benchmark_cohort','generated_at','publication']);
+  else assert.strictEqual(response.headers.get('Allow'),'GET, HEAD');
+ }
+})().catch(e=>{console.error(e);process.exitCode=1});
+"""
+    result = subprocess.run(["node", "-e", script, str(root)], text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+
+
+def test_bootstrap_unavailable_head_has_json_headers_and_empty_body(tmp_path):
+    app = Application(tmp_path)
+    captured = []
+    body = b"".join(
+        app(
+            dict(REQUEST_METHOD="HEAD", PATH_INFO="/api/v1/bootstrap"),
+            lambda status, headers: captured.append((status, dict(headers))),
+        )
+    )
+    assert captured[0][0].startswith("503")
+    assert captured[0][1]["Content-Type"].startswith("application/json")
+    assert body == b""
+    script = r"""
+const assert=require('assert'),{browser}=require('./tests/helpers/ui-browser.js');
+const b=browser(true,{static:true,fetch:async()=>new Response('{}',{status:503})});
+(async()=>{
+ const response=await b.context.window.fetch('/api/v1/bootstrap',{method:'HEAD'});
+ assert.strictEqual(response.status,503);
+ assert(response.headers.get('Content-Type').startsWith('application/json'));
+ assert.strictEqual(await response.text(),'');
+ const rejected=await b.context.window.fetch('/api/v1/bootstrap',{method:'POST'});
+ assert.strictEqual(rejected.status,405);
+})().catch(e=>{console.error(e);process.exitCode=1});
+"""
+    result = subprocess.run(["node", "-e", script], text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr

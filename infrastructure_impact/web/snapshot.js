@@ -691,10 +691,20 @@ if (typeof document !== 'undefined') {
   window.fetch = async (input, options) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
     if (url.origin === location.origin && url.pathname === '/api/v1/bootstrap') {
+      const method = (options?.method ?? input?.method ?? 'GET').toUpperCase();
+      const reply = (value, status = 200) =>
+        new Response(method === 'HEAD' ? null : window.InfrastructureJSON.stringify(value), {
+          status,
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            ...(status === 405 ? { Allow: 'GET, HEAD' } : {}),
+          },
+        });
+      if (!['GET', 'HEAD'].includes(method)) return reply({ error: 'Read-only service' }, 405);
       try {
-        return new Response(window.InfrastructureJSON.stringify((await getDelivery()).bootstrap()));
+        return reply((await getDelivery()).bootstrap());
       } catch {
-        return new Response('{"error":"Publication temporarily unavailable"}', { status: 503 });
+        return reply({ error: 'Publication temporarily unavailable' }, 503);
       }
     }
     if (url.origin === location.origin && url.pathname === '/api/v1/switching-comparison') {

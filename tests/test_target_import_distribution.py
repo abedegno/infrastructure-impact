@@ -1,5 +1,7 @@
 """Exact import shipping and CI coverage are explicit release contracts."""
 
+import ast
+import re
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -50,7 +52,9 @@ def test_exact_import_test_modules_have_explicit_ci_lint_and_format_coverage():
     ]
     assert len(commands) == 2
     tests = sorted(ROOT.glob("tests/test_target_import_*.py")) + [
-        ROOT / "tests/test_hosted_target_import.py"
+        ROOT / "tests/test_hosted_target_import.py",
+        ROOT / "tests/test_browser_bootstrap.py",
+        ROOT / "tests/test_target_capture_cache.py",
     ]
     for command in commands:
         for path in tests:
@@ -173,3 +177,48 @@ def test_codec_hook_temporary_file_is_reclaimed_after_build_failure(tmp_path, mo
         list(builder.build(directory=str(tmp_path), versions=["standard"]))
     gc.collect()
     assert created and all(not path.exists() for path in created)
+
+
+def test_quality_workflow_preserves_contexts_and_runs_shared_checks_once():
+    """Parse the workflow's scalar/step subset, as for hosted workflow gates."""
+    text = (ROOT / ".github/workflows/ci.yaml").read_text()
+    header, jobs_text = text.split("\njobs:\n", 1)
+    assert re.search(r"^on:\n  push:\n    branches: \[main\]\n  pull_request:", header, re.M)
+    assert "paths:" not in header and "paths-ignore:" not in header
+    concurrency = dict(re.findall(r"^  (group|cancel-in-progress): (.+)$", header, re.M))
+    assert concurrency == {
+        "group": "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}",
+        "cancel-in-progress": "true",
+    }
+    jobs = dict(re.findall(r"^  (\w+):\n(.*?)(?=^  \w+:|\Z)", jobs_text, re.M | re.S))
+    assert set(jobs) == {"python", "container"}
+    versions = ast.literal_eval(re.search(r"^        python: (.+)$", jobs["python"], re.M)[1])
+    assert versions == ["3.11", "3.13"]
+    assert not re.search(r"^    (name|if):", jobs["python"], re.M)
+    steps = []
+    for block in re.split(r"^      - ", jobs["python"], flags=re.M)[1:]:
+        steps.append(dict(re.findall(r"^(?:        )?(run|name|uses|if): (.+)$", block, re.M)))
+    pytest_steps = [step for step in steps if step.get("run") == "uv run pytest -q"]
+    assert len(pytest_steps) == 1 and "if" not in pytest_steps[0]
+    shared = [
+        step
+        for step in steps
+        if (
+            step.get("name") == "Check container dependency exports"
+            or any(
+                token in step.get("run", "")
+                for token in (
+                    "checks/release.py",
+                    "ruff ",
+                    "npm ",
+                    "node tests/",
+                    "python -m build",
+                    "checks/distribution.py",
+                )
+            )
+        )
+    ]
+    assert len(shared) == 16
+    for step in shared:
+        assert step.get("if") == "matrix.python == '3.11'", step
+    assert "docker build" in jobs["container"]
