@@ -2,11 +2,13 @@
 
 import gzip
 import json
+from collections import deque
 from functools import lru_cache
 from hashlib import sha256
 from pathlib import Path
 
 from .. import publication_codec as codec
+from ..phase_events import phase
 from ..settings import PACKAGE
 
 PART = 8_000_000
@@ -611,6 +613,7 @@ def write_bundle(destination, data):
     return catalog
 
 
+@phase("publication.inspection")
 def inspect_bundle(directory, facts):
     """Verify the complete physical inventory before independent native parity."""
     from .import_candidate import CapacityFailure, _measure
@@ -672,6 +675,7 @@ def inspect_bundle(directory, facts):
     return reader
 
 
+@phase("publication.native_parity")
 def native_parity(database, directory, home, reader):
     """Bind mandatory roots to independently queried sanitized native facts."""
     from contextlib import closing
@@ -695,30 +699,32 @@ def native_parity(database, directory, home, reader):
     verify_projection(reader, projected)
     if (Path(directory) / "impact.csv").read_bytes() != csv_export(projected).encode():
         raise ValueError("native CSV mismatch")
-    scopes = ("os_family", "model_qualified")
-    actuals = reader.switching_selections(
-        [dict(scope_level=scope) for scope in scopes], evaluated_at=projected["generated_at"]
-    )
-    expected_summaries = _select_summaries(
-        projected["switching_comparison"],
-        [dict(scope_level=scope) for scope in scopes],
-        evaluated_at=projected["generated_at"],
-    )
-    for expected, actual in zip(expected_summaries, actuals, strict=True):
-        if codec.digest(
-            c.encode()
-            for c in json.JSONEncoder(
-                ensure_ascii=False, sort_keys=True, separators=(",", ":")
-            ).iterencode(actual)
-        ) != codec.digest(
-            c.encode()
-            for c in json.JSONEncoder(
-                ensure_ascii=False, sort_keys=True, separators=(",", ":")
-            ).iterencode(expected)
-        ) or switching_csv(actual) != switching_csv(expected):
-            raise ValueError("native switching query mismatch")
+    with phase("publication.native_queries"):
+        scopes = ("os_family", "model_qualified")
+        actuals = reader.switching_selections(
+            [dict(scope_level=scope) for scope in scopes], evaluated_at=projected["generated_at"]
+        )
+        expected_summaries = _select_summaries(
+            projected["switching_comparison"],
+            [dict(scope_level=scope) for scope in scopes],
+            evaluated_at=projected["generated_at"],
+        )
+        for expected, actual in zip(expected_summaries, actuals, strict=True):
+            if codec.digest(
+                c.encode()
+                for c in json.JSONEncoder(
+                    ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                ).iterencode(actual)
+            ) != codec.digest(
+                c.encode()
+                for c in json.JSONEncoder(
+                    ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                ).iterencode(expected)
+            ) or switching_csv(actual) != switching_csv(expected):
+                raise ValueError("native switching query mismatch")
 
 
+@phase("publication.native_roots")
 def verify_projection(reader, projected):
     """Root membership comes from native views, never the untrusted catalog."""
     from .switching_comparison import summary
@@ -814,6 +820,9 @@ def verify_projection(reader, projected):
     encoder = json.JSONEncoder(ensure_ascii=False, allow_nan=False, separators=(",", ":"))
     for name, value in views.items():
         expected = codec.digest(chunk.encode() for chunk in encoder.iterencode(value))
-        actual = codec.digest(reader.stream_root(name))
-        if actual != expected:
+        if reader.root(name)["logical"] != expected:
             raise ValueError("native logical root mismatch: " + name)
+        # The authenticated descriptor now binds this root to native facts.
+        # Exhaustion still verifies every byte, declared range and EOF via
+        # Reader._stream; avoid hashing the same decoded chunks a second time.
+        deque(reader.stream_root(name), maxlen=0)
