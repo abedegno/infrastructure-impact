@@ -11,6 +11,7 @@ import tempfile
 from contextlib import closing
 from hashlib import sha256
 from pathlib import Path
+from time import perf_counter
 
 from ..settings import PACKAGE
 
@@ -19,6 +20,87 @@ RESULT = "target-import-verification.json"
 MAX_CONTEXT = 2_000_000
 MAX_RESULT = 16_384
 CHECKS = ("audit_passed", "capacity_passed", "candidate_validated")
+WORKER_PHASES = (
+    "publication.query",
+    "publication.projection",
+    "publication.writing",
+    "publication.inspection",
+    "publication.native_parity",
+    "publication.native_roots",
+    "publication.native_queries",
+)
+
+
+def _worker_diagnostics(log, state, started, returncode=None):
+    """Retain bounded, closed metadata only; diagnostics never affect acceptance."""
+
+    def pairs(items):
+        value = {}
+        for key, item in items:
+            if key in value:
+                raise ValueError("duplicate key")
+            value[key] = item
+        return value
+
+    def elapsed(value):
+        return type(value) in (int, float) and 0 <= value <= 86_400
+
+    try:
+        events = []
+        try:
+            log.flush()
+            log.seek(0)
+            raw = log.read(65_536)
+        except (OSError, ValueError):
+            raw = b""
+        for line in raw.splitlines():
+            try:
+                value = json.loads(line, object_pairs_hook=pairs)
+                if (
+                    not isinstance(value, dict)
+                    or value.get("event") != "phase"
+                    or value.get("phase") not in WORKER_PHASES
+                    or value.get("state") not in ("started", "completed", "failed")
+                    or not elapsed(value.get("elapsed_seconds"))
+                ):
+                    continue
+                events.append(
+                    {
+                        "event": "phase",
+                        "phase": value["phase"],
+                        "state": value["state"],
+                        "elapsed_seconds": round(value["elapsed_seconds"], 6),
+                    }
+                )
+                # Optional measurements come from child events, never parent RUSAGE_CHILDREN.
+                cpu = value.get("process_cpu_seconds")
+                if elapsed(cpu):
+                    events[-1]["process_cpu_seconds"] = round(cpu, 6)
+                peak = value.get("peak_resident_bytes")
+                if type(peak) is int and 0 <= peak <= 2**50:
+                    events[-1]["peak_resident_bytes"] = peak
+            except (ValueError, TypeError, RecursionError):
+                continue
+            if len(events) == 32:
+                break
+        duration = perf_counter() - started
+        summary = {
+            "event": "candidate_worker",
+            "state": state,
+            "elapsed_seconds": round(min(86_400, max(0, duration)), 6),
+        }
+        if type(returncode) is int and -(2**31) <= returncode < 2**31:
+            summary["returncode"] = returncode
+        events.append(summary)
+        for event in events:
+            print(
+                json.dumps(event, allow_nan=False, separators=(",", ":")),
+                file=sys.stderr,
+                flush=True,
+            )
+    except Exception:
+        # Log I/O or a broken stderr must not change the candidate gate's result.
+        pass
 
 
 class CapacityFailure(ValueError):
@@ -209,24 +291,38 @@ def verify(database: Path, public: Path, profile, *, publication_format="v1") ->
         (home / REQUEST).chmod(0o600)
         if (home / RESULT).exists():
             raise ValueError("stale worker result")
-        with (home / "target-import-worker.log").open("xb") as log:
-            completed = subprocess.run(
-                [
-                    sys.executable,
-                    "-I",
-                    "-m",
-                    __name__,
-                    "--worker",
-                    str(database),
-                    str(public),
-                    *(["v2"] if publication_format == "v2" else []),
-                ],
-                cwd=home,
-                env=_environment(database, public, home, base_path=_base_path(home)),
-                stdout=log,
-                stderr=log,
-                timeout=2400,
-                check=False,
+        with (home / "target-import-worker.log").open("x+b") as log:
+            started = perf_counter()
+            try:
+                completed = subprocess.run(
+                    [
+                        sys.executable,
+                        "-I",
+                        "-m",
+                        __name__,
+                        "--worker",
+                        str(database),
+                        str(public),
+                        *(["v2"] if publication_format == "v2" else []),
+                    ],
+                    cwd=home,
+                    env=_environment(database, public, home, base_path=_base_path(home)),
+                    stdout=log,
+                    stderr=log,
+                    timeout=2400,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired:
+                _worker_diagnostics(log, "timeout", started)
+                return failure
+            except Exception:
+                _worker_diagnostics(log, "launch_error", started)
+                return failure
+            _worker_diagnostics(
+                log,
+                "nonzero" if completed.returncode else "completed",
+                started,
+                completed.returncode,
             )
         if completed.returncode:
             return failure

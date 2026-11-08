@@ -2,10 +2,13 @@
 
 import io
 import json
+import math
+import resource
 import sys
 
 import pytest
 
+from infrastructure_impact import phase_events
 from infrastructure_impact.application import jobs, publication, query
 from infrastructure_impact.storage.repository import connect
 from ops import hosted_job
@@ -23,7 +26,18 @@ class FlushedEvents(io.StringIO):
 def events(sink):
     result = [json.loads(line) for line in sink.getvalue().splitlines()]
     for event in result:
-        assert set(event) == {"event", "phase", "state", "elapsed_seconds"}
+        assert set(event) == {
+            "event",
+            "phase",
+            "state",
+            "elapsed_seconds",
+            "process_cpu_seconds",
+            "peak_resident_bytes",
+        }
+        assert math.isfinite(event["process_cpu_seconds"])
+        assert 0 <= event["process_cpu_seconds"] <= 86_400
+        assert type(event["peak_resident_bytes"]) is int
+        assert 0 <= event["peak_resident_bytes"] <= 2**50
         assert event["event"] == "phase"
         assert event["state"] in {"started", "completed", "failed"}
         assert 0 <= event["elapsed_seconds"] < 60
@@ -91,3 +105,60 @@ def test_query_projection_writer_and_backup_failures_have_bounded_receipts(tmp_p
     assert "PRIVATE SYNTHETIC" not in sink.getvalue()
     assert str(tmp_path) not in sink.getvalue()
     db.close()
+
+
+@pytest.mark.parametrize(
+    "platform,rss,expected", [("darwin", 4096, 4096), ("linux", 4096, 4194304)]
+)
+def test_phase_resources_use_process_cpu_and_platform_rss_units(
+    monkeypatch, capsys, platform, rss, expected
+):
+    from types import SimpleNamespace
+
+    ticks = iter([10.0, 10.25, 11.5])
+    monkeypatch.setattr(phase_events, "process_time", lambda: next(ticks), raising=False)
+    monkeypatch.setattr(phase_events.sys, "platform", platform)
+
+    def usage(who):
+        assert who == resource.RUSAGE_SELF
+        return SimpleNamespace(ru_maxrss=rss)
+
+    monkeypatch.setattr(resource, "getrusage", usage)
+    with phase_events.phase("publication.query"):
+        pass
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert [event["process_cpu_seconds"] for event in receipt] == [0.25, 1.5]
+    assert [event["peak_resident_bytes"] for event in receipt] == [expected, expected]
+
+
+@pytest.mark.parametrize("rss", [True, -1, float("nan"), float("inf"), 10**1000])
+def test_phase_omits_invalid_resource_measurements(monkeypatch, capsys, rss):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(resource, "getrusage", lambda who: SimpleNamespace(ru_maxrss=rss))
+    with phase_events.phase("publication.query"):
+        pass
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert all("peak_resident_bytes" not in event for event in receipt)
+    assert receipt[-1]["state"] == "completed"
+
+
+def test_phase_resource_unavailable_does_not_fail_operation(monkeypatch, capsys):
+    monkeypatch.setattr(phase_events, "resource", None, raising=False)
+    with phase_events.phase("publication.query"):
+        pass
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert all("peak_resident_bytes" not in event for event in receipt)
+    assert receipt[-1]["state"] == "completed"
+
+
+def test_phase_resource_platform_error_does_not_fail_operation(monkeypatch, capsys):
+    def unavailable(who):
+        raise NotImplementedError("PRIVATE PLATFORM DETAIL")
+
+    monkeypatch.setattr(resource, "getrusage", unavailable)
+    with phase_events.phase("publication.query"):
+        pass
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert all("peak_resident_bytes" not in event for event in receipt)
+    assert receipt[-1]["state"] == "completed"
