@@ -188,17 +188,29 @@ def _compiled_validators():
     formats = {
         name: (lambda value, fmt=name: checker.conforms(value, fmt)) for name in checker.checkers
     }
+    schemas = {name: validator.schema for name, validator in originals.items()}
+    schemas["switching-claim"] = {
+        "$ref": "urn:infrastructure-impact:switching-evidence:1#/$defs/claim"
+    }
     return {
         name: jsonschema_rs.Draft202012Validator(
-            validator.schema,
+            schema,
             registry=registry,
             formats=formats,
             validate_formats=True,
             keywords={"pattern": _PythonPattern},
             offline=True,
         )
-        for name, validator in originals.items()
+        for name, schema in schemas.items()
     }
+
+
+def _validate_claim(value):
+    """Validate a decoded claim freshly with the same installed schema/format rules."""
+    _json(value)
+    if not _compiled_validators()["switching-claim"].is_valid(value):
+        legacy = _validators()["switching-evidence-v1.json"]
+        legacy.evolve(schema=legacy.schema["properties"]["claims"]["items"]).validate(value)
 
 
 def _validate(value, schema):

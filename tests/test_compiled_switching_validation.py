@@ -212,3 +212,33 @@ def test_nested_if_then_else_bindings(reports, variant, expected):
     name = "switching-evidence-v1.json"
     assert evidence._validators()[name].is_valid(value) is expected
     assert evidence._compiled_validators()[name].is_valid(value) is expected
+
+
+def test_decoded_claim_uses_compiled_shape_without_python_walk(reports, monkeypatch):
+    value = reports["switching-evidence-v1.json"]["claims"][0]
+    evidence._compiled_validators()
+    legacy = evidence._validators()["switching-evidence-v1.json"]
+
+    def unnecessary_walk(self, value):
+        raise AssertionError("Decoded valid claims must use the compiled shape check")
+
+    monkeypatch.setattr(type(legacy), "validate", unnecessary_walk)
+    evidence._validate_claim(value)
+
+
+@pytest.mark.parametrize("fault", ["missing", "extra", "format", "duplicate", "python_type"])
+def test_decoded_claim_is_rechecked_after_mutation(reports, fault):
+    value = copy.deepcopy(reports["switching-evidence-v1.json"]["claims"][0])
+    evidence._validate_claim(value)
+    if fault == "missing":
+        del value["source"]["source_locator"]
+    elif fault == "extra":
+        value["source"]["unexpected"] = "forbidden"
+    elif fault == "format":
+        value["source"]["retrieved_at"] = "2026-02-30T00:00:00Z"
+    elif fault == "duplicate":
+        value["named_platforms"] = ["same", "same"]
+    else:
+        value["issues"] = tuple(value["issues"])
+    with pytest.raises((ValidationError, TypeError)):
+        evidence._validate_claim(value)

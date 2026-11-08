@@ -51,3 +51,44 @@ runner, authenticate them and rehash each target. No actual vault, encryption ke
 or ciphertext is downloaded to the operator's machine. No schedule, workflow
 permission, live source activation or public promotion is changed by this rollout.
 Final hosted results must be inspected before treating the candidate as accepted.
+
+## Resumed full hosted attempt
+
+[Run 42521786472](https://github.com/abedegno/infrastructure-impact/actions/runs/42521786472)
+used source `a77baf0d06591e5e8b51ae120b4d9a5c4d7cea74`. The checkout log confirmed
+accepted checkpoint `6caac484839968a047668080a126062a63528545`, identical to the
+recorded baseline. The full local suite had passed 3,811 tests and 12 subtests;
+Python 3.11/3.13 and container CI passed, as did the installed offline v2 probe.
+
+The hosted candidate still failed: the worker finished normally after 2,204.69
+seconds, and its closed phase diagnostics identified `stream_deadline` during
+native query comparison. The audit passed; all 174 targets were imported with
+zero HTTP attempts and received bytes. Capacity acceptance and standalone
+monitor gates were not reached. This is not a successful certification.
+
+| Completed phase | Seconds |
+| --- | ---: |
+| First projection | 231.18 |
+| Writing | 444.45 |
+| Independent projection | 232.24 |
+| Native root verification | 576.55 |
+| Query comparison (failed with inner deadline) | 454.67 |
+
+The earlier same-checkpoint attempt took about 380/644/384/667 seconds in the
+first four phases. These component improvements do not establish complete
+pipeline acceptance, and runner variation remains possible.
+
+## Decoded-claim follow-up
+
+The query reader still used the Python `evolve().validate()` gate for every
+decoded claim. The follow-up routes that exact installed claim-schema fragment
+through the already approved compiled engine. It retains fresh strict JSON
+checking, the original validator on rejection, all existing format/pattern and
+offline-reference rules, and every identity/provenance/linkage check afterward.
+Only the compiled claim schema is cached; no claim's validation result is cached.
+
+The new fast-path regression failed against the missing helper before the fix.
+The 142 targeted compiled-validation and reader tests passed, and the freshly
+installed v2 worker and standalone/missing-monitor probe passed. Independent
+review found no critical or important findings. Full-suite/platform checks and
+another complete same-checkpoint certification remain required.
