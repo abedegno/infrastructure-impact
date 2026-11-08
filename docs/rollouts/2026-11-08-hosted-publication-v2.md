@@ -1,7 +1,8 @@
 # Hosted publication v2 rollout — 8 November 2026
 
-Status: source and v2 selection activated; the first hosted apply was cancelled
-by the outer job deadline. No hosted candidate was accepted or published.
+Status: source and v2 selection activated; the first apply was cancelled by the
+outer job deadline, and the exact retry failed in the isolated validator.
+No hosted candidate was accepted or published.
 
 ## Source and controls
 
@@ -67,8 +68,43 @@ normalization, backup/readback or deployment. The mirrored workflow now gives
 the outer job 60 minutes. The verifier's 2,400-second deadline, byte limits,
 source pin, profile, schedule, permissions and every acceptance gate are unchanged.
 
-A fresh hosted preview is required before retrying the same exact profile.
-The retry result and public verification will be recorded separately.
+[PR 41](https://github.com/abedegno/infrastructure-impact/pull/41) merged the
+orchestration-only repair as `b186fd4f35bae2f4e6f9e5a6853b93c038677444`.
+The mirrored workflow blob is `01f556887af6f0f9a14c3742991a4988b43939d8`.
+The repair passed 114 focused tests, independent scoped review and all six
+GitHub CI checks. Runtime source remained pinned to `d473d60`.
+
+## Exact retry
+
+[Fresh preview 42465337461](https://github.com/abedegno/infrastructure-impact/actions/runs/42465337461)
+passed. Its logical receipt was identical to the first preview except for the
+observation time: same baseline, target identities, source and normalizer pins,
+and hosted binding. All 174 targets still had empty `before_keys`.
+The refreshed receipt's SHA-256 is
+`0d00ed418ae662034d2eda9d2e6e8ea9780617bfab613220dfffb65d2cede2e0`.
+
+[Exact retry 42465490495](https://github.com/abedegno/infrastructure-impact/actions/runs/42465490495)
+started at `2026-11-08T09:02:57Z` using that binding, the same installed profile,
+replay limit zero and no vendor override. Source pin, v2 selection, recovery
+backend and vault profile were checked again before dispatch.
+
+The retry failed after approximately 44 minutes at `receipt_validation`. Its
+closed receipt reports all 174 targets as imported into the disposable stage,
+174 HTTP attempts and 32,176,699 received/input bytes, with no target-level
+failures. Source retrieval and target normalization therefore completed.
+
+The isolated candidate returned `worker_failed`, with audit, capacity, parity
+and monitor acceptance fields unset. That result does not distinguish a worker
+timeout from another process failure, so the specific inner cause is not
+established by the current receipt. No deadline or byte guard was relaxed to
+accept it, and no further live retry was dispatched.
+
+Recovery retention and Pages publication were skipped. Independent checks after
+the failure confirmed the same accepted recovery pointer and public v1 generation.
+The fetched/normalized stage was not promoted to hosted state.
+
+Bounded, metadata-only worker phase diagnostics and redundant root-verification
+work are being addressed locally before another runtime activation decision.
 
 The previous public generation is `749b1131e0074a59826403c63110a47f`, generated
 at `2026-11-07T17:55:17.617166+00:00` in v1 format. The pre-rollout recovery

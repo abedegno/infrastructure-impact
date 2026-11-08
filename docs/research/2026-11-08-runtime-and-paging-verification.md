@@ -48,14 +48,16 @@ verification checks complete index membership against projected facts. Totals,
 ordering, cursor bindings, unknown values and existing vendor filters are
 preserved. Older publications retain their existing fallback path.
 
-First, middle and last pages matched the saved native facts for both arrays:
+First, middle and last pages matched the saved native facts for both arrays.
+These measurements exercised the browser JavaScript readers in a Node VM,
+not a live browser or the complete application startup sequence:
 
 - **35,357 sources:** browser pages took 2.97–5.21 seconds and fetched at most
   664,910 additional bytes.
 - **91,441 diagnostics:** browser pages took 6.78–7.51 seconds and fetched at
   most 800,328 additional bytes.
 
-All six browser and six native checks passed. The browser's default transfer
+All six JavaScript-reader and six native checks passed. The reader's default transfer
 remained 24,655,412 bytes. Previous full-array paging reached the five-minute
 deadline. Native claims retain their existing reviewed-link validation path;
 custom full-claim queries can still be expensive and are not certified by these
@@ -98,7 +100,7 @@ envelope rejection; 195 targeted Python tests and the browser suites passed.
 
 Verification against the saved publication passed in 596.74 seconds (238.91 CPU
 seconds), including complete root and detail-index membership checks. The six
-browser page checks also passed with the exact-kind validator: source pages took
+JavaScript-reader page checks also passed with the exact-kind validator: source pages took
 1.72–2.86 seconds and diagnostic pages 3.77–4.08 seconds, with the same byte bounds.
 Profiling outputs remain private diagnostic artifacts, separate from acceptance.
 
