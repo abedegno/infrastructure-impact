@@ -304,7 +304,7 @@ def test_storage_exception_is_bounded(setup, monkeypatch):
     module = implementation()
     monkeypatch.setattr(
         module.shutil,
-        "copyfile",
+        "move",
         lambda *a: (_ for _ in ()).throw(OSError("/private/secret disk path")),
     )
     result = run(setup, monkeypatch)

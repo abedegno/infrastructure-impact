@@ -211,6 +211,7 @@ def test_optional_exact_old_package_integration(legacy_workflow, failure):
 @pytest.mark.parametrize(
     "controls",
     [
+        {"ACQUISITION_CACHE": "true"},
         {"MAINTENANCE_PROFILE": PROFILE, "MAINTENANCE_MODE": "preview"},
         {
             "MAINTENANCE_PROFILE": PROFILE,
@@ -407,3 +408,258 @@ def test_completed_target_import_does_not_claim_cross_system_rollback(downstream
         not gate(s, effects, success=rejected.returncode == 0, hosted_outcome="success")
         for s in publication_steps()
     )
+
+
+TARGET_IMPORT = "campus-switching-public-gap-2026-11-07-v1"
+
+
+def test_manual_acquisition_cache_defaults_false_and_mirrors():
+    text = (ROOT / ".github/workflows/collect.yaml").read_text()
+    assert re.search(r"      acquisition_cache:\n(?:        .*\n)*        default: false", text)
+    assert (
+        text.count(
+            "ACQUISITION_CACHE: ${{ github.event_name == 'workflow_dispatch' && inputs.acquisition_cache == true && 'true' || 'false' }}"
+        )
+        == 2
+    )
+    assert text == (ROOT / "deploy/github-public-service.yaml").read_text()
+
+
+@pytest.mark.parametrize(
+    "controls",
+    [
+        {},
+        {"MAINTENANCE_PROFILE": TARGET_IMPORT, "MAINTENANCE_MODE": "preview"},
+        {"MAINTENANCE_PROFILE": PROFILE, "MAINTENANCE_MODE": "apply"},
+        {"MAINTENANCE_PROFILE": "target-import-unknown", "MAINTENANCE_MODE": "apply"},
+    ],
+)
+def test_acquisition_request_rejects_ineligible_modes_before_invocation(legacy_workflow, controls):
+    source, env, key, effects = legacy_workflow
+    (source / "ops/hosted_job.py").write_bytes((ROOT / "ops/hosted_job.py").read_bytes())
+    result = preflight(source, env | {"ACQUISITION_CACHE": "true"} | controls)
+    assert result.returncode != 0
+    assert not Path(env["TEST_INVOKED"]).exists()
+    assert effect_values(Path(env["GITHUB_OUTPUT"])) == {}
+
+
+@pytest.mark.parametrize("capability", [False, True])
+def test_acquisition_preflight_requires_pinned_helper_flag(legacy_workflow, capability):
+    source, env, key, effects = legacy_workflow
+    (source / "ops/hosted_job.py").write_text(
+        "HOSTED_WORKFLOW_PROTOCOL = 'effects-v1'\n"
+        + f"print({'--acquisition-cache' if capability else '--old-flag'!r})\n"
+    )
+    result = preflight(
+        source,
+        env
+        | {
+            "ACQUISITION_CACHE": "true",
+            "MAINTENANCE_PROFILE": TARGET_IMPORT,
+            "MAINTENANCE_MODE": "apply",
+            "MAINTENANCE_PREVIEW_FINGERPRINT": "a" * 64,
+        },
+    )
+    assert (result.returncode == 0) is capability, result.stderr
+    assert not Path(env["TEST_INVOKED"]).exists()
+
+
+@pytest.mark.parametrize("value", ["", "false", "TRUE", "garbage", "true"])
+def test_acquisition_effect_only_retains_failed_apply_and_never_publishes(value):
+    cleanup = next(
+        s for s in workflow_steps() if s.get("name") == "Retain only encrypted recovery copies"
+    )
+    for mode in ("apply", "ordinary", "preview", ""):
+        effects = {"mode": mode, "acquisition_ready": value}
+        assert gate(cleanup, effects, success=False) is (mode == "apply" and value == "true")
+        assert all(not gate(s, effects, success=False) for s in publication_steps())
+        assert all(not gate(s, effects, success=True) for s in publication_steps())
+        artifact = next(
+            s for s in workflow_steps() if "actions/upload-artifact@" in s.get("uses", "")
+        )
+        assert not gate(artifact, effects, success=False)
+
+
+@pytest.fixture
+def retention_tree(recovery, tmp_path):
+    import shutil
+
+    state, database, key, effects = recovery
+    workspace = tmp_path / "workspace"
+    service = workspace / "service"
+    service.mkdir(parents=True)
+    shutil.copytree(state, service / "state")
+    acquisitions = service / "acquisitions"
+    acquisitions.mkdir()
+    for fingerprint in ("a" * 64, "b" * 64):
+        shutil.copytree(state, acquisitions / fingerprint)
+    (workspace / "source").symlink_to(ROOT, target_is_directory=True)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    log = tmp_path / "git-log"
+    git = bin_dir / "git"
+    git.write_text(f'#!/bin/sh\nprintf "%s\\n" "$*" >> "{log}"\n')
+    git.chmod(0o755)
+    env = {
+        **os.environ,
+        "PATH": str(bin_dir) + os.pathsep + os.environ["PATH"],
+        "PRIVATE_STATE": str(service / "state"),
+        "IMPACT_STATE_KEY": key.decode(),
+        "GITHUB_WORKSPACE": str(workspace),
+    }
+    return service, acquisitions, env, log
+
+
+def retain(retention_tree):
+    service, acquisitions, env, log = retention_tree
+    return subprocess.run(
+        ["bash", "-c", script("Retain only encrypted recovery copies")],
+        cwd=service,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_retention_validates_and_stages_separate_encrypted_acquisition_tree(retention_tree):
+    service, acquisitions, env, log = retention_tree
+    result = retain(retention_tree)
+    assert result.returncode == 0, result.stderr
+    assert "add state acquisitions" in log.read_text()
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "root-link",
+        "profile-link",
+        "unknown-profile",
+        "root-file",
+        "plaintext",
+        "leaf-link",
+        "nested",
+        "missing-manifest",
+        "corrupt",
+        "accepted-plaintext",
+    ],
+)
+def test_retention_rejects_unmanaged_or_invalid_acquisition_before_any_staging(retention_tree, bad):
+    import shutil
+
+    service, acquisitions, env, log = retention_tree
+    profile = acquisitions / ("b" * 64)
+    if bad == "root-link":
+        moved = service / "elsewhere"
+        acquisitions.rename(moved)
+        acquisitions.symlink_to(moved, target_is_directory=True)
+    elif bad == "profile-link":
+        shutil.rmtree(profile)
+        profile.symlink_to(acquisitions / ("a" * 64), target_is_directory=True)
+    elif bad == "unknown-profile":
+        (acquisitions / "unknown").mkdir()
+    elif bad == "root-file":
+        (acquisitions / "raw.sqlite3").write_bytes(b"synthetic plaintext")
+    elif bad == "plaintext":
+        (profile / "cache.sqlite3").write_bytes(b"synthetic plaintext")
+    elif bad == "leaf-link":
+        (profile / "extra").symlink_to(profile / "current.json")
+    elif bad == "nested":
+        (profile / "unexpected").mkdir()
+    elif bad == "missing-manifest":
+        (profile / "current.json").unlink()
+    elif bad == "corrupt":
+        next(profile.glob("*.fernet")).write_bytes(b"unauthenticated")
+    else:
+        (service / "state/raw.sqlite3").write_bytes(b"synthetic plaintext")
+    result = retain(retention_tree)
+    assert result.returncode != 0
+    assert not log.exists() or not any(
+        line.startswith("add ") for line in log.read_text().splitlines()
+    )
+
+
+@pytest.mark.parametrize("cache", ["false", "true", "invalid"])
+def test_workflow_forwards_acquisition_flag_only_when_explicitly_enabled(tmp_path, cache):
+    import json
+
+    shim = tmp_path / "uv"
+    shim.write_text(f"#!{sys.executable}\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n")
+    shim.chmod(0o755)
+    env = {
+        **os.environ,
+        "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
+        "ACQUISITION_CACHE": cache,
+        "HOSTED_PROTOCOL": "effects-v1",
+        "VAULT_PROFILE": "standard",
+        "RECOVERY_STORAGE": "git",
+        "REPARSE_LIMIT": "0",
+        "REPARSE_VENDOR": "",
+        "MAINTENANCE_PROFILE": TARGET_IMPORT,
+        "MAINTENANCE_MODE": "apply",
+        "MAINTENANCE_PREVIEW_FINGERPRINT": "a" * 64,
+        "PRIVATE_STATE": str(tmp_path / "state"),
+        "PUBLIC_OUTPUT": str(tmp_path / "public"),
+        "BASE_PATH": "/example/",
+    }
+    result = subprocess.run(
+        ["bash", "-c", script("Restore, collect, audit and back up privately")],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    if cache == "invalid":
+        assert result.returncode != 0
+        assert "[" not in result.stdout  # The helper argv shim was never invoked.
+    else:
+        assert result.returncode == 0, result.stderr
+        assert ("--acquisition-cache" in json.loads(result.stdout)) is (cache == "true")
+
+
+def test_acquisition_effect_cannot_satisfy_successful_apply_contract(tmp_path):
+    result = subprocess.run(
+        ["bash", "-c", script("Check hosted helper effects")],
+        env={
+            **os.environ,
+            "MODE": "apply",
+            "ACQUISITION_READY": "true",
+            "RECOVERY_READY": "",
+            "PUBLISH_READY": "",
+            "PREVIEW_READY": "",
+        },
+        cwd=tmp_path,
+        capture_output=True,
+    )
+    assert result.returncode != 0
+
+
+def test_protocol_preflight_uses_installed_interpreter():
+    # Profile resolution and capability --help need the locked source dependencies.
+    assert script("Check hosted helper protocol").startswith(
+        "set -euo pipefail\nuv run --no-dev python - <<'PY'\n"
+    )
+
+
+def test_current_helper_cache_preflight_needs_no_key_or_recovery(legacy_workflow):
+    source, env, key, effects = legacy_workflow
+    (source / "ops/hosted_job.py").write_bytes((ROOT / "ops/hosted_job.py").read_bytes())
+    result = preflight(
+        source,
+        env
+        | {
+            "ACQUISITION_CACHE": "true",
+            "MAINTENANCE_PROFILE": TARGET_IMPORT,
+            "MAINTENANCE_MODE": "apply",
+            "MAINTENANCE_PREVIEW_FINGERPRINT": "a" * 64,
+        },
+    )
+    assert result.returncode == 0, result.stderr
+    assert effect_values(Path(env["GITHUB_OUTPUT"])) == {"protocol": "effects-v1"}
+    assert not Path(env["TEST_INVOKED"]).exists()
+
+
+def test_acquisition_retention_requires_existing_accepted_manifest(retention_tree):
+    service, acquisitions, env, log = retention_tree
+    (service / "state/current.json").unlink()
+    result = retain(retention_tree)
+    assert result.returncode != 0
+    assert not log.exists()

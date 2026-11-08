@@ -522,3 +522,93 @@ def test_hosted_stage_lock_refusal_does_not_promote_or_fetch(
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["maintenance"]["outcome"] == "skipped_writer_lock"
     assert receipt["maintenance"]["failure_code"] == "writer_lock"
+
+
+def test_acquisition_checkpoint_survives_rejection_and_retries_without_http(
+    recovery, tmp_path, monkeypatch, capsys
+):
+    state, _, key, effects, selected, raws = recovery
+    pointer = (state / "current.json").read_bytes()
+    accepted_before = state_bytes(state)
+    serve(monkeypatch, selected, raws)
+
+    def reject(*_):
+        acquisition = state.parent / "acquisitions" / selected.fingerprint
+        assert (acquisition / "current.json").is_file()
+        assert hosted.validate_encrypted_state(acquisition, key)
+        assert effect_values(effects) == {"mode": "apply", "acquisition_ready": "true"}
+        return {"candidate_validated": False}
+
+    monkeypatch.setattr(target_import_stage, "verify", reject)
+    with pytest.raises(RuntimeError):
+        apply(recovery, monkeypatch, tmp_path / "rejected", extra=("--acquisition-cache",))
+    first = json.loads(capsys.readouterr().out)
+    assert first["maintenance"]["failure_code"] == "candidate_validation"
+    assert (state / "current.json").read_bytes() == pointer
+    assert state_bytes(state) == accepted_before
+    assert hosted.validate_current(state, key)
+    assert hosted.validate_current(state.parent / "acquisitions" / selected.fingerprint, key)
+    assert not (tmp_path / "rejected").exists()
+    assert effect_values(effects) == {"mode": "apply", "acquisition_ready": "true"}
+    monkeypatch.setattr(transport, "build_opener", forbidden)
+    monkeypatch.setattr(target_import_stage, "verify", passing_verifier)
+    apply(recovery, monkeypatch, tmp_path / "accepted", extra=("--acquisition-cache",))
+    second = json.loads(capsys.readouterr().out)
+    assert second["maintenance"]["counters"]["http_attempts"] == 0
+    assert second["maintenance"]["counters"]["received_bytes"] == 0
+    assert (tmp_path / "accepted/index.html").is_file()
+    assert hosted.validate_current(state, key)
+    assert hosted.validate_current(state.parent / "acquisitions" / selected.fingerprint, key)
+
+
+def test_acquisition_readback_failure_cannot_emit_ready_or_verify(
+    recovery, tmp_path, monkeypatch, capsys
+):
+    state, _, _, effects, selected, raws = recovery
+    pointer = (state / "current.json").read_bytes()
+    serve(monkeypatch, selected, raws)
+    actual_restore = hosted.restore
+
+    def bad_readback(state, destination, *args, **kwargs):
+        if destination.name == "readback.sqlite3":
+            raise ValueError("synthetic failed authentication")
+        return actual_restore(state, destination, *args, **kwargs)
+
+    monkeypatch.setattr(hosted, "restore", bad_readback)
+    monkeypatch.setattr(target_import_stage, "verify", forbidden)
+    with pytest.raises(RuntimeError):
+        apply(recovery, monkeypatch, tmp_path / "rejected", extra=("--acquisition-cache",))
+    assert effect_values(effects) == {"mode": "apply"}
+    assert (state / "current.json").read_bytes() == pointer
+    assert not (state.parent / "acquisitions" / selected.fingerprint / "current.json").exists()
+    assert json.loads(capsys.readouterr().out)["maintenance"]["failure_code"] == "storage"
+
+
+@pytest.mark.parametrize(
+    "flags", [(), ("--maintenance-profile", PROFILE, "--maintenance-mode", "preview")]
+)
+def test_acquisition_flag_is_restricted_before_keys_or_restore(tmp_path, monkeypatch, flags):
+    monkeypatch.delenv("IMPACT_STATE_KEY", raising=False)
+    monkeypatch.setattr(hosted, "restore_current", forbidden)
+    with pytest.raises(SystemExit) as error:
+        invoke(monkeypatch, tmp_path / "state", tmp_path / "output", "--acquisition-cache", *flags)
+    assert error.value.code == 2
+    assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("location", ["root", "profile", "another_profile"])
+def test_acquisition_tree_cannot_overlap_public_output(recovery, monkeypatch, location):
+    state, _, _, effects, selected, _ = recovery
+    root = state.parent / "acquisitions"
+    output = (
+        root
+        if location == "root"
+        else root / (selected.fingerprint if location == "profile" else "another-profile")
+    )
+    before = state_bytes(state)
+    monkeypatch.setattr(target_import_stage, "stage", forbidden)
+    with pytest.raises(ValueError, match="separate directory trees"):
+        apply(recovery, monkeypatch, output, extra=("--acquisition-cache",))
+    assert state_bytes(state) == before
+    assert effect_values(effects) == {"mode": "apply"}
+    assert not root.exists()

@@ -1,0 +1,105 @@
+{
+  "scope": "Local saved public retained sample, 223 advisory identities; not complete hosted certification",
+  "frontend_commit": "6fb41b6",
+  "application_scripts": {
+    "accepted": true,
+    "selected_cves": 24,
+    "requests": 28,
+    "transferred_bytes": 3318209,
+    "elapsed_seconds": 2.429577541,
+    "cpu_seconds": 0.676218,
+    "complete_snapshot_root_requested": false,
+    "scope": "actual application scripts and saved public v2 data; DOM helper, not a live browser",
+    "transfer_scope": "Data requests only; JavaScript/CSS loaded directly by the harness are outside this byte counter"
+  },
+  "actual_chrome": {
+    "browser": "Actual headless Chrome with disposable profile",
+    "returncode": 0,
+    "elapsed_seconds": 3.871936167124659,
+    "matrix_rendered": true,
+    "matrix_contains_cve": true,
+    "screenshot": true,
+    "snapshot": "saved public retained v2 data; current frontend scripts"
+  },
+  "plain_json_gzip_experiment": {
+    "scope": "Three public components only; not a complete replacement format, browser memory or hosted-capacity proof",
+    "public_checkpoint_sha256": "e6126b94facac03c0cebc401544c27bc4e21f74f4a8645c9615112a52ca6cc7b",
+    "results": [
+      {
+        "component": "records",
+        "items": 223,
+        "logical_bytes": 98649008,
+        "gzip_bytes": 3955237,
+        "cpu_seconds": 2.720321,
+        "elapsed_seconds": 5.245625625131652,
+        "roundtrip_sha256": "b9bb5bc883a8294407550700841bf754e5fc248a46e8d769fc6ab9d256f252e8"
+      },
+      {
+        "component": "comparison-rows",
+        "items": 3,
+        "logical_bytes": 7183098,
+        "gzip_bytes": 3960479,
+        "cpu_seconds": 0.2579690000000001,
+        "elapsed_seconds": 0.46468133316375315,
+        "roundtrip_sha256": "bed2f1f46c2a998cae91a22a157f284a8548dc5a337dd93fb6a76f44f9dab111"
+      },
+      {
+        "component": "diagnostics",
+        "items": 91441,
+        "logical_bytes": 82820686,
+        "gzip_bytes": 707107,
+        "cpu_seconds": 1.695944,
+        "elapsed_seconds": 3.9111760419327766,
+        "roundtrip_sha256": "776205cc0f6286a2f6bbdc29b3bb202bd487affe45e709745bf38ef39fd4333b"
+      }
+    ],
+    "process_peak_rss_bytes": 2305294336,
+    "peak_rss_scope": "Whole process including loading the complete public checkpoint; not incremental encoding memory"
+  },
+  "isolated_root_verification": {
+    "before_wall_seconds": 607.1778361669276,
+    "before_cpu_seconds": 232.331666,
+    "after_wall_seconds": 537.4571242919192,
+    "after_cpu_seconds": 224.29101799999998,
+    "cpu_reduction_percent": 3.4608489399804987,
+    "limitation": "One phase only; wall time affected by competing work; not an explanation of hosted failure"
+  },
+  "clone_experiment": {
+    "decision": "Rejected and reverted after preserving original strict JSON semantics made the corrected experiment worse on a bounded record-heavy synthetic frame",
+    "comparison_scope": "Copy phase only, three fresh subprocesses per mode; not complete hosted workload",
+    "baseline_median_cpu_seconds": 0.050022,
+    "envelope_median_cpu_seconds": 0.069029,
+    "baseline_process_peak_rss_bytes": 148783104,
+    "envelope_process_peak_rss_bytes": 181927936,
+    "final_implementation": "Original cloning behavior retained; five strict retained-wrapper rejection regressions added"
+  },
+  "latest_condition_based_chrome": {
+    "browser": "Actual headless Chrome with disposable profile and readiness polling",
+    "matrix_rendered": true,
+    "matrix_contains_cve": true,
+    "selected_cves": 24,
+    "navigation_to_ready_seconds": 0.3982301669999999,
+    "browser_check_elapsed_seconds": 1.020354625,
+    "requests": 42,
+    "complete_snapshot_root_requested": false,
+    "runtime_exceptions": [],
+    "scope": "Local saved public retained v2 data; current frontend; not hosted-union certification"
+  },
+  "browser_harness_note": "A later --dump-dom/virtual-time screenshot captured Loading evidence before asynchronous completion. The final check uses actual Chrome readiness polling and verifies no complete-root request or runtime exception; CLI screenshot timing is not a page-load SLO.",
+  "verification": {
+    "pytest_passed": 3711,
+    "pytest_subtests_passed": 12,
+    "pytest_seconds": 398.98,
+    "javascript_suites_passed": 8,
+    "ruff_and_format": "passed",
+    "installed_wheel_probe": "passed offline, all installed-package/plugin/API checks true",
+    "public_source_files_checked": 641,
+    "hosted_certification": "not run; inactive template prepared",
+    "release_inventory_tests_passed": 15
+  },
+  "known_cache_limitations": [
+    "Original HTTP checked_at/status observation rows in rejected stages are not checkpointed; capture timestamp/bytes/validators survive; replay does not imply fresh reachability",
+    "Hard runner termination before encrypted checkpoint may lose in-flight captures",
+    "No automatic local cache eviction"
+  ]
+}

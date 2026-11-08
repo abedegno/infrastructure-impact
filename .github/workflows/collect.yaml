@@ -17,6 +17,11 @@ on:
         description: 'Accepted preview fingerprint; required only for apply'
         required: false
         type: string
+      acquisition_cache:
+        description: 'Retain encrypted acquisition checkpoints for target-import apply only'
+        required: false
+        type: boolean
+        default: false
       reparse_limit:
         description: 'Optional single-run replay budget; blank uses the repository variable'
         required: false
@@ -70,6 +75,7 @@ jobs:
         id: protocol
         working-directory: source
         env:
+          ACQUISITION_CACHE: ${{ github.event_name == 'workflow_dispatch' && inputs.acquisition_cache == true && 'true' || 'false' }}
           MAINTENANCE_PROFILE: ${{ inputs.maintenance_profile || '' }}
           MAINTENANCE_MODE: ${{ inputs.maintenance_mode || '' }}
           MAINTENANCE_PREVIEW_FINGERPRINT: ${{ inputs.maintenance_preview_fingerprint || '' }}
@@ -85,6 +91,8 @@ jobs:
           import hashlib
           import os
           import re
+          import subprocess
+          import sys
           from pathlib import Path
 
           raw = Path("ops/hosted_job.py").read_bytes()
@@ -146,6 +154,23 @@ jobs:
               formats = ("v1", "v2")
           if publication_format not in formats or (publication_format == "v2" and protocol != "effects-v1"):
               raise SystemExit("Pinned helper does not support the selected publication format")
+          acquisition_cache = os.environ.get("ACQUISITION_CACHE", "false")
+          if acquisition_cache not in ("true", "false"):
+              raise SystemExit("Unsupported acquisition cache setting")
+          if acquisition_cache == "true":
+              if (protocol != "effects-v1" or os.environ["MAINTENANCE_MODE"] != "apply"
+                      or not os.environ["MAINTENANCE_PROFILE"]):
+                  raise SystemExit("Acquisition cache requires named target-import apply")
+              from infrastructure_impact.collection.maintenance_operations import resolve_profile
+              kind, _ = resolve_profile(os.environ["MAINTENANCE_PROFILE"])
+              if kind != "target-import":
+                  raise SystemExit("Acquisition cache requires target-import apply")
+              help_result = subprocess.run(
+                  [sys.executable, "ops/hosted_job.py", "--help"],
+                  check=True, capture_output=True, text=True,
+              )
+              if "--acquisition-cache" not in help_result.stdout.split():
+                  raise SystemExit("Pinned helper does not support acquisition cache")
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               output.write("protocol=" + protocol + "\n")
           PY
@@ -160,6 +185,7 @@ jobs:
           PRIVATE_STATE: ${{ github.workspace }}/service/state
           PUBLIC_OUTPUT: ${{ runner.temp }}/public-publication
           PREVIEW_OUTPUT: ${{ runner.temp }}/maintenance-preview
+          ACQUISITION_CACHE: ${{ github.event_name == 'workflow_dispatch' && inputs.acquisition_cache == true && 'true' || 'false' }}
           MAINTENANCE_PROFILE: ${{ inputs.maintenance_profile || '' }}
           MAINTENANCE_MODE: ${{ inputs.maintenance_mode || '' }}
           MAINTENANCE_PREVIEW_FINGERPRINT: ${{ inputs.maintenance_preview_fingerprint || '' }}
@@ -172,6 +198,13 @@ jobs:
           PUBLICATION_FORMAT: ${{ vars.IMPACT_PUBLICATION_FORMAT || 'v1' }}
         run: |
           set -euo pipefail
+          case "${ACQUISITION_CACHE:-false}" in
+            false) ;;
+            true)
+              [[ "$HOSTED_PROTOCOL" = effects-v1 && "$MAINTENANCE_MODE" = apply && -n "$MAINTENANCE_PROFILE" ]]
+              ;;
+            *) echo 'Unsupported acquisition cache setting'; exit 1 ;;
+          esac
           recovery_args=(--vault-profile "$VAULT_PROFILE" --schedule-utc 12:43)
           case "${PUBLICATION_FORMAT:-v1}" in
             v1) ;; # Omit the new flag for old pinned helpers.
@@ -202,6 +235,9 @@ jobs:
           if test -n "$MAINTENANCE_PREVIEW_FINGERPRINT"; then
             recovery_args+=(--maintenance-preview-fingerprint "$MAINTENANCE_PREVIEW_FINGERPRINT")
           fi
+          if test "${ACQUISITION_CACHE:-false}" = true; then
+            recovery_args+=(--acquisition-cache)
+          fi
           if test "$MAINTENANCE_MODE" = preview; then
             PUBLIC_OUTPUT="$PREVIEW_OUTPUT"
           fi
@@ -228,7 +264,7 @@ jobs:
             *) echo 'Hosted helper effects contract failed'; exit 1 ;;
           esac
       - name: Retain only encrypted recovery copies
-        if: ${{ always() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply')) || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true')) }}
+        if: ${{ always() && ((steps.protocol.outputs.protocol == 'effects-v1' && ((steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply')) || (steps.hosted.outputs.mode == 'apply' && steps.hosted.outputs.acquisition_ready == 'true'))) || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true')) }}
         working-directory: service
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
@@ -240,11 +276,43 @@ jobs:
             git config user.name 'Infrastructure Impact collector'
             git config user.email 'collector@users.noreply.github.com'
             "$GITHUB_WORKSPACE/source/.venv/bin/python" "$GITHUB_WORKSPACE/source/ops/hosted_job.py" --state-dir "$PRIVATE_STATE" --encrypted-state --validate-encrypted-state
-            git add state
+            "$GITHUB_WORKSPACE/source/.venv/bin/python" - <<'PY_VALIDATE'
+          import os
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          root = Path(os.environ["PRIVATE_STATE"]).parent / "acquisitions"
+          if root.is_symlink():
+              raise SystemExit("Acquisition root must not be a symbolic link")
+          if root.exists():
+              if not root.is_dir():
+                  raise SystemExit("Acquisition root must be a directory")
+              for state in sorted(root.iterdir()):
+                  if (state.is_symlink() or not state.is_dir()
+                          or not re.fullmatch(r"[a-f0-9]{64}", state.name)):
+                      raise SystemExit("Unexpected acquisition profile entry")
+                  # The helper rejects unknown leaf files, subdirectories and links,
+                  # and authenticates every archive, not just the current pointer.
+                  subprocess.run([
+                      sys.executable,
+                      str(Path(os.environ["GITHUB_WORKSPACE"]) / "source/ops/hosted_job.py"),
+                      "--state-dir", str(state), "--encrypted-state", "--validate-encrypted-state",
+                  ], check=True)
+          PY_VALIDATE
+            if test -d acquisitions; then
+              git add state acquisitions
+            else
+              git add state
+            fi
             if ! git diff --cached --quiet; then
               git commit -m 'Retain collected evidence and recovery copies'
               git push
             fi
+          elif test -e acquisitions || test -L acquisitions; then
+            echo 'Acquisition retention requires accepted encrypted recovery state'
+            exit 1
           fi
       - name: Upload bounded maintenance preview
         if: ${{ success() && steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.mode == 'preview' && steps.hosted.outputs.preview_ready == 'true' }}

@@ -513,6 +513,7 @@ def target_import_candidate_probe(*, base_path="/", publication_format="v1"):
     import sqlite3
     import sys
     from contextlib import closing
+    from io import BytesIO
 
     from infrastructure_impact.adapters.common import assessment, base
     from infrastructure_impact.application import target_import, target_import_stage
@@ -567,13 +568,21 @@ def target_import_candidate_probe(*, base_path="/", publication_format="v1"):
         before = database.read_bytes()
         with patch.object(target_import, "registered_profile", return_value=selected):
             accepted = target_import.preview(database, selected.profile_id)
-        # Supplying authored bodies is the sole acquisition substitute. No external HTTP.
+        # Substitute only the HTTP boundary so real transport records capture
+        # provenance, observations and byte/attempt budgets. No external HTTP.
+        by_url = {urls[vendor]: body for vendor, body in raw.items()}
+
+        class Response(BytesIO):
+            status = 200
+            headers = {"Content-Type": "text/plain", "ETag": "synthetic-wheel-capture"}
+
+        class Opener:
+            def open(self, request, timeout):
+                assert timeout == 25
+                return Response(by_url[request.full_url])
+
         with (
-            patch.object(
-                target_import_stage.transport,
-                "fetch",
-                side_effect=lambda db, url, vendor, **kw: raw[vendor],
-            ),
+            patch.object(target_import_stage.transport, "build_opener", return_value=Opener()),
             patch.dict(
                 os.environ,
                 {
@@ -594,6 +603,9 @@ def target_import_candidate_probe(*, base_path="/", publication_format="v1"):
                 publication_format=publication_format,
             )
         assert result["outcome"] == "completed", result
+        assert result["counters"]["http_attempts"] == 2
+        assert result["counters"]["received_bytes"] == sum(map(len, raw.values()))
+        assert result["counters"]["input_bytes"] == sum(map(len, raw.values()))
         assert result["candidate"]["archive_monitor_passed"] is True
         assert 'src="' + base_path + "assets/" in (root / "stage/public/index.html").read_text()
         if publication_format == "v2":

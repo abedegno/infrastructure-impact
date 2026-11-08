@@ -1397,6 +1397,62 @@
           }
         }
       }
+    },
+    "/api/v1/bootstrap": {
+      "get": {
+        "summary": "Minimal publication metadata for browser startup",
+        "description": "Read-only metadata without hydrating publication state. Does not change the default CVE selection of other API endpoints. Only GET and HEAD are accepted; other methods return 405 with Allow: GET, HEAD.",
+        "responses": {
+          "200": {
+            "description": "Publication identity, generation time and default benchmark cohort only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "publication",
+                    "generated_at",
+                    "benchmark_cohort"
+                  ],
+                  "properties": {
+                    "publication": {
+                      "type": [
+                        "object",
+                        "null"
+                      ]
+                    },
+                    "generated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "benchmark_cohort": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Awaiting a publication or publication temporarily unavailable."
+          }
+        }
+      },
+      "head": {
+        "summary": "Bootstrap availability and JSON headers without a response body",
+        "responses": {
+          "200": {
+            "description": "Same status and JSON content type as GET, with an empty body."
+          },
+          "503": {
+            "description": "Publication unavailable, with an empty body."
+          }
+        }
+      }
     }
   }
 }

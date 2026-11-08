@@ -484,6 +484,12 @@ async function createStaticDelivery(fetchPart, siteBase) {
     );
   };
   load.publication = index.publication;
+  load.bootstrap = () =>
+    window.InfrastructureJSON.clone({
+      publication: common.publication,
+      generated_at: common.generated_at,
+      benchmark_cohort: common.benchmark_cohort,
+    });
   load.generated_at = index.generated_at;
   function studyIndex() {
     if (!Object.hasOwn(index, 'switching')) return null;

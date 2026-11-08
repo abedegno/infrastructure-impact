@@ -851,3 +851,168 @@ def test_projection_verification_checks_optional_detail_membership(generation):
     reader.catalog["switching"]["detail_indexes"]["sources"][0]["count"] += 1
     with pytest.raises(ValueError, match="detail"):
         verify_projection(reader, projected)
+
+
+@pytest.fixture
+def native_projection(generation):
+    reader = PublicationReader(generation)
+    projected = json.loads(b"".join(reader.stream_root("snapshot.json")))
+    projected["switching_comparison"] = json.loads(
+        b"".join(reader.stream_root("switching-comparison.json"))
+    )
+    projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    return reader, projected
+
+
+def test_native_root_verification_hashes_each_native_view_only_once(native_projection, monkeypatch):
+    from infrastructure_impact.application import publication_v2
+
+    reader, projected = native_projection
+    original = publication_v2.codec.digest
+    calls = []
+
+    def digest(chunks):
+        result = original(chunks)
+        calls.append(result)
+        return result
+
+    monkeypatch.setattr(publication_v2.codec, "digest", digest)
+    publication_v2.verify_projection(reader, projected)
+    # Reader._stream authenticates decoded bytes itself. An external digest of
+    # those same bytes duplicates the per-chunk work for every logical root.
+    assert len(calls) == len(reader.catalog["roots"])
+
+
+def test_native_root_verification_exhausts_every_stream_through_eof(native_projection, monkeypatch):
+    from infrastructure_impact.application.publication_v2 import verify_projection
+
+    reader, projected = native_projection
+    original = reader.stream_root
+    completed = []
+
+    def stream(name):
+        yield from original(name)
+        completed.append(name)
+
+    monkeypatch.setattr(reader, "stream_root", stream)
+    verify_projection(reader, projected)
+    assert set(completed) == set(reader.catalog["roots"])
+    assert len(completed) == len(reader.catalog["roots"])
+
+
+@pytest.mark.parametrize(
+    "corruption",
+    [
+        "eof",
+        "trailing_token",
+        "unvisited_range",
+        "physical_token",
+        "range",
+        "native",
+        "root_digest",
+    ],
+)
+def test_native_root_verification_preserves_rejections(
+    native_projection, monkeypatch, tmp_path, corruption
+):
+    import shutil
+
+    from infrastructure_impact.application.publication_v2 import verify_projection
+
+    reader, projected = native_projection
+    name = "benchmark.json"
+    if corruption == "eof":
+        original = reader.stream_root
+
+        def stream(root):
+            yield from original(root)
+            if root == name:
+                raise ValueError("injected EOF failure")
+
+        monkeypatch.setattr(reader, "stream_root", stream)
+        match = "EOF failure"
+    elif corruption == "trailing_token":
+        original = reader.iter_tokens
+
+        def tokens(root, first=0, end=None):
+            yield from original(root, first, end)
+            if root == name:
+                yield None
+
+        monkeypatch.setattr(reader, "iter_tokens", tokens)
+        match = "extra node"
+    elif corruption == "unvisited_range":
+        reader.ranges(name)[("missing",)] = reader.ranges(name)[()].copy()
+        match = "unvisited range"
+    elif corruption == "physical_token":
+        shutil.copytree(reader.directory, tmp_path / "tampered")
+        reader = PublicationReader(tmp_path / "tampered")
+        descriptor = reader.root(name)["pages"][0]["part"]
+        path = reader.directory / descriptor["path"]
+        envelope = json.loads(path.read_bytes())
+        envelope["data"][0] = [-1, 0]
+        path.write_text(json.dumps(envelope))
+        match = "hash|digest|bytes"
+    elif corruption == "range":
+        reader.ranges(name)[()]["logical_sha256"] = "0" * 64
+        match = "range.*digest"
+    elif corruption == "native":
+        projected["benchmark"]["changed_native_fact"] = True
+        match = "native logical root mismatch"
+    else:
+        reader.root(name)["logical"]["sha256"] = "0" * 64
+        match = "native logical root mismatch|root/range digest"
+    with pytest.raises(ValueError, match=match):
+        verify_projection(reader, projected)
+
+
+def test_native_roots_phase_is_static_and_reusable(native_projection, capsys):
+    from infrastructure_impact.application.publication_v2 import verify_projection
+
+    reader, projected = native_projection
+    for _ in range(2):
+        verify_projection(reader, projected)
+    events = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert [(event["phase"], event["state"]) for event in events] == [
+        ("publication.native_roots", state) for _ in range(2) for state in ("started", "completed")
+    ]
+    required = {"event", "phase", "state", "elapsed_seconds"}
+    allowed = required | {"process_cpu_seconds", "peak_resident_bytes"}
+    assert all(required <= set(event) <= allowed for event in events)
+
+
+def test_inspection_and_native_parity_emit_static_nested_phases(tmp_path, monkeypatch, capsys):
+    from io import StringIO
+
+    from infrastructure_impact.application import publication_v2, query
+    from infrastructure_impact.storage import repository
+
+    native = dataset()
+    native["research"]["switching_input"] = copy.deepcopy(FIXTURE["report"]["inputs"]["evidence"])
+    generation = publish(native, tmp_path, publication_format="v2")
+    capsys.readouterr()
+    monkeypatch.setattr(repository, "connect", lambda *args, **kwargs: StringIO())
+    monkeypatch.setattr(query, "state", lambda db: copy.deepcopy(native))
+    for _ in range(2):
+        reader = publication_v2.inspect_bundle(generation, {})
+        publication_v2.native_parity("synthetic-native-only", generation, generation, reader)
+    events = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert [(event["phase"], event["state"]) for event in events] == [
+        item
+        for _ in range(2)
+        for item in (
+            ("publication.inspection", "started"),
+            ("publication.inspection", "completed"),
+            ("publication.native_parity", "started"),
+            ("publication.projection", "started"),
+            ("publication.projection", "completed"),
+            ("publication.native_roots", "started"),
+            ("publication.native_roots", "completed"),
+            ("publication.native_queries", "started"),
+            ("publication.native_queries", "completed"),
+            ("publication.native_parity", "completed"),
+        )
+    ]
+    required = {"event", "phase", "state", "elapsed_seconds"}
+    allowed = required | {"process_cpu_seconds", "peak_resident_bytes"}
+    assert all(required <= set(event) <= allowed for event in events)

@@ -145,7 +145,11 @@ See [static delivery](docs/STATIC_DELIVERY.md) for integrity checks and transfer
 budgets. Local publication v2 is opt-in: it uses bounded parts and a self-contained
 snapshot archive, while full research inputs remain separate mandatory logical
 roots. Study JSON downloads are summaries; the local streaming export command
-retrieves complete roots. See [target import and v2 export](docs/target-import.md).
+retrieves complete roots. See [target import and v2 export](docs/target-import.md). Local target-import
+stages retain verified raw captures under the collector home by default
+(`--capture-cache` overrides the path). Hosted persistence across runners requires
+the separately gated encrypted `--acquisition-cache` helper option; it is not
+enabled by the collector workflow.
 The [174-document local retained replay](docs/research/2026-11-08-runtime-and-paging-verification.md#accepted-local-retained-replay)
 passed audit, capacity, native parity and both HTTP monitors; hosted activation
 remains a separate step.
@@ -214,7 +218,7 @@ only after those dependencies have been cached.
 | [Plugins](docs/PLUGINS.md)                               | Add a vendor and package an extension                             |
 | [Schema](docs/SCHEMA.md)                                 | Normalization semantics and invariants                            |
 | [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
-| [Exact target import](docs/target-import.md) | Preview, isolated staging and opt-in v2 root export |
+| [Exact target import](docs/target-import.md) | Preview, isolated staging, durable local captures and opt-in v2 root export |
 | [Switching CVE comparison brief](docs/research/2026-11-07-vendor-comparison-brief.md) | Cisco/Aruba/Arista evidence, disclosure bias and patching limits |
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |

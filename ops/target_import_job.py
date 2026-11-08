@@ -30,6 +30,32 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
         accepted = validate_preview(target_import.preview(database, selected.profile_id), selected)
         if accepted["fingerprint"] != args.maintenance_preview_fingerprint:
             raise ValueError("stale_preview")
+        acquisition_options = {}
+        if getattr(args, "acquisition_cache", False):
+            acquisition_root = state.parent / "acquisitions"
+            acquisition_state = acquisition_root / selected.fingerprint
+            cache = home / "captures" / (selected.fingerprint + ".sqlite3")
+            from infrastructure_impact.storage.capture_cache import validate_path
+
+            validate_path(cache, database, output)
+            if any(p.is_symlink() for p in (acquisition_state, *acquisition_state.parents)):
+                raise ValueError("Acquisition state must not use symbolic links")
+            root = acquisition_root.resolve()
+            for other in (output.resolve(), state.resolve()):
+                if other.is_relative_to(root) or root.is_relative_to(other):
+                    raise ValueError(
+                        "Acquisition state, accepted state and public output require separate directory trees"
+                    )
+            hosted.restore_current(
+                acquisition_state, cache, key, store=store, vault_limit_bytes=limit
+            )
+
+            def checkpoint(cache_path):
+                hosted.backup_acquisitions(
+                    acquisition_state, cache_path, key, store=store, args=args, limit=limit
+                )
+
+            acquisition_options = {"capture_cache": cache, "acquisition_checkpoint": checkpoint}
         # A separate generated root is outside the restored home/lock scope.
         # resolve() handles macOS /var aliases only for this trusted temp path.
         with tempfile.TemporaryDirectory(prefix="impact-target-import-") as directory:
@@ -43,6 +69,7 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
                 lock_home=home,
                 accepted_preview=accepted,
                 base_path=args.base_path,
+                **acquisition_options,
                 **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
             )
             step = "receipt_validation"

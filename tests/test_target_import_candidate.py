@@ -116,7 +116,9 @@ def candidate(setup, monkeypatch, request):  # noqa: F811
     assert snapshot(database) == before
 
 
-def test_complete_candidate_builds_with_hostile_parent_roots(candidate, tmp_path, monkeypatch):
+def test_complete_candidate_builds_with_hostile_parent_roots(
+    candidate, tmp_path, monkeypatch, capsys
+):
     module = implementation()
     sentinel = tmp_path / "HOSTILE"
     sentinel.mkdir()
@@ -128,6 +130,10 @@ def test_complete_candidate_builds_with_hostile_parent_roots(candidate, tmp_path
     monkeypatch.setattr(query, "ROOT", sentinel)
     assert reporting is not None
     result = module.verify(*candidate)
+    events = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    process = next(event for event in events if event["event"] == "candidate_worker")
+    assert process["state"] == "completed"
+    assert process["elapsed_seconds"] < 60
     assert result["audit_passed"] is True
     assert result["capacity_passed"] is True
     assert result["candidate_validated"] is True, result
@@ -731,3 +737,210 @@ def test_explicit_v2_candidate_runs_complete_fresh_worker(candidate):
     assert result["candidate"]["archive_scope"] == "snapshot-v1"
     assert result["candidate"]["representation"] == "publication-v2-physical"
     assert not (public / "snapshot.json").exists()
+
+
+@pytest.mark.parametrize(
+    "exit_kind,state,returncode",
+    [
+        ("success", "completed", 0),
+        ("failure", "nonzero", 7),
+        ("signal", "nonzero", -9),
+        ("timeout", "timeout", None),
+        ("launch", "launch_error", None),
+    ],
+)
+def test_worker_process_diagnostics_do_not_change_fail_closed_result(
+    tmp_path, monkeypatch, capsys, exit_kind, state, returncode
+):
+    import subprocess
+    from types import SimpleNamespace
+
+    module = implementation()
+    database = tmp_path / "private/data/intel.sqlite3"
+    database.parent.mkdir(parents=True)
+    database.touch()
+    home = tmp_path / "private/home"
+    home.mkdir()
+    (home / "target-import-context.json").write_text('{"base_path":"/"}')
+    profile = SimpleNamespace(metadata=lambda: {})
+
+    def worker(*args, **kwargs):
+        assert kwargs["timeout"] == 2400
+        kwargs["stderr"].write(
+            b'{"event":"phase","phase":"publication.query","state":"started",'
+            b'"elapsed_seconds":0,"secret":"SOURCE_SECRET"}\n'
+        )
+        kwargs["stderr"].flush()
+        if exit_kind == "timeout":
+            raise subprocess.TimeoutExpired(["SOURCE_SECRET"], 2400, stderr=b"SOURCE_SECRET")
+        if exit_kind == "launch":
+            raise OSError("SOURCE_SECRET")
+        return subprocess.CompletedProcess(["SOURCE_SECRET"], returncode)
+
+    monkeypatch.setattr(module.subprocess, "run", worker)
+    result = module.verify(database, tmp_path / "public", profile)
+    assert result == module._empty()
+    output = capsys.readouterr()
+    assert not output.out
+    assert "SOURCE_SECRET" not in output.err
+    events = [json.loads(line) for line in output.err.splitlines()]
+    assert events[0] == {
+        "event": "phase",
+        "phase": "publication.query",
+        "state": "started",
+        "elapsed_seconds": 0,
+    }
+    summary = events[1]
+    assert summary["event"] == "candidate_worker"
+    assert summary["state"] == state
+    assert 0 <= summary["elapsed_seconds"] <= 86_400
+    if returncode is None:
+        assert set(summary) == {"event", "state", "elapsed_seconds"}
+    else:
+        assert summary["returncode"] == returncode
+        assert set(summary) == {"event", "state", "elapsed_seconds", "returncode"}
+
+
+def test_worker_phase_diagnostics_reject_untrusted_log_metadata(capsys):
+    import io
+    from time import perf_counter
+
+    module = implementation()
+    valid = {
+        "event": "phase",
+        "phase": "publication.native_parity",
+        "state": "completed",
+        "elapsed_seconds": 1.25,
+    }
+    invalid = [
+        {**valid, "event": "SOURCE_SECRET"},
+        {**valid, "phase": "SOURCE_SECRET"},
+        {**valid, "state": "SOURCE_SECRET"},
+        {**valid, "elapsed_seconds": "SOURCE_SECRET"},
+        *(
+            {**valid, "elapsed_seconds": value}
+            for value in [True, -1, 86_401, float("nan"), float("inf"), 10**1000]
+        ),
+        [],
+        None,
+    ]
+    raw = b"SOURCE_SECRET\n" + b"\n".join(json.dumps(value).encode() for value in invalid)
+    raw += b'\n{"event":"phase","phase":"publication.query","state":"started",'
+    raw += b'"elapsed_seconds":0,"elapsed_seconds":1}\n'
+    raw += json.dumps({**valid, "path": "SOURCE_SECRET", "message": "SOURCE_SECRET"}).encode()
+    module._worker_diagnostics(io.BytesIO(raw), "completed", perf_counter(), 0)
+    output = capsys.readouterr().err
+    events = [json.loads(line) for line in output.splitlines()]
+    assert events[:-1] == [valid]
+    assert "SOURCE_SECRET" not in output
+
+
+def test_worker_phase_diagnostics_bound_read_events_and_flushed_output(monkeypatch):
+    import io
+    from time import perf_counter
+
+    module = implementation()
+    valid = (
+        b'{"event":"phase","phase":"publication.writing","state":"started","elapsed_seconds":0}\n'
+    )
+
+    class BoundedLog(io.BytesIO):
+        def read(self, size=-1):
+            assert 0 <= size <= 65_536
+            return super().read(size)
+
+    class FlushedOutput(io.StringIO):
+        flushes = 0
+
+        def flush(self):
+            self.flushes += 1
+
+    output = FlushedOutput()
+    monkeypatch.setattr(module.sys, "stderr", output)
+    module._worker_diagnostics(BoundedLog(valid * 1000), "timeout", perf_counter())
+    events = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert len(events) == 33
+    assert all(value["event"] == "phase" for value in events[:-1])
+    assert events[-1]["state"] == "timeout"
+    assert len(output.getvalue().encode()) < 8192
+    assert output.flushes == 33
+
+
+def test_worker_phase_diagnostics_do_not_read_past_byte_limit(capsys):
+    import io
+    from time import perf_counter
+
+    module = implementation()
+    valid = (
+        b'{"event":"phase","phase":"publication.query","state":"completed","elapsed_seconds":1}\n'
+    )
+    raw = b"x" * 65_535 + b"\n" + valid
+    module._worker_diagnostics(io.BytesIO(raw), "completed", perf_counter(), 0)
+    assert len(capsys.readouterr().err.splitlines()) == 1
+
+
+def test_worker_phase_diagnostics_forward_only_bounded_resource_metrics(capsys):
+    import io
+    from time import perf_counter
+
+    module = implementation()
+    valid = {
+        "event": "phase",
+        "phase": "publication.query",
+        "state": "completed",
+        "elapsed_seconds": 1.25,
+        "process_cpu_seconds": 0.5,
+        "peak_resident_bytes": 4194304,
+    }
+    raw = json.dumps({**valid, "unknown_resource": "SOURCE_SECRET"}).encode() + b"\n"
+    module._worker_diagnostics(io.BytesIO(raw), "completed", perf_counter(), 0)
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert receipt[0] == valid
+    assert "process_cpu_seconds" not in receipt[-1]
+    assert "peak_resident_bytes" not in receipt[-1]
+
+
+@pytest.mark.parametrize("field", ["process_cpu_seconds", "peak_resident_bytes"])
+@pytest.mark.parametrize(
+    "value", [True, -1, float("nan"), float("inf"), 10**1000, "SOURCE_SECRET", {}, None]
+)
+def test_worker_phase_diagnostics_omit_hostile_resource_values(capsys, field, value):
+    import io
+    from time import perf_counter
+
+    module = implementation()
+    valid = {
+        "event": "phase",
+        "phase": "publication.query",
+        "state": "completed",
+        "elapsed_seconds": 1.25,
+    }
+    raw = json.dumps({**valid, field: value}).encode() + b"\n"
+    module._worker_diagnostics(io.BytesIO(raw), "completed", perf_counter(), 0)
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert receipt[0] == valid
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("process_cpu_seconds", 86_401),
+        ("peak_resident_bytes", 2**50 + 1),
+        ("peak_resident_bytes", 1.5),
+    ],
+)
+def test_worker_phase_diagnostics_omit_out_of_range_resource_values(capsys, field, value):
+    import io
+    from time import perf_counter
+
+    module = implementation()
+    valid = {
+        "event": "phase",
+        "phase": "publication.query",
+        "state": "completed",
+        "elapsed_seconds": 1.25,
+    }
+    raw = json.dumps({**valid, field: value}).encode() + b"\n"
+    module._worker_diagnostics(io.BytesIO(raw), "completed", perf_counter(), 0)
+    receipt = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert receipt[0] == valid

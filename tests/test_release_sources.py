@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.error import HTTPError
 
+import pytest
+
 from checks.operations_report import summarize
 from infrastructure_impact.application.query import state
 from infrastructure_impact.application.release_assets import (
@@ -163,3 +165,104 @@ def test_distribution_checks_switching_assets_against_installed_wheel():
             resources[name]
             == hashlib.sha256((root / "infrastructure_impact" / name).read_bytes()).hexdigest()
         )
+
+
+# Export must fail before a Git checkout can hide tracked nonpublic work behind
+# the copy allowlist. Synthetic checkouts exercise the actual Git inventory.
+def release_checkout(tmp_path):
+    import subprocess
+
+    from checks import release
+
+    root = tmp_path / "source"
+    root.mkdir()
+    for name in release.FILES:
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("synthetic public source\n")
+    for name in release.DIRECTORIES:
+        (root / name).mkdir(exist_ok=True)
+    (root / ".gitignore").write_text(".superpowers/\n__pycache__/\n*.pyc\n")
+    (root / "LICENSE").write_text("Apache License\n")
+    fixtures = root / "tests/fixtures"
+    fixtures.mkdir()
+    (fixtures / "manifest.json").write_text("[]")
+    (fixtures / "README.md").write_text("Synthetic fixtures\n")
+    (root / "infrastructure_impact/web").mkdir()
+    (root / "web").symlink_to("infrastructure_impact/web", target_is_directory=True)
+    subprocess.run(["git", "init", "-q", str(root)], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(root), "add", "--all"], check=True, capture_output=True)
+    return root
+
+
+def run_release(monkeypatch, root, destination):
+    import sys
+
+    from checks import release
+
+    monkeypatch.setattr(release, "ROOT", root)
+    monkeypatch.setattr(sys, "argv", ["release.py", "--output", str(destination)])
+    release.main()
+
+
+def test_release_accepts_public_tracked_inventory_and_canonical_web(tmp_path, monkeypatch, capsys):
+    root = release_checkout(tmp_path)
+    destination = tmp_path / "export"
+    run_release(monkeypatch, root, destination)
+    assert (destination / "README.md").read_text() == "synthetic public source\n"
+    assert (destination / "web").readlink() == Path("infrastructure_impact/web")
+    assert json.loads(capsys.readouterr().out)["private_artifact_checks"] == "passed"
+
+
+def test_release_rejects_force_tracked_workspace_before_export(tmp_path, monkeypatch):
+    import subprocess
+
+    root = release_checkout(tmp_path)
+    artifact = root / ".superpowers/internal-workspace/report.md"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text("SYNTHETIC PRIVATE SENTINEL")
+    subprocess.run(["git", "-C", str(root), "add", "-f", str(artifact)], check=True)
+    destination = tmp_path / "export"
+    with pytest.raises(ValueError) as caught:
+        run_release(monkeypatch, root, destination)
+    assert "internal-workspace" not in str(caught.value)
+    assert "SENTINEL" not in str(caught.value)
+    assert str(root) not in str(caught.value)
+    assert not destination.exists()
+
+
+@pytest.mark.parametrize(
+    "name", ["docs/__pycache__/artifact", "checks/stale.pyc", "docs/link", "web"]
+)
+def test_release_rejects_tracked_ignored_artifacts_and_symlinks(tmp_path, monkeypatch, name):
+    import subprocess
+
+    root = release_checkout(tmp_path)
+    path = root / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if name == "web":
+        path.unlink()
+        path.symlink_to("docs", target_is_directory=True)
+    elif name == "docs/link":
+        path.symlink_to("../README.md")
+    else:
+        path.write_text("SYNTHETIC PRIVATE SENTINEL")
+    subprocess.run(["git", "-C", str(root), "add", "-f", str(path)], check=True)
+    destination = tmp_path / "export"
+    with pytest.raises(ValueError) as caught:
+        run_release(monkeypatch, root, destination)
+    assert name not in str(caught.value)
+    assert not destination.exists()
+
+
+def test_release_source_tarball_retains_existing_export_behavior(tmp_path, monkeypatch, capsys):
+    import shutil
+
+    root = release_checkout(tmp_path)
+    shutil.rmtree(root / ".git")
+    (root / "untracked-workspace").mkdir()
+    (root / "untracked-workspace/report").write_text("synthetic non-exported file")
+    destination = tmp_path / "export"
+    run_release(monkeypatch, root, destination)
+    assert not (destination / "untracked-workspace").exists()
+    assert json.loads(capsys.readouterr().out)["private_artifact_checks"] == "passed"
