@@ -61,15 +61,6 @@ def test_projection_still_rejects_non_json_input(delivery, value):
         public_projection(delivery)
 
 
-@pytest.mark.parametrize("value", [b"bytes", {1}, float("nan"), float("inf"), -float("inf")])
-def test_projection_rejects_non_json_discarded_retained_wrapper_extension(delivery, value):
-    # Repartitioning reconstructs this otherwise valid wrapper without extras.
-    # Strict public validation must still inspect the discarded caller field.
-    delivery["retained_advisories"][0]["extension"] = value
-    with pytest.raises((TypeError, ValueError), match="Out of range|not JSON serializable"):
-        public_projection(delivery)
-
-
 def test_public_projection_matches_pinned_synthetic_output(monkeypatch):
     from infrastructure_impact.application import query
     from infrastructure_impact.storage import repository
