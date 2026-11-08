@@ -482,7 +482,11 @@ def apply_maintenance(args, selected, state, output, home, database, key, store,
                         with phase("publication.build"), redirect_stdout(io.StringIO()):
                             build(
                                 output=candidate,
-                                **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
+                                **(
+                                    {"publication_format": "v2"}
+                                    if args.publication_format == "v2"
+                                    else {}
+                                ),
                             )
                     except Exception:
                         with db:

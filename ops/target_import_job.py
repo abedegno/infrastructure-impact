@@ -48,7 +48,8 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
             step = "receipt_validation"
             validated = json.loads(
                 result_bytes(
-                    result, selected=selected,
+                    result,
+                    selected=selected,
                     **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
                 )
             )
