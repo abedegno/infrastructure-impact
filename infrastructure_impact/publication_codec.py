@@ -23,6 +23,7 @@ INTEGER = re.compile(r"-?(?:0|[1-9][0-9]*)\Z")
 HASH = re.compile(r"[a-f0-9]{64}\Z")
 NAME = re.compile(r"(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\.json)?\Z")
 PART_PATH = re.compile(r"data/v2/([a-f0-9]{64})\.json\Z")
+SURROGATE = re.compile("[\ud800-\udfff]")
 
 
 def safe_int(value, *, minimum=0):
@@ -34,7 +35,9 @@ def safe_int(value, *, minimum=0):
 def literal(value):
     if not isinstance(value, str):
         raise ValueError("literal must be a string")
-    if any(0xD800 <= ord(c) <= 0xDFFF for c in value):
+    # Scan in the C regex engine without allocating an encoded copy. This check
+    # runs for every decoded literal and must stay cheap on full advisory text.
+    if SURROGATE.search(value) is not None:
         raise ValueError("unpaired surrogate")
     return value
 

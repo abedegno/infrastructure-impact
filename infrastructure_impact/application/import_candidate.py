@@ -13,6 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from time import perf_counter
 
+from ..phase_events import FAILURE_CODES
 from ..settings import PACKAGE
 
 REQUEST = "target-import-request.json"
@@ -83,6 +84,9 @@ def parse_worker_diagnostics(raw, *, include_terminal=True):
                     "state": value["state"],
                     "elapsed_seconds": round(value["elapsed_seconds"], 6),
                 }
+                code = value.get("failure_code")
+                if value["state"] == "failed" and isinstance(code, str) and code in FAILURE_CODES:
+                    event["failure_code"] = code
                 cpu = value.get("process_cpu_seconds")
                 if elapsed(cpu):
                     event["process_cpu_seconds"] = round(cpu, 6)

@@ -221,3 +221,19 @@ def test_child_allocation_budget_shares_stream_ceiling_and_deadline():
     second = codec.Budget(20, parent=parent)
     with pytest.raises(ValueError, match="budget"):
         second.charge(13, 13)
+
+
+@pytest.mark.parametrize(
+    "point", [0, 31, 127, 128, 0x7FF, 0x800, 0xD7FF, 0xE000, 0xFFFF, 0x10000, 0x10FFFF]
+)
+def test_literal_validates_scalar_boundaries_without_changing_text(point):
+    value = "vendor advisory " + chr(point) + ' "end'
+    assert codec.literal(value) is value
+    assert codec.strict_loads(json.dumps(value).encode()) == value
+
+
+@pytest.mark.parametrize("point", [0xD800, 0xDBFF, 0xDC00, 0xDFFF])
+def test_literal_rejects_surrogates_inside_long_advisory_text(point):
+    value = "a" * 100_000 + chr(point) + "z" * 100_000
+    with pytest.raises(ValueError, match="surrogate"):
+        codec.literal(value)

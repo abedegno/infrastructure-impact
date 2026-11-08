@@ -11,17 +11,53 @@ except ImportError:  # Not available on every supported Python platform.
     resource = None
 
 
+FAILURE_CODES = frozenset(
+    {
+        "stream_deadline",
+        "byte_budget",
+        "query_mismatch",
+        "schema",
+        "memory",
+        "recursion",
+        "unclassified",
+    }
+)
+
+
+def _failure_code(error):
+    """Classify known failures without formatting arbitrary exception details."""
+    if isinstance(error, MemoryError):
+        return "memory"
+    if isinstance(error, RecursionError):
+        return "recursion"
+    if (
+        type(error).__module__ == "jsonschema.exceptions"
+        and type(error).__name__ == "ValidationError"
+    ):
+        return "schema"
+    if type(error) is ValueError and len(error.args) == 1 and type(error.args[0]) is str:
+        return {
+            "stream deadline": "stream_deadline",
+            "decoded byte budget": "byte_budget",
+            "claim byte budget": "byte_budget",
+            "cross-claim linkage byte budget": "byte_budget",
+            "selected byte budget": "byte_budget",
+            "native switching query mismatch": "query_mismatch",
+        }.get(error.args[0], "unclassified")
+    return "unclassified"
+
+
 @contextmanager
 def phase(label):
-    """Use static call-site labels only; never log arguments, payloads or errors."""
+    """Use static labels and failure codes, never payloads or exception details."""
     started = perf_counter()
     try:
         cpu_started = process_time()
     except (NotImplementedError, OSError, ValueError):
         cpu_started = None
 
-    def emit(state):
-        metrics = {}
+    def emit(state, failure=None):
+        metrics = {} if failure is None else {"failure_code": failure}
         try:
             cpu = process_time() - cpu_started
             if type(cpu) in (int, float) and 0 <= cpu <= 86_400:
@@ -56,8 +92,8 @@ def phase(label):
     emit("started")
     try:
         yield
-    except BaseException:
-        emit("failed")
+    except BaseException as error:
+        emit("failed", _failure_code(error))
         raise
     else:
         emit("completed")
