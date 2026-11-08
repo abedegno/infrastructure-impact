@@ -47,6 +47,7 @@ jobs:
         working-directory: source
         run: uv sync --frozen --no-dev --group hosted
       - name: Restore accepted baseline privately
+        id: restore
         working-directory: source
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
@@ -150,17 +151,19 @@ jobs:
           PY
       - name: Sanitize result metadata
         id: metadata
-        if: ${{ always() && steps.stage.outcome != 'skipped' && steps.stage.outcome != '' }}
+        if: ${{ always() && steps.restore.outcome != 'skipped' && steps.restore.outcome != '' }}
         working-directory: source
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           STAGE_OUTCOME: ${{ steps.stage.outcome }}
+          RESTORE_OUTCOME: ${{ steps.restore.outcome }}
         run: |
           set -euo pipefail
           umask 077
           uv run --no-sync python - <<'PY'
           import json
           import os
+          import re
           from pathlib import Path
           from jsonschema import ValidationError
           from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
@@ -170,6 +173,20 @@ jobs:
           root = Path(os.environ["RUNNER_TEMP"])
           summary = {"source_commit": os.environ["SOURCE_COMMIT"],
                      "stage_step": os.environ["STAGE_OUTCOME"], "diagnostics": []}
+          if os.environ.get("RESTORE_OUTCOME") == "failure":
+              error = {"category": "unclassified"}
+              log = root / "restore-stderr"
+              if log.is_file():
+                  with log.open("rb") as stream:
+                      text = stream.read(65_536).decode("utf-8", errors="replace")
+                  http = re.search(r"Recovery API returned HTTP ([1-5][0-9]{2})", text)
+                  if http:
+                      error = {"category": "remote_http", "http_status": int(http[1])}
+                  elif "cryptography.fernet.InvalidToken" in text:
+                      error = {"category": "authentication"}
+                  elif "Encrypted public-runner state requires IMPACT_STATE_KEY" in text:
+                      error = {"category": "missing_key"}
+              summary["restore_error"] = error
           receipt = root / "stage-result.json"
           if receipt.is_file() and receipt.stat().st_size <= 2_000_000:
               try:

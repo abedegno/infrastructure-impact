@@ -94,6 +94,42 @@ def test_installed_certification_matches_template_and_existing_vault_profile():
 
 
 @pytest.mark.parametrize(
+    "error,expected",
+    [
+        (
+            "PRIVATE/path\nValueError: Recovery API returned HTTP 404\n",
+            {"category": "remote_http", "http_status": 404},
+        ),
+        ("PRIVATE/key\ncryptography.fernet.InvalidToken\n", {"category": "authentication"}),
+        (
+            "error: Encrypted public-runner state requires IMPACT_STATE_KEY\nPRIVATE",
+            {"category": "missing_key"},
+        ),
+        ("PRIVATE/path and unknown error", {"category": "unclassified"}),
+    ],
+)
+def test_restore_failure_metadata_is_available_without_stage_and_excludes_details(
+    tmp_path, error, expected
+):
+    (tmp_path / "restore-stderr").write_text(error)
+    result = execute(
+        "Sanitize result metadata",
+        tmp_path,
+        RUNNER_TEMP=str(tmp_path),
+        SOURCE_COMMIT="a" * 40,
+        STAGE_OUTCOME="skipped",
+        RESTORE_OUTCOME="failure",
+    )
+    assert result.returncode == 0, result.stderr
+    value = json.loads((tmp_path / "certification-result/result.json").read_text())
+    assert value["restore_error"] == expected
+    assert "PRIVATE" not in json.dumps(value)
+    text = TEMPLATE.read_text()
+    metadata = text.split("      - name: Sanitize result metadata", 1)[1]
+    assert "steps.restore.outcome != 'skipped'" in metadata
+
+
+@pytest.mark.parametrize(
     "commit,run_id,ok",
     [
         ("a" * 40, "", True),
