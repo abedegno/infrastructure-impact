@@ -12,6 +12,7 @@ from ..collection import transport
 from ..collection.transport_budget import TransportBudget
 from ..domain import validate_advisory
 from ..plugins.registry import default_registry
+from ..storage import capture_cache as captures
 from ..storage.checkpoint_copy import stable_checkpoint
 from ..storage.locking import writer_lock
 from ..storage.repository import ingest
@@ -256,9 +257,20 @@ def _preflight_existing(db, selected, result):
             raise StageFailure("existing_identity_conflict")
 
 
-def _fetch(db, target, selected, budget):
+def _fetch(db, target, selected, budget, cache):
     try:
-        return transport.fetch(
+        capture = captures.from_evidence(
+            db, target.fetch_url, target.source_sha256, selected.max_document_bytes
+        )
+        if capture is None:
+            capture = captures.lookup(
+                cache, target.fetch_url, target.source_sha256, selected.max_document_bytes
+            )
+        if capture is not None:
+            captures.save(cache, capture)
+            captures.replay(db, capture)
+            return capture["raw"]
+        raw = transport.fetch(
             db,
             target.fetch_url,
             target.vendor,
@@ -267,6 +279,15 @@ def _fetch(db, target, selected, budget):
             budget=budget,
             forbid_redirects=True,
         )
+        capture = captures.from_evidence(
+            db, target.fetch_url, sha256(raw).hexdigest(), selected.max_document_bytes
+        )
+        if capture is None:
+            raise StageFailure("storage")
+        captures.save(cache, capture)
+        return raw
+    except captures.CaptureError as error:
+        raise StageFailure(str(error)) from None
     except sqlite3.Error:
         raise StageFailure("storage") from None
     except Exception as error:
@@ -278,11 +299,11 @@ def _fetch(db, target, selected, budget):
         raise StageFailure(code) from None
 
 
-def _preflight(db, selected, result, budget):
+def _preflight(db, selected, result, budget, cache):
     ready, seen = [], set()
     for target, status in zip(selected.targets, result["targets"]):
         try:
-            raw = _fetch(db, target, selected, budget)
+            raw = _fetch(db, target, selected, budget, cache)
             digest = sha256(raw).hexdigest()
             if digest not in seen:
                 size = result["counters"]["input_bytes"] + len(raw)
@@ -319,6 +340,8 @@ def stage(
     accepted_preview: dict,
     base_path: str = "/",
     publication_format: str = "v1",
+    capture_cache: Path | None = None,
+    acquisition_checkpoint=None,
 ) -> dict:
     """Hold one collector lock, validate all targets, then ingest only a private copy.
 
@@ -343,6 +366,13 @@ def stage(
         if expected_fingerprint != accepted["fingerprint"]:
             raise StageFailure("stale_preview")
         _paths(database, output, home)
+        cache_path = captures.validate_path(
+            capture_cache
+            if capture_cache is not None
+            else home / "captures" / (profile.fingerprint + ".sqlite3"),
+            database,
+            output,
+        )
         with writer_lock(home=home) as acquired:
             if not acquired:
                 result["outcome"] = "skipped_writer_lock"
@@ -354,7 +384,7 @@ def stage(
                 staged.parent.mkdir(parents=True, mode=0o700)
                 stage_home = output / "private/home"
                 stage_home.mkdir(mode=0o700)
-                shutil.copyfile(checkpoint, staged)
+                shutil.move(checkpoint, staged)
             with closing(sqlite3.connect(staged)) as db:
                 db.row_factory = sqlite3.Row
                 db.execute("PRAGMA foreign_keys=ON")
@@ -366,7 +396,14 @@ def stage(
                 _preflight_existing(db, profile, result)
                 db.commit()
                 operation_started_at = target_import.now()
-                ready = _preflight(db, profile, result, budget)
+                with closing(captures.connect(cache_path)) as cache:
+                    try:
+                        ready = _preflight(db, profile, result, budget, cache)
+                    finally:
+                        # Every acquisition transaction has committed before
+                        # checkpointing, including partial preflight failures.
+                        if acquisition_checkpoint is not None:
+                            acquisition_checkpoint(cache_path)
                 for (target, raw, normalized), status in zip(ready, result["targets"]):
                     changed = ingest(
                         db, raw, target.fetch_url, lambda *a: normalized, target.vendor

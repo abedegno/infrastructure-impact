@@ -162,6 +162,7 @@ def main(argv=None):
         if mode == "stage":
             command.add_argument("--preview", type=Path, required=True)
             command.add_argument("--home", type=Path, required=True)
+            command.add_argument("--capture-cache", type=Path)
             command.add_argument("--base-path", default="/")
             command.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
     args = parser.parse_args(argv)
@@ -554,6 +555,7 @@ def _target_import(args, parser):
                 accepted["fingerprint"],
                 args.output,
                 lock_home=args.home,
+                **({"capture_cache": args.capture_cache} if args.capture_cache is not None else {}),
                 accepted_preview=accepted,
                 base_path=args.base_path,
                 **({"publication_format": "v2"} if args.publication_format == "v2" else {}),

@@ -368,7 +368,7 @@ def workflow_effect(name, value="true"):
             stream.write(f"{name}={value}\n")
 
 
-def backup_verified(state, database, encryption_key, *, store, args, limit):
+def _checkpoint_verified(state, database, encryption_key, *, store, args, limit):
     """Keep the old pointer until the candidate authenticates and restores."""
     if args.recovery_storage == "github-draft":
         backup_remote(
@@ -419,7 +419,19 @@ def backup_verified(state, database, encryption_key, *, store, args, limit):
                     archive.unlink(missing_ok=True)
             for previous in sorted(state.glob("vault-*"))[:-3]:
                 previous.unlink()
+
+
+def backup_verified(state, database, encryption_key, *, store, args, limit):
+    _checkpoint_verified(state, database, encryption_key, store=store, args=args, limit=limit)
     workflow_effect("recovery_ready")
+
+
+def backup_acquisitions(state, database, encryption_key, *, store, args, limit):
+    """Authenticate/read back a separate byte-capture pointer before its effect."""
+    if not encryption_key:
+        raise ValueError("Acquisition checkpoints require authenticated encryption")
+    _checkpoint_verified(state, database, encryption_key, store=store, args=args, limit=limit)
+    workflow_effect("acquisition_ready")
 
 
 def apply_maintenance(args, selected, state, output, home, database, key, store, limit):
@@ -549,6 +561,7 @@ def main():
     parser.add_argument("--base-path", default="/")
     parser.add_argument("--publication-format", choices=HOSTED_PUBLICATION_FORMATS, default="v1")
     parser.add_argument("--encrypted-state", action="store_true")
+    parser.add_argument("--acquisition-cache", action="store_true")
     parser.add_argument("--backup-compression", choices=("xz", "gzip"), default="xz")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--validate-encrypted-state", action="store_true")
@@ -611,6 +624,10 @@ def main():
             parser.error("Private state and maintenance output must be separate directory trees")
     elif args.maintenance_mode or args.maintenance_preview_fingerprint:
         parser.error("Maintenance mode or fingerprint requires a maintenance profile")
+    if args.acquisition_cache and (
+        kind != "target-import" or args.maintenance_mode != "apply" or not args.encrypted_state
+    ):
+        parser.error("Acquisition cache requires target-import apply and encrypted state")
     limit = vault_limit(args.vault_profile)
     if not re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", args.schedule_utc):
         parser.error("Schedule must use HH:MM UTC")
