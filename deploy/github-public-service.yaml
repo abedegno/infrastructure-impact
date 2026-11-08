@@ -76,6 +76,7 @@ jobs:
           REPARSE_LIMIT: ${{ inputs.reparse_limit || vars.IMPACT_REPARSE_LIMIT || '0' }}
           REPARSE_VENDOR: ${{ inputs.reparse_vendor || vars.IMPACT_REPARSE_VENDOR || '' }}
           VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
+          PUBLICATION_FORMAT: ${{ vars.IMPACT_PUBLICATION_FORMAT || 'v1' }}
         run: |
           set -euo pipefail
           uv run --no-dev python - <<'PY'
@@ -123,6 +124,27 @@ jobs:
                   from infrastructure_impact.plugins.registry import default_registry
                   default_registry().get(vendor)
               protocol = "legacy-ordinary-v0"
+          publication_format = os.environ.get("PUBLICATION_FORMAT", "v1")
+          if publication_format not in ("v1", "v2"):
+              raise SystemExit("Unsupported publication format")
+          name = "HOSTED_PUBLICATION_FORMATS"
+          stores = [n for n in ast.walk(tree) if isinstance(n, ast.Name)
+                    and n.id == name and isinstance(n.ctx, ast.Store)]
+          declarations = [n for n in tree.body if isinstance(n, ast.Assign)
+                          and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name)
+                          and n.targets[0].id == name]
+          formats = ("v1",)
+          if stores:
+              if (len(stores) != 1 or len(declarations) != 1
+                      or not isinstance(declarations[0].value, ast.Tuple)
+                      or len(declarations[0].value.elts) != 2
+                      or not all(isinstance(n, ast.Constant) and isinstance(n.value, str)
+                                 for n in declarations[0].value.elts)
+                      or tuple(n.value for n in declarations[0].value.elts) != ("v1", "v2")):
+                  raise SystemExit("Unsupported hosted publication capabilities")
+              formats = ("v1", "v2")
+          if publication_format not in formats or (publication_format == "v2" and protocol != "effects-v1"):
+              raise SystemExit("Pinned helper does not support the selected publication format")
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               output.write("protocol=" + protocol + "\n")
           PY
@@ -146,9 +168,18 @@ jobs:
           REPARSE_LIMIT: ${{ inputs.reparse_limit || vars.IMPACT_REPARSE_LIMIT || '0' }}
           REPARSE_VENDOR: ${{ inputs.reparse_vendor || vars.IMPACT_REPARSE_VENDOR || '' }}
           VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
+          PUBLICATION_FORMAT: ${{ vars.IMPACT_PUBLICATION_FORMAT || 'v1' }}
         run: |
           set -euo pipefail
           recovery_args=(--vault-profile "$VAULT_PROFILE" --schedule-utc 12:43)
+          case "${PUBLICATION_FORMAT:-v1}" in
+            v1) ;; # Omit the new flag for old pinned helpers.
+            v2)
+              [[ "$HOSTED_PROTOCOL" = effects-v1 ]]
+              recovery_args+=(--publication-format v2)
+              ;;
+            *) echo 'Unsupported publication format'; exit 1 ;;
+          esac
           case "$RECOVERY_STORAGE" in
             git) ;;
             github-draft) recovery_args+=(--recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY") ;;

@@ -71,7 +71,7 @@ class FakeAPI:
         elif tail.startswith("releases/assets/"):
             payload = self.assets[int(tail.split("/")[-1])][1]
             if self.corrupt_download:
-                payload = payload[:-1] + b"X"
+                payload = payload[:-1] + bytes([payload[-1] ^ 1])
             if self.extra_download:
                 payload += b"X"
             return io.BytesIO(payload)
@@ -92,6 +92,21 @@ def setup(tmp_path):
     api = FakeAPI()
     store = GitHubDraftStore("example/recovery", "SYNTHETIC_TOKEN", opener=api)
     return database, key, api, store
+
+
+def test_fake_corruption_changes_payload_even_if_last_byte_is_x():
+    api = FakeAPI()
+    original = b"gAAAA-synthetic-ciphertext-X"
+    api.assets[1] = ({}, original, 1)
+    request = Request(
+        "https://api.github.com/repos/example/recovery/releases/assets/1",
+        headers={"Authorization": "Bearer SYNTHETIC_TOKEN"},
+    )
+    assert api.open(request, timeout=60).read() == original
+    api.corrupt_download = True
+    corrupted = api.open(request, timeout=60).read()
+    assert len(corrupted) == len(original)
+    assert corrupted != original
 
 
 @pytest.mark.parametrize("compression", ["gzip", "xz"])
