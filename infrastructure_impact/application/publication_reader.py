@@ -47,6 +47,7 @@ class PublicationReader(codec.CatalogReader):
         self._identity(self.catalog)
         self._validate_table_descriptors(self.catalog["strings"])
         self._validate_table_descriptors(self.catalog["shapes"])
+        codec.validate_table_transports(self.catalog)
 
     def _path(self, path):
         target = self.directory / path

@@ -9,6 +9,7 @@ import json
 import math
 import re
 import time
+import zlib
 from collections import deque
 from dataclasses import dataclass, field
 from hashlib import sha256
@@ -23,6 +24,7 @@ INTEGER = re.compile(r"-?(?:0|[1-9][0-9]*)\Z")
 HASH = re.compile(r"[a-f0-9]{64}\Z")
 NAME = re.compile(r"(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\.json)?\Z")
 PART_PATH = re.compile(r"data/v2/([a-f0-9]{64})\.json\Z")
+TABLE_TRANSPORT_PATH = re.compile(r"data/v2/([a-f0-9]{64})\.json\.gz\Z")
 SURROGATE = re.compile("[\ud800-\udfff]")
 
 
@@ -110,6 +112,64 @@ def validate_descriptor(value, *, paths=None, max_bytes=MAX_PART):
     if safe_int(value["bytes"], minimum=1) > max_bytes:
         raise ValueError("descriptor byte budget")
     return value
+
+
+def _validate_table_transport_descriptor(value):
+    if not isinstance(value, dict) or set(value) != {"path", "sha256", "bytes"}:
+        raise ValueError("table transport descriptor fields")
+    path = value["path"]
+    match = TABLE_TRANSPORT_PATH.fullmatch(path) if isinstance(path, str) else None
+    if not match or match[1] != value["sha256"]:
+        raise ValueError("table transport descriptor path/hash")
+    return validate_descriptor(value, paths={path})
+
+
+def validate_table_transports(catalog):
+    """Bind an optional gzip map exclusively to existing raw table parts."""
+    transports = catalog.get("table_transports", {})
+    if not isinstance(transports, dict):
+        raise ValueError("table transports map")
+    tables = {}
+    for kind in ("strings", "shapes"):
+        rows = catalog.get(kind)
+        if not isinstance(rows, list):
+            raise ValueError("table descriptors array")
+        for row in rows:
+            if not isinstance(row, dict) or "part" not in row:
+                raise ValueError("table descriptor fields")
+            part = validate_descriptor(row["part"])
+            if part["path"] in tables and tables[part["path"]] != part:
+                raise ValueError("conflicting raw table descriptors")
+            tables[part["path"]] = part
+    seen = set()
+    for raw_path, compressed in transports.items():
+        if raw_path not in tables:
+            raise ValueError("table transport key is not a table part")
+        _validate_table_transport_descriptor(compressed)
+        if compressed["path"] in seen:
+            raise ValueError("duplicate table transport path")
+        seen.add(compressed["path"])
+    return transports
+
+
+def decode_table_transport(raw, compressed, decoded):
+    """Verify and inflate exactly one gzip member within the raw part bound."""
+    _validate_table_transport_descriptor(compressed)
+    validate_descriptor(decoded)
+    if len(raw) != compressed["bytes"] or sha256(raw).hexdigest() != compressed["sha256"]:
+        raise ValueError("table transport encoded bytes/hash mismatch")
+    decoder = zlib.decompressobj(16 + zlib.MAX_WBITS)
+    try:
+        result = decoder.decompress(raw, decoded["bytes"] + 1)
+    except zlib.error as exc:
+        raise ValueError("invalid table transport gzip") from exc
+    if len(result) > decoded["bytes"]:
+        raise ValueError("table transport decoded byte budget")
+    if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail:
+        raise ValueError("truncated or trailing table transport gzip")
+    if len(result) != decoded["bytes"] or sha256(result).hexdigest() != decoded["sha256"]:
+        raise ValueError("table transport decoded bytes/hash mismatch")
+    return result
 
 
 def validate_range(value):
@@ -534,6 +594,7 @@ class CatalogReader:
         self._ranges = {}
         self._validate_table_descriptors(catalog["strings"])
         self._validate_table_descriptors(catalog["shapes"])
+        validate_table_transports(catalog)
 
     @staticmethod
     def _validate_table_descriptors(descriptors):

@@ -192,6 +192,16 @@
         "expanded",
         "gzip"
       ]
+    },
+    "table_transports": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^data/v2/[a-f0-9]{64}\\.json$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/table_transport"
+      }
     }
   },
   "required": [
@@ -1212,6 +1222,30 @@
         "count",
         "vendors",
         "part"
+      ]
+    },
+    "table_transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^data/v2/[a-f0-9]{64}\\.json\\.gz$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8000000
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
       ]
     }
   },
