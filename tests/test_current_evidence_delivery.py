@@ -106,6 +106,15 @@ def test_projection_rebuilds_and_removes_private_input_without_mutation(delivery
     )
 
 
+@pytest.mark.parametrize("value", [b"bytes", {1}, float("nan"), float("inf"), -float("inf")])
+def test_projection_rejects_non_json_discarded_retained_wrapper_extension(delivery, value):
+    # Repartitioning reconstructs this otherwise valid wrapper without extras.
+    # Strict public validation must still inspect the discarded caller field.
+    delivery["retained_advisories"][0]["extension"] = value
+    with pytest.raises((TypeError, ValueError), match="Out of range|not JSON serializable"):
+        public_projection(delivery)
+
+
 @pytest.mark.parametrize("mutation", ["count", "reference", "generation", "restore"])
 def test_boundary_rejects_supplied_inconsistent_partition(delivery, mutation):
     if mutation == "count":
