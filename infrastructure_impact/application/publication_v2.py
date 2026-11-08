@@ -142,19 +142,39 @@ class Writer:
         root_hash, root_bytes, ascii_bytes = sha256(), 0, 0
         ascii_hash = sha256() if name == "snapshot.json" else None
 
+        pending, ascii_pending = bytearray(), bytearray()
+
+        def hash_bytes(raw, ascii_raw):
+            root_hash.update(raw)
+            if ascii_hash is not None:
+                ascii_hash.update(ascii_raw)
+            for item in active:
+                item["hash"].update(raw)
+
+        def flush_hashes():
+            if pending:
+                hash_bytes(pending, ascii_pending)
+                pending.clear()
+                ascii_pending.clear()
+
         def logical(raw, ascii_raw=None):
             nonlocal root_bytes, ascii_bytes
             ascii_raw = raw if ascii_raw is None else ascii_raw
-            root_hash.update(raw)
             root_bytes += len(raw)
-            if ascii_hash is not None:
-                ascii_hash.update(ascii_raw)
             ascii_bytes += len(ascii_raw)
             if root_bytes > SITE or ascii_bytes > SITE:
                 raise ValueError("root stream exceeds 1 GB")
-            for item in active:
-                item["hash"].update(raw)
-                item["size"] += len(raw)
+            if len(raw) >= 65_536 or ascii_hash is not None and len(ascii_raw) >= 65_536:
+                flush_hashes()
+                hash_bytes(raw, ascii_raw)
+            else:
+                if len(pending) + len(raw) > 65_536 or (
+                    ascii_hash is not None and len(ascii_pending) + len(ascii_raw) > 65_536
+                ):
+                    flush_hashes()
+                pending.extend(raw)
+                if ascii_hash is not None:
+                    ascii_pending.extend(ascii_raw)
 
         def flush():
             nonlocal tokens, encoded, decoded, page_first
@@ -197,8 +217,12 @@ class Writer:
             )
             marked = self.ranged(name, path) or detail_kind is not None
             if marked:
+                flush_hashes()
                 marker = dict(
-                    path=path, first=position, hash=sha256() if path else root_hash, size=0
+                    path=path,
+                    first=position,
+                    hash=sha256() if path else root_hash,
+                    start_bytes=root_bytes,
                 )
                 if path:
                     active.append(marker)
@@ -257,13 +281,14 @@ class Writer:
                 )
                 logical(raw, ascii_raw)
             if marked:
+                flush_hashes()
                 if path:
                     active.pop()
                 bound = dict(
                     root=name,
                     first_token=marker["first"],
                     end_token=position,
-                    logical_bytes=marker["size"] if path else root_bytes,
+                    logical_bytes=root_bytes - marker["start_bytes"],
                     logical_sha256=marker["hash"].hexdigest(),
                 )
                 if detail_kind is not None:

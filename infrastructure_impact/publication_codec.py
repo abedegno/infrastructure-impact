@@ -711,22 +711,39 @@ class CatalogReader:
             else {}
         )
         active, visited = [], set()
+        pending = bytearray()
+        limits = [expected["bytes"]]
+
+        def hash_bytes(raw):
+            digest.update(raw)
+            for current in active:
+                current[2].update(raw)
+
+        def flush_hashes():
+            if pending:
+                hash_bytes(pending)
+                pending.clear()
 
         def node_event(event, location, position):
             bound = declared.get(location)
             if bound is None:
                 return
+            # Flush before changing membership: every range sees exactly its
+            # own bytes, including punctuation, aliases and empty containers.
+            flush_hashes()
             if event == "start":
                 if position != bound["first_token"]:
                     raise ValueError("range path/start mismatch")
-                active.append([location, bound, sha256(), 0])
+                active.append([location, bound, sha256(), size])
+                limits.append(min(limits[-1], size + bound["logical_bytes"]))
                 visited.add(location)
             else:
                 current = active.pop()
+                limits.pop()
                 if (
                     current[0] != location
                     or position != bound["end_token"]
-                    or current[3] != bound["logical_bytes"]
+                    or size - current[3] != bound["logical_bytes"]
                     or current[2].hexdigest() != bound["logical_sha256"]
                 ):
                     raise ValueError("range path/end/digest mismatch")
@@ -736,12 +753,17 @@ class CatalogReader:
             size += len(raw)
             if size > expected["bytes"]:
                 raise ValueError("declared logical output bound")
-            digest.update(raw)
-            for current in active:
-                current[2].update(raw)
-                current[3] += len(raw)
-                if current[3] > current[1]["logical_bytes"]:
-                    raise ValueError("range declared byte bound")
+            # Absolute end offsets enforce every enclosing byte bound before
+            # emission without walking the active stack for each tiny fragment.
+            if size > limits[-1]:
+                raise ValueError("range declared byte bound")
+            if len(raw) >= 65_536:
+                flush_hashes()
+                hash_bytes(raw)  # Already allocated by the decoder; do not copy.
+            else:
+                if len(pending) + len(raw) > 65_536:
+                    flush_hashes()
+                pending.extend(raw)
 
         budget = NodeBudget(budget, expected["bytes"])
         yield from stream_tokens(
@@ -758,6 +780,7 @@ class CatalogReader:
             number_observer=number_observer,
             node_observer=node_event if declared else None,
         )
+        flush_hashes()
         if set(declared) != visited:
             raise ValueError("unvisited range path")
         if size != expected["bytes"] or (
