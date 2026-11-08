@@ -363,3 +363,28 @@ def test_phase_event_cap_preserves_terminal_summary():
     values = parse_worker_diagnostics(raw)
     assert len(values) == 33
     assert values[-1] == terminal
+
+
+def test_monitor_capacity_diagnostics_are_closed_and_bounded():
+    from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
+
+    event = dict(
+        event="monitor_capacity",
+        mode="default",
+        reason="default_transfer",
+        resource="v2_part",
+        observed_bytes=32_000_001,
+        limit_bytes=32_000_000,
+    )
+    raw = json.dumps(dict(event, private="PRIVATE")).encode()
+    assert parse_worker_diagnostics(raw) == [event]
+    assert parse_worker_diagnostics(raw + b"\n" + raw + b"\n" + raw) == [event, event]
+    for key, bad in (
+        ("mode", "PRIVATE"),
+        ("resource", "PRIVATE"),
+        ("reason", "PRIVATE"),
+        ("observed_bytes", True),
+        ("limit_bytes", -1),
+        ("observed_bytes", 2**50),
+    ):
+        assert parse_worker_diagnostics(json.dumps(dict(event, **{key: bad})).encode()) == []

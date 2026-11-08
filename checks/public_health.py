@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import re
+import sys
 from datetime import date, datetime, timezone
 from urllib.error import HTTPError
 from urllib.request import urlopen
@@ -326,6 +327,35 @@ def check(origin, expected=None, *, verify_archive=False):
             raw = response.read(limit + 1)
         if not archive:
             checked_bytes += len(raw)
+        if (not archive and checked_bytes > default_budget) or len(raw) > budget:
+            aggregate = not archive and checked_bytes > default_budget
+            resource = (
+                "manifest"
+                if path == "manifest.json"
+                else "index"
+                if path == "data/index.json"
+                else "v2_part"
+                if re.fullmatch(r"data/v2/[a-f0-9]{64}\.json", path)
+                else "cohort"
+                if re.fullmatch(r"data/[a-f0-9]{64}\.json", path)
+                else "other"
+            )
+            print(
+                json.dumps(
+                    {
+                        "event": "monitor_capacity",
+                        "mode": "archive" if verify_archive else "default",
+                        "reason": "default_transfer" if aggregate else "part",
+                        "resource": resource,
+                        "observed_bytes": checked_bytes if aggregate else len(raw),
+                        "limit_bytes": default_budget if aggregate else budget,
+                    },
+                    separators=(",", ":"),
+                ),
+                file=sys.stderr,
+                flush=True,
+            )
+        if not archive:
             assert checked_bytes <= default_budget, "Default publication exceeds monitor budget"
         assert len(raw) <= budget, (
             "Publication manifest exceeds monitor budget"

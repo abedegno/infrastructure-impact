@@ -128,3 +128,19 @@ source pin or promote this rejected candidate. The next investigation must
 identify the exact monitor budget/request and reduce the default payload or
 reorganize validation while retaining complete-data checks. No further
 unchanged full certification is justified merely to repeat the known rejection.
+
+## Monitor capacity diagnostics
+
+The next attempt retains a closed `monitor_capacity` event immediately before
+an existing download-budget assertion. It distinguishes default versus archive
+mode, cumulative transfer versus individual-part overflow, static resource
+category, observed bytes and the unchanged limit. No document paths, URLs,
+exception text or evidence contents enter this metadata. The worker and hosted
+sanitizer preserve at most two such events. All existing acceptance checks and
+budgets remain in force; these events do not establish candidate acceptance.
+
+Actual per-file and aggregate overflow tests verify rejection and the emitted
+metadata; hostile-input tests verify sanitization. The 173 focused tests, built
+wheel/offline distribution checks, isolated installed v2 worker/monitor probe,
+Ruff and source export passed. Independent review found no important issues.
+The complete suite also passed: 3,819 tests and 12 subtests in 363.92 seconds.

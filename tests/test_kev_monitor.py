@@ -196,7 +196,7 @@ def test_delivery_budget_contract_is_preserved():
 
 
 @pytest.mark.parametrize("fault", ["index", "part", "default_cohort"])
-def test_monitor_keeps_existing_delivery_bounds(tmp_path, monkeypatch, fault):
+def test_monitor_keeps_existing_delivery_bounds(tmp_path, monkeypatch, capsys, fault):
     generation = publish(dataset(), tmp_path)
     manifest_path = generation / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
@@ -230,5 +230,13 @@ def test_monitor_keeps_existing_delivery_bounds(tmp_path, monkeypatch, fault):
     manifest["sha256"]["data/index.json"] = hashlib.sha256(index_path.read_bytes()).hexdigest()
     manifest_path.write_text(json.dumps(manifest))
     serve(monkeypatch, generation)
+    capsys.readouterr()
     with pytest.raises(AssertionError, match=message):
         health.check("https://example.test")
+    if fault != "part":
+        event = json.loads(capsys.readouterr().err)
+        assert event["event"] == "monitor_capacity"
+        assert event["reason"] == ("default_transfer" if fault == "default_cohort" else "part")
+        assert event["mode"] == "default"
+        assert event["observed_bytes"] == event["limit_bytes"] + 1
+        assert event["resource"] in ("index", "cohort")

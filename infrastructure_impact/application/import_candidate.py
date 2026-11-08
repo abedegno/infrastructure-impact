@@ -49,10 +49,41 @@ def parse_worker_diagnostics(raw, *, include_terminal=True):
     events = []
     phases = 0
     terminal = False
+    monitor_events = 0
     for line in raw[:65_536].splitlines():
         try:
             value = json.loads(line, object_pairs_hook=pairs)
-            if not isinstance(value, dict) or not elapsed(value.get("elapsed_seconds")):
+            if not isinstance(value, dict):
+                continue
+            if value.get("event") == "monitor_capacity":
+                if (
+                    monitor_events >= 2
+                    or value.get("mode") not in ("default", "archive")
+                    or value.get("reason") not in ("default_transfer", "part")
+                    or value.get("resource")
+                    not in ("manifest", "index", "v2_part", "cohort", "other")
+                    or any(
+                        type(value.get(key)) is not int or not 0 <= value[key] <= 2**40
+                        for key in ("observed_bytes", "limit_bytes")
+                    )
+                ):
+                    continue
+                events.append(
+                    {
+                        key: value[key]
+                        for key in (
+                            "event",
+                            "mode",
+                            "reason",
+                            "resource",
+                            "observed_bytes",
+                            "limit_bytes",
+                        )
+                    }
+                )
+                monitor_events += 1
+                continue
+            if not elapsed(value.get("elapsed_seconds")):
                 continue
             if value.get("event") == "candidate_worker":
                 if (
