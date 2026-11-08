@@ -5,6 +5,9 @@ publication. The reviewed source pin remains the sole source-code authority;
 there is no branch, source override, alternate manifest or secret-bearing preview
 bypass. The local full replay and complete hosted inventory are separate gates.
 
+This is the historical proposal. See the [approved rollout record](2026-11-08-hosted-publication-v2.md)
+for activation, the first cancelled apply and the orchestration repair.
+
 ## Local verification available
 
 The [core retained replay](../research/2026-11-08-runtime-and-paging-verification.md#accepted-local-retained-replay)
