@@ -157,9 +157,25 @@ exact target-import apply with `--encrypted-state`. It restores and checkpoints
 a separate encrypted acquisition recovery stream; rejected candidates gain no
 accepted-vault recovery or publication readiness from these captures. Without
 that flag, a hosted run may reuse its local captures during that runner's
-lifetime, but they are not backed up for subsequent runners. Workflow wiring
-and activation remain separately gated; the collector workflow does not enable
-this option by default. Offline acceptance
+lifetime, but they are not backed up for subsequent runners. The collector
+workflow exposes the manual boolean `acquisition_cache`, defaulting to false;
+scheduled runs always leave it disabled. Enabling it requires a named installed
+target-import profile in explicit apply mode and a pinned helper advertising
+`--acquisition-cache`. Protocol preflight rejects other requests before the
+state key or repository token is made available to the helper.
+
+Encrypted acquisition checkpoints live in the separate sibling tree
+`acquisitions/PROFILE_FINGERPRINT/`, alongside accepted `state/`. Retention can
+run after a rejected apply with `acquisition_ready=true`, but first authenticates
+the accepted recovery manifest and every acquisition sub-state with the pinned
+helper. Only managed 64-character lowercase hexadecimal profile directories
+containing encrypted archives and their manifest may be staged; links, plaintext
+and unexpected entries fail retention. Acquisition readiness alone authorizes
+neither accepted recovery nor public artifacts or Pages publication. This wiring
+does not activate a new source pin or dispatch an import; source-pin approval,
+a hosted preview and an explicit apply remain separate activation steps.
+
+Offline acceptance
 may replay verified retained bytes through current normalizers in a disposable
 lab; it must preserve original capture dates, add no HTTP successes and explicitly
 say **offline retained evidence**. The public CLI has no offline acquisition
