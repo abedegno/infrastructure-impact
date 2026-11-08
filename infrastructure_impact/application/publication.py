@@ -44,7 +44,6 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
 
     validate_format(publication_format)
     # Consume private frames before any general clone or public serialization.
-    research = {k: v for k, v in data["research"].items() if k != "current_evidence_input"}
     context = data["research"].get("current_evidence_input", {"selections": [], "sources": []})
     union = data["records"] + [w["record"] for w in data.get("retained_advisories", [])]
     computed = partition(
@@ -64,8 +63,7 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
             raise ValueError("Supplied retained partition differs from recomputed decisions")
     elif data.get("retained_advisories"):
         raise ValueError("Retained exclusions require decision references")
-    data = json.loads(json.dumps({**data, "research": research}, allow_nan=False))
-    data = rebuild(data, computed)
+    data = rebuild(data, computed, json_copy=True)
     from ..adapters.cvss import public_metrics
 
     has_score_input = "score_input" in data["research"]
