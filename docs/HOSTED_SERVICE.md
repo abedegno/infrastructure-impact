@@ -46,9 +46,11 @@ V2 serves a catalog of bounded parts and a complete `snapshot-v2.json.gz` archiv
 The full research roots remain available through streaming export, while browser
 downloads are selected summaries. See [target imports](target-import.md#opt-in-local-publication-v2)
 for the representation and [the rollout proposal](rollouts/2026-11-08-hosted-publication-v2-proposal.md)
-for activation and recovery. This support is prepared, with no hosted format or
-source-pin activation performed. Activation remains a separate maintainer decision;
-a successful local sample does not certify the complete hosted inventory.
+for activation and recovery. The source pin and v2 selection were activated on
+8 November 2026. The first apply reached the outer job deadline without publishing;
+the [rollout record](rollouts/2026-11-08-hosted-publication-v2.md) tracks the repair
+and hosted acceptance separately. A successful local sample does not certify
+the complete hosted inventory.
 
 ## Encrypted backups and recovery
 
