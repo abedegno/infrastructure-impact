@@ -87,6 +87,8 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
     };
     const index = JSON.parse(fs.readFileSync(path.join(dir, 'data/index.json'))),
       catalog = JSON.parse(fs.readFileSync(path.join(dir, 'publication-v2.json')));
+    // Raw-descriptor mutation cases exercise legacy catalogs; test_table_transport.js covers gzip.
+    delete catalog.table_transports;
     const reader = await api.open(fetch, catalog, index);
     assert.strictEqual(reads.length, 0, 'open metadata only');
     await assert.rejects(

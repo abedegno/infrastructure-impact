@@ -92,3 +92,24 @@ Tests compare cohort-delivery results with the Python reader for comparison,
 product groups, exact-product filters, coverage, scorecards, timeline, case files
 and exports. Fault checks cover tampering, missing files, mixed generations,
 missing known-CVE index entries, deferred history and atomic publication failure.
+
+## Publication v2 table transport
+
+V2 catalogs may declare `table_transports`, mapping existing strings/shapes part
+paths to content-addressed `.json.gz` descriptors. The writer emits deterministic
+single-member gzip only when smaller, retaining the original raw assets. Readers
+verify encoded length/hash, bound expansion to the original part size, and verify
+decoded length/hash before the existing envelope, table, token and routing checks.
+Both representations remain limited to 8 MB per part. The default v2 monitor
+counts actual compressed transfer against its unchanged 32 MB ceiling; decoded
+and cache limits remain independent. V1 retains its 20 MB transfer ceiling.
+
+Older catalogs use raw parts. Browsers without `DecompressionStream` also use the
+verified raw assets; an invalid declared gzip response fails rather than silently
+falling back. Native browser gzip decoders may accept concatenated members only
+when their complete result matches the declared decoded length and fingerprint.
+Python rejects additional members. Neither case permits altered data or overflow.
+Snapshot archives keep their existing raw self-contained scope and limits.
+
+This reduces wire transfer; it does not remove the shared table memory cost or
+change study evidence, counts, affectedness, review status or disclosure caveats.

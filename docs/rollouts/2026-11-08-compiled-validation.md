@@ -160,3 +160,43 @@ All 145 focused tests passed; the complete suite passed 3,821 tests and 12
 subtests in 332.44 seconds. Independent review confirmed failed receipts allow
 unattempted gate values and still fail closed. Run 42530463587 was dispatched
 before this reorder and continues to use source `5b9de3fe88dc2b212286becf257aad3ff160fab8`.
+
+## Exact capacity result and bounded table transport
+
+[Diagnostic run 42530463587](https://github.com/abedegno/infrastructure-impact/actions/runs/42530463587)
+used `5b9de3fe88dc2b212286becf257aad3ff160fab8`. Its worker completed in
+1,327.00 seconds. Audit and native parity passed, but the **default monitor's
+aggregate transfer limit** rejected a v2 part at 32,000,001 bytes against a
+32,000,000-byte limit. This was not an individual-file rejection. All 174 targets
+were imported from cached captures with zero HTTP attempts and received bytes.
+The accepted branch remained `6caac484839968a047668080a126062a63528545`; the live
+public index fingerprint still matched the recorded baseline.
+
+The [bounded table transport design](../superpowers/specs/2026-11-08-table-transport-design.md)
+adds optional deterministic gzip table sidecars while retaining raw assets and
+self-contained archive scope. Monitor and browser verify both representations'
+lengths and hashes, bound decoded output, and keep the existing table, envelope,
+generation, token, routing and range checks. Transfer limits and decoded/cache
+limits remain independent. No scheduling, permissions, accepted state or live
+source activation changes are included.
+
+A read-only overlay of the frozen 223-advisory public sample passed the actual
+standalone default monitor with **13,865,516 bytes**, compared with **28,392,401
+bytes** using raw tables. It made 109 HTTP requests / 108 asset-body reads in
+both cases; this is a transfer reduction, not a request-count reduction. Its 39
+sidecars transferred 4,239,922 bytes. This is a public-sample result, not complete
+hosted certification, and it does not reduce decoded table memory.
+
+Core tests cover strict descriptors/maps, deterministic production, unchanged
+logical roots/archive scope, corrupted/truncated/trailing gzip and bounded
+expansion. Monitor tests additionally prove rejection at exactly 32,000,001 bytes
+while reading gzip, with the bounded sentinel read and no raw fallback. Browser
+tests cover both hashes/lengths, oversized input/output, legacy compatibility,
+cache accounting, cancellation, stalled readers/decoders and deadlines.
+Task and fresh integration reviews found no important or critical issues.
+
+The combined suite passed **3,879 tests and 12 subtests in 479.65 seconds**.
+All nine JavaScript suites, source export, Ruff/format, Prettier, built-wheel
+/offline distribution and isolated installed v2 worker/monitor probes passed.
+The next cached full hosted certification remains the acceptance gate; these
+local results do not authorize source activation or accepted-state promotion.
