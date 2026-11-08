@@ -340,6 +340,14 @@
     )
       fail('mixed generations');
   }
+  function envelope(value, kind) {
+    const variants = schemas['publication-v2.json'].$defs.envelope.oneOf;
+    const matches = variants
+      .map((branch, index) => (branch.properties.kind.const === kind ? index : -1))
+      .filter((index) => index >= 0);
+    if (matches.length !== 1) fail('unknown or ambiguous publication envelope kind');
+    return validate('publication-v2.json', value, '/$defs/envelope/oneOf/' + matches[0]);
+  }
   function definition(report) {
     const hash = fingerprint(report.definition);
     if (hash !== report.selection.definition_sha256 || hash !== bundle.definition_sha256)
@@ -631,6 +639,7 @@
   }
   window.InfrastructureSwitchingContracts = {
     validate,
+    envelope,
     fingerprint,
     full,
     summary,

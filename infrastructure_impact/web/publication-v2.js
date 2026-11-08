@@ -523,11 +523,7 @@
         new TextDecoder('utf-8', { fatal: true }).decode(await raw(d, options)),
         { transport: kind === 'overview' ? (path) => path[0] !== 'data' : true },
       );
-      window.InfrastructureSwitchingContracts.validate(
-        'publication-v2.json',
-        value,
-        '/$defs/envelope',
-      );
+      window.InfrastructureSwitchingContracts.envelope(value, kind);
       if (
         value.publication.id !== identity.publication.id ||
         value.publication.advisory_schema_version !==

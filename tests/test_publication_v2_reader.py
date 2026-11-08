@@ -699,6 +699,57 @@ def detail_reader(generation, monkeypatch, tmp_path):
     return reader, selected, expected, writer
 
 
+def test_detail_envelope_does_not_validate_unrelated_variants(detail_reader, monkeypatch):
+    from jsonschema import Draft202012Validator
+
+    reader, _, expected, _ = detail_reader
+    original = Draft202012Validator.VALIDATORS["oneOf"]
+
+    def check(validator, alternatives, instance, schema):
+        assert not any("kind" in option.get("properties", {}) for option in alternatives), (
+            "envelope must dispatch by kind before validating its payload"
+        )
+        yield from original(validator, alternatives, instance, schema)
+
+    monkeypatch.setitem(Draft202012Validator.VALIDATORS, "oneOf", check)
+    descriptor = reader.catalog["switching"]["detail_indexes"]["diagnostics"][0]
+    entries = reader.fetch(descriptor["part"], kind="detail_index")
+    assert entries[0]["vendor"] == expected[0]["vendor"]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("schema_version", 1),
+        ("publication", {"id": "bad", "advisory_schema_version": 2}),
+        ("generated_at", 42),
+        ("kind", "strings"),
+        ("data", [{"ordinal": -1}]),
+        ("extra", True),
+    ],
+)
+def test_exact_envelope_validation_preserves_rejections(detail_reader, field, value):
+    from jsonschema import ValidationError
+
+    from infrastructure_impact.application.publication_v2 import validate_envelope, validators
+
+    reader, _, _, _ = detail_reader
+    descriptor = reader.catalog["switching"]["detail_indexes"]["diagnostics"][0]["part"]
+    envelope = json.loads((reader.directory / descriptor["path"]).read_bytes())
+    generic = validators()["publication-v2.json"].evolve(
+        schema={"$ref": "urn:infrastructure-impact:publication:2#/$defs/envelope"}
+    )
+    generic.validate(envelope)
+    validate_envelope(envelope, "detail_index")
+    envelope[field] = value
+    with pytest.raises(ValidationError):
+        generic.validate(envelope)
+    with pytest.raises(ValidationError):
+        validate_envelope(envelope, "detail_index")
+    with pytest.raises(ValueError, match="unknown or ambiguous"):
+        validate_envelope(envelope, "unknown")
+
+
 def test_diagnostic_page_reads_only_requested_children(detail_reader, monkeypatch):
     reader, selected, expected, _ = detail_reader
 

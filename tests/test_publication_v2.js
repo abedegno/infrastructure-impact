@@ -117,7 +117,39 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
       ),
     );
     assert(catalog.switching.detail_indexes, 'publisher emits separate detail indexes');
-    const sourcePage = await reader.switchingDetails(overview, { kind: 'sources', limit: 25 });
+    const contracts = context.window.InfrastructureSwitchingContracts;
+    const detailEnvelope = {
+      schema_version: 2,
+      publication: catalog.publication,
+      generated_at: catalog.generated_at,
+      kind: 'detail_index',
+      data: [{ ordinal: 0, range: catalog.switching.diagnostics }],
+    };
+    contracts.envelope(detailEnvelope, 'detail_index');
+    for (const [field, value] of [
+      ['schema_version', 1],
+      ['publication', { id: 'bad', advisory_schema_version: 2 }],
+      ['generated_at', 42],
+      ['kind', 'strings'],
+      ['data', [{ ordinal: -1 }]],
+      ['extra', true],
+    ]) {
+      const broken = { ...detailEnvelope, [field]: value };
+      assert.throws(() => contracts.validate('publication-v2.json', broken, '/$defs/envelope'));
+      assert.throws(() => contracts.envelope(broken, 'detail_index'));
+    }
+    assert.throws(() => contracts.envelope(detailEnvelope, 'unknown'));
+    const originalValidate = contracts.validate;
+    contracts.validate = (name, value, fragment) => {
+      assert.notStrictEqual(fragment, '/$defs/envelope', 'dispatch envelope by exact kind');
+      return originalValidate(name, value, fragment);
+    };
+    let sourcePage;
+    try {
+      sourcePage = await reader.switchingDetails(overview, { kind: 'sources', limit: 25 });
+    } finally {
+      contracts.validate = originalValidate;
+    }
     assert(sourcePage.items.length <= 25);
     const diagnosticPage = await reader.switchingDetails(overview, {
       kind: 'diagnostics',

@@ -62,6 +62,26 @@ def validate(value, name):
     validators()[name].validate(value)
 
 
+def validate_envelope(value, kind):
+    """Validate the complete envelope against its disjoint, literal kind branch.
+
+    Trying every branch can run quadratic uniqueItems checks for string tables
+    against unrelated arrays of objects, even after their kind has failed.
+    """
+    validator = validators()["publication-v2.json"]
+    variants = validator.schema["$defs"]["envelope"]["oneOf"]
+    matches = [
+        i for i, branch in enumerate(variants) if branch["properties"]["kind"]["const"] == kind
+    ]
+    if len(matches) != 1:
+        raise ValueError("unknown or ambiguous publication envelope kind")
+    validator.evolve(
+        schema={
+            "$ref": f"urn:infrastructure-impact:publication:2#/$defs/envelope/oneOf/{matches[0]}"
+        }
+    ).validate(value)
+
+
 class Writer:
     def __init__(self, destination, identity):
         self.destination = Path(destination)

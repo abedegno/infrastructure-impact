@@ -117,12 +117,10 @@ class PublicationReader(codec.CatalogReader):
                 if kind == "record_routes":
                     codec.validate_record_routes(result["data"])
                 # Closed kind-specific schemas, including tokens and array counts.
-                from .publication_v2 import validators
+                from .publication_v2 import validate_envelope
 
                 if kind not in ("tokens", "strings", "shapes"):
-                    validators()["publication-v2.json"].evolve(
-                        schema={"$ref": "urn:infrastructure-impact:publication:2#/$defs/envelope"}
-                    ).validate(result)
+                    validate_envelope(result, kind)
             return result["data"]
         return result
 
