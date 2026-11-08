@@ -1,7 +1,6 @@
 """Pure assembly of current analytics, with explicitly retained audit evidence."""
 
 import copy
-import json
 
 from .evidence_identity import record_key
 
@@ -43,7 +42,7 @@ def validate_partition(data, *, require_targets=False):
         raise ValueError("Inconsistent current-evidence partition")
 
 
-def rebuild(data: dict, partition_result: dict, *, json_copy=False) -> dict:
+def rebuild(data: dict, partition_result: dict) -> dict:
     """Rebuild every current reducer from one partition; leave audit facts intact."""
     from .casefiles import casefiles
     from .cohort import coverage_from_checks
@@ -62,16 +61,15 @@ def rebuild(data: dict, partition_result: dict, *, json_copy=False) -> dict:
     from .scorecards import scorecards
     from .vendor_gaps import vendor_gaps
 
-    merged = {
-        **data,
-        **partition_result,
-        "research": {
-            k: v for k, v in data.get("research", {}).items() if k != "current_evidence_input"
-        },
-    }
-    # Public callers normalize and isolate both frames with one strict JSON copy;
-    # ordinary query callers retain deepcopy's Python types and isolation.
-    data = json.loads(json.dumps(merged, allow_nan=False)) if json_copy else copy.deepcopy(merged)
+    data = copy.deepcopy(
+        {
+            **data,
+            **partition_result,
+            "research": {
+                k: v for k, v in data.get("research", {}).items() if k != "current_evidence_input"
+            },
+        }
+    )
     records = data["records"]
     retained = data["retained_advisories"]
     for wrapper in retained:
