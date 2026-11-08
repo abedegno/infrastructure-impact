@@ -130,6 +130,7 @@ def validate_table_transports(catalog):
     if not isinstance(transports, dict):
         raise ValueError("table transports map")
     tables = {}
+    table_bytes = 0
     for kind in ("strings", "shapes"):
         rows = catalog.get(kind)
         if not isinstance(rows, list):
@@ -138,6 +139,7 @@ def validate_table_transports(catalog):
             if not isinstance(row, dict) or "part" not in row:
                 raise ValueError("table descriptor fields")
             part = validate_descriptor(row["part"])
+            table_bytes += part["bytes"]
             if part["path"] in tables and tables[part["path"]] != part:
                 raise ValueError("conflicting raw table descriptors")
             tables[part["path"]] = part
@@ -149,6 +151,8 @@ def validate_table_transports(catalog):
         if compressed["path"] in seen:
             raise ValueError("duplicate table transport path")
         seen.add(compressed["path"])
+    if transports and table_bytes > MAX_SELECTED:
+        raise ValueError("decoded byte budget")
     return transports
 
 

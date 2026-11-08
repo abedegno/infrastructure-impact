@@ -200,3 +200,27 @@ All nine JavaScript suites, source export, Ruff/format, Prettier, built-wheel
 /offline distribution and isolated installed v2 worker/monitor probes passed.
 The next cached full hosted certification remains the acceptance gate; these
 local results do not authorize source activation or accepted-state promotion.
+
+## Combined decoded-table bound and runtime portability
+
+Final review identified that compressed transfer must not become an unbounded
+aggregate decoded-table allocation. Nonempty transport maps now require the sum
+of every strings/shapes descriptor occurrence to fit the existing 128,000,000-byte
+selection ceiling, before any table fetch. Unmapped entries and repeated paths
+count too. Empty/absent maps retain legacy behavior. This bounds serialized table
+input, not exact process RSS. Boundary, combined-kind, partial-map and repeated
+entry cases failed before the fix and pass afterward.
+
+Linux CI 42534002069 also exposed a test portability issue: native gzip decoding
+correctly rejected concatenated overflow with `TypeError`, while the test expected
+only a library size/gzip error. The assertion now accepts that native rejection
+and explicitly verifies no raw fallback or invalid cache entry. Content/length
+checks are unchanged. Superseded hosted run 42534044246 was cancelled before
+spending more parity CPU; the reusable capture cache remains run 42530463587.
+The scoped fix re-review marked the aggregate issue addressed with no new
+important findings. The 49 focused tests and fresh installed v2 probes passed.
+The final guarded suite passed **3,889 tests and 12 subtests in 684.77 seconds**.
+Ruff/format, Prettier, scoped re-review, fresh offline distribution and installed
+v2 worker/standalone monitor checks passed. The read-only public-sample replay
+still checked 13,865,516 transferred bytes. Complete hosted certification and
+platform CI on this final revision remain required.

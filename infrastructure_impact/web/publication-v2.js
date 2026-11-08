@@ -294,8 +294,13 @@
     const transports = catalog.table_transports;
     if (!transports || typeof transports !== 'object' || Array.isArray(transports))
       fail('table transports');
+    let tableBytes = 0;
     const paths = new Set(
-        [...catalog.strings, ...catalog.shapes].map((entry) => descriptor(entry.part).path),
+        [...catalog.strings, ...catalog.shapes].map((entry) => {
+          const part = descriptor(entry.part);
+          tableBytes += part.bytes;
+          return part.path;
+        }),
       ),
       compressedPaths = new Set();
     for (const [path, transport] of Object.entries(transports)) {
@@ -304,6 +309,7 @@
       if (compressedPaths.has(transport.path)) fail('duplicate table transport');
       compressedPaths.add(transport.path);
     }
+    if (compressedPaths.size && tableBytes > 128000000) fail('table decoded byte budget');
     return transports;
   }
   function range(r) {

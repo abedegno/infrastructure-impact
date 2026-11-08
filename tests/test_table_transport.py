@@ -50,6 +50,54 @@ def test_map_accepts_legacy_empty_and_valid_table_subset():
     assert validate(catalog) == {decoded["path"]: compressed}
 
 
+def metadata_table_catalog(*, overflow=False, repeated=False, combined=False, partial=False):
+    """Advertise large tables using only small, valid descriptor metadata."""
+    parts = []
+    for index in range(16 + overflow):
+        part = descriptor(str(0 if repeated and index < 16 else index).encode())
+        part["bytes"] = 8_000_000 if index < 16 else 1
+        parts.append(part)
+    split = 8 if combined else len(parts)
+    catalog = {"strings": [], "shapes": [], "table_transports": {}}
+    for kind, group in (("strings", parts[:split]), ("shapes", parts[split:])):
+        catalog[kind] = [dict(part=part, first=index, count=1) for index, part in enumerate(group)]
+    for index, part in enumerate(parts[:1] if partial else parts):
+        if part["path"] not in catalog["table_transports"]:
+            catalog["table_transports"][part["path"]] = descriptor(
+                f"compressed {index}".encode(), compressed=True
+            )
+    return catalog
+
+
+@pytest.mark.parametrize("options", [{}, {"partial": True}, {"repeated": True}, {"combined": True}])
+def test_transport_map_rejects_combined_advertised_table_bytes_before_fetch(options):
+    catalog = metadata_table_catalog(overflow=True, **options)
+    with pytest.raises(ValueError, match="^decoded byte budget$"):
+        codec.validate_table_transports(catalog)
+    reads = []
+    with pytest.raises(ValueError, match="^decoded byte budget$"):
+        codec.CatalogReader(lambda *args, **kwargs: reads.append(args), catalog, {}, {})
+    assert reads == []
+
+
+@pytest.mark.parametrize("options", [{}, {"partial": True}, {"repeated": True}, {"combined": True}])
+def test_transport_map_accepts_exact_combined_advertised_table_byte_limit(options):
+    catalog = metadata_table_catalog(**options)
+    assert codec.validate_table_transports(catalog) == catalog["table_transports"]
+    codec.CatalogReader(None, catalog, {}, {})
+
+
+@pytest.mark.parametrize("absent", [False, True])
+def test_legacy_table_metadata_retains_existing_aggregate_behavior(absent):
+    catalog = metadata_table_catalog(overflow=True)
+    if absent:
+        catalog.pop("table_transports")
+    else:
+        catalog["table_transports"] = {}
+    assert codec.validate_table_transports(catalog) == {}
+    codec.CatalogReader(None, catalog, {}, {})
+
+
 @pytest.mark.parametrize(
     "fault",
     [

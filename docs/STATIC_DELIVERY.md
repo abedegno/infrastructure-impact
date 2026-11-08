@@ -100,9 +100,15 @@ paths to content-addressed `.json.gz` descriptors. The writer emits deterministi
 single-member gzip only when smaller, retaining the original raw assets. Readers
 verify encoded length/hash, bound expansion to the original part size, and verify
 decoded length/hash before the existing envelope, table, token and routing checks.
-Both representations remain limited to 8 MB per part. The default v2 monitor
-counts actual compressed transfer against its unchanged 32 MB ceiling; decoded
-and cache limits remain independent. V1 retains its 20 MB transfer ceiling.
+Both representations remain limited to 8 MB per part. A nonempty transport map
+also requires the combined advertised raw bytes of all strings and shapes parts
+to be at most 128,000,000 bytes, checked before any table fetch or parse. Every
+descriptor occurrence counts, including unmapped parts and repeated paths.
+Empty or absent maps retain the legacy behavior. This bounds advertised table
+bytes, not exact process memory; parsed tables and their indexes have overhead.
+The default v2 monitor counts actual compressed transfer against its unchanged
+32 MB ceiling; decoded and cache limits remain independent. V1 retains its 20 MB
+transfer ceiling.
 
 Older catalogs use raw parts. Browsers without `DecompressionStream` also use the
 verified raw assets; an invalid declared gzip response fails rather than silently

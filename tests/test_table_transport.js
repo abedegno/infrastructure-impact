@@ -77,6 +77,56 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
       return new Response(raw);
     };
   const api = context();
+  // Advertised table bytes are bounded at open, before fetching or parsing tables.
+  // These descriptors require no large allocation; repeated paths still count per row.
+  function metadataCatalog({
+    overflow = false,
+    repeated = false,
+    combined = false,
+    partial = false,
+  } = {}) {
+    const metadata = clone(catalog);
+    const parts = Array.from({ length: 16 + Number(overflow) }, (_, index) => ({
+      ...descriptor(Buffer.from(String(repeated && index < 16 ? 0 : index))),
+      bytes: index < 16 ? 8000000 : 1,
+    }));
+    const split = combined ? 8 : parts.length;
+    for (const [kind, group] of [
+      ['strings', parts.slice(0, split)],
+      ['shapes', parts.slice(split)],
+    ])
+      metadata[kind] = group.map((part, first) => ({ part, first, count: 1 }));
+    metadata.table_transports = {};
+    for (const [index, part] of (partial ? parts.slice(0, 1) : parts).entries())
+      if (!Object.hasOwn(metadata.table_transports, part.path))
+        metadata.table_transports[part.path] = descriptor(Buffer.from(`compressed ${index}`), true);
+    return metadata;
+  }
+  for (const options of [{}, { partial: true }, { repeated: true }, { combined: true }]) {
+    for (const implementation of [api, context(null)]) {
+      const reads = [];
+      await assert.rejects(
+        () =>
+          implementation.open(
+            fetcher(reads),
+            metadataCatalog({ ...options, overflow: true }),
+            identity,
+          ),
+        /table decoded byte budget/,
+      );
+      assert.deepStrictEqual(reads, [], 'aggregate table rejection precedes fetch');
+      await implementation.open(fetcher(reads), metadataCatalog(options), identity);
+      assert.deepStrictEqual(reads, [], 'exactly 128 MB of advertised tables may open');
+    }
+  }
+  for (const absent of [false, true]) {
+    const legacy = metadataCatalog({ overflow: true });
+    if (absent) delete legacy.table_transports;
+    else legacy.table_transports = {};
+    const reads = [];
+    await api.open(fetcher(reads), legacy, identity);
+    assert.deepStrictEqual(reads, [], 'legacy aggregate metadata behavior is retained');
+  }
   const reads = [];
   const reader = await api.open(fetcher(reads), catalog, identity);
   const tables = await reader.getTables();
@@ -208,13 +258,17 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
     );
   }
 
-  async function rejectTransport(name, gzip, expected, mutate = () => {}) {
+  async function rejectTransport(name, gzip, expected, mutate = () => {}, implementation = api) {
     const bad = clone(catalog);
     const transport = descriptor(gzip, true);
     bad.table_transports[first.path] = transport;
     mutate(bad, transport);
     const reads = [];
-    const reader = await api.open(fetcher(reads, new Map([[transport.path, gzip]])), bad, identity);
+    const reader = await implementation.open(
+      fetcher(reads, new Map([[transport.path, gzip]])),
+      bad,
+      identity,
+    );
     await assert.rejects(() => reader.getTables(), expected, name);
     assert(
       !reads.includes(first.path),
@@ -310,7 +364,24 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
   await rejectTransport(
     'concatenated overflow',
     Buffer.concat([assets.get(firstTransport.path), zlib.gzipSync('extra')]),
-    /size|gzip/,
+    // Native decoders may reject the additional member before our size check.
+    (error) => error.name === 'TypeError' || /size|gzip/.test(error.message),
+  );
+  class RejectedDecoder {
+    constructor() {
+      return new TransformStream({
+        transform() {
+          throw new TypeError('native decompression rejected');
+        },
+      });
+    }
+  }
+  await rejectTransport(
+    'native decoder rejection',
+    assets.get(firstTransport.path),
+    (error) => error instanceof TypeError && error.message === 'native decompression rejected',
+    undefined,
+    context(RejectedDecoder),
   );
 
   const unavailableReads = [];

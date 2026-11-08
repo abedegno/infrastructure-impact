@@ -33,8 +33,13 @@ Export stdlib codec helpers `validate_table_transports(catalog)` and
 validated optional map; the latter checks encoded length/hash, bounded gzip
 expansion (decoded.bytes + one overflow sentinel), exact decoded length/hash.
 Malformed/truncated gzip and overflow fail closed. Both descriptors remain bounded
-by 8 MB. Physical inspection verifies every declared compressed part against its
-original and rejects unbound gzip assets.
+by 8 MB. A nonempty validated transport map also caps the combined advertised raw
+strings and shapes table bytes at the existing 128,000,000-byte selected limit,
+before any table fetch or parse. Count every descriptor occurrence, including
+unmapped raw parts and repeated paths. Empty/absent maps retain legacy behavior.
+This is an advertised-byte bound, not an exact RSS ceiling for retained tables
+and their indexes. Physical inspection verifies every declared compressed part
+against its original and rejects unbound gzip assets.
 
 The standalone monitor uses declared transport when fetching tables, binds both
 descriptors to manifest hashes, counts compressed bytes against unchanged network
