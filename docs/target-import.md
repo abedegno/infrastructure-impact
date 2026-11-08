@@ -89,6 +89,10 @@ validated public subtree is suitable for the existing publication process.
 
 ## Opt-in local publication v2
 
+See the [retained-data runtime and paging checks](research/2026-11-08-runtime-and-paging-verification.md)
+for the measured query improvements and optional indexed source/diagnostic pages.
+Existing publications remain readable through the fallback path.
+
 Local `snapshot` and `target-import stage` accept `--publication-format v2`.
 The default remains `v1`; there is no environment setting or hosted activation
 for this option. Use the same preview, ownership and stage arguments above and
