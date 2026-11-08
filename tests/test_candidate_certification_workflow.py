@@ -1,4 +1,4 @@
-"""Read-only certification boundaries; all executed evidence and keys are synthetic."""
+"""Non-publishing certification boundaries; all executed evidence and keys are synthetic."""
 
 import json
 import os
@@ -37,16 +37,17 @@ def execute(name, tmp_path, **extra):
     )
 
 
-def test_template_is_manual_read_only():
+def test_template_is_manual_non_publishing_with_explicit_draft_read_credential():
     text = TEMPLATE.read_text()
     assert TEMPLATE.parent == ROOT / "deploy"
     assert "  workflow_dispatch:" in text
-    assert "  contents: read\n  actions: read" in text
+    assert "  contents: write\n  actions: read" in text
     assert "timeout-minutes: 60" in text
     for forbidden in (
         "schedule:",
         "cron:",
-        "contents: write",
+        "pages: write",
+        "id-token: write",
         "git push",
         "git commit",
         "collect_once",
@@ -62,6 +63,11 @@ def test_template_is_manual_read_only():
     assert text.index("name: Validate manual inputs") < text.index("uses: actions/checkout")
     assert text.index("name: Validate manual inputs") < text.index("secrets.")
     assert text.count("persist-credentials: false") == 2
+    blocks = re.split(r"^      - ", text, flags=re.M)
+    stage = next(b for b in blocks if b.startswith("name: Stage disposable full candidate\n"))
+    assert "GH_TOKEN" not in stage and "IMPACT_STATE_KEY" not in stage
+    capture = next(b for b in blocks if b.startswith("name: Checkpoint private captures\n"))
+    assert "GH_TOKEN" not in capture
     for action in re.findall(r"uses: (\S+)", text):
         assert re.fullmatch(r"actions/[a-z-]+@[a-f0-9]{40}", action)
     assert "ref: ${{ inputs.source_commit }}" in text

@@ -1,4 +1,4 @@
-# Canonical read-only certification workflow; keep the installed copy identical.
+# Canonical non-publishing certification workflow; keep the installed copy identical.
 # Certifies a disposable full hosted candidate; never promotes accepted recovery.
 name: Certify full hosted candidate
 on:
@@ -13,7 +13,7 @@ on:
         required: false
         type: string
 permissions:
-  contents: read
+  contents: write
   actions: read
 jobs:
   certify:
