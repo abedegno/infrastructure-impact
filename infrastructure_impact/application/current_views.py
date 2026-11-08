@@ -62,16 +62,16 @@ def rebuild(data: dict, partition_result: dict, *, json_copy=False) -> dict:
     from .scorecards import scorecards
     from .vendor_gaps import vendor_gaps
 
-    merged = {
-        **data,
-        **partition_result,
-        "research": {
-            k: v for k, v in data.get("research", {}).items() if k != "current_evidence_input"
-        },
-    }
-    # Public callers normalize and isolate both frames with one strict JSON copy;
-    # ordinary query callers retain deepcopy's Python types and isolation.
-    data = json.loads(json.dumps(merged, allow_nan=False)) if json_copy else copy.deepcopy(merged)
+    research = {k: v for k, v in data.get("research", {}).items() if k != "current_evidence_input"}
+    if json_copy:
+        # Validate even caller fields replaced by the computed partition. Copy
+        # both frames together so their nested values remain isolated as well.
+        data, partition_result = json.loads(
+            json.dumps([{**data, "research": research}, partition_result], allow_nan=False)
+        )
+        data = {**data, **partition_result, "research": data["research"]}
+    else:
+        data = copy.deepcopy({**data, **partition_result, "research": research})
     records = data["records"]
     retained = data["retained_advisories"]
     for wrapper in retained:
