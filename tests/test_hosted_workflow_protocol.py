@@ -385,3 +385,25 @@ def test_legacy_preflight_accepts_supported_replay_backend_and_capacity_controls
     assert result.returncode == 0, result.stderr
     assert effect_values(Path(env["GITHUB_OUTPUT"])) == {"protocol": "legacy-ordinary-v0"}
     assert not Path(env["TEST_INVOKED"]).exists()
+
+
+@pytest.mark.parametrize("downstream", ["push", "deploy"])
+def test_completed_target_import_does_not_claim_cross_system_rollback(downstream):
+    # Both rejection points follow local recovery promotion. Existing workflow
+    # gates retain that verified recovery while withholding a failed deployment.
+    effects = {"mode": "apply", "recovery_ready": "true", "publish_ready": "true"}
+    cleanup = next(
+        s for s in workflow_steps() if s.get("name") == "Retain only encrypted recovery copies"
+    )
+    # Execute a rejected test-local downstream action. Neither action has any
+    # recovery rollback authorization; its failed exit only changes later gates.
+    rejected = subprocess.run(
+        [sys.executable, "-c", "import sys; sys.exit(1)", downstream],
+        capture_output=True,
+    )
+    assert rejected.returncode == 1
+    assert gate(cleanup, effects, success=False, hosted_outcome="success")
+    assert all(
+        not gate(s, effects, success=rejected.returncode == 0, hosted_outcome="success")
+        for s in publication_steps()
+    )

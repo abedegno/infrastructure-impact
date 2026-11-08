@@ -462,3 +462,16 @@ class WorkflowPolicy(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_repository_default_connection_uses_current_explicit_configuration(tmp_path, monkeypatch):
+    """Removing import-time defaults must preserve connect()'s call-time lookup."""
+    for name in ("first.sqlite3", "second.sqlite3"):
+        database = tmp_path / name
+        monkeypatch.setenv("IMPACT_DATABASE", str(database))
+        db = connect()
+        try:
+            assert Path(db.execute("PRAGMA database_list").fetchone()[2]) == database
+            assert db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0] == 0
+        finally:
+            db.close()

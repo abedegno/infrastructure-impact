@@ -12,7 +12,6 @@ from ..plugins.registry import default_registry
 from ..settings import Paths
 from .migrations import migrate
 
-DB = Paths.from_env().database
 VENDORS = default_registry().names()
 
 

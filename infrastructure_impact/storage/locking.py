@@ -2,13 +2,14 @@
 
 import fcntl
 from contextlib import contextmanager
+from pathlib import Path
 
 from ..settings import Paths
 
 
 @contextmanager
-def writer_lock():
-    path = Paths.from_env().home / "data/collector.lock"
+def writer_lock(*, home: Path | None = None):
+    path = (Paths.from_env().home if home is None else Path(home)) / "data/collector.lock"
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a") as handle:
         try:

@@ -39,3 +39,10 @@ vendor source evidence. It is maintained directly and fingerprinted by the fixtu
 manifest generator. Real source-led review expectations are metadata in the separate
 switching-extraction-review resource; synthetic CI results never count as passes
 for those retained primary-source cases.
+
+`target-import-candidate.json` contains minimal project-authored Cisco CSAF and
+Aruba bulletin strings for exact-import stage and installed-wheel checks. Advisory
+route shapes and literal parser markers exercise dispatch; all vulnerability,
+version, timestamp and applicability content is synthetic. It is maintained
+directly and preserved/fingerprinted by the generator. It contains no retained
+vendor capture and does not certify real-source acquisition or hosted acceptance.

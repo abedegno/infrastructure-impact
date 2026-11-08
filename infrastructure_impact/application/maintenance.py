@@ -109,64 +109,12 @@ def preview(database: Path, profile_id: str) -> dict:
     WAL or rollback-journal data requires an operator-provided consistent backup.
     Never checkpoint a live input or open it with SQLite just to preview it.
     """
-    import os
-    import shutil
-    from tempfile import TemporaryDirectory
+    from ..storage.checkpoint_copy import stable_checkpoint
 
     selected = registered_profile(profile_id)  # Validate before opening any database.
-    supplied = Path(database)
-    source = supplied.resolve(strict=True)
-    if not source.is_file():
-        raise ValueError("maintenance_input_missing")
-
-    def identity(path):
-        try:
-            st = path.stat()
-        except FileNotFoundError:
-            return None
-        return (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
-
-    def state():
-        return (
-            identity(source),
-            identity(Path(str(source) + "-wal")),
-            identity(Path(str(source) + "-journal")),
-        )
-
-    before = state()
-    if before[0] is None:
-        raise ValueError("maintenance_input_missing")
-    if any(journal is not None and journal[2] for journal in before[1:]):
-        raise ValueError("maintenance_checkpoint_required")
-    # One bounded streaming copy attempt. Stat comparisons detect ordinary
-    # concurrent changes; this is not authentication against a hostile writer.
-    with TemporaryDirectory(prefix="impact-maintenance-preview-") as directory:
-        copy = Path(directory) / "checkpoint.sqlite"
-        with source.open("rb") as incoming, copy.open("xb") as outgoing:
-            opened = os.fstat(incoming.fileno())
-            if (
-                opened.st_dev,
-                opened.st_ino,
-                opened.st_size,
-                opened.st_mtime_ns,
-                opened.st_ctime_ns,
-            ) != before[0]:
-                raise MaintenanceBaselineChanged("maintenance_baseline_changed")
-            shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
-            after_read = os.fstat(incoming.fileno())
-        if (
-            state() != before
-            or supplied.resolve(strict=True) != source
-            or (
-                after_read.st_dev,
-                after_read.st_ino,
-                after_read.st_size,
-                after_read.st_mtime_ns,
-                after_read.st_ctime_ns,
-            )
-            != before[0]
-        ):
-            raise MaintenanceBaselineChanged("maintenance_baseline_changed")
+    with stable_checkpoint(
+        database, error_prefix="maintenance", changed_error=MaintenanceBaselineChanged
+    ) as copy:
         with closing(connect(copy, read_only=True)) as db:
             db.execute("BEGIN")
             receipt = _preview(db, selected)

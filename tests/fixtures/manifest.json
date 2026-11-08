@@ -128,5 +128,10 @@
     "file": "switching-cases.json",
     "kind": "synthetic",
     "sha256": "d7771f4629f0e96ab389fd55f7de60f665f050f1801f4f481ca1a0ae6c571c26"
+  },
+  {
+    "file": "target-import-candidate.json",
+    "kind": "synthetic",
+    "sha256": "14d58255c8f1749b896b378b60c528b81094ae4ee5c4028cb369a9ad3244512c"
   }
 ]

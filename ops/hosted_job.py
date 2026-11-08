@@ -560,13 +560,21 @@ def main():
     )
     args = parser.parse_args()
     selected = None
+    kind = None
     if args.maintenance_profile:
-        from infrastructure_impact.collection.maintenance_profiles import profile
+        from infrastructure_impact.collection.maintenance_operations import resolve_profile
 
         try:
-            selected = profile(args.maintenance_profile)
+            kind, selected = resolve_profile(args.maintenance_profile)
         except ValueError as error:
             parser.error(str(error))
+        if kind == "target-import":
+            from infrastructure_impact.application.target_import_contracts import validate_base_path
+
+            try:
+                validate_base_path(args.base_path)
+            except ValueError as error:
+                parser.error(str(error))
         if not args.maintenance_mode:
             parser.error("A named profile requires an explicit maintenance mode")
         if (
@@ -645,7 +653,7 @@ def main():
         parser.error("Private state and public output must be separate directory trees")
     workflow_effect("mode", args.maintenance_mode or "ordinary")
     with tempfile.TemporaryDirectory(prefix="impact-writer-") as directory:
-        home = Path(directory)
+        home = Path(directory).resolve()
         database = home / "data/intel.sqlite3"
         restored = restore_current(
             state, database, encryption_key, store=store, vault_limit_bytes=limit
@@ -653,9 +661,18 @@ def main():
         if selected and not restored:
             raise RuntimeError("Targeted maintenance requires an existing recovery checkpoint")
         if args.maintenance_mode == "preview":
-            from infrastructure_impact.application.maintenance import preview, preview_bytes
+            if kind == "target-import":
+                from infrastructure_impact.application.target_import import preview
+                from infrastructure_impact.application.target_import_contracts import preview_bytes
+            else:
+                from infrastructure_impact.application.maintenance import preview, preview_bytes
 
-            raw = preview_bytes(preview(database, selected.profile_id))
+            value = preview(database, selected.profile_id)
+            raw = (
+                preview_bytes(value, selected=selected)
+                if kind == "target-import"
+                else preview_bytes(value)
+            )
             output.mkdir(parents=True, exist_ok=False)
             (output / "maintenance-preview.json").write_bytes(raw)
             workflow_effect("preview_ready")
@@ -669,6 +686,11 @@ def main():
                     }
                 )
             )
+            return
+        if kind == "target-import":
+            from ops.target_import_job import apply
+
+            apply(args, selected, state, output, home, database, encryption_key, store, limit)
             return
         os.environ.update(
             IMPACT_HOME=str(home),

@@ -4,6 +4,7 @@ COPY requirements-build.lock ./
 RUN pip install --no-cache-dir --require-hashes -r requirements-build.lock
 COPY pyproject.toml README.md LICENSE NOTICE THIRD_PARTY.md ./
 COPY infrastructure_impact ./infrastructure_impact
+COPY checks/public_health.py checks/switching_health.py ./checks/
 RUN python -m build --wheel --no-isolation
 
 FROM python:3.15-slim

@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import tempfile
+from contextlib import closing
 from importlib.metadata import version
 from pathlib import Path
 from unittest.mock import patch
@@ -51,6 +52,20 @@ def main():
         os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
     ).items():
         assert hashlib.sha256((package / name).read_bytes()).hexdigest() == digest, name
+    # Exact import remains an installed-ID-only operator CLI, with closed schemas.
+    from infrastructure_impact.application.target_import_contracts import preview_bytes
+    from infrastructure_impact.collection.target_import_profiles import PROFILE_ID, profile
+
+    selected = profile(PROFILE_ID)
+    assert len(selected.targets) == 174
+    assert selected.metadata() == json.loads(
+        (package / "resources/target-imports" / (PROFILE_ID + ".json")).read_bytes()
+    )
+    assert {t.vendor for t in selected.targets} == {"aruba", "cisco"}
+    assert all(
+        (package / "schemas" / ("target-import-" + name + "-v1.json")).is_file()
+        for name in ("manifest", "preview", "result")
+    )
     # Unreleased local reconciliation commands/resources work without checkout imports.
     from infrastructure_impact.cli import main as cli_main
     from infrastructure_impact.reconciliation.report import ReportError, validate_report
@@ -64,7 +79,7 @@ def main():
     else:
         raise AssertionError("Installed report schema accepted an invalid report")
     with tempfile.TemporaryDirectory() as probe_directory:
-        probe = Path(probe_directory)
+        probe = Path(probe_directory).resolve()
         for command in ("verify", "scan", "baseline", "report"):
             try:
                 cli_main(["cve-reconcile", command, "--help"])
@@ -73,8 +88,8 @@ def main():
         config = probe / "config.json"
         config.write_text('{"vendors": []}')
         database = probe / "vault.sqlite3"
-        with connect(database):
-            pass
+        with closing(connect(database)) as probe_db:
+            probe_db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         cli_main(
             [
                 "cve-reconcile",
@@ -87,9 +102,33 @@ def main():
                 str(probe / "baseline.json"),
             ]
         )
+        for command in ("preview", "stage"):
+            try:
+                cli_main(["target-import", command, "--help"])
+            except SystemExit as error:
+                assert error.code == 0
+        target_preview = probe / "target-preview.json"
+        assert (
+            cli_main(
+                [
+                    "target-import",
+                    "preview",
+                    "--database",
+                    str(database),
+                    "--profile",
+                    PROFILE_ID,
+                    "--output",
+                    str(target_preview),
+                ]
+            )
+            == 0
+        )
+        assert preview_bytes(json.loads(target_preview.read_bytes())) == target_preview.read_bytes()
         from infrastructure_impact.reconciliation.baseline import load_baseline
 
         assert load_baseline(probe / "baseline.json")["revisions"] == []
+    for base_path in ("/", "/infrastructure-impact/"):
+        target_import_candidate_probe(base_path=base_path)
     configured = json.loads((package / "resources/sources.json").read_text())
     assert next(s for s in configured["reference_sources"] if s["source_id"] == "cisa-kev") == {
         "source_id": "cisa-kev",
@@ -111,8 +150,8 @@ def main():
 
     with tempfile.TemporaryDirectory() as directory:
         database = Path(directory) / "operator.sqlite3"
-        with connect(database):
-            pass
+        with closing(connect(database)) as probe_db:
+            probe_db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         before = database.read_bytes()
         with connect(database, read_only=True) as operator:
             inventory = coverage_report(operator, {"vendors": []}, vendor="acme")
@@ -467,6 +506,148 @@ def main():
             }
         )
     )
+
+
+def target_import_candidate_probe(*, base_path="/"):
+    """Run the real worker from the isolated wheel using authored source bytes only."""
+    import sqlite3
+    import sys
+    from contextlib import closing
+
+    from infrastructure_impact.adapters.common import assessment, base
+    from infrastructure_impact.application import target_import, target_import_stage
+    from infrastructure_impact.application.import_candidate import _monitor_path
+    from infrastructure_impact.collection.target_import_profiles import (
+        TargetImportProfile,
+        TargetImportTarget,
+    )
+    from infrastructure_impact.settings import PACKAGE
+
+    assert _monitor_path() == PACKAGE / "_standalone/public_health.py"
+    assert not any(Path(p).name == "checks" for p in sys.path)
+    raw = {k: v.encode() for k, v in json.loads(os.environ["IMPACT_TARGET_IMPORT_PROBE"]).items()}
+    urls = {
+        "aruba": "https://csaf.arubanetworking.hpe.com/2021/hpe_aruba_networking_-_2021-013.txt",
+        "cisco": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fast-Zqr6DD5/csaf/cisco-sa-fast-Zqr6DD5.json",
+    }
+    targets = []
+    for vendor, url in urls.items():
+        normalized = default_registry().normalize(raw[vendor], url, vendor)
+        targets.append(
+            TargetImportTarget(
+                vendor,
+                normalized["advisory_id"],
+                url,
+                url.split("/csaf/")[0],
+                hashlib.sha256(raw[vendor]).hexdigest(),
+                tuple(sorted(normalized["cves"])),
+                "2026-11-06T12:00:00Z",
+                "2026-11-06T12:00:00Z",
+            )
+        )
+    selected = TargetImportProfile("synthetic-wheel-v1", "1", tuple(targets), 2)
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary).resolve()
+        home = root / "source"
+        database = home / "data/intel.sqlite3"
+        record = base(
+            "juniper",
+            "https://www.juniper.net/synthetic/retained",
+            "RETAINED",
+            "Authored baseline",
+            "2025-01-01T00:00:00Z",
+        )
+        record["cves"] = ["CVE-2024-6387"]
+        record["assessments"] = [assessment("CVE-2024-6387", "Junos OS", "affected", "Synthetic")]
+        with closing(connect(database)) as db:
+            ingest(db, b"authored baseline", record["source_url"], lambda *a: record, "juniper")
+        before = database.read_bytes()
+        with patch.object(target_import, "registered_profile", return_value=selected):
+            accepted = target_import.preview(database, selected.profile_id)
+        # Supplying authored bodies is the sole acquisition substitute. No external HTTP.
+        with (
+            patch.object(
+                target_import_stage.transport,
+                "fetch",
+                side_effect=lambda db, url, vendor, **kw: raw[vendor],
+            ),
+            patch.dict(
+                os.environ,
+                {
+                    "PATH": str(root / "no-node"),
+                    "IMPACT_SOURCES": str(root / "HOSTILE"),
+                    "IMPACT_BASE_PATH": "https://hostile.invalid/",
+                },
+            ),
+        ):
+            result = target_import_stage.stage(
+                database,
+                selected,
+                accepted["fingerprint"],
+                root / "stage",
+                lock_home=home,
+                accepted_preview=accepted,
+                base_path=base_path,
+            )
+        assert result["outcome"] == "completed", result
+        assert result["candidate"]["archive_monitor_passed"] is True
+        assert 'src="' + base_path + "assets/" in (root / "stage/public/index.html").read_text()
+        published = json.loads((root / "stage/public/snapshot.json").read_bytes())
+        run = published["collector"]["last_run"]
+        details = json.loads(run["details"])
+        assert (run["outcome"], run["imported"], run["failures"]) == ("ok", 2, 0)
+        assert details["scope"] == "exact_target_ingestion"
+        assert details["unchanged"] == 0 and details["profile_id"] == selected.profile_id
+        assert set(details["acquisition"].values()) == {"not_run"}
+        assert database.read_bytes() == before
+        missing_monitor_probe(root)
+        with closing(sqlite3.connect(root / "stage/private/data/intel.sqlite3")) as db:
+            assert db.execute("SELECT COUNT(*) FROM revisions").fetchone()[0] == 3
+
+
+def missing_monitor_probe(root):
+    """A disposable installed-package copy missing either companion must fail closed."""
+    import shutil
+    import subprocess
+    import sys
+
+    from infrastructure_impact.settings import PACKAGE
+
+    for missing in ("public_health.py", "switching_health.py"):
+        isolated = root / ("broken-" + missing)
+        package = isolated / "infrastructure_impact"
+        shutil.copytree(PACKAGE, package, ignore=shutil.ignore_patterns("__pycache__"))
+        (package / "_standalone" / missing).unlink()
+        stage = isolated / "stage"
+        home = stage / "private/home"
+        home.mkdir(parents=True)
+        database = stage / "private/data/intel.sqlite3"
+        database.parent.mkdir()
+        shutil.copyfile(root / "stage/private/data/intel.sqlite3", database)
+        for name in ("target-import-context.json", "target-import-request.json"):
+            shutil.copyfile(root / "stage/private/home" / name, home / name)
+        # Test-only bootstrapping selects this disposable incomplete wheel layout.
+        code = "import sys;sys.path.insert(0,sys.argv.pop(1));sys.argv=sys.argv[1:];from infrastructure_impact.application.import_candidate import main;main()"
+        subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                "-c",
+                code,
+                str(isolated),
+                "probe",
+                "--worker",
+                str(database),
+                str(stage / "public"),
+            ],
+            cwd=isolated,
+            check=True,
+            capture_output=True,
+        )
+        failure = json.loads((home / "target-import-verification.json").read_bytes())
+        assert failure["candidate"]["outcome"] == "monitor_unavailable", failure
+        assert failure["candidate_validated"] is False
+        assert not (stage / "public").exists()
 
 
 if __name__ == "__main__":
