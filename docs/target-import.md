@@ -209,15 +209,18 @@ a 32 MB default-download safety ceiling; v1 retains 20 MB. This download budget
 is separate from GitHub Pages' site-size limit. Further compression is deferred
 once the complete candidate fits, so import correctness and coverage take priority.
 
-## Inactive full hosted certification template
+## Manual full hosted certification
 
-`deploy/github-candidate-certification.yaml` is an **inactive template**, outside
-`.github/workflows`. No workflow has been installed or dispatched by adding it.
-After separate user approval to install and run this read-only check:
+The maintainer approved installation and a read-only certification run on
+8 November 2026. `.github/workflows/candidate-certification.yaml` is the manual
+workflow; keep it byte-identical to the canonical copy at
+`deploy/github-candidate-certification.yaml`. It has no schedule and does not
+publish or promote a candidate. It inherits the existing recovery vault profile
+(`IMPACT_VAULT_PROFILE`, currently `large`) rather than using a different restore
+limit. To run the approved check:
 
-1. Review the proposed source commit and the template, then copy the template to
-   `.github/workflows/candidate-certification.yaml` on the repository's default
-   branch. Keep its `contents: read` and `actions: read` permissions. The existing
+1. Review the proposed source commit and installed workflow. Keep its
+   `contents: read` and `actions: read` permissions. The existing
    `IMPACT_STATE_KEY` secret and `publication-state` accepted pointer must be
    available; the job's read token downloads the GitHub draft recovery archive.
 2. In Actions, select **Certify full hosted candidate**, then **Run workflow**.

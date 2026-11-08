@@ -1,4 +1,4 @@
-"""Inactive certification boundaries; all executed evidence and keys are synthetic."""
+"""Read-only certification boundaries; all executed evidence and keys are synthetic."""
 
 import json
 import os
@@ -37,9 +37,9 @@ def execute(name, tmp_path, **extra):
     )
 
 
-def test_template_is_manual_read_only_and_inactive():
+def test_template_is_manual_read_only():
     text = TEMPLATE.read_text()
-    assert not (ROOT / ".github/workflows" / TEMPLATE.name).exists()
+    assert TEMPLATE.parent == ROOT / "deploy"
     assert "  workflow_dispatch:" in text
     assert "  contents: read\n  actions: read" in text
     assert "timeout-minutes: 60" in text
@@ -83,6 +83,14 @@ def test_template_is_manual_read_only_and_inactive():
             "${{ runner.temp }}/certification-captures",
             "${{ runner.temp }}/certification-result/result.json",
         )
+
+
+def test_installed_certification_matches_template_and_existing_vault_profile():
+    installed = ROOT / ".github/workflows/candidate-certification.yaml"
+    assert installed.read_bytes() == TEMPLATE.read_bytes()
+    text = TEMPLATE.read_text()
+    assert "VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}" in text
+    assert '--vault-profile "$VAULT_PROFILE"' in script("Restore accepted baseline privately")
 
 
 @pytest.mark.parametrize(

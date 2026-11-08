@@ -1,4 +1,4 @@
-# INACTIVE TEMPLATE: installation and dispatch require separate approval.
+# Canonical read-only certification workflow; keep the installed copy identical.
 # Certifies a disposable full hosted candidate; never promotes accepted recovery.
 name: Certify full hosted candidate
 on:
@@ -51,12 +51,14 @@ jobs:
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
           GH_TOKEN: ${{ github.token }}
+          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
         run: |
           set -euo pipefail
           umask 077
           uv run --no-sync python ops/hosted_job.py \
             --state-dir "$GITHUB_WORKSPACE/accepted/state" --encrypted-state \
             --recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY" \
+            --vault-profile "$VAULT_PROFILE" \
             --restore-only "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
             > "$RUNNER_TEMP/restore-result.json" 2> "$RUNNER_TEMP/restore-stderr"
       - name: Download prior encrypted captures
