@@ -43,9 +43,15 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
                 lock_home=home,
                 accepted_preview=accepted,
                 base_path=args.base_path,
+                **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
             )
             step = "receipt_validation"
-            validated = json.loads(result_bytes(result, selected=selected))
+            validated = json.loads(
+                result_bytes(
+                    result, selected=selected,
+                    **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
+                )
+            )
             if validated["fingerprint"] != accepted["fingerprint"]:
                 raise ValueError("invalid_target_import_result_binding")
             receipt = validated
