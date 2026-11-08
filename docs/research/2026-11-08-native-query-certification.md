@@ -81,3 +81,46 @@ The hosted retry should use the encrypted captures retained by run
 against each pinned target and normalized by current code; capture time must
 not be rewritten as a fresh HTTP check. No live runtime source pin, collection
 schedule, workflow permission or public promotion is changed by this patch.
+
+## Full hosted retry: still rejected
+
+[Run 42510212446](https://github.com/abedegno/infrastructure-impact/actions/runs/42510212446)
+used source `9794ea510786baf4e46295b55e10b079579b8988` and authenticated the previous
+capture checkpoint. It imported all 174 targets with **zero HTTP attempts and
+zero received bytes**, replaying 32,176,699 input bytes. This verifies runner-side
+capture reuse; no actual capture archive or key was downloaded locally.
+
+The candidate did **not** pass. The worker hit its unchanged 2,400-second timeout
+at 2,400.32 seconds. Its last started phase was `publication.native_queries`.
+Because the process was terminated before returning its result, the parent
+receipt reports audit/capacity/candidate checks as unknown, not passed.
+
+| Completed phase | Wall seconds |
+| --- | ---: |
+| First query | 98.25 |
+| First projection | 379.54 |
+| Writing | 644.46 |
+| Inspection | 19.36 |
+| Independent query | 98.66 |
+| Independent projection | 384.30 |
+| Native root verification | 666.95 |
+
+These completed phases alone took approximately 2,291.5 seconds; query comparison
+and standalone monitors cannot be assumed to fit the remaining budget. Peak
+resident memory reached 5,764,694,016 bytes. Phase CPU closely tracked wall time.
+This runner was slower on several unchanged phases than the earlier runner, so
+cross-run wall times do not isolate the codec change's overall effect.
+
+The public-sample improvement remains demonstrated, but it does **not** resolve
+the full hosted pipeline's runtime. The new run's proven failure is the outer
+worker timeout; it does not establish the earlier run's hidden exception.
+The closed codes will be useful for caught phase errors, while timeout
+classification comes from the supervising parent.
+
+PR #44 must remain unmerged pending the wider runtime work. Do not activate its
+source, raise limits, weaken validation or repeat an unchanged certification.
+The next engineering target is the measured repeated query/projection work and
+complete-root traversal, with representative CPU/memory measurements and all
+existing semantic, type, provenance and native/static checks preserved. A shared
+immutable projection or shared-fact representation needs a concrete design and
+mutation tests before replacing independent recomputation.
