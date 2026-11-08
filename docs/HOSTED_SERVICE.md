@@ -32,6 +32,24 @@ reader's query-string REST routes. Use Compose on a persistent host for a live R
 query service. Neither public deployment exposes plaintext source bytes, the vault
 or private review notes.
 
+## Publication format selection
+
+The hosted helper accepts `--publication-format v1|v2`, defaulting to `v1`.
+`IMPACT_PUBLICATION_FORMAT` selects that format in the workflow; unset retains
+v1 and omits the new flag for compatibility with older reviewed source pins.
+V2 requires the pinned helper's explicit format capability declaration, checked
+before recovery credentials are supplied. The setting applies to ordinary
+collection, named maintenance and exact-target apply. Preview retains its
+existing format-independent binding and does not publish.
+
+V2 serves a catalog of bounded parts and a complete `snapshot-v2.json.gz` archive.
+The full research roots remain available through streaming export, while browser
+downloads are selected summaries. See [target imports](target-import.md#opt-in-local-publication-v2)
+for the representation and [the rollout proposal](rollouts/2026-11-08-hosted-publication-v2-proposal.md)
+for activation and recovery. This support is prepared, with no hosted format or
+source-pin activation performed. Activation remains a separate maintainer decision;
+a successful local sample does not certify the complete hosted inventory.
+
 ## Encrypted backups and recovery
 
 The `publication-state` branch stores a recovery manifest and legacy encrypted
