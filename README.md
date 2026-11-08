@@ -146,6 +146,9 @@ budgets. Local publication v2 is opt-in: it uses bounded parts and a self-contai
 snapshot archive, while full research inputs remain separate mandatory logical
 roots. Study JSON downloads are summaries; the local streaming export command
 retrieves complete roots. See [target import and v2 export](docs/target-import.md).
+The [174-document local retained replay](docs/research/2026-11-08-runtime-and-paging-verification.md#accepted-local-retained-replay)
+passed audit, capacity, native parity and both HTTP monitors; hosted activation
+remains a separate step.
 Hosted publication remains on the existing format unless separately activated.
 
 The supported topology is one writer with SQLite/WAL and one or more readers on

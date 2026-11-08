@@ -1,0 +1,101 @@
+{
+  "format": "infrastructure-impact-retained-replay-proof",
+  "schema_version": 1,
+  "scope": "public-only offline retained replay; local acceptance",
+  "software": {
+    "commit": "ca27f6c723ef6848bc1cb5e3bc1c067424e50228",
+    "wheel_sha256": "e74e6df134809a33fc5b9dc9697cd2e0caeb56a87c6bc254a6144501aff8c919",
+    "source_package_files": 264,
+    "input_sha256": "a400c2268285ec69122ddcbf34494af321cd6135df68b0f5cb24a423a6cf3dca",
+    "proposal_sha256": "45a3b4bb2494d7620d6f469eb9d9691296b0db3ecff43dd542d61763eb0f0566",
+    "query_before_after_public_parity": {
+      "public_json_sha256": "73235d962d585d2bcbf66c879db31e7cf57334879371d6f72125540c34e46444",
+      "private_context_equality": true
+    },
+    "targeted_native_detail_cases": 6,
+    "targeted_browser_detail_cases": 6,
+    "source_acquisition": "not_performed_offline",
+    "targeted_python_tests": 195
+  },
+  "profile_id": "campus-switching-public-gap-2026-11-07-v1",
+  "baseline_fingerprint": "a92a6f0ae7d00e26f812a0108384d5e64230dd7f00c51c0c7da8bbf61bfa6e3f",
+  "fingerprint": "41a21e7bfef79f3b2e4181ae4f8e1b9355ee667ed0d16e553180921db09ea2bd",
+  "source_config_fingerprint": "0c4f379ab4c7013d2d6c066f6c2e98e596dea02833636fc9768bf925eeeceb62",
+  "normalizer_fingerprints": {
+    "aruba": "325f186810f36cfe",
+    "cisco": "6fd7afe89ce23278"
+  },
+  "source_unchanged": true,
+  "all_existing_rows_preserved": true,
+  "capture_dates_preserved": 174,
+  "targets_replayed": 174,
+  "counters": {
+    "http_attempts": 0,
+    "received_bytes": 0,
+    "input_bytes": 32176699,
+    "imported": 174,
+    "unchanged": 0
+  },
+  "checks": {
+    "audit_passed": true,
+    "candidate_validated": true,
+    "capacity_passed": true
+  },
+  "candidate": {
+    "outcome": "passed",
+    "archive_scope": "snapshot-v1",
+    "representation": "publication-v2-physical",
+    "generation": "bc5e22934d8b432b9e90b6b96fcacd3f",
+    "manifest_sha256": "86db851af528e11cbd75a3d065318d737da4fe800a595fc112741c06b5eec51b",
+    "public_bytes": 464855421,
+    "expanded_bytes": 39411181,
+    "compressed_bytes": 5037754,
+    "default_checked_bytes": 28392214,
+    "default_monitor_passed": true,
+    "archive_monitor_passed": true,
+    "parity_passed": true
+  },
+  "worker_wall_seconds_from_receipt_files": 1453.14,
+  "result_sha256": "2df99048678d0fbaf79d0017ac6096c7888f703965e7317e856d9d8807a6b590",
+  "capture_proof_sha256": "ed978a34bad8e34a1a84d602a25659d160841fb68162981a1d8d8d76fc0c12e0",
+  "target_publications_by_year": [
+    {
+      "vendor": "aruba",
+      "year": 2021,
+      "documents": 1
+    },
+    {
+      "vendor": "cisco",
+      "year": 2021,
+      "documents": 52
+    },
+    {
+      "vendor": "cisco",
+      "year": 2022,
+      "documents": 24
+    },
+    {
+      "vendor": "cisco",
+      "year": 2023,
+      "documents": 20
+    },
+    {
+      "vendor": "cisco",
+      "year": 2024,
+      "documents": 26
+    },
+    {
+      "vendor": "cisco",
+      "year": 2025,
+      "documents": 33
+    },
+    {
+      "vendor": "cisco",
+      "year": 2026,
+      "documents": 18
+    }
+  ],
+  "live_source_reachability": "not_tested",
+  "hosted_acceptance": "not_run",
+  "independent_human_review": "pending"
+}
