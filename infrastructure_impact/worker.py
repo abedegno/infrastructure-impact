@@ -5,6 +5,7 @@ import logging
 import os
 import threading
 from datetime import datetime, timedelta, timezone
+from functools import partial
 from zoneinfo import ZoneInfo
 
 from .application.benchmark import run as benchmark
@@ -28,7 +29,10 @@ def next_daily(current, hour=8, minute=15, zone="Europe/London"):
     return candidate.astimezone(timezone.utc)
 
 
-def collect_once():
+def collect_once(*, publication_format="v1"):
+    from .application.publication_v2 import publication_format as validate_format
+
+    validate_format(publication_format)
     paths = Paths.from_env()
     for directory in ("benchmark", "data", "ops"):
         (paths.home / directory).mkdir(parents=True, exist_ok=True)
@@ -45,7 +49,11 @@ def collect_once():
             added, errors = backfill(config)
             return imported + added, failed + errors
 
-        result = execute(collect_sources, benchmark, report, build, status_fn=write_status)
+        build_fn = build
+        if publication_format == "v2":
+            build_fn = partial(build, publication_format="v2")
+
+        result = execute(collect_sources, benchmark, report, build_fn, status_fn=write_status)
         LOG.info("Collection result %s", json.dumps(result))
         return result
 

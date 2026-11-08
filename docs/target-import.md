@@ -94,10 +94,15 @@ for the measured query improvements and optional indexed source/diagnostic pages
 Existing publications remain readable through the fallback path.
 
 Local `snapshot` and `target-import stage` accept `--publication-format v2`.
-The default remains `v1`; there is no environment setting or hosted activation
-for this option. Use the same preview, ownership and stage arguments above and
+The default remains `v1`; library calls select the format explicitly rather than
+reading an environment setting. Use the same preview, ownership and stage arguments above and
 add the format flag to the stage command. A different representation does not
 waive any audit, native parity, monitor or capacity gate.
+
+The hosted helper also accepts an explicit format flag. Hosted selection is
+default-off and requires the separately reviewed source and persistent workflow
+setting described in [Hosted service](HOSTED_SERVICE.md#publication-format-selection).
+Preparing this support does not activate a hosted import.
 
 V2 publishes `publication-v2.json`, content-addressed bounded parts and a
 self-contained `snapshot-v2.json.gz`. The archive reconstructs every field in

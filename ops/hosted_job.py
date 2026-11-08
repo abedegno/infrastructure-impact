@@ -33,6 +33,7 @@ from infrastructure_impact.storage.profiling import storage_profile
 
 # Workflow compatibility is explicit; missing effects never imply legacy support.
 HOSTED_WORKFLOW_PROTOCOL = "effects-v1"
+HOSTED_PUBLICATION_FORMATS = ("v1", "v2")
 
 MAX_VAULT_BYTES = vault_limit()
 MAX_ARCHIVE_BYTES = ARCHIVE_LIMIT
@@ -479,7 +480,14 @@ def apply_maintenance(args, selected, state, output, home, database, key, store,
                             audit()
                         stage = "build"
                         with phase("publication.build"), redirect_stdout(io.StringIO()):
-                            build(output=candidate)
+                            build(
+                                output=candidate,
+                                **(
+                                    {"publication_format": "v2"}
+                                    if args.publication_format == "v2"
+                                    else {}
+                                ),
+                            )
                     except Exception:
                         with db:
                             db.execute(
@@ -539,6 +547,7 @@ def main():
     parser.add_argument("--state-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--base-path", default="/")
+    parser.add_argument("--publication-format", choices=HOSTED_PUBLICATION_FORMATS, default="v1")
     parser.add_argument("--encrypted-state", action="store_true")
     parser.add_argument("--backup-compression", choices=("xz", "gzip"), default="xz")
     mode = parser.add_mutually_exclusive_group()
@@ -730,7 +739,9 @@ def main():
                     raise RuntimeError(
                         "Normalization maintenance could not acquire the writer lock"
                     )
-            result = collect_once()
+            result = collect_once(
+                **({"publication_format": "v2"} if args.publication_format == "v2" else {})
+            )
             if result["outcome"] not in ("ok", "partial"):
                 raise RuntimeError(
                     "No successful collection; existing public deployment is retained"
