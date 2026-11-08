@@ -1,17 +1,17 @@
 # Proposal: compiled switching schema validation
 
-**Pending maintainer approval. No application dependency or validation backend
-has been changed.** Automatic approval review rejected the attempted application
-dependency addition because it introduces native third-party code into the
-supply chain and runtime boundary. Isolated experiments remain separate from the
-application environment.
+**Approved by the maintainer on 8 November 2026.** The reviewed patch is now
+implemented on PR #44, with dependency lockfiles updated. This document retains
+the approved design and isolated benchmark; full application and hosted
+verification are separate release gates.
 
-## Requested approval
+## Approved change
 
-Add **`jsonschema-rs==0.60.3`** as a pinned application dependency and implement
-the fast shape-validation path in the
-[reviewable patch](2026-11-08-compiled-validation.patch). The project retains its
-existing Python validator. Regenerate the dependency lockfiles after approval.
+The application pins **`jsonschema-rs==0.60.3`** and implements the fast
+shape-validation path in the [historical approved patch](2026-11-08-compiled-validation.patch).
+That patch is already applied; it is not an additional installation step. The
+project retains its Python validator. `uv.lock` and `requirements.lock` include
+the native package's distribution hashes.
 The downloaded experimental wheel was approximately 5.3 MiB and declares MIT
 licensing. Its documented API supports Draft 2020-12, custom format/keyword
 checks and offline references:
@@ -59,8 +59,8 @@ are not a proof of equivalence over every possible JSON instance.
 
 ## Release gate
 
-After approval, apply the patch, update lockfiles, run the complete suite and
-platform CI, then certify the complete hosted inventory using retained captures
+Run the complete application suite, installed-package checks and platform CI,
+then certify the complete hosted inventory using retained captures
 and a recorded accepted checkpoint identity. Keep PR #44 draft until that
 certification passes. No scheduling, hosted permission, source activation or
 publication change is included in this approval request.

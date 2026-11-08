@@ -161,9 +161,51 @@ def _validators():
     }
 
 
+class _PythonPattern:
+    """Preserve Python's Unicode regex behavior, including control whitespace."""
+
+    def __init__(self, parent_schema, pattern, schema_path):
+        self.pattern = re.compile(pattern)
+
+    def validate(self, value):
+        if isinstance(value, str) and self.pattern.search(value) is None:
+            raise ValueError("Schema pattern mismatch")
+
+
+def _deny_retrieval(uri):
+    raise LookupError("Schema reference is not installed")
+
+
+@lru_cache(maxsize=1)
+def _compiled_validators():
+    import jsonschema_rs
+
+    originals = _validators()
+    checker = next(iter(originals.values())).format_checker
+    registry = jsonschema_rs.Registry(
+        [(v.schema["$id"], v.schema) for v in originals.values()], retriever=_deny_retrieval
+    )
+    formats = {
+        name: (lambda value, fmt=name: checker.conforms(value, fmt)) for name in checker.checkers
+    }
+    return {
+        name: jsonschema_rs.Draft202012Validator(
+            validator.schema,
+            registry=registry,
+            formats=formats,
+            validate_formats=True,
+            keywords={"pattern": _PythonPattern},
+            offline=True,
+        )
+        for name, validator in originals.items()
+    }
+
+
 def _validate(value, schema):
     _json(value)
-    _validators()[schema].validate(value)
+    if not _compiled_validators()[schema].is_valid(value):
+        # Preserve existing rejection/exception behavior on the compatibility path.
+        _validators()[schema].validate(value)
 
 
 def _official(url, vendor=None, *, reference=False):
