@@ -377,3 +377,61 @@ def test_cli_explicit_capture_cache_stays_outside_output(setup, monkeypatch, cap
     assert cache.stat().st_mode & 0o777 == 0o600
     assert not (home / "captures").exists()
     assert "explicit-captures" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("cache_suffix", ["", "-wal", "-shm", "-journal"])
+@pytest.mark.parametrize("source_suffix", ["", "-wal", "-shm", "-journal"])
+def test_cache_family_hardlink_aliases_refused_before_sqlite_write(
+    setup, monkeypatch, cache_suffix, source_suffix
+):
+    from pathlib import Path
+
+    database, selected, _, output, home = setup
+    cache = home / "separate" / "cache.sqlite3"
+    cache.parent.mkdir()
+    source = Path(str(database) + source_suffix)
+    if not source.exists():
+        source.touch()
+    Path(str(cache) + cache_suffix).hardlink_to(source)
+    accepted = receipt(database, selected)
+    before = snapshot(database)
+    module = implementation()
+    monkeypatch.setattr(module.captures, "connect", lambda *_: pytest.fail("cache SQLite opened"))
+    monkeypatch.setattr(module.transport, "build_opener", lambda *_: pytest.fail("alias HTTP"))
+    result = module.stage(
+        database,
+        selected,
+        accepted["fingerprint"],
+        output,
+        lock_home=home,
+        accepted_preview=accepted,
+        capture_cache=cache,
+    )
+    assert result["failure_code"] == "storage"
+    assert not output.exists()
+    assert snapshot(database) == before
+
+
+@pytest.mark.parametrize("suffix", ["", "-wal", "-shm", "-journal"])
+def test_nonregular_cache_family_path_refused_before_sqlite(setup, monkeypatch, suffix):
+    from pathlib import Path
+
+    database, selected, _, output, home = setup
+    cache = home / "nonregular.sqlite3"
+    Path(str(cache) + suffix).mkdir()
+    module = implementation()
+    monkeypatch.setattr(module.captures, "connect", lambda *_: pytest.fail("nonregular SQLite"))
+    accepted = receipt(database, selected)
+    before = snapshot(database)
+    result = module.stage(
+        database,
+        selected,
+        accepted["fingerprint"],
+        output,
+        lock_home=home,
+        accepted_preview=accepted,
+        capture_cache=cache,
+    )
+    assert result["failure_code"] == "storage"
+    assert not output.exists()
+    assert snapshot(database) == before

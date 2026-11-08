@@ -529,10 +529,11 @@ def test_acquisition_checkpoint_survives_rejection_and_retries_without_http(
 ):
     state, _, key, effects, selected, raws = recovery
     pointer = (state / "current.json").read_bytes()
+    accepted_before = state_bytes(state)
     serve(monkeypatch, selected, raws)
 
     def reject(*_):
-        acquisition = state / "acquisitions" / selected.fingerprint
+        acquisition = state.parent / "acquisitions" / selected.fingerprint
         assert (acquisition / "current.json").is_file()
         assert hosted.validate_encrypted_state(acquisition, key)
         assert effect_values(effects) == {"mode": "apply", "acquisition_ready": "true"}
@@ -544,6 +545,9 @@ def test_acquisition_checkpoint_survives_rejection_and_retries_without_http(
     first = json.loads(capsys.readouterr().out)
     assert first["maintenance"]["failure_code"] == "candidate_validation"
     assert (state / "current.json").read_bytes() == pointer
+    assert state_bytes(state) == accepted_before
+    assert hosted.validate_current(state, key)
+    assert hosted.validate_current(state.parent / "acquisitions" / selected.fingerprint, key)
     assert not (tmp_path / "rejected").exists()
     assert effect_values(effects) == {"mode": "apply", "acquisition_ready": "true"}
     monkeypatch.setattr(transport, "build_opener", forbidden)
@@ -553,6 +557,8 @@ def test_acquisition_checkpoint_survives_rejection_and_retries_without_http(
     assert second["maintenance"]["counters"]["http_attempts"] == 0
     assert second["maintenance"]["counters"]["received_bytes"] == 0
     assert (tmp_path / "accepted/index.html").is_file()
+    assert hosted.validate_current(state, key)
+    assert hosted.validate_current(state.parent / "acquisitions" / selected.fingerprint, key)
 
 
 def test_acquisition_readback_failure_cannot_emit_ready_or_verify(
@@ -574,7 +580,7 @@ def test_acquisition_readback_failure_cannot_emit_ready_or_verify(
         apply(recovery, monkeypatch, tmp_path / "rejected", extra=("--acquisition-cache",))
     assert effect_values(effects) == {"mode": "apply"}
     assert (state / "current.json").read_bytes() == pointer
-    assert not (state / "acquisitions" / selected.fingerprint / "current.json").exists()
+    assert not (state.parent / "acquisitions" / selected.fingerprint / "current.json").exists()
     assert json.loads(capsys.readouterr().out)["maintenance"]["failure_code"] == "storage"
 
 
@@ -588,3 +594,21 @@ def test_acquisition_flag_is_restricted_before_keys_or_restore(tmp_path, monkeyp
         invoke(monkeypatch, tmp_path / "state", tmp_path / "output", "--acquisition-cache", *flags)
     assert error.value.code == 2
     assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("location", ["root", "profile", "another_profile"])
+def test_acquisition_tree_cannot_overlap_public_output(recovery, monkeypatch, location):
+    state, _, _, effects, selected, _ = recovery
+    root = state.parent / "acquisitions"
+    output = (
+        root
+        if location == "root"
+        else root / (selected.fingerprint if location == "profile" else "another-profile")
+    )
+    before = state_bytes(state)
+    monkeypatch.setattr(target_import_stage, "stage", forbidden)
+    with pytest.raises(ValueError, match="separate directory trees"):
+        apply(recovery, monkeypatch, output, extra=("--acquisition-cache",))
+    assert state_bytes(state) == before
+    assert effect_values(effects) == {"mode": "apply"}
+    assert not root.exists()

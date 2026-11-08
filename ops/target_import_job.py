@@ -32,13 +32,20 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
             raise ValueError("stale_preview")
         acquisition_options = {}
         if getattr(args, "acquisition_cache", False):
-            acquisition_state = state / "acquisitions" / selected.fingerprint
+            acquisition_root = state.parent / "acquisitions"
+            acquisition_state = acquisition_root / selected.fingerprint
             cache = home / "captures" / (selected.fingerprint + ".sqlite3")
             from infrastructure_impact.storage.capture_cache import validate_path
 
             validate_path(cache, database, output)
             if any(p.is_symlink() for p in (acquisition_state, *acquisition_state.parents)):
                 raise ValueError("Acquisition state must not use symbolic links")
+            root = acquisition_root.resolve()
+            for other in (output.resolve(), state.resolve()):
+                if other.is_relative_to(root) or root.is_relative_to(other):
+                    raise ValueError(
+                        "Acquisition state, accepted state and public output require separate directory trees"
+                    )
             hosted.restore_current(
                 acquisition_state, cache, key, store=store, vault_limit_bytes=limit
             )

@@ -2,6 +2,7 @@
 
 import os
 import sqlite3
+import stat
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
@@ -13,7 +14,10 @@ class CaptureError(ValueError):
 
 def validate_path(path, database, output):
     path, database, output = Path(path), Path(database), Path(output)
-    for candidate in (path, *(Path(str(path) + s) for s in ("-wal", "-shm", "-journal"))):
+    suffixes = ("", "-wal", "-shm", "-journal")
+    cache_family = tuple(Path(str(path) + suffix) for suffix in suffixes)
+    source_family = tuple(Path(str(database) + suffix) for suffix in suffixes)
+    for candidate in cache_family:
         if any(p.is_symlink() for p in (candidate, *candidate.parents)):
             raise CaptureError("storage")
     resolved, source, destination = path.resolve(), database.resolve(), output.resolve()
@@ -26,7 +30,21 @@ def validate_path(path, database, output):
         or destination.is_relative_to(resolved)
     ):
         raise CaptureError("storage")
-    if path.exists() and (not path.is_file() or os.path.samefile(path, database)):
+    # Existing aliases are rejected before SQLite can open any cache journal or
+    # database file; a post-write baseline check would be too late to preserve it.
+    identities = []
+    for family in (cache_family, source_family):
+        members = set()
+        for candidate in family:
+            try:
+                info = candidate.stat()
+            except FileNotFoundError:
+                continue
+            if not stat.S_ISREG(info.st_mode):
+                raise CaptureError("storage")
+            members.add((info.st_dev, info.st_ino))
+        identities.append(members)
+    if identities[0] & identities[1]:
         raise CaptureError("storage")
     return path
 
