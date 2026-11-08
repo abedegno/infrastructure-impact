@@ -108,8 +108,9 @@ receipt reports audit/capacity/candidate checks as unknown, not passed.
 These completed phases alone took approximately 2,291.5 seconds; query comparison
 and standalone monitors cannot be assumed to fit the remaining budget. Peak
 resident memory reached 5,764,694,016 bytes. Phase CPU closely tracked wall time.
-This runner was slower on several unchanged phases than the earlier runner, so
-cross-run wall times do not isolate the codec change's overall effect.
+The retry used a newer accepted baseline (see below), and runner variation is
+also possible. Cross-run timings do not isolate the codec change's overall
+effect.
 
 The public-sample improvement remains demonstrated, but it does **not** resolve
 the full hosted pipeline's runtime. The new run's proven failure is the outer
@@ -124,3 +125,30 @@ complete-root traversal, with representative CPU/memory measurements and all
 existing semantic, type, provenance and native/static checks preserved. A shared
 immutable projection or shared-fact representation needs a concrete design and
 mutation tests before replacing independent recomputation.
+
+## Concurrent scheduled collection and baseline binding
+
+The final hash comparison did **not** match the original production baseline.
+Inspection identified a separate successful
+[scheduled collector run 42508066043](https://github.com/abedegno/infrastructure-impact/actions/runs/42508066043),
+started at `18:03:50Z`, using the existing source pin
+`d473d60ec46783750fcaa1795035603ca43a9100`. It published generation
+`ff61832828904b6b9614c796d95146ae` at `18:06:24.491563Z` and accepted recovery at
+`18:10:54.453212Z`. The database grew from 704,847,872 to 713,977,856 bytes.
+The second certification checked out this newer accepted baseline at about
+`18:29Z`; the first certification had started before the scheduled update.
+
+Current accepted-manifest SHA-256:
+`74ac7a8e4ab354b345a25a926b98cdf6af786533ec1ca42c20ddc3fdfc192f4e`.
+Current public-index SHA-256:
+`cd765d3bff972cf3d109b28b5d0aabe00fc0b18ddf9979e31de8fa471f92a537`.
+The runtime source pin is unchanged. Neither certification promoted a candidate;
+the separate scheduled collector explains the public/accepted-state changes.
+This also means the two hosted runtimes are not an equal-input benchmark.
+
+Further performance comparisons must pin the same accepted checkpoint and
+inventory fingerprint, record the resolved checkpoint commit and database size,
+and distinguish routine collection from experimental certification. Do not
+pause or change collection scheduling merely to obtain a benchmark without the
+maintainer's separate approval. Certification must still prove the current full
+accepted inventory before any later source activation.
