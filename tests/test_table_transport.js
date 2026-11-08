@@ -400,7 +400,21 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
   let cancellations = 0,
     releases = 0,
     slots = 0,
-    attempts = 0;
+    attempts = 0,
+    onDecoderStarted;
+  async function withinWatchdog(promise) {
+    let watchdog;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          watchdog = setTimeout(() => reject(Error('operation watchdog expired')), 1000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(watchdog);
+    }
+  }
   class StalledDecoder {
     constructor(format) {
       if (attempts++) return new DecompressionStream(format);
@@ -416,6 +430,7 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
           releases++;
         },
       });
+      onDecoderStarted?.();
     }
   }
   const stalled = await context(StalledDecoder).open(fetcher(), catalog, identity, {
@@ -429,8 +444,17 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
     },
   });
   const abort = new AbortController();
+  const decoderStarted = new Promise((resolve) => {
+    onDecoderStarted = resolve;
+  });
   const pending = stalled.getTables({ signal: abort.signal });
-  setTimeout(() => abort.abort(), 20);
+  pending.catch(() => {});
+  try {
+    await withinWatchdog(decoderStarted);
+  } finally {
+    onDecoderStarted = undefined;
+    abort.abort();
+  }
   await assert.rejects(() => pending, /cancelled/);
   assert.strictEqual(slots, 0);
   assert.strictEqual(cancellations, 1);
@@ -443,9 +467,28 @@ print(publish(dataset(),sys.argv[1],publication_format='v2'))`,
   });
   await assert.rejects(() => timeout.getTables(), /deadline/);
   assert.strictEqual(timeout.cacheBytes(), 0);
-  attempts = 0;
-  const deadline = await context(StalledDecoder).open(fetcher(), catalog, identity);
-  await assert.rejects(() => deadline.getTables({ deadline: Date.now() + 20 }), /deadline/);
+  attempts = cancellations = releases = 0;
+  const deadline = await context(StalledDecoder).open(fetcher(), catalog, identity, {
+    requestSlots: {
+      acquire: async () => {
+        slots++;
+      },
+      release: () => {
+        slots--;
+      },
+    },
+  });
+  await assert.rejects(
+    withinWatchdog(deadline.getTables({ deadline: Date.now() + 20 })),
+    // The operation's own timer may fire just before the Date.now() boundary.
+    /deadline|cancelled/,
+  );
+  // A busy runner can hit the deadline before constructing the decoder.
+  assert(attempts <= 1, 'operation deadline cannot retry the decoder');
+  assert.strictEqual(cancellations, attempts, 'operation deadline cancels any decoder reader');
+  assert.strictEqual(releases, attempts, 'operation deadline releases any decoder reader lock');
+  assert.strictEqual(slots, 0, 'operation deadline releases the request slot');
+  assert.strictEqual(deadline.cacheBytes(), 0, 'operation deadline cannot cache stalled bytes');
   console.log('Browser gzip table transport, fallback, integrity, bounds and cancellation passed');
 })()
   .catch((error) => {
