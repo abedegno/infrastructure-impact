@@ -8,8 +8,10 @@ synthetic-fixture integrity. This is a release check, not a general secret scann
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -65,6 +67,46 @@ LEAKS = re.compile(
 )
 
 
+def check_tracked_sources(root):
+    """Reject checkout inventory that the public export would silently omit."""
+    if not (root / ".git").exists():
+        return  # Source archives have no Git inventory.
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "--stage", "-z"],
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        raise ValueError("Unable to inspect tracked source inventory") from None
+    if result.returncode:
+        raise ValueError("Unable to inspect tracked source inventory")
+    for entry in result.stdout.split(b"\0"):
+        if not entry:
+            continue
+        metadata, name = entry.split(b"\t", 1)
+        mode, _, stage = metadata.split()
+        relative = Path(os.fsdecode(name))
+        path = root / relative
+        if (
+            name == b"web"
+            and mode == b"120000"
+            and stage == b"0"
+            and path.is_symlink()
+            and path.readlink() == Path("infrastructure_impact/web")
+        ):
+            continue
+        if (
+            stage != b"0"
+            or mode not in (b"100644", b"100755")
+            or not (relative.as_posix() in FILES or relative.parts[0] in DIRECTORIES)
+            or set(relative.parts) & IGNORED_PARTS
+            or relative.suffix == ".pyc"
+            or any(p.is_symlink() for p in (path, *path.parents) if p != root and root in p.parents)
+        ):
+            raise ValueError("Tracked source inventory contains unexpected entries")
+
+
 def fixture_check(root):
     fixtures = root / "tests/fixtures"
     entries = json.loads((fixtures / "manifest.json").read_text())
@@ -109,6 +151,7 @@ def main():
         parser.error("Output already exists; choose a new empty destination")
     if destination == ROOT or ROOT.is_relative_to(destination):
         parser.error("Output cannot contain the source checkout")
+    check_tracked_sources(ROOT)
     destination.mkdir(parents=True)
     for name in FILES:
         target = destination / name
