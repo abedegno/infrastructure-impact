@@ -2,7 +2,7 @@ const fs = require('fs'),
   vm = require('vm');
 const web = 'infrastructure_impact/web/';
 const base = JSON.parse(fs.readFileSync('tests/fixtures/kev-selection-cases.json')).base_report;
-function browser(currentEvidence = false) {
+function browser(currentEvidence = false, options = {}) {
   const nodes = new Map(),
     downloads = [],
     requests = [],
@@ -137,7 +137,7 @@ function browser(currentEvidence = false) {
     }
     static revokeObjectURL() {}
   }
-  const window = {};
+  const window = options.static ? { snapshotMode: true } : {};
   const context = {
     window,
     document,
@@ -153,9 +153,17 @@ function browser(currentEvidence = false) {
     Map,
     console,
     setTimeout: () => {},
+    crypto: require('crypto').webcrypto,
+    Uint8Array,
+    AbortController,
+    clearTimeout,
   };
   context.fetch = window.fetch = (url) =>
     new Promise((resolve, reject) => requests.push({ url, resolve, reject }));
+  if (options.fetch) {
+    window.fetch = options.fetch;
+    context.fetch = (...args) => window.fetch(...args);
+  }
   vm.createContext(context);
   context.createStaticDelivery = async () => async () => ({ changes: [] });
   for (const file of [
@@ -163,7 +171,11 @@ function browser(currentEvidence = false) {
     ...(currentEvidence ? ['switching-contracts.js', 'current-evidence.js'] : []),
     'kev.js',
     'research-dossiers.js',
-    'snapshot.js',
+    ...(options.static
+      ? ['publication-v2.js', 'delivery.js', 'snapshot.js']
+      : options.fetch
+        ? []
+        : ['snapshot.js']),
   ])
     vm.runInContext(fs.readFileSync(web + file, 'utf8'), context);
   vm.runInContext(fs.readFileSync(web + 'app.js', 'utf8'), context);

@@ -668,7 +668,12 @@ function snapshotCSV(source, extraFields = []) {
 if (typeof document !== 'undefined') {
   const originalFetch = window.fetch.bind(window);
   const siteBase = new URL('.', document.baseURI).pathname;
-  const delivery = createStaticDelivery(originalFetch, siteBase);
+  let delivery;
+  const getDelivery = () =>
+    (delivery ??= createStaticDelivery(originalFetch, siteBase).catch((error) => {
+      delivery = null;
+      throw error;
+    }));
   let current,
     accepted,
     acceptedReport,
@@ -685,6 +690,13 @@ if (typeof document !== 'undefined') {
   };
   window.fetch = async (input, options) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.origin);
+    if (url.origin === location.origin && url.pathname === '/api/v1/bootstrap') {
+      try {
+        return new Response(window.InfrastructureJSON.stringify((await getDelivery()).bootstrap()));
+      } catch {
+        return new Response('{"error":"Publication temporarily unavailable"}', { status: 503 });
+      }
+    }
     if (url.origin === location.origin && url.pathname === '/api/v1/switching-comparison') {
       const reply = (value, status = 200, type = 'application/json') =>
         new Response(
@@ -698,7 +710,7 @@ if (typeof document !== 'undefined') {
         );
       let load, summary;
       try {
-        load = await delivery;
+        load = await getDelivery();
         summary = await load.switchingSummary();
       } catch {
         return reply({ error: 'Publication temporarily unavailable' }, 503);
@@ -753,7 +765,7 @@ if (typeof document !== 'undefined') {
       };
       if (!['GET', 'HEAD'].includes(method)) return reply({ error: 'Method not allowed' }, 405);
       try {
-        const load = await delivery;
+        const load = await getDelivery();
         const source = await load([]);
         const params = url.searchParams;
         const raw = params.has('cves')
@@ -864,7 +876,7 @@ if (typeof document !== 'undefined') {
       } catch {
         return reply({ error: 'Invalid request' }, 400);
       }
-      const load = await delivery;
+      const load = await getDelivery();
       // Native selected endpoints default to the full imported CVE catalogue.
       // Read shared metadata first so the transport hydrates that same scope.
       if (ids === null && url.pathname !== '/api/v1/kev') ids = (await load([])).all_cves;
@@ -917,7 +929,7 @@ if (typeof document !== 'undefined') {
           ? chosen
           : {
               ...chosen,
-              changes: (await (await delivery)(chosen.comparison.cohort, true)).changes,
+              changes: (await (await getDelivery())(chosen.comparison.cohort, true)).changes,
             };
       const content = kev
         ? window.InfrastructureJSON.stringify(report, null, 2)

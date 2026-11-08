@@ -183,6 +183,10 @@ class Application:
                 return self._route_v2(environ, generation, data)
         except FileNotFoundError:
             return 503, "application/json", b'{"error":"Awaiting first successful publication"}'
+        if path == "/api/v1/bootstrap":
+            return respond(
+                {key: data[key] for key in ("publication", "generated_at", "benchmark_cohort")}
+            )
         if path in ("/health/ready", "/api/v1/health"):
             published = datetime.fromisoformat(data["generated_at"].replace("Z", "+00:00"))
             age = (datetime.now(timezone.utc) - published).total_seconds()
@@ -724,7 +728,7 @@ class Application:
                 )
             return self.json(report, max_bytes=reader.limits["selected"])
         bootstrap = reader.fetch(reader.index["bootstrap"], ordinary=True)
-        if path in ("/health/ready", "/api/v1/health"):
+        if path in ("/health/ready", "/api/v1/health", "/api/v1/bootstrap"):
             return self.route(environ, _opened=(generation, bootstrap), _reader=reader)
         ids = None
         if "cves" in query or "cve" in query:

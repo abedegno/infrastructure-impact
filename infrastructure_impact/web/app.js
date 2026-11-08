@@ -183,6 +183,17 @@ async function load() {
   };
   $('#feedback').textContent = 'Loading evidence…';
   try {
+    if (selection.selectedCves === null && selection.cohortMode === 'benchmark') {
+      const metadata = await fetch('/api/v1/bootstrap');
+      if (!metadata.ok)
+        throw Error(`Selection rejected (${metadata.status}): could not load benchmark metadata.`);
+      const bootstrap = await metadata.json();
+      const ids = Object.keys(bootstrap.benchmark_cohort ?? {});
+      if (!ids.length || ids.length > 200 || ids.some((id) => !/^CVE-\d{4}-\d{4,}$/.test(id)))
+        throw Error('Invalid benchmark metadata.');
+      if (sequence !== loadSequence) return;
+      selection.selectedCves = ids;
+    }
     const params = new URLSearchParams();
     params.set('view', selection.view);
     if (selection.selectedCves) params.set('cves', selection.selectedCves.join(','));
@@ -204,10 +215,6 @@ async function load() {
       ? window.InfrastructureJSON.parse(await response.text())
       : await response.json();
     if (sequence !== loadSequence) return;
-    if (selection.selectedCves === null && selection.cohortMode === 'benchmark') {
-      selectedCves = Object.keys(loaded.benchmark_cohort);
-      return load();
-    }
     accept(evaluateState(loaded, selection.kevOnly), selection, suffix);
   } catch (error) {
     if (sequence !== loadSequence) return;
@@ -801,7 +808,9 @@ $('#apply').addEventListener('click', () => {
   kevOnly = $('#kev-only').checked;
   selectedCves =
     mode === 'benchmark'
-      ? benchmark
+      ? benchmark.length
+        ? benchmark
+        : null
       : mode === 'reference'
         ? reference
         : mode === 'custom'
