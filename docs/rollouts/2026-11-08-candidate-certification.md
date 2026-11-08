@@ -43,3 +43,41 @@ artifact restrictions remain unchanged.
 
 Dispatch and final certification results are recorded below when observed. A
 passing local installation test is not a hosted candidate acceptance result.
+
+## Hosted attempts and permission proposal
+
+- [First run](https://github.com/abedegno/infrastructure-impact/actions/runs/42495298670)
+  failed during accepted-state restore. No stage or validation ran.
+- [Diagnostic retry](https://github.com/abedegno/infrastructure-impact/actions/runs/42496077029)
+  also failed at restore. Its bounded allowlisted result reports
+  `restore_error: {category: remote_http, http_status: 403}` and
+  `stage_step: skipped`. No actual vault or ciphertext was downloaded locally.
+
+The denial is consistent with GitHub's documented push-access requirement for
+[draft release visibility](https://docs.github.com/en/rest/releases/releases#list-releases).
+A separate proposal changes certification's `contents: read` to `contents: write`
+so the existing authenticated draft recovery reader can operate. It retains
+`actions: read`, no Pages or OIDC permissions, no persisted checkout credentials,
+no remote-write commands and no publication or promotion steps. The stage step
+receives neither the GitHub token nor the recovery key.
+
+This proposal is **not approved or activated**. It must not be merged or dispatched
+until the maintainer approves the broader credential scope. No fallback to an
+older recovery checkpoint or public recovery release is proposed. A passing
+workflow contract test cannot establish that hosted restore or certification has
+succeeded; that requires an approved hosted run.
+
+## Proposal verification
+
+The permission contract failed against the existing read-only template before
+this change, then all 31 certification tests passed. Ruff, formatting,
+actionlint and whitespace checks passed. Tests also check that stage receives
+neither `GH_TOKEN` nor `IMPACT_STATE_KEY`, and capture encryption receives no
+`GH_TOKEN`.
+
+After both failed runs, the accepted manifest SHA-256 remained
+`744f1a07352338c2da81ca7ec75d5d815763636e3628519632cc16a53c9317af`;
+the public index SHA-256 remained
+`0f150ee5d7470de53575d03e6fde827e14d9ccfb685b03d132510cf1a15a7127`;
+and the live source pin remained
+`d473d60ec46783750fcaa1795035603ca43a9100`.

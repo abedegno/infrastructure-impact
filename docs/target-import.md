@@ -217,12 +217,26 @@ workflow; keep it byte-identical to the canonical copy at
 `deploy/github-candidate-certification.yaml`. It has no schedule and does not
 publish or promote a candidate. It inherits the existing recovery vault profile
 (`IMPACT_VAULT_PROFILE`, currently `large`) rather than using a different restore
-limit. To run the approved check:
+limit.
 
-1. Review the proposed source commit and installed workflow. Keep its
-   `contents: read` and `actions: read` permissions. The existing
-   `IMPACT_STATE_KEY` secret and `publication-state` accepted pointer must be
-   available; the job's read token downloads the GitHub draft recovery archive.
+The first two hosted attempts failed before staging: GitHub returned HTTP 403
+while restoring the draft recovery release. GitHub documents that viewing draft
+releases requires push access ([release API documentation](https://docs.github.com/en/rest/releases/releases#list-releases)).
+The proposed workflow therefore requests `contents: write` solely to read that
+private draft, plus `actions: read` for optional capture reuse. This is a
+write-capable credential even though the workflow performs no remote writes.
+**Activation of this broader permission requires separate maintainer approval.**
+The installed main-branch workflow remains read-only until that approval.
+
+After permission approval, to run the check:
+
+1. Review the proposed source commit and installed workflow. The proposed
+   `contents: write` and `actions: read` permissions must have been explicitly
+   approved. The existing `IMPACT_STATE_KEY` secret and `publication-state`
+   accepted pointer must be available. The GitHub token is passed only to the
+   recovery download and optional prior-artifact download steps; the stage step
+   receives neither that token nor the recovery key. Checkout credentials are
+   not persisted. There are no recovery promotion or Pages deployment steps.
 2. In Actions, select **Certify full hosted candidate**, then **Run workflow**.
    Enter the reviewed full 40-character lowercase hexadecimal `source_commit`.
    Leave `previous_capture_run_id` blank for normal exact acquisition on the
