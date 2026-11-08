@@ -96,8 +96,53 @@ headers, closed fields, payload checks, references and existing limits remain
 in force. Native and browser regression tests check both dispatch and malformed
 envelope rejection; 195 targeted Python tests and the browser suites passed.
 
-Profiling outputs are private diagnostic artifacts, not accepted publications.
-Verification against the saved publication is being measured before another
-retained-target replay. No source acquisition or hosted activation is implied
-by these measurements; the complete hosted union and independent human evidence
-review remain separate from this local sample.
+Verification against the saved publication passed in 596.74 seconds (238.91 CPU
+seconds), including complete root and detail-index membership checks. The six
+browser page checks also passed with the exact-kind validator: source pages took
+1.72–2.86 seconds and diagnostic pages 3.77–4.08 seconds, with the same byte bounds.
+Profiling outputs remain private diagnostic artifacts, separate from acceptance.
+
+## Accepted local retained replay
+
+The fresh replay using frozen code `ca27f6c` and the following installed wheel
+completed successfully on 8 November 2026:
+
+`e74e6df134809a33fc5b9dc9697cd2e0caeb56a87c6bc254a6144501aff8c919`
+
+The worker took approximately 1,453 seconds, within the unchanged 2,400-second
+limit. Audit, capacity, independent native parity, default HTTP monitor and
+archive HTTP monitor all passed. All 174 retained documents were normalized;
+existing rows, original capture dates and the source database were preserved.
+HTTP attempts and newly claimed retrieval observations were zero.
+
+| Publication measurement | Bytes |
+| --- | ---: |
+| Complete physical site | 464,855,421 |
+| Expanded snapshot archive | 39,411,181 |
+| Compressed snapshot archive | 5,037,754 |
+| Default HTTP monitor transfer | 28,392,214 |
+
+The accepted local generation is `bc5e22934d8b432b9e90b6b96fcacd3f`; its manifest
+SHA-256 is `86db851af528e11cbd75a3d065318d737da4fe800a595fc112741c06b5eec51b`.
+The [machine-readable proof](2026-11-08-retained-import-acceptance.json) records
+the input, software and receipt identities and the explicit acceptance flags.
+Earlier failed replay receipts remain preserved.
+
+The pinned repair batch contains the following vendor publications by year:
+
+| Year | Cisco | Aruba |
+| --- | ---: | ---: |
+| 2021 | 52 | 1 |
+| 2022 | 24 | 0 |
+| 2023 | 20 | 0 |
+| 2024 | 26 | 0 |
+| 2025 | 33 | 0 |
+| 2026 | 18 | 0 |
+| Total | 173 | 1 |
+
+These are repair-batch document counts within a local 223-identity sample.
+They do not measure comparable vendor affectedness or complete historical
+coverage. No source acquisition or hosted activation occurred, and live source
+reachability was not tested by this offline replay. The complete hosted union,
+independent human evidence review and expensive custom browser query limits
+remain separate from this local acceptance.
