@@ -82,6 +82,14 @@ The [OpenSSH service study](docs/COMPONENT_STUDIES.md) uses a frozen CVE cohort
 across six selected firewall families. Unknown cells remain unknown; rates and
 rankings are suppressed pending defensible coverage and independent review.
 
+The **Customer switching comparison** in the Comparison view combines the
+Cisco IOS XE, Aruba AOS-CX and Arista EOS study with severity/KEV, explicit fixed
+releases, dated public release/bundle evidence and coverage/model limits.
+Publication counts describe vendor disclosures; they do not count customer
+upgrades or rank vendor security. Fixed-only statements remain separate from
+fixes linked to an affected scope. Missing release dates and incomplete archives
+stay visible. See the [method and API](docs/switching-comparison.md).
+
 Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
 and Fortinet. [Archive source reviews](docs/research/vendor-archives.md) document
 product filters, access gaps and why Cisco archive backfill remains disabled.

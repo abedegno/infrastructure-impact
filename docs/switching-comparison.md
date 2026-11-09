@@ -323,15 +323,22 @@ descriptors are checked without claiming unloaded detail bytes were verified.
 Public CVSS metrics pass a closed-field monitor allowlist; private notes or added
 metric fields fail the check. These gates do not independently rescore CVSS.
 
-The unreleased evidence contract also records `reviewed_source_sections`
-remediation bindings for Arista advisory 0100. The existing core parser checks the
-reviewed section hashes; the bridge requires the exact affected EOS branch,
-CVE-specific fixed EOS branch, source identity and locators. The retained fixed
-claim and affected claim must agree on revision and publisher identity. This
-records the explicit OS-family remediation publication, without deriving model
-applicability, product IDs, an availability date or installed software state.
-A fixed-only statement still cannot establish affectedness. Python and browser
-contract checks reject mismatched source, CVE, product or revision links.
+The evidence contract records `reviewed_source_sections` remediation bindings
+for Arista advisories 0100, 0128, 0201 and 0075, and three AOS-CX affected/fixed
+pairs in Aruba HPESBNW04669. These are reviewed associations between source-owned
+sections, rather than publisher product-ID equivalence or automatic version
+matching. The retained fixed and affected claims must agree on source revision,
+CVE and product ownership. Python and browser checks require a matching fixed
+sibling; ambiguous or changed sections remain unsupported.
+
+For Aruba CVE-2024-6387, only the reviewed 10.14, 10.13 and 10.10 affected branches
+link respectively to 10.14.0007, 10.13.1031 and 10.10.1131. The 10.11 and 10.12
+migration paths remain unresolved. The source's remediation date is advisory
+context and does not establish software release availability. Arista EOS lists
+remain separate from TerminAttr, MOS and hotfix instructions. These links do not
+establish hardware model applicability or installed software state; a fixed-only
+statement cannot establish affectedness. Literal fixed releases, reported software
+release dates and actual customer upgrades remain separate facts.
 
 ### Study identity and browser ownership
 
