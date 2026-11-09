@@ -1,0 +1,243 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "vendor",
+    "family",
+    "product",
+    "platforms",
+    "source_url",
+    "parser_fingerprint",
+    "releases",
+    "bundles",
+    "platform_support",
+    "issues"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "vendor": {
+      "enum": [
+        "aruba",
+        "cisco",
+        "arista"
+      ]
+    },
+    "family": {
+      "enum": [
+        "aruba-aoscx",
+        "cisco-iosxe",
+        "arista-eos"
+      ]
+    },
+    "product": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "platforms": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 2000
+    },
+    "parser_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "releases": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "branch",
+          "reported_release_date",
+          "publisher_reports_posted",
+          "date_basis",
+          "source_locator",
+          "statement"
+        ],
+        "properties": {
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "reported_release_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publisher_reports_posted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "date_basis": {
+            "enum": [
+              "publisher_release_history",
+              "publisher_release_date"
+            ]
+          },
+          "source_locator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
+        }
+      }
+    },
+    "bundles": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "publisher_id",
+          "title",
+          "initial_published_at",
+          "member_publication_date",
+          "member_advisory_ids",
+          "source_locator",
+          "statement"
+        ],
+        "properties": {
+          "publisher_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "initial_published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "member_publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "member_advisory_ids": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "source_locator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
+          }
+        }
+      }
+    },
+    "platform_support": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "model_literal",
+          "minimum_version",
+          "source_locator"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "model_literal": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "minimum_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "source_locator": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "software-release-evidence-v1.json",
+  "title": "Reviewed public software release evidence"
+}
