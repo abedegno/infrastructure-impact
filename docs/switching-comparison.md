@@ -451,3 +451,53 @@ are not publisher product IDs. Platform scope remains unresolved, and resolution
 prose does not become a fixed-release event. Unrecognized affected-software
 headings stop prior-product version inheritance and remain visible in core
 normalization warnings. Earlier mixed and multi-CVE layouts remain review backlog.
+
+## Customer comparison API and exports
+
+Native `GET /api/v1/customer-comparison` accepts the same single `vendor`, `scope`,
+`window`, `cves` and `format=json|csv` controls and rejects blank, duplicate or
+unknown controls. Its closed `customer-comparison-v1` envelope contains
+`schema_version`, `publication`, `generated_at`, `study`, `release_history` and
+`limitations`. The selected study is either the genuine summary v1 or the genuine bounded
+switching-overview v2, preserving its source-specific severity facets, KEV
+membership, event counts and coverage. The overview retains explicit detail
+ranges for deferred arrays; it is never relabelled as a complete summary.
+Release context never creates another study denominator or adds affected CVEs or
+events. Both nested reports must share publication identity, observation bounds,
+study definition and the exact selection. For default study controls, v2 reuses its overview and re-evaluates KEV freshness
+without scanning claims. Custom controls use the existing selector once. Both
+paths load the optional release root without loading the generic runtime snapshot
+or full comparison.
+
+Missing release assets in old publications return an explicit unavailable history
+alongside the available study with HTTP 200. A missing study retains the existing
+503 behavior. Damaged or mixed-generation history fails closed. Static Pages has
+no external REST service: a browser composes the same envelope from the selected
+study summary and the optional `switching-release-history.json` root. Each control
+change selects from the complete history root, whose `selection` is null; a
+previously filtered history must never become the source for a new selection.
+
+Release history describes the selected **advisory CVE cohort**, not necessarily
+releases published within that advisory window. Publisher-reported fixed CVEs
+and affected-scope-linked CVEs have separate sets/counts. A fixed-only statement
+can supply release context without establishing affectedness, model applicability
+or an upgrade event. Only `reported_release_dates` are software dates;
+remediation availability dates, bundle notice initial dates and explicit bundle
+member publication dates retain their different meanings. SKU minimum versions
+are literal support context, with no automatic version ordering or applicability.
+Unlinked releases and missing sources denote unknown evidence, not zero fixes;
+the reviewed source set does not establish complete release coverage.
+
+CSV exports use the same accepted envelope. `study_summary` rows reuse existing
+severity-provider facets and include the accepted selected row in `details`.
+`study_representation` and `study_schema_version` explicitly distinguish overview
+rows with deferred ranges from complete summary rows.
+`release_reference` rows retain each compact reference, separate fixed/affected
+counts and history context; a history-only row has `reference_kind=history_context`
+and blank counts. `bundle_context` and `platform_support` rows preserve literal
+context separately; `source_coverage` rows preserve study/source diagnostics and
+history availability even when history is unavailable. Structured `details` cells
+contain compact JSON. `totals_basis=repeated_totals_nonadditive` marks every row;
+never sum across severity facets or release references. Cells use the existing
+spreadsheet-control escaping policy, and v2 exports share the selected-response
+byte ceiling. JSON uses the versioned envelope schema bundled under `schemas/`.

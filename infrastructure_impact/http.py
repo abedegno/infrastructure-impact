@@ -276,7 +276,7 @@ class Application:
                 }
             )
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
-        if path == "/api/v1/switching-comparison":
+        if path in ("/api/v1/switching-comparison", "/api/v1/customer-comparison"):
             from .application.switching_comparison import day, query_options, select_report, summary
             from .exports import switching_csv
 
@@ -301,9 +301,21 @@ class Application:
             report = select_report(complete, **options)
             if report["availability"] == "unavailable":
                 return respond({"error": "switching_unavailable"}, status=503)
+            selected = summary(report)
+            if path == "/api/v1/customer-comparison":
+                from .application import customer_comparison, switching_releases
+
+                history_asset = generation / "switching-release-history.json"
+                history = json.loads(history_asset.read_text()) if history_asset.exists() else None
+                envelope = customer_comparison.build(
+                    selected, switching_releases.select_report(history, selected)
+                )
+                if output == "csv":
+                    return 200, "text/csv", customer_comparison.csv_export(envelope).encode()
+                return respond(envelope)
             if output == "csv":
                 return 200, "text/csv", switching_csv(report).encode()
-            return respond(summary(report))
+            return respond(selected)
         ids = None
         if "cves" in query or "cve" in query:
             ids = sorted(set(",".join(query.get("cves", query.get("cve", []))).upper().split(",")))
@@ -605,6 +617,8 @@ class Application:
             "/schemas/switching-evidence-v1.json",
             "/schemas/switching-comparison-v1.json",
             "/schemas/switching-summary-v1.json",
+            "/schemas/switching-release-history-v1.json",
+            "/schemas/customer-comparison-v1.json",
             "/schemas/switching-inputs-v1.json",
             "/kev.json",
             "/schemas/kev-v1.json",
@@ -723,7 +737,7 @@ class Application:
                 return 200, mimetypes.guess_type(target)[0] or "application/octet-stream", chunks()
             return self.route(environ, _opened=(generation, reader.metadata()))
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
-        if path == "/api/v1/switching-comparison":
+        if path in ("/api/v1/switching-comparison", "/api/v1/customer-comparison"):
             from .application.switching_comparison import query_options
             from .exports import switching_csv
 
@@ -732,9 +746,28 @@ class Application:
                 options, output = query_options(query, overview["observation_end"])
             except ValueError as exc:
                 raise BadRequest("Invalid study query") from exc
-            report = reader.switching_selection(
-                options, evaluated_at=datetime.now(timezone.utc).isoformat()
-            )
+            evaluated_at = datetime.now(timezone.utc).isoformat()
+            if path == "/api/v1/customer-comparison" and options == dict(
+                vendor=None, scope_level="os_family", window="all", cve_ids=None
+            ):
+                report = reader.switching_overview(evaluated_at=evaluated_at)
+            else:
+                report = reader.switching_selection(options, evaluated_at=evaluated_at)
+            if path == "/api/v1/customer-comparison":
+                from .application import customer_comparison
+
+                envelope = customer_comparison.build(
+                    report, reader.switching_release_history(report)
+                )
+                if output == "csv":
+                    return (
+                        200,
+                        "text/csv",
+                        customer_comparison.csv_export(
+                            envelope, max_bytes=reader.limits["selected"]
+                        ).encode(),
+                    )
+                return self.json(envelope, max_bytes=reader.limits["selected"])
             if output == "csv":
                 return (
                     200,

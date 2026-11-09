@@ -11,10 +11,29 @@ from infrastructure_impact.application import switching_evidence as evidence
 
 
 @pytest.fixture(scope="module")
-def reports():
+def reports(tmp_path_factory):
+    from test_static_delivery import dataset
+
+    from infrastructure_impact.application import (
+        customer_comparison,
+        publication,
+        switching_releases,
+    )
+    from infrastructure_impact.application.publication_reader import PublicationReader
+
     value = report([claim()])
+    summary = comparison.summary(value)
+    releases = switching_releases.select_report(None, summary)
+    out = publication.publish(
+        dataset(), tmp_path_factory.mktemp("compiled-schemas"), publication_format="v2"
+    )
+    reader = PublicationReader(out)
     return {
         "switching-study-v1.json": value["definition"],
+        "switching-release-history-v1.json": releases,
+        "customer-comparison-v1.json": customer_comparison.build(summary, releases),
+        "switching-overview-v2.json": reader.switching_overview(),
+        "publication-v2.json": reader.catalog,
         "switching-evidence-v1.json": value["inputs"]["evidence"],
         "switching-comparison-v1.json": value,
         "switching-summary-v1.json": comparison.summary(value),

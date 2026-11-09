@@ -278,16 +278,40 @@ SWITCHING_FIELDS = [
 ]
 
 
+def _csv_cell(value):
+    value = "" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
+    if value.lstrip().startswith(("=", "+", "-", "@")) or value.startswith(("\t", "\r", "\n")):
+        value = "'" + value
+    return '"' + value.replace('"', '""') + '"'
+
+
+def csv_table(fields, rows, *, max_bytes=None):
+    """Render repeatable row mappings using the shared spreadsheet cell policy.
+
+    Reserve the complete UTF-8 output before retaining any serialized lines.
+    """
+    if max_bytes is not None:
+        from .publication_codec import Budget
+
+        budget = Budget(max_bytes)
+        size = len(",".join(fields).encode("utf-8"))
+        budget.charge(size, size)
+        for row in rows():
+            budget.charge(2 + len(fields) - 1, 2 + len(fields) - 1)
+            for field in fields:
+                value = _csv_cell(row.get(field))
+                cost = _utf8_cost(value)
+                budget.charge(cost, cost)
+    return "\r\n".join(
+        [
+            ",".join(fields),
+            *(",".join(_csv_cell(row.get(field)) for field in fields) for row in rows()),
+        ]
+    )
+
+
 def switching_csv(report: dict, *, max_bytes=None) -> str:
     """Summary facets; repeated observed totals are explicitly nonadditive."""
-
-    def cell(value):
-        value = (
-            "" if value is None else str(value).lower() if isinstance(value, bool) else str(value)
-        )
-        if value.lstrip().startswith(("=", "+", "-", "@")) or value.startswith(("\t", "\r", "\n")):
-            value = "'" + value
-        return '"' + value.replace('"', '""') + '"'
 
     if max_bytes is not None:
         from .publication_codec import Budget
@@ -313,7 +337,7 @@ def switching_csv(report: dict, *, max_bytes=None) -> str:
                 budget.charge(cost, cost)
     lines = [",".join(SWITCHING_FIELDS)]
     for values in _switching_csv_rows(report):
-        lines.append(",".join(cell(v) for v in values))
+        lines.append(",".join(_csv_cell(v) for v in values))
     return "\r\n".join(lines)
 
 

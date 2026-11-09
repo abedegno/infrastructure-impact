@@ -1479,6 +1479,139 @@
           }
         }
       }
+    },
+    "/api/v1/customer-comparison": {
+      "get": {
+        "summary": "Read selected customer switching study and release context",
+        "description": "Native read-only API using the genuine v2 overview for default study controls or the existing switching selection once for custom controls, then optional generation-bound release history. The study representation remains switching-overview v2 or summary v1; an overview keeps deferred detail ranges and never claims complete claim/event arrays. The customer envelope retains the selected study CVE, severity-provider, KEV and coverage facts unchanged. Missing history returns 200 with unavailable history and the available study; damaged or mixed-generation assets fail closed. Blank, duplicate and unknown parameters are rejected. No collection, upstream or vault access. GitHub Pages is static hosting and exposes no external REST endpoint; the browser composes equivalent selections from immutable study and optional switching-release-history.json assets.",
+        "parameters": [
+          {
+            "name": "vendor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            "description": "Optional single vendor; omission selects all registered study vendors."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ],
+              "default": "os_family"
+            },
+            "description": "OS-family context or explicitly qualified model subset."
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "all"
+            },
+            "description": "all, pre, post, undated, or an observed year from 2021 through observation_end year. Cutoff 2026-04-07 is post."
+          },
+          {
+            "name": "cves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}(,CVE-[0-9]{4}-[0-9]{4,19})*$"
+            },
+            "description": "Canonical distinct comma-separated IDs. Omission selects full study independently of ordinary benchmark/KEV controls. Unmatched selection is empty."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "default": "json"
+            },
+            "description": "JSON is customer-comparison-v1 (study is genuine summary v1 or switching-overview v2): selected study, selected release history and limitations. CSV has study_summary, release_reference, bundle_context, platform_support and source_coverage rows. Repeated totals are nonadditive; unknown fix counts are blank. Software dates, remediation availability and bundle dates remain distinct."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Selected study and release context from the same publication, or explicit unavailable history preserving study facts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/customer-comparison-v1.json"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request: blank, repeated, unknown or invalid study control."
+          },
+          "503": {
+            "description": "Missing legacy study: {\"error\":\"switching_unavailable\"}. Damaged publication: {\"error\":\"Publication temporarily unavailable\"}."
+          }
+        }
+      }
+    },
+    "/schemas/switching-release-history-v1.json": {
+      "get": {
+        "summary": "Immutable generation schema: switching-release-history-v1.json",
+        "responses": {
+          "200": {
+            "description": "Public closed schema bundled with this publication."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/schemas/customer-comparison-v1.json": {
+      "get": {
+        "summary": "Immutable generation schema: customer-comparison-v1.json",
+        "responses": {
+          "200": {
+            "description": "Public closed schema bundled with this publication."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
+    },
+    "/switching-release-history.json": {
+      "get": {
+        "summary": "Optional immutable release-history root",
+        "description": "Complete generation-bound root; reselect from this complete root for every new study control selection. Missing history never changes available study data.",
+        "responses": {
+          "200": {
+            "description": "Closed switching-release-history-v1 report with selection null."
+          },
+          "404": {
+            "description": "Absent in older publications."
+          }
+        }
+      }
     }
   }
 }

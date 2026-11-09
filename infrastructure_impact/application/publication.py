@@ -559,6 +559,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-comparison-v1.json",
         "switching-summary-v1.json",
         "switching-release-history-v1.json",
+        "customer-comparison-v1.json",
         "switching-inputs-v1.json",
         "research-dossiers-v1.json",
         "research-dossier-definition-v1.json",

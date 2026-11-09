@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:customer-comparison:1",
+  "title": "Selected customer switching comparison v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "study",
+    "release_history",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "publication": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/publication"
+    },
+    "generated_at": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/generated_at"
+    },
+    "study": {
+      "oneOf": [
+        {
+          "$ref": "urn:infrastructure-impact:switching-summary:1"
+        },
+        {
+          "$ref": "urn:infrastructure-impact:switching-overview:2"
+        }
+      ]
+    },
+    "release_history": {
+      "$ref": "urn:infrastructure-impact:switching-release-history:1"
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      },
+      "uniqueItems": true
+    }
+  }
+}
