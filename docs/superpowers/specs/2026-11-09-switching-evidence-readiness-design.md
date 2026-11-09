@@ -51,3 +51,11 @@ unknown. Synthetic fixtures only in Git; public-source observations stay outside
    without converting unlinked fixes or unknown bundles into workload facts.
 3. Bounded public-source triage of existing Aruba historical and Arista error lists,
    with a concrete retained-source repair/import worklist and no hosted apply.
+
+## Source-led scope clarification during implementation
+
+SA-0201 exposed a core generic Arista parser boundary defect: an unrecognized
+CloudVision Portal heading allowed its version list to enter the prior TerminAttr
+assessment. Correct that source boundary in the existing core parser and cover
+both normalized and typed outputs. Do not compensate solely in the study bridge
+while leaving known incorrect product/version ownership in the main record.
