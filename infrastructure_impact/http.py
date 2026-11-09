@@ -185,7 +185,18 @@ class Application:
             return 503, "application/json", b'{"error":"Awaiting first successful publication"}'
         if path == "/api/v1/bootstrap":
             return respond(
-                {key: data[key] for key in ("publication", "generated_at", "benchmark_cohort")}
+                {
+                    key: data[key]
+                    for key in (
+                        "publication",
+                        "generated_at",
+                        "benchmark_cohort",
+                        "switching_validation",
+                        "switching_review_packet",
+                        "switching_reviewed_source_scopes",
+                    )
+                    if key in data
+                }
             )
         if path in ("/health/ready", "/api/v1/health"):
             published = datetime.fromisoformat(data["generated_at"].replace("Z", "+00:00"))
@@ -249,6 +260,8 @@ class Application:
             return respond(data.get("catalogue", {}))
         if path in (
             "/api/v1/extraction-validation",
+            "/api/v1/switching-validation",
+            "/api/v1/switching-review-packet",
             "/api/v1/review-packet",
             "/api/v1/publisher-history",
         ):
@@ -616,6 +629,8 @@ class Application:
             "/comparison-eligibility-summary.json",
             "/product-groups.json",
             "/extraction-validation.json",
+            "/switching-validation.json",
+            "/switching-review-packet.json",
             "/review-packet.json",
             "/publisher-history.json",
             "/casefiles.json",

@@ -1,10 +1,50 @@
 # Does Cisco disclose more switching vulnerabilities?
 
+**Dated update:** the [9 November live investigation](2026-11-09-live-switching-readiness.md)
+records the published Cisco import and corrects the interpretation of validation
+outcomes. The website-membership figures below describe the older pinned publication.
+
 Observation date: **7 November 2026**. Public evidence only. This brief compares
 Cisco IOS XE, HPE Aruba Networking AOS-CX and Arista EOS. It does not compare the
 vendors' entire portfolios or certify applicability to a customer's switches.
 
-## Answer suitable for a customer
+## Updated customer answer — 9 November 2026
+
+In the current retained OS-family collection, Cisco IOS XE has **199 distinct
+explicitly affected CVEs**, compared with **104 for Aruba AOS-CX** and **65 for
+Arista EOS**, over the study period starting 2021-01-01. Cisco therefore has more
+observed CVE IDs in this collection. These are broad family counts: IOS XE also
+includes wireless controllers and other non-Catalyst products. Historical coverage
+and exact switch-model applicability remain unequal or unknown, so the figures
+do not yet establish a fair comparison of the customer's switches.
+
+We cannot reliably say Cisco requires more patching. A bounded local replay of
+12 Cisco advisories covering 13 CVEs counted **12 remediation publications until
+their explicit bundle page was retained, then one bundled event**. The advisories
+and CVEs did not change. Peer event totals also undercount fixes whose affected
+and fixed product branches have not been explicitly linked. Comparing those
+incomplete event totals would compare extraction and publication formats as well
+as vendors. A publication event also does not establish an actual customer upgrade
+or maintenance window.
+
+Higher CVE volume can reflect more defects, more discovery effort, broader
+features/dependencies, or different disclosure and numbering practices. This
+investigation has not measured their relative contributions. Counts alone cannot
+separate these explanations, establish a Glasswing effect, prove vendors equally
+secure, or demonstrate intentional concealment. A missing CVE reference or a
+component update is a research lead requiring exact product/build, correction and
+disclosure-history evidence.
+
+Use disclosure volume as a descriptive signal alongside **applicable serious or
+exploited exposure, supported fixes, known bundle/release grouping, emergency
+versus planned actions, and visible coverage gaps**. Keep unknowns explicit rather
+than treating missing statements as unaffectedness or low patch burden. The
+[9 November evidence investigation](2026-11-09-live-switching-readiness.md) and
+[bounded source/bundle follow-up](2026-11-09-switching-coverage-followup.md) record
+the data identity, reproduction and remaining limits. The code repairs described
+there are separate from the unchanged live publication used for these figures.
+
+## Historical answer and pinned observations — 7 November 2026
 
 Our current evidence does not support a reliable conclusion that Cisco requires
 more security patching than Aruba or Arista. The pinned official CVE scan finds

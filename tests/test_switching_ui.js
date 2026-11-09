@@ -500,3 +500,48 @@ assert(lazyHtml.includes('data-switching-detail="claims"'));
   console.error(e);
   process.exitCode = 1;
 });
+
+// Study reports are optional and belong to the accepted generation, not form controls.
+const validationState = {
+  validationPublication: report.publication,
+  validationGeneratedAt: report.generated_at,
+  validation: {
+    vendor_results: [
+      {
+        vendor: 'arista',
+        sample_cases: 5,
+        full_byte_matches: 2,
+        scoped_matches: 1,
+        failures: [{ id: 'synthetic', outcome: 'source_missing' }],
+      },
+    ],
+  },
+  reviewPacket: { study: 'campus-branch-switching', cases: [] },
+};
+const validatedHtml = api.render(report, validationState);
+for (const label of [
+  '5 sample cases',
+  '2 exact-byte matches',
+  '1 structural matches',
+  'synthetic: source_missing',
+  'Accepted-generation validation report',
+  'Blind review packet',
+])
+  assert(validatedHtml.includes(label), label);
+assert(validatedHtml.includes('download="switching-review-packet.json"'));
+assert(
+  api
+    .render(report, { ...validationState, validationPublication: { id: 'stale' } })
+    .includes('Switching validation unavailable for this accepted generation'),
+);
+
+// Diagnostic limits derive from accepted row facts and keep collection ownership.
+for (const phrase of [
+  'Metric evidence limits',
+  'Observed affected CVEs:',
+  'Fixed-only claims without proven affected-to-fix linkage:',
+  'publications without grouping evidence',
+  'does not prove independent patch cycles',
+  'Report-wide limitations',
+]) assert(html.includes(phrase), phrase);
+assert(!html.includes(' unbundled</small>'));

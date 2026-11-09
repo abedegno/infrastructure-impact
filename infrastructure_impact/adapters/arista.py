@@ -87,6 +87,7 @@ def arista_software(raw, url, vendor):
     product = None
     groups = {}
     shared_groups = set()
+    unresolved_headings = []
     for n in nodes:
         t = n.text()
         if n.tag in ("h2", "h3"):
@@ -132,6 +133,16 @@ def arista_software(raw, url, vendor):
             and re.fullmatch(r"[A-Za-z][A-Za-z0-9 ()/-]* Versions:?", t)
         ):
             product = re.sub(r" Versions:?$", "", t) + " (source platform scope applies)"
+        elif (
+            n.tag in {"div", "h4"}
+            and t
+            and t != "All releases are impacted including:"
+            and not any(getattr(c, "tag", None) in {"div", "ul", "ol", "p"} for c in n.children)
+        ):
+            # A new unrecognized product label cannot inherit the previous list.
+            # Keep the literal boundary visible without inventing its product scope.
+            product = None
+            unresolved_headings.append(t)
         elif n.tag == "li" and product and ids:
             state = "unaffected" if re.search(r"not (?:impacted|affected)", t, re.I) else "affected"
             for cid in ids:
@@ -159,6 +170,10 @@ def arista_software(raw, url, vendor):
     out["warnings"] = [
         "Software/service statements only; consult source Affected Platforms before applying to hardware. A current unaffected statement does not erase historical exposure. Cloud-service fix statements do not establish a downloadable fixed firmware version."
     ]
+    if unresolved_headings:
+        out["warnings"].append(
+            "Unresolved affected-software headings: " + " | ".join(unresolved_headings)
+        )
     if not out["published_at"]:
         out["warnings"].append("Publication date not extracted.")
     if not out["assessments"]:

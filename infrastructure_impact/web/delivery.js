@@ -489,6 +489,11 @@ async function createStaticDelivery(fetchPart, siteBase) {
       publication: common.publication,
       generated_at: common.generated_at,
       benchmark_cohort: common.benchmark_cohort,
+      ...Object.fromEntries(
+        ['switching_validation', 'switching_review_packet', 'switching_reviewed_source_scopes']
+          .filter((key) => Object.hasOwn(common, key))
+          .map((key) => [key, common[key]]),
+      ),
     });
   load.generated_at = index.generated_at;
   function studyIndex() {

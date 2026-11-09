@@ -1453,6 +1453,32 @@
           }
         }
       }
+    },
+    "/api/v1/switching-validation": {
+      "get": {
+        "summary": "Study extraction validation",
+        "responses": {
+          "200": {
+            "description": "Whole purposive review sample; source revisions require re-review; independent human review pending."
+          },
+          "404": {
+            "description": "Report unavailable in older accepted generations."
+          }
+        }
+      }
+    },
+    "/api/v1/switching-review-packet": {
+      "get": {
+        "summary": "Blind study independent review packet",
+        "responses": {
+          "200": {
+            "description": "Generation-bound blind study review packet; expected labels and parser output withheld."
+          },
+          "404": {
+            "description": "Report unavailable in older accepted generations."
+          }
+        }
+      }
     }
   }
 }

@@ -540,6 +540,8 @@ def logical_views(data):
         "comparison_eligibility",
         "product_groups",
         "extraction_validation",
+        "switching_validation",
+        "switching_review_packet",
         "review_packet",
         "publisher_history",
         "family_completeness",

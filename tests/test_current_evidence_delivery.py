@@ -4,6 +4,7 @@ import copy
 import csv
 import io
 import json
+import re
 
 import pytest
 from test_arista_current_evidence import (  # noqa: F401
@@ -1261,3 +1262,30 @@ def test_native_rejects_top_level_counters_inconsistent_with_partition(
     rewrite(generation, "snapshot.json", data)
     with pytest.raises(ValueError):
         Application(tmp_path).store.read()
+
+
+def test_switching_report_keeps_excluded_source_out_of_current_matches(delivery, monkeypatch):
+    from infrastructure_impact.application import switching_validation
+
+    excluded = delivery["retained_advisories"][0]["record"]
+    claim = excluded["assessments"][0]
+    review = switching_validation.definition()
+    review["cases"] = [
+        dict(
+            id="synthetic-excluded-study-case",
+            vendor=excluded["vendor"],
+            source_url=excluded["source_url"],
+            source_sha256=excluded["sha256"],
+            cve_id=claim["cve_id"],
+            product_pattern="^" + re.escape(claim["product"]) + "$",
+            expected_status=claim["status"],
+            source_locator="Synthetic retained source",
+            rationale="Synthetic current partition regression",
+        )
+    ]
+    monkeypatch.setattr(switching_validation, "definition", lambda: review)
+    projected = public_projection(delivery)
+    report = projected["switching_validation"]
+    assert report["passed"] == report["scope_matches"] == 0
+    assert report["cases"][0]["outcome"] == "source_missing"
+    assert report["independent_human_review_completed"] is False

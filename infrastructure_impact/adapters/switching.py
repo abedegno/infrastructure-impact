@@ -160,6 +160,81 @@ def _availability(details, category, published_date, as_of):
     return "vendor_reports_fixed" if re.search(positive, text, re.I) else "unknown"
 
 
+def _aruba_local_resolution(claim, remediation, ids, as_of):
+    """A numeric fixed product must occur in its own publisher resolution section.
+
+    Global lifecycle prose is context, not availability for every listed product.
+    This does not bind a sibling affected range to the fixed product.
+    """
+    if (
+        claim["vendor"] != "aruba"
+        or claim["family"] != "aruba-aoscx"
+        or claim["status"] != "fixed"
+        or claim["product_id"] not in ids
+        or remediation["category"] != "vendor_fix"
+    ):
+        return None
+    details = remediation["details"] or ""
+    sections = re.findall(r"(?m)^- ArubaOS-CX Switches\s*\n((?:[ \t]+-[^\n]+\n?)+)", details)
+    if len(sections) != 1:
+        return None
+    releases = []
+    for line in sections[0].splitlines():
+        match = re.fullmatch(r"\s*- ([0-9]+\.[0-9]+\.[0-9]+) and above\s*", line)
+        if not match:
+            return None
+        releases.append(match[1])
+    resolution = (
+        "Software versions with resolution/fixes for the vulnerabilities "
+        "covered above, can be downloaded from the HPE Networking Support Portal."
+    )
+    paragraphs = [" ".join(p.split()) for p in re.split(r"\n[ \t]*\n", details)]
+    numeric = [
+        v for v in claim["version_expressions"] if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v)
+    ]
+    if not numeric or not all(v in releases for v in numeric) or resolution not in paragraphs:
+        return None
+    # This repair supports the reviewed source structure only. Extra paragraphs
+    # may qualify this release, even when their product scope is unspecified.
+    # Keep their negative/planned classification, otherwise fail closed. Never
+    # reduce arbitrary prose to the affirmative download paragraph alone.
+    context = {
+        "HPE Aruba Networking",
+        resolution,
+        "https://networkingsupport.hpe.com/home/",
+        "HPE Aruba Networking does not evaluate or patch product branches "
+        "that have reached their End of Maintenance (EoM) milestone.",
+        "For more information about HPE Aruba Networking products End of "
+        "Support policy visit: https://networkingsupport.hpe.com/end-of-life",
+    }
+    for paragraph in re.split(r"\n[ \t]*\n", details):
+        normalized = " ".join(paragraph.split())
+        if normalized in context:
+            continue
+        if re.fullmatch(r"- ArubaOS-CX Switches\s*\n(?:[ \t]+-[^\n]+\n?)+", paragraph):
+            continue
+        # Both heading and body must match the reviewed foreign product shape.
+        # Arbitrary bullets can contain qualifications for this AOS-CX release.
+        foreign_shapes = (
+            r"- Aruba Fabric Composer\n(?:[ \t]+- [0-9]+\.[0-9]+\.[0-9]+ and above\n?)+",
+            r"- EdgeConnect SD-WAN Orchestrator\n[ \t]+-Detailed information on the "
+            r"resolution of CVE-2024-6387 can be found at "
+            r"https://www\.arubanetworks\.com/techdocs/sdwan-PDFs/docs/advisories/"
+            r"orch_resolution_to_cve-2024-6387_latest\.pdf",
+            r"-  HPE Networking Instant On\n[ \t]+- Firmware version [0-9]+\.[0-9]+\.[0-9]+ and higher"
+            r"\n[ \t]+- No direct customer action is necessary other than to ensure affected "
+            r"devices \(APs and Switches in cloud mode\) remain connected to the internet "
+            r"to receive automatic updates\.",
+        )
+        if any(re.fullmatch(shape, paragraph) for shape in foreign_shapes):
+            continue
+        state = remediation["availability"]
+        return state if state in {"unavailable", "partial_mitigation", "planned"} else "unknown"
+    # Reuse category/date/future guards against only the source-owned availability
+    # statement. Other product sections and EoM prose cannot authorize this claim.
+    return _availability(resolution, "vendor_fix", remediation["availability_date"], as_of)
+
+
 def _csaf(raw, url, vendor, document, digest):
     data = json.loads(raw)
     tracking = data["document"].get("tracking", {})
@@ -318,9 +393,19 @@ def _csaf(raw, url, vendor, document, digest):
                     # Preserve the failure boundary for an applicable malformed scope.
                     ids = set(ids)
                 claim["issues"].extend(issues)
+                local_availability = None
+                if "evidence_text_truncated" not in issues:
+                    local_availability = _aruba_local_resolution(
+                        claim,
+                        prepared,
+                        ids,
+                        tracking.get("current_release_date")
+                        or tracking.get("initial_release_date"),
+                    )
                 claim["remediations"].append(
                     {
                         **prepared,
+                        "availability": local_availability or prepared["availability"],
                         "product_ids": [pid] if ids and pid is not None else sorted(ids),
                         "version_expressions": [],
                         "source": dict(prepared["source"]),
@@ -351,6 +436,8 @@ def _arista_reviewed(raw, url, document, digest):
         "19905-security-advisory-0101": "Arista reviewed applicability boundaries HTML",
         "19222-security-advisory-0095": "Arista reviewed applicability boundaries HTML",
         "19904-security-advisory-0100": "Arista affected software HTML",
+        "23115-security-advisory-0128": "Arista affected software HTML",
+        "24847-security-advisory-0201": "Arista affected software HTML",
         "11996-security-advisory-56": "Arista reviewed older product/model HTML",
         "12135-security-advisory-61": "Arista reviewed older product/model HTML",
         "12166-security-advisory-62": "Arista reviewed older product/model HTML",
@@ -391,6 +478,34 @@ def _arista_reviewed(raw, url, document, digest):
     dates = [iso_date(row[1]) for row in history]
     if dates != sorted(dates) or dates[0] != parsed["published_at"]:
         raise ValueError("Reviewed Arista revision chronology changed")
+    software_cves = {
+        "23115-security-advisory-0128": "CVE-2025-8872",
+        "24847-security-advisory-0201": "CVE-2026-111943",
+    }
+    if slug in software_cves:
+        cid = software_cves[slug]
+        headings = [n.text() for n in tree.find({"h2", "h3"})]
+        expected_label = "Security Advisory " + slug.rsplit("-", 1)[-1]
+        products = ["EOS (source platform scope applies)"]
+        if slug == "24847-security-advisory-0201":
+            products.append(
+                "Streaming Telemetry Agent (TerminAttr) (source platform scope applies)"
+            )
+        owned = [a for a in parsed["assessments"] if a["product"] in products]
+        if (
+            labels != [expected_label]
+            or parsed["cves"] != [cid]
+            or any(headings.count(h) != 1 for h in ("Affected Software", "Affected Platforms"))
+            or headings.index("Affected Software") >= headings.index("Affected Platforms")
+            or [a["product"] for a in owned] != products
+            or any(
+                a["cve_id"] != cid or a["scope"] != "cve_specific" or a["status"] != "affected"
+                for a in parsed["assessments"]
+            )
+        ):
+            raise ValueError("Reviewed Arista software ownership changed")
+        # Only the reviewed software branches participate in this narrow bridge.
+        parsed["assessments"] = owned
     publisher = dict(
         id=labels[0],
         sequence=history[-1][0],
@@ -420,6 +535,8 @@ def _arista_reviewed(raw, url, document, digest):
             scope=assessment["scope"],
         )
         if slug in {
+            "23115-security-advisory-0128",
+            "24847-security-advisory-0201",
             "19862-security-advisory-0099",
             "19917-security-advisory-0103",
             "24853-security-advisory-0202",
@@ -433,6 +550,8 @@ def _arista_reviewed(raw, url, document, digest):
             # These HTML adapters use local branch keys, not publisher product IDs.
             claim["product_id"] = None
         if assessment["product"] in {"Arista EOS", "EOS release (source platform scope applies)"}:
+            claim["family"] = "arista-eos"
+        if slug in software_cves and assessment["product"] == "EOS (source platform scope applies)":
             claim["family"] = "arista-eos"
         claim["version_expressions"] = [
             v["expression"] for v in assessment["versions"] if v.get("expression")

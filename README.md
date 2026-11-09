@@ -57,6 +57,8 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
   source-window gaps and generation-bound JSON/CSV downloads. Counts measure disclosure,
   not vendor security quality; higher disclosure can reflect more scrutiny. The separate
   16-case switching checks remain independent-human-review pending; 2026 is partial.
+  The study view includes per-vendor validation results, evidence limits and
+  downloads of the validation report and blind review packet.
 - Publishes source-led extraction checks and blind independent-review packets.
 - Investigates disclosure leads with publisher histories and counter-evidence.
 - Prepares and audits private exact-build inventory evidence with a [vendor-neutral contract](docs/BUILD_INVENTORY.md), without certifying CVE exposure.

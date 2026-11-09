@@ -363,3 +363,46 @@ Trace, provenance, diagnostic and status details expand in batches of 25; nested
 lists in diagnostics are bounded to 25 with the complete accepted JSON available.
 These details always belong to the accepted selection, including during a pending
 or failed request.
+
+### Study validation delivery
+
+New generations include optional top-level `switching_validation`,
+`switching_review_packet` and `switching_reviewed_source_scopes` fields. The
+reports are available at `/api/v1/switching-validation` and
+`/api/v1/switching-review-packet`, and as `switching-validation.json` and
+`switching-review-packet.json` in both publication formats. Bootstrap includes
+the same study-wide sample independently of selected CVEs. Older generations
+without these fields return unavailable (404 on native report endpoints).
+
+Vault-backed queries compute reviewed structural digests for selected retained
+records only. Public projection whitelists owned digest fields and recomputes
+results after privacy and current-evidence filtering; excluded claims do not
+become current matches. Missing selected alternate representations remain missing.
+Exact bytes and reviewed structural matches remain separate, and independent
+human review is pending. The blind packet omits expected labels and parser output.
+The study view offers downloads bound to the accepted generation.
+
+Metric evidence limits are derived from accepted row counts: observed affected
+CVEs are retained observations, model-unspecified claims expose qualification
+gaps, and fixed-only claims lack proven affected-to-fix linkage. Known bundle
+membership is distinct from publications without grouping evidence. The legacy
+`unbundled_publications` field does not prove independent patch cycles. Report-wide
+limitations are labelled separately from source failures owned by
+`row.coverage.sources`.
+
+Aruba CSAF resolution extraction recognizes numeric fixed AOS-CX products only
+when explicit remediation IDs own the claim, the product release occurs in the
+local ArubaOS-CX Switches section, and the publisher states that resolution/fix
+versions can be downloaded. Global multi-product and lifecycle prose cannot
+supply availability for another product. This correction preserves literal
+provenance and does not join sibling affected ranges to fixed releases.
+
+The reviewed Arista HTML bridge also covers SA-0128 (CVE-2025-8872) and
+SA-0201 (CVE-2026-111943). It re-parses retained bytes and requires the reviewed
+route, single CVE, product sections and publisher revision history. Only their
+owned EOS and, for SA-0201, separate TerminAttr affected lists enter this bridge.
+EOS establishes family context; TerminAttr does not. Generated HTML branch keys
+are not publisher product IDs. Platform scope remains unresolved, and resolution
+prose does not become a fixed-release event. Unrecognized affected-software
+headings stop prior-product version inheritance and remain visible in core
+normalization warnings. Earlier mixed and multi-CVE layouts remain review backlog.

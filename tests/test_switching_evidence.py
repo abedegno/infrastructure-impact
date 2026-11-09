@@ -1069,3 +1069,148 @@ def test_current_boundary_preserves_scores_from_unexcluded_alternate_representat
         s["source_url"] == alternate_url and s["state"] == "available"
         for s in public["switching_evidence"]["score_availability"]
     )
+
+
+def resolution_document(local="10.13.1000 and above", resolution=None):
+    d = tree(status="fixed")
+    d["vulnerabilities"][0]["remediations"][0]["details"] = (
+        "HPE Aruba Networking\n\n- Aruba Fabric Composer\n   - 1.2.3 and above\n\n"
+        "- ArubaOS-CX Switches\n   - "
+        + local
+        + "\n\n- Aruba Fabric Composer\n   - 2.3.4 and above\n\n"
+        + (
+            resolution
+            or "Software versions with resolution/fixes for the vulnerabilities\n"
+            "covered above, can be downloaded from the HPE Networking Support\nPortal."
+        )
+        + "\n\nHPE Aruba Networking does not evaluate or patch product branches\n"
+        "that have reached their End of Maintenance (EoM) milestone."
+    )
+    return d
+
+
+def test_csaf_source_local_fixed_resolution_survives_foreign_lifecycle_negation():
+    claim = extract(resolution_document())["claims"][0]
+    assert claim["remediations"][0]["availability"] == "vendor_reports_fixed"
+    assert claim["remediations"][0]["product_ids"] == ["p"]
+    assert claim["status"] == "fixed"
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "plan",
+        "partial",
+        "negated",
+        "foreign",
+        "lifecycle",
+        "missing_ids",
+        "affected",
+        "resolution_plan",
+        "resolution_partial",
+    ],
+)
+def test_csaf_local_resolution_does_not_authorize_other_scopes(change):
+    d = resolution_document()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    if change in {"plan", "partial"}:
+        rem["details"] = rem["details"].replace(
+            "10.13.1000 and above",
+            "10.13.1000 and above " + ("planned" if change == "plan" else "(partial fix)"),
+        )
+    elif change in {"resolution_plan", "resolution_partial"}:
+        rem["details"] = rem["details"].replace(
+            "Software versions with",
+            ("Planned: " if change == "resolution_plan" else "Partial fix: ")
+            + "Software versions with",
+        )
+    elif change == "negated":
+        rem["details"] = rem["details"].replace("can be downloaded", "cannot be downloaded")
+    elif change == "foreign":
+        rem["details"] = rem["details"].replace("ArubaOS-CX Switches", "Foreign Switches")
+    elif change == "lifecycle":
+        rem["details"] = (
+            "- ArubaOS-CX Switches\n   - 10.13.1000 and above\n\nEnd of Maintenance products are not patched."
+        )
+    elif change == "missing_ids":
+        rem.pop("product_ids")
+    else:
+        d["vulnerabilities"][0]["product_status"] = {"known_affected": ["p"]}
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification", ["AOS-CX 10.13.1000 is not available.", "AOS-CX 10.13.1000 is planned."]
+)
+def test_local_resolution_does_not_promote_truncated_remediation(qualification):
+    d = resolution_document()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    retained = rem["details"].ljust(4000)
+    rem["details"] = retained + "\n\n" + qualification
+    claim = extract(d)["claims"][0]
+    assert claim["remediations"][0]["availability"] == "unknown"
+    assert claim["remediations"][0]["details"] == retained
+    assert "evidence_text_truncated" in claim["issues"]
+
+
+def test_local_resolution_ignores_unrelated_note_truncation():
+    d = resolution_document()
+    d["vulnerabilities"][0]["notes"][0]["text"] = "Condition " * 500
+    claim = extract(d)["claims"][0]
+    assert "evidence_text_truncated" in claim["issues"]
+    assert claim["remediations"][0]["availability"] == "vendor_reports_fixed"
+
+
+def test_local_resolution_uses_numeric_version_path_when_leaf_name_is_family():
+    d = resolution_document()
+    branch = d["product_tree"]["branches"][0]["branches"][0]["branches"][0]["branches"][0]
+    branch["product"]["name"] = "AOS-CX"
+    d["product_tree"]["full_product_names"][0]["name"] = "AOS-CX"
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] == "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification",
+    [
+        "AOS-CX 10.13.1000 is not available.",
+        "AOS-CX 10.13.1000 is a partial fix.",
+        "AOS-CX 10.13.1000 is planned.",
+        "The release is not available.",
+        "The release is a partial fix.",
+        "The release is planned.",
+        "Availability of the release is unknown.",
+    ],
+)
+def test_local_resolution_preserves_separate_applicable_or_unscoped_qualifications(qualification):
+    d = resolution_document()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    rem["details"] += "\n\n" + qualification
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification",
+    [
+        "The release is planned.",
+        "The release is not available.",
+        "The release is a partial fix.",
+        "Availability is unknown.",
+    ],
+)
+def test_local_resolution_does_not_discard_unknown_bulleted_heading(qualification):
+    d = resolution_document()
+    d["vulnerabilities"][0]["remediations"][0]["details"] += (
+        "\n\n- Availability\n   - " + qualification
+    )
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification", ["AOS-CX 10.13.1000 is not available.", "AOS-CX 10.13.1000 is planned."]
+)
+def test_local_resolution_foreign_heading_cannot_hide_conflicting_product_body(qualification):
+    d = resolution_document()
+    d["vulnerabilities"][0]["remediations"][0]["details"] += (
+        "\n\n- Aruba Fabric Composer\n   - " + qualification
+    )
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"

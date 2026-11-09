@@ -455,6 +455,10 @@ function renderComparison() {
     loading: switchingLoading,
     error: switchingError,
     factCatalog: switchingAcceptedDelivery?.factCatalog,
+    validation: data.switching_validation,
+    reviewPacket: data.switching_review_packet,
+    validationPublication: data.publication,
+    validationGeneratedAt: data.generated_at,
   });
   const accepted = switchingReport,
     delivery = switchingAcceptedDelivery;

@@ -134,7 +134,14 @@ def test_bootstrap_metadata_does_not_hydrate_state_and_unspecified_api_scope_sta
     status, _, raw = app.route(dict(REQUEST_METHOD="GET", PATH_INFO="/api/v1/bootstrap"))
     assert status == 200
     metadata = json.loads(raw)
-    assert set(metadata) == {"publication", "generated_at", "benchmark_cohort"}
+    assert set(metadata) == {
+        "publication",
+        "generated_at",
+        "benchmark_cohort",
+        "switching_validation",
+        "switching_review_packet",
+        "switching_reviewed_source_scopes",
+    }
     assert metadata["benchmark_cohort"] == {CID: "Synthetic"}
     monkeypatch.undo()
     status, _, raw = app.route(dict(REQUEST_METHOD="GET", PATH_INFO="/api/state"))
@@ -162,7 +169,14 @@ def test_bootstrap_http_methods_headers_and_minimal_body(tmp_path, publication_f
         if method == "HEAD":
             assert body == b""
         elif method == "GET":
-            assert set(json.loads(body)) == {"publication", "generated_at", "benchmark_cohort"}
+            assert set(json.loads(body)) == {
+                "publication",
+                "generated_at",
+                "benchmark_cohort",
+                "switching_validation",
+                "switching_review_packet",
+                "switching_reviewed_source_scopes",
+            }
         else:
             assert headers["Allow"] == "GET, HEAD"
 
@@ -180,7 +194,7 @@ const b=browser(true,{static:true,fetch:async path=>new Response(fs.readFileSync
   const text=await response.text();
   if(method==='HEAD') assert.strictEqual(text,'');
   else if(method==='GET') assert.deepStrictEqual(Object.keys(JSON.parse(text)).sort(),
-    ['benchmark_cohort','generated_at','publication']);
+    ['benchmark_cohort','generated_at','publication','switching_review_packet','switching_reviewed_source_scopes','switching_validation']);
   else assert.strictEqual(response.headers.get('Allow'),'GET, HEAD');
  }
 })().catch(e=>{console.error(e);process.exitCode=1});
