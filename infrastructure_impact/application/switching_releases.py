@@ -67,6 +67,17 @@ def _literal(vendor, expression):
     return match[1] if match else None
 
 
+def _validate_observation_end(generated_at, observation_end):
+    if (
+        not isinstance(observation_end, str)
+        or comparison.day(observation_end) != observation_end
+        or not contracts.definition()["start_date"]
+        <= observation_end
+        <= comparison.day(generated_at)
+    ):
+        raise ValueError("Release observation end outside study or generation")
+
+
 def _owned_remediation(claim, remediation):
     """Exact retained source/product ownership; unrelated statements cannot conflict."""
     if remediation["category"] not in {"vendor_fix", "no_fix_planned", "none_available"} or any(
@@ -299,10 +310,7 @@ def _base(publication, generated_at, observation_end, *, available=True):
 def build(evidence, release_input, *, publication, generated_at, observation_end):
     """Build from validated current evidence and five registered source frames."""
     contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
-    if comparison.day(observation_end) != observation_end or not contracts.definition()[
-        "start_date"
-    ] <= observation_end <= comparison.day(generated_at):
-        raise ValueError("Release observation end outside generation")
+    _validate_observation_end(generated_at, observation_end)
     result = _base(publication, generated_at, observation_end)
     nodes = {}
 
@@ -464,6 +472,7 @@ def build(evidence, release_input, *, publication, generated_at, observation_end
 def validate_report(report, *, publication=contracts._UNSET, generated_at=contracts._UNSET):
     contracts._validate(report, "switching-release-history-v1.json")
     contracts._publication(report, publication, generated_at)
+    _validate_observation_end(report["generated_at"], report["observation_end"])
     if (
         report["definition_sha256"] != contracts.definition_sha256(contracts.definition())
         or report["method"] != METHOD
@@ -629,6 +638,7 @@ def csv_export(selected):
 
 def validate_current_references(report, evidence):
     """Bind every published compact reference to the writer's validated current claims."""
+    _validate_observation_end(report["generated_at"], report["observation_end"])
     current = {c["claim_id"]: c for c in evidence["claims"]}
     candidate_cache = {}
     if report["selection"] is not None:

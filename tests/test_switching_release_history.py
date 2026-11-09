@@ -681,7 +681,10 @@ def test_writer_reference_validation_rejects_future_facts_excluded_by_builder(ki
 
 
 @pytest.mark.parametrize("fmt", ["v1", "v2"])
-def test_direct_publication_writer_rejects_forged_future_reference_report(tmp_path, fmt):
+@pytest.mark.parametrize("future_bound", [False, True])
+def test_direct_publication_writer_rejects_forged_future_reference_report(
+    tmp_path, fmt, future_bound
+):
     from test_static_delivery import dataset
 
     current, forged = forged_future_report()
@@ -705,8 +708,10 @@ def test_direct_publication_writer_rejects_forged_future_reference_report(tmp_pa
         generated_at=projected["generated_at"],
         observation_end=projected["switching_comparison"]["observation_end"],
     )
+    if future_bound:
+        forged["observation_end"] = "2027-01-01"
     projected["switching_release_history"] = forged
-    with pytest.raises(ValueError, match="reference"):
+    with pytest.raises(ValueError, match="reference|observation"):
         publication.write_bundle(tmp_path / "forged", projected, publication_format=fmt)
 
 
@@ -726,3 +731,61 @@ def test_affected_conflict_preserves_different_owned_literal_release_alternative
     assert release(result, "10.14.0099")["affected_scope_cve_count"] == 1
     assert release(result, "10.14.0099")["vendor_reported_fixed_cve_count"] is None
     assert {d["code"] for d in result["diagnostics"]} == {"fixed_availability_conflicting"}
+
+
+@pytest.mark.parametrize("validator", ["report", "references"])
+def test_forged_future_observation_bound_cannot_authorize_future_references(validator):
+    current, forged = forged_future_report()
+    forged["observation_end"] = "2027-01-01"
+    with pytest.raises(ValueError, match="observation"):
+        if validator == "report":
+            api().validate_report(forged)
+        else:
+            api().validate_current_references(forged, current)
+
+
+@pytest.mark.parametrize("bound", ["2020-12-31", "2026-11-10"])
+def test_report_observation_bound_must_be_inside_study_and_generation(bound):
+    report = build()
+    report["observation_end"] = bound
+    with pytest.raises(ValueError, match="observation"):
+        api().validate_report(report)
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_writer_accepts_authoritative_historical_bound_and_rejects_same_generation_mismatch(
+    tmp_path, fmt
+):
+    from test_static_delivery import dataset
+
+    data = dataset()
+    data["research"]["switching_input"] = aruba_evidence()
+    out = publication.publish(data, tmp_path / "valid", publication_format=fmt)
+    if fmt == "v2":
+        reader = PublicationReader(out)
+        projected = json.loads(b"".join(reader.stream_root("snapshot.json")))
+        full = json.loads(b"".join(reader.stream_root("switching-comparison.json")))
+    else:
+        projected = json.loads((out / "snapshot.json").read_text())
+        full = json.loads((out / "switching-comparison.json").read_text())
+    projected["switching_evidence"] = full["inputs"]["evidence"]
+    context = dict(
+        publication=projected["publication"],
+        generated_at=projected["generated_at"],
+        observation_end="2025-12-31",
+    )
+    projected["switching_comparison"] = switching_comparison.build_report(
+        projected["switching_evidence"],
+        projected["kev"],
+        definition=evidence.definition(),
+        **context,
+    )
+    projected["switching_release_history"] = api().build(
+        projected["switching_evidence"], [], **context
+    )
+    api().validate_report(projected["switching_release_history"])
+    publication.write_bundle(tmp_path / "historical", projected, publication_format=fmt)
+    projected["switching_release_history"]["observation_end"] = "2026-01-01"
+    api().validate_report(projected["switching_release_history"])
+    with pytest.raises(ValueError, match="observation"):
+        publication.write_bundle(tmp_path / "mismatch", projected, publication_format=fmt)

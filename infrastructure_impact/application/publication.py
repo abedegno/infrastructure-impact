@@ -315,6 +315,15 @@ def write_bundle(destination, data, *, publication_format="v1"):
             publication=data["publication"],
             generated_at=data["generated_at"],
         )
+        comparison = data.get("switching_comparison")
+        if comparison is None or (
+            data["switching_release_history"]["observation_end"] != comparison["observation_end"]
+            or data["switching_release_history"]["definition_sha256"]
+            != comparison["selection"]["definition_sha256"]
+        ):
+            raise ValueError(
+                "Release history observation bound or definition differs from comparison"
+            )
         validate_current_references(data["switching_release_history"], data["switching_evidence"])
     if publication_format == "v2":
         from .publication_v2 import write_bundle as write_v2
