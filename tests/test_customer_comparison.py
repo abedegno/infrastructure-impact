@@ -470,3 +470,51 @@ def test_default_v2_customer_route_uses_overview_without_claim_scan(published, m
         if "format=csv" not in query:
             assert json.loads(raw)["study"]["representation"] == "switching-overview"
     assert "switching-evidence.json" not in reader._roots
+
+
+def test_exported_customer_schema_validates_using_only_publication_schemas(published):
+    from jsonschema import Draft202012Validator, FormatChecker
+    from referencing import Registry, Resource
+
+    root, out, _ = published
+    schemas = {}
+    for path in (out / "schemas").glob("*.json"):
+        schema = json.loads(path.read_text())
+        if path.name == "kev-v1.json":
+            schema["$id"] = "urn:infrastructure-impact:kev:1"
+        schemas[path.name] = schema
+    registry = Registry().with_resources(
+        (schema["$id"], Resource.from_contents(schema))
+        for schema in schemas.values()
+        if "$id" in schema
+    )
+    validator = Draft202012Validator(
+        schemas["customer-comparison-v1.json"], registry=registry, format_checker=FormatChecker()
+    )
+    app = Application(root)
+    for query in ("", "vendor=aruba"):
+        status, raw = request(app, "/api/v1/customer-comparison", query)
+        assert status == 200
+        validator.validate(json.loads(raw))
+    for name in (
+        "customer-comparison-v1.json",
+        "switching-overview-v2.json",
+        "publication-v2.json",
+    ):
+        status, raw = request(app, "/schemas/" + name)
+        assert status == 200, name
+        assert json.loads(raw) == schemas[name]
+
+
+def test_native_documented_history_asset_returns_present_root_and_absent_v1_404(published):
+    root, out, fmt = published
+    asset = out / "switching-release-history.json"
+    complete = json.loads(asset.read_text())
+    app = Application(root)
+    status, raw = request(app, "/switching-release-history.json")
+    assert status == 200
+    assert json.loads(raw) == complete
+    assert json.loads(raw)["selection"] is None
+    if fmt == "v1":
+        asset.unlink()
+        assert request(app, "/switching-release-history.json")[0] == 404

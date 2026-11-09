@@ -537,11 +537,10 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "extraction-review-v1.json",
         "review-submission-v1.json",
         "static-index-v1.json",
-        *(
-            ("static-index-v2.json", "publication-v2.json", "switching-overview-v2.json")
-            if publication_format == "v2"
-            else ()
-        ),
+        *(("static-index-v2.json",) if publication_format == "v2" else ()),
+        # The customer schema union references overview and range definitions in v1 too.
+        "publication-v2.json",
+        "switching-overview-v2.json",
         "vendor-gaps-v1.json",
         "family-completeness-v1.json",
         "comparison-readiness-v1.json",
