@@ -36,6 +36,7 @@ def versions():
         ("adapters/arista_reconciliation.py", {"arista"}),
         ("plugins/arista_selection.py", {"arista"}),
         ("adapters/arista_management_scope.py", {"arista"}),
+        ("adapters/arista_scoped.py", {"arista"}),
         ("adapters/component_statements.py", {"hpe", "juniper"}),
         ("adapters/vendor_cna.py", {"cisco", "hpe", "juniper", "checkpoint"}),
         (

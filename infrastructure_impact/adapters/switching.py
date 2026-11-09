@@ -734,8 +734,7 @@ def _arista_fixes(tree, slug, parsed):
 
 def _arista_legacy_eos(tree, parsed):
     """0075: the EOS nested affected list owns only its literal versions."""
-    from .arista_scoped import leading_inline
-    from .common import Node, assessment
+    from .common import Node, assessment, leading_inline
 
     rule = ARISTA_FIX_RULES["15438-security-advisory-0075"]
     events = list(_arista_events(tree))

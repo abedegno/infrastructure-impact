@@ -161,6 +161,16 @@ class Node:
                 yield from c.find(tags)
 
 
+def leading_inline(n):
+    """Read only a node's leading inline text, stopping before nested blocks."""
+    text = []
+    for child in n.children:
+        if isinstance(child, Node) and child.tag not in {"b", "strong", "span", "a", "br"}:
+            break
+        text.append(child.text() if isinstance(child, Node) else child)
+    return " ".join(" ".join(text).split())
+
+
 class HTML(HTMLParser):
     def __init__(self, raw):
         super().__init__(convert_charrefs=True)
