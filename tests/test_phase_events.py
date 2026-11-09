@@ -6,6 +6,7 @@ import math
 import sys
 
 import pytest
+from jsonschema.exceptions import ValidationError
 
 from infrastructure_impact import phase_events
 from infrastructure_impact.application import jobs, publication, query
@@ -26,6 +27,8 @@ def events(sink):
     result = [json.loads(line) for line in sink.getvalue().splitlines()]
     for event in result:
         expected = {"event", "phase", "state", "elapsed_seconds"}
+        if event["state"] == "failed":
+            expected.add("failure_code")
         try:
             phase_events.process_time()
         except (NotImplementedError, OSError, ValueError):
@@ -185,3 +188,70 @@ def test_phase_cpu_unavailable_does_not_fail_operation(monkeypatch, capsys):
     receipt = events(io.StringIO(capsys.readouterr().err))
     assert all("process_cpu_seconds" not in event for event in receipt)
     assert receipt[-1]["state"] == "completed"
+
+
+@pytest.mark.parametrize(
+    "error,code",
+    [
+        (ValueError("stream deadline"), "stream_deadline"),
+        (ValueError("decoded byte budget"), "byte_budget"),
+        (ValueError("native switching query mismatch"), "query_mismatch"),
+        (ValidationError("PRIVATE SCHEMA DETAIL"), "schema"),
+        (MemoryError("PRIVATE MEMORY DETAIL"), "memory"),
+        (RecursionError("PRIVATE RECURSION DETAIL"), "recursion"),
+        (RuntimeError("PRIVATE/path/token"), "unclassified"),
+        (ValueError("PRIVATE/path/token stream deadline"), "unclassified"),
+    ],
+)
+def test_failed_phase_has_only_closed_failure_code(error, code, capsys):
+    from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
+
+    with pytest.raises(type(error)) as caught:
+        with phase_events.phase("publication.native_queries"):
+            raise error
+    assert caught.value is error
+    raw = capsys.readouterr().err
+    event = json.loads(raw.splitlines()[-1])
+    assert event["failure_code"] == code
+    sanitized = parse_worker_diagnostics(raw.encode())
+    assert sanitized[-1]["failure_code"] == code
+    assert "PRIVATE" not in raw and "PRIVATE" not in json.dumps(sanitized)
+
+
+def test_diagnostic_parser_drops_untrusted_failure_code():
+    from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
+
+    event = dict(
+        event="phase",
+        phase="publication.native_queries",
+        state="failed",
+        elapsed_seconds=1,
+        failure_code="PRIVATE/token",
+    )
+    value = parse_worker_diagnostics(json.dumps(event).encode())
+    assert len(value) == 1
+    assert "failure_code" not in value[0]
+    assert "PRIVATE" not in json.dumps(value)
+
+
+def test_phase_does_not_format_unknown_exception(capsys):
+    class PrivateError(Exception):
+        def __str__(self):
+            raise AssertionError("Exception details must not be formatted")
+
+    with pytest.raises(PrivateError):
+        with phase_events.phase("publication.native_queries"):
+            raise PrivateError()
+    assert json.loads(capsys.readouterr().err.splitlines()[-1])["failure_code"] == "unclassified"
+
+
+def test_real_decoder_deadline_is_reported_without_traceback(capsys):
+    from infrastructure_impact import publication_codec as codec
+    from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
+
+    with pytest.raises(ValueError, match="stream deadline"):
+        with phase_events.phase("publication.native_queries"):
+            list(codec.stream_tokens([-2], ["vendor text"], [], budget=codec.Budget(deadline=0)))
+    raw = capsys.readouterr().err
+    assert parse_worker_diagnostics(raw.encode())[-1]["failure_code"] == "stream_deadline"
+    assert "Traceback" not in raw and "vendor text" not in raw

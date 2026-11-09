@@ -1,6 +1,7 @@
 """Direct, opt-in bounded publication of the sanitized public projection."""
 
 import gzip
+import io
 import json
 from collections import deque
 from functools import lru_cache
@@ -100,6 +101,7 @@ class Writer:
         self.record_intervals = []
         self.string_parts = []
         self.shape_parts = []
+        self.table_transports = {}
 
     def part(self, kind, data):
         raw = encode(dict(schema_version=2, **self.identity, kind=kind, data=data))
@@ -108,6 +110,18 @@ class Writer:
         digest = sha256(raw).hexdigest()
         path = "data/v2/" + digest + ".json"
         (self.destination / path).write_bytes(raw)
+        if kind in ("strings", "shapes"):
+            output = io.BytesIO()
+            with gzip.GzipFile(fileobj=output, mode="wb", filename="", mtime=0) as stream:
+                stream.write(raw)
+            compressed = output.getvalue()
+            if len(compressed) < len(raw):
+                compressed_hash = sha256(compressed).hexdigest()
+                compressed_path = f"data/v2/{compressed_hash}.json.gz"
+                (self.destination / compressed_path).write_bytes(compressed)
+                self.table_transports[path] = dict(
+                    path=compressed_path, sha256=compressed_hash, bytes=len(compressed)
+                )
         return dict(path=path, sha256=digest, bytes=len(raw))
 
     def chunks(self, kind, values):
@@ -142,19 +156,39 @@ class Writer:
         root_hash, root_bytes, ascii_bytes = sha256(), 0, 0
         ascii_hash = sha256() if name == "snapshot.json" else None
 
+        pending, ascii_pending = bytearray(), bytearray()
+
+        def hash_bytes(raw, ascii_raw):
+            root_hash.update(raw)
+            if ascii_hash is not None:
+                ascii_hash.update(ascii_raw)
+            for item in active:
+                item["hash"].update(raw)
+
+        def flush_hashes():
+            if pending:
+                hash_bytes(pending, ascii_pending)
+                pending.clear()
+                ascii_pending.clear()
+
         def logical(raw, ascii_raw=None):
             nonlocal root_bytes, ascii_bytes
             ascii_raw = raw if ascii_raw is None else ascii_raw
-            root_hash.update(raw)
             root_bytes += len(raw)
-            if ascii_hash is not None:
-                ascii_hash.update(ascii_raw)
             ascii_bytes += len(ascii_raw)
             if root_bytes > SITE or ascii_bytes > SITE:
                 raise ValueError("root stream exceeds 1 GB")
-            for item in active:
-                item["hash"].update(raw)
-                item["size"] += len(raw)
+            if len(raw) >= 65_536 or ascii_hash is not None and len(ascii_raw) >= 65_536:
+                flush_hashes()
+                hash_bytes(raw, ascii_raw)
+            else:
+                if len(pending) + len(raw) > 65_536 or (
+                    ascii_hash is not None and len(ascii_pending) + len(ascii_raw) > 65_536
+                ):
+                    flush_hashes()
+                pending.extend(raw)
+                if ascii_hash is not None:
+                    ascii_pending.extend(ascii_raw)
 
         def flush():
             nonlocal tokens, encoded, decoded, page_first
@@ -197,8 +231,12 @@ class Writer:
             )
             marked = self.ranged(name, path) or detail_kind is not None
             if marked:
+                flush_hashes()
                 marker = dict(
-                    path=path, first=position, hash=sha256() if path else root_hash, size=0
+                    path=path,
+                    first=position,
+                    hash=sha256() if path else root_hash,
+                    start_bytes=root_bytes,
                 )
                 if path:
                     active.append(marker)
@@ -257,13 +295,14 @@ class Writer:
                 )
                 logical(raw, ascii_raw)
             if marked:
+                flush_hashes()
                 if path:
                     active.pop()
                 bound = dict(
                     root=name,
                     first_token=marker["first"],
                     end_token=position,
-                    logical_bytes=marker["size"] if path else root_bytes,
+                    logical_bytes=root_bytes - marker["start_bytes"],
                     logical_sha256=marker["hash"].hexdigest(),
                 )
                 if detail_kind is not None:
@@ -591,6 +630,9 @@ def write_bundle(destination, data):
         ),
         archive=writer.archive(routes["records"]),
     )
+    if writer.table_transports:
+        catalog["table_transports"] = writer.table_transports
+    codec.validate_table_transports(catalog)
     validate(catalog, "publication-v2.json")
     raw = encode(catalog)
     if len(raw) > INDEX:
@@ -648,10 +690,30 @@ def inspect_bundle(directory, facts):
     reader = PublicationReader(directory)
     if manifest["generation"] != reader.identity["publication"]["id"]:
         raise ValueError("manifest generation")
+    transports = codec.validate_table_transports(reader.catalog)
+    table_parts = {
+        row["part"]["path"]: row["part"]
+        for kind in ("strings", "shapes")
+        for row in reader.catalog[kind]
+    }
+    bound_transports = {part["path"] for part in transports.values()}
+    physical_transports = {
+        name for name in files if name.endswith(".gz") and name != "snapshot-v2.json.gz"
+    }
+    if physical_transports != bound_transports:
+        raise ValueError("unbound or missing table transport gzip")
+    for raw_path, compressed in transports.items():
+        decoded = codec.decode_table_transport(
+            files[compressed["path"]].read_bytes(), compressed, table_parts[raw_path]
+        )
+        if raw_path not in files or files[raw_path].read_bytes() != decoded:
+            raise ValueError("table transport differs from raw table asset")
     # Every physically inventoried v2 envelope is strictly parsed and bound,
     # including assets not reached by the default route.
     for name, path in files.items():
         if name.startswith("data/v2/"):
+            if name in bound_transports:
+                continue
             value = codec.strict_loads(path.read_bytes())
             if (
                 set(value) != {"schema_version", "publication", "generated_at", "kind", "data"}

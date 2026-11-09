@@ -14,6 +14,10 @@ coverage improvements and documentation. Start with the [README](README.md),
 5. Open a pull request explaining the problem, resulting behavior, validation and
    any coverage limits. Use the provided PR template.
 
+The table-transport browser tests require Node globals `Response`,
+`ReadableStream` and `DecompressionStream`. They also run through `pytest` when
+Node is installed.
+
 The runtime package is `infrastructure_impact/`. Root service scripts preserve
 workspace compatibility; do not create duplicate business logic there. The
 historical `impact.py` importer is outside the production package.

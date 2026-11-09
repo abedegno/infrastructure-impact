@@ -1,0 +1,75 @@
+{
+  "scope": "Pinned locally saved sanitized public projection; not full hosted certification",
+  "measurements": {
+    "before.json": {
+      "mode": "before",
+      "root": "switching-evidence.json",
+      "logical": {
+        "bytes": 365068886,
+        "sha256": "d1913e0606706bb174d63d88b1633f6246e24855a5a3bf25402dc9f422989a16"
+      },
+      "catalog_sha256": "69c4a4a9c874b1690060eceafc70b5d8fe1edecb70d37f99202ffdbee3f47c52",
+      "wall_seconds": 63.76121050002985,
+      "cpu_seconds": 62.976573,
+      "peak_resident_bytes": 115736576
+    },
+    "after.json": {
+      "mode": "after",
+      "root": "switching-evidence.json",
+      "logical": {
+        "bytes": 365068886,
+        "sha256": "d1913e0606706bb174d63d88b1633f6246e24855a5a3bf25402dc9f422989a16"
+      },
+      "catalog_sha256": "69c4a4a9c874b1690060eceafc70b5d8fe1edecb70d37f99202ffdbee3f47c52",
+      "wall_seconds": 56.72720824996941,
+      "cpu_seconds": 55.933762,
+      "peak_resident_bytes": 106315776
+    },
+    "writer-before.json": {
+      "mode": "before",
+      "input_checkpoint_sha256": "e6126b94facac03c0cebc401544c27bc4e21f74f4a8645c9615112a52ca6cc7b",
+      "root": {
+        "bytes": 365068886,
+        "sha256": "d1913e0606706bb174d63d88b1633f6246e24855a5a3bf25402dc9f422989a16"
+      },
+      "wall_seconds": 50.79856700007804,
+      "cpu_seconds": 50.488435,
+      "peak_resident_bytes": 1884962816,
+      "physical_files": 368,
+      "inventory_sha256": "1da21386e914dd7c3f0e2d5b7c14f4443ed09ba2205db8fcbc1a0ddbe1e067ee"
+    },
+    "writer-after.json": {
+      "mode": "after",
+      "input_checkpoint_sha256": "e6126b94facac03c0cebc401544c27bc4e21f74f4a8645c9615112a52ca6cc7b",
+      "root": {
+        "bytes": 365068886,
+        "sha256": "d1913e0606706bb174d63d88b1633f6246e24855a5a3bf25402dc9f422989a16"
+      },
+      "wall_seconds": 47.423876833869144,
+      "cpu_seconds": 47.144806,
+      "peak_resident_bytes": 1843331072,
+      "physical_files": 368,
+      "inventory_sha256": "1da21386e914dd7c3f0e2d5b7c14f4443ed09ba2205db8fcbc1a0ddbe1e067ee"
+    },
+    "schema-proposal-benchmark.json": {
+      "public_input_sha256": "e6126b94facac03c0cebc401544c27bc4e21f74f4a8645c9615112a52ca6cc7b",
+      "claims": 91393,
+      "results": [
+        {
+          "backend": "legacy",
+          "valid": true,
+          "wall_seconds": 113.37583316699602,
+          "cpu_seconds": 44.316878,
+          "peak_resident_bytes": 1863925760
+        },
+        {
+          "backend": "compiled",
+          "valid": true,
+          "wall_seconds": 9.049009874928743,
+          "cpu_seconds": 3.785687000000003,
+          "peak_resident_bytes": 1863925760
+        }
+      ]
+    }
+  }
+}

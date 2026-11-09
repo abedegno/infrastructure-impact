@@ -13,6 +13,7 @@ from hashlib import sha256
 from pathlib import Path
 from time import perf_counter
 
+from ..phase_events import FAILURE_CODES
 from ..settings import PACKAGE
 
 REQUEST = "target-import-request.json"
@@ -48,10 +49,41 @@ def parse_worker_diagnostics(raw, *, include_terminal=True):
     events = []
     phases = 0
     terminal = False
+    monitor_events = 0
     for line in raw[:65_536].splitlines():
         try:
             value = json.loads(line, object_pairs_hook=pairs)
-            if not isinstance(value, dict) or not elapsed(value.get("elapsed_seconds")):
+            if not isinstance(value, dict):
+                continue
+            if value.get("event") == "monitor_capacity":
+                if (
+                    monitor_events >= 2
+                    or value.get("mode") not in ("default", "archive")
+                    or value.get("reason") not in ("default_transfer", "part")
+                    or value.get("resource")
+                    not in ("manifest", "index", "v2_part", "cohort", "other")
+                    or any(
+                        type(value.get(key)) is not int or not 0 <= value[key] <= 2**40
+                        for key in ("observed_bytes", "limit_bytes")
+                    )
+                ):
+                    continue
+                events.append(
+                    {
+                        key: value[key]
+                        for key in (
+                            "event",
+                            "mode",
+                            "reason",
+                            "resource",
+                            "observed_bytes",
+                            "limit_bytes",
+                        )
+                    }
+                )
+                monitor_events += 1
+                continue
+            if not elapsed(value.get("elapsed_seconds")):
                 continue
             if value.get("event") == "candidate_worker":
                 if (
@@ -83,6 +115,9 @@ def parse_worker_diagnostics(raw, *, include_terminal=True):
                     "state": value["state"],
                     "elapsed_seconds": round(value["elapsed_seconds"], 6),
                 }
+                code = value.get("failure_code")
+                if value["state"] == "failed" and isinstance(code, str) and code in FAILURE_CODES:
+                    event["failure_code"] = code
                 cpu = value.get("process_cpu_seconds")
                 if elapsed(cpu):
                     event["process_cpu_seconds"] = round(cpu, 6)
@@ -830,12 +865,16 @@ def _worker(database, public, *, publication_format="v1"):
             from .publication_v2 import inspect_bundle, native_parity
 
             reader = inspect_bundle(public, result["candidate"])
-            native_parity(database, public, home, reader)
         else:
             snapshot = _inspect_bundle(public, result["candidate"])
+        # Reject download/part-capacity failures before the expensive independent
+        # comparison. Every gate remains mandatory for an accepted candidate.
+        _monitors(public, home, result["candidate"], base_path=_base_path(home))
+        if publication_format == "v2":
+            native_parity(database, public, home, reader)
+        else:
             _parity(database, public, home, snapshot)
         result["candidate"]["parity_passed"] = True
-        _monitors(public, home, result["candidate"], base_path=_base_path(home))
         _preserved(
             database,
             home,

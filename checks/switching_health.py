@@ -351,6 +351,7 @@ def open_publication_v2(index, verified, manifest, schemas):
     codec = publication_codec()
     identity = {k: index[k] for k in ("publication", "generated_at")}
     cache, cache_bytes = OrderedDict(), 0
+    table_transports = {}
 
     def fetch(desc, *, kind=None):
         nonlocal cache_bytes
@@ -360,9 +361,18 @@ def open_publication_v2(index, verified, manifest, schemas):
             max_bytes=2_000_000 if kind is None else 8_000_000,
         )
         assert manifest["sha256"].get(desc["path"]) == desc["sha256"], "Unbound v2 part"
+        transport = table_transports.get(desc["path"]) if kind in ("strings", "shapes") else None
+        if transport is not None:
+            assert manifest["sha256"].get(transport["path"]) == transport["sha256"], (
+                "Unbound v2 table transport"
+            )
         raw = cache.pop(desc["path"], None)
         if raw is None:
-            raw = verified(desc["path"], desc["bytes"])
+            if transport is not None:
+                encoded = verified(transport["path"], transport["bytes"])
+                raw = codec.decode_table_transport(encoded, transport, desc)
+            else:
+                raw = verified(desc["path"], desc["bytes"])
             assert len(raw) == desc["bytes"], "V2 part size"
             while cache and cache_bytes + len(raw) > 16_000_000:
                 _, old = cache.popitem(last=False)
@@ -386,6 +396,7 @@ def open_publication_v2(index, verified, manifest, schemas):
     validate_schema(index, "static-index-v2.json", schemas)
     catalog = fetch(index["publication_v2"])
     validate_schema(catalog, "publication-v2.json", schemas)
+    table_transports = codec.validate_table_transports(catalog)
     reader = codec.CatalogReader(
         fetch,
         catalog,

@@ -144,7 +144,9 @@ archives retain the complete snapshot scope, independent of the selected cohort.
 See [static delivery](docs/STATIC_DELIVERY.md) for integrity checks and transfer
 budgets. Local publication v2 is opt-in: it uses bounded parts and a self-contained
 snapshot archive, while full research inputs remain separate mandatory logical
-roots. Study JSON downloads are summaries; the local streaming export command
+roots. Optional gzip transport reduces shared-table downloads while verifying both
+compressed and decoded fingerprints and sizes; raw assets remain available.
+Study JSON downloads are summaries; the local streaming export command
 retrieves complete roots. See [target import and v2 export](docs/target-import.md). Local target-import
 stages retain verified raw captures under the collector home by default
 (`--capture-cache` overrides the path). Hosted persistence across runners requires

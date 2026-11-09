@@ -47,6 +47,7 @@ class PublicationReader(codec.CatalogReader):
         self._identity(self.catalog)
         self._validate_table_descriptors(self.catalog["strings"])
         self._validate_table_descriptors(self.catalog["shapes"])
+        codec.validate_table_transports(self.catalog)
 
     def _path(self, path):
         target = self.directory / path
@@ -509,8 +510,6 @@ class PublicationReader(codec.CatalogReader):
         }
         metadata["coverage"] = []
         study = contracts.definition()
-        validator = contracts._validators()["switching-evidence-v1.json"]
-        claim_validator = validator.evolve(schema=validator.schema["properties"]["claims"]["items"])
         links, fixed, held = [], [], 0
         stream_budget = codec.Budget(self.limits["stream"])
         for i, route in enumerate(self._claim_routes()):
@@ -547,7 +546,7 @@ class PublicationReader(codec.CatalogReader):
             claim = codec.strict_loads(raw, max_bytes=maximum, parse_int=number, parse_float=number)
             if claim["claim_id"] != route[0]:
                 raise ValueError("claim identity mismatch")
-            claim_validator.validate(claim)
+            contracts._validate_claim(claim)
             contracts._validate_evidence_semantics(
                 {**metadata, "claims": [claim]}, **self.identity, _study=study, _linkage=links
             )

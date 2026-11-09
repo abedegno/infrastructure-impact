@@ -46,3 +46,6 @@ Python and JavaScript dependencies are declared and locked in the project. Their
 individual licenses and notices continue to apply. The runtime container also
 installs Poppler and operating-system packages; retain their license information
 when distributing images. This repository does not vendor their implementations.
+
+The compiled study-schema validator uses [`jsonschema-rs`](https://pypi.org/project/jsonschema-rs/0.60.3/),
+pinned to version 0.60.3, under its [MIT license](https://github.com/Stranger6667/jsonschema/blob/master/LICENSE).

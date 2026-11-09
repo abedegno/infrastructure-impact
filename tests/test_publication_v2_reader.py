@@ -1016,3 +1016,16 @@ def test_inspection_and_native_parity_emit_static_nested_phases(tmp_path, monkey
     required = {"event", "phase", "state", "elapsed_seconds"}
     allowed = required | {"process_cpu_seconds", "peak_resident_bytes"}
     assert all(required <= set(event) <= allowed for event in events)
+
+
+def test_claim_reader_uses_compiled_shapes_without_losing_semantics(generation, monkeypatch):
+    from infrastructure_impact.application import switching_evidence as contracts
+
+    contracts._compiled_validators()
+    legacy = contracts._validators()["switching-evidence-v1.json"]
+
+    def unnecessary_walk(self, value):
+        raise AssertionError("Valid decoded claims should not repeat the Python schema walk")
+
+    monkeypatch.setattr(type(legacy), "validate", unnecessary_walk)
+    assert list(PublicationReader(generation).iter_claims())

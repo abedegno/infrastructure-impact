@@ -276,16 +276,41 @@
       pieces.push(chunk);
     return pieces.join('');
   }
-  function descriptor(d) {
+  function descriptor(d, compressed = false) {
     if (
       !d ||
       Object.keys(d).sort().join(',') !== 'bytes,path,sha256' ||
-      !/^data\/v2\/[a-f0-9]{64}\.json$/.test(d.path) ||
-      d.path !== `data/v2/${d.sha256}.json` ||
+      !(compressed ? /^data\/v2\/[a-f0-9]{64}\.json\.gz$/ : /^data\/v2\/[a-f0-9]{64}\.json$/).test(
+        d.path,
+      ) ||
+      d.path !== `data/v2/${d.sha256}.json${compressed ? '.gz' : ''}` ||
       integer(d.bytes, 1) > 8000000
     )
       fail('descriptor');
     return d;
+  }
+  function tableTransports(catalog) {
+    if (!Object.hasOwn(catalog, 'table_transports')) return {};
+    const transports = catalog.table_transports;
+    if (!transports || typeof transports !== 'object' || Array.isArray(transports))
+      fail('table transports');
+    let tableBytes = 0;
+    const paths = new Set(
+        [...catalog.strings, ...catalog.shapes].map((entry) => {
+          const part = descriptor(entry.part);
+          tableBytes += part.bytes;
+          return part.path;
+        }),
+      ),
+      compressedPaths = new Set();
+    for (const [path, transport] of Object.entries(transports)) {
+      if (!paths.has(path)) fail('unknown table transport');
+      descriptor(transport, true);
+      if (compressedPaths.has(transport.path)) fail('duplicate table transport');
+      compressedPaths.add(transport.path);
+    }
+    if (compressedPaths.size && tableBytes > 128000000) fail('table decoded byte budget');
+    return transports;
   }
   function range(r) {
     if (
@@ -405,7 +430,8 @@
       catalog.publication.advisory_schema_version !== identity.publication.advisory_schema_version
     )
       fail('mixed generations');
-    const cache = new Map(),
+    const transports = tableTransports(catalog),
+      cache = new Map(),
       pending = new Map(),
       pool = json.requestPool();
     let bytes = 0;
@@ -414,6 +440,10 @@
       const op = options.operation,
         signal = op?.signal ?? options.signal;
       d = Object.freeze({ ...descriptor(d) });
+      const encoded =
+        typeof DecompressionStream === 'function' && Object.hasOwn(transports, d.path)
+          ? transports[d.path]
+          : d;
       if (cache.has(d.path)) {
         const value = cache.get(d.path);
         cache.delete(d.path);
@@ -445,34 +475,33 @@
         });
         try {
           if (signal?.aborted) fail('cancelled');
-          const response = await (op
-            ? op.run(Promise.race([fetchPart(d.path, { signal: controller.signal }), expired]))
-            : Promise.race([fetchPart(d.path, { signal: controller.signal }), expired]));
-          if (!response.ok) fail('part unavailable');
-          let value;
-          if (response.body?.getReader) {
-            const reader = response.body.getReader(),
+          const wait = (promise) => {
+            const bounded = Promise.race([promise, expired]);
+            return op ? op.run(bounded) : bounded;
+          };
+          async function readBytes(body, bound) {
+            const reader = body.getReader(),
               pieces = [];
             let size = 0;
             try {
               for (;;) {
-                const part = await (op
-                  ? op.run(Promise.race([reader.read(), expired]))
-                  : Promise.race([reader.read(), expired]));
+                const part = await wait(reader.read());
                 if (part.done) break;
+                // Retain at most the declared bytes; the first excess byte is
+                // sufficient to reject, including a single oversized chunk.
+                if (part.value.length > bound - size) fail('part size');
                 size += part.value.length;
-                if (size > d.bytes) fail('part size');
                 pieces.push(part.value);
               }
-              value = new Uint8Array(size);
+              const result = new Uint8Array(size);
               let offset = 0;
               for (const piece of pieces) {
-                value.set(piece, offset);
+                result.set(piece, offset);
                 offset += piece.length;
               }
+              return result;
             } finally {
-              controller.abort();
-              // Cancellation is advisory: an uncooperative response must not
+              // Cancellation is advisory: a stalled decoder/body must not
               // retain the request slot or poison the pending metadata cache.
               try {
                 Promise.resolve(reader.cancel()).catch(() => {});
@@ -481,17 +510,24 @@
                 reader.releaseLock();
               } catch {}
             }
-          } else
-            value = new Uint8Array(
-              await (op
-                ? op.run(Promise.race([response.arrayBuffer(), expired]))
-                : Promise.race([response.arrayBuffer(), expired])),
-            );
-          if (
-            value.length !== d.bytes ||
-            (await (op ? op.run(digest(value)) : digest(value))) !== d.sha256
-          )
-            fail('part fingerprint');
+          }
+          async function verified(value, expected) {
+            if (value.length !== expected.bytes || (await wait(digest(value))) !== expected.sha256)
+              fail('part fingerprint');
+            return value;
+          }
+          const response = await wait(fetchPart(encoded.path, { signal: controller.signal }));
+          if (!response.ok) fail('part unavailable');
+          let value = await verified(
+            response.body?.getReader
+              ? await readBytes(response.body, encoded.bytes)
+              : new Uint8Array(await wait(response.arrayBuffer())),
+            encoded,
+          );
+          if (encoded !== d) {
+            const decoded = new Response(value).body.pipeThrough(new DecompressionStream('gzip'));
+            value = await verified(await readBytes(decoded, d.bytes), d);
+          }
           if (value.length <= maxCache) {
             while (bytes + value.length > maxCache) {
               const key = cache.keys().next().value;
@@ -504,6 +540,7 @@
           }
           return value;
         } finally {
+          controller.abort();
           clearTimeout(timer);
           signal?.removeEventListener('abort', abort);
           limits.requestSlots?.release();
