@@ -323,15 +323,67 @@ descriptors are checked without claiming unloaded detail bytes were verified.
 Public CVSS metrics pass a closed-field monitor allowlist; private notes or added
 metric fields fail the check. These gates do not independently rescore CVSS.
 
-The unreleased evidence contract also records `reviewed_source_sections`
-remediation bindings for Arista advisory 0100. The existing core parser checks the
-reviewed section hashes; the bridge requires the exact affected EOS branch,
-CVE-specific fixed EOS branch, source identity and locators. The retained fixed
-claim and affected claim must agree on revision and publisher identity. This
-records the explicit OS-family remediation publication, without deriving model
-applicability, product IDs, an availability date or installed software state.
-A fixed-only statement still cannot establish affectedness. Python and browser
-contract checks reject mismatched source, CVE, product or revision links.
+The evidence contract records `reviewed_source_sections` remediation bindings
+for Arista advisories 0100, 0128, 0201 and 0075, and three AOS-CX affected/fixed
+pairs in Aruba HPESBNW04669. These are reviewed associations between source-owned
+sections, rather than publisher product-ID equivalence or automatic version
+matching. The retained fixed and affected claims must agree on source revision,
+CVE and product ownership. Python and browser checks require a matching fixed
+sibling; ambiguous or changed sections remain unsupported.
+
+For Aruba CVE-2024-6387, only the reviewed 10.14, 10.13 and 10.10 affected branches
+link respectively to 10.14.0007, 10.13.1031 and 10.10.1131. The 10.11 and 10.12
+migration paths remain unresolved. The source's remediation date is advisory
+context and does not establish software release availability. Arista EOS lists
+remain separate from TerminAttr, MOS and hotfix instructions. These links do not
+establish hardware model applicability or installed software state; a fixed-only
+statement cannot establish affectedness. Literal fixed releases, reported software
+release dates and actual customer upgrades remain separate facts.
+
+### Release and bundle date evidence
+
+Release evidence uses registered official reference sources and the existing
+revision store. Source-byte SHA-256, normalized fingerprint, capture time and
+parser time remain separate from a publisher's reported release date. A page
+captured in 2026 can report a 2024 release date; that is retrospective publisher
+evidence, not proof that we observed the release in 2024.
+
+The initial bounded history set includes the official AOS-CX 6300/6400
+[10.14 history](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html),
+[10.16 history](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-16-xx/version-history.html)
+and [supported-product table](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/products-supported-3.html).
+The 10.14 table explicitly dates 10.14.0007 to 12 July 2024. Its release/posting
+wording differs from the initial-release-only row; missing posting wording stays
+unknown. The product table retains individual SKU minimum-version statements.
+Later SKUs in a maintained table do not establish historical support, affectedness
+or applicability to every 6300M model.
+
+[Arista advisory 0148](https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148)
+has an initial notice date of 2 September 2026 and a separate member-publication
+date of 9 September 2026. The reviewed table explicitly links 30 EOS advisories
+and four VeloCloud advisories. Only EOS membership enters this switching context;
+neither date is firmware availability. A truncated or changed member table fails
+visibly rather than being treated as a complete bundle.
+
+The optional [Cisco IOS XE Dublin 17.12.1 source](https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html)
+remains disabled: anonymous raw acquisition returned 403. Its parser has synthetic
+ownership tests but no accepted raw capture. Hardware series dates and release-note
+update dates cannot supply software availability. No authenticated portal access
+or alternate-source date substitution is performed.
+
+These documents are a reviewed source set, not complete vendor release histories.
+The packaged candidate configuration enables the three Aruba references and
+Arista advisory 0148 through existing reference collection. Cisco is explicitly
+configured with `enabled: false`; its history source remains excluded and
+not collected. This preparation does not activate a hosted collector. The
+[bounded cached replay](research/2026-11-09-customer-comparison-replay.md) verifies
+the integration without establishing current production coverage.
+
+Undated fixes, releases without justified CVE links, unavailable sources and unknown
+archive totals remain distinct. A literal version association supplies release
+context; it does not establish an installed version, an upgrade path or a customer
+upgrade count. A release without linked CVEs is not evidence of a silent security
+fix or vendor concealment.
 
 ### Study identity and browser ownership
 
@@ -406,3 +458,65 @@ are not publisher product IDs. Platform scope remains unresolved, and resolution
 prose does not become a fixed-release event. Unrecognized affected-software
 headings stop prior-product version inheritance and remain visible in core
 normalization warnings. Earlier mixed and multi-CVE layouts remain review backlog.
+
+## Customer comparison API and exports
+
+The browser deep link is `#customer-comparison`. A compact vendor overview appears
+before detailed study evidence, in the selected study's fixed vendor order. It
+reuses affected CVEs, remediation-publication events, KEV listed/unknown counts and
+availability, source coverage state, selected scope and model-unspecified claims.
+CVE counts use the original advisory-publication cohort; remediation-publication
+counts use event dates, as in the existing study.
+Distinct selected release nodes with vendor-reported fixed CVEs and nodes with
+affected-scope CVE links are counted separately as literal fixed-version evidence.
+Missing linked evidence is not established, not zero upgrade work. The table does
+not combine severity providers, change the CVE denominator or rank vendors;
+provider-specific severity and complete audit material remain below it.
+
+Native `GET /api/v1/customer-comparison` accepts the same single `vendor`, `scope`,
+`window`, `cves` and `format=json|csv` controls and rejects blank, duplicate or
+unknown controls. Its closed `customer-comparison-v1` envelope contains
+`schema_version`, `publication`, `generated_at`, `study`, `release_history` and
+`limitations`. The selected study is either the genuine summary v1 or the genuine bounded
+switching-overview v2, preserving its source-specific severity facets, KEV
+membership, event counts and coverage. The overview retains explicit detail
+ranges for deferred arrays; it is never relabelled as a complete summary.
+Release context never creates another study denominator or adds affected CVEs or
+events. Both nested reports must share publication identity, observation bounds,
+study definition and the exact selection. For default study controls, v2 reuses its overview and re-evaluates KEV freshness
+without scanning claims. Custom controls use the existing selector once. Both
+paths load the optional release root without loading the generic runtime snapshot
+or full comparison.
+
+Missing release assets in old publications return an explicit unavailable history
+alongside the available study with HTTP 200. A missing study retains the existing
+503 behavior. Damaged or mixed-generation history fails closed. Static Pages has
+no external REST service: a browser composes the same envelope from the selected
+study summary and the optional `switching-release-history.json` root. Each control
+change selects from the complete history root, whose `selection` is null; a
+previously filtered history must never become the source for a new selection.
+
+Release history describes the selected **advisory CVE cohort**, not necessarily
+releases published within that advisory window. Publisher-reported fixed CVEs
+and affected-scope-linked CVEs have separate sets/counts. A fixed-only statement
+can supply release context without establishing affectedness, model applicability
+or an upgrade event. Only `reported_release_dates` are software dates;
+remediation availability dates, bundle notice initial dates and explicit bundle
+member publication dates retain their different meanings. SKU minimum versions
+are literal support context, with no automatic version ordering or applicability.
+Unlinked releases and missing sources denote unknown evidence, not zero fixes;
+the reviewed source set does not establish complete release coverage.
+
+CSV exports use the same accepted envelope. `study_summary` rows reuse existing
+severity-provider facets and include the accepted selected row in `details`.
+`study_representation` and `study_schema_version` explicitly distinguish overview
+rows with deferred ranges from complete summary rows.
+`release_reference` rows retain each compact reference, separate fixed/affected
+counts and history context; a history-only row has `reference_kind=history_context`
+and blank counts. `bundle_context` and `platform_support` rows preserve literal
+context separately; `source_coverage` rows preserve study/source diagnostics and
+history availability even when history is unavailable. Structured `details` cells
+contain compact JSON. `totals_basis=repeated_totals_nonadditive` marks every row;
+never sum across severity facets or release references. Cells use the existing
+spreadsheet-control escaping policy, and v2 exports share the selected-response
+byte ceiling. JSON uses the versioned envelope schema bundled under `schemas/`.

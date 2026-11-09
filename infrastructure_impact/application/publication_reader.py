@@ -552,8 +552,14 @@ class PublicationReader(codec.CatalogReader):
             )
             if (
                 claim["vendor"] == "arista"
-                and claim["advisory_id"] == "19904-security-advisory-0100"
-            ):
+                and claim["advisory_id"]
+                in {
+                    "19904-security-advisory-0100",
+                    "23115-security-advisory-0128",
+                    "24847-security-advisory-0201",
+                    "15438-security-advisory-0075",
+                }
+            ) or (claim["vendor"] == "aruba" and claim["advisory_id"] == "HPESBNW04669"):
                 held += route[3]
                 if held > self.limits["selected"]:
                     raise ValueError("cross-claim linkage byte budget")
@@ -561,6 +567,20 @@ class PublicationReader(codec.CatalogReader):
             yield claim
         for claim, remediation, binding in links:
             contracts._validate_reviewed_link(claim, remediation, binding, fixed)
+
+    def switching_release_history(self, study_selection):
+        """Optional lazy root; authenticate generation before reading release arrays."""
+        from .switching_releases import select_report
+
+        self._identity(study_selection)
+        name = "switching-release-history.json"
+        if name not in self.catalog["roots"]:
+            return select_report(None, study_selection)
+        self._identity({k: self.field(name, k) for k in self.identity})
+        value = self.materialize_range(self.ranges(name)[()])
+        result = select_report(value, study_selection)
+        codec.charge_value(result, codec.Budget(self.limits["selected"]))
+        return result
 
     def switching_selection(self, options, *, evaluated_at):
         return next(self.switching_selections([options], evaluated_at=evaluated_at))

@@ -661,18 +661,14 @@ def _select_summaries(report, selections, *, evaluated_at):
     """Eager native v2 batch with one fresh, complete source validation."""
     contracts.validate_comparison(report)
     source_proof = contracts._fingerprint(report)
-    inputs_proof = contracts._json(report["inputs"]) if report["inputs"] is not None else None
     results = []
     for options in selections:
         if contracts._fingerprint(report) != source_proof:
             raise ValueError("Native comparison source changed while selecting")
-        selected = _select_report(
-            report, **options, evaluated_at=evaluated_at, validated_inputs_json=inputs_proof
-        )
+        selected = _select_summary(report, **options, evaluated_at=evaluated_at)
         if contracts._fingerprint(report) != source_proof:
             raise ValueError("Native comparison source changed while selecting")
-        results.append(summary(selected))
-        del selected  # Keep at most one full isolated input copy alive.
+        results.append(selected)
     return results
 
 
@@ -689,6 +685,44 @@ def _select_report(
     validated_inputs_json=None,
 ):
     """Recompute from typed immutable inputs, never from already-filtered rows."""
+    evaluation = _selection_evaluation(vendor, scope_level, cve_ids, evaluated_at)
+    available = (
+        isinstance(report, dict)
+        and report.get("schema_version") == 1
+        and isinstance(report.get("inputs"), dict)
+    )
+    if available:
+        result = copy.deepcopy(report)
+    else:
+        result = _unavailable_selection(report, evaluation, publication, generated_at)
+    _populate_selection(result, vendor, scope_level, window, cve_ids, evaluation)
+    _validate_selection_output(result, validated_inputs_json)
+    return result
+
+
+def _unavailable_selection(report, evaluation, publication=None, generated_at=None):
+    definition = contracts.definition()
+    origin = generated_at or (report or {}).get("generated_at") or evaluation
+    result = dict(
+        schema_version=1,
+        publication=copy.deepcopy(
+            publication if publication is not None else (report or {}).get("publication")
+        ),
+        generated_at=origin,
+        evaluated_at=evaluation,
+        availability="unavailable",
+        definition=definition,
+        observation_end=day(origin),
+        inputs=None,
+        rows=[],
+        sources=[],
+        issues=["comparison_unavailable"],
+        method=METHOD,
+    )
+    return result
+
+
+def _selection_evaluation(vendor, scope_level, cve_ids, evaluated_at):
     if vendor is not None and vendor not in VENDORS:
         raise ValueError("Unknown study vendor")
     if scope_level not in SCOPES:
@@ -700,32 +734,31 @@ def _select_report(
         raise ValueError("CVE selection must be null or a list of canonical CVE IDs")
     evaluation = evaluated_at or datetime.now(timezone.utc).isoformat()
     kev_reports._timestamp(evaluation)
-    available = (
-        isinstance(report, dict)
-        and report.get("schema_version") == 1
-        and isinstance(report.get("inputs"), dict)
-    )
-    if available:
-        result = copy.deepcopy(report)
+    return evaluation
+
+
+def _select_summary(
+    report, *, vendor=None, scope_level="os_family", window="all", cve_ids=None, evaluated_at=None
+):
+    """Select only an isolated summary inside the eager, source-guarded native batch.
+
+    The batch freshly validates the complete source. Borrow its inputs only for
+    synchronous reduction; summary() copies every returned field independently.
+    No borrowed input or source reference can escape this helper.
+    """
+    evaluation = _selection_evaluation(vendor, scope_level, cve_ids, evaluated_at)
+    if isinstance(report["inputs"], dict):
+        result = {k: v for k, v in report.items() if k not in ("rows", "sources", "selection")}
+        result.update(rows=[], sources=[])
     else:
-        definition = contracts.definition()
-        origin = generated_at or (report or {}).get("generated_at") or evaluation
-        result = dict(
-            schema_version=1,
-            publication=copy.deepcopy(
-                publication if publication is not None else (report or {}).get("publication")
-            ),
-            generated_at=origin,
-            evaluated_at=evaluation,
-            availability="unavailable",
-            definition=definition,
-            observation_end=day(origin),
-            inputs=None,
-            rows=[],
-            sources=[],
-            issues=["comparison_unavailable"],
-            method=METHOD,
-        )
+        result = _unavailable_selection(report, evaluation)
+    _populate_selection(result, vendor, scope_level, window, cve_ids, evaluation)
+    return summary(result)
+
+
+def _populate_selection(result, vendor, scope_level, window, cve_ids, evaluation):
+    """Shared options, bounds, rows, identities and provenance for both outputs."""
+    available = isinstance(result.get("inputs"), dict)
     _bounds(result["definition"], result["observation_end"], window)
     requested = sorted(set(cve_ids)) if cve_ids is not None else None
     vendors = [vendor] if vendor else list(VENDORS)
@@ -748,8 +781,6 @@ def _select_report(
     )
     if available:
         result["sources"] = _selected_sources(result["inputs"]["evidence"], result["rows"])
-    _validate_selection_output(result, validated_inputs_json)
-    return result
 
 
 def _validate_selection_output(result, validated_inputs_json):
@@ -784,11 +815,16 @@ def _selected_sources(evidence, rows, *, build=None):
     sources = {}
 
     def retain(source):
-        identity = contracts.definition_sha256(source)
-        if identity not in sources:
+        if set(source) != set(contracts._SOURCE_FIELDS) or any(
+            type(source[field]) is not str for field in contracts._SOURCE_FIELDS
+        ):
+            raise ValueError("Expected a closed four-string Source")
+        key = tuple(source[field] for field in contracts._SOURCE_FIELDS)
+        if key not in sources:
+            identity = contracts.definition_sha256(source)
             build.value(identity)
             build.value(source)
-            sources[identity] = source
+            sources[key] = source
 
     def collect(node):
         if isinstance(node, dict):

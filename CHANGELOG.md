@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0 research preview candidate — 2026-11-09
+
+- Add a customer switching comparison with selected affected CVEs, remediation-publication events, provider severity, KEV, coverage/model limits and separate literal fixed-release evidence. Share the native/static/browser selection and JSON/CSV contracts; retain unavailable old-publication history and accepted exports during failed or pending loads.
+- Preserve reviewed Aruba affected-to-fix links and Arista product/CVE-owned fixed statements. Add bounded release-history, support-table and bundle references through existing collection: three Aruba references and Arista advisory 0148 enabled in packaged configuration; blocked anonymous Cisco reference explicitly disabled. No new model binding, release-date inference, completeness denominator, vendor ranking or customer upgrade count.
+- Record cached public replay acceptance and prepare package 0.13.0 with example plugin 0.1.12 compatibility. Source release, full hosted CI, runtime pin activation, collection and live acceptance remain controller steps.
+
 ## 0.12.1 research preview candidate — 2026-11-07
 
 - Fix the health monitor’s KEV scope for CVEs present only in labelled retained evidence, outside both current records and the benchmark. Derive extra context from validated retained wrappers; keep exact scope checks and reject missing or unproven CVEs. Cover indexed and full-snapshot readers.

@@ -255,3 +255,25 @@ def test_real_decoder_deadline_is_reported_without_traceback(capsys):
     raw = capsys.readouterr().err
     assert parse_worker_diagnostics(raw.encode())[-1]["failure_code"] == "stream_deadline"
     assert "Traceback" not in raw and "vendor text" not in raw
+
+
+@pytest.mark.parametrize("label", ["publication.native_expected", "publication.native_reader"])
+def test_native_subphase_diagnostics_accept_only_static_numeric_metadata(label, capsys):
+    from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
+
+    with phase_events.phase(label):
+        pass
+    raw = capsys.readouterr().err
+    accepted = parse_worker_diagnostics(raw.encode())
+    assert [e["state"] for e in accepted] == ["started", "completed"]
+    assert all(e["phase"] == label for e in accepted)
+    event = json.loads(raw.splitlines()[-1])
+    event["private"] = "PRIVATE/CVE-2099-1234/https://example.test"
+    assert "PRIVATE" not in json.dumps(parse_worker_diagnostics(json.dumps(event).encode()))
+    for field, value in (
+        ("phase", label + ".unknown"),
+        ("elapsed_seconds", "PRIVATE"),
+        ("elapsed_seconds", True),
+        ("elapsed_seconds", float("nan")),
+    ):
+        assert parse_worker_diagnostics(json.dumps({**event, field: value}).encode()) == []

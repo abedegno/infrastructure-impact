@@ -1,0 +1,999 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observation_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "availability": {
+      "enum": [
+        "available",
+        "unavailable"
+      ]
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "release_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "vendor": {
+            "enum": [
+              "aruba",
+              "arista",
+              "cisco"
+            ]
+          },
+          "family": {
+            "enum": [
+              "aruba-aoscx",
+              "arista-eos",
+              "cisco-iosxe"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "product": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "platforms": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20000
+                  }
+                },
+                "reported_release_date": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Literal software release date reported by this publisher release-history source, with platform context retained."
+                },
+                "publisher_reports_posted": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "date_basis": {
+                  "enum": [
+                    "publisher_release_history",
+                    "publisher_release_date"
+                  ]
+                },
+                "statement": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://"
+                    },
+                    "source_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "retrieved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "source_locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "source_sha256",
+                    "retrieved_at",
+                    "source_locator"
+                  ]
+                }
+              },
+              "required": [
+                "source_id",
+                "product",
+                "platforms",
+                "reported_release_date",
+                "publisher_reports_posted",
+                "date_basis",
+                "statement",
+                "source"
+              ]
+            }
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "vendor_fixed",
+                    "affected_scope_fix"
+                  ]
+                },
+                "claim_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "advisory_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "cve_id": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                },
+                "initial_published_at": {
+                  "anyOf": [
+                    {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "scope_level": {
+                  "enum": [
+                    "os_family",
+                    "model_qualified"
+                  ]
+                },
+                "publisher_status": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 20000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "expression": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20000
+                },
+                "link_basis": {
+                  "enum": [
+                    "explicit_fixed_claim",
+                    "explicit_product_id",
+                    "same_source_row",
+                    "reviewed_source_sections"
+                  ]
+                },
+                "availability_date": {
+                  "anyOf": [
+                    {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Original remediation availability date from the advisory. This is advisory context, never a firmware release date, first-fix date or inferred delay."
+                },
+                "source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://"
+                    },
+                    "source_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "retrieved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "source_locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "source_sha256",
+                    "retrieved_at",
+                    "source_locator"
+                  ]
+                },
+                "claim_source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://"
+                    },
+                    "source_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "retrieved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "source_locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "source_sha256",
+                    "retrieved_at",
+                    "source_locator"
+                  ],
+                  "description": "Original current claim provenance, distinct from the remediation section provenance retained in source."
+                }
+              },
+              "required": [
+                "kind",
+                "claim_id",
+                "advisory_id",
+                "cve_id",
+                "initial_published_at",
+                "scope_level",
+                "publisher_status",
+                "expression",
+                "link_basis",
+                "availability_date",
+                "source",
+                "claim_source"
+              ]
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "reported_release_dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Distinct explicit publisher release-history dates. Never filled from advisory, remediation, bundle, capture or parsing dates."
+          },
+          "vendor_reported_fixed_cve_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            }
+          },
+          "vendor_reported_fixed_cve_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "affected_scope_cve_ids": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            }
+          },
+          "affected_scope_cve_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "release_id",
+          "vendor",
+          "family",
+          "version",
+          "history",
+          "references",
+          "issues",
+          "reported_release_dates",
+          "vendor_reported_fixed_cve_ids",
+          "vendor_reported_fixed_cve_count",
+          "affected_scope_cve_ids",
+          "affected_scope_cve_count"
+        ]
+      }
+    },
+    "bundles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "enum": [
+              "aruba",
+              "arista",
+              "cisco"
+            ]
+          },
+          "family": {
+            "enum": [
+              "aruba-aoscx",
+              "arista-eos",
+              "cisco-iosxe"
+            ]
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "publisher_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "initial_published_at": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "member_publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "member_advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "source_url",
+              "source_sha256",
+              "retrieved_at",
+              "source_locator"
+            ]
+          }
+        },
+        "required": [
+          "vendor",
+          "family",
+          "source_id",
+          "publisher_id",
+          "title",
+          "initial_published_at",
+          "member_publication_date",
+          "member_advisory_ids",
+          "source"
+        ]
+      },
+      "description": "Publisher notice and member dates remain distinct. Bundle membership is context; it never supplies version identities or fixed CVE counts."
+    },
+    "platform_support": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "enum": [
+              "aruba",
+              "arista",
+              "cisco"
+            ]
+          },
+          "family": {
+            "enum": [
+              "aruba-aoscx",
+              "arista-eos",
+              "cisco-iosxe"
+            ]
+          },
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "sku": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "model_literal": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "minimum_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "source_url",
+              "source_sha256",
+              "retrieved_at",
+              "source_locator"
+            ]
+          }
+        },
+        "required": [
+          "vendor",
+          "family",
+          "source_id",
+          "sku",
+          "model_literal",
+          "minimum_version",
+          "source"
+        ]
+      },
+      "description": "Literal SKU support minima. No minimum-version or model affectedness join is authorized."
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latest_attempt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "checked_at": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "outcome": {
+                    "enum": [
+                      "ok",
+                      "error",
+                      "partial",
+                      "not_applicable"
+                    ]
+                  },
+                  "error_code": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "access_denied",
+                          "edge_access_denied",
+                          "rate_limited",
+                          "http_error",
+                          "network_error",
+                          "source_missing",
+                          "redirect_target_missing",
+                          "access_verification_required",
+                          "unsupported_or_invalid_document",
+                          "collection_error"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "checked_at",
+                  "outcome",
+                  "error_code"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retained": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "normalized_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "parser_fingerprint": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "revision_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 20000
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    ]
+                  },
+                  "source_observed_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "parsed_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "sha256",
+                  "normalized_sha256",
+                  "parser_fingerprint",
+                  "revision_id",
+                  "source_observed_at",
+                  "parsed_at"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availability": {
+            "enum": [
+              "excluded",
+              "retained",
+              "uncollected"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20000
+            }
+          }
+        },
+        "required": [
+          "source_id",
+          "source_url",
+          "configured",
+          "enabled",
+          "checked_at",
+          "latest_attempt",
+          "retained",
+          "availability",
+          "issues"
+        ]
+      },
+      "description": "Five reviewed source slots, not an expected vendor release archive. Capture and parse times are distinct from publisher dates. Disabled retained inputs are diagnostics only."
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "enum": [
+              "release_source_issue",
+              "draft_fixed_context_excluded",
+              "future_fix_availability_excluded",
+              "fixed_expression_unresolved",
+              "fixed_availability_conflicting"
+            ]
+          },
+          "claim_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expression": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "claim_id",
+          "expression",
+          "source_id"
+        ]
+      }
+    },
+    "selection": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requested_vendor": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_vendors": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "scope_level": {
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
+            },
+            "requested_window": {
+              "type": "string",
+              "pattern": "^(all|pre|post|undated|[0-9]{4})$"
+            },
+            "effective_windows": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "requested_cve_ids": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+              },
+              "uniqueItems": true
+            },
+            "definition_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "required": [
+            "requested_vendor",
+            "effective_vendors",
+            "scope_level",
+            "requested_window",
+            "effective_windows",
+            "requested_cve_ids",
+            "effective_cve_ids",
+            "definition_sha256"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expected_releases": {
+          "type": "null"
+        },
+        "expected_advisories": {
+          "type": "null"
+        },
+        "completeness": {
+          "const": "not_established"
+        }
+      },
+      "required": [
+        "expected_releases",
+        "expected_advisories",
+        "completeness"
+      ]
+    },
+    "method": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "definition_sha256",
+    "observation_end",
+    "availability",
+    "releases",
+    "bundles",
+    "platform_support",
+    "sources",
+    "diagnostics",
+    "selection",
+    "coverage",
+    "method"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-release-history:1",
+  "title": "Literal switching release history and current fix references v1"
+}

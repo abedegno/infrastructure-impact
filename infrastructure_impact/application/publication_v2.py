@@ -523,11 +523,17 @@ def logical_views(data):
     """Same mandatory semantic views as the v1 writer, without legacy sidecars."""
     from .switching_comparison import summary
 
-    compact = {k: v for k, v in data.items() if k != "switching_evidence"}
+    compact = {
+        k: v
+        for k, v in data.items()
+        if k not in ("switching_evidence", "switching_release_history")
+    }
     compact["switching_comparison"] = summary(data["switching_comparison"])
     yield "snapshot.json", compact
     yield "switching-evidence.json", data["switching_evidence"]
     yield "switching-comparison.json", data["switching_comparison"]
+    if "switching_release_history" in data:
+        yield "switching-release-history.json", data["switching_release_history"]
     yield "current-evidence.json", data["current_evidence"]
     yield "release-assets.json", data["research"].get("release_assets", [])
     yield "catalogue.json", data.get("catalogue", {})
@@ -607,7 +613,9 @@ def write_bundle(destination, data):
         )
     overview = writer.overview(summary(data["switching_comparison"]))
     runtime = {
-        k: v for k, v in data.items() if k not in ("switching_evidence", "switching_comparison")
+        k: v
+        for k, v in data.items()
+        if k not in ("switching_evidence", "switching_comparison", "switching_release_history")
     }
     runtime["switching_overview"] = overview
     writer.root("runtime-snapshot", runtime)
@@ -768,24 +776,26 @@ def native_parity(database, directory, home, reader):
         actuals = reader.switching_selections(
             [dict(scope_level=scope) for scope in scopes], evaluated_at=projected["generated_at"]
         )
-        expected_summaries = _select_summaries(
-            projected["switching_comparison"],
-            [dict(scope_level=scope) for scope in scopes],
-            evaluated_at=projected["generated_at"],
-        )
-        for expected, actual in zip(expected_summaries, actuals, strict=True):
-            if codec.digest(
-                c.encode()
-                for c in json.JSONEncoder(
-                    ensure_ascii=False, sort_keys=True, separators=(",", ":")
-                ).iterencode(actual)
-            ) != codec.digest(
-                c.encode()
-                for c in json.JSONEncoder(
-                    ensure_ascii=False, sort_keys=True, separators=(",", ":")
-                ).iterencode(expected)
-            ) or switching_csv(actual) != switching_csv(expected):
-                raise ValueError("native switching query mismatch")
+        with phase("publication.native_expected"):
+            expected_summaries = _select_summaries(
+                projected["switching_comparison"],
+                [dict(scope_level=scope) for scope in scopes],
+                evaluated_at=projected["generated_at"],
+            )
+        with phase("publication.native_reader"):
+            for expected, actual in zip(expected_summaries, actuals, strict=True):
+                if codec.digest(
+                    c.encode()
+                    for c in json.JSONEncoder(
+                        ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                    ).iterencode(actual)
+                ) != codec.digest(
+                    c.encode()
+                    for c in json.JSONEncoder(
+                        ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                    ).iterencode(expected)
+                ) or switching_csv(actual) != switching_csv(expected):
+                    raise ValueError("native switching query mismatch")
 
 
 @phase("publication.native_roots")
@@ -822,7 +832,7 @@ def verify_projection(reader, projected):
         **{
             k: v
             for k, v in projected.items()
-            if k not in ("switching_evidence", "switching_comparison")
+            if k not in ("switching_evidence", "switching_comparison", "switching_release_history")
         },
         "switching_overview": overview,
     }

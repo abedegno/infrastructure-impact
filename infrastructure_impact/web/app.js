@@ -31,7 +31,7 @@ const link = (url, label) => {
 const badge = (s) => `<span class="badge ${esc(s)}">${esc(s.replaceAll('_', ' '))}</span>`;
 const reference = ['CVE-2026-109618', 'CVE-2026-109619', 'CVE-2021-44228', 'CVE-2023-48795'];
 let data,
-  view = 'matrix',
+  view = location.hash === '#customer-comparison' ? 'compare' : 'matrix',
   rows = [],
   shown = 150,
   matrixCve = 'CVE-2026-109618',
@@ -47,7 +47,10 @@ let selectedCves = null,
 window.InfrastructureSnapshot?.commit(null, null);
 let comparisonSelection = {},
   comparisonScopeVendor = '';
-let comparisonMode = 'benchmark',
+let comparisonMode = location.hash === '#customer-comparison' ? 'customer' : 'benchmark',
+  customerReport = null,
+  customerStudy = null,
+  customerAcceptedDelivery = null,
   switchingReport = null,
   switchingLoading = false,
   switchingError = '',
@@ -82,7 +85,8 @@ function stats() {
     .map(([l, n]) => `<div><strong>${n}</strong><span>${l}</span></div>`)
     .join('');
 }
-let loadSequence = 0;
+let loadSequence = 0,
+  studyBootstrapOnly = false;
 function selectionControls(selection) {
   view = selection.view;
   selectedCves = selection.selectedCves;
@@ -183,6 +187,32 @@ async function load() {
   };
   $('#feedback').textContent = 'Loading evidence…';
   try {
+    if (!data && view === 'compare' && comparisonMode === 'customer') {
+      const promise = createStaticDelivery(
+        window.fetch.bind(window),
+        new URL('.', document.baseURI).pathname,
+      );
+      const loader = await promise;
+      const metadata = loader.bootstrap();
+      if (sequence !== loadSequence) return;
+      data = metadata;
+      studyBootstrapOnly = true;
+      committedSelection = selection;
+      switchingDelivery = {
+        key: appJSON.stringify({
+          publication: metadata.publication,
+          generated_at: metadata.generated_at,
+        }),
+        promise,
+      };
+      selectionControls(selection);
+      renderComparison();
+      document.querySelectorAll('[data-view]').forEach((b) => {
+        if (b.dataset.view === view) b.setAttribute('aria-current', 'page');
+        else b.removeAttribute('aria-current');
+      });
+      return;
+    }
     if (selection.selectedCves === null && selection.cohortMode === 'benchmark') {
       const metadata = await fetch('/api/v1/bootstrap');
       if (!metadata.ok)
@@ -216,6 +246,7 @@ async function load() {
       : await response.json();
     if (sequence !== loadSequence) return;
     accept(evaluateState(loaded, selection.kevOnly), selection, suffix);
+    studyBootstrapOnly = false;
   } catch (error) {
     if (sequence !== loadSequence) return;
     selectionError(error);
@@ -223,6 +254,11 @@ async function load() {
 }
 function render(paint = draw) {
   if (!data) return;
+  if (studyBootstrapOnly) {
+    if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode))
+      return renderComparison();
+    return load();
+  }
   try {
     const selection = { ...committedSelection, view };
     accept(evaluateState(data, selection.kevOnly), selection, '', paint);
@@ -240,7 +276,7 @@ function draw() {
   });
   $('#feedback').textContent =
     `${Date.now() - new Date(data.generated_at).getTime() > 36 * 3600000 ? 'STALE DATA · ' : ''}${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
-  const study = view === 'compare' && comparisonMode === 'switching';
+  const study = view === 'compare' && ['switching', 'customer'].includes(comparisonMode);
   for (const selector of ['#cohort-controls', '#summary', '#kev-source'])
     $(selector).hidden = study;
   if (data.kev.selection.kev_only && !data.comparison.cohort.length && view !== 'compare') {
@@ -442,26 +478,31 @@ function comparisonCoverage(v) {
 }
 function renderComparison() {
   $('#view').innerHTML =
-    `<label for="comparison-mode">Comparison view<select id="comparison-mode" aria-label="Comparison view"><option value="benchmark" ${comparisonMode === 'benchmark' ? 'selected' : ''}>Scoped benchmark comparison</option><option value="switching" ${comparisonMode === 'switching' ? 'selected' : ''}>Campus/branch switching study · descriptive disclosure</option></select></label><div id="comparison-content"></div>`;
+    `<label for="comparison-mode">Comparison view<select id="comparison-mode" aria-label="Comparison view"><option value="benchmark" ${comparisonMode === 'benchmark' ? 'selected' : ''}>Scoped benchmark comparison</option><option value="switching" ${comparisonMode === 'switching' ? 'selected' : ''}>Campus/branch switching study · descriptive disclosure</option><option value="customer" ${comparisonMode === 'customer' ? 'selected' : ''}>Customer switching comparison</option></select></label><div id="comparison-content"></div>`;
   $('#comparison-mode').addEventListener('change', (e) => {
     comparisonMode = e.target.value;
     render();
   });
-  if (comparisonMode !== 'switching') return renderBenchmarkComparison();
+  if (!['switching', 'customer'].includes(comparisonMode)) return renderBenchmarkComparison();
   for (const selector of ['#cohort-controls', '#summary', '#kev-source']) $(selector).hidden = true;
   $('#feedback').textContent =
     'Switching study · independent controls and accepted publication below';
-  $('#comparison-content').innerHTML = window.InfrastructureSwitching.render(switchingReport, {
+  const customer = comparisonMode === 'customer',
+    acceptedCustomer = customerReport;
+  const accepted = customer ? customerStudy : switchingReport,
+    delivery = customer ? customerAcceptedDelivery : switchingAcceptedDelivery;
+  const renderStudy = customer
+    ? window.InfrastructureCustomerComparison.render
+    : window.InfrastructureSwitching.render;
+  $('#comparison-content').innerHTML = renderStudy(customer ? customerReport : accepted, {
     loading: switchingLoading,
     error: switchingError,
-    factCatalog: switchingAcceptedDelivery?.factCatalog,
+    factCatalog: delivery?.factCatalog,
     validation: data.switching_validation,
     reviewPacket: data.switching_review_packet,
     validationPublication: data.publication,
     validationGeneratedAt: data.generated_at,
   });
-  const accepted = switchingReport,
-    delivery = switchingAcceptedDelivery;
   window.InfrastructureSwitchingView.mount(
     $('#comparison-content'),
     accepted,
@@ -491,41 +532,65 @@ function renderComparison() {
   $('#switching-refresh').addEventListener('click', () => {
     switchingError = '';
     loadSwitching(
-      switchingReport
+      accepted
         ? {
-            vendor: switchingReport.selection.requested_vendor,
-            scope_level: switchingReport.selection.scope_level,
-            window: switchingReport.selection.requested_window,
-            cve_ids: switchingReport.selection.requested_cve_ids,
+            vendor: accepted.selection.requested_vendor,
+            scope_level: accepted.selection.scope_level,
+            window: accepted.selection.requested_window,
+            cve_ids: accepted.selection.requested_cve_ids,
           }
         : {},
     );
   });
   for (const format of ['json', 'csv'])
-    $('#switching-' + format)?.addEventListener('click', async () => {
-      const accepted = switchingReport,
-        delivery = switchingAcceptedDelivery;
-      const blob = await switchingExport(format, accepted, delivery).catch((error) => {
-        switchingError = 'Study export rejected: ' + error.message;
-        if (view === 'compare' && comparisonMode === 'switching') renderComparison();
-        return null;
-      });
-      if (!blob) return;
-      const url = URL.createObjectURL(blob),
-        a = document.createElement('a');
-      a.href = url;
-      a.download = 'switching-' + accepted.publication?.id + '.' + format;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    });
-  if (!switchingReport && !switchingLoading && !switchingError) loadSwitching();
+    $('#' + (customer ? 'customer' : 'switching') + '-' + format)?.addEventListener(
+      'click',
+      async () => {
+        const blob = await (
+          customer
+            ? Promise.resolve().then(() => customerDownload(format, acceptedCustomer))
+            : switchingExport(format, accepted, delivery)
+        ).catch((error) => {
+          switchingError = 'Study export rejected: ' + error.message;
+          if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode))
+            renderComparison();
+          return null;
+        });
+        if (!blob) return;
+        const url = URL.createObjectURL(blob),
+          a = document.createElement('a');
+        a.href = url;
+        a.download =
+          (customer ? 'customer-comparison-' : 'switching-') +
+          accepted.publication?.id +
+          '.' +
+          format;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+    );
+  if (
+    !switchingLoading &&
+    !switchingError &&
+    (!switchingReport || (customer && (!customerReport || customerStudy !== switchingReport)))
+  )
+    loadSwitching(switchingReport ? studyOptions(switchingReport) : {});
+}
+function studyOptions(report) {
+  return {
+    vendor: report.selection.requested_vendor,
+    scope_level: report.selection.scope_level,
+    window: report.selection.requested_window,
+    cve_ids: report.selection.requested_cve_ids,
+  };
 }
 async function loadSwitching(options = {}) {
+  const customer = comparisonMode === 'customer';
   const sequence = ++switchingSequence;
   const identity = { publication: data.publication, generated_at: data.generated_at };
   switchingLoading = true;
   switchingError = '';
-  if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+  if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode)) renderComparison();
   try {
     const key = appJSON.stringify(identity);
     if (!switchingDelivery || switchingDelivery.key !== key) {
@@ -564,7 +629,26 @@ async function loadSwitching(options = {}) {
           ...options,
           ...(full ? {} : identity),
         });
+    let envelope;
+    if (customer) {
+      const study = accepted.representation
+        ? accepted
+        : window.InfrastructureSwitching.summary(accepted);
+      const history = await loader.switchingReleaseHistory(study);
+      envelope = window.InfrastructureCustomerComparison.build(study, history);
+      if (sequence !== switchingSequence) return;
+      if (
+        appJSON.stringify(data.publication) !== appJSON.stringify(identity.publication) ||
+        data.generated_at !== identity.generated_at
+      )
+        throw Error('Mixed publication generations');
+    }
     switchingReport = accepted;
+    if (customer) {
+      customerReport = envelope;
+      customerStudy = accepted;
+      customerAcceptedDelivery = delivery;
+    }
     delivery.factCatalog = loader.factCatalog;
     switchingAcceptedDelivery = delivery;
     switchingLoading = false;
@@ -573,7 +657,20 @@ async function loadSwitching(options = {}) {
     switchingLoading = false;
     switchingError = 'Study selection rejected: ' + error.message;
   }
-  if (view === 'compare' && comparisonMode === 'switching') renderComparison();
+  if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode)) renderComparison();
+}
+function customerDownload(format, envelope = customerReport, limits = {}) {
+  if (!envelope) return null;
+  window.InfrastructureCustomerComparison.validate(envelope);
+  const maxBytes = Math.min(limits.max_bytes ?? 128000000, 128000000);
+  return new Blob(
+    [
+      format === 'csv'
+        ? window.InfrastructureCustomerComparison.csvExport(envelope, { max_bytes: maxBytes })
+        : appJSON.stringifyBounded(envelope, null, 2, maxBytes),
+    ],
+    { type: format === 'csv' ? 'text/csv' : 'application/json' },
+  );
 }
 async function switchingExport(
   format,
@@ -795,7 +892,7 @@ document.querySelectorAll('[data-view]').forEach((b) =>
   b.addEventListener('click', () => {
     view = b.dataset.view;
     if (data) {
-      if (window.snapshotMode) load();
+      if (window.snapshotMode && !(studyBootstrapOnly && view === 'compare')) load();
       else render();
     }
   }),
@@ -833,6 +930,17 @@ $('#apply').addEventListener('click', () => {
   load();
 });
 $('#close-detail').addEventListener('click', () => $('#detail').close());
+window.addEventListener?.('hashchange', () => {
+  if (location.hash !== '#customer-comparison') return;
+  ++loadSequence;
+  view = 'compare';
+  comparisonMode = 'customer';
+  if (!data) {
+    load();
+    return;
+  }
+  render();
+});
 load();
 
 function renderCoverage() {

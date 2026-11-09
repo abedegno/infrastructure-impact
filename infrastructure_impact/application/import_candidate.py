@@ -29,6 +29,8 @@ WORKER_PHASES = (
     "publication.native_parity",
     "publication.native_roots",
     "publication.native_queries",
+    "publication.native_expected",
+    "publication.native_reader",
 )
 
 
@@ -663,7 +665,11 @@ def _parity(database, public, home, snapshot):
     projected = public_projection(
         native, [d["url"] for d in load_config().get("release_documents", [])]
     )
-    compact = {k: v for k, v in projected.items() if k != "switching_evidence"}
+    compact = {
+        k: v
+        for k, v in projected.items()
+        if k not in ("switching_evidence", "switching_release_history")
+    }
     compact["switching_comparison"] = summary(projected["switching_comparison"])
     if compact != snapshot:
         raise ValueError("native public facts differ")

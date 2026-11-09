@@ -128,6 +128,7 @@ def write_static_delivery(destination, data, *, publication_v2=None):
         "changes",
         "switching_evidence",
         "switching_comparison",
+        "switching_release_history",
         "retained_advisories",
         "current_evidence",
     }

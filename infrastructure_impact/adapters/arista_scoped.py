@@ -3,7 +3,7 @@
 import re
 from urllib.parse import urlsplit
 
-from .common import HTML, Node, assessment, base, cves, iso_date
+from .common import HTML, Node, assessment, base, cves, iso_date, leading_inline
 
 SOFTWARE = {
     "EOS Versions": "Arista EOS",
@@ -55,15 +55,6 @@ def non_cve_security_notice(raw, url, vendor):
         "The reviewed article names a GHSA and product applicability but contains no CVE identifier. Retained as a security notice, not a CVE impact assessment. No GHSA-to-CVE mapping, blanket unaffectedness, available fix or concealment is inferred."
     ]
     return out
-
-
-def leading_inline(n):
-    text = []
-    for child in n.children:
-        if isinstance(child, Node) and child.tag not in {"b", "strong", "span", "a", "br"}:
-            break
-        text.append(child.text() if isinstance(child, Node) else child)
-    return " ".join(" ".join(text).split())
 
 
 def grouped_software(raw, url, vendor):

@@ -222,12 +222,30 @@ def test_study_schema_checks_dates_unknown_properties_and_alias_locators():
 def test_old_resource_bytes_are_preserved():
     package = files("infrastructure_impact")
     for name, sha256 in FIXTURE["old_resource_sha256"].items():
-        assert (
-            hashlib.sha256(
-                package.joinpath(name.removeprefix("infrastructure_impact/")).read_bytes()
-            ).hexdigest()
-            == sha256
-        )
+        raw = package.joinpath(name.removeprefix("infrastructure_impact/")).read_bytes()
+        if name == "infrastructure_impact/resources/sources.json":
+            # Task 5 appends exactly these reviewed references; the dedicated
+            # collection-config test checks their complete entries and enablement.
+            # Preserve the original frozen digest for every pre-existing byte.
+            config = json.loads(raw)
+            added = {
+                "aruba-aos-cx-6300-6400-10-14-history",
+                "aruba-aos-cx-6300-6400-10-16-history",
+                "aruba-aos-cx-6300-6400-10-14-models",
+                "cisco-iosxe-17-12-1-release",
+                "arista-eos-advisory-bundle-0148",
+            }
+            for entry in config["reference_sources"]:
+                if entry["source_id"] in added:
+                    fragment = (
+                        ",\n"
+                        + "\n".join(
+                            "    " + line for line in json.dumps(entry, indent=2).splitlines()
+                        )
+                    ).encode()
+                    assert raw.count(fragment) == 1
+                    raw = raw.replace(fragment, b"", 1)
+        assert hashlib.sha256(raw).hexdigest() == sha256
 
 
 @pytest.mark.parametrize("change", ["unknown_model", "unbound_platform", "family", "alias"])

@@ -24,6 +24,10 @@ _SCHEMAS = (
     "switching-evidence-v1.json",
     "switching-comparison-v1.json",
     "switching-summary-v1.json",
+    "switching-release-history-v1.json",
+    "customer-comparison-v1.json",
+    "switching-overview-v2.json",
+    "publication-v2.json",
     "switching-inputs-v1.json",
     "kev-v1.json",
 )
@@ -328,13 +332,65 @@ class _ValidatedEvidence:
             raise ValueError("Fresh evidence proof does not match complete value/context")
 
 
+def _validate_aruba_reviewed_link(claim, remediation, binding, claims):
+    from ..adapters.switching import aruba_reviewed_fixed, aruba_reviewed_rule
+
+    rule = aruba_reviewed_rule(claim)
+    matching = [] if rule is None else [c for c in claims if aruba_reviewed_fixed(claim, c, rule)]
+    if (
+        rule is None
+        or binding["fixed_product"] != "AOS-CX"
+        or binding.get("fixed_product_id") != rule[0]
+        or binding["source"] != claim["source"]
+        or binding["cve_id"] != claim["cve_id"]
+        or len(matching) != 1
+        or binding["fixed_source"] != matching[0]["source"]
+        or matching[0]["version_expressions"] != [rule[1]]
+        or remediation["product_ids"]
+        or remediation["version_expressions"] != [rule[1]]
+        or remediation["category"] != "vendor_fix"
+        or remediation.get("availability") != "vendor_reports_fixed"
+        or remediation["source"]["source_locator"] != "/vulnerabilities/0/remediations/0"
+        or any(
+            remediation["source"][k] != claim["source"][k]
+            for k in ("source_url", "source_sha256", "retrieved_at")
+        )
+        or not any(
+            fixed["product_ids"] == [rule[0]]
+            and not fixed.get("scope_binding")
+            and all(
+                remediation.get(key) == fixed.get(key)
+                for key in (
+                    "publisher_id",
+                    "category",
+                    "details",
+                    "published_availability",
+                    "availability",
+                    "availability_date",
+                    "source",
+                )
+            )
+            for fixed in matching[0]["remediations"]
+        )
+    ):
+        raise ValueError("Reviewed section remediation requires exact retained AOS-CX/CVE linkage")
+
+
 def _validate_reviewed_link(claim, remediation, binding, claims):
+    if claim["vendor"] == "aruba":
+        return _validate_aruba_reviewed_link(claim, remediation, binding, claims)
+    from ..adapters.switching import ARISTA_FIX_RULES, ARISTA_FIXED_VERSIONS, arista_reviewed_rule
+
+    rule = arista_reviewed_rule(claim)
     vendor = claim["vendor"]
     cid = claim["cve_id"]
     row = binding["source"]["source_locator"]
     locator = remediation["source"]["source_locator"]
     fixed_source = binding["fixed_source"]
-    expected_url = "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
+    expected_url = (
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/"
+        + claim["advisory_id"]
+    )
     matching = [
         c
         for c in claims
@@ -350,18 +406,32 @@ def _validate_reviewed_link(claim, remediation, binding, claims):
     ]
     if (
         vendor != "arista"
-        or claim["advisory_id"] != "19904-security-advisory-0100"
+        or binding["fixed_product"] != "Arista EOS"
+        or "fixed_product_id" in binding
+        or rule is None
         or claim["source"]["source_url"] != expected_url
-        or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
         or claim["status"] != "affected"
         or claim["scope"] != "cve_specific"
-        or claim["product"] != "EOS release (source platform scope applies)"
-        or row != "Affected Software / EOS release (source platform scope applies)"
-        or locator != "Resolution / " + cid + " / Arista EOS-based products"
+        or claim["product"] != rule[1]
+        or row != rule[2]
+        or locator != rule[3]
         or fixed_source != remediation["source"]
         or len(matching) != 1
         or remediation["product_ids"]
         or remediation["version_expressions"] != matching[0]["version_expressions"]
+        or (
+            claim["advisory_id"] in ARISTA_FIX_RULES
+            and (
+                claim["product_id"] is not None
+                or matching[0]["product_id"] is not None
+                or claim["family"] != "arista-eos"
+                or matching[0]["family"] != "arista-eos"
+                or matching[0]["version_expressions"] != ARISTA_FIXED_VERSIONS[claim["advisory_id"]]
+                or remediation["category"] != "vendor_fix"
+                or remediation["availability"] != "vendor_reports_fixed"
+                or remediation["availability_date"] is not None
+            )
+        )
         or not any(
             all(
                 remediation.get(key) == fixed.get(key)

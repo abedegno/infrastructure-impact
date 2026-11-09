@@ -17,6 +17,8 @@ NAMES = (
     "publication-v2.json",
     "switching-overview-v2.json",
     "current-evidence-v1.json",
+    "switching-release-history-v1.json",
+    "customer-comparison-v1.json",
 )
 
 
@@ -25,7 +27,15 @@ def payload():
     canonical = json.dumps(
         definition, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode()
+    from infrastructure_impact.application import customer_comparison, switching_releases
+    from infrastructure_impact.references.registry import SOURCES
+
     return dict(
+        customer_limitations=customer_comparison.LIMITATIONS,
+        customer_fields=customer_comparison.CUSTOMER_FIELDS,
+        release_method=switching_releases.METHOD,
+        release_sources={key: SOURCES[key].url for key in switching_releases.SOURCE_IDS},
+        study_definition=definition,
         schemas={name: json.loads((ROOT / "schemas" / name).read_text()) for name in NAMES},
         definition_sha256=hashlib.sha256(canonical).hexdigest(),
     )

@@ -1,0 +1,2039 @@
+{
+  "description": "Authored synthetic inputs for Python/JS selection parity. Compact study selections contain only overview-retained selection facts; no claim IDs.",
+  "histories": {
+    "dated": {
+      "schema_version": 1,
+      "publication": null,
+      "generated_at": "2026-11-09T12:00:00Z",
+      "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33",
+      "observation_end": "2026-11-09",
+      "availability": "available",
+      "releases": [
+        {
+          "release_id": "6242ae358503b4840253de631aaae552343722c79d7fee74e4b119289a6a8fbb",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.10.1131",
+          "history": [],
+          "references": [
+            {
+              "kind": "affected_scope_fix",
+              "claim_id": "3583105f829b9bcb4cdbe134d0049e9fd8ce27b578704eb2ce7cea34984446b6",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "model_qualified",
+              "publisher_status": "final",
+              "expression": "10.10.1131",
+              "link_basis": "reviewed_source_sections",
+              "availability_date": "2024-07-09T17:00:00.000Z",
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/remediations/0"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/7/product"
+              }
+            },
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "96f8a8ab1b1bd5013047b1ea8bdae11df1c1df53cfe16fd02326a85559c56518",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.10.1131",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "36ce5c77818327a50088a8bd113ef3e2e9befee7521ccd9da6e3e2ca694ab43c",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.13.1031",
+          "history": [],
+          "references": [
+            {
+              "kind": "affected_scope_fix",
+              "claim_id": "7a3cb1e7e1c37e3a59a19b218e21e193b903989072d514913ef27661cd1eb5f5",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "model_qualified",
+              "publisher_status": "final",
+              "expression": "10.13.1031",
+              "link_basis": "reviewed_source_sections",
+              "availability_date": "2024-07-09T17:00:00.000Z",
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/remediations/0"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/4/product"
+              }
+            },
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "2ec3641bf3cd4d9aa27959c5a650f8c2573f56caba174df81f8e0b76cdd32768",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.13.1031",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "eec940e01649c5761f30772e854e140ae1a5ad4af39f4cce97427b9369c6680b",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0001",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-05-29",
+              "publisher_reports_posted": null,
+              "date_basis": "publisher_release_history",
+              "statement": "Initial release.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0001"
+              }
+            }
+          ],
+          "references": [],
+          "issues": [
+            "posting_not_established"
+          ],
+          "vendor_reported_fixed_cve_ids": [],
+          "vendor_reported_fixed_cve_count": null,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": [
+            "2024-05-29"
+          ]
+        },
+        {
+          "release_id": "c6242a3c3c04d8c92f500c18d505a8f79603df8896fa497435bfec7f2f357a24",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0007",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-07-12",
+              "publisher_reports_posted": true,
+              "date_basis": "publisher_release_history",
+              "statement": "Released, fully supported, and posted on the Web.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0007"
+              }
+            }
+          ],
+          "references": [
+            {
+              "kind": "affected_scope_fix",
+              "claim_id": "38994e6dde6807d5dc272084fa639e96a6a0d3103c52f5a41e89445c46e44d13",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "model_qualified",
+              "publisher_status": "final",
+              "expression": "10.14.0007",
+              "link_basis": "reviewed_source_sections",
+              "availability_date": "2024-07-09T17:00:00.000Z",
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/remediations/0"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/3/product"
+              }
+            },
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "500bb6389761cbbd9082c99b3d48816585c79f2401771a84cfd46ba1d9d4d8ab",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.14.0007",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              }
+            }
+          ],
+          "issues": [],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": [
+            "2024-07-12"
+          ]
+        }
+      ],
+      "bundles": [],
+      "platform_support": [],
+      "sources": [
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+          "configured": true,
+          "enabled": true,
+          "checked_at": "2026-11-09T12:00:00Z",
+          "latest_attempt": {
+            "checked_at": "2026-11-09T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "retained": {
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "normalized_sha256": "c73d665910414fbefb47ffff9545a75385267f7eb19f1b2d8a50df63f62ebbe3",
+            "parser_fingerprint": "a0e7d6a6ced8ee765fae9c45be69d7574b25be9fe3f9cdf395156e2f4aa89a12",
+            "revision_id": "1",
+            "source_observed_at": "2026-11-09T12:00:00Z",
+            "parsed_at": "2026-11-09T12:00:00Z"
+          },
+          "issues": [],
+          "availability": "retained"
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-16-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-16-xx/version-history.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-models",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/products-supported-3.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "cisco-iosxe-17-12-1-release",
+          "source_url": "https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "arista-eos-advisory-bundle-0148",
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        }
+      ],
+      "diagnostics": [],
+      "selection": null,
+      "coverage": {
+        "expected_releases": null,
+        "expected_advisories": null,
+        "completeness": "not_established"
+      },
+      "method": "Release and fix evidence for the selected advisory CVE cohort; releases need not have been published in the selected advisory window. Publisher-reported fixed CVEs and affected-scope linked CVEs are separate observations. Vendor-fixed context follows selected study CVEs; affected-scope links additionally require the selected affected CVE cohort. Remediation availability dates retain advisory context and never supply a software release date; only publisher release-history dates do. Fixed-only statements do not establish affectedness, model applicability, deployed exposure or an upgrade event. Exact literal identities only; no version ordering, first-fix, fix-delay or security ranking inference. Retained sources are a bounded reviewed set, not a complete vendor release archive; coverage denominators are unknown."
+    },
+    "undated": {
+      "schema_version": 1,
+      "publication": null,
+      "generated_at": "2026-11-09T12:00:00Z",
+      "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33",
+      "observation_end": "2026-11-09",
+      "availability": "available",
+      "releases": [
+        {
+          "release_id": "6242ae358503b4840253de631aaae552343722c79d7fee74e4b119289a6a8fbb",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.10.1131",
+          "history": [],
+          "references": [
+            {
+              "kind": "affected_scope_fix",
+              "claim_id": "e1c62844e1c387bcd94a7290563d4bca6f7f7bf0e9bea54629e378aa1ab8cd79",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": null,
+              "scope_level": "model_qualified",
+              "publisher_status": "final",
+              "expression": "10.10.1131",
+              "link_basis": "reviewed_source_sections",
+              "availability_date": "2024-07-09T17:00:00.000Z",
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/remediations/0"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/7/product"
+              }
+            },
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "b7ca8db78e1c6e50299281c05406603f3b75c887b9af1841e5999649a2aae06d",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": null,
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.10.1131",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "36ce5c77818327a50088a8bd113ef3e2e9befee7521ccd9da6e3e2ca694ab43c",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.13.1031",
+          "history": [],
+          "references": [
+            {
+              "kind": "affected_scope_fix",
+              "claim_id": "c7ee403941e97c55db711140415457e8c9dcd33baa1723e47f5a8273d61ae54c",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": null,
+              "scope_level": "model_qualified",
+              "publisher_status": "final",
+              "expression": "10.13.1031",
+              "link_basis": "reviewed_source_sections",
+              "availability_date": "2024-07-09T17:00:00.000Z",
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/remediations/0"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/4/product"
+              }
+            },
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "90f5d08ee0926ff09ce5a021282d731e87e64404d84459d33671d488e9cabcaf",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": null,
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.13.1031",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "eec940e01649c5761f30772e854e140ae1a5ad4af39f4cce97427b9369c6680b",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0001",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-05-29",
+              "publisher_reports_posted": null,
+              "date_basis": "publisher_release_history",
+              "statement": "Initial release.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0001"
+              }
+            }
+          ],
+          "references": [],
+          "issues": [
+            "posting_not_established"
+          ],
+          "vendor_reported_fixed_cve_ids": [],
+          "vendor_reported_fixed_cve_count": null,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": [
+            "2024-05-29"
+          ]
+        },
+        {
+          "release_id": "c6242a3c3c04d8c92f500c18d505a8f79603df8896fa497435bfec7f2f357a24",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0007",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-07-12",
+              "publisher_reports_posted": true,
+              "date_basis": "publisher_release_history",
+              "statement": "Released, fully supported, and posted on the Web.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0007"
+              }
+            }
+          ],
+          "references": [
+            {
+              "kind": "affected_scope_fix",
+              "claim_id": "a369f21174cb4c28663bcb7007b07319f723532cf011ed08598315d5e3810f6e",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": null,
+              "scope_level": "model_qualified",
+              "publisher_status": "final",
+              "expression": "10.14.0007",
+              "link_basis": "reviewed_source_sections",
+              "availability_date": "2024-07-09T17:00:00.000Z",
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/remediations/0"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/3/product"
+              }
+            },
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "52be83e34ab8958738a3679f6d6cfe9406218ff864a015c642822daf5eeb844b",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": null,
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.14.0007",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              }
+            }
+          ],
+          "issues": [],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": [
+            "2024-07-12"
+          ]
+        }
+      ],
+      "bundles": [],
+      "platform_support": [],
+      "sources": [
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+          "configured": true,
+          "enabled": true,
+          "checked_at": "2026-11-09T12:00:00Z",
+          "latest_attempt": {
+            "checked_at": "2026-11-09T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "retained": {
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "normalized_sha256": "c73d665910414fbefb47ffff9545a75385267f7eb19f1b2d8a50df63f62ebbe3",
+            "parser_fingerprint": "a0e7d6a6ced8ee765fae9c45be69d7574b25be9fe3f9cdf395156e2f4aa89a12",
+            "revision_id": "1",
+            "source_observed_at": "2026-11-09T12:00:00Z",
+            "parsed_at": "2026-11-09T12:00:00Z"
+          },
+          "issues": [],
+          "availability": "retained"
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-16-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-16-xx/version-history.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-models",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/products-supported-3.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "cisco-iosxe-17-12-1-release",
+          "source_url": "https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "arista-eos-advisory-bundle-0148",
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        }
+      ],
+      "diagnostics": [],
+      "selection": null,
+      "coverage": {
+        "expected_releases": null,
+        "expected_advisories": null,
+        "completeness": "not_established"
+      },
+      "method": "Release and fix evidence for the selected advisory CVE cohort; releases need not have been published in the selected advisory window. Publisher-reported fixed CVEs and affected-scope linked CVEs are separate observations. Vendor-fixed context follows selected study CVEs; affected-scope links additionally require the selected affected CVE cohort. Remediation availability dates retain advisory context and never supply a software release date; only publisher release-history dates do. Fixed-only statements do not establish affectedness, model applicability, deployed exposure or an upgrade event. Exact literal identities only; no version ordering, first-fix, fix-delay or security ranking inference. Retained sources are a bounded reviewed set, not a complete vendor release archive; coverage denominators are unknown."
+    },
+    "fixed_only": {
+      "schema_version": 1,
+      "publication": null,
+      "generated_at": "2026-11-09T12:00:00Z",
+      "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33",
+      "observation_end": "2026-11-09",
+      "availability": "available",
+      "releases": [
+        {
+          "release_id": "6242ae358503b4840253de631aaae552343722c79d7fee74e4b119289a6a8fbb",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.10.1131",
+          "history": [],
+          "references": [
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "96f8a8ab1b1bd5013047b1ea8bdae11df1c1df53cfe16fd02326a85559c56518",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.10.1131",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "36ce5c77818327a50088a8bd113ef3e2e9befee7521ccd9da6e3e2ca694ab43c",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.13.1031",
+          "history": [],
+          "references": [
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "2ec3641bf3cd4d9aa27959c5a650f8c2573f56caba174df81f8e0b76cdd32768",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.13.1031",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "eec940e01649c5761f30772e854e140ae1a5ad4af39f4cce97427b9369c6680b",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0001",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-05-29",
+              "publisher_reports_posted": null,
+              "date_basis": "publisher_release_history",
+              "statement": "Initial release.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0001"
+              }
+            }
+          ],
+          "references": [],
+          "issues": [
+            "posting_not_established"
+          ],
+          "vendor_reported_fixed_cve_ids": [],
+          "vendor_reported_fixed_cve_count": null,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": [
+            "2024-05-29"
+          ]
+        },
+        {
+          "release_id": "c6242a3c3c04d8c92f500c18d505a8f79603df8896fa497435bfec7f2f357a24",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0007",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-07-12",
+              "publisher_reports_posted": true,
+              "date_basis": "publisher_release_history",
+              "statement": "Released, fully supported, and posted on the Web.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0007"
+              }
+            }
+          ],
+          "references": [
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "500bb6389761cbbd9082c99b3d48816585c79f2401771a84cfd46ba1d9d4d8ab",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.14.0007",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              }
+            }
+          ],
+          "issues": [],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": [
+            "2024-07-12"
+          ]
+        }
+      ],
+      "bundles": [],
+      "platform_support": [],
+      "sources": [
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+          "configured": true,
+          "enabled": true,
+          "checked_at": "2026-11-09T12:00:00Z",
+          "latest_attempt": {
+            "checked_at": "2026-11-09T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "retained": {
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "normalized_sha256": "c73d665910414fbefb47ffff9545a75385267f7eb19f1b2d8a50df63f62ebbe3",
+            "parser_fingerprint": "a0e7d6a6ced8ee765fae9c45be69d7574b25be9fe3f9cdf395156e2f4aa89a12",
+            "revision_id": "1",
+            "source_observed_at": "2026-11-09T12:00:00Z",
+            "parsed_at": "2026-11-09T12:00:00Z"
+          },
+          "issues": [],
+          "availability": "retained"
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-16-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-16-xx/version-history.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-models",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/products-supported-3.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "cisco-iosxe-17-12-1-release",
+          "source_url": "https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "arista-eos-advisory-bundle-0148",
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        }
+      ],
+      "diagnostics": [],
+      "selection": null,
+      "coverage": {
+        "expected_releases": null,
+        "expected_advisories": null,
+        "completeness": "not_established"
+      },
+      "method": "Release and fix evidence for the selected advisory CVE cohort; releases need not have been published in the selected advisory window. Publisher-reported fixed CVEs and affected-scope linked CVEs are separate observations. Vendor-fixed context follows selected study CVEs; affected-scope links additionally require the selected affected CVE cohort. Remediation availability dates retain advisory context and never supply a software release date; only publisher release-history dates do. Fixed-only statements do not establish affectedness, model applicability, deployed exposure or an upgrade event. Exact literal identities only; no version ordering, first-fix, fix-delay or security ranking inference. Retained sources are a bounded reviewed set, not a complete vendor release archive; coverage denominators are unknown."
+    },
+    "conflicting": {
+      "schema_version": 1,
+      "publication": null,
+      "generated_at": "2026-11-09T12:00:00Z",
+      "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33",
+      "observation_end": "2026-11-09",
+      "availability": "available",
+      "releases": [
+        {
+          "release_id": "6242ae358503b4840253de631aaae552343722c79d7fee74e4b119289a6a8fbb",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.10.1131",
+          "history": [],
+          "references": [
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "96f8a8ab1b1bd5013047b1ea8bdae11df1c1df53cfe16fd02326a85559c56518",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.10.1131",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/2/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "36ce5c77818327a50088a8bd113ef3e2e9befee7521ccd9da6e3e2ca694ab43c",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.13.1031",
+          "history": [],
+          "references": [
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "2ec3641bf3cd4d9aa27959c5a650f8c2573f56caba174df81f8e0b76cdd32768",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.13.1031",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/1/product"
+              }
+            }
+          ],
+          "issues": [
+            "release_date_unknown"
+          ],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": []
+        },
+        {
+          "release_id": "eec940e01649c5761f30772e854e140ae1a5ad4af39f4cce97427b9369c6680b",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0001",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-05-29",
+              "publisher_reports_posted": null,
+              "date_basis": "publisher_release_history",
+              "statement": "Initial release.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0001"
+              }
+            }
+          ],
+          "references": [],
+          "issues": [
+            "posting_not_established"
+          ],
+          "vendor_reported_fixed_cve_ids": [],
+          "vendor_reported_fixed_cve_count": null,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": [
+            "2024-05-29"
+          ]
+        },
+        {
+          "release_id": "c6242a3c3c04d8c92f500c18d505a8f79603df8896fa497435bfec7f2f357a24",
+          "vendor": "aruba",
+          "family": "aruba-aoscx",
+          "version": "10.14.0007",
+          "history": [
+            {
+              "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+              "product": "AOS-CX",
+              "platforms": [
+                "6300 Switch Series",
+                "6300L Switch Series",
+                "6400 Switch Series"
+              ],
+              "reported_release_date": "2024-07-12",
+              "publisher_reports_posted": true,
+              "date_basis": "publisher_release_history",
+              "statement": "Released, fully supported, and posted on the Web.",
+              "source": {
+                "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+                "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "Version history / Version number=10.14.0007"
+              }
+            }
+          ],
+          "references": [
+            {
+              "kind": "vendor_fixed",
+              "claim_id": "500bb6389761cbbd9082c99b3d48816585c79f2401771a84cfd46ba1d9d4d8ab",
+              "advisory_id": "HPESBNW04669",
+              "cve_id": "CVE-2024-6387",
+              "initial_published_at": "2024-07-09T17:00:00.000Z",
+              "scope_level": "os_family",
+              "publisher_status": "final",
+              "expression": "10.14.0007",
+              "link_basis": "explicit_fixed_claim",
+              "availability_date": null,
+              "source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              },
+              "claim_source": {
+                "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+                "source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+                "retrieved_at": "2026-11-09T12:00:00Z",
+                "source_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/product"
+              }
+            }
+          ],
+          "issues": [],
+          "vendor_reported_fixed_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "vendor_reported_fixed_cve_count": 1,
+          "affected_scope_cve_ids": [],
+          "affected_scope_cve_count": null,
+          "reported_release_dates": [
+            "2024-07-12"
+          ]
+        }
+      ],
+      "bundles": [],
+      "platform_support": [],
+      "sources": [
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html",
+          "configured": true,
+          "enabled": true,
+          "checked_at": "2026-11-09T12:00:00Z",
+          "latest_attempt": {
+            "checked_at": "2026-11-09T12:00:00Z",
+            "outcome": "ok",
+            "error_code": null
+          },
+          "retained": {
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "normalized_sha256": "c73d665910414fbefb47ffff9545a75385267f7eb19f1b2d8a50df63f62ebbe3",
+            "parser_fingerprint": "a0e7d6a6ced8ee765fae9c45be69d7574b25be9fe3f9cdf395156e2f4aa89a12",
+            "revision_id": "1",
+            "source_observed_at": "2026-11-09T12:00:00Z",
+            "parsed_at": "2026-11-09T12:00:00Z"
+          },
+          "issues": [],
+          "availability": "retained"
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-16-history",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-16-xx/version-history.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "aruba-aos-cx-6300-6400-10-14-models",
+          "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/products-supported-3.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "cisco-iosxe-17-12-1-release",
+          "source_url": "https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        },
+        {
+          "source_id": "arista-eos-advisory-bundle-0148",
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148",
+          "configured": false,
+          "enabled": false,
+          "checked_at": null,
+          "latest_attempt": null,
+          "retained": null,
+          "availability": "uncollected",
+          "issues": []
+        }
+      ],
+      "diagnostics": [
+        {
+          "code": "fixed_availability_conflicting",
+          "claim_id": "3a7715f1ed1efeac7313d1b0203b7687a56d012d8203af36b2eb2f780362d3b8",
+          "expression": "10.14.0007",
+          "source_id": null
+        },
+        {
+          "code": "fixed_availability_conflicting",
+          "claim_id": "5e850e18b47864a223f4d1472d2057c8f4f1620f39be58e485accc8387f69cfd",
+          "expression": "10.10.1131",
+          "source_id": null
+        },
+        {
+          "code": "fixed_availability_conflicting",
+          "claim_id": "beba700f649c82c518361875377880faf7d078ed3e2326d03e24472c70972a1e",
+          "expression": "10.13.1031",
+          "source_id": null
+        }
+      ],
+      "selection": null,
+      "coverage": {
+        "expected_releases": null,
+        "expected_advisories": null,
+        "completeness": "not_established"
+      },
+      "method": "Release and fix evidence for the selected advisory CVE cohort; releases need not have been published in the selected advisory window. Publisher-reported fixed CVEs and affected-scope linked CVEs are separate observations. Vendor-fixed context follows selected study CVEs; affected-scope links additionally require the selected affected CVE cohort. Remediation availability dates retain advisory context and never supply a software release date; only publisher release-history dates do. Fixed-only statements do not establish affectedness, model applicability, deployed exposure or an upgrade event. Exact literal identities only; no version ordering, first-fix, fix-delay or security ranking inference. Retained sources are a bounded reviewed set, not a complete vendor release archive; coverage denominators are unknown."
+    },
+    "missing": null
+  },
+  "vectors": [
+    {
+      "name": "all_family",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": 1,
+        "affected_count_10_14_0007": 1
+      }
+    },
+    {
+      "name": "aruba_2024",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": "aruba",
+          "effective_vendors": [
+            "aruba"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2024",
+          "effective_windows": [
+            "aruba:os_family:2024"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": 1,
+        "affected_count_10_14_0007": 1
+      }
+    },
+    {
+      "name": "aruba_model",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": "aruba",
+          "effective_vendors": [
+            "aruba"
+          ],
+          "scope_level": "model_qualified",
+          "requested_window": "all",
+          "effective_windows": [
+            "aruba:model_qualified:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "aruba",
+            "scope_level": "model_qualified",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": 1
+      }
+    },
+    {
+      "name": "wrong_advisory_year",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": "aruba",
+          "effective_vendors": [
+            "aruba"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2025",
+          "effective_windows": [
+            "aruba:os_family:2025"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2025-01-01",
+            "period_end": "2025-12-31",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "empty_cve_selection",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": [],
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "wrong_vendor",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": "arista",
+          "effective_vendors": [
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "undated_window",
+      "history": "dated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "undated",
+          "effective_windows": [
+            "cisco:os_family:undated",
+            "aruba:os_family:undated",
+            "arista:os_family:undated"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": null,
+            "period_end": null,
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": null,
+            "period_end": null,
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": null,
+            "period_end": null,
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "unknown_dates_all",
+      "history": "undated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": 1,
+        "affected_count_10_14_0007": 1
+      }
+    },
+    {
+      "name": "unknown_dates_undated",
+      "history": "undated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "undated",
+          "effective_windows": [
+            "cisco:os_family:undated",
+            "aruba:os_family:undated",
+            "arista:os_family:undated"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": null,
+            "period_end": null,
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": null,
+            "period_end": null,
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": null,
+            "period_end": null,
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": 1,
+        "affected_count_10_14_0007": 1
+      }
+    },
+    {
+      "name": "unknown_dates_year",
+      "history": "undated",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2024",
+          "effective_windows": [
+            "cisco:os_family:2024",
+            "aruba:os_family:2024",
+            "arista:os_family:2024"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "fixed_only_context",
+      "history": "fixed_only",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": "aruba",
+          "effective_vendors": [
+            "aruba"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "2024",
+          "effective_windows": [
+            "aruba:os_family:2024"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2024-01-01",
+            "period_end": "2024-12-31",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": 1,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "fixed_only_cannot_qualify_model",
+      "history": "fixed_only",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": "aruba",
+          "effective_vendors": [
+            "aruba"
+          ],
+          "scope_level": "model_qualified",
+          "requested_window": "all",
+          "effective_windows": [
+            "aruba:model_qualified:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "aruba",
+            "scope_level": "model_qualified",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "owned_affected_conflict_keeps_only_vendor_context",
+      "history": "conflicting",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "available",
+        "versions": [
+          "10.10.1131",
+          "10.13.1031",
+          "10.14.0001",
+          "10.14.0007"
+        ],
+        "fixed_count_10_14_0007": 1,
+        "affected_count_10_14_0007": null
+      }
+    },
+    {
+      "name": "optional_old_generation",
+      "history": "missing",
+      "study_selection": {
+        "publication": null,
+        "generated_at": "2026-11-09T12:00:00Z",
+        "observation_end": "2026-11-09",
+        "selection": {
+          "requested_vendor": null,
+          "effective_vendors": [
+            "cisco",
+            "aruba",
+            "arista"
+          ],
+          "scope_level": "os_family",
+          "requested_window": "all",
+          "effective_windows": [
+            "cisco:os_family:all",
+            "aruba:os_family:all",
+            "arista:os_family:all"
+          ],
+          "requested_cve_ids": null,
+          "effective_cve_ids": [
+            "CVE-2024-6387"
+          ],
+          "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+        },
+        "rows": [
+          {
+            "vendor": "cisco",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          },
+          {
+            "vendor": "aruba",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": [
+              "CVE-2024-6387"
+            ]
+          },
+          {
+            "vendor": "arista",
+            "scope_level": "os_family",
+            "period_start": "2021-01-01",
+            "period_end": "2026-11-09",
+            "affected_cve_ids": []
+          }
+        ]
+      },
+      "expected": {
+        "availability": "unavailable",
+        "versions": [],
+        "fixed_count_10_14_0007": null,
+        "affected_count_10_14_0007": null
+      }
+    }
+  ]
+}

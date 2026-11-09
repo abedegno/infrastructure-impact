@@ -389,10 +389,18 @@
               "$ref": "#/$defs/source"
             },
             "fixed_product": {
-              "const": "Arista EOS"
+              "enum": [
+                "Arista EOS",
+                "AOS-CX"
+              ]
             },
             "fixed_source": {
               "$ref": "#/$defs/source"
+            },
+            "fixed_product_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
             }
           },
           "required": [
@@ -400,7 +408,7 @@
             "cve_id",
             "source"
           ],
-          "description": "Explicit reviewed linkage: same source row, or the exact reviewed Arista 0100 EOS affected and CVE-specific Resolution sections. Never establishes a model or availability date.",
+          "description": "Explicit reviewed linkage: same source row, the reviewed Arista 0100, 0128, 0201 and 0075 EOS sections, or the three pinned HPESBNW04669 AOS-CX product sections. Never establishes a model or software release availability date.",
           "allOf": [
             {
               "if": {
@@ -428,7 +436,36 @@
                       "required": [
                         "fixed_source"
                       ]
+                    },
+                    {
+                      "required": [
+                        "fixed_product_id"
+                      ]
                     }
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "fixed_product": {
+                    "const": "AOS-CX"
+                  }
+                },
+                "required": [
+                  "fixed_product"
+                ]
+              },
+              "then": {
+                "required": [
+                  "fixed_product_id"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "fixed_product_id"
                   ]
                 }
               }

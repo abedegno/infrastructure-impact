@@ -317,7 +317,8 @@ vm.createContext(c);for(const f of ['lossless-json.js','publication-v2.js','swit
         check(origin)
     if isinstance(rejected.value, HTTPError):
         assert rejected.value.code == 404
-        assert rejected.value.url == origin + "/schemas/publication-v2.json"
+        # The mislabeled index is rejected before its publication catalog is opened.
+        assert rejected.value.url == origin + "/schemas/static-index-v2.json"
 
 
 def test_monitor_validates_root_report_types_before_index_equality(delivery, tmp_path):

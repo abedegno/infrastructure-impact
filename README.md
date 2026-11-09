@@ -22,6 +22,10 @@ The [v0.12.0 release](docs/releases/0.12.0.md) adds exact-target refresh and
 visible current-evidence dispositions while preserving labelled historical records.
 The [v0.12.1 candidate](docs/releases/0.12.1.md) corrects monitoring of retained-only
 KEV context. Source release and hosted activation remain separate review steps.
+The [v0.13.0 candidate](docs/releases/0.13.0.md) adds customer switching comparison
+and reviewed public release/bundle references. Its
+[bounded replay result](docs/research/2026-11-09-customer-comparison-replay.md)
+is a local integration check; hosted acceptance remains pending.
 
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.
@@ -81,6 +85,15 @@ Log4j and Linux. Custom CVE cohorts are supported.
 The [OpenSSH service study](docs/COMPONENT_STUDIES.md) uses a frozen CVE cohort
 across six selected firewall families. Unknown cells remain unknown; rates and
 rankings are suppressed pending defensible coverage and independent review.
+
+The **[Customer switching comparison](https://abedegno.github.io/infrastructure-impact/#customer-comparison)** in the Comparison view combines the
+Cisco IOS XE, Aruba AOS-CX and Arista EOS study with severity/KEV, explicit fixed
+releases, dated public release/bundle evidence and coverage/model limits.
+Publication counts describe vendor disclosures; they do not count customer
+upgrades or rank vendor security. Fixed-only statements remain separate from
+fixes linked to an affected scope. Missing release dates and incomplete archives
+stay visible. The compact overview reuses selected study counts, with provider
+severity and detailed audit evidence below. See the [method and API](docs/switching-comparison.md).
 
 Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
 and Fortinet. [Archive source reviews](docs/research/vendor-archives.md) document

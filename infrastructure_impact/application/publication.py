@@ -44,7 +44,14 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
 
     validate_format(publication_format)
     # Consume private frames before any general clone or public serialization.
-    research = {k: v for k, v in data["research"].items() if k != "current_evidence_input"}
+    release_input = data["research"].get("release_input", [])
+    research = {
+        k: v
+        for k, v in data["research"].items()
+        if k not in {"current_evidence_input", "release_input"}
+    }
+    # Supplied reports are never authority at the public boundary.
+    data = {k: v for k, v in data.items() if k != "switching_release_history"}
     context = data["research"].get("current_evidence_input", {"selections": [], "sources": []})
     union = data["records"] + [w["record"] for w in data.get("retained_advisories", [])]
     computed = partition(
@@ -145,6 +152,16 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
                 generated_at=data["generated_at"],
                 observation_end=observation_end,
             )
+    if switching_input is not None and observation_end >= definition()["start_date"]:
+        from .switching_releases import build as build_releases
+
+        data["switching_release_history"] = build_releases(
+            data["switching_evidence"],
+            release_input,
+            publication=data.get("publication"),
+            generated_at=data["generated_at"],
+            observation_end=observation_end,
+        )
     data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
     data["research"]["release_assets"] = [
@@ -244,7 +261,9 @@ def write_bundle(destination, data, *, publication_format="v1"):
     from .research_reports import validate
 
     validate_partition(data, require_targets=True)
-    if {"current_evidence_input", "score_input"}.intersection(data.get("research", {})):
+    if {"current_evidence_input", "score_input", "release_input"}.intersection(
+        data.get("research", {})
+    ):
         raise ValueError("Private evidence input cannot be published")
     validate_kev(data["kev"])
     if (
@@ -287,6 +306,25 @@ def write_bundle(destination, data, *, publication_format="v1"):
             raise ValueError("Published switching evaluation must match generation time")
         if data["switching_evidence"] != data["switching_comparison"]["inputs"]["evidence"]:
             raise ValueError("Switching asset and comparison evidence disagree")
+    if "switching_release_history" in data:
+        from .switching_releases import validate_current_references
+        from .switching_releases import validate_report as validate_releases
+
+        validate_releases(
+            data["switching_release_history"],
+            publication=data["publication"],
+            generated_at=data["generated_at"],
+        )
+        comparison = data.get("switching_comparison")
+        if comparison is None or (
+            data["switching_release_history"]["observation_end"] != comparison["observation_end"]
+            or data["switching_release_history"]["definition_sha256"]
+            != comparison["selection"]["definition_sha256"]
+        ):
+            raise ValueError(
+                "Release history observation bound or definition differs from comparison"
+            )
+        validate_current_references(data["switching_release_history"], data["switching_evidence"])
     if publication_format == "v2":
         from .publication_v2 import write_bundle as write_v2
 
@@ -294,7 +332,15 @@ def write_bundle(destination, data, *, publication_format="v1"):
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "current-evidence.json").write_bytes(report_bytes(data["current_evidence"]))
-    compact = {k: v for k, v in data.items() if k != "switching_evidence"}
+    compact = {
+        k: v
+        for k, v in data.items()
+        if k not in ("switching_evidence", "switching_release_history")
+    }
+    if "switching_release_history" in data:
+        (destination / "switching-release-history.json").write_text(
+            json.dumps(data["switching_release_history"], allow_nan=False)
+        )
     if "switching_comparison" in data:
         compact["switching_comparison"] = summary(data["switching_comparison"])
         for name in ("switching_evidence", "switching_comparison"):
@@ -406,6 +452,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-contracts.js",
         "switching.js",
         "switching-view.js",
+        "customer-comparison.js",
         "snapshot.js",
         "delivery.js",
     ):
@@ -415,7 +462,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/customer-comparison.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     if publication_format == "v2":
@@ -437,6 +484,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-contracts.js",
         "switching.js",
         "switching-view.js",
+        "customer-comparison.js",
         "snapshot.js",
         "delivery.js",
         "style.css",
@@ -491,11 +539,10 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "extraction-review-v1.json",
         "review-submission-v1.json",
         "static-index-v1.json",
-        *(
-            ("static-index-v2.json", "publication-v2.json", "switching-overview-v2.json")
-            if publication_format == "v2"
-            else ()
-        ),
+        *(("static-index-v2.json",) if publication_format == "v2" else ()),
+        # The customer schema union references overview and range definitions in v1 too.
+        "publication-v2.json",
+        "switching-overview-v2.json",
         "vendor-gaps-v1.json",
         "family-completeness-v1.json",
         "comparison-readiness-v1.json",
@@ -512,6 +559,8 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-evidence-v1.json",
         "switching-comparison-v1.json",
         "switching-summary-v1.json",
+        "switching-release-history-v1.json",
+        "customer-comparison-v1.json",
         "switching-inputs-v1.json",
         "research-dossiers-v1.json",
         "research-dossier-definition-v1.json",

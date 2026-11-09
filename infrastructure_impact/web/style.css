@@ -207,6 +207,21 @@ input:disabled {
   border: 1px solid var(--line);
   background: var(--panel);
 }
+.customer-overview table {
+  min-width: 900px;
+}
+.customer-overview th {
+  white-space: normal;
+}
+.customer-overview caption {
+  text-align: left;
+  padding: 12px 15px;
+  color: var(--muted);
+}
+.customer-overview th[scope='row'] {
+  min-width: 110px;
+  vertical-align: top;
+}
 table {
   border-collapse: collapse;
   width: 100%;

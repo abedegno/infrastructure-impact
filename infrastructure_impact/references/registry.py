@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Callable
 
+from . import software_releases as releases
 from .kev import parse as parse_kev
 from .nvd import parse_openssh
 
@@ -30,6 +31,28 @@ class ReferenceSource:
 SOURCES = {
     "nvd-openssh-products": ReferenceSource("nvd-openssh-products", NVD_OPENSSH_URL, parse_openssh),
     "cisa-kev": ReferenceSource("cisa-kev", KEV_URL, parse_kev, purpose="cve_enrichment"),
+    **{
+        key: ReferenceSource(key, url, parse, purpose="release_history")
+        for key, url, parse in [
+            (
+                "aruba-aos-cx-6300-6400-10-14-history",
+                releases.ARUBA_10_14_URL,
+                releases.parse_aruba_10_14,
+            ),
+            (
+                "aruba-aos-cx-6300-6400-10-16-history",
+                releases.ARUBA_10_16_URL,
+                releases.parse_aruba_10_16,
+            ),
+            (
+                "aruba-aos-cx-6300-6400-10-14-models",
+                releases.ARUBA_SUPPORT_URL,
+                releases.parse_aruba_support_10_14,
+            ),
+            ("cisco-iosxe-17-12-1-release", releases.CISCO_URL, releases.parse_cisco_17_12_1),
+            ("arista-eos-advisory-bundle-0148", releases.ARISTA_URL, releases.parse_arista_0148),
+        ]
+    },
 }
 
 

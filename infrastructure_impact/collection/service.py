@@ -278,9 +278,13 @@ def run(config, limit=None, db_path=None, upstream_limit=0):
                 continue
             try:
                 from ..references.kev import MAX_BYTES
+                from ..references.registry import source
+                from ..references.software_releases import MAX_BYTES as RELEASE_MAX_BYTES
                 from ..references.storage import ingest as ingest_reference
 
                 bounds = {"max_bytes": MAX_BYTES} if ref["source_id"] == "cisa-kev" else {}
+                if source(ref["source_id"]).purpose == "release_history":
+                    bounds = {"max_bytes": RELEASE_MAX_BYTES}
                 raw = fetch(db, ref["url"], "upstream", **bounds)
                 changed = ingest_reference(db, raw, ref["source_id"])
                 collection_result(
