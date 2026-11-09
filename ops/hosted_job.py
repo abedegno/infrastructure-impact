@@ -820,5 +820,25 @@ def main():
         )
 
 
-if __name__ == "__main__":
+def entrypoint():
+    """The temporary operations pin opts into exactly one closed activation."""
+    import sys
+
+    from infrastructure_impact.application.switching_activation import PROFILE_ID
+
+    argv = sys.argv[1:]
+    profiles = []
+    for index, value in enumerate(argv):
+        if value == "--maintenance-profile":
+            profiles.append(argv[index + 1] if index + 1 < len(argv) else "")
+        elif value.startswith("--maintenance-profile="):
+            profiles.append(value.split("=", 1)[1])
+    if len(profiles) > 1 or PROFILE_ID in profiles:
+        from infrastructure_impact.application.switching_activation import main as activate
+
+        raise SystemExit(activate(argv))
     main()
+
+
+if __name__ == "__main__":
+    entrypoint()
