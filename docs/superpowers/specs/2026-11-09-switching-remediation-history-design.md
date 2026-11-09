@@ -92,3 +92,52 @@ unknown/planned/negated/lifecycle text, cross-train and cross-product clauses,
 ambiguous literal dates, unsupported layouts, stale generations and old assets.
 Complete focused tests per task, whole-branch review and final CI. Keep existing
 fresh-worker, privacy, native/static and publication acceptance gates mandatory.
+
+## Release/report stage decisions after source reconnaissance
+
+Reuse ReferenceSource and reference_documents for the reviewed public histories;
+add purpose=release_history and pure vendor source adapters. This avoids another
+collector, DB schema or private-browser publication path. All documents normalize
+to software-release-evidence-v1; the legacy posted-only browser history contract
+is unchanged. New vendor sources require an exact registered URL and parser.
+
+Working Aruba6300/6400 consolidated10.14 and10.16 HTML tables provide real origin
+bytes. Dates are publisher-reported retrospective testimony. One10.14 row asserts
+posting; another only says Initial release. The latter retains unknown posting.
+The companion supported-products table has SKU-specific minimum versions; retain
+literal support context without applying version arithmetic or inferring every
+6300M/6410 release is supported. Cisco's reviewed17.12.1 model page labels a release
+date, but the collection probe returned403; preserve disabled/unavailable state
+until acquired. Arista patch-release dates remain unavailable; explicit fixed
+release references can still be shown with unknown dates.
+
+Reference documents preserve their own source capture and parser times. Public
+projection uses only registered public release sources, closed normalized fields
+and current typed claims. Do not publish private browser captures or private fix
+review checks. A new switching-release-history report joins only literal named
+fixed releases from validated source-owned remediations. The original expression,
+claim IDs, CVE/advisory identity and source remain attached. No earliest/latest
+version matching, cross-train migration, train-date substitution or model inference.
+Where the same literal release has conflicting dates, show conflicting evidence
+rather than choose one. A history entry without justified fix links is context;
+absence of links is not zero vulnerabilities resolved.
+
+Bundle history keeps notice initial publication separate from explicit member
+publication date and from software availability. New Arista0148 bundle context
+must not overwrite existing typed event dates or become an inferred upgrade.
+Existing Cisco typed bundles are reused. Software dates never come from capture,
+advisory, HTTP Last-Modified or search-index timestamps.
+
+The customer view is an additional Vendor comparison mode using existing study
+controls/selection and lazy release-history loading. A customer envelope combines
+existing study summary, selected release history and limitations; it does not
+create another CVE denominator. JSON/CSV and the native API derive from the same
+pure selectors as the static browser. Old publications without release assets
+show explicit unavailable history while retaining the existing study summary.
+Keep report roots bounded and optional for old generations; avoid duplicating
+full claim bodies or rebuilding study facts separately for each customer view.
+
+Explicit CVE-specific fixed-only claims may supply publisher-reported fixed-release
+context independently of an affected range. The report must distinguish
+vendor-reported fixed CVEs from affected-scope-linked cohort CVEs. Fixed-only
+context never authorizes affectedness, model applicability or an upgrade event.
