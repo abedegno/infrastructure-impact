@@ -1069,3 +1069,79 @@ def test_current_boundary_preserves_scores_from_unexcluded_alternate_representat
         s["source_url"] == alternate_url and s["state"] == "available"
         for s in public["switching_evidence"]["score_availability"]
     )
+
+
+def resolution_document(local="10.13.1000 and above", resolution=None):
+    d = tree(status="fixed")
+    d["vulnerabilities"][0]["remediations"][0]["details"] = (
+        "HPE Aruba Networking\n\n- Other Product\n   - 1.2.3 and above\n\n"
+        "- ArubaOS-CX Switches\n   - "
+        + local
+        + "\n\n- Another Product\n   - 2.3.4 and above\n\n"
+        + (
+            resolution
+            or "Software versions with resolution/fixes for the vulnerabilities\n"
+            "covered above, can be downloaded from the HPE Networking Support\nPortal."
+        )
+        + "\n\nHPE Aruba Networking does not evaluate or patch product branches\n"
+        "that have reached their End of Maintenance (EoM) milestone."
+    )
+    return d
+
+
+def test_csaf_source_local_fixed_resolution_survives_foreign_lifecycle_negation():
+    claim = extract(resolution_document())["claims"][0]
+    assert claim["remediations"][0]["availability"] == "vendor_reports_fixed"
+    assert claim["remediations"][0]["product_ids"] == ["p"]
+    assert claim["status"] == "fixed"
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "plan",
+        "partial",
+        "negated",
+        "foreign",
+        "lifecycle",
+        "missing_ids",
+        "affected",
+        "resolution_plan",
+        "resolution_partial",
+    ],
+)
+def test_csaf_local_resolution_does_not_authorize_other_scopes(change):
+    d = resolution_document()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    if change in {"plan", "partial"}:
+        rem["details"] = rem["details"].replace(
+            "10.13.1000 and above",
+            "10.13.1000 and above " + ("planned" if change == "plan" else "(partial fix)"),
+        )
+    elif change in {"resolution_plan", "resolution_partial"}:
+        rem["details"] = rem["details"].replace(
+            "Software versions with",
+            ("Planned: " if change == "resolution_plan" else "Partial fix: ")
+            + "Software versions with",
+        )
+    elif change == "negated":
+        rem["details"] = rem["details"].replace("can be downloaded", "cannot be downloaded")
+    elif change == "foreign":
+        rem["details"] = rem["details"].replace("ArubaOS-CX Switches", "Foreign Switches")
+    elif change == "lifecycle":
+        rem["details"] = (
+            "- ArubaOS-CX Switches\n   - 10.13.1000 and above\n\nEnd of Maintenance products are not patched."
+        )
+    elif change == "missing_ids":
+        rem.pop("product_ids")
+    else:
+        d["vulnerabilities"][0]["product_status"] = {"known_affected": ["p"]}
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
+
+
+def test_local_resolution_uses_numeric_version_path_when_leaf_name_is_family():
+    d = resolution_document()
+    branch = d["product_tree"]["branches"][0]["branches"][0]["branches"][0]["branches"][0]
+    branch["product"]["name"] = "AOS-CX"
+    d["product_tree"]["full_product_names"][0]["name"] = "AOS-CX"
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] == "vendor_reports_fixed"

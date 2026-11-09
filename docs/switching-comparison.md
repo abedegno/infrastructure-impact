@@ -381,3 +381,18 @@ become current matches. Missing selected alternate representations remain missin
 Exact bytes and reviewed structural matches remain separate, and independent
 human review is pending. The blind packet omits expected labels and parser output.
 The study view offers downloads bound to the accepted generation.
+
+Metric evidence limits are derived from accepted row counts: observed affected
+CVEs are retained observations, model-unspecified claims expose qualification
+gaps, and fixed-only claims lack proven affected-to-fix linkage. Known bundle
+membership is distinct from publications without grouping evidence. The legacy
+`unbundled_publications` field does not prove independent patch cycles. Report-wide
+limitations are labelled separately from source failures owned by
+`row.coverage.sources`.
+
+Aruba CSAF resolution extraction recognizes numeric fixed AOS-CX products only
+when explicit remediation IDs own the claim, the product release occurs in the
+local ArubaOS-CX Switches section, and the publisher states that resolution/fix
+versions can be downloaded. Global multi-product and lifecycle prose cannot
+supply availability for another product. This correction preserves literal
+provenance and does not join sibling affected ranges to fixed releases.

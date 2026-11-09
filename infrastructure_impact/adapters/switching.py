@@ -160,6 +160,45 @@ def _availability(details, category, published_date, as_of):
     return "vendor_reports_fixed" if re.search(positive, text, re.I) else "unknown"
 
 
+def _aruba_local_resolution(claim, remediation, ids, as_of):
+    """A numeric fixed product must occur in its own publisher resolution section.
+
+    Global lifecycle prose is context, not availability for every listed product.
+    This does not bind a sibling affected range to the fixed product.
+    """
+    if (
+        claim["vendor"] != "aruba"
+        or claim["family"] != "aruba-aoscx"
+        or claim["status"] != "fixed"
+        or claim["product_id"] not in ids
+        or remediation["category"] != "vendor_fix"
+    ):
+        return None
+    details = remediation["details"] or ""
+    sections = re.findall(r"(?m)^- ArubaOS-CX Switches\s*\n((?:[ \t]+-[^\n]+\n?)+)", details)
+    if len(sections) != 1:
+        return None
+    releases = []
+    for line in sections[0].splitlines():
+        match = re.fullmatch(r"\s*- ([0-9]+\.[0-9]+\.[0-9]+) and above\s*", line)
+        if not match:
+            return None
+        releases.append(match[1])
+    resolution = (
+        "Software versions with resolution/fixes for the vulnerabilities "
+        "covered above, can be downloaded from the HPE Networking Support Portal."
+    )
+    paragraphs = [" ".join(p.split()) for p in re.split(r"\n[ \t]*\n", details)]
+    numeric = [
+        v for v in claim["version_expressions"] if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", v)
+    ]
+    if not numeric or not all(v in releases for v in numeric) or resolution not in paragraphs:
+        return None
+    # Reuse category/date/future guards against only the source-owned availability
+    # statement. Other product sections and EoM prose cannot authorize this claim.
+    return _availability(resolution, "vendor_fix", remediation["availability_date"], as_of)
+
+
 def _csaf(raw, url, vendor, document, digest):
     data = json.loads(raw)
     tracking = data["document"].get("tracking", {})
@@ -318,9 +357,16 @@ def _csaf(raw, url, vendor, document, digest):
                     # Preserve the failure boundary for an applicable malformed scope.
                     ids = set(ids)
                 claim["issues"].extend(issues)
+                local_availability = _aruba_local_resolution(
+                    claim,
+                    prepared,
+                    ids,
+                    tracking.get("current_release_date") or tracking.get("initial_release_date"),
+                )
                 claim["remediations"].append(
                     {
                         **prepared,
+                        "availability": local_availability or prepared["availability"],
                         "product_ids": [pid] if ids and pid is not None else sorted(ids),
                         "version_expressions": [],
                         "source": dict(prepared["source"]),

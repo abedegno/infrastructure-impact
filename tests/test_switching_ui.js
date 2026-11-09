@@ -534,3 +534,14 @@ assert(
     .render(report, { ...validationState, validationPublication: { id: 'stale' } })
     .includes('Switching validation unavailable for this accepted generation'),
 );
+
+// Diagnostic limits derive from accepted row facts and keep collection ownership.
+for (const phrase of [
+  'Metric evidence limits',
+  'Observed affected CVEs:',
+  'Fixed-only claims without proven affected-to-fix linkage:',
+  'publications without grouping evidence',
+  'does not prove independent patch cycles',
+  'Report-wide limitations',
+]) assert(html.includes(phrase), phrase);
+assert(!html.includes(' unbundled</small>'));
