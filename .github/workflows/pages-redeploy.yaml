@@ -1,6 +1,4 @@
-# Proposal: merging/dispatching requires explicit maintainer approval for the
-# deployment-only publication and the added actions:read permission.
-# Reuses one accepted public artifact; no collection or private recovery access.
+# Deploys one reviewed accepted public artifact without collection or private recovery access.
 name: Retry accepted Pages deployment
 on:
   workflow_dispatch:
@@ -43,11 +41,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir "$RETRY_TEMP"
-          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/13682616422 > "$RETRY_TEMP/artifact.json"
-          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/runs/42629259767 > "$RETRY_TEMP/run.json"
-          gh api --hostname github.com 'repos/abedegno/infrastructure-impact/actions/runs/42629259767/attempts/1/jobs?per_page=100' > "$RETRY_TEMP/jobs.json"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/13719707587 > "$RETRY_TEMP/artifact.json"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/runs/42714054236 > "$RETRY_TEMP/run.json"
+          gh api --hostname github.com 'repos/abedegno/infrastructure-impact/actions/runs/42714054236/attempts/1/jobs?per_page=100' > "$RETRY_TEMP/jobs.json"
           # Keep the original ZIP bytes: gh run download would unpack this layer.
-          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/13682616422/zip > "$RETRY_TEMP/artifact.zip"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/13719707587/zip > "$RETRY_TEMP/artifact.zip"
       - name: Verify exact accepted publication before extraction
         env:
           RETRY_TEMP: ${{ runner.temp }}/pages-redeploy
@@ -57,7 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           python checks/pages_redeploy.py \
-            --receipt docs/operations/pages-redeploy-2026-11-09.json \
+            --receipt docs/operations/pages-redeploy-switching-2026-11-09.json \
             --artifact-metadata "$RETRY_TEMP/artifact.json" \
             --run-metadata "$RETRY_TEMP/run.json" \
             --job-metadata "$RETRY_TEMP/jobs.json" \
