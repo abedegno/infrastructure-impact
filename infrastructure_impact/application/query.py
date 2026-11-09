@@ -66,6 +66,7 @@ def state(db, cohort=None):
     checks = health(db)
     review_signals = signals(db)
     from ..collection.config import load_config
+    from ..references.software_releases import inputs as release_inputs
     from ..references.storage import enrichment_input
     from ..references.storage import latest as reference_inputs
     from .switching_evidence import inputs as switching_inputs
@@ -73,6 +74,7 @@ def state(db, cohort=None):
 
     research = {
         "switching_input": switching_inputs(db, records),
+        "release_input": release_inputs(db, load_config()),
         "score_input": score_inputs(db, retained),
         "study_inputs": reference_inputs(db, purpose="component_study"),
         "kev_input": enrichment_input(db, load_config(), "cisa-kev"),

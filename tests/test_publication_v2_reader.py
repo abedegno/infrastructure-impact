@@ -180,6 +180,10 @@ def test_mandatory_whole_root_cannot_be_omitted(generation):
         b"".join(reader.stream_root("switching-comparison.json"))
     )
     projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    if "switching-release-history.json" in reader.catalog["roots"]:
+        projected["switching_release_history"] = json.loads(
+            b"".join(reader.stream_root("switching-release-history.json"))
+        )
     reader.catalog["roots"].pop("catalogue.json")
     with pytest.raises(ValueError, match="mandatory logical root"):
         verify_projection(reader, projected)
@@ -836,6 +840,10 @@ def test_projection_verification_accepts_optional_detail_membership(generation):
         b"".join(reader.stream_root("switching-comparison.json"))
     )
     projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    if "switching-release-history.json" in reader.catalog["roots"]:
+        projected["switching_release_history"] = json.loads(
+            b"".join(reader.stream_root("switching-release-history.json"))
+        )
     verify_projection(reader, projected)
 
 
@@ -848,6 +856,10 @@ def test_projection_verification_checks_optional_detail_membership(generation):
         b"".join(reader.stream_root("switching-comparison.json"))
     )
     projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    if "switching-release-history.json" in reader.catalog["roots"]:
+        projected["switching_release_history"] = json.loads(
+            b"".join(reader.stream_root("switching-release-history.json"))
+        )
     reader.catalog["switching"]["detail_indexes"]["sources"][0]["count"] += 1
     with pytest.raises(ValueError, match="detail"):
         verify_projection(reader, projected)
@@ -861,6 +873,10 @@ def native_projection(generation):
         b"".join(reader.stream_root("switching-comparison.json"))
     )
     projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    if "switching-release-history.json" in reader.catalog["roots"]:
+        projected["switching_release_history"] = json.loads(
+            b"".join(reader.stream_root("switching-release-history.json"))
+        )
     return reader, projected
 
 

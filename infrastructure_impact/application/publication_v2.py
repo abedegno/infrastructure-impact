@@ -523,11 +523,17 @@ def logical_views(data):
     """Same mandatory semantic views as the v1 writer, without legacy sidecars."""
     from .switching_comparison import summary
 
-    compact = {k: v for k, v in data.items() if k != "switching_evidence"}
+    compact = {
+        k: v
+        for k, v in data.items()
+        if k not in ("switching_evidence", "switching_release_history")
+    }
     compact["switching_comparison"] = summary(data["switching_comparison"])
     yield "snapshot.json", compact
     yield "switching-evidence.json", data["switching_evidence"]
     yield "switching-comparison.json", data["switching_comparison"]
+    if "switching_release_history" in data:
+        yield "switching-release-history.json", data["switching_release_history"]
     yield "current-evidence.json", data["current_evidence"]
     yield "release-assets.json", data["research"].get("release_assets", [])
     yield "catalogue.json", data.get("catalogue", {})
@@ -607,7 +613,9 @@ def write_bundle(destination, data):
         )
     overview = writer.overview(summary(data["switching_comparison"]))
     runtime = {
-        k: v for k, v in data.items() if k not in ("switching_evidence", "switching_comparison")
+        k: v
+        for k, v in data.items()
+        if k not in ("switching_evidence", "switching_comparison", "switching_release_history")
     }
     runtime["switching_overview"] = overview
     writer.root("runtime-snapshot", runtime)
@@ -822,7 +830,7 @@ def verify_projection(reader, projected):
         **{
             k: v
             for k, v in projected.items()
-            if k not in ("switching_evidence", "switching_comparison")
+            if k not in ("switching_evidence", "switching_comparison", "switching_release_history")
         },
         "switching_overview": overview,
     }

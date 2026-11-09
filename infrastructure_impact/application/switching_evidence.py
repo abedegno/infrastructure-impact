@@ -24,6 +24,7 @@ _SCHEMAS = (
     "switching-evidence-v1.json",
     "switching-comparison-v1.json",
     "switching-summary-v1.json",
+    "switching-release-history-v1.json",
     "switching-inputs-v1.json",
     "kev-v1.json",
 )
