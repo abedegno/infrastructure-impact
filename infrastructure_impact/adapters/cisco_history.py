@@ -16,24 +16,35 @@ def model_release(raw, url):
     tree = reviewed_html(raw)
     heading(tree, "title", "Cisco IOS XE Dublin 17.12.1 - Cisco")
     heading(tree, "h1", "Cisco IOS XE Dublin 17.12.1")
-    labels = [n for n in tree.find({"dt"}) if n.text() == "Release Date"]
-    if len(labels) != 1:
-        raise ValueError("Expected exactly one software model Release Date")
-    label = labels[0]
-    siblings = label.parent.children
-    position = siblings.index(label)
-    following = [n for n in siblings[position + 1 :] if not isinstance(n, str)]
-    if label.parent.tag != "dl" or not following or following[0].tag != "dd":
-        raise ValueError("Software model Release Date value missing")
-    safe_node(label.parent)
-    text = following[0].text()
+    # This synthetic-reviewed layout is deliberately narrow until raw acceptance.
+    # Page title/h1 alone cannot make a hardware or documentation date software metadata.
+    model = "Cisco IOS XE Dublin 17.12.1"
+    sections = [
+        section
+        for section in tree.find({"section"})
+        if any(
+            not isinstance(child, str) and child.tag == "h2" and child.text() == model
+            for child in section.children
+        )
+    ]
+    if len(sections) != 1:
+        raise ValueError("Expected exactly one explicitly named software model metadata section")
+    section = sections[0]
+    safe_node(section)
+    elements = [child for child in section.children if not isinstance(child, str)]
+    if [child.tag for child in elements] != ["h2", "dl"]:
+        raise ValueError("Unsupported software model metadata section layout")
+    fields = [child for child in elements[1].children if not isinstance(child, str)]
+    if [child.tag for child in fields] != ["dt", "dd"] or fields[0].text() != "Release Date":
+        raise ValueError("Expected one directly owned software model Release Date field")
+    text = fields[1].text()
     row = dict(
         version="17.12.1",
         branch="17.12",
         reported_release_date=explicit_date(text, "%d-%b-%Y"),
         publisher_reports_posted=None,
         date_basis="publisher_release_date",
-        source_locator="Cisco IOS XE Dublin 17.12.1 / Release Date",
+        source_locator="section[h2=Cisco IOS XE Dublin 17.12.1] / dl / Release Date",
         statement=f"Release Date: {text}",
     )
     return document(

@@ -69,7 +69,7 @@ def models():
 
 
 def cisco():
-    return b"<title>Cisco IOS XE Dublin 17.12.1 - Cisco</title><h1>Cisco IOS XE Dublin 17.12.1</h1><dl><dt>Release Date</dt><dd>31-Jul-2023</dd></dl><h2>Documentation</h2><p>Updated November 9, 2026</p>"
+    return b"<title>Cisco IOS XE Dublin 17.12.1 - Cisco</title><h1>Cisco IOS XE Dublin 17.12.1</h1><section><h2>Cisco IOS XE Dublin 17.12.1</h2><dl><dt>Release Date</dt><dd>31-Jul-2023</dd></dl></section><h2>Documentation</h2><p>Updated November 9, 2026</p>"
 
 
 def bundle():
@@ -274,7 +274,9 @@ def test_cisco_release_date_is_scoped_to_the_named_software_version():
         with pytest.raises(ValueError):
             api().parse_cisco_17_12_1(cisco().replace(old, new))
     with pytest.raises(ValueError):
-        api().parse_cisco_17_12_1(cisco() + b"<dl><dt>Release Date</dt><dd>01-Aug-2023</dd></dl>")
+        api().parse_cisco_17_12_1(
+            cisco().replace(b"</dl>", b"<dt>Release Date</dt><dd>01-Aug-2023</dd></dl>")
+        )
 
 
 def test_closed_schema_rejects_inferred_or_unbounded_fields():
@@ -466,3 +468,61 @@ def test_bundle_reviewed_product_split_cannot_be_reassigned():
     ]:
         with pytest.raises(ValueError):
             api().parse_arista_0148(bundle().replace(old, new))
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        b"<section><h2>Cisco Catalyst 9300 Series</h2><dl><dt>Release Date</dt><dd>01-Jan-2010</dd></dl></section>",
+        b'<section><h2>Documentation</h2><a href="https://www.cisco.com/document">Configuration Guide</a><dl><dt>Release Date</dt><dd>01-Jan-2026</dd></dl></section>',
+        b"<dl><dt>Release Date</dt><dd>31-Jul-2023</dd></dl>",
+    ],
+)
+def test_cisco_unrelated_or_unowned_release_date_is_not_software_metadata(body):
+    prefix = (
+        b"<title>Cisco IOS XE Dublin 17.12.1 - Cisco</title><h1>Cisco IOS XE Dublin 17.12.1</h1>"
+    )
+    with pytest.raises(ValueError):
+        api().parse_cisco_17_12_1(prefix + body)
+
+
+def test_cisco_explicit_software_metadata_ignores_other_owned_section_dates():
+    raw = (
+        cisco()
+        + b"<section><h2>Cisco Catalyst 9300 Series</h2><dl><dt>Release Date</dt><dd>01-Jan-2010</dd></dl></section><section><h2>Documentation</h2><dl><dt>Release Date</dt><dd>01-Jan-2026</dd></dl></section>"
+    )
+    row = api().parse_cisco_17_12_1(raw)["releases"][0]
+    assert row["reported_release_date"] == "2023-07-31"
+    assert row["source_locator"] == "section[h2=Cisco IOS XE Dublin 17.12.1] / dl / Release Date"
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda raw: raw.replace(
+            b"<h2>Cisco IOS XE Dublin 17.12.1", b"<h2>Cisco IOS XE Dublin 17.12.2"
+        ),
+        lambda raw: raw.replace(
+            b"<h2>Cisco IOS XE Dublin 17.12.1", b"<h2>Cisco Catalyst 9300 Series"
+        ),
+        lambda raw: raw.replace(
+            b"<dl>", b"<section><h3>Cisco Catalyst 9300 Series</h3><dl>"
+        ).replace(b"</dl>", b"</dl></section>"),
+        lambda raw: raw.replace(b"<dl>", b"<h3>Documentation</h3><dl>"),
+        lambda raw: raw.replace(b"<dl>", b"<div><dl>").replace(b"</dl>", b"</dl></div>"),
+        lambda raw: raw.replace(
+            b"</section>", b"<dl><dt>Release Date</dt><dd>01-Aug-2023</dd></dl></section>"
+        ),
+        lambda raw: raw.replace(b"</dl>", b"<dt>Documentation</dt><dd>01-Jan-2026</dd></dl>"),
+        lambda raw: (
+            raw
+            + b"<section><h2>Cisco IOS XE Dublin 17.12.1</h2><dl><dt>Release Date</dt><dd>01-Aug-2023</dd></dl></section>"
+        ),
+        lambda raw: (
+            raw + b"<section><h2>Cisco IOS XE Dublin 17.12.1</h2><p>No model metadata</p></section>"
+        ),
+    ],
+)
+def test_cisco_changed_nested_or_ambiguous_model_metadata_is_rejected(change):
+    with pytest.raises(ValueError):
+        api().parse_cisco_17_12_1(change(cisco()))
