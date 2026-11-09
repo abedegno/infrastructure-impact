@@ -1074,10 +1074,10 @@ def test_current_boundary_preserves_scores_from_unexcluded_alternate_representat
 def resolution_document(local="10.13.1000 and above", resolution=None):
     d = tree(status="fixed")
     d["vulnerabilities"][0]["remediations"][0]["details"] = (
-        "HPE Aruba Networking\n\n- Other Product\n   - 1.2.3 and above\n\n"
+        "HPE Aruba Networking\n\n- Aruba Fabric Composer\n   - 1.2.3 and above\n\n"
         "- ArubaOS-CX Switches\n   - "
         + local
-        + "\n\n- Another Product\n   - 2.3.4 and above\n\n"
+        + "\n\n- Aruba Fabric Composer\n   - 2.3.4 and above\n\n"
         + (
             resolution
             or "Software versions with resolution/fixes for the vulnerabilities\n"
@@ -1163,4 +1163,32 @@ def test_local_resolution_preserves_separate_applicable_or_unscoped_qualificatio
     d = resolution_document()
     rem = d["vulnerabilities"][0]["remediations"][0]
     rem["details"] += "\n\n" + qualification
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification",
+    [
+        "The release is planned.",
+        "The release is not available.",
+        "The release is a partial fix.",
+        "Availability is unknown.",
+    ],
+)
+def test_local_resolution_does_not_discard_unknown_bulleted_heading(qualification):
+    d = resolution_document()
+    d["vulnerabilities"][0]["remediations"][0]["details"] += (
+        "\n\n- Availability\n   - " + qualification
+    )
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification", ["AOS-CX 10.13.1000 is not available.", "AOS-CX 10.13.1000 is planned."]
+)
+def test_local_resolution_foreign_heading_cannot_hide_conflicting_product_body(qualification):
+    d = resolution_document()
+    d["vulnerabilities"][0]["remediations"][0]["details"] += (
+        "\n\n- Aruba Fabric Composer\n   - " + qualification
+    )
     assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"

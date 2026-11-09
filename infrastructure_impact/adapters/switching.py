@@ -213,10 +213,20 @@ def _aruba_local_resolution(claim, remediation, ids, as_of):
             continue
         if re.fullmatch(r"- ArubaOS-CX Switches\s*\n(?:[ \t]+-[^\n]+\n?)+", paragraph):
             continue
-        # A separate, explicitly headed product section is foreign context.
-        if re.fullmatch(r"- [^\n]+\n(?:[ \t]+-[^\n]+\n?)+", paragraph) and not re.search(
-            r"(?:AOS-CX|ArubaOS-CX)", paragraph, re.I
-        ):
+        # Both heading and body must match the reviewed foreign product shape.
+        # Arbitrary bullets can contain qualifications for this AOS-CX release.
+        foreign_shapes = (
+            r"- Aruba Fabric Composer\n(?:[ \t]+- [0-9]+\.[0-9]+\.[0-9]+ and above\n?)+",
+            r"- EdgeConnect SD-WAN Orchestrator\n[ \t]+-Detailed information on the "
+            r"resolution of CVE-2024-6387 can be found at "
+            r"https://www\.arubanetworks\.com/techdocs/sdwan-PDFs/docs/advisories/"
+            r"orch_resolution_to_cve-2024-6387_latest\.pdf",
+            r"-  HPE Networking Instant On\n[ \t]+- Firmware version [0-9]+\.[0-9]+\.[0-9]+ and higher"
+            r"\n[ \t]+- No direct customer action is necessary other than to ensure affected "
+            r"devices \(APs and Switches in cloud mode\) remain connected to the internet "
+            r"to receive automatic updates\.",
+        )
+        if any(re.fullmatch(shape, paragraph) for shape in foreign_shapes):
             continue
         state = remediation["availability"]
         return state if state in {"unavailable", "partial_mitigation", "planned"} else "unknown"
