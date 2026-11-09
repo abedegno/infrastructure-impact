@@ -340,6 +340,44 @@ establish hardware model applicability or installed software state; a fixed-only
 statement cannot establish affectedness. Literal fixed releases, reported software
 release dates and actual customer upgrades remain separate facts.
 
+### Release and bundle date evidence
+
+Release evidence uses registered official reference sources and the existing
+revision store. Source-byte SHA-256, normalized fingerprint, capture time and
+parser time remain separate from a publisher's reported release date. A page
+captured in 2026 can report a 2024 release date; that is retrospective publisher
+evidence, not proof that we observed the release in 2024.
+
+The initial bounded history set includes the official AOS-CX 6300/6400
+[10.14 history](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/version-history-4.html),
+[10.16 history](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-16-xx/version-history.html)
+and [supported-product table](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-14-xx/products-supported-3.html).
+The 10.14 table explicitly dates 10.14.0007 to 12 July 2024. Its release/posting
+wording differs from the initial-release-only row; missing posting wording stays
+unknown. The product table retains individual SKU minimum-version statements.
+Later SKUs in a maintained table do not establish historical support, affectedness
+or applicability to every 6300M model.
+
+[Arista advisory 0148](https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148)
+has an initial notice date of 2 September 2026 and a separate member-publication
+date of 9 September 2026. The reviewed table explicitly links 30 EOS advisories
+and four VeloCloud advisories. Only EOS membership enters this switching context;
+neither date is firmware availability. A truncated or changed member table fails
+visibly rather than being treated as a complete bundle.
+
+The optional [Cisco IOS XE Dublin 17.12.1 source](https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html)
+remains disabled: anonymous raw acquisition returned 403. Its parser has synthetic
+ownership tests but no accepted raw capture. Hardware series dates and release-note
+update dates cannot supply software availability. No authenticated portal access
+or alternate-source date substitution is performed.
+
+These documents are a reviewed source set, not complete vendor release histories.
+Undated fixes, releases without justified CVE links, unavailable sources and unknown
+archive totals remain distinct. A literal version association supplies release
+context; it does not establish an installed version, an upgrade path or a customer
+upgrade count. A release without linked CVEs is not evidence of a silent security
+fix or vendor concealment.
+
 ### Study identity and browser ownership
 
 Study claim IDs hash the complete public claim except `claim_id`, with sorted
