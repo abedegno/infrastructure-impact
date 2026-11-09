@@ -1352,6 +1352,36 @@
       }
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
+    let releaseHistoryPromise;
+    async function switchingReleaseHistory(study, options = {}) {
+      window.InfrastructureSwitchingContracts.identity(study, catalog);
+      if (!options.operation)
+        return scoped(options, (next) => switchingReleaseHistory(study, next));
+      if (!releaseHistoryPromise)
+        releaseHistoryPromise = (async () => {
+          const name = 'switching-release-history.json';
+          if (!Object.hasOwn(catalog.roots, name)) return null;
+          // Reject a foreign generation before materializing any history arrays.
+          const identity = {
+            publication: await field(name, ['publication'], options),
+            generated_at: await field(name, ['generated_at'], options),
+          };
+          window.InfrastructureSwitchingContracts.identity(identity, catalog);
+          const history = await materializeRoot(name, {
+            ...options,
+            max_bytes: Math.min(options.max_bytes ?? 8000000, 8000000),
+          });
+          window.InfrastructureCustomerComparison.validateHistory(history, catalog);
+          return history;
+        })().catch((error) => {
+          releaseHistoryPromise = null;
+          throw error;
+        });
+      const history = await releaseHistoryPromise;
+      const selected = window.InfrastructureCustomerComparison.selectHistory(history, study);
+      json.measure(selected, null, '', Math.min(options.max_bytes ?? 8000000, 8000000));
+      return selected;
+    }
     return {
       metadata: () => json.clone(catalog),
       streamRoot,
@@ -1359,6 +1389,7 @@
       materializeRoot,
       runtimeSnapshot,
       switchingOverview,
+      switchingReleaseHistory,
       switchingSelection,
       switchingClaims,
       switchingDetails,

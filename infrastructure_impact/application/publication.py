@@ -452,6 +452,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-contracts.js",
         "switching.js",
         "switching-view.js",
+        "customer-comparison.js",
         "snapshot.js",
         "delivery.js",
     ):
@@ -461,7 +462,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/customer-comparison.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     if publication_format == "v2":
@@ -483,6 +484,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-contracts.js",
         "switching.js",
         "switching-view.js",
+        "customer-comparison.js",
         "snapshot.js",
         "delivery.js",
         "style.css",

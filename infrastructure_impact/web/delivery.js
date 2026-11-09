@@ -691,7 +691,34 @@ async function createStaticDelivery(fetchPart, siteBase) {
       });
     return switchingPromise;
   };
+  let releaseHistoryPromise;
+  load.switchingReleaseHistory = async (study) => {
+    window.InfrastructureSwitchingContracts.identity(study, index);
+    if (!releaseHistoryPromise)
+      releaseHistoryPromise = (async () => {
+        const response = await fetchPart(siteBase + 'switching-release-history.json', {
+          cache: 'no-cache',
+        });
+        if (response.status === 404) return null;
+        if (!response.ok)
+          throw Error('Release history unavailable. Retry or reload after deployment.');
+        const raw = await boundedBytes(response, 8000000);
+        const history = window.InfrastructureJSON.parseStrict(
+          new TextDecoder('utf-8', { fatal: true }).decode(raw),
+        );
+        window.InfrastructureCustomerComparison.validateHistory(history, index);
+        return history;
+      })().catch((error) => {
+        releaseHistoryPromise = null;
+        throw error;
+      });
+    return window.InfrastructureCustomerComparison.selectHistory(
+      await releaseHistoryPromise,
+      study,
+    );
+  };
   if (publicationV2) {
+    load.switchingReleaseHistory = publicationV2.switchingReleaseHistory;
     load.switchingOverview = publicationV2.switchingOverview;
     load.switchingSummary = publicationV2.switchingOverview;
     load.switchingSelection = publicationV2.switchingSelection;

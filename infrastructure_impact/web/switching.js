@@ -1130,6 +1130,9 @@
     summary,
     selectClaims,
     queryOptions,
+    day,
+    bounds,
+    inWindow,
     render: (...args) => window.InfrastructureSwitchingView.render(...args),
   };
 })();
@@ -1173,7 +1176,7 @@
     'coverage_issues',
     'source_window_states',
   ];
-  function csvExport(report, options = {}) {
+  function csvTable(fields, rows, options = {}) {
     const quota =
       options.max_bytes === undefined ? null : window.InfrastructureJSON.budget(options.max_bytes);
     function cellBytes(value) {
@@ -1199,6 +1202,13 @@
     };
     quota?.charge(fields.join(',').length);
     const lines = [fields.join(',')];
+    for (const row of rows) {
+      quota?.charge(fields.length - 1 + 2);
+      lines.push(row.map(cell).join(','));
+    }
+    return lines.join('\r\n');
+  }
+  function* csvRows(report) {
     for (const r of report.rows) {
       const c = r.counts,
         k = r.kev,
@@ -1231,29 +1241,31 @@
         c.conditionality_unclassified_cves,
       ];
       for (const f of r.severity.length ? r.severity : [{ band: 'Unknown', count: 0 }]) {
-        quota?.charge(fields.length - 1 + 2);
-        lines.push(
-          [
-            ...common,
-            ...['version', 'provider', 'origin', 'preferred', 'band', 'count'].map((key) => f[key]),
-            'documented_affected_cves',
-            k.availability,
-            k.listed_count,
-            k.unknown_count,
-            coverage.state,
-            coverage.observed_advisories,
-            coverage.expected_advisories,
-            issues.join(';'),
-            [...new Set(coverage.sources.map((s) => s.enumeration?.coverage_state ?? s.state))]
-              .sort()
-              .join(';'),
-          ]
-            .map(cell)
-            .join(','),
-        );
+        yield [
+          ...common,
+          ...['version', 'provider', 'origin', 'preferred', 'band', 'count'].map((key) => f[key]),
+          'documented_affected_cves',
+          k.availability,
+          k.listed_count,
+          k.unknown_count,
+          coverage.state,
+          coverage.observed_advisories,
+          coverage.expected_advisories,
+          issues.join(';'),
+          [...new Set(coverage.sources.map((s) => s.enumeration?.coverage_state ?? s.state))]
+            .sort()
+            .join(';'),
+        ];
       }
     }
-    return lines.join('\r\n');
   }
-  Object.assign(window.InfrastructureSwitching, { csvExport, csvFields: fields });
+  function csvExport(report, options = {}) {
+    return csvTable(fields, csvRows(report), options);
+  }
+  Object.assign(window.InfrastructureSwitching, {
+    csvExport,
+    csvRows,
+    csvTable,
+    csvFields: fields,
+  });
 })();

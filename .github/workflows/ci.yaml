@@ -53,6 +53,8 @@ jobs:
         if: matrix.python == '3.11'
       - run: node tests/test_switching.js
         if: matrix.python == '3.11'
+      - run: uv run python -c 'import os,subprocess,sys; subprocess.run(["node", "tests/test_customer_comparison.js"], env=dict(os.environ, PYTHON=sys.executable), check=True)'
+        if: matrix.python == '3.11'
       - run: node tests/test_switching_ui.js
         if: matrix.python == '3.11'
       # The dossier suite receives its synthetic stdin through pytest above.
