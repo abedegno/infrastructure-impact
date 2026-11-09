@@ -224,3 +224,35 @@ Ruff/format, Prettier, scoped re-review, fresh offline distribution and installe
 v2 worker/standalone monitor checks passed. The read-only public-sample replay
 still checked 13,865,516 transferred bytes. Complete hosted certification and
 platform CI on this final revision remain required.
+
+## Complete hosted certification — 9 November 2026
+
+[Run 42536277051](https://github.com/abedegno/infrastructure-impact/actions/runs/42536277051)
+**completed successfully** on runtime source
+`18579c312bc83397730d47122dcdb7459ca283dc`. The bounded sanitized receipt reports
+`outcome: completed` and `audit_passed`, `capacity_passed` and
+`candidate_validated` all true. This includes physical inspection, both unchanged
+standalone monitor modes, independent native parity and preservation gates.
+
+All 174 documents were imported from authenticated cached captures: zero HTTP
+attempts/received bytes, with 32,176,699 input bytes. The worker completed in
+1,940.07 seconds (32.33 minutes), including every acceptance gate. Peak resident
+memory reached 6,134,403,072 bytes. Query/projection/writing and native-parity times
+also varied from earlier runs; this is a complete pass, not a causal whole-run
+speedup claim or a memory reduction.
+
+Python 3.11, Python 3.13 and container CI passed on
+`d7597861601566672dac98d1f17e2d74164d10b8`. Its only change from the certified
+runtime source is `tests/test_table_transport.js`: condition-based manual-abort
+setup and a watchdog remove runtime-dependent timer wording/order assertions.
+Git diff confirmed all runtime inputs unchanged. Subsequent completion notes and
+plan checkbox updates also change documentation only. No additional full hosted
+certification is needed for identical runtime bytes.
+
+After certification, accepted checkpoint
+`6caac484839968a047668080a126062a63528545`, its manifest fingerprint, live source
+pin `d473d60ec46783750fcaa1795035603ca43a9100`, public generation
+`ff61832828904b6b9614c796d95146ae` and the public-index fingerprint all matched the
+recorded baseline exactly. This disposable certification did not promote the
+candidate or publish the imported records. Merge and hosted activation remain
+separate operations.
