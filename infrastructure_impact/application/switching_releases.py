@@ -67,6 +67,105 @@ def _literal(vendor, expression):
     return match[1] if match else None
 
 
+def _owned_remediation(claim, remediation):
+    """Exact retained source/product ownership; unrelated statements cannot conflict."""
+    if remediation["category"] not in {"vendor_fix", "no_fix_planned", "none_available"} or any(
+        claim["source"][key] != remediation["source"][key]
+        for key in ("source_url", "source_sha256", "retrieved_at")
+    ):
+        return False
+    products = remediation["product_ids"]
+    if products and (claim["product_id"] is None or claim["product_id"] not in products):
+        return False
+    binding = remediation.get("scope_binding")
+    if binding is not None:
+        return (
+            binding["cve_id"] == claim["cve_id"]
+            and binding["source"] == claim["source"]
+            and binding.get("fixed_product", claim["product"]) in PRODUCTS[claim["vendor"]]
+        )
+    if products:
+        return True
+    # Reviewed HTML fixed claims own their exact fixed section, without a
+    # publisher product ID. This never authorizes an affected-to-fixed join.
+    return (
+        claim["status"] == "fixed"
+        and claim["product_id"] is None
+        and remediation["source"] == claim["source"]
+    )
+
+
+def _availability_issue(claim, version, owned, observation_end):
+    """Resolve only contradictory facts about this exact release and owned scope."""
+    related = [
+        rem
+        for rem in owned
+        if not rem["version_expressions"]
+        or version
+        in {_literal(claim["vendor"], expression) for expression in rem["version_expressions"]}
+    ]
+    if any(
+        rem["availability"]
+        in {"planned", "unavailable", "no_fix_planned", "partial_mitigation", "not_a_fix"}
+        for rem in related
+    ):
+        return "fixed_availability_conflicting"
+    if any(
+        rem["availability_date"] is not None
+        and comparison.day(rem["availability_date"]) > observation_end
+        for rem in related
+    ):
+        return "future_fix_availability_excluded"
+    return None
+
+
+def _claim_candidates(claim, observation_end):
+    """Single builder/writer policy over already validated current claim facts."""
+    if (
+        claim["scope"] != "cve_specific"
+        or claim["cve_id"] is None
+        or claim["status"] not in {"affected", "fixed"}
+        or claim["family"] != FAMILIES[claim["vendor"]]
+        or claim["product"] not in PRODUCTS.get(claim["vendor"], set())
+    ):
+        return [], []
+    if (claim["publisher"]["status"] or "").casefold() == "draft":
+        return [], [("draft_fixed_context_excluded", None)]
+    owned = [r for r in claim["remediations"] if _owned_remediation(claim, r)]
+    if claim["status"] == "fixed":
+        candidates = [
+            ("vendor_fixed", expression, "explicit_fixed_claim", claim["source"], None)
+            for expression in claim["version_expressions"]
+        ]
+    else:
+        candidates = [
+            (
+                "affected_scope_fix",
+                expression,
+                rem["scope_binding"]["basis"] if "scope_binding" in rem else "explicit_product_id",
+                rem["source"],
+                rem["availability_date"],
+            )
+            for rem in owned
+            if comparison._fix(claim, rem)
+            for expression in rem["version_expressions"]
+        ]
+    eligible, diagnostics = [], []
+    for candidate in candidates:
+        expression = candidate[1]
+        version = _literal(claim["vendor"], expression)
+        issue = (
+            "fixed_expression_unresolved"
+            if version is None
+            else _availability_issue(claim, version, owned, observation_end)
+        )
+        if issue is not None:
+            diagnostics.append((issue, expression))
+        else:
+            eligible.append(candidate)
+    return eligible, diagnostics
+
+
 def _frames(values):
     """Close private frames before use; source identity is owned by the registry."""
     if not isinstance(values, list) or len(values) > len(SOURCE_IDS):
@@ -321,82 +420,9 @@ def build(evidence, release_input, *, publication, generated_at, observation_end
             )
             if value not in result["bundles"]:
                 result["bundles"].append(value)
-        if (
-            c["scope"] != "cve_specific"
-            or c["cve_id"] is None
-            or c["status"] not in {"affected", "fixed"}
-        ):
-            continue
-        if c["family"] != FAMILIES[c["vendor"]] or c["product"] not in PRODUCTS.get(
-            c["vendor"], set()
-        ):
-            continue
-        if (c["publisher"]["status"] or "").casefold() == "draft":
-            diagnostic(c, "draft_fixed_context_excluded")
-            continue
-        if c["status"] == "fixed":
-            own = [
-                r
-                for r in c["remediations"]
-                if r["category"] in {"vendor_fix", "no_fix_planned", "none_available"}
-                and (
-                    c["product_id"] in r["product_ids"]
-                    if c["product_id"]
-                    else r.get("scope_binding") is not None or r["source"] == c["source"]
-                )
-                and all(
-                    c["source"][k] == r["source"][k]
-                    for k in ("source_url", "source_sha256", "retrieved_at")
-                )
-            ]
-            if any(
-                r["availability"]
-                in {"planned", "unavailable", "no_fix_planned", "partial_mitigation"}
-                for r in own
-            ):
-                diagnostic(c, "fixed_availability_conflicting")
-                continue
-            if any(
-                r["availability_date"] is not None
-                and comparison.day(r["availability_date"]) > observation_end
-                for r in own
-            ):
-                diagnostic(c, "future_fix_availability_excluded")
-                continue
-        # Typed fixed claims are publisher context even without an affected-scope link.
-        candidates = (
-            [
-                ("vendor_fixed", e, "explicit_fixed_claim", c["source"], None)
-                for e in c["version_expressions"]
-            ]
-            if c["status"] == "fixed"
-            else []
-        )
-        if c["status"] == "affected":
-            for rem in c["remediations"]:
-                same_source = all(
-                    c["source"][k] == rem["source"][k]
-                    for k in ("source_url", "source_sha256", "retrieved_at")
-                )
-                if not comparison._fix(c, rem) or not same_source:
-                    continue
-                if (
-                    rem["availability_date"] is not None
-                    and comparison.day(rem["availability_date"]) > observation_end
-                ):
-                    diagnostic(c, "future_fix_availability_excluded")
-                    continue
-                binding = rem.get("scope_binding")
-                candidates.extend(
-                    (
-                        "affected_scope_fix",
-                        e,
-                        binding["basis"] if binding else "explicit_product_id",
-                        rem["source"],
-                        rem["availability_date"],
-                    )
-                    for e in rem["version_expressions"]
-                )
+        candidates, diagnostics = _claim_candidates(c, observation_end)
+        for code, expression in diagnostics:
+            diagnostic(c, code, expression)
         for kind, expression, basis, source, availability_date in candidates:
             version = _literal(c["vendor"], expression)
             if version is None:
@@ -604,6 +630,7 @@ def csv_export(selected):
 def validate_current_references(report, evidence):
     """Bind every published compact reference to the writer's validated current claims."""
     current = {c["claim_id"]: c for c in evidence["claims"]}
+    candidate_cache = {}
     if report["selection"] is not None:
         raise ValueError("Published release history must retain its complete reference set")
     for node in report["releases"]:
@@ -632,27 +659,16 @@ def validate_current_references(report, evidence):
                 or _literal(claim["vendor"], ref["expression"]) != node["version"]
             ):
                 raise ValueError("Release reference literal or scope differs")
-            if ref["kind"] == "vendor_fixed":
-                valid = (
-                    claim["status"] == "fixed"
-                    and ref["expression"] in claim["version_expressions"]
-                    and ref["link_basis"] == "explicit_fixed_claim"
-                    and ref["source"] == claim["source"]
-                    and ref["availability_date"] is None
-                )
-            else:
-                valid = claim["status"] == "affected" and any(
-                    comparison._fix(claim, rem)
-                    and ref["expression"] in rem["version_expressions"]
-                    and ref["source"] == rem["source"]
-                    and ref["availability_date"] == rem["availability_date"]
-                    and ref["link_basis"]
-                    == (
-                        rem["scope_binding"]["basis"]
-                        if "scope_binding" in rem
-                        else "explicit_product_id"
-                    )
-                    for rem in claim["remediations"]
-                )
-            if not valid:
-                raise ValueError("Release reference is not owned by current fixed evidence")
+            if claim["claim_id"] not in candidate_cache:
+                candidate_cache[claim["claim_id"]] = _claim_candidates(
+                    claim, report["observation_end"]
+                )[0]
+            descriptor = (
+                ref["kind"],
+                ref["expression"],
+                ref["link_basis"],
+                ref["source"],
+                ref["availability_date"],
+            )
+            if descriptor not in candidate_cache[claim["claim_id"]]:
+                raise ValueError("Release reference is not eligible current fixed evidence")

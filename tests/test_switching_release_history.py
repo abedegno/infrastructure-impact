@@ -567,3 +567,162 @@ def test_source_owned_arista_fixed_statement_with_planned_availability_stays_dia
     result = build(ev)
     assert result["releases"] == []
     assert {d["code"] for d in result["diagnostics"]} == {"fixed_availability_conflicting"}
+
+
+@pytest.mark.parametrize("status", ["affected", "fixed"])
+@pytest.mark.parametrize(
+    "state", ["planned", "unavailable", "no_fix_planned", "partial_mitigation", "not_a_fix"]
+)
+def test_owned_availability_conflict_excludes_only_its_release_reference(status, state):
+    ev = aruba_evidence()
+    if status == "fixed":
+        ev["claims"] = [c for c in ev["claims"] if c["status"] == status]
+    ordinary = build(ev)
+    previous_ids = [c["claim_id"] for c in ev["claims"]]
+    for c in ev["claims"]:
+        if c["status"] != status or not c["remediations"]:
+            continue
+        negative = copy.deepcopy(c["remediations"][0])
+        negative.pop("scope_binding", None)
+        negative.update(availability=state, product_ids=[c["product_id"]])
+        if status == "fixed":
+            negative["version_expressions"] = c["version_expressions"][:]
+        c["remediations"].append(negative)
+        if not c["product_id"] and "remediation_product_scope_unresolved" not in c["issues"]:
+            c["issues"].append("remediation_product_scope_unresolved")
+    reidentify(ev)
+    evidence.validate_evidence(ev)
+    current_ids = dict(zip(previous_ids, [c["claim_id"] for c in ev["claims"]], strict=True))
+    for node in ordinary["releases"]:
+        for ref in node["references"]:
+            ref["claim_id"] = current_ids[ref["claim_id"]]
+    with pytest.raises(ValueError, match="reference"):
+        api().validate_current_references(ordinary, ev)
+    result = build(ev)
+    assert {d["code"] for d in result["diagnostics"]} == {"fixed_availability_conflicting"}
+    if status == "fixed":
+        assert result["releases"] == []
+    else:
+        assert all(n["affected_scope_cve_count"] is None for n in result["releases"])
+        assert all(n["vendor_reported_fixed_cve_count"] == 1 for n in result["releases"])
+
+
+@pytest.mark.parametrize("status", ["affected", "fixed"])
+@pytest.mark.parametrize("unrelated", ["release", "product", "source", "category", "unknown"])
+def test_unrelated_or_unknown_remediation_does_not_poison_owned_fix(status, unrelated):
+    ev = arista_evidence(CASES[0])
+    if status == "fixed":
+        ev["claims"] = [c for c in ev["claims"] if c["status"] == status]
+    for c in ev["claims"]:
+        if c["status"] != status or not c["remediations"]:
+            continue
+        negative = copy.deepcopy(c["remediations"][0])
+        negative.pop("scope_binding", None)
+        negative.update(
+            availability="planned",
+            version_expressions=c["version_expressions"][:]
+            if status == "fixed"
+            else negative["version_expressions"],
+        )
+        if unrelated == "release":
+            negative["version_expressions"] = ["4.99.1F"]
+        elif unrelated == "product":
+            negative["product_ids"] = ["unrelated-publisher-product"]
+        elif unrelated == "source":
+            negative["source"]["source_sha256"] = "b" * 64
+        elif unrelated == "category":
+            negative["category"] = "workaround"
+        else:
+            negative["availability"] = "unknown"
+        c["remediations"].append(negative)
+        if not c["product_id"] and "remediation_product_scope_unresolved" not in c["issues"]:
+            c["issues"].append("remediation_product_scope_unresolved")
+    reidentify(ev)
+    evidence.validate_evidence(ev)
+    result = build(ev)
+    assert result["diagnostics"] == []
+    assert len(result["releases"]) == 4
+    assert all(n["vendor_reported_fixed_cve_count"] == 1 for n in result["releases"])
+    if status == "affected":
+        assert all(n["affected_scope_cve_count"] == 1 for n in result["releases"])
+
+
+def forged_future_report():
+    before = aruba_evidence()
+    forged = build(before)
+    current = copy.deepcopy(before)
+    for c in current["claims"]:
+        for rem in c["remediations"]:
+            rem["availability_date"] = "2027-01-01"
+    reidentify(current)
+    mapping = {
+        old["claim_id"]: new for old, new in zip(before["claims"], current["claims"], strict=True)
+    }
+    for node in forged["releases"]:
+        for ref in node["references"]:
+            ref["claim_id"] = mapping[ref["claim_id"]]["claim_id"]
+            if ref["kind"] == "affected_scope_fix":
+                ref["availability_date"] = "2027-01-01"
+    return current, forged
+
+
+@pytest.mark.parametrize("kind", ["vendor_fixed", "affected_scope_fix"])
+def test_writer_reference_validation_rejects_future_facts_excluded_by_builder(kind):
+    current, forged = forged_future_report()
+    assert build(current)["releases"] == []
+    for node in forged["releases"]:
+        node["references"] = [r for r in node["references"] if r["kind"] == kind]
+        absent = "affected_scope" if kind == "vendor_fixed" else "vendor_reported_fixed"
+        node[absent + "_cve_ids"] = []
+        node[absent + "_cve_count"] = None
+    api().validate_report(forged)
+    with pytest.raises(ValueError, match="reference"):
+        api().validate_current_references(forged, current)
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_direct_publication_writer_rejects_forged_future_reference_report(tmp_path, fmt):
+    from test_static_delivery import dataset
+
+    current, forged = forged_future_report()
+    data = dataset()
+    data["research"]["switching_input"] = current
+    out = publication.publish(data, tmp_path / "valid", publication_format=fmt)
+    if fmt == "v2":
+        reader = PublicationReader(out)
+        projected = json.loads(b"".join(reader.stream_root("snapshot.json")))
+        projected["switching_comparison"] = json.loads(
+            b"".join(reader.stream_root("switching-comparison.json"))
+        )
+    else:
+        projected = json.loads((out / "snapshot.json").read_text())
+        projected["switching_comparison"] = json.loads(
+            (out / "switching-comparison.json").read_text()
+        )
+    projected["switching_evidence"] = projected["switching_comparison"]["inputs"]["evidence"]
+    forged.update(
+        publication=projected["publication"],
+        generated_at=projected["generated_at"],
+        observation_end=projected["switching_comparison"]["observation_end"],
+    )
+    projected["switching_release_history"] = forged
+    with pytest.raises(ValueError, match="reference"):
+        publication.write_bundle(tmp_path / "forged", projected, publication_format=fmt)
+
+
+def test_affected_conflict_preserves_different_owned_literal_release_alternative():
+    ev = aruba_evidence()
+    c = next(c for c in ev["claims"] if c["status"] == "affected" and c["remediations"])
+    negative = copy.deepcopy(c["remediations"][0])
+    negative.pop("scope_binding")
+    negative.update(product_ids=[c["product_id"]], availability="planned")
+    alternative = copy.deepcopy(negative)
+    alternative.update(version_expressions=["10.14.0099"], availability="vendor_reports_fixed")
+    c["remediations"].extend([negative, alternative])
+    reidentify(ev)
+    evidence.validate_evidence(ev)
+    result = build(ev)
+    assert release(result, negative["version_expressions"][0])["affected_scope_cve_count"] is None
+    assert release(result, "10.14.0099")["affected_scope_cve_count"] == 1
+    assert release(result, "10.14.0099")["vendor_reported_fixed_cve_count"] is None
+    assert {d["code"] for d in result["diagnostics"]} == {"fixed_availability_conflicting"}
