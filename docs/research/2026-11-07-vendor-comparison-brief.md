@@ -1,5 +1,9 @@
 # Does Cisco disclose more switching vulnerabilities?
 
+**Dated update:** the [9 November live investigation](2026-11-09-live-switching-readiness.md)
+records the published Cisco import and corrects the interpretation of validation
+outcomes. The website-membership figures below describe the older pinned publication.
+
 Observation date: **7 November 2026**. Public evidence only. This brief compares
 Cisco IOS XE, HPE Aruba Networking AOS-CX and Arista EOS. It does not compare the
 vendors' entire portfolios or certify applicability to a customer's switches.
