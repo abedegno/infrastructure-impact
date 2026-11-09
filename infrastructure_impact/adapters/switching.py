@@ -1,7 +1,7 @@
 """Pure switching evidence extraction. No version comparison or model inference.
 
 CSAF structural product names are matched literally. Reviewed HTML claims and
-bundle membership require the exact registered bytes, URL and evidence locator.
+bundle membership require reviewed bytes or bounded publisher text, URL and locator.
 The caller adds retained retrieval time and normalized revision, never this hook.
 """
 
@@ -530,6 +530,263 @@ def _csaf(raw, url, vendor, document, digest):
     )
 
 
+# Finite source-section associations; these are not family/version joins. Pins
+# cover normalized publisher text inside owned boundaries, not site wrappers.
+ARISTA_FIX_RULES = {
+    "23115-security-advisory-0128": (
+        "CVE-2025-8872",
+        "EOS (source platform scope applies)",
+        "Affected Software / EOS (source platform scope applies)",
+        "Resolution / CVE-2025-8872 / EOS fixed-release list",
+    ),
+    "24847-security-advisory-0201": (
+        "CVE-2026-111943",
+        "EOS (source platform scope applies)",
+        "Affected Software / EOS (source platform scope applies)",
+        "Resolution / EOS",
+    ),
+    "15438-security-advisory-0075": (
+        "CVE-2022-0778",
+        "Arista EOS",
+        "Vulnerability Assessment / products affected by CVE-2022-0778 / Arista EOS-based products",
+        "Resolution / Arista EOS-based products / first fixed-version list",
+    ),
+}
+
+
+ARISTA_FIXED_VERSIONS = {
+    "23115-security-advisory-0128": [
+        "4.34.2F and later releases in the 4.34.x train",
+        "4.33.5M and later releases in the 4.33.x train",
+        "4.32.8M and later releases in the 4.32.x train",
+        "4.31.9M and later releases in the 4.31.x train",
+    ],
+    "24847-security-advisory-0201": [
+        "4.37.0F and later releases in the 4.37.x train",
+        "4.36.3.2M and later releases in the 4.36.x train",
+        "4.35.7.2M and later releases in the 4.35.x train",
+        "4.34.9.2M and later releases in the 4.34.x train",
+        "4.33.11.2M and later releases in the 4.33.x train",
+    ],
+    "15438-security-advisory-0075": [
+        "4.27.4 and later releases in the 4.27.x train",
+        "4.26.6 and later releases in the 4.26.x train",
+        "4.25.9 and later releases in the 4.25.x train",
+        "4.24.10 and later release in the 4.24.x train",
+        "4.23.12 and later release in the 4.23.x train",
+    ],
+}
+
+
+def _arista_events(node):
+    # Text events avoid inheriting later MOS prose through malformed nested ULs.
+    yield node
+    for child in node.children:
+        if isinstance(child, str):
+            yield child
+        else:
+            yield from _arista_events(child)
+
+
+def _arista_section(events, title, tags, start=0, end=None):
+    end = len(events) if end is None else end
+    matches = [
+        i
+        for i in range(start, end)
+        if not isinstance(events[i], str) and events[i].tag in tags and events[i].text() == title
+    ]
+    if len(matches) != 1:
+        raise ValueError("Reviewed Arista section boundary changed")
+    first = matches[0]
+    last = next(
+        (
+            i
+            for i in range(first + 1, end)
+            if not isinstance(events[i], str)
+            and events[i].tag in {"h2", "h3", "h4"}
+            and (events[i].tag <= events[first].tag or events[i].text() == "For More Information")
+        ),
+        end,
+    )
+    return first, last
+
+
+def _arista_text(events, start, end):
+    return " ".join(" ".join(n for n in events[start:end] if isinstance(n, str)).split())
+
+
+def _arista_pin(events, start, end, expected):
+    if hashlib.sha256(_arista_text(events, start, end).encode()).hexdigest() != expected:
+        raise ValueError("Reviewed Arista EOS resolution changed; source review required")
+
+
+def _arista_fixes(tree, slug, parsed):
+    """Read only the three reviewed EOS lists; hotfix/agent/MOS stay separate."""
+    from .common import assessment, cves
+
+    rule = ARISTA_FIX_RULES[slug]
+    cid = rule[0]
+    events = list(_arista_events(tree))
+    first, last = _arista_section(events, "Resolution", {"h2", "h3"})
+    last = next(
+        (
+            i
+            for i in range(first + 1, last)
+            if not isinstance(events[i], str)
+            and events[i].tag == "table"
+            and any(
+                [c.text() for c in row.find({"th", "td"})] == ["Revision", "Date", "Changes"]
+                for row in events[i].find({"tr"})
+            )
+        ),
+        last,
+    )
+    text = _arista_text(events, first, last)
+    # Preserve existing affected-only captures lacking a reviewed fix statement.
+    # Any release list or fix language must pass review, even negated/planned.
+    if (
+        slug != "15438-security-advisory-0075"
+        and not any(
+            not isinstance(n, str) and n.tag in {"ul", "ol", "h3", "h4"}
+            for n in events[first + 1 : last]
+        )
+        and not re.search(r"\b(fix(?:ed|es)?|release|CVE-[0-9]|[0-9]+\.[0-9]+)\b", text, re.I)
+    ):
+        return []
+    metadata = [
+        n for n in tree.find({"p"}) if n.text().startswith("The CVE-ID tracking this issue:")
+    ]
+    if slug == "15438-security-advisory-0075":
+        metadata = [n for n in tree.find({"h4"}) if n.text() == cid]
+    assessment_start, _ = _arista_section(events, "Vulnerability Assessment", {"h2", "h3"})
+    if (
+        len(metadata) != 1
+        or cves(metadata[0].text()) != [cid]
+        or parsed["cves"] != [cid]
+        or events.index(metadata[0]) >= assessment_start
+    ):
+        raise ValueError("Reviewed Arista single-CVE metadata changed")
+    if slug == "23115-security-advisory-0128":
+        _arista_pin(
+            events, first, last, "3914ce1cc07a3021d01b264a002115efcee80d505131b436dff8fcb0865a66a3"
+        )
+        if [a["product"] for a in parsed["assessments"]] != [rule[1]]:
+            raise ValueError("Reviewed Arista EOS-only ownership changed")
+        statement = cid + " has been fixed in the following releases:"
+        owned_start, owned_end = first, last
+    else:
+        title = "EOS" if slug == "24847-security-advisory-0201" else "Arista EOS-based products"
+        owned_start, owned_end = _arista_section(
+            events,
+            title,
+            {"h3"} if slug == "24847-security-advisory-0201" else {"h4"},
+            first + 1,
+            last,
+        )
+        prelude, owned = (
+            (
+                "29ca139b6332ca4d4a4c4677b7dc687edfd90694235d0708970a2a98201d7c0b",
+                "6d685252c621ee1528e97b1903d5fa30334f9c6875c25be4d515751dac27e16f",
+            )
+            if slug == "24847-security-advisory-0201"
+            else (
+                "52e4de753d1a96febf448ec325e1c5184c86b2157a9fe57aeafa9b3b2bd0da92",
+                "2b1577094a2510008bce6d865044e8c088fb5519dbbf33cd85ce7f5dde56736c",
+            )
+        )
+        _arista_pin(events, first, owned_start, prelude)
+        _arista_pin(events, owned_start, owned_end, owned)
+        expected_boundary = (
+            "Streaming Telemetry Agent (TerminAttr)"
+            if slug == "24847-security-advisory-0201"
+            else "Arista 7130 Systems running MOS"
+        )
+        if owned_end == last or events[owned_end].text() != expected_boundary:
+            raise ValueError("Reviewed Arista EOS product boundary changed")
+        statement = (
+            "The issue is fixed in the following product releases:"
+            if slug == "24847-security-advisory-0201"
+            else "This vulnerability has been fixed in the following EOS version:"
+        )
+    lists = [n for n in events[owned_start:owned_end] if not isinstance(n, str) and n.tag == "ul"]
+    if not lists:
+        raise ValueError("Reviewed Arista EOS fixed list missing")
+    versions = [n.text() for n in lists[0].children if not isinstance(n, str) and n.tag == "li"]
+    if versions != ARISTA_FIXED_VERSIONS[slug]:
+        raise ValueError("Reviewed Arista EOS fixed list structure changed")
+    fixed = assessment(
+        cid,
+        "Arista EOS",
+        "fixed",
+        rule[3],
+        [dict(expression=v) for v in versions],
+        [
+            dict(
+                category="vendor_fix",
+                availability="vendor_reports_fixed",
+                details=statement,
+                source_locator=rule[3],
+            )
+        ],
+    )
+    return [fixed]
+
+
+def _arista_legacy_eos(tree, parsed):
+    """0075: the EOS nested affected list owns only its literal versions."""
+    from .arista_scoped import leading_inline
+    from .common import Node, assessment
+
+    rule = ARISTA_FIX_RULES["15438-security-advisory-0075"]
+    events = list(_arista_events(tree))
+    first, last = _arista_section(events, "Vulnerability Assessment", {"h3"})
+    first, last = _arista_section(
+        events, "The following products are affected by CVE-2022-0778:", {"h4"}, first + 1, last
+    )
+    lists = [n for n in events[first:last] if not isinstance(n, str) and n.tag == "ul"]
+    if not lists:
+        raise ValueError("Reviewed Arista EOS affected ownership changed")
+    owned = [
+        n
+        for n in lists[0].children
+        if isinstance(n, Node)
+        and n.tag == "li"
+        and leading_inline(n) == "Arista EOS-based products"
+    ]
+    if len(owned) != 1:
+        raise ValueError("Reviewed Arista EOS affected ownership changed")
+    branches = list(owned[0].find({"ul"}))
+    if len(branches) != 1:
+        raise ValueError("Reviewed Arista EOS affected version boundary changed")
+    versions = [n.text() for n in branches[0].children if isinstance(n, Node) and n.tag == "li"]
+    if not versions or any(
+        not re.fullmatch(
+            r"4\.[0-9]+(?:\.[0-9]+)?(?: and below releases? in the 4\.[0-9]+\.x train|\.x train)", v
+        )
+        for v in versions
+    ):
+        raise ValueError("Reviewed Arista EOS affected expressions changed")
+    parsed["assessments"] = [
+        assessment(
+            rule[0], "Arista EOS", "affected", rule[2], [dict(expression=v) for v in versions]
+        )
+    ]
+
+
+def arista_reviewed_rule(claim):
+    """Return the finite identity/product/locator rule, including strict SA0100."""
+    slug, cid = claim["advisory_id"], claim["cve_id"]
+    if slug == "19904-security-advisory-0100" and cid in {"CVE-2024-6387", "CVE-2024-6409"}:
+        return (
+            cid,
+            "EOS release (source platform scope applies)",
+            "Affected Software / EOS release (source platform scope applies)",
+            "Resolution / " + cid + " / Arista EOS-based products",
+        )
+    rule = ARISTA_FIX_RULES.get(slug)
+    return rule if rule and rule[0] == cid else None
+
+
 def _arista_reviewed(raw, url, document, digest):
     """Bridge only reviewed routes, re-reading bytes through the core adapters.
 
@@ -547,6 +804,7 @@ def _arista_reviewed(raw, url, document, digest):
         "19222-security-advisory-0095": "Arista reviewed applicability boundaries HTML",
         "19904-security-advisory-0100": "Arista affected software HTML",
         "23115-security-advisory-0128": "Arista affected software HTML",
+        "15438-security-advisory-0075": "Vendor HTML",
         "24847-security-advisory-0201": "Arista affected software HTML",
         "11996-security-advisory-56": "Arista reviewed older product/model HTML",
         "12135-security-advisory-61": "Arista reviewed older product/model HTML",
@@ -585,6 +843,10 @@ def _arista_reviewed(raw, url, document, digest):
     history = [[c.text() for c in row.find({"th", "td"})] for row in tables[0].find({"tr"})][1:]
     if not history or any(len(row) != 3 or not row[0] for row in history):
         raise ValueError("Reviewed Arista revision rows changed")
+    history_row = len(history)
+    if slug == "15438-security-advisory-0075":
+        history = list(reversed(history)) if len(history) > 1 else history
+        history_row = 1
     dates = [iso_date(row[1]) for row in history]
     if dates != sorted(dates) or dates[0] != parsed["published_at"]:
         raise ValueError("Reviewed Arista revision chronology changed")
@@ -608,6 +870,7 @@ def _arista_reviewed(raw, url, document, digest):
             or any(headings.count(h) != 1 for h in ("Affected Software", "Affected Platforms"))
             or headings.index("Affected Software") >= headings.index("Affected Platforms")
             or [a["product"] for a in owned] != products
+            or (slug == "23115-security-advisory-0128" and len(owned) != len(parsed["assessments"]))
             or any(
                 a["cve_id"] != cid or a["scope"] != "cve_specific" or a["status"] != "affected"
                 for a in parsed["assessments"]
@@ -616,6 +879,12 @@ def _arista_reviewed(raw, url, document, digest):
             raise ValueError("Reviewed Arista software ownership changed")
         # Only the reviewed software branches participate in this narrow bridge.
         parsed["assessments"] = owned
+    if slug == "15438-security-advisory-0075":
+        if labels != ["Security Advisory 0075"]:
+            raise ValueError("Reviewed Arista publisher identity changed")
+        _arista_legacy_eos(tree, parsed)
+    if slug in ARISTA_FIX_RULES:
+        parsed["assessments"].extend(_arista_fixes(tree, slug, parsed))
     publisher = dict(
         id=labels[0],
         sequence=history[-1][0],
@@ -623,7 +892,7 @@ def _arista_reviewed(raw, url, document, digest):
         source=_source(
             url,
             digest,
-            "h2 direct text; table[Revision, Date, Changes]/tr[" + str(len(history)) + "]",
+            "h2 direct text; table[Revision, Date, Changes]/tr[" + str(history_row) + "]",
         ),
     )
     claims = []
@@ -647,6 +916,7 @@ def _arista_reviewed(raw, url, document, digest):
         if slug in {
             "23115-security-advisory-0128",
             "24847-security-advisory-0201",
+            "15438-security-advisory-0075",
             "19862-security-advisory-0099",
             "19917-security-advisory-0103",
             "24853-security-advisory-0202",
@@ -702,18 +972,18 @@ def _arista_reviewed(raw, url, document, digest):
                 )
             )
         claims.append(claim)
-    if slug == "19904-security-advisory-0100":
-        # The core openssh_scope parser has verified its exact reviewed section
-        # hashes. Link only these literal EOS/CVE branches; no family/model join.
+    if slug == "19904-security-advisory-0100" or slug in ARISTA_FIX_RULES:
+        # Core SA0100 and the bounded resolution parser above verify owned
+        # sections. Link only the finite EOS/CVE tuples; no family/model join.
         for claim in claims:
             cid = claim["cve_id"]
+            rule = arista_reviewed_rule(claim)
             if (
-                cid not in {"CVE-2024-6387", "CVE-2024-6409"}
+                rule is None
                 or claim["status"] != "affected"
                 or claim["scope"] != "cve_specific"
-                or claim["product"] != "EOS release (source platform scope applies)"
-                or claim["source"]["source_locator"]
-                != "Affected Software / EOS release (source platform scope applies)"
+                or claim["product"] != rule[1]
+                or claim["source"]["source_locator"] != rule[2]
             ):
                 continue
             fixed = [
@@ -723,8 +993,7 @@ def _arista_reviewed(raw, url, document, digest):
                 and c["status"] == "fixed"
                 and c["scope"] == "cve_specific"
                 and c["product"] == "Arista EOS"
-                and c["source"]["source_locator"]
-                == "Resolution / " + cid + " / Arista EOS-based products"
+                and c["source"]["source_locator"] == rule[3]
             ]
             if len(fixed) != 1:
                 continue

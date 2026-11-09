@@ -408,7 +408,7 @@
             "cve_id",
             "source"
           ],
-          "description": "Explicit reviewed linkage: same source row, the reviewed Arista 0100 EOS sections, or the three pinned HPESBNW04669 AOS-CX product sections. Never establishes a model or software release availability date.",
+          "description": "Explicit reviewed linkage: same source row, the reviewed Arista 0100, 0128, 0201 and 0075 EOS sections, or the three pinned HPESBNW04669 AOS-CX product sections. Never establishes a model or software release availability date.",
           "allOf": [
             {
               "if": {

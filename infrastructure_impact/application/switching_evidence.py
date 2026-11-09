@@ -375,12 +375,18 @@ def _validate_aruba_reviewed_link(claim, remediation, binding, claims):
 def _validate_reviewed_link(claim, remediation, binding, claims):
     if claim["vendor"] == "aruba":
         return _validate_aruba_reviewed_link(claim, remediation, binding, claims)
+    from ..adapters.switching import ARISTA_FIX_RULES, ARISTA_FIXED_VERSIONS, arista_reviewed_rule
+
+    rule = arista_reviewed_rule(claim)
     vendor = claim["vendor"]
     cid = claim["cve_id"]
     row = binding["source"]["source_locator"]
     locator = remediation["source"]["source_locator"]
     fixed_source = binding["fixed_source"]
-    expected_url = "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100"
+    expected_url = (
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/"
+        + claim["advisory_id"]
+    )
     matching = [
         c
         for c in claims
@@ -398,18 +404,30 @@ def _validate_reviewed_link(claim, remediation, binding, claims):
         vendor != "arista"
         or binding["fixed_product"] != "Arista EOS"
         or "fixed_product_id" in binding
-        or claim["advisory_id"] != "19904-security-advisory-0100"
+        or rule is None
         or claim["source"]["source_url"] != expected_url
-        or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
         or claim["status"] != "affected"
         or claim["scope"] != "cve_specific"
-        or claim["product"] != "EOS release (source platform scope applies)"
-        or row != "Affected Software / EOS release (source platform scope applies)"
-        or locator != "Resolution / " + cid + " / Arista EOS-based products"
+        or claim["product"] != rule[1]
+        or row != rule[2]
+        or locator != rule[3]
         or fixed_source != remediation["source"]
         or len(matching) != 1
         or remediation["product_ids"]
         or remediation["version_expressions"] != matching[0]["version_expressions"]
+        or (
+            claim["advisory_id"] in ARISTA_FIX_RULES
+            and (
+                claim["product_id"] is not None
+                or matching[0]["product_id"] is not None
+                or claim["family"] != "arista-eos"
+                or matching[0]["family"] != "arista-eos"
+                or matching[0]["version_expressions"] != ARISTA_FIXED_VERSIONS[claim["advisory_id"]]
+                or remediation["category"] != "vendor_fix"
+                or remediation["availability"] != "vendor_reports_fixed"
+                or remediation["availability_date"] is not None
+            )
+        )
         or not any(
             all(
                 remediation.get(key) == fixed.get(key)
