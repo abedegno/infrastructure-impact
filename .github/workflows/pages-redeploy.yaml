@@ -1,0 +1,84 @@
+# Proposal: merging/dispatching requires explicit maintainer approval for the
+# deployment-only publication and the added actions:read permission.
+# Reuses one accepted public artifact; no collection or private recovery access.
+name: Retry accepted Pages deployment
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  group: service-publication
+  cancel-in-progress: false
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Use the reviewed workflow revision containing the verifier and receipt.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          path: source
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: publication-state
+          path: accepted
+          persist-credentials: false
+          sparse-checkout: state/current.json
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - name: Download pinned public artifact and producer metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RETRY_TEMP: ${{ runner.temp }}/pages-redeploy
+        run: |
+          set -euo pipefail
+          mkdir "$RETRY_TEMP"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/13682616422 > "$RETRY_TEMP/artifact.json"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/runs/42629259767 > "$RETRY_TEMP/run.json"
+          gh api --hostname github.com 'repos/abedegno/infrastructure-impact/actions/runs/42629259767/attempts/1/jobs?per_page=100' > "$RETRY_TEMP/jobs.json"
+          # Keep the original ZIP bytes: gh run download would unpack this layer.
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/13682616422/zip > "$RETRY_TEMP/artifact.zip"
+      - name: Verify exact accepted publication before extraction
+        env:
+          RETRY_TEMP: ${{ runner.temp }}/pages-redeploy
+          ACCEPTED_MANIFEST: ${{ github.workspace }}/accepted/state/current.json
+          PUBLIC_OUTPUT: ${{ runner.temp }}/public-publication
+        working-directory: source
+        run: |
+          set -euo pipefail
+          python checks/pages_redeploy.py \
+            --receipt docs/operations/pages-redeploy-2026-11-09.json \
+            --artifact-metadata "$RETRY_TEMP/artifact.json" \
+            --run-metadata "$RETRY_TEMP/run.json" \
+            --job-metadata "$RETRY_TEMP/jobs.json" \
+            --accepted-manifest "$ACCEPTED_MANIFEST" \
+            --artifact-zip "$RETRY_TEMP/artifact.zip" \
+            --output "$PUBLIC_OUTPUT" > "$RETRY_TEMP/verified.json"
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ${{ runner.temp }}/public-publication
+          include-hidden-files: true
+      - name: Deploy the accepted public generation
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: Verify public default and archive health for the pinned generation
+        env:
+          PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
+          RETRY_TEMP: ${{ runner.temp }}/pages-redeploy
+        working-directory: source
+        run: |
+          set -euo pipefail
+          GENERATION="$(python -c 'import json, os; from pathlib import Path; print(json.loads((Path(os.environ["RETRY_TEMP"]) / "verified.json").read_text())["generation"])')"
+          python checks/public_health.py "$PUBLIC_URL" --generation "$GENERATION"
+          python checks/public_health.py "$PUBLIC_URL" --generation "$GENERATION" --verify-archive
