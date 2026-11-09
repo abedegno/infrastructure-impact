@@ -224,6 +224,7 @@ only after those dependencies have been cached.
 | [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
 | [Exact target import](docs/target-import.md) | Preview, isolated staging, durable local captures and opt-in v2 root export |
 | [Switching CVE comparison brief](docs/research/2026-11-07-vendor-comparison-brief.md) | Cisco/Aruba/Arista evidence, disclosure bias and patching limits |
+| [Accepted switching results](docs/research/2026-11-09-switching-activation-results.md) | Dated counts, yearly/cutoff views and pending Pages recovery |
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
 | [Security](SECURITY.md)                                  | Reporting vulnerabilities in this project                         |

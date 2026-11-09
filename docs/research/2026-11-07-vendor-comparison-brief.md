@@ -4,6 +4,8 @@
 records the published Cisco import and corrects the interpretation of validation
 outcomes. The website-membership figures below describe the older pinned publication.
 
+**Accepted-candidate update:** the [9 November activation results](2026-11-09-switching-activation-results.md) add explicit Cisco bundle evidence and two Arista EOS CVEs. Full-period observed affected counts become 199 / 104 / 67; the 2026 advisory-date cohort is 24 / 43 / 34. These are not disclosure rates or comparable deployed-switch risk. Pages recovery is pending, so the current-site figures below remain a dated baseline.
+
 Observation date: **7 November 2026**. Public evidence only. This brief compares
 Cisco IOS XE, HPE Aruba Networking AOS-CX and Arista EOS. It does not compare the
 vendors' entire portfolios or certify applicability to a customer's switches.
