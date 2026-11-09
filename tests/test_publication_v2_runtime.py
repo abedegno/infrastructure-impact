@@ -251,7 +251,7 @@ def test_native_batch_matches_separate_scopes_and_validates_once(monkeypatch):
 @pytest.mark.parametrize("field", ["inputs", "definition", "rows"])
 def test_native_batch_rejects_source_mutation_during_selection(monkeypatch, field):
     full = report([claim()])
-    original = comparison._select_report
+    original = comparison._select_summary
 
     def changed(*args, **kwargs):
         result = original(*args, **kwargs)
@@ -263,7 +263,7 @@ def test_native_batch_rejects_source_mutation_during_selection(monkeypatch, fiel
             full["rows"][0]["counts"]["advisories"] += 1
         return result
 
-    monkeypatch.setattr(comparison, "_select_report", changed)
+    monkeypatch.setattr(comparison, "_select_summary", changed)
     with pytest.raises(ValueError, match="source changed"):
         comparison._select_summaries(full, [dict(scope_level="os_family")], evaluated_at=AT)
 
@@ -420,3 +420,46 @@ def test_native_parity_queries_fresh_source_and_rejects_changed_native_fact(tmp_
         publication_v2.native_parity("synthetic-native-only", out, tmp_path, PublicationReader(out))
     assert reads == [("synthetic-native-only", True)] * 2
     assert queried == [1, 1]
+
+
+def test_native_subphases_cover_eager_expected_and_actual_reader_consumption(tmp_path, monkeypatch):
+    from contextlib import contextmanager
+
+    from test_static_delivery import dataset
+
+    from infrastructure_impact.application import publication_v2, query
+    from infrastructure_impact.application.publication_reader import PublicationReader
+    from infrastructure_impact.storage import repository
+
+    native = dataset()
+    out = publication.publish(native, tmp_path / "published", publication_format="v2")
+    active, observed = [], []
+
+    @contextmanager
+    def tracked_phase(label):
+        active.append(label)
+        try:
+            yield
+        finally:
+            active.pop()
+
+    select, reader_select = comparison._select_summaries, PublicationReader.switching_selections
+
+    def expected(*args, **kwargs):
+        observed.append("expected")
+        assert active == ["publication.native_queries", "publication.native_expected"]
+        return select(*args, **kwargs)
+
+    def actual(self, *args, **kwargs):
+        # Assertions execute on generator consumption, not generator creation.
+        observed.append("reader")
+        assert active == ["publication.native_queries", "publication.native_reader"]
+        yield from reader_select(self, *args, **kwargs)
+
+    monkeypatch.setattr(publication_v2, "phase", tracked_phase)
+    monkeypatch.setattr(comparison, "_select_summaries", expected)
+    monkeypatch.setattr(PublicationReader, "switching_selections", actual)
+    monkeypatch.setattr(repository, "connect", lambda *args, **kwargs: StringIO())
+    monkeypatch.setattr(query, "state", lambda db: copy.deepcopy(native))
+    publication_v2.native_parity("synthetic-native-only", out, tmp_path, PublicationReader(out))
+    assert observed == ["expected", "reader"]

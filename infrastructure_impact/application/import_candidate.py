@@ -29,6 +29,8 @@ WORKER_PHASES = (
     "publication.native_parity",
     "publication.native_roots",
     "publication.native_queries",
+    "publication.native_expected",
+    "publication.native_reader",
 )
 
 

@@ -1025,6 +1025,10 @@ def test_inspection_and_native_parity_emit_static_nested_phases(tmp_path, monkey
             ("publication.native_roots", "started"),
             ("publication.native_roots", "completed"),
             ("publication.native_queries", "started"),
+            ("publication.native_expected", "started"),
+            ("publication.native_expected", "completed"),
+            ("publication.native_reader", "started"),
+            ("publication.native_reader", "completed"),
             ("publication.native_queries", "completed"),
             ("publication.native_parity", "completed"),
         )

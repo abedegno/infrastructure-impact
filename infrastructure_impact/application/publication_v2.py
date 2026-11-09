@@ -776,24 +776,26 @@ def native_parity(database, directory, home, reader):
         actuals = reader.switching_selections(
             [dict(scope_level=scope) for scope in scopes], evaluated_at=projected["generated_at"]
         )
-        expected_summaries = _select_summaries(
-            projected["switching_comparison"],
-            [dict(scope_level=scope) for scope in scopes],
-            evaluated_at=projected["generated_at"],
-        )
-        for expected, actual in zip(expected_summaries, actuals, strict=True):
-            if codec.digest(
-                c.encode()
-                for c in json.JSONEncoder(
-                    ensure_ascii=False, sort_keys=True, separators=(",", ":")
-                ).iterencode(actual)
-            ) != codec.digest(
-                c.encode()
-                for c in json.JSONEncoder(
-                    ensure_ascii=False, sort_keys=True, separators=(",", ":")
-                ).iterencode(expected)
-            ) or switching_csv(actual) != switching_csv(expected):
-                raise ValueError("native switching query mismatch")
+        with phase("publication.native_expected"):
+            expected_summaries = _select_summaries(
+                projected["switching_comparison"],
+                [dict(scope_level=scope) for scope in scopes],
+                evaluated_at=projected["generated_at"],
+            )
+        with phase("publication.native_reader"):
+            for expected, actual in zip(expected_summaries, actuals, strict=True):
+                if codec.digest(
+                    c.encode()
+                    for c in json.JSONEncoder(
+                        ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                    ).iterencode(actual)
+                ) != codec.digest(
+                    c.encode()
+                    for c in json.JSONEncoder(
+                        ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                    ).iterencode(expected)
+                ) or switching_csv(actual) != switching_csv(expected):
+                    raise ValueError("native switching query mismatch")
 
 
 @phase("publication.native_roots")
