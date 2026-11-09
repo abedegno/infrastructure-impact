@@ -553,7 +553,7 @@ class PublicationReader(codec.CatalogReader):
             if (
                 claim["vendor"] == "arista"
                 and claim["advisory_id"] == "19904-security-advisory-0100"
-            ):
+            ) or (claim["vendor"] == "aruba" and claim["advisory_id"] == "HPESBNW04669"):
                 held += route[3]
                 if held > self.limits["selected"]:
                     raise ValueError("cross-claim linkage byte budget")

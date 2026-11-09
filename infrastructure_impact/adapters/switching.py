@@ -34,6 +34,115 @@ STATUSES = {
 }
 
 
+# Three reviewed associations, not a general train/range comparison. The complete
+# source pin owns the mixed-product resolution and its lifecycle qualifications.
+ARUBA_FIX_URL = "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json"
+ARUBA_FIX_SHA256 = "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138"
+ARUBA_FIX_RULES = {
+    ">=10.14.0000|<=10.14.0006_aos-cx": ("10.14.0007_aos-cx", "10.14.0007", 3, 0),
+    ">=10.13.0000|<=10.13.1030_aos-cx": ("10.13.1031_aos-cx", "10.13.1031", 4, 1),
+    ">=10.10.0000|<=10.10.1130_aos-cx": ("10.10.1131_aos-cx", "10.10.1131", 7, 2),
+}
+
+
+def _aruba_status_locator(child):
+    return (
+        "/vulnerabilities/0/product_status; "
+        f"/product_tree/branches/0/branches/0/branches/{child}/product"
+    )
+
+
+def aruba_reviewed_rule(claim):
+    """Identify only a retained, reviewed affected product-section tuple."""
+    rule = ARUBA_FIX_RULES.get(claim["product_id"])
+    if (
+        rule is not None
+        and claim["vendor"] == "aruba"
+        and claim["advisory_id"] == "HPESBNW04669"
+        and claim["cve_id"] == "CVE-2024-6387"
+        and claim["family"] == "aruba-aoscx"
+        and claim["product"] == "AOS-CX"
+        and claim["status"] == "affected"
+        and claim["scope"] == "cve_specific"
+        and claim["source"]["source_url"] == ARUBA_FIX_URL
+        and claim["source"]["source_sha256"] == ARUBA_FIX_SHA256
+        and claim["source"]["source_locator"] == _aruba_status_locator(rule[2])
+        and claim["version_expressions"]
+        == ["vers:semver/" + claim["product_id"].removesuffix("_aos-cx")]
+    ):
+        return rule
+    return None
+
+
+def aruba_reviewed_fixed(claim, fixed, rule):
+    """Require the exact retained fixed sibling, including literal release scope."""
+    return (
+        all(
+            fixed[k] == claim[k]
+            for k in (
+                "vendor",
+                "advisory_id",
+                "revision",
+                "publisher",
+                "cve_id",
+                "family",
+                "product",
+                "scope",
+            )
+        )
+        and fixed["status"] == "fixed"
+        and fixed["product_id"] == rule[0]
+        and fixed["source"]["source_locator"] == _aruba_status_locator(rule[3])
+        and all(
+            fixed["source"][k] == claim["source"][k]
+            for k in ("source_url", "source_sha256", "retrieved_at")
+        )
+    )
+
+
+def _aruba_fix_links(data, claims):
+    parent = data.get("product_tree", {}).get("branches", [])
+    if not parent or not parent[0].get("branches"):
+        return
+    parent = parent[0]["branches"][0]
+    if parent.get("category") != "product_name" or parent.get("name") != "AOS-CX":
+        return
+    for claim in claims:
+        rule = aruba_reviewed_rule(claim)
+        if rule is None:
+            continue
+        matching = [c for c in claims if aruba_reviewed_fixed(claim, c, rule)]
+        if len(matching) != 1 or matching[0]["version_expressions"] != [rule[1]]:
+            continue
+        fixed = matching[0]
+        remediations = [
+            r
+            for r in fixed["remediations"]
+            if r["category"] == "vendor_fix"
+            and r["availability"] == "vendor_reports_fixed"
+            and r["product_ids"] == [rule[0]]
+            and r["source"]["source_locator"] == "/vulnerabilities/0/remediations/0"
+            and all(
+                r["source"][k] == fixed["source"][k]
+                for k in ("source_url", "source_sha256", "retrieved_at")
+            )
+        ]
+        if len(remediations) != 1 or "evidence_text_truncated" in fixed["issues"]:
+            continue
+        bound = copy.deepcopy(remediations[0])
+        bound["product_ids"] = []  # Preserve the publisher's fixed-ID scope on its sibling.
+        bound["version_expressions"] = fixed["version_expressions"][:]
+        bound["scope_binding"] = dict(
+            basis="reviewed_source_sections",
+            cve_id=claim["cve_id"],
+            source=claim["source"].copy(),
+            fixed_product="AOS-CX",
+            fixed_product_id=rule[0],
+            fixed_source=fixed["source"].copy(),
+        )
+        claim["remediations"].append(bound)
+
+
 def bindings_resource():
     return json.loads(
         files("infrastructure_impact")
@@ -412,6 +521,7 @@ def _csaf(raw, url, vendor, document, digest):
                     }
                 )
             claims.append(claim)
+    _aruba_fix_links(data, claims)
     return dict(
         schema_version=1,
         claims=claims,

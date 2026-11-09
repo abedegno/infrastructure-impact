@@ -328,7 +328,53 @@ class _ValidatedEvidence:
             raise ValueError("Fresh evidence proof does not match complete value/context")
 
 
+def _validate_aruba_reviewed_link(claim, remediation, binding, claims):
+    from ..adapters.switching import aruba_reviewed_fixed, aruba_reviewed_rule
+
+    rule = aruba_reviewed_rule(claim)
+    matching = [] if rule is None else [c for c in claims if aruba_reviewed_fixed(claim, c, rule)]
+    if (
+        rule is None
+        or binding["fixed_product"] != "AOS-CX"
+        or binding.get("fixed_product_id") != rule[0]
+        or binding["source"] != claim["source"]
+        or binding["cve_id"] != claim["cve_id"]
+        or len(matching) != 1
+        or binding["fixed_source"] != matching[0]["source"]
+        or matching[0]["version_expressions"] != [rule[1]]
+        or remediation["product_ids"]
+        or remediation["version_expressions"] != [rule[1]]
+        or remediation["category"] != "vendor_fix"
+        or remediation.get("availability") != "vendor_reports_fixed"
+        or remediation["source"]["source_locator"] != "/vulnerabilities/0/remediations/0"
+        or any(
+            remediation["source"][k] != claim["source"][k]
+            for k in ("source_url", "source_sha256", "retrieved_at")
+        )
+        or not any(
+            fixed["product_ids"] == [rule[0]]
+            and not fixed.get("scope_binding")
+            and all(
+                remediation.get(key) == fixed.get(key)
+                for key in (
+                    "publisher_id",
+                    "category",
+                    "details",
+                    "published_availability",
+                    "availability",
+                    "availability_date",
+                    "source",
+                )
+            )
+            for fixed in matching[0]["remediations"]
+        )
+    ):
+        raise ValueError("Reviewed section remediation requires exact retained AOS-CX/CVE linkage")
+
+
 def _validate_reviewed_link(claim, remediation, binding, claims):
+    if claim["vendor"] == "aruba":
+        return _validate_aruba_reviewed_link(claim, remediation, binding, claims)
     vendor = claim["vendor"]
     cid = claim["cve_id"]
     row = binding["source"]["source_locator"]
@@ -350,6 +396,8 @@ def _validate_reviewed_link(claim, remediation, binding, claims):
     ]
     if (
         vendor != "arista"
+        or binding["fixed_product"] != "Arista EOS"
+        or "fixed_product_id" in binding
         or claim["advisory_id"] != "19904-security-advisory-0100"
         or claim["source"]["source_url"] != expected_url
         or cid not in {"CVE-2024-6387", "CVE-2024-6409"}
