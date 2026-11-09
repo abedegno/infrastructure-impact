@@ -1,33 +1,35 @@
-# Canonical non-publishing certification workflow; keep the installed copy identical.
-# Certifies a disposable full hosted candidate; never promotes accepted recovery.
-name: Certify full hosted candidate
+# One-off activation operation on ops/seed-certified-captures only.
+# Do not merge: main retains the nonpublishing certification workflow.
+name: Seed verified acquisition captures
 on:
   workflow_dispatch:
     inputs:
       source_commit:
-        description: 'Reviewed source commit (40 lowercase hexadecimal characters)'
         required: true
         type: string
       previous_capture_run_id:
-        description: 'Optional earlier certification run ID containing encrypted captures'
-        required: false
+        required: true
         type: string
 permissions:
   contents: write
   actions: read
+concurrency:
+  group: service-publication
+  cancel-in-progress: false
 jobs:
-  certify:
+  seed:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 15
     steps:
-      - name: Validate manual inputs
+      - name: Validate approved operation
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
-          PREVIOUS_RUN_ID: ${{ inputs.previous_capture_run_id }}
+          CAPTURE_RUN: ${{ inputs.previous_capture_run_id }}
         run: |
           set -euo pipefail
-          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || exit 1
-          [[ -z "$PREVIOUS_RUN_ID" || "$PREVIOUS_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          [[ "$GITHUB_REF" == refs/heads/ops/seed-certified-captures ]]
+          [[ "$SOURCE_COMMIT" == 18579c312bc83397730d47122dcdb7459ca283dc ]]
+          [[ "$CAPTURE_RUN" == 42536277051 ]]
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.source_commit }}
@@ -36,189 +38,97 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: publication-state
-          path: accepted
-          persist-credentials: false
+          path: service
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: '3.13'
       - run: python -m pip install uv==0.11.21
-      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
-      - name: Install locked source
+      - name: Install certified source
         working-directory: source
         run: uv sync --frozen --no-dev --group hosted
-      - name: Restore accepted baseline privately
-        id: restore
-        working-directory: source
+      - name: Download certified encrypted cache on runner only
         env:
-          IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
           GH_TOKEN: ${{ github.token }}
-          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
+          CAPTURE_RUN: ${{ inputs.previous_capture_run_id }}
         run: |
           set -euo pipefail
           umask 077
-          uv run --no-sync python ops/hosted_job.py \
-            --state-dir "$GITHUB_WORKSPACE/accepted/state" --encrypted-state \
-            --recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY" \
-            --vault-profile "$VAULT_PROFILE" \
-            --restore-only "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
-            > "$RUNNER_TEMP/restore-result.json" 2> "$RUNNER_TEMP/restore-stderr"
-      - name: Download prior encrypted captures
-        if: ${{ inputs.previous_capture_run_id != '' }}
-        env:
-          PREVIOUS_RUN_ID: ${{ inputs.previous_capture_run_id }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          umask 077
-          [[ "$PREVIOUS_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
-          gh run download "$PREVIOUS_RUN_ID" --repo "$GITHUB_REPOSITORY" \
-            --name candidate-certification-captures --dir "$RUNNER_TEMP/previous-captures"
-      - name: Authenticate prior captures
-        if: ${{ inputs.previous_capture_run_id != '' }}
-        working-directory: source
-        env:
-          IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
-        run: |
-          set -euo pipefail
-          umask 077
-          uv run --no-sync python - <<'PY'
-          import os
-          from pathlib import Path
-          from infrastructure_impact.collection.target_import_profiles import profile
-          from ops import hosted_job as hosted
-
-          root = Path(os.environ["RUNNER_TEMP"])
-          selected = profile("campus-switching-public-gap-2026-11-07-v1")
-          state = root / "previous-captures"
-          cache = root / "private-home/captures" / (selected.fingerprint + ".sqlite3")
-          key = os.environ["IMPACT_STATE_KEY"]
-          hosted.validate_encrypted_state(state, key)
-          if not hosted.restore(state, cache, key):
-              raise RuntimeError("Requested acquisition checkpoint is unavailable")
-          PY
-      - name: Preview full hosted baseline
-        working-directory: source
-        run: |
-          set -euo pipefail
-          umask 077
-          export IMPACT_SOURCES="$GITHUB_WORKSPACE/source/infrastructure_impact/resources/sources.json"
-          uv run --no-sync impact target-import preview \
-            --database "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
-            --profile campus-switching-public-gap-2026-11-07-v1 \
-            --output "$RUNNER_TEMP/private-preview.json" \
-            > "$RUNNER_TEMP/preview-stdout" 2> "$RUNNER_TEMP/preview-stderr"
-      - name: Stage disposable full candidate
-        id: stage
-        working-directory: source
-        run: |
-          set -euo pipefail
-          umask 077
-          export IMPACT_SOURCES="$GITHUB_WORKSPACE/source/infrastructure_impact/resources/sources.json"
-          uv run --no-sync impact target-import stage \
-            --database "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
-            --home "$RUNNER_TEMP/private-home" \
-            --profile campus-switching-public-gap-2026-11-07-v1 \
-            --preview "$RUNNER_TEMP/private-preview.json" \
-            --output "$RUNNER_TEMP/private-stage" \
-            --base-path /infrastructure-impact/ --publication-format v2 \
-            > "$RUNNER_TEMP/stage-result.json" 2> "$RUNNER_TEMP/stage-stderr"
-      - name: Checkpoint private captures
-        id: checkpoint
-        if: ${{ always() && steps.stage.outcome != 'skipped' && steps.stage.outcome != '' }}
+          gh run view "$CAPTURE_RUN" --repo "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion | grep -qx success
+          gh run download "$CAPTURE_RUN" --repo "$GITHUB_REPOSITORY" --name candidate-certification-result --dir "$RUNNER_TEMP/certificate"
+          gh run download "$CAPTURE_RUN" --repo "$GITHUB_REPOSITORY" --name candidate-certification-captures --dir "$RUNNER_TEMP/captured"
+      - name: Authenticate, verify targets and retain independent cache pointer
         working-directory: source
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
           IMPACT_SOURCE_COMMIT: ${{ inputs.source_commit }}
-        run: |
-          set -euo pipefail
-          umask 077
-          uv run --no-sync python - <<'PY'
-          import os
-          from pathlib import Path
-          from infrastructure_impact.collection.target_import_profiles import profile
-          from ops import hosted_job as hosted
-
-          root = Path(os.environ["RUNNER_TEMP"])
-          selected = profile("campus-switching-public-gap-2026-11-07-v1")
-          cache = root / "private-home/captures" / (selected.fingerprint + ".sqlite3")
-          if cache.exists():
-              state = root / "certification-captures"
-              key = os.environ["IMPACT_STATE_KEY"]
-              hosted.backup(state, cache, key)
-              hosted.validate_encrypted_state(state, key)
-              if not hosted.restore(state, root / "capture-readback.sqlite3", key):
-                  raise RuntimeError("Acquisition readback failed")
-          PY
-      - name: Sanitize result metadata
-        id: metadata
-        if: ${{ always() && steps.restore.outcome != 'skipped' && steps.restore.outcome != '' }}
-        working-directory: source
-        env:
-          SOURCE_COMMIT: ${{ inputs.source_commit }}
-          STAGE_OUTCOME: ${{ steps.stage.outcome }}
-          RESTORE_OUTCOME: ${{ steps.restore.outcome }}
+          IMPACT_SOURCES: ${{ github.workspace }}/source/infrastructure_impact/resources/sources.json
+          GH_TOKEN: ${{ github.token }}
+          VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
         run: |
           set -euo pipefail
           umask 077
           uv run --no-sync python - <<'PY'
           import json
           import os
-          import re
+          import subprocess
+          from contextlib import closing
+          from hashlib import sha256
           from pathlib import Path
-          from jsonschema import ValidationError
-          from infrastructure_impact.application.import_candidate import parse_worker_diagnostics
-          from infrastructure_impact.application.target_import_contracts import result_bytes
           from infrastructure_impact.collection.target_import_profiles import profile
+          from infrastructure_impact.recovery_policy import vault_limit
+          from infrastructure_impact.storage import capture_cache
+          from infrastructure_impact.storage.remote_recovery import GitHubDraftStore
+          from ops import hosted_job as hosted
 
-          root = Path(os.environ["RUNNER_TEMP"])
-          summary = {"source_commit": os.environ["SOURCE_COMMIT"],
-                     "stage_step": os.environ["STAGE_OUTCOME"], "diagnostics": []}
-          if os.environ.get("RESTORE_OUTCOME") == "failure":
-              error = {"category": "unclassified"}
-              log = root / "restore-stderr"
-              if log.is_file():
-                  with log.open("rb") as stream:
-                      text = stream.read(65_536).decode("utf-8", errors="replace")
-                  http = re.search(r"Recovery API returned HTTP ([1-5][0-9]{2})", text)
-                  if http:
-                      error = {"category": "remote_http", "http_status": int(http[1])}
-                  elif "cryptography.fernet.InvalidToken" in text:
-                      error = {"category": "authentication"}
-                  elif "Encrypted public-runner state requires IMPACT_STATE_KEY" in text:
-                      error = {"category": "missing_key"}
-              summary["restore_error"] = error
-          receipt = root / "stage-result.json"
-          if receipt.is_file() and receipt.stat().st_size <= 2_000_000:
-              try:
-                  selected = profile("campus-switching-public-gap-2026-11-07-v1")
-                  value = json.loads(result_bytes(json.loads(receipt.read_bytes()),
-                                     selected=selected, publication_format="v2"))
-                  for field in ("outcome", "failure_code", "fingerprint", "counters", "checks"):
-                      summary[field] = value[field]
-              except (ValueError, TypeError, AttributeError, KeyError, RecursionError, ValidationError):
-                  summary["receipt_status"] = "invalid"
-          log = root / "stage-stderr"
-          if log.is_file():
-              with log.open("rb") as stream:
-                  summary["diagnostics"] = parse_worker_diagnostics(stream.read(65_536))
-          output = root / "certification-result"
-          output.mkdir()
-          raw = json.dumps(summary, allow_nan=False) + "\n"
-          if len(raw.encode()) > 65_536:
-              raise ValueError("Certification metadata exceeds bound")
-          (output / "result.json").write_text(raw)
+          temporary = Path(os.environ['RUNNER_TEMP'])
+          service = Path(os.environ['GITHUB_WORKSPACE']) / 'service'
+          certificate = temporary / 'certificate/result.json'
+          if certificate.stat().st_size > 65536:
+              raise ValueError('Certificate size')
+          receipt = json.loads(certificate.read_bytes())
+          assert receipt['source_commit'] == os.environ['IMPACT_SOURCE_COMMIT']
+          assert receipt['outcome'] == 'completed'
+          assert set(receipt['checks']) == {'audit_passed', 'capacity_passed', 'candidate_validated'}
+          assert all(value is True for value in receipt['checks'].values())
+          assert receipt['counters']['imported'] == 174
+          selected = profile('campus-switching-public-gap-2026-11-07-v1')
+          key = os.environ['IMPACT_STATE_KEY']
+          limit = vault_limit(os.environ['VAULT_PROFILE'])
+          source = temporary / 'captured'
+          cache = temporary / 'private-cache.sqlite3'
+          hosted.validate_encrypted_state(source, key)
+          if not hosted.restore(source, cache, key, vault_limit_bytes=limit):
+              raise RuntimeError('Capture restore failed')
+          with closing(capture_cache.connect(cache)) as database:
+              total = 0
+              for target in selected.targets:
+                  capture = capture_cache.lookup(database, target.fetch_url, target.source_sha256, selected.max_document_bytes)
+                  if capture is None:
+                      raise RuntimeError('Required verified capture unavailable')
+                  total += len(capture['raw'])
+          assert total == receipt['counters']['input_bytes'] <= selected.max_input_bytes
+          accepted = service / 'state/current.json'
+          before = sha256(accepted.read_bytes()).hexdigest()
+          store = GitHubDraftStore(os.environ['GITHUB_REPOSITORY'])
+          hosted.validate_current(accepted.parent, key, store=store)
+          destination = service / 'acquisitions' / selected.fingerprint
+          if destination.exists() or destination.is_symlink():
+              raise RuntimeError('Acquisition destination already exists')
+          hosted.backup_remote(destination, cache, key, store=store, vault_limit_bytes=limit)
+          hosted.validate_current(destination, key, store=store)
+          assert sha256(accepted.read_bytes()).hexdigest() == before
+          relative = destination.relative_to(service).as_posix() + '/current.json'
+          subprocess.run(['git', '-C', str(service), 'add', '--', relative], check=True)
+          changed = subprocess.check_output(['git', '-C', str(service), 'diff', '--cached', '--name-only'], text=True).splitlines()
+          assert changed == [relative]
+          subprocess.run(['git', '-C', str(service), 'diff', '--exit-code', '--', 'state'], check=True)
+          print(json.dumps({'cache_ready': True, 'verified_targets': len(selected.targets), 'input_bytes': total, 'accepted_manifest_unchanged': True}))
           PY
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ always() && steps.checkpoint.outcome == 'success' }}
-        with:
-          name: candidate-certification-captures
-          path: ${{ runner.temp }}/certification-captures
-          if-no-files-found: ignore
-          retention-days: 14
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ always() && steps.metadata.outcome == 'success' }}
-        with:
-          name: candidate-certification-result
-          path: ${{ runner.temp }}/certification-result/result.json
-          if-no-files-found: error
-          retention-days: 14
+      - name: Retain cache pointer without promoting accepted recovery
+        working-directory: service
+        run: |
+          set -euo pipefail
+          git config user.name 'Infrastructure Impact collector'
+          git config user.email 'collector@users.noreply.github.com'
+          git commit -m 'Retain certified exact-import acquisition cache'
+          git push origin HEAD:publication-state
