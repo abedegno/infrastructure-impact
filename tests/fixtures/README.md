@@ -40,6 +40,12 @@ manifest generator. Real source-led review expectations are metadata in the sepa
 switching-extraction-review resource; synthetic CI results never count as passes
 for those retained primary-source cases.
 
+`switching-release-history-vectors.json` contains project-authored study selections
+and 14 release-history vectors shared by Python and JavaScript. Dates, releases, claims
+and source availability are synthetic contract examples, not publisher captures or
+evidence of real vendor impact. It is maintained directly and fingerprinted by the
+fixture manifest generator.
+
 `target-import-candidate.json` contains minimal project-authored Cisco CSAF and
 Aruba bulletin strings for exact-import stage and installed-wheel checks. Advisory
 route shapes and literal parser markers exercise dispatch; all vulnerability,

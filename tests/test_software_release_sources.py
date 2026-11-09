@@ -1,5 +1,6 @@
 """Synthetic reviewed release evidence; raw publisher captures stay outside Git."""
 
+import json
 from copy import deepcopy
 from importlib import import_module
 from unittest.mock import patch
@@ -10,6 +11,7 @@ from infrastructure_impact.collection.config import validate_config
 from infrastructure_impact.collection.service import run
 from infrastructure_impact.references.registry import SOURCES, source
 from infrastructure_impact.references.storage import ingest
+from infrastructure_impact.settings import PACKAGE
 from infrastructure_impact.storage.repository import collection_result, connect
 
 ARUBA = "aruba-aos-cx-6300-6400-10-14-history"
@@ -18,6 +20,22 @@ MODELS = "aruba-aos-cx-6300-6400-10-14-models"
 CISCO = "cisco-iosxe-17-12-1-release"
 ARISTA = "arista-eos-advisory-bundle-0148"
 IDS = [ARUBA, ARUBA16, MODELS, CISCO, ARISTA]
+
+
+def test_packaged_release_sources_use_existing_collection_with_explicit_cisco_exclusion(tmp_path):
+    config = validate_config(json.loads((PACKAGE / "resources/sources.json").read_text()))
+    entries = {item["source_id"]: item for item in config["reference_sources"]}
+    assert all(key in entries for key in IDS)
+    for key in IDS:
+        assert entries[key] == {
+            "source_id": key,
+            "url": source(key).url,
+            "enabled": key != CISCO,
+        }
+    with connect(tmp_path / "release-sources.sqlite3") as db:
+        values = api().inputs(db, config)
+    assert [v["enabled"] for v in values] == [True, True, True, False, True]
+    assert all(v["configured"] and v["retained"] is None for v in values)
 
 
 def api():

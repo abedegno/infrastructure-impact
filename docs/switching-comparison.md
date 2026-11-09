@@ -372,6 +372,13 @@ update dates cannot supply software availability. No authenticated portal access
 or alternate-source date substitution is performed.
 
 These documents are a reviewed source set, not complete vendor release histories.
+The packaged candidate configuration enables the three Aruba references and
+Arista advisory 0148 through existing reference collection. Cisco is explicitly
+configured with `enabled: false`; its history source remains excluded and
+not collected. This preparation does not activate a hosted collector. The
+[bounded cached replay](research/2026-11-09-customer-comparison-replay.md) verifies
+the integration without establishing current production coverage.
+
 Undated fixes, releases without justified CVE links, unavailable sources and unknown
 archive totals remain distinct. A literal version association supplies release
 context; it does not establish an installed version, an upgrade path or a customer
@@ -453,6 +460,18 @@ headings stop prior-product version inheritance and remain visible in core
 normalization warnings. Earlier mixed and multi-CVE layouts remain review backlog.
 
 ## Customer comparison API and exports
+
+The browser deep link is `#customer-comparison`. A compact vendor overview appears
+before detailed study evidence, in the selected study's fixed vendor order. It
+reuses affected CVEs, remediation-publication events, KEV listed/unknown counts and
+availability, source coverage state, selected scope and model-unspecified claims.
+CVE counts use the original advisory-publication cohort; remediation-publication
+counts use event dates, as in the existing study.
+Distinct selected release nodes with vendor-reported fixed CVEs and nodes with
+affected-scope CVE links are counted separately as literal fixed-version evidence.
+Missing linked evidence is not established, not zero upgrade work. The table does
+not combine severity providers, change the CVE denominator or rank vendors;
+provider-specific severity and complete audit material remain below it.
 
 Native `GET /api/v1/customer-comparison` accepts the same single `vendor`, `scope`,
 `window`, `cves` and `format=json|csv` controls and rejects blank, duplicate or

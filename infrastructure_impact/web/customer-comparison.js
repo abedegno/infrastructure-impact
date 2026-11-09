@@ -301,6 +301,31 @@
   function source(s) {
     return view.source(s);
   }
+  function overview(envelope) {
+    const names = { cisco: 'Cisco IOS XE', aruba: 'Aruba AOS-CX', arista: 'Arista EOS' };
+    return (
+      '<section class="customer-overview"><div class="table-wrap" tabindex="0" role="region" aria-label="Selected vendor overview"><table><caption>Selected vendor overview · disclosure evidence, in study order</caption><thead><tr><th scope="col">Vendor</th><th scope="col">Affected CVEs</th><th scope="col">Remediation publications</th><th scope="col">KEV membership</th><th scope="col">Selected fix evidence</th><th scope="col">Source coverage</th><th scope="col">Scope / model limits</th></tr></thead><tbody>' +
+      envelope.study.rows
+        .map((row) => {
+          const releases = envelope.release_history.releases.filter((n) => n.vendor === row.vendor),
+            fixed = new Set(
+              releases
+                .filter((n) => n.vendor_reported_fixed_cve_count > 0)
+                .map((n) => n.release_id),
+            ).size,
+            affected = new Set(
+              releases.filter((n) => n.affected_scope_cve_count > 0).map((n) => n.release_id),
+            ).size,
+            evidence =
+              fixed || affected
+                ? `${fixed ? esc(fixed) + ' literal fixed versions' : 'Vendor-reported fixed versions not established'}<small>${affected ? esc(affected) + ' with affected-scope links' : 'Affected-scope release links not established'}</small>`
+                : 'No linked release evidence<small>Fix workload not established</small>';
+          return `<tr data-customer-vendor="${esc(row.vendor)}"><th scope="row">${esc(names[row.vendor] ?? row.vendor)}</th><td>${text(row.counts.affected_cves)}</td><td>${text(row.counts.remediation_events)}</td><td>${text(row.kev.listed_count)} listed; ${text(row.kev.unknown_count)} unknown<small>${text(row.kev.availability)}</small></td><td>${evidence}</td><td>${text(row.coverage.state)}</td><td>${text(row.scope_level)}<small>${text(row.counts.model_unresolved_claims)} model-unspecified claims</small></td></tr>`;
+        })
+        .join('') +
+      '</tbody></table></div><p>CVE counts use the original advisory-publication cohort; remediation-publication counts use event dates. Publications are not customer upgrades. Literal fixed versions are source evidence, not an upgrade count or path. Model applicability and historical completeness remain unknown; zero observations do not establish no exposure. Provider-specific severity and supporting evidence follow below.</p></section>'
+    );
+  }
   function render(envelope, state = {}) {
     const title =
       '<h2>Customer switching comparison</h2><p class="notice">Counts measure disclosure, not vendor security quality. Actual customer upgrades: unknown.</p><p>The advisory cohort uses the study publication window; release dates and publication events describe separate evidence.</p>';
@@ -309,6 +334,7 @@
     const history = envelope.release_history;
     return (
       title +
+      overview(envelope) +
       view.render(envelope.study, { ...state, customer: true }) +
       '<section class="customer-history"><h3>Reported fixed releases and source history</h3><p>A release without linked CVEs is not evidence of a silent security fix or vendor concealment. Evidence gaps do not establish zero exposure or withholding. Model applicability and actual upgrades remain unknown.</p>' +
       `<p>History: ${esc(history.availability)}. Release coverage denominator: unknown. ${esc(history.method)}</p>` +

@@ -79,7 +79,7 @@ const fixtures = JSON.parse(
 sys.path.insert(0,'tests')
 from test_customer_comparison import selected
 from test_static_delivery import dataset
-from test_switching_aruba_fix_links import projected
+from test_switching_aruba_fix_links import projected,reidentify
 from test_switching_release_history import frame,study,build as build_history
 from test_software_release_sources import ARISTA,MODELS,bundle,models
 from infrastructure_impact.references import software_releases as source_docs
@@ -106,9 +106,12 @@ score=copy.deepcopy(FIXTURE['evidence']['claims'][0]['scores'][0])
 c['scores']=[dict(score,value=0,provider='vendor',preferred=True),dict(score,value=9.8,provider='other',preferred=False)]
 scored_study=switching_comparison.summary(switching_comparison.select_report(report([c]),vendor='arista'))
 scored_envelope=customer.build(scored_study,switching_releases.select_report(None,scored_study))
+fixed_ev=projected();fixed_ev['claims']=[c for c in fixed_ev['claims'] if c['status']=='fixed'];reidentify(fixed_ev)
+fixed_study=study(fixed_ev,vendor='aruba',window='2024')
+fixed_envelope=customer.build(fixed_study,switching_releases.select_report(build_history(fixed_ev),fixed_study))
 vectors=json.load(open('tests/fixtures/switching-release-history-vectors.json'))
 selections=[switching_releases.select_report(vectors['histories'].get(v['history']),v['study_selection']) for v in vectors['vectors']]
-print(json.dumps(dict(selections=selections,cases=[dict(envelope=e,csv=customer.csv_export(e)) for e in [envelope,other,context_envelope,scored_envelope]],paths=paths,temporary=root)))`,
+print(json.dumps(dict(selections=selections,cases=[dict(envelope=e,csv=customer.csv_export(e)) for e in [envelope,other,context_envelope,scored_envelope,fixed_envelope]],paths=paths,temporary=root)))`,
     ],
     { encoding: 'utf8' },
   ),
@@ -120,6 +123,46 @@ shared.vectors.forEach((vector, i) =>
     vector.name + ' full Python parity',
   ),
 );
+// Catch missing/reordered overview facts, conflated fix counts and unsafe labels.
+const overviewCase = fixtures.cases[2].envelope;
+const overviewHTML = api.render(overviewCase);
+const overview = overviewHTML.match(
+  /<section class="customer-overview">([\s\S]*?)<\/section>/,
+)?.[1];
+assert(overview, 'compact overview is present before the detailed study');
+assert(overviewHTML.indexOf('customer-overview') < overviewHTML.indexOf('switching-controls'));
+const overviewRows = [...overview.matchAll(/<tr data-customer-vendor="([^"]+)">([\s\S]*?)<\/tr>/g)];
+assert.deepStrictEqual(
+  overviewRows.map((r) => r[1]),
+  ['cisco', 'aruba', 'arista'],
+);
+const cells = (row) => [...row.matchAll(/<td>([\s\S]*?)<\/td>/g)].map((c) => c[1]);
+assert.deepStrictEqual(cells(overviewRows[1][2]).slice(0, 2), ['1', '1']);
+assert(cells(overviewRows[1][2])[2].includes('0 listed; 1 unknown'));
+assert(cells(overviewRows[1][2])[2].includes('not_configured'));
+assert(cells(overviewRows[1][2])[3].includes('3 literal fixed versions'));
+assert(cells(overviewRows[1][2])[3].includes('3 with affected-scope links'));
+assert(cells(overviewRows[0][2])[3].includes('No linked release evidence'));
+assert(!cells(overviewRows[0][2])[3].includes('0 literal'));
+assert(cells(overviewRows[1][2])[4].includes('unknown'));
+assert(cells(overviewRows[1][2])[5].includes('9 model-unspecified claims'));
+assert(overview.includes('Publications are not customer upgrades'));
+assert(overview.includes('CVE counts use the original advisory-publication cohort'));
+assert(overview.includes('remediation-publication counts use event dates'));
+assert(overview.includes('Model applicability and historical completeness remain unknown'));
+const escapedOverview = clone(overviewCase);
+escapedOverview.study.rows[1].coverage.state = '<img onerror=bad()>';
+assert.throws(() => api.render(escapedOverview), 'invalid overview labels fail closed');
+const safeError = api.render(overviewCase, { error: '<img onerror=bad()>' });
+assert(safeError.includes('&lt;img onerror=bad()&gt;'));
+assert(!safeError.includes('<img onerror=bad()>'));
+const missingOverview = api.render(fixtures.cases[3].envelope).split('</section>')[0];
+assert(missingOverview.includes('No linked release evidence'));
+assert(!missingOverview.includes('0 literal fixed versions'));
+const fixedOnlyOverview = api.render(fixtures.cases[4].envelope).split('</section>')[0];
+assert(fixedOnlyOverview.includes('3 literal fixed versions'));
+assert(fixedOnlyOverview.includes('Affected-scope release links not established'));
+assert(!fixedOnlyOverview.includes('0 with affected-scope links'));
 for (const test of fixtures.cases) {
   const envelope = api.build(test.envelope.study, test.envelope.release_history);
   assert.deepStrictEqual(clone(envelope), test.envelope);
