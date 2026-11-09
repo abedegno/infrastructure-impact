@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import sqlite3
+import sys
 import tempfile
 from contextlib import closing, contextmanager, redirect_stderr, redirect_stdout
 from hashlib import sha256
@@ -385,6 +386,60 @@ def controls(argv):
     return args, vault_limit(args.vault_profile)
 
 
+@contextmanager
+def private_diagnostics():
+    """Annotate only the stock bounded projection after private streams unwind."""
+    from .import_candidate import parse_worker_diagnostics
+
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as log:
+        try:
+            with redirect_stdout(log), redirect_stderr(log):
+                yield
+        finally:
+            # Never print the captured stream, arbitrary lines or exception values.
+            # An annotation failure cannot alter the candidate/recovery decision.
+            try:
+                log.flush()
+                log.buffer.seek(0)
+                raw = log.buffer.read(65_536)
+                for event in parse_worker_diagnostics(raw):
+                    print(
+                        "::notice title=Switching activation diagnostics::"
+                        + encoded(event).decode().strip(),
+                        file=sys.stderr,
+                        flush=True,
+                    )
+            except Exception:
+                pass
+
+
+def stage_error_annotation(step):
+    """Closed stage metadata works through the checks annotations API alone."""
+    stages = {
+        "controls",
+        "restore",
+        "preview",
+        "preparation",
+        "staging",
+        "capacity",
+        "backup",
+        "public_copy",
+    }
+    event = {
+        "event": "switching_activation",
+        "outcome": "error",
+        "stage": step if step in stages else "internal",
+    }
+    try:
+        print(
+            "::error title=Switching activation::" + encoded(event).decode().strip(),
+            file=sys.stderr,
+            flush=True,
+        )
+    except Exception:
+        pass
+
+
 def main(argv):
     """Emit only closed metadata, including failures; never propagate raw errors."""
     from ops import hosted_job as hosted
@@ -405,12 +460,10 @@ def main(argv):
         # Keep failed preparation/candidates private on the runner for diagnosis.
         home = Path(tempfile.mkdtemp(prefix="impact-switching-")).resolve()
         database = home / "data/intel.sqlite3"
-        # File-backed private log avoids unbounded memory and is never emitted.
+        # Private raw output is never emitted; only the stock closed projection escapes.
         with (
-            tempfile.TemporaryFile(mode="w+") as log,
             environment(home, database, args.output, args.base_path),
-            redirect_stdout(log),
-            redirect_stderr(log),
+            private_diagnostics(),
         ):
             if not hosted.restore_current(
                 args.state_dir, database, key, store=store, vault_limit_bytes=limit
@@ -497,6 +550,7 @@ def main(argv):
         )
         return 0
     except Exception:
+        stage_error_annotation(step)
         print(
             encoded({"outcome": "error", "profile_id": PROFILE_ID, "stage": step}).decode(), end=""
         )

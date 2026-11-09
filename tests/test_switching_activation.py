@@ -520,3 +520,136 @@ def test_activation_refuses_non_remote_recovery_before_restore(baseline, monkeyp
     monkeypatch.setattr(hosted_job, "restore_current", lambda *a, **k: pytest.fail("restore"))
     assert m.main(invocation(state, home.parent / "public")) == 1
     assert json.loads(capsys.readouterr().out)["stage"] == "controls"
+
+
+def annotations(raw):
+    return [
+        json.loads(line.split("::", 2)[2]) for line in raw.splitlines() if line.startswith("::")
+    ]
+
+
+def test_private_diagnostics_annotations_use_only_existing_closed_projection(capsys):
+    m = implementation()
+    import sys
+
+    with pytest.raises(ValueError):
+        with m.private_diagnostics():
+            print("PRIVATE_PATH_SENTINEL ::error::injected")
+            print(
+                json.dumps(
+                    {
+                        "event": "monitor_capacity",
+                        "mode": "archive",
+                        "reason": "part",
+                        "resource": "v2_part",
+                        "observed_bytes": 1024,
+                        "limit_bytes": 512,
+                        "path": "PRIVATE_RESOURCE_SENTINEL",
+                    }
+                )
+            )
+            print(
+                json.dumps(
+                    {
+                        "event": "phase",
+                        "phase": "publication.query",
+                        "state": "completed",
+                        "elapsed_seconds": 1.25,
+                        "private": "PRIVATE_FIELD_SENTINEL",
+                    }
+                )
+            )
+            print(
+                json.dumps(
+                    {
+                        "event": "phase",
+                        "phase": "PRIVATE_PHASE_SENTINEL",
+                        "state": "completed",
+                        "elapsed_seconds": 1,
+                    }
+                )
+            )
+            print(
+                json.dumps(
+                    {
+                        "event": "candidate_worker",
+                        "state": "timeout",
+                        "elapsed_seconds": 2400,
+                        "returncode": 1,
+                        "exception": "PRIVATE_EXCEPTION_SENTINEL",
+                    }
+                ),
+                file=sys.stderr,
+            )
+            print(
+                json.dumps(
+                    {
+                        "event": "candidate_worker",
+                        "state": "PRIVATE_STATE_SENTINEL",
+                        "elapsed_seconds": 1,
+                    }
+                )
+            )
+            raise ValueError("PRIVATE_EXCEPTION_SENTINEL")
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert "PRIVATE" not in output.err
+    assert annotations(output.err) == [
+        {
+            "event": "monitor_capacity",
+            "mode": "archive",
+            "reason": "part",
+            "resource": "v2_part",
+            "observed_bytes": 1024,
+            "limit_bytes": 512,
+        },
+        {
+            "event": "phase",
+            "phase": "publication.query",
+            "state": "completed",
+            "elapsed_seconds": 1.25,
+        },
+        {"event": "candidate_worker", "state": "timeout", "elapsed_seconds": 2400, "returncode": 1},
+    ]
+
+
+def test_diagnostics_input_event_and_numeric_limits_are_preserved(capsys):
+    m = implementation()
+    with m.private_diagnostics():
+        for _ in range(50):
+            print(
+                json.dumps(
+                    {
+                        "event": "phase",
+                        "phase": "publication.writing",
+                        "state": "started",
+                        "elapsed_seconds": 0,
+                    }
+                )
+            )
+        print(
+            '{"event":"phase","phase":"publication.query","state":"started","elapsed_seconds":NaN}'
+        )
+        print(
+            '{"event":"phase","phase":"publication.query","state":"started","elapsed_seconds":Infinity}'
+        )
+        print("x" * 65_536)
+        print(
+            json.dumps({"event": "candidate_worker", "state": "timeout", "elapsed_seconds": 2400})
+        )
+    output = capsys.readouterr()
+    projected = annotations(output.err)
+    assert len(projected) == 32
+    assert len(output.err.encode()) < 16_384
+    assert all(event["elapsed_seconds"] == 0 for event in projected)
+    assert all(event["event"] == "phase" for event in projected)
+
+
+def test_controls_error_has_closed_annotation_without_exception_text(monkeypatch, capsys):
+    m = implementation()
+    assert m.main(["--unknown=PRIVATE_ARGUMENT_SENTINEL"]) == 1
+    output = capsys.readouterr()
+    assert "PRIVATE" not in output.out + output.err
+    assert annotations(output.err) == [
+        {"event": "switching_activation", "outcome": "error", "stage": "controls"}
+    ]
