@@ -4,7 +4,7 @@
 records the published Cisco import and corrects the interpretation of validation
 outcomes. The website-membership figures below describe the older pinned publication.
 
-**Accepted-candidate update:** the [9 November activation results](2026-11-09-switching-activation-results.md) add explicit Cisco bundle evidence and two Arista EOS CVEs. Full-period observed affected counts become 199 / 104 / 67; the 2026 advisory-date cohort is 24 / 43 / 34. These are not disclosure rates or comparable deployed-switch risk. Pages recovery is pending, so the current-site figures below remain a dated baseline.
+**Published update:** the [9 November activation results](2026-11-09-switching-activation-results.md) add explicit Cisco bundle evidence and two Arista EOS CVEs. Full-period observed affected counts are 199 / 104 / 67; the 2026 advisory-date cohort is 24 / 43 / 34. These are not disclosure rates or comparable deployed-switch risk. Generation `278bbaf40f714727a4eddcbaab450d85` is live; the historical membership observations below remain dated.
 
 Observation date: **7 November 2026**. Public evidence only. This brief compares
 Cisco IOS XE, HPE Aruba Networking AOS-CX and Arista EOS. It does not compare the
@@ -13,21 +13,26 @@ vendors' entire portfolios or certify applicability to a customer's switches.
 ## Updated customer answer — 9 November 2026
 
 In the current retained OS-family collection, Cisco IOS XE has **199 distinct
-explicitly affected CVEs**, compared with **104 for Aruba AOS-CX** and **65 for
+explicitly affected CVEs**, compared with **104 for Aruba AOS-CX** and **67 for
 Arista EOS**, over the study period starting 2021-01-01. Cisco therefore has more
 observed CVE IDs in this collection. These are broad family counts: IOS XE also
 includes wireless controllers and other non-Catalyst products. Historical coverage
 and exact switch-model applicability remain unequal or unknown, so the figures
 do not yet establish a fair comparison of the customer's switches.
 
-We cannot reliably say Cisco requires more patching. A bounded local replay of
-12 Cisco advisories covering 13 CVEs counted **12 remediation publications until
-their explicit bundle page was retained, then one bundled event**. The advisories
-and CVEs did not change. Peer event totals also undercount fixes whose affected
-and fixed product branches have not been explicitly linked. Comparing those
-incomplete event totals would compare extraction and publication formats as well
-as vendors. A publication event also does not establish an actual customer upgrade
-or maintenance window.
+We cannot reliably say Cisco requires more patching. Retaining Cisco's explicit
+bundle page reduced the live collection's counted remediation publications from
+**170 to 159 without changing its 199 affected CVEs**: twelve retained member
+advisories now group into one explicit bundle. Peer event totals still undercount
+fixes whose affected and fixed product branches lack explicit links. Comparing
+these incomplete totals would compare extraction and publication formats as well
+as vendors. A publication event does not establish an actual customer upgrade or
+maintenance window.
+
+The ordering also changes with the window: the partial **2026 advisory-date cohort**
+has 24 affected CVEs for Cisco, 43 for Aruba and 34 for Arista. These are not vendor
+disclosure rates. Coverage remains unresolved, and CVEs added in later revisions
+still inherit the advisory's original publication date.
 
 Higher CVE volume can reflect more defects, more discovery effort, broader
 features/dependencies, or different disclosure and numbering practices. This
@@ -43,8 +48,9 @@ versus planned actions, and visible coverage gaps**. Keep unknowns explicit rath
 than treating missing statements as unaffectedness or low patch burden. The
 [9 November evidence investigation](2026-11-09-live-switching-readiness.md) and
 [bounded source/bundle follow-up](2026-11-09-switching-coverage-followup.md) record
-the data identity, reproduction and remaining limits. The code repairs described
-there are separate from the unchanged live publication used for these figures.
+the data identity, reproduction and remaining limits. The
+[published activation results](2026-11-09-switching-activation-results.md) record
+the current generation and verified exports.
 
 ## Historical answer and pinned observations — 7 November 2026
 
@@ -193,10 +199,9 @@ and maintenance evidence establishes the work actually required.
 
 ## What remains before a fair comparison
 
-1. Reconcile the successful public Cisco stage and the three Aruba gaps into a
-   reviewed publication proposal. Expand discovery for unsupported CVE formats
-   and upstream-component leads while keeping bounds and unknowns visible.
-   Hosted activation remains a separate decision.
+1. Close remaining relevant source and representation gaps after the published
+   Cisco import, Aruba bulletin and Arista repairs. Expand official-source
+   reconciliation while keeping unresolved upstream-component leads visible.
 2. Obtain comparable historical archive coverage, dated release notes and explicit
    bundle/remediation links for all three families. Expected historical advisory
    totals remain unknown. None of the current three vendor histories is certified
@@ -207,9 +212,10 @@ and maintenance evidence establishes the work actually required.
    corrected local stage had no qualifying model observations; that was missing
    evidence, not unaffectedness.
 4. Complete independent human evidence review and analyse attributed discovery
-   and release histories. The current publication's extraction validation remains
-   **13/25** with independent human review pending; its separate benchmark is not
-   an accuracy estimate for this population.
+   and release histories. The published switching sample has seven exact-byte
+   matches, six reviewed-section matches and three missing-source cases out of
+   sixteen. These outcomes are distinct, human review remains pending, and the
+   purposive sample is not a population accuracy estimate.
 
 There is no justified vendor ranking, equality claim, hidden-exposure finding or
 causal Glasswing conclusion at this stage. Higher disclosure can reflect more
