@@ -396,3 +396,13 @@ local ArubaOS-CX Switches section, and the publisher states that resolution/fix
 versions can be downloaded. Global multi-product and lifecycle prose cannot
 supply availability for another product. This correction preserves literal
 provenance and does not join sibling affected ranges to fixed releases.
+
+The reviewed Arista HTML bridge also covers SA-0128 (CVE-2025-8872) and
+SA-0201 (CVE-2026-111943). It re-parses retained bytes and requires the reviewed
+route, single CVE, product sections and publisher revision history. Only their
+owned EOS and, for SA-0201, separate TerminAttr affected lists enter this bridge.
+EOS establishes family context; TerminAttr does not. Generated HTML branch keys
+are not publisher product IDs. Platform scope remains unresolved, and resolution
+prose does not become a fixed-release event. Unrecognized affected-software
+headings stop prior-product version inheritance and remain visible in core
+normalization warnings. Earlier mixed and multi-CVE layouts remain review backlog.

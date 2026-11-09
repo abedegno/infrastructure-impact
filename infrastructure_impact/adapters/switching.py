@@ -433,6 +433,8 @@ def _arista_reviewed(raw, url, document, digest):
         "19905-security-advisory-0101": "Arista reviewed applicability boundaries HTML",
         "19222-security-advisory-0095": "Arista reviewed applicability boundaries HTML",
         "19904-security-advisory-0100": "Arista affected software HTML",
+        "23115-security-advisory-0128": "Arista affected software HTML",
+        "24847-security-advisory-0201": "Arista affected software HTML",
         "11996-security-advisory-56": "Arista reviewed older product/model HTML",
         "12135-security-advisory-61": "Arista reviewed older product/model HTML",
         "12166-security-advisory-62": "Arista reviewed older product/model HTML",
@@ -473,6 +475,34 @@ def _arista_reviewed(raw, url, document, digest):
     dates = [iso_date(row[1]) for row in history]
     if dates != sorted(dates) or dates[0] != parsed["published_at"]:
         raise ValueError("Reviewed Arista revision chronology changed")
+    software_cves = {
+        "23115-security-advisory-0128": "CVE-2025-8872",
+        "24847-security-advisory-0201": "CVE-2026-111943",
+    }
+    if slug in software_cves:
+        cid = software_cves[slug]
+        headings = [n.text() for n in tree.find({"h2", "h3"})]
+        expected_label = "Security Advisory " + slug.rsplit("-", 1)[-1]
+        products = ["EOS (source platform scope applies)"]
+        if slug == "24847-security-advisory-0201":
+            products.append(
+                "Streaming Telemetry Agent (TerminAttr) (source platform scope applies)"
+            )
+        owned = [a for a in parsed["assessments"] if a["product"] in products]
+        if (
+            labels != [expected_label]
+            or parsed["cves"] != [cid]
+            or any(headings.count(h) != 1 for h in ("Affected Software", "Affected Platforms"))
+            or headings.index("Affected Software") >= headings.index("Affected Platforms")
+            or [a["product"] for a in owned] != products
+            or any(
+                a["cve_id"] != cid or a["scope"] != "cve_specific" or a["status"] != "affected"
+                for a in parsed["assessments"]
+            )
+        ):
+            raise ValueError("Reviewed Arista software ownership changed")
+        # Only the reviewed software branches participate in this narrow bridge.
+        parsed["assessments"] = owned
     publisher = dict(
         id=labels[0],
         sequence=history[-1][0],
@@ -502,6 +532,8 @@ def _arista_reviewed(raw, url, document, digest):
             scope=assessment["scope"],
         )
         if slug in {
+            "23115-security-advisory-0128",
+            "24847-security-advisory-0201",
             "19862-security-advisory-0099",
             "19917-security-advisory-0103",
             "24853-security-advisory-0202",
@@ -515,6 +547,8 @@ def _arista_reviewed(raw, url, document, digest):
             # These HTML adapters use local branch keys, not publisher product IDs.
             claim["product_id"] = None
         if assessment["product"] in {"Arista EOS", "EOS release (source platform scope applies)"}:
+            claim["family"] = "arista-eos"
+        if slug in software_cves and assessment["product"] == "EOS (source platform scope applies)":
             claim["family"] = "arista-eos"
         claim["version_expressions"] = [
             v["expression"] for v in assessment["versions"] if v.get("expression")
