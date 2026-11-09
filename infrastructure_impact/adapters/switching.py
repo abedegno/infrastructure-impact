@@ -194,6 +194,32 @@ def _aruba_local_resolution(claim, remediation, ids, as_of):
     ]
     if not numeric or not all(v in releases for v in numeric) or resolution not in paragraphs:
         return None
+    # This repair supports the reviewed source structure only. Extra paragraphs
+    # may qualify this release, even when their product scope is unspecified.
+    # Keep their negative/planned classification, otherwise fail closed. Never
+    # reduce arbitrary prose to the affirmative download paragraph alone.
+    context = {
+        "HPE Aruba Networking",
+        resolution,
+        "https://networkingsupport.hpe.com/home/",
+        "HPE Aruba Networking does not evaluate or patch product branches "
+        "that have reached their End of Maintenance (EoM) milestone.",
+        "For more information about HPE Aruba Networking products End of "
+        "Support policy visit: https://networkingsupport.hpe.com/end-of-life",
+    }
+    for paragraph in re.split(r"\n[ \t]*\n", details):
+        normalized = " ".join(paragraph.split())
+        if normalized in context:
+            continue
+        if re.fullmatch(r"- ArubaOS-CX Switches\s*\n(?:[ \t]+-[^\n]+\n?)+", paragraph):
+            continue
+        # A separate, explicitly headed product section is foreign context.
+        if re.fullmatch(r"- [^\n]+\n(?:[ \t]+-[^\n]+\n?)+", paragraph) and not re.search(
+            r"(?:AOS-CX|ArubaOS-CX)", paragraph, re.I
+        ):
+            continue
+        state = remediation["availability"]
+        return state if state in {"unavailable", "partial_mitigation", "planned"} else "unknown"
     # Reuse category/date/future guards against only the source-owned availability
     # statement. Other product sections and EoM prose cannot authorize this claim.
     return _availability(resolution, "vendor_fix", remediation["availability_date"], as_of)

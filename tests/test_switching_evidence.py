@@ -1145,3 +1145,22 @@ def test_local_resolution_uses_numeric_version_path_when_leaf_name_is_family():
     branch["product"]["name"] = "AOS-CX"
     d["product_tree"]["full_product_names"][0]["name"] = "AOS-CX"
     assert extract(d)["claims"][0]["remediations"][0]["availability"] == "vendor_reports_fixed"
+
+
+@pytest.mark.parametrize(
+    "qualification",
+    [
+        "AOS-CX 10.13.1000 is not available.",
+        "AOS-CX 10.13.1000 is a partial fix.",
+        "AOS-CX 10.13.1000 is planned.",
+        "The release is not available.",
+        "The release is a partial fix.",
+        "The release is planned.",
+        "Availability of the release is unknown.",
+    ],
+)
+def test_local_resolution_preserves_separate_applicable_or_unscoped_qualifications(qualification):
+    d = resolution_document()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    rem["details"] += "\n\n" + qualification
+    assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
