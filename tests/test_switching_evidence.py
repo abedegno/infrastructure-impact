@@ -1139,6 +1139,28 @@ def test_csaf_local_resolution_does_not_authorize_other_scopes(change):
     assert extract(d)["claims"][0]["remediations"][0]["availability"] != "vendor_reports_fixed"
 
 
+@pytest.mark.parametrize(
+    "qualification", ["AOS-CX 10.13.1000 is not available.", "AOS-CX 10.13.1000 is planned."]
+)
+def test_local_resolution_does_not_promote_truncated_remediation(qualification):
+    d = resolution_document()
+    rem = d["vulnerabilities"][0]["remediations"][0]
+    retained = rem["details"].ljust(4000)
+    rem["details"] = retained + "\n\n" + qualification
+    claim = extract(d)["claims"][0]
+    assert claim["remediations"][0]["availability"] == "unknown"
+    assert claim["remediations"][0]["details"] == retained
+    assert "evidence_text_truncated" in claim["issues"]
+
+
+def test_local_resolution_ignores_unrelated_note_truncation():
+    d = resolution_document()
+    d["vulnerabilities"][0]["notes"][0]["text"] = "Condition " * 500
+    claim = extract(d)["claims"][0]
+    assert "evidence_text_truncated" in claim["issues"]
+    assert claim["remediations"][0]["availability"] == "vendor_reports_fixed"
+
+
 def test_local_resolution_uses_numeric_version_path_when_leaf_name_is_family():
     d = resolution_document()
     branch = d["product_tree"]["branches"][0]["branches"][0]["branches"][0]["branches"][0]

@@ -393,12 +393,15 @@ def _csaf(raw, url, vendor, document, digest):
                     # Preserve the failure boundary for an applicable malformed scope.
                     ids = set(ids)
                 claim["issues"].extend(issues)
-                local_availability = _aruba_local_resolution(
-                    claim,
-                    prepared,
-                    ids,
-                    tracking.get("current_release_date") or tracking.get("initial_release_date"),
-                )
+                local_availability = None
+                if "evidence_text_truncated" not in issues:
+                    local_availability = _aruba_local_resolution(
+                        claim,
+                        prepared,
+                        ids,
+                        tracking.get("current_release_date")
+                        or tracking.get("initial_release_date"),
+                    )
                 claim["remediations"].append(
                     {
                         **prepared,
