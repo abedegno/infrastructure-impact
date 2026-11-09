@@ -5,7 +5,7 @@ and readback, retained recovery, and uploaded its sanitized public artifact. Onl
 its Pages deployment timed out. Repeating acquisition and a full candidate build
 would produce a different artifact and spend the same work again.
 
-The proposed `pages-redeploy.yaml` workflow retries the exact accepted public
+The `pages-redeploy.yaml` workflow retries the exact accepted public
 artifact. It is manual only, without input URLs or credentials. Its reviewed
 [receipt](pages-redeploy-2026-11-09.json) pins the producer run/head, artifact and tar
 digests, publication generation and accepted recovery manifest. Any changed or
@@ -24,7 +24,7 @@ This is a concrete one-off recovery operation, not a generic artifact publisher.
 The receipt ceases to apply when accepted recovery advances or the artifact
 expires. A different artifact requires a new reviewed receipt.
 
-**Activation requires maintainer approval.** The workflow adds `actions: read`
+**Approved and executed:** [PR #46](https://github.com/abedegno/infrastructure-impact/pull/46) was approved before merge and dispatch. [Recovery run 42647218928](https://github.com/abedegno/infrastructure-impact/actions/runs/42647218928) published the accepted generation. The workflow uses `actions: read`
 for the earlier public artifact, alongside `contents: read`, `pages: write` and
-`id-token: write`. It must not be merged or dispatched until that hosted
-publication/permission change has been approved.
+`id-token: write`. A different recovery input or hosted permission/publication change still requires
+explicit approval.

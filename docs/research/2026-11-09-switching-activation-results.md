@@ -1,8 +1,8 @@
-# Accepted switching evidence — 9 November 2026
+# Published switching evidence — 9 November 2026
 
-The reviewed repairs are in an accepted candidate; Pages deployment timed out. [Infrastructure Impact](https://abedegno.github.io/infrastructure-impact/) still serves the earlier generation until the separately approved deployment-only recovery succeeds. This updates the [customer brief](2026-11-07-vendor-comparison-brief.md) and preserves the earlier [investigation](2026-11-09-live-switching-readiness.md) as a dated baseline.
+The reviewed repairs are live on [Infrastructure Impact](https://abedegno.github.io/infrastructure-impact/). The initial Pages deployment timed out; the approved deployment-only recovery published the exact accepted artifact without repeating collection or the full build. This updates the [customer brief](2026-11-07-vendor-comparison-brief.md) and preserves the earlier [investigation](2026-11-09-live-switching-readiness.md) as a dated baseline.
 
-Accepted candidate `278bbaf40f714727a4eddcbaab450d85`, generated `2026-11-09T13:53:25.281891+00:00`. The comparison starts 2021-01-01; 2026 is partial. Counts below describe retained explicit affected statements at OS-family scope, including product roles outside campus switching. They are not deployment exposure or vendor security scores.
+Published generation `278bbaf40f714727a4eddcbaab450d85`, generated `2026-11-09T13:53:25.281891+00:00`. The comparison starts 2021-01-01; 2026 is partial. Counts below describe retained explicit affected statements at OS-family scope, including product roles outside campus switching. They are not deployment exposure or vendor security scores.
 
 ## What changed
 
@@ -40,7 +40,7 @@ JSON and CSV selections were exported through the stock native publication reade
 | aruba | 5 | 5 | 0 | None |
 | arista | 6 | 0 | 6 | None |
 
-The study-specific validation, matching section fingerprints and blind review packet are included in the accepted artifact and supported by the updated browser client. Automated exact/section matches remain different outcomes. Independent human review is pending, missing sample categories remain explicit, and these samples are not a population accuracy estimate.
+The study-specific validation, matching section fingerprints and blind review packet are published and exposed by the browser client. Automated exact/section matches remain different outcomes. Independent human review is pending, missing sample categories remain explicit, and these samples are not a population accuracy estimate.
 
 Historical expected advisory totals remain unknown for all three vendors. Exact model applicability, complete bundle histories, release availability dates and configuration exposure are still incomplete. Some disclosed fixes lack the strict affected-to-fix link required by the reducer, so small peer event counts cannot establish low patching workload. Higher disclosure can reflect more scrutiny, broader scope or more transparent publication. No result establishes vendor security quality, equal security, deliberate concealment or an AI programme's causal effect.
 
@@ -52,7 +52,9 @@ The customer-facing answer remains: **Cisco has more observed affected CVE IDs i
 
 - [Merged repair PR #45](https://github.com/abedegno/infrastructure-impact/pull/45).
 - [Successful hosted preview](https://github.com/abedegno/infrastructure-impact/actions/runs/42629072051).
-- [Accepted candidate and timed-out deployment](https://github.com/abedegno/infrastructure-impact/actions/runs/42629259767).
+- [Accepted candidate and initial timed-out deployment](https://github.com/abedegno/infrastructure-impact/actions/runs/42629259767).
+- [Approved deployment-only recovery](https://github.com/abedegno/infrastructure-impact/actions/runs/42647218928).
 - Full stock candidate audit, capacity, native/static parity and default/archive monitoring remained mandatory before encrypted backup/readback and publication.
-- The accepted artifact passed its original full candidate gates. All 10,911 manifest-listed file hashes and stock native-reader exports were independently verified locally. New live default/archive health and browser-client checks remain pending successful deployment.
+- The accepted artifact passed its original full candidate gates. All 10,911 manifest-listed file hashes and stock native-reader exports were independently verified locally. The live manifest, index and catalogue match the accepted bytes exactly. The actual published browser data client loaded the matching validation, review packet and scope digests and confirmed the comparison counts; this was data-client execution, not visual browser testing.
+- The recovery workflow passed both public default and compressed-archive health checks, requiring the pinned generation.
 - Private recovery and keys stayed runner-only. Schedules, workflow permissions and existing limits were unchanged; ordinary runtime was restored to the merged repair commit.
