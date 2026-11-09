@@ -10,7 +10,7 @@
 ## Global Constraints
 
 - No hosted activation/configuration/schedule/permission changes or original vault/key access.
-- Use packaged sources configuration for tests; never read /Users/jonw/cve/sources.json.
+- Use packaged sources configuration for tests; never read the operator's original source configuration.
 - Backward-compatible optional report fields; old generations remain readable.
 - No frozen cohort changes, inferred version/model matching or human-review certification.
 - Keep raw captures/databases/generated publications outside Git. No capacity-limit changes.
