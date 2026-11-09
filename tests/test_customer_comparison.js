@@ -429,3 +429,117 @@ for (const test of fixtures.cases) {
   console.error(error);
   process.exitCode = 1;
 });
+
+// Exercise the actual operation/scoped/history functions with only root I/O gated.
+// A second consumer must stop waiting without closing the first consumer's transport.
+(async () => {
+  const source = fs.readFileSync('infrastructure_impact/web/publication-v2.js', 'utf8'),
+    operationStart = source.indexOf('  let operationId = 0;'),
+    historyStart = source.indexOf('    let releaseHistoryPromise;');
+  assert(operationStart >= 0 && historyStart >= 0);
+  const helpers = source.slice(
+      operationStart,
+      source.indexOf('  async function* streamTokens', operationStart),
+    ),
+    history = source.slice(
+      historyStart,
+      source.indexOf('    return {\n      metadata:', historyStart),
+    ),
+    fixture = fixtures.cases[0].envelope;
+  function gatedHistory() {
+    let release,
+      started,
+      reads = 0,
+      transportSignal;
+    const gate = new Promise((resolve) => (release = resolve)),
+      ready = new Promise((resolve) => (started = resolve)),
+      ctx = {
+        window: context.window,
+        json: context.window.InfrastructureJSON,
+        catalog: {
+          publication: fixture.publication,
+          generated_at: fixture.generated_at,
+          roots: { 'switching-release-history.json': {} },
+        },
+        AbortController,
+        Date,
+        Promise,
+        setTimeout,
+        clearTimeout,
+        field: async (name, path) => fixture.release_history[path[0]],
+        materializeRoot: async (name, options) => {
+          reads++;
+          transportSignal = options.operation.signal;
+          started();
+          await options.operation.run(gate);
+          return fixture.release_history;
+        },
+      };
+    vm.createContext(ctx);
+    vm.runInContext(helpers + history, ctx);
+    return {
+      load: (options) => ctx.switchingReleaseHistory(fixture.study, options),
+      ready,
+      release: () => release(),
+      reads: () => reads,
+      signal: () => transportSignal,
+    };
+  }
+  async function promptly(promise) {
+    let timer;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(Error('consumer waited for another caller')), 1000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  for (const reason of ['abort', 'deadline']) {
+    const reader = gatedHistory(),
+      owner = reader.load({});
+    await reader.ready;
+    const controller = new AbortController();
+    const waiting = reader.load(
+      reason === 'abort' ? { signal: controller.signal } : { deadline: Date.now() + 25 },
+    );
+    const rejected = assert.rejects(() => waiting, reason === 'abort' ? /cancelled/ : /deadline/);
+    if (reason === 'abort') controller.abort();
+    try {
+      await promptly(rejected);
+      assert(!reader.signal().aborted, 'second consumer cannot abort the shared transport owner');
+      assert.strictEqual(reader.reads(), 1, 'overlapping calls share the root read');
+    } finally {
+      reader.release();
+      await owner;
+    }
+    assert.deepStrictEqual(
+      clone(await reader.load({})),
+      fixture.release_history,
+      'cancelled consumer preserves valid cache',
+    );
+    assert.strictEqual(reader.reads(), 1, 'valid cache remains available');
+  }
+  const retry = gatedHistory(),
+    controller = new AbortController();
+  const failed = assert.rejects(() => retry.load({ signal: controller.signal }), /cancelled/);
+  await retry.ready;
+  controller.abort();
+  await promptly(failed);
+  retry.release();
+  assert.deepStrictEqual(
+    clone(await retry.load({})),
+    fixture.release_history,
+    'owner failure permits a fresh root read',
+  );
+  assert.strictEqual(retry.reads(), 2, 'failed shared transport is evicted');
+  console.log(
+    'Overlapping history abort/deadline isolation, valid cache and failed-owner retry passed',
+  );
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

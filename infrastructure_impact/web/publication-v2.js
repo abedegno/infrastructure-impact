@@ -1377,7 +1377,8 @@
           releaseHistoryPromise = null;
           throw error;
         });
-      const history = await releaseHistoryPromise;
+      // Each consumer can stop waiting without closing the shared transport owner.
+      const history = await options.operation.run(releaseHistoryPromise);
       const selected = window.InfrastructureCustomerComparison.selectHistory(history, study);
       json.measure(selected, null, '', Math.min(options.max_bytes ?? 8000000, 8000000));
       return selected;
