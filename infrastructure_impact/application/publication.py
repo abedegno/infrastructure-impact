@@ -199,6 +199,9 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
         scopes=data["reviewed_source_scopes"],
         retained_advisories=data["retained_advisories"],
     )
+    from .switching_validation import rebuild as rebuild_switching_validation
+
+    rebuild_switching_validation(data)
     data["vendor_gaps"] = vendor_gaps(data)
     data["review_packet"] = review_packet(
         data["records"] + [w["record"] for w in data["retained_advisories"]]
@@ -317,6 +320,8 @@ def write_bundle(destination, data, *, publication_format="v1"):
         "comparison_eligibility",
         "product_groups",
         "extraction_validation",
+        "switching_validation",
+        "switching_review_packet",
         "review_packet",
         "publisher_history",
         "family_completeness",

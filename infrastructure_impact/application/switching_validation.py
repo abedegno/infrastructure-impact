@@ -76,3 +76,24 @@ def packet(records: list[dict]) -> dict:
     )
     result["packet_sha256"] = extraction_validation.packet_sha256(result)
     return result
+
+
+def rebuild(data):
+    """Project owned digest fields and recompute study results from current inputs."""
+    import re
+
+    records = data["records"]
+    retained = data.get("retained_advisories", [])
+    union = records + [w["record"] for w in retained]
+    known = {(r["source_url"], r["sha256"]) for r in union}
+    fields = ("source_url", "source_sha256", "scheme", "scope_sha256")
+    scopes = [
+        {k: s[k] for k in fields}
+        for s in data.get("switching_reviewed_source_scopes", [])
+        if all(isinstance(s.get(k), str) for k in fields)
+        and (s["source_url"], s["source_sha256"]) in known
+        and re.fullmatch(r"[a-f0-9]{64}", s["scope_sha256"])
+    ]
+    data["switching_reviewed_source_scopes"] = scopes
+    data["switching_validation"] = report(records, scopes, retained_advisories=retained)
+    data["switching_review_packet"] = packet(union)

@@ -114,6 +114,9 @@ def rebuild(data: dict, partition_result: dict) -> dict:
         records, scopes=data.get("reviewed_source_scopes", []), retained_advisories=retained
     )
     data["review_packet"] = review_packet(union)
+    from .switching_validation import rebuild as rebuild_switching_validation
+
+    rebuild_switching_validation(data)
 
     # Preserve independently owned alternate/source-only representations. Only
     # an exact excluded owner can remove a research claim or score source.

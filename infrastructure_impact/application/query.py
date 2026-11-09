@@ -45,6 +45,9 @@ def current_partition(db, records=None, *, generated_at=None):
 def state(db, cohort=None):
     retained = latest(db)
     scopes = retained_scopes(db, retained, review_definition())
+    from . import switching_validation
+
+    switching_scopes = retained_scopes(db, retained, switching_validation.definition())
     generated = now()
     partition_result, context = current_partition(db, retained, generated_at=generated)
     records = partition_result["records"]
@@ -132,6 +135,7 @@ def state(db, cohort=None):
             records, scopes=scopes, retained_advisories=partition_result["retained_advisories"]
         ),
         "reviewed_source_scopes": scopes,
+        "switching_reviewed_source_scopes": switching_scopes,
         "review_packet": review_packet(retained),
         "publisher_history": publisher_history(db),
         "coverage": all_coverage,

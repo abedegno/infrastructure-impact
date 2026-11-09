@@ -363,3 +363,21 @@ Trace, provenance, diagnostic and status details expand in batches of 25; nested
 lists in diagnostics are bounded to 25 with the complete accepted JSON available.
 These details always belong to the accepted selection, including during a pending
 or failed request.
+
+### Study validation delivery
+
+New generations include optional top-level `switching_validation`,
+`switching_review_packet` and `switching_reviewed_source_scopes` fields. The
+reports are available at `/api/v1/switching-validation` and
+`/api/v1/switching-review-packet`, and as `switching-validation.json` and
+`switching-review-packet.json` in both publication formats. Bootstrap includes
+the same study-wide sample independently of selected CVEs. Older generations
+without these fields return unavailable (404 on native report endpoints).
+
+Vault-backed queries compute reviewed structural digests for selected retained
+records only. Public projection whitelists owned digest fields and recomputes
+results after privacy and current-evidence filtering; excluded claims do not
+become current matches. Missing selected alternate representations remain missing.
+Exact bytes and reviewed structural matches remain separate, and independent
+human review is pending. The blind packet omits expected labels and parser output.
+The study view offers downloads bound to the accepted generation.
