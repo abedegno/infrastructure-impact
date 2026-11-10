@@ -236,7 +236,8 @@ only after those dependencies have been cached.
 | [Schema](docs/SCHEMA.md)                                 | Normalization semantics and invariants                            |
 | [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
 | [Exact target import](docs/target-import.md) | Preview, isolated staging, durable local captures and opt-in v2 root export |
-| [Switching CVE comparison brief](docs/research/2026-11-07-vendor-comparison-brief.md) | Cisco/Aruba/Arista evidence, disclosure bias and patching limits |
+| [Switching CVE comparison brief](docs/research/2026-11-10-vendor-comparison-brief.md) | Current Cisco/Aruba/Arista observations, disclosure bias and patching limits |
+| [Coverage audit and review packet](docs/research/2026-11-10-comparison-evidence/README.md) | Source gaps, yearly observed inventory, provenance and blank human review submission |
 | [Published switching results](docs/research/2026-11-09-switching-activation-results.md) | Dated counts, yearly/cutoff views and evidence limits |
 | [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
 | [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
