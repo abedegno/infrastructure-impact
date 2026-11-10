@@ -115,12 +115,19 @@ def _sources(db):
                 for child in value:
                     stamp(child)
 
+        def known_truncated(claim):
+            return (claim["vendor"], claim["advisory_id"], claim["cve_id"]) == (
+                "arista",
+                "24074-security-advisory-0140",
+                "CVE-2026-10040",
+            ) and "evidence_text_truncated" in claim.get("issues", [])
+
         for value in (before, after):
             stamp(value)
             if "reviewed_fix_source_drift" in value.get("issues", []) or any(
                 c["vendor"] != vendor
                 or c["advisory_id"] != advisory
-                or "evidence_text_truncated" in c.get("issues", [])
+                or ("evidence_text_truncated" in c.get("issues", []) and not known_truncated(c))
                 for c in value["claims"]
                 if c["status"] == "affected"
             ):
@@ -150,9 +157,26 @@ def _sources(db):
                 except (ValueError, TypeError, KeyError):
                     raise ValueError("source_drift") from None
                 linked.append(reviewed.rule_for(claim))
-        # Every registered tuple must survive literal HTML scope extraction;
+        truncated = [c for c in new if known_truncated(c)]
+        if truncated:
+            # The known 0140 truncated context can prove only the original fixed
+            # sibling. No affected remediation/event may be inferred or copied.
+            if len(truncated) != 1 or any(c["remediations"] for c in old + new):
+                raise ValueError("source_drift")
+            claim = truncated[0]
+            rule = reviewed.rule_for(claim)
+            siblings = [] if rule is None else reviewed.fixed_siblings(claim, rule, after["claims"])
+            fixed = [c for c in after["claims"] if c["status"] == "fixed"]
+            if len(siblings) != 1 or fixed != siblings:
+                raise ValueError("source_drift")
+            originals = siblings[0]["remediations"]
+            if len(originals) != 1 or not reviewed.owned_remediation(
+                siblings[0], originals[0], rule
+            ):
+                raise ValueError("source_drift")
+        # Otherwise every registered HTML tuple must retain its validated link;
         # CSAF's complete raw hash already binds its full product/CVE scope.
-        if not linked or (
+        elif not linked or (
             spec["kind"] == "arista_marker_list" and len(linked) != len(spec["bindings"])
         ):
             raise ValueError("source_drift")

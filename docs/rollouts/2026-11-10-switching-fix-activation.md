@@ -44,8 +44,15 @@ bytes, and requires a matching normalized source representation. Missing
 normalization fails closed; the helper does not invent a representation or fetch
 one. CSAF sources require their packaged complete-byte pins. HTML sources require
 the registry's exact source identity, source format, affected tuples and owned
-resolution clauses. Planned/contradictory fixes, source drift and truncated
-affected scope fail closed, including the 0140 boundary.
+resolution clauses. Planned/contradictory fixes and source drift fail closed.
+The known unchanged truncated affected context for Arista
+`24074-security-advisory-0140` / `CVE-2026-10040` can pass only as fixed-only:
+its unique original fixed sibling and single remediation must independently pass
+the registry's exact ownership checks, and both baseline and current affected
+claims must have zero remediations/events. The truncation issue remains intact.
+A missing, duplicate or forged original, changed affected fields or attempted
+copied fix fails. Other truncated affected contexts fail closed. Complete
+untruncated 0140 claims use the ordinary validated-link path.
 
 The old/new comparison uses the same bytes, normalized document and retrieval
 lineage. The feature baseline disables only `apply_csaf` and `arista_assessments`;
@@ -98,8 +105,10 @@ into this artifact. Default target-import receipt handling is unchanged.
    merged source commit and no prior-capture run.
 2. Inspect only `candidate-certification-result` locally. Require the step and
    receipt to pass, all eight source proofs/counts, unchanged affected fields and
-   database, all candidate gates, and full-cohort counts. A rejected/truncated
-   source remains a blocker; do not weaken the registry or sanitizer to pass it.
+   database, all candidate gates, and full-cohort counts. For known truncated
+   0140, require its authenticated fixed-only state and zero affected copies/events;
+   other rejected/truncated sources remain blockers. Do not weaken the registry
+   or sanitizer to pass them.
 3. Confirm no collector is active before activating that tested source pin.
    Dispatch ordinary collection with `reparse_limit=0` through the existing
    activation path.

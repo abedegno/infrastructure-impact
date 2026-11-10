@@ -410,7 +410,8 @@ def test_receipt_validation_is_fresh_for_nested_private_mutations(retained):
             helper().receipt_bytes(bad)
 
 
-def test_0140_actual_truncated_affected_scope_is_rejected(retained, monkeypatch):
+@pytest.fixture
+def truncated_0140(retained, monkeypatch):
     _, db, _ = retained
     sample = copy.deepcopy(SAMPLES[0])
     raw = authored(sample).replace(
@@ -437,11 +438,131 @@ def test_0140_actual_truncated_affected_scope_is_rejected(retained, monkeypatch)
         "definition",
         lambda: {"schema_version": 1, "sources": [copy.deepcopy(spec)]},
     )
+    return db, raw, url, doc
+
+
+def test_0140_unchanged_truncated_scope_accepts_only_authentic_fixed_only_state(truncated_0140):
+    from infrastructure_impact.application import kev, switching_comparison, switching_evidence
     from infrastructure_impact.plugins.registry import default_registry
 
-    claims = default_registry().research_evidence(raw, url, "arista", doc)["claims"]
-    assert any(
-        "evidence_text_truncated" in c["issues"] for c in claims if c["status"] == "affected"
+    db, raw, url, doc = truncated_0140
+    value = default_registry().research_evidence(raw, url, "arista", doc)
+    affected = next(c for c in value["claims"] if c["status"] == "affected")
+    assert "evidence_text_truncated" in affected["issues"]
+    assert affected["remediations"] == []
+    source = helper()._sources(db)[0]
+    assert source["affected_fields_unchanged"] is True
+    assert source["before"]["reviewed_links"] == source["after"]["reviewed_links"] == 0
+    assert source["before"]["fixed_cves"] == 0
+    assert source["after"]["fixed_cves"] == 1
+    # The unchanged application reducer must still report zero affected events.
+    for claim in value["claims"]:
+        claim["revision"] = "1"
+        claim["source"]["retrieved_at"] = AT
+        claim["publisher"]["source"]["retrieved_at"] = AT
+        for remediation in claim["remediations"]:
+            remediation["source"]["retrieved_at"] = AT
+    report = switching_evidence.project(value, publication=None, generated_at=AT)
+    full = switching_comparison.build_report(
+        report,
+        kev.build_report({}, [], publication=None, generated_at=AT),
+        definition=switching_evidence.definition(),
+        publication=None,
+        generated_at=AT,
+        observation_end=AT[:10],
     )
-    with pytest.raises(ValueError, match="^source_drift$"):
+    assert (
+        next(row for row in full["rows"] if row["vendor"] == "arista")["counts"][
+            "remediation_events"
+        ]
+        == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing",
+        "duplicate",
+        "details",
+        "date",
+        "product",
+        "versions",
+        "remediation_duplicate",
+        "remediation_missing",
+        "availability",
+        "truncated_fixed",
+        "extra_fixed",
+        "published",
+        "source",
+        "revision",
+        "affected",
+        "copied",
+    ],
+)
+def test_0140_fixed_only_requires_fresh_original_ownership(truncated_0140, monkeypatch, mutation):
+    from infrastructure_impact.plugins.registry import default_registry
+
+    db, _, _, _ = truncated_0140
+    registry = default_registry()
+    extract = registry.research_evidence
+
+    def forged(*args):
+        value = extract(*args)
+        fixed = next((c for c in value["claims"] if c["status"] == "fixed"), None)
+        if fixed is None:
+            return value  # The feature baseline has no new fixed sibling.
+        affected = next(c for c in value["claims"] if c["status"] == "affected")
+        original = fixed["remediations"][0]
+        if mutation == "missing":
+            value["claims"].remove(fixed)
+        elif mutation == "duplicate":
+            value["claims"].append(copy.deepcopy(fixed))
+        elif mutation == "details":
+            original["details"] = original["published_availability"] = "Forged original fix"
+        elif mutation == "date":
+            original["availability_date"] = "2026-01-01"
+        elif mutation == "product":
+            fixed["product"] = "Forged product"
+        elif mutation == "versions":
+            fixed["version_expressions"] = original["version_expressions"] = ["99.99.99"]
+        elif mutation == "remediation_duplicate":
+            fixed["remediations"].append(copy.deepcopy(original))
+        elif mutation == "remediation_missing":
+            fixed["remediations"] = []
+        elif mutation == "availability":
+            original["availability"] = "planned"
+        elif mutation == "truncated_fixed":
+            fixed["issues"].append("evidence_text_truncated")
+        elif mutation == "extra_fixed":
+            extra = copy.deepcopy(fixed)
+            extra["product"] = "Forged extra fixed product"
+            value["claims"].append(extra)
+        elif mutation == "published":
+            original["published_availability"] = "Forged availability"
+        elif mutation == "source":
+            original["source"]["source_locator"] = "/foreign"
+        elif mutation == "revision":
+            fixed["publisher"]["sequence"] = "forged revision"
+        elif mutation == "affected":
+            affected["conditions"].append("Changed affected condition")
+        elif mutation == "copied":
+            remediation = copy.deepcopy(original)
+            remediation["scope_binding"] = dict(
+                basis="reviewed_source_sections",
+                cve_id=affected["cve_id"],
+                source=copy.deepcopy(affected["source"]),
+                fixed_product=fixed["product"],
+                fixed_source=copy.deepcopy(fixed["source"]),
+            )
+            # Existing application contract continues to reject truncated copies.
+            with pytest.raises(ValueError):
+                remediation_bindings.validate_link(
+                    affected, remediation, remediation["scope_binding"], value["claims"]
+                )
+            affected["remediations"].append(remediation)
+        return value
+
+    monkeypatch.setattr(registry, "research_evidence", forged)
+    with pytest.raises(ValueError, match="^(source_drift|affected_changed)$"):
         helper()._sources(db)
