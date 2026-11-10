@@ -56,6 +56,36 @@ def test_selection_matches_full_v1(generation, options):
     assert switching_csv(actual) == switching_csv(expected)
 
 
+@pytest.mark.parametrize("vendor", [None, "cisco", "aruba", "arista"])
+@pytest.mark.parametrize("at", [AT, "2027-12-01T00:00:00Z"])
+def test_published_vendor_selection_never_reads_claims(generation, monkeypatch, vendor, at):
+    reader = PublicationReader(generation)
+    native = json.loads(b"".join(reader.stream_root("switching-comparison.json")))
+    expected = comparison.summary(comparison.select_report(native, vendor=vendor, evaluated_at=at))
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("eligible published selection read claims")
+
+    monkeypatch.setattr(reader, "iter_claims", forbidden)
+    actual = reader.switching_selection({"vendor": vendor, "cve_ids": None}, evaluated_at=at)
+    assert actual == expected
+    assert switching_csv(actual) == switching_csv(expected)
+    actual["rows"].clear()
+    assert reader.switching_selection({"vendor": vendor}, evaluated_at=at) == expected
+
+
+def test_optional_source_root_is_not_snapshot_data(generation):
+    reader = PublicationReader(generation)
+    name = "switching-row-sources.json"
+    assert name in reader.catalog["roots"]
+    index = reader.materialize_range(reader.ranges(name)[()])
+    assert index["representation"] == "switching-row-sources"
+    assert len(index["rows"]) == 3
+    assert "sources" not in index
+    for root in ("snapshot.json", "runtime-snapshot"):
+        assert ("switching_row_sources",) not in reader.ranges(root)
+
+
 def test_open_is_metadata_only_and_narrow_runtime_does_not_touch_whole_root(generation):
     reader = PublicationReader(generation, limits={"selected": 1_000_000})
     assert reader._strings is None and not reader._roots
@@ -88,12 +118,12 @@ def test_reducer_working_budget_is_separate_from_response_budget(generation, mon
 
     monkeypatch.setattr(comparison.ReducerClaim, "from_validated", capture)
     reader = PublicationReader(generation)
-    assert reader.switching_selection({}, evaluated_at=AT)["rows"]
+    assert reader.switching_selection({"scope_level": "model_qualified"}, evaluated_at=AT)["rows"]
     assert seen and set(seen) == {512_000_000}
     assert reader.limits["selected"] == 128_000_000
     with pytest.raises(ValueError, match="budget"):
         PublicationReader(generation, limits={"working": 1}).switching_selection(
-            {}, evaluated_at=AT
+            {"scope_level": "model_qualified"}, evaluated_at=AT
         )
     with pytest.raises(ValueError, match="increase"):
         PublicationReader(generation, limits={"working": 512_000_001})
@@ -1049,3 +1079,143 @@ def test_claim_reader_uses_compiled_shapes_without_losing_semantics(generation, 
 
     monkeypatch.setattr(type(legacy), "validate", unnecessary_walk)
     assert list(PublicationReader(generation).iter_claims())
+
+
+@pytest.mark.parametrize("at", [AT, "2027-12-01T00:00:00Z"])
+def test_five_query_batch_binds_study_once_and_checks_every_claim(generation, monkeypatch, at):
+    from infrastructure_impact.application import switching_evidence as contracts
+
+    reader = PublicationReader(generation)
+    native = json.loads(b"".join(reader.stream_root("switching-comparison.json")))
+    requests = [{}, {"scope_level": "model_qualified"}] + [
+        {"vendor": vendor} for vendor in ("cisco", "aruba", "arista")
+    ]
+    expected = [
+        comparison.summary(comparison.select_report(native, **q, evaluated_at=at)) for q in requests
+    ]
+    count = dict(study=0, identity=0, schema=0, semantics=0, projection=0, traversal=0)
+    digest = contracts.definition_sha256
+    schema = contracts._validate_claim
+    semantic_core = contracts._validate_claim_semantics
+    projection = comparison.ReducerClaim.from_validated
+    stream = reader.iter_claims
+
+    def hash_count(value):
+        if "targets" in value:
+            count["study"] += 1
+        elif "advisory_id" in value and "vendor" in value:
+            count["identity"] += 1
+        return digest(value)
+
+    def shape(value):
+        count["schema"] += 1
+        return schema(value)
+
+    def semantic(claims, study, **kwargs):
+        count["semantics"] += len(claims)
+        return semantic_core(claims, study, **kwargs)
+
+    def project(value, **kwargs):
+        count["projection"] += 1
+        return projection(value, **kwargs)
+
+    def claims(**kwargs):
+        count["traversal"] += 1
+        yield from stream(**kwargs)
+
+    monkeypatch.setattr(contracts, "definition_sha256", hash_count)
+    monkeypatch.setattr(contracts, "_validate_claim", shape)
+    monkeypatch.setattr(contracts, "_validate_claim_semantics", semantic)
+    monkeypatch.setattr(comparison.ReducerClaim, "from_validated", project)
+    monkeypatch.setattr(reader, "iter_claims", claims)
+    results = list(reader.switching_selections(requests, evaluated_at=at))
+    assert results == expected
+    assert [switching_csv(v) for v in results] == [switching_csv(v) for v in expected]
+    n = len(native["inputs"]["evidence"]["claims"])
+    assert count["schema"] == count["semantics"] == count["projection"] == n
+    assert count["traversal"] == 1
+    # Five normal selection hashes plus one fresh binding, never one per claim.
+    assert count["study"] == 6
+    assert count["identity"] == n
+
+
+@pytest.mark.parametrize(
+    "fault", ["publication", "generated_at", "definition_sha256", "schema_version"]
+)
+def test_claim_stream_rebinds_header_before_decoding_after_prior_success(
+    generation, monkeypatch, fault
+):
+    from jsonschema import ValidationError
+
+    reader = PublicationReader(generation)
+    assert list(reader.iter_claims())
+    field = reader.field
+    bad = {
+        "publication": None,
+        "generated_at": "2020-01-01T00:00:00Z",
+        "definition_sha256": "0" * 64,
+        "schema_version": True,
+    }[fault]
+
+    def changed(root, key):
+        return bad if root == "switching-evidence.json" and key == fault else field(root, key)
+
+    def forbidden():
+        raise AssertionError("header must fail before claim routes or bytes")
+
+    monkeypatch.setattr(reader, "field", changed)
+    monkeypatch.setattr(reader, "_claim_routes", forbidden)
+    with pytest.raises((ValueError, ValidationError)):
+        next(reader.iter_claims())
+
+
+def test_claim_stream_owns_study_and_new_streams_reject_mutation(generation, monkeypatch):
+    from infrastructure_impact.application import switching_evidence as contracts
+
+    original = contracts.definition()
+    reader = PublicationReader(generation)
+    claims = list(reader.iter_claims())
+    monkeypatch.setattr(contracts, "definition", lambda: original)
+    stream = reader.iter_claims()
+    assert next(stream) == claims[0]
+    original["targets"].clear()
+    # Original caller object cannot change the active stream's privately owned rules.
+    assert list(stream) == claims[1:]
+    for fresh in (reader, PublicationReader(generation)):
+        with pytest.raises(ValueError, match="fingerprint"):
+            next(fresh.iter_claims())
+
+
+def test_public_validation_and_stream_share_complete_claim_semantic_core(generation, monkeypatch):
+    from infrastructure_impact.application import switching_evidence as contracts
+
+    reader = PublicationReader(generation)
+    value = json.loads(b"".join(reader.stream_root("switching-evidence.json")))
+    original = contracts._validate_claim_semantics
+    checked = []
+
+    def core(claims, study, **kwargs):
+        checked.extend(c["claim_id"] for c in claims)
+        return original(claims, study, **kwargs)
+
+    monkeypatch.setattr(contracts, "_validate_claim_semantics", core)
+    contracts.validate_evidence(value, **reader.identity)
+    ids = [c["claim_id"] for c in value["claims"]]
+    assert checked == ids
+    checked.clear()
+    streamed = list(reader.iter_claims())
+    assert checked == [c["claim_id"] for c in streamed]
+    assert sorted(checked) == sorted(ids)
+
+
+@pytest.mark.parametrize("keyword", ["_study", "_context", "validated", "definition_sha256"])
+def test_public_evidence_validation_accepts_no_caller_proof(generation, keyword):
+    from infrastructure_impact.application import switching_evidence as contracts
+
+    reader = PublicationReader(generation)
+    value = json.loads(b"".join(reader.stream_root("switching-evidence.json")))
+    contracts.validate_evidence(value, **reader.identity)
+    with pytest.raises(TypeError):
+        contracts.validate_evidence(value, **reader.identity, **{keyword: True})
+    with pytest.raises(TypeError):
+        reader.iter_claims(**{keyword: True})

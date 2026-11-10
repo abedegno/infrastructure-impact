@@ -50,3 +50,42 @@ the old failed result is preserved.
 
 No decision permits dropping facts, declaring missing coverage complete, ranking
 vendor security by disclosure counts, or alleging concealed fixes.
+
+## Optional published-row Source membership
+
+New v2 publications can include the generic logical root
+`switching-row-sources.json`, validated by `switching-row-sources-v1.json`.
+It binds the three canonical `os_family` / `all` vendor rows to their original
+snapshot ordinals and row hashes, their sorted unique claim/event membership
+SHA-256, and increasing ordinals into the existing global Sources array. Source
+identity retains all four fields and the native canonical order; no Source array,
+catalog field or envelope kind is added. The root is excluded from the ordinary
+snapshot, runtime bootstrap and snapshot archive.
+
+Fresh publication validation derives membership from complete evidence through
+the existing nested Source collector. Independent native certification derives
+it again, retains complete root/detail/evidence and custom model-query checks,
+and compares each vendor's complete summary JSON and CSV to native rows and
+Sources. The extra vendor expectations reuse the already validated OS-family
+summary; they do not repeat the full comparison proof or its source guards.
+
+The Python and browser readers use the index for canonical options selecting a
+registered vendor (or null/default vendor), omitted/exact `os_family` scope,
+omitted/exact `all` window and omitted/null CVE selection. They hydrate the seven
+row detail fields at the original snapshot ordinal, refresh KEV evaluation, and
+rebuild the actual v1 summary selection metadata. Source detail chunks intersecting
+the selected ordinal set load once, and only selected Sources are materialized.
+Claims and the full reducer remain necessary for other requests, including empty
+CVE lists. Existing Python validation and the browser's ignored-key behavior stay
+unchanged; explicit null scope/window use their established language paths.
+
+An absent optional root preserves the old artifact path. If Source detail indexes
+are absent, present row metadata and selected membership are authenticated before
+using the complete reducer. A present corrupt root, row binding, ordinal list or
+consumed Source chunk rejects; corruption never becomes missing provenance.
+The producer omits this optimization only when its measured compact UTF-8 logical
+document exceeds 8,000,000 bytes. Structural or provenance errors always reject.
+Readers enforce that cap before materialization, and caller limits can only lower
+it. Existing response, working, cache, page and deadline limits remain in force.
+Old catalog readers can ignore this generic root; old native verifiers that require
+the former exact root set need the corresponding verifier update.

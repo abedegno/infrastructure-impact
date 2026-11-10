@@ -256,6 +256,8 @@ def write_bundle(destination, data, *, publication_format="v1"):
     from .publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
+    if publication_format == "v2" and "switching_row_sources" in data:
+        raise ValueError("Published Source membership is writer-owned")
     from .current_evidence import report_bytes
     from .current_views import validate_partition
     from .research_reports import validate
@@ -278,6 +280,7 @@ def write_bundle(destination, data, *, publication_format="v1"):
     from .switching_comparison import summary
     from .switching_evidence import validate_comparison, validate_evidence
 
+    row_sources = None
     if "switching_comparison" in data:
         if publication_format == "v2":
             from .switching_evidence import _validate_comparison_evidence
@@ -288,6 +291,9 @@ def write_bundle(destination, data, *, publication_format="v1"):
                 publication=data["publication"],
                 generated_at=data["generated_at"],
             )
+            from .switching_row_sources import derive
+
+            row_sources = derive(data["switching_comparison"])
         else:
             validate_comparison(
                 data["switching_comparison"],
@@ -326,9 +332,9 @@ def write_bundle(destination, data, *, publication_format="v1"):
             )
         validate_current_references(data["switching_release_history"], data["switching_evidence"])
     if publication_format == "v2":
-        from .publication_v2 import write_bundle as write_v2
+        from .publication_v2 import _write_bundle as write_v2
 
-        return write_v2(destination, data)
+        return write_v2(destination, data, row_sources)
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "current-evidence.json").write_bytes(report_bytes(data["current_evidence"]))

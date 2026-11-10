@@ -364,3 +364,32 @@ def test_source_uri_accepts_percent_encoded_capture_path():
     report = evidence()
     report["claims"][0]["source"]["source_url"] = "https://www.arista.com/%3Ccapture%3E"
     contracts().validate_evidence(reidentify(report))
+
+
+def test_fresh_public_evidence_binding_rejects_changed_packaged_definition(monkeypatch):
+    c = contracts()
+    value = evidence()
+    study = c.definition()
+    c.validate_evidence(value)
+    monkeypatch.setattr(c, "definition", lambda: study)
+    c.validate_evidence(value)
+    study["targets"].clear()
+    with pytest.raises(ValueError, match="fingerprint"):
+        c.validate_evidence(value)
+
+
+@pytest.mark.parametrize("fault", ["integer_to_float", "unused_field", "context"])
+def test_prior_evidence_proof_keeps_exact_value_and_context_types(fault):
+    c = contracts()
+    value = evidence()
+    publication, generated_at = value["publication"], value["generated_at"]
+    proof = c._ValidatedEvidence(value, publication=publication, generated_at=generated_at)
+    proof.require(value, publication=publication, generated_at=generated_at)
+    if fault == "integer_to_float":
+        value["schema_version"] = 1.0
+    elif fault == "unused_field":
+        value["issues"].append("authored_context_mutation")
+    else:
+        publication = {"unused": True}
+    with pytest.raises(ValueError, match="complete value/context"):
+        proof.require(value, publication=publication, generated_at=generated_at)

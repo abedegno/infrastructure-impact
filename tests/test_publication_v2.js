@@ -177,6 +177,38 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
         JSON.parse(JSON.stringify(selected)),
         JSON.parse(JSON.stringify(expected)),
       );
+      for (const evaluated_at of [index.generated_at, '2027-12-01T00:00:00Z'])
+        for (const vendor of ['cisco', 'aruba', 'arista']) {
+          const narrowReads = [],
+            narrow = await api.open(
+              async (name) => {
+                narrowReads.push(name);
+                return fetch(name);
+              },
+              catalog,
+              index,
+            ),
+            actual = await narrow.switchingSelection({ vendor, cve_ids: null }, evaluated_at),
+            native = context.window.InfrastructureSwitching.summary(
+              context.window.InfrastructureSwitching.selectReport(full, { vendor, evaluated_at }),
+            );
+          assert.deepStrictEqual(
+            JSON.parse(JSON.stringify(actual)),
+            JSON.parse(JSON.stringify(native)),
+          );
+          assert.strictEqual(
+            context.window.InfrastructureSwitching.csvExport(actual),
+            context.window.InfrastructureSwitching.csvExport(native),
+          );
+          assert(!narrowReads.includes(catalog.roots['switching-evidence.json'].path));
+          for (const chunk of catalog.switching.detail_indexes.sources)
+            assert(
+              narrowReads.filter((name) => name === chunk.part.path).length <= 1,
+              'intersected Source chunk fetched once',
+            );
+          assert(Object.isFrozen(actual) && Object.isFrozen(actual.rows));
+          await assert.rejects(() => narrow.switchingDetails(selected, { kind: 'sources' }));
+        }
     } finally {
       context.window.InfrastructureSwitching.selectClaims = originalSelectClaims;
     }
@@ -355,6 +387,216 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
         logical_sha256: createHash('sha256').update(text).digest('hex'),
       };
     }
+    const membershipRoot = 'switching-row-sources.json',
+      originalMembership = await reader.materializeRoot(membershipRoot),
+      seedStrings = catalog.strings.flatMap(
+        (d) => JSON.parse(fs.readFileSync(path.join(dir, d.part.path))).data,
+      ),
+      seedShapes = catalog.shapes.flatMap(
+        (d) => JSON.parse(fs.readFileSync(path.join(dir, d.part.path))).data,
+      );
+    function membershipCatalog(change, floatPath = null) {
+      const value = JSON.parse(JSON.stringify(originalMembership)),
+        result = JSON.parse(JSON.stringify(catalog)),
+        strings = [...seedStrings],
+        shapes = [...seedShapes],
+        tokens = [];
+      change(value);
+      function encode(v, path = []) {
+        if (v === null || typeof v === 'boolean') tokens.push(v);
+        else if (typeof v === 'number') {
+          const fractional = JSON.stringify(path) === JSON.stringify(floatPath),
+            raw = String(v) + (fractional ? '.0' : '');
+          tokens.push([-2, fractional ? 'f' : 'i', raw]);
+          return raw;
+        } else if (typeof v === 'string') {
+          let i = strings.indexOf(v);
+          if (i < 0) {
+            i = strings.length;
+            strings.push(v);
+          }
+          tokens.push(-i - 2);
+        } else if (Array.isArray(v)) {
+          tokens.push([-1, v.length]);
+          return '[' + v.map((x, i) => encode(x, [...path, i])).join(',') + ']';
+        } else {
+          const keys = Object.keys(v);
+          let i = shapes.findIndex((s) => JSON.stringify(s) === JSON.stringify(keys));
+          if (i < 0) {
+            i = shapes.length;
+            shapes.push(keys);
+          }
+          tokens.push([i]);
+          return (
+            '{' +
+            keys.map((k) => JSON.stringify(k) + ':' + encode(v[k], [...path, k])).join(',') +
+            '}'
+          );
+        }
+        return JSON.stringify(v);
+      }
+      const text = encode(value);
+      result.roots[membershipRoot] = wireRoot(
+        membershipRoot,
+        tokens,
+        text,
+        Buffer.byteLength(text),
+      );
+      result.strings = [{ first: 0, count: strings.length, part: part('strings', strings) }];
+      result.shapes = [{ first: 0, count: shapes.length, part: part('shapes', shapes) }];
+      delete result.table_transports;
+      return result;
+    }
+    for (const floatPath of [
+      ['schema_version'],
+      ['sources_count'],
+      ['rows', 0, 'row_ordinal'],
+      ['rows', 2, 'source_ordinals', 0],
+      ['sources_range', 'first_token'],
+    ]) {
+      const broken = await api.open(
+        virtualFetch,
+        membershipCatalog(() => {}, floatPath),
+        index,
+      );
+      await assert.rejects(
+        () => broken.switchingSelection({ vendor: 'arista' }, index.generated_at),
+        undefined,
+        'float kind at ' + JSON.stringify(floatPath),
+      );
+    }
+    for (const change of [
+      (v) => {
+        v.schema_version = true;
+      },
+      (v) => {
+        v.publication.id = '0'.repeat(32);
+      },
+      (v) => {
+        v.generated_at = '2025-01-01T00:00:00Z';
+      },
+      (v) => {
+        v.definition_sha256 = '0'.repeat(64);
+      },
+      (v) => {
+        v.observation_end = '2025-01-01';
+      },
+      (v) => {
+        v.sources_count++;
+      },
+      (v) => {
+        v.sources_count = true;
+      },
+      (v) => {
+        v.sources_range.logical_sha256 = '0'.repeat(64);
+      },
+      (v) => {
+        v.rows[0].row_id = 'arista:os_family:all';
+      },
+      (v) => {
+        v.rows[0].row_ordinal = 1;
+      },
+      (v) => {
+        v.rows[0].published_row_sha256 = '0'.repeat(64);
+      },
+      (v) => {
+        v.rows[2].claim_membership_sha256 = '0'.repeat(64);
+      },
+      (v) => {
+        v.rows.pop();
+      },
+      (v) => {
+        v.rows.push(v.rows[0]);
+      },
+      (v) => {
+        v.extra = true;
+      },
+      ...[[true], [-1], [0, 0], [1, 0], [9007199254740992], [originalMembership.sources_count]].map(
+        (values) => (v) => {
+          v.rows[2].source_ordinals = values;
+        },
+      ),
+    ]) {
+      const brokenCatalog = membershipCatalog(change),
+        broken = await api.open(virtualFetch, brokenCatalog, index);
+      await assert.rejects(() =>
+        broken.switchingSelection({ vendor: 'arista' }, index.generated_at),
+      );
+      delete brokenCatalog.switching.detail_indexes;
+      const noDetails = await api.open(virtualFetch, brokenCatalog, index);
+      await assert.rejects(() =>
+        noDetails.switchingSelection({ vendor: 'arista' }, index.generated_at),
+      );
+    }
+    for (const change of [
+      (v) => {
+        v.data[0].ordinal++;
+      },
+      (v) => {
+        v.data[0].range.logical_sha256 = '0'.repeat(64);
+      },
+      (v) => {
+        v.data[0].range.end_token++;
+      },
+    ]) {
+      const brokenCatalog = JSON.parse(JSON.stringify(catalog));
+      for (const chunk of brokenCatalog.switching.detail_indexes.sources)
+        chunk.part = altered(chunk.part, change);
+      const broken = await api.open(virtualFetch, brokenCatalog, index);
+      await assert.rejects(() => broken.switchingSelection({}, index.generated_at));
+    }
+    const oldCatalog = JSON.parse(JSON.stringify(catalog));
+    delete oldCatalog.roots[membershipRoot];
+    const oldReader = await api.open(virtualFetch, oldCatalog, index);
+    assert.deepStrictEqual(
+      JSON.parse(
+        JSON.stringify(
+          await oldReader.switchingSelection({ vendor: 'arista' }, index.generated_at),
+        ),
+      ),
+      JSON.parse(
+        JSON.stringify(
+          context.window.InfrastructureSwitching.summary(
+            context.window.InfrastructureSwitching.selectReport(full, {
+              vendor: 'arista',
+              evaluated_at: index.generated_at,
+            }),
+          ),
+        ),
+      ),
+    );
+    let retryOnce = true;
+    const retryReader = await api.open(
+      async (name) => {
+        if (name === catalog.roots[membershipRoot].path && retryOnce) {
+          retryOnce = false;
+          throw Error('transient metadata failure');
+        }
+        return virtualFetch(name);
+      },
+      catalog,
+      index,
+    );
+    await assert.rejects(
+      () => retryReader.switchingSelection({ vendor: 'arista' }, index.generated_at),
+      /transient/,
+    );
+    await retryReader.switchingSelection({ vendor: 'arista' }, index.generated_at);
+    const cancelledSelection = new AbortController();
+    cancelledSelection.abort();
+    await assert.rejects(
+      () =>
+        retryReader.switchingSelection({ vendor: 'arista' }, index.generated_at, {
+          signal: cancelledSelection.signal,
+        }),
+      /cancel/,
+    );
+    await retryReader.switchingSelection({ vendor: 'arista' }, index.generated_at);
+    const tinyWorking = await api.open(virtualFetch, catalog, index, { working_bytes: 1 });
+    await assert.rejects(
+      () => tinyWorking.switchingSelection({ vendor: 'arista' }, index.generated_at),
+      /budget/,
+    );
     const transportCatalog = JSON.parse(JSON.stringify(catalog));
     const transportRoot = transportCatalog.roots['snapshot.json'];
     const floatRaw = Buffer.from(

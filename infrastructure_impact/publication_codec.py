@@ -26,6 +26,8 @@ NAME = re.compile(r"(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+(?:\.json)?\Z")
 PART_PATH = re.compile(r"data/v2/([a-f0-9]{64})\.json\Z")
 TABLE_TRANSPORT_PATH = re.compile(r"data/v2/([a-f0-9]{64})\.json\.gz\Z")
 SURROGATE = re.compile("[\ud800-\udfff]")
+CONTROL = re.compile("[\x00-\x1f]")
+LONG_CONTROL = "".join(chr(i) for i in range(32) if chr(i) not in "\b\f\n\r\t")
 
 
 def safe_int(value, *, minimum=0):
@@ -312,6 +314,14 @@ class NodeBudget:
 
 def string_cost(value, ascii=False):
     literal(value)
+    if type(value) is str and value.isascii():
+        total = 2 + len(value) + value.count('"') + value.count("\\")
+        if CONTROL.search(value) is not None:
+            total += sum(value.count(c) for c in "\b\f\n\r\t")
+            total += 5 * sum(value.count(c) for c in LONG_CONTROL)
+        if ascii:
+            total += 5 * value.count("\x7f")
+        return total
     total = 2
     for char in value:
         code = ord(char)

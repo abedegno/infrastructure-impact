@@ -130,6 +130,7 @@ class PublicationReader(codec.CatalogReader):
 
         result = self.fetch(self.catalog["switching"]["overview"], kind="overview")
         validate(result, "switching-overview-v2.json")
+        self._identity(result)
         if evaluated_at is not None:
             report = self.materialize_range(self.catalog["switching"]["kev"])
             for row in result["rows"]:
@@ -509,7 +510,8 @@ class PublicationReader(codec.CatalogReader):
             )
         }
         metadata["coverage"] = []
-        study = contracts.definition()
+        contracts._validate({**metadata, "claims": []}, "switching-evidence-v1.json")
+        semantics = contracts._EvidenceClaimSemantics(metadata, **self.identity)
         links, fixed, held = [], [], 0
         stream_budget = codec.Budget(self.limits["stream"])
         for i, route in enumerate(self._claim_routes()):
@@ -547,9 +549,7 @@ class PublicationReader(codec.CatalogReader):
             if claim["claim_id"] != route[0]:
                 raise ValueError("claim identity mismatch")
             contracts._validate_claim(claim)
-            contracts._validate_evidence_semantics(
-                {**metadata, "claims": [claim]}, **self.identity, _study=study, _linkage=links
-            )
+            semantics.validate_claims([claim], _linkage=links)
             if (
                 claim["vendor"] == "arista"
                 and claim["advisory_id"]
@@ -586,23 +586,42 @@ class PublicationReader(codec.CatalogReader):
         return next(self.switching_selections([options], evaluated_at=evaluated_at))
 
     def switching_selections(self, selections, *, evaluated_at):
-        from .switching_comparison import ReducerClaim, select_reducer_claims
+        from .switching_comparison import VENDORS, ReducerClaim, select_reducer_claims
 
-        claims = []
-        # Aggregate reducer state is larger than the selected response it produces.
-        accumulator = codec.Budget(self.limits["working"])
-        accumulator.charge(2, 2)
-        for claim in self.iter_claims():
-            accumulator.charge(bool(claims), bool(claims))
-            projection = ReducerClaim.from_validated(claim, budget=accumulator)
-            claims.append(projection)
-        overview = self.switching_overview()
-        coverage = self.field("switching-evidence.json", "coverage")
-        issues = self.field("switching-evidence.json", "issues")
-        kev = self.materialize_range(self.catalog["switching"]["kev"])
+        claims = None
         for options in selections:
+            if (
+                isinstance(options, dict)
+                and not set(options) - {"vendor", "scope_level", "window", "cve_ids"}
+                and (options.get("vendor") is None or options.get("vendor") in VENDORS)
+                and options.get("scope_level", "os_family") == "os_family"
+                and options.get("window", "all") == "all"
+                and options.get("cve_ids") is None
+            ):
+                overview = self.switching_overview(evaluated_at)
+                index = self._published_row_source_index(overview)
+                if index is not None:
+                    supported = "detail_indexes" in self.catalog["switching"]
+                    result = self._published_selection(
+                        overview, index, options.get("vendor"), hydrate_only=not supported
+                    )
+                    if supported:
+                        yield result
+                        continue
+            if claims is None:
+                claims = []
+                # Mixed batches construct complete reducer state exactly once.
+                accumulator = codec.Budget(self.limits["working"])
+                accumulator.charge(2, 2)
+                for claim in self.iter_claims():
+                    accumulator.charge(bool(claims), bool(claims))
+                    claims.append(ReducerClaim.from_validated(claim, budget=accumulator))
+                overview = self.switching_overview()
+                coverage = self.field("switching-evidence.json", "coverage")
+                issues = self.field("switching-evidence.json", "issues")
+                kev = self.materialize_range(self.catalog["switching"]["kev"])
             result = select_reducer_claims(
-                overview,
+                self.switching_overview(),
                 claims,
                 coverage,
                 issues,
@@ -613,6 +632,152 @@ class PublicationReader(codec.CatalogReader):
             )
             codec.charge_value(result, codec.Budget(self.limits["selected"]))
             yield result
+
+    def _published_row_source_index(self, overview):
+        from .switching_row_sources import MAX_BYTES, ROOT, SCHEMA, published_family
+
+        if ROOT not in self.catalog["roots"]:
+            return None
+        maximum = min(MAX_BYTES, self.limits["selected"], self.limits["working"])
+        if self.root(ROOT)["logical"]["bytes"] > maximum:
+            raise ValueError("published Source index byte budget")
+        index = self.materialize_range(self.ranges(ROOT)[()], max_bytes=maximum, path=())
+        validate(index, SCHEMA)
+        codec.validate_range(index["sources_range"])
+        self._identity(index)
+        published_family(overview)
+        ranges = self.ranges("snapshot.json")
+        bound = ranges[("switching_comparison", "sources")]
+        if (
+            type(index["schema_version"]) is not int
+            or index["definition_sha256"] != overview["selection"]["definition_sha256"]
+            or index["definition_sha256"] != self.catalog["switching"]["definition_sha256"]
+            or index["observation_end"] != overview["observation_end"]
+            or index["sources_range"] != bound
+            or overview["detail_ranges"]["sources"] != bound
+            or len(index["rows"]) != len(overview["rows"])
+        ):
+            raise ValueError("published Source index binding")
+        count = codec.safe_int(index["sources_count"])
+        header = self.iter_tokens(bound["root"], bound["first_token"], bound["first_token"] + 1)
+        try:
+            if next(header, None) != [-1, count]:
+                raise ValueError("published Source index parent count")
+        finally:
+            header.close()
+        for ordinal, (entry, row) in enumerate(zip(index["rows"], overview["rows"], strict=True)):
+            if (
+                codec.safe_int(entry["row_ordinal"]) != ordinal
+                or entry["row_id"] != row["row_id"]
+                or entry["published_row_sha256"]
+                != ranges[("switching_comparison", "rows", ordinal)]["logical_sha256"]
+            ):
+                raise ValueError("published Source index row binding")
+            previous = -1
+            for value in entry["source_ordinals"]:
+                value = codec.safe_int(value)
+                if not previous < value < count:
+                    raise ValueError("published Source index ordinal order/bounds")
+                previous = value
+        return index
+
+    def _published_selection(self, overview, index, vendor, *, hydrate_only=False):
+        from .publication_v2 import DEFERRED, validators
+        from .switching_comparison import VENDORS
+        from .switching_evidence import _validate
+        from .switching_row_sources import membership_digest
+
+        quota = codec.Budget(self.limits["selected"])
+        working = codec.Budget(self.limits["working"])
+        codec.charge_value(index, working)
+        base = {k: v for k, v in overview.items() if k not in ("rows", "detail_ranges")}
+        base.update(schema_version=1, representation="summary", rows=[], sources=[])
+        codec.charge_value(base, quota)
+        codec.charge_value(base, working)
+        ordinals = set()
+        for ordinal, original in enumerate(overview["rows"]):
+            if vendor is not None and original["vendor"] != vendor:
+                continue
+            row = {k: v for k, v in original.items() if k != "detail_ranges"}
+            codec.charge_value(row, quota)
+            codec.charge_value(row, working)
+            for key in DEFERRED:
+                quota.charge(codec.string_cost(key) + 2, codec.string_cost(key, True) + 2)
+                value = self.materialize_range(
+                    original["detail_ranges"][key],
+                    path=("switching_comparison", "rows", ordinal, key),
+                    max_bytes=min(quota.max_bytes - quota.used, working.max_bytes - working.used),
+                    serialization="ascii",
+                )
+                codec.charge_value(value, quota)
+                codec.charge_value(value, working)
+                row[key] = value
+            if (
+                membership_digest(row, budget=working)
+                != index["rows"][ordinal]["claim_membership_sha256"]
+            ):
+                raise ValueError("published row membership digest")
+            for value in index["rows"][ordinal]["source_ordinals"]:
+                if value not in ordinals:
+                    working.charge(32, 32)
+                    ordinals.add(value)
+            base["rows"].append(row)
+        if hydrate_only:
+            # Unsupported transport combination still authenticates consumed
+            # membership before the complete reducer fallback can run.
+            return None
+        sources = []
+        bound, path, chunks, total = self._detail_chunks("sources")
+        if total != index["sources_count"] or bound != index["sources_range"]:
+            raise ValueError("published Source detail parent binding")
+        selected = iter(sorted(ordinals))
+        wanted = next(selected, None)
+        source_validator = validators()["switching-evidence-v1.json"].evolve(
+            schema={"$ref": "urn:infrastructure-impact:switching-evidence:1#/$defs/source"}
+        )
+        for chunk in chunks:
+            if wanted is None:
+                break
+            if wanted >= chunk["first"] + chunk["count"]:
+                continue
+            for entry in self._detail_chunk("sources", chunk, bound, total):
+                if entry["ordinal"] != wanted:
+                    continue
+                value = self._detail_item(
+                    entry,
+                    path,
+                    min(
+                        quota.max_bytes - quota.used - bool(sources),
+                        working.max_bytes - working.used,
+                    ),
+                )
+                source_validator.validate(value)
+                quota.charge(bool(sources), bool(sources))
+                codec.charge_value(value, quota)
+                codec.charge_value(value, working)
+                sources.append(value)
+                wanted = next(selected, None)
+        if wanted is not None:
+            raise ValueError("missing published Source ordinal")
+        cves = set()
+        for row in base["rows"]:
+            for identity in row["cve_ids"]:
+                if identity not in cves:
+                    codec.charge_value(identity, working)
+                    working.charge(32, 32)
+                    cves.add(identity)
+        base["sources"] = sources
+        base["selection"] = {
+            **base["selection"],
+            "requested_vendor": vendor,
+            "effective_vendors": [vendor] if vendor else list(VENDORS),
+            "effective_windows": [r["row_id"] for r in base["rows"]],
+            "effective_cve_ids": sorted(cves),
+        }
+        result = base
+        _validate(result, "switching-summary-v1.json")
+        codec.charge_value(result, codec.Budget(self.limits["selected"]))
+        return result
 
     def _detail_chunks(self, kind):
         """Check optional chunk counts against the authenticated parent array header."""
@@ -649,7 +814,7 @@ class PublicationReader(codec.CatalogReader):
         for index, entry in enumerate(entries, chunk["first"]):
             r = codec.validate_range(entry["range"])
             if (
-                entry["ordinal"] != index
+                codec.safe_int(entry["ordinal"]) != index
                 or r["root"] != bound["root"]
                 or r["first_token"] <= bound["first_token"]
                 or r["end_token"] > bound["end_token"]

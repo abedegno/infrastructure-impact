@@ -729,7 +729,7 @@
         );
       if (canonicalBytes !== r.logical_bytes || hash.digest() !== r.logical_sha256)
         fail('range logical fingerprint');
-      return json.parseStrict(text);
+      return json.parseStrict(text, { transport: options.integer_metadata });
     }
     async function materializeRoot(name, options = {}) {
       if (!options.operation) return scoped(options, (next) => materializeRoot(name, next));
@@ -987,25 +987,52 @@
       quota.charge(json.measure({ items: [], next_cursor, total }));
       return { quota, next_cursor };
     }
-    async function indexedRangePage(kind, input, offset, limit, vendors, binding, options) {
-      const r = range(input),
-        chunks = catalog.switching.detail_indexes[kind];
-      let count = 0,
-        total = 0;
-      const selectedCount = (chunk) =>
-        vendors === null
-          ? chunk.count
-          : Object.entries(chunk.vendors).reduce(
-              (n, [vendor, number]) => n + (vendors.has(vendor) ? number : 0),
-              0,
-            );
+    async function detailChunk(kind, chunk, r, count, options) {
+      const entries = await read(chunk.part, 'detail_index', options),
+        actualVendors = {};
+      if (entries.length !== chunk.count) fail('detail chunk count');
+      let previous = null;
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i],
+          bound = range(entry.range),
+          ordinal = chunk.first + i;
+        if (
+          entry.ordinal !== ordinal ||
+          bound.root !== r.root ||
+          bound.first_token <= r.first_token ||
+          bound.end_token > r.end_token ||
+          (previous !== null && previous !== bound.first_token) ||
+          (ordinal === 0 && bound.first_token !== r.first_token + 1) ||
+          (ordinal === count - 1 && bound.end_token !== r.end_token)
+        )
+          fail('detail item routing');
+        previous = bound.end_token;
+        if (kind === 'diagnostics') {
+          if (typeof entry.vendor !== 'string') fail('detail vendor');
+          Object.defineProperty(actualVendors, entry.vendor, {
+            value:
+              (Object.hasOwn(actualVendors, entry.vendor) ? actualVendors[entry.vendor] : 0) + 1,
+            enumerable: true,
+            configurable: true,
+          });
+        } else if (Object.hasOwn(entry, 'vendor')) fail('source detail vendor');
+      }
+      if (
+        Object.keys(actualVendors).length !== Object.keys(chunk.vendors).length ||
+        Object.entries(actualVendors).some(([vendor, n]) => chunk.vendors[vendor] !== n)
+      )
+        fail('detail chunk vendor counts');
+      return entries;
+    }
+    async function detailCount(kind, r, options) {
+      const chunks = catalog.switching.detail_indexes[kind];
+      let count = 0;
       for (const chunk of chunks) {
         if (integer(chunk.first) !== count) fail('detail chunk order/count');
         count += integer(chunk.count, 1);
         const vendorCount = Object.values(chunk.vendors).reduce((n, v) => n + integer(v, 1), 0);
         if (kind === 'diagnostics' ? vendorCount !== chunk.count : vendorCount !== 0)
           fail('detail chunk vendor counts');
-        total += selectedCount(chunk);
       }
       const header = tokens(r.root, r.first_token, r.first_token + 1, options)[
         Symbol.asyncIterator
@@ -1017,6 +1044,17 @@
       } finally {
         await header.return?.();
       }
+      return count;
+    }
+    async function indexedRangePage(kind, input, offset, limit, vendors, binding, options) {
+      const r = range(input),
+        chunks = catalog.switching.detail_indexes[kind];
+      const count = await detailCount(kind, r, options),
+        selectedCount = (chunk) =>
+          vendors === null
+            ? chunk.count
+            : Object.entries(chunk.vendors).reduce((n, [v, c]) => n + (vendors.has(v) ? c : 0), 0),
+        total = chunks.reduce((n, chunk) => n + selectedCount(chunk), 0);
       if (offset > total) fail('detail offset');
       const { quota, next_cursor } = pageBudget(total, binding, offset, limit),
         items = [];
@@ -1026,40 +1064,7 @@
           start = passed;
         passed += selected;
         if (!selected || passed <= offset || start >= offset + limit) continue;
-        const entries = await read(chunk.part, 'detail_index', options),
-          actualVendors = {};
-        if (entries.length !== chunk.count) fail('detail chunk count');
-        let previous = null;
-        for (let i = 0; i < entries.length; i++) {
-          const entry = entries[i],
-            bound = range(entry.range),
-            ordinal = chunk.first + i;
-          if (
-            entry.ordinal !== ordinal ||
-            bound.root !== r.root ||
-            bound.first_token <= r.first_token ||
-            bound.end_token > r.end_token ||
-            (previous !== null && previous !== bound.first_token) ||
-            (ordinal === 0 && bound.first_token !== r.first_token + 1) ||
-            (ordinal === count - 1 && bound.end_token !== r.end_token)
-          )
-            fail('detail item routing');
-          previous = bound.end_token;
-          if (kind === 'diagnostics') {
-            if (typeof entry.vendor !== 'string') fail('detail vendor');
-            Object.defineProperty(actualVendors, entry.vendor, {
-              value:
-                (Object.hasOwn(actualVendors, entry.vendor) ? actualVendors[entry.vendor] : 0) + 1,
-              enumerable: true,
-              configurable: true,
-            });
-          } else if (Object.hasOwn(entry, 'vendor')) fail('source detail vendor');
-        }
-        if (
-          Object.keys(actualVendors).length !== Object.keys(chunk.vendors).length ||
-          Object.entries(actualVendors).some(([vendor, n]) => chunk.vendors[vendor] !== n)
-        )
-          fail('detail chunk vendor counts');
+        const entries = await detailChunk(kind, chunk, r, count, options);
         let local = start;
         for (const entry of entries) {
           if (vendors !== null && !vendors.has(entry.vendor)) continue;
@@ -1134,32 +1139,234 @@
       accepted.add(value);
       return value;
     }
-    async function publishedSelection(overview, consumption) {
-      const { detail_ranges, rows, ...header } = json.clone(overview),
+    const publishedVendors = ['cisco', 'aruba', 'arista'];
+    function same(a, b) {
+      return json.stringify(a) === json.stringify(b);
+    }
+    async function publishedRowSourceIndex(overview, options) {
+      const name = 'switching-row-sources.json';
+      if (!Object.hasOwn(catalog.roots, name)) return null;
+      const maximum = Math.min(8000000, selectedMax, limits.working_bytes ?? 512000000),
+        descriptor = await root(name, options);
+      if (descriptor.logical.bytes > maximum) fail('published Source index byte budget');
+      const index = await materializeRoot(name, {
+          ...options,
+          max_bytes: maximum,
+          integer_metadata: true,
+        }),
+        contracts = window.InfrastructureSwitchingContracts,
+        selection = overview.selection;
+      contracts.validate('switching-row-sources-v1.json', index);
+      range(index.sources_range);
+      contracts.identity(index, catalog);
+      contracts.identity(overview, catalog);
+      if (
+        contracts.fingerprint(overview.definition) !== selection.definition_sha256 ||
+        selection.definition_sha256 !== catalog.switching.definition_sha256 ||
+        selection.requested_vendor !== null ||
+        selection.scope_level !== 'os_family' ||
+        selection.requested_window !== 'all' ||
+        selection.requested_cve_ids !== null ||
+        !same(selection.effective_vendors, publishedVendors) ||
+        !same(
+          overview.rows.map((r) => r.vendor),
+          publishedVendors,
+        ) ||
+        !same(
+          selection.effective_windows,
+          overview.rows.map((r) => r.row_id),
+        )
+      )
+        fail('noncanonical published row family');
+      const bound = await findRange('snapshot.json', ['switching_comparison', 'sources'], options),
+        count = integer(index.sources_count);
+      if (
+        index.definition_sha256 !== selection.definition_sha256 ||
+        index.observation_end !== overview.observation_end ||
+        !same(index.sources_range, bound) ||
+        !same(overview.detail_ranges.sources, bound) ||
+        index.rows.length !== overview.rows.length
+      )
+        fail('published Source index binding');
+      const header = tokens(bound.root, bound.first_token, bound.first_token + 1, options)[
+        Symbol.asyncIterator
+      ]();
+      try {
+        const token = (await header.next()).value;
+        if (!same(token, [-1, count])) fail('published Source index parent count');
+      } finally {
+        await header.return?.();
+      }
+      for (let ordinal = 0; ordinal < index.rows.length; ordinal++) {
+        const entry = index.rows[ordinal],
+          row = overview.rows[ordinal],
+          original = await findRange(
+            'snapshot.json',
+            ['switching_comparison', 'rows', ordinal],
+            options,
+          );
+        if (
+          integer(entry.row_ordinal) !== ordinal ||
+          entry.row_id !== row.row_id ||
+          row.row_id !== `${row.vendor}:os_family:all` ||
+          row.scope_level !== 'os_family' ||
+          row.window !== 'all' ||
+          entry.published_row_sha256 !== original.logical_sha256
+        )
+          fail('published Source index row binding');
+        let previous = -1;
+        for (const value of entry.source_ordinals) {
+          integer(value);
+          if (value <= previous || value >= count)
+            fail('published Source index ordinal order/bounds');
+          previous = value;
+        }
+      }
+      return index;
+    }
+    async function sourcesAtOrdinals(ordinals, index, quota, working, options) {
+      const bound = range(index.sources_range),
+        count = await detailCount('sources', bound, options),
+        items = [];
+      if (count !== index.sources_count) fail('published Source detail parent binding');
+      let position = 0;
+      for (const chunk of catalog.switching.detail_indexes.sources) {
+        if (position === ordinals.length) break;
+        if (ordinals[position] >= chunk.first + chunk.count) continue;
+        const entries = await detailChunk('sources', chunk, bound, count, options);
+        for (const entry of entries) {
+          if (entry.ordinal !== ordinals[position]) continue;
+          const value = await materializeRange(entry.range, {
+            ...options,
+            path: ['switching_comparison', 'sources', entry.ordinal],
+            max_bytes: Math.max(
+              0,
+              Math.min(working.remaining, quota.remaining - (items.length ? 1 : 0)),
+            ),
+            serialization: 'ascii',
+          });
+          window.InfrastructureSwitchingContracts.validate(
+            'switching-evidence-v1.json',
+            value,
+            '/$defs/source',
+          );
+          quota.charge(json.measure(value, null, '', quota.remaining) + (items.length ? 1 : 0));
+          working.charge(json.measure(value));
+          items.push(value);
+          position++;
+        }
+      }
+      if (position !== ordinals.length) fail('missing published Source ordinal');
+      return items;
+    }
+    async function publishedSelection(
+      overview,
+      consumption,
+      vendor = null,
+      index = null,
+      hydrateOnly = false,
+    ) {
+      const { detail_ranges, rows, ...header } = overview,
         quota = json.budget(selectedMax),
-        result = { ...header, schema_version: 1, representation: 'summary', rows: [], sources: [] };
+        workingMax = Math.min(integer(limits.working_bytes ?? 512000000, 1), 512000000),
+        working = {
+          used: 0,
+          get remaining() {
+            return workingMax - this.used;
+          },
+          charge(n) {
+            if (integer(n) > this.remaining) fail('working byte budget');
+            this.used += n;
+          },
+        },
+        result = { ...header, schema_version: 1, representation: 'summary', rows: [], sources: [] },
+        ordinals = new Set();
+      if (index)
+        working.charge(json.measure(index, null, '', Math.min(working.remaining, 128000000)));
       quota.charge(json.measure(result, null, '', quota.remaining));
-      for (let index = 0; index < rows.length; index++) {
-        const { detail_ranges: fields, ...row } = rows[index];
+      working.charge(json.measure(result));
+      for (let ordinal = 0; ordinal < rows.length; ordinal++) {
+        if (vendor !== null && rows[ordinal].vendor !== vendor) continue;
+        const { detail_ranges: fields, ...row } = rows[ordinal];
         quota.charge(json.measure(row, null, '', quota.remaining) + 1);
+        working.charge(json.measure(row));
         for (const [key, bound] of Object.entries(fields)) {
           quota.charge(json.stringBytes(key) + 2);
+          const path = ['switching_comparison', 'rows', ordinal, key];
+          if (!same(bound, await findRange('snapshot.json', path, consumption)))
+            fail('published row detail binding');
           const value = await materializeRange(bound, {
             ...consumption,
-            path: ['switching_comparison', 'rows', index, key],
-            max_bytes: quota.remaining,
+            path,
+            max_bytes: Math.min(quota.remaining, working.remaining),
+            serialization: 'ascii',
           });
           quota.charge(json.measure(value, null, '', quota.remaining));
+          working.charge(json.measure(value));
           row[key] = value;
+        }
+        if (index) {
+          const ids = new Set();
+          function retain(identity) {
+            if (typeof identity !== 'string' || /[^\x00-\x7F]/.test(identity))
+              fail('ASCII row claim ID');
+            if (!ids.has(identity)) {
+              working.charge(json.stringBytes(identity) + 32);
+              ids.add(identity);
+            }
+          }
+          row.claim_ids.forEach(retain);
+          for (const event of row.events) event.claim_ids.forEach(retain);
+          const hash = createHash();
+          hash.update(
+            json.stringifyBounded(
+              [...ids].sort(),
+              null,
+              '',
+              Math.min(working.remaining, 128000000),
+            ),
+          );
+          if (hash.digest() !== index.rows[ordinal].claim_membership_sha256)
+            fail('published row membership digest');
+          for (const value of index.rows[ordinal].source_ordinals)
+            if (!ordinals.has(value)) {
+              working.charge(32);
+              ordinals.add(value);
+            }
         }
         result.rows.push(row);
       }
-      result.sources = await materializeRange(detail_ranges.sources, {
-        ...consumption,
-        path: ['switching_comparison', 'sources'],
-        max_bytes: quota.remaining,
-      });
-      quota.charge(json.measure(result.sources, null, '', quota.remaining));
+      if (index || vendor !== null) {
+        const ids = new Set();
+        for (const row of result.rows)
+          for (const identity of row.cve_ids)
+            if (!ids.has(identity)) {
+              working.charge(json.stringBytes(identity) + 32);
+              ids.add(identity);
+            }
+        result.selection = {
+          ...result.selection,
+          requested_vendor: vendor,
+          effective_vendors: vendor === null ? [...publishedVendors] : [vendor],
+          effective_windows: result.rows.map((r) => r.row_id),
+          effective_cve_ids: [...ids].sort(),
+        };
+      }
+      if (hydrateOnly) return null;
+      result.sources = index
+        ? await sourcesAtOrdinals(
+            [...ordinals].sort((a, b) => a - b),
+            index,
+            quota,
+            working,
+            consumption,
+          )
+        : await materializeRange(detail_ranges.sources, {
+            ...consumption,
+            path: ['switching_comparison', 'sources'],
+            max_bytes: quota.remaining,
+          });
+      if (!index) quota.charge(json.measure(result.sources, null, '', quota.remaining));
       json.measure(result, null, '', selectedMax);
       window.InfrastructureSwitchingContracts.summary(result, overview);
       freeze(result);
@@ -1180,12 +1387,25 @@
         Object.keys(options).every((key) =>
           ['vendor', 'scope_level', 'window', 'cve_ids'].includes(key),
         ) &&
-        options.vendor == null &&
+        (options.vendor == null || publishedVendors.includes(options.vendor)) &&
         options.cve_ids == null &&
         (options.scope_level === undefined || options.scope_level === 'os_family') &&
         (options.window === undefined || options.window === 'all')
-      )
-        return publishedSelection(overview, consumption);
+      ) {
+        const index = await publishedRowSourceIndex(overview, consumption);
+        if (index) {
+          const supported = !!catalog.switching.detail_indexes,
+            result = await publishedSelection(
+              overview,
+              consumption,
+              options.vendor ?? null,
+              index,
+              !supported,
+            );
+          if (supported) return result;
+        }
+        if (options.vendor == null) return publishedSelection(overview, consumption);
+      }
       const evidence = {};
       for (const key of ['publication', 'generated_at', 'definition_sha256', 'coverage', 'issues'])
         evidence[key] = await field('switching-evidence.json', [key], consumption);
