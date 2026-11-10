@@ -448,12 +448,20 @@ def test_native_subphases_cover_eager_expected_and_actual_reader_consumption(tmp
     def expected(*args, **kwargs):
         observed.append("expected")
         assert active == ["publication.native_queries", "publication.native_expected"]
+        assert args[1] == [{"scope_level": "os_family"}, {"scope_level": "model_qualified"}]
         return select(*args, **kwargs)
 
     def actual(self, *args, **kwargs):
         # Assertions execute on generator consumption, not generator creation.
         observed.append("reader")
         assert active == ["publication.native_queries", "publication.native_reader"]
+        assert args[0] == [
+            {"scope_level": "os_family"},
+            {"scope_level": "model_qualified"},
+            {"vendor": "cisco"},
+            {"vendor": "aruba"},
+            {"vendor": "arista"},
+        ]
         yield from reader_select(self, *args, **kwargs)
 
     monkeypatch.setattr(publication_v2, "phase", tracked_phase)
@@ -463,3 +471,28 @@ def test_native_subphases_cover_eager_expected_and_actual_reader_consumption(tmp
     monkeypatch.setattr(query, "state", lambda db: copy.deepcopy(native))
     publication_v2.native_parity("synthetic-native-only", out, tmp_path, PublicationReader(out))
     assert observed == ["expected", "reader"]
+
+
+@pytest.mark.parametrize("vendor", ["cisco", "aruba", "arista"])
+def test_native_gate_compares_each_vendor_reader_summary(tmp_path, monkeypatch, vendor):
+    from test_static_delivery import dataset
+
+    from infrastructure_impact.application import publication_v2, query
+    from infrastructure_impact.application.publication_reader import PublicationReader
+    from infrastructure_impact.storage import repository
+
+    native = dataset()
+    out = publication.publish(native, tmp_path / "published", publication_format="v2")
+    original = PublicationReader.switching_selections
+
+    def selections(self, *args, **kwargs):
+        for value in original(self, *args, **kwargs):
+            if value["selection"]["requested_vendor"] == vendor:
+                value["issues"].append("foreign reader result")
+            yield value
+
+    monkeypatch.setattr(PublicationReader, "switching_selections", selections)
+    monkeypatch.setattr(repository, "connect", lambda *a, **k: StringIO())
+    monkeypatch.setattr(query, "state", lambda db: copy.deepcopy(native))
+    with pytest.raises(ValueError, match="native switching query mismatch"):
+        publication_v2.native_parity("synthetic-native-only", out, tmp_path, PublicationReader(out))

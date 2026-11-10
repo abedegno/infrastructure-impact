@@ -56,6 +56,36 @@ def test_selection_matches_full_v1(generation, options):
     assert switching_csv(actual) == switching_csv(expected)
 
 
+@pytest.mark.parametrize("vendor", [None, "cisco", "aruba", "arista"])
+@pytest.mark.parametrize("at", [AT, "2027-12-01T00:00:00Z"])
+def test_published_vendor_selection_never_reads_claims(generation, monkeypatch, vendor, at):
+    reader = PublicationReader(generation)
+    native = json.loads(b"".join(reader.stream_root("switching-comparison.json")))
+    expected = comparison.summary(comparison.select_report(native, vendor=vendor, evaluated_at=at))
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("eligible published selection read claims")
+
+    monkeypatch.setattr(reader, "iter_claims", forbidden)
+    actual = reader.switching_selection({"vendor": vendor, "cve_ids": None}, evaluated_at=at)
+    assert actual == expected
+    assert switching_csv(actual) == switching_csv(expected)
+    actual["rows"].clear()
+    assert reader.switching_selection({"vendor": vendor}, evaluated_at=at) == expected
+
+
+def test_optional_source_root_is_not_snapshot_data(generation):
+    reader = PublicationReader(generation)
+    name = "switching-row-sources.json"
+    assert name in reader.catalog["roots"]
+    index = reader.materialize_range(reader.ranges(name)[()])
+    assert index["representation"] == "switching-row-sources"
+    assert len(index["rows"]) == 3
+    assert "sources" not in index
+    for root in ("snapshot.json", "runtime-snapshot"):
+        assert "switching_row_sources" not in reader.ranges(root)
+
+
 def test_open_is_metadata_only_and_narrow_runtime_does_not_touch_whole_root(generation):
     reader = PublicationReader(generation, limits={"selected": 1_000_000})
     assert reader._strings is None and not reader._roots
@@ -88,12 +118,12 @@ def test_reducer_working_budget_is_separate_from_response_budget(generation, mon
 
     monkeypatch.setattr(comparison.ReducerClaim, "from_validated", capture)
     reader = PublicationReader(generation)
-    assert reader.switching_selection({}, evaluated_at=AT)["rows"]
+    assert reader.switching_selection({"scope_level": "model_qualified"}, evaluated_at=AT)["rows"]
     assert seen and set(seen) == {512_000_000}
     assert reader.limits["selected"] == 128_000_000
     with pytest.raises(ValueError, match="budget"):
         PublicationReader(generation, limits={"working": 1}).switching_selection(
-            {}, evaluated_at=AT
+            {"scope_level": "model_qualified"}, evaluated_at=AT
         )
     with pytest.raises(ValueError, match="increase"):
         PublicationReader(generation, limits={"working": 512_000_001})

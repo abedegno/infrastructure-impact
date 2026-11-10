@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-row-sources:1",
+  "title": "Exact published switching row Source ordinals v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "representation": {
+      "const": "switching-row-sources"
+    },
+    "publication": {
+      "$ref": "urn:infrastructure-impact:switching-comparison:1#/properties/publication"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observation_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "scope_level": {
+      "const": "os_family"
+    },
+    "window": {
+      "const": "all"
+    },
+    "requested_cve_ids": {
+      "type": "null"
+    },
+    "sources_range": {
+      "$ref": "urn:infrastructure-impact:publication:2#/$defs/range"
+    },
+    "sources_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "rows": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "row_id": {
+            "type": "string",
+            "enum": [
+              "cisco:os_family:all",
+              "aruba:os_family:all",
+              "arista:os_family:all"
+            ]
+          },
+          "row_ordinal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "published_row_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "claim_membership_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "source_ordinals": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "required": [
+          "row_id",
+          "row_ordinal",
+          "published_row_sha256",
+          "claim_membership_sha256",
+          "source_ordinals"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "representation",
+    "publication",
+    "generated_at",
+    "definition_sha256",
+    "observation_end",
+    "scope_level",
+    "window",
+    "requested_cve_ids",
+    "sources_range",
+    "sources_count",
+    "rows"
+  ]
+}

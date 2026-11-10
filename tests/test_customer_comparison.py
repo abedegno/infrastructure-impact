@@ -336,7 +336,9 @@ def test_v2_mixed_history_body_fails_before_release_array_read(tmp_path, monkeyp
     out.mkdir()
     # Bypass the validating publication boundary to simulate a foreign logical asset
     # inside otherwise correctly hashed v2 transport envelopes.
-    publication_v2.write_bundle(out, public)
+    from infrastructure_impact.application.switching_row_sources import derive
+
+    publication_v2._write_bundle(out, public, derive(public["switching_comparison"]))
     reader = PublicationReader(out)
     original = reader.materialize_range
 

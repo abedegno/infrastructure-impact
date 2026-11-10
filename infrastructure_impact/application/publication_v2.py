@@ -588,6 +588,13 @@ def logical_views(data):
 
 
 def write_bundle(destination, data):
+    """Preserve fresh public writer validation for direct v2 callers, too."""
+    from .publication import write_bundle as validated_write
+
+    return validated_write(destination, data, publication_format="v2")
+
+
+def _write_bundle(destination, data, row_sources):
     from ..exports import csv_export
     from .eligibility import monitor_summary
     from .publication import write_manifest, write_reader_assets
@@ -619,6 +626,21 @@ def write_bundle(destination, data):
     }
     runtime["switching_overview"] = overview
     writer.root("runtime-snapshot", runtime)
+    from .switching_row_sources import MAX_BYTES, ROOT, SCHEMA, finalize
+
+    index = finalize(data["switching_comparison"], row_sources, writer.root_ranges["snapshot.json"])
+    if index is not None:
+        validate(index, SCHEMA)
+        # Optional optimization only: omit exactly at the measured logical size
+        # boundary. Structural/provenance failures always propagate.
+        size = sum(
+            len(c.encode())
+            for c in json.JSONEncoder(
+                ensure_ascii=False, allow_nan=False, separators=(",", ":")
+            ).iterencode(index)
+        )
+        if size <= MAX_BYTES:
+            writer.root(ROOT, index)
     routes = writer.routes()
     writer.tables()
     overview_part = writer.part("overview", overview)
@@ -757,7 +779,8 @@ def native_parity(database, directory, home, reader):
     from ..storage.repository import connect
     from .publication import public_projection
     from .query import state
-    from .switching_comparison import _select_summaries
+    from .switching_comparison import VENDORS, _select_summaries, _selected_sources
+    from .switching_row_sources import vendor_summary
 
     with closing(connect(database, read_only=True)) as db:
         native = state(db)
@@ -774,7 +797,8 @@ def native_parity(database, directory, home, reader):
     with phase("publication.native_queries"):
         scopes = ("os_family", "model_qualified")
         actuals = reader.switching_selections(
-            [dict(scope_level=scope) for scope in scopes], evaluated_at=projected["generated_at"]
+            [dict(scope_level=scope) for scope in scopes] + [dict(vendor=v) for v in VENDORS],
+            evaluated_at=projected["generated_at"],
         )
         with phase("publication.native_expected"):
             expected_summaries = _select_summaries(
@@ -782,6 +806,23 @@ def native_parity(database, directory, home, reader):
                 [dict(scope_level=scope) for scope in scopes],
                 evaluated_at=projected["generated_at"],
             )
+            # The existing source-guarded batch has freshly proved complete
+            # inputs and OS-family rows. Derive three vendor expectations from
+            # those facts without another full reducer/fingerprint batch.
+            complete = expected_summaries[0]
+            for vendor in VENDORS:
+                rows = [r for r in complete["rows"] if r["vendor"] == vendor]
+                expected_summaries.append(
+                    vendor_summary(
+                        complete,
+                        vendor,
+                        _selected_sources(
+                            projected["switching_comparison"]["inputs"]["evidence"], rows
+                        )
+                        if projected["switching_comparison"]["inputs"] is not None
+                        else [],
+                    )
+                )
         with phase("publication.native_reader"):
             for expected, actual in zip(expected_summaries, actuals, strict=True):
                 if codec.digest(
@@ -836,6 +877,17 @@ def verify_projection(reader, projected):
         },
         "switching_overview": overview,
     }
+    from .switching_row_sources import MAX_BYTES, ROOT, derive, finalize
+
+    if ROOT in reader.catalog["roots"]:
+        if reader.root(ROOT)["logical"]["bytes"] > MAX_BYTES:
+            raise ValueError("published Source index byte budget")
+        expected_index = finalize(
+            projected["switching_comparison"], derive(projected["switching_comparison"]), ranges
+        )
+        if expected_index is None:
+            raise ValueError("Source index without published native rows")
+        views[ROOT] = expected_index
     if set(views) != set(reader.catalog["roots"]):
         raise ValueError("missing or extra mandatory logical root")
     if "detail_indexes" in reader.catalog["switching"]:
