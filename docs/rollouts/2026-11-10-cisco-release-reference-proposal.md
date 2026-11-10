@@ -51,3 +51,20 @@ the existing approved pipeline and check its ordinary health result. If the sour
 is unavailable or fails validation, leave the failure visible and disable this
 entry again; retain capture/revision history rather than delete it. This rollback
 does not require a schedule or permissions change.
+
+## Approved rollout — 10 November 2026
+
+The maintainer authorized merge and activation. PR #51 merged as
+`1a2318b418b2d4b3f53378054b62ada2bd97cde8`; its Python 3.11, Python 3.13 and
+container quality checks passed. The activation branch changes only the existing
+Cisco reference's enabled flag in the two public example/default configurations,
+plus the packaged-default assertion. No schedule, permissions, acquisition limits
+or advisory-normalizer changes are included.
+
+After activation CI and review pass, pin the merged source and run one ordinary
+Collect and publish pass. The existing collection, publication, recovery-readback
+and public health checks apply. No target-import backfill, forced advisory reparse
+or repeat download of the 174 imported targets is requested. Verify the new source
+against the live generation; successful acquisition from this Mac does not establish
+GitHub runner access. Until that verification, hosted source acquisition remains
+unconfirmed. Human adjudication remains pending and is not part of this rollout.

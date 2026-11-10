@@ -22,7 +22,7 @@ ARISTA = "arista-eos-advisory-bundle-0148"
 IDS = [ARUBA, ARUBA16, MODELS, CISCO, ARISTA]
 
 
-def test_packaged_release_sources_use_existing_collection_with_explicit_cisco_exclusion(tmp_path):
+def test_packaged_release_sources_use_existing_collection_with_reviewed_cisco_activation(tmp_path):
     config = validate_config(json.loads((PACKAGE / "resources/sources.json").read_text()))
     entries = {item["source_id"]: item for item in config["reference_sources"]}
     assert all(key in entries for key in IDS)
@@ -30,11 +30,11 @@ def test_packaged_release_sources_use_existing_collection_with_explicit_cisco_ex
         assert entries[key] == {
             "source_id": key,
             "url": source(key).url,
-            "enabled": key != CISCO,
+            "enabled": True,
         }
     with connect(tmp_path / "release-sources.sqlite3") as db:
         values = api().inputs(db, config)
-    assert [v["enabled"] for v in values] == [True, True, True, False, True]
+    assert [v["enabled"] for v in values] == [True, True, True, True, True]
     assert all(v["configured"] and v["retained"] is None for v in values)
 
 
