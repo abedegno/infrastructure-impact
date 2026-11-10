@@ -286,7 +286,7 @@ class ProgressFile:
 
 def read_progress(path):
     path = _safe_path(path)
-    with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+    with os.fdopen(os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW), "rb") as stream:
         info = os.fstat(stream.fileno())
         _require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_size <= MAX_PROGRESS)
         _require(-60 <= time.time() - info.st_mtime <= 3600)

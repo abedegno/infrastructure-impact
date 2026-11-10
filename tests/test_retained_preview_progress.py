@@ -308,3 +308,32 @@ def test_progress_rejects_hardlink_and_replacement(tmp_path):
         writer.write({"schema_version": 1, "events": []})
     with pytest.raises(ValueError):
         progress.read_progress(path)
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="requires POSIX FIFO support")
+def test_progress_rejects_fifo_without_blocking(tmp_path):
+    path = tmp_path.resolve() / "progress.fifo"
+    os.mkfifo(path, 0o600)
+    code = """
+import sys
+from ops.retained_preview_progress import read_progress
+try:
+    read_progress(sys.argv[1])
+except ValueError:
+    print("rejected")
+else:
+    raise SystemExit(3)
+"""
+    try:
+        # subprocess.run kills and reaps its owned child if the read blocks.
+        result = subprocess.run(
+            [sys.executable, "-c", code, str(path)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except subprocess.TimeoutExpired:
+        pytest.fail("FIFO progress read did not reject within two seconds")
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == "rejected\n"
