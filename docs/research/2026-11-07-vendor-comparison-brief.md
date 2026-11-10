@@ -1,5 +1,8 @@
 # Does Cisco disclose more switching vulnerabilities?
 
+**Current brief:** [10 November evidence and customer answer](2026-11-10-vendor-comparison-brief.md).
+The observations below remain dated historical evidence; do not combine their counts with the new publication.
+
 **Dated update:** the [9 November live investigation](2026-11-09-live-switching-readiness.md)
 records the published Cisco import and corrects the interpretation of validation
 outcomes. The website-membership figures below describe the older pinned publication.

@@ -3,10 +3,11 @@
 import json
 from importlib.resources import files
 
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 from ..source_policy import allowed
 from . import extraction_validation
+from .source_selections import public_selections
 
 VENDORS = ("cisco", "aruba", "arista")
 # Missing categories are not invented examples and do not enter pass rates.
@@ -32,10 +33,46 @@ def definition():
     return result
 
 
-def report(records: list[dict], scopes: list[dict], *, retained_advisories=()) -> dict:
+def _alternate_contexts(selections, records):
+    """Fail closed on optional malformed metadata; never treat it as claims."""
+    contexts = {}
+    if not isinstance(selections, (list, tuple)):
+        return contexts
+    for selection in selections:
+        try:
+            choices = public_selections([selection], records)
+        except (AttributeError, KeyError, TypeError, ValueError, ValidationError):
+            continue
+        for choice in choices:
+            selected = next(v for v in choice["views"] if v["selected"])
+            unavailable = {issue["source_url"] for issue in choice["unavailable"]}
+            for view in choice["views"]:
+                if view["selected"] or view["source_url"] in unavailable:
+                    continue
+                key = choice["vendor"], view["source_url"], view["source_sha256"]
+                contexts[key] = dict(
+                    state="retained_unselected_representation",
+                    source_url=view["source_url"],
+                    source_sha256=view["source_sha256"],
+                    selected_source_url=selected["source_url"],
+                    selected_source_sha256=selected["source_sha256"],
+                )
+    return contexts
+
+
+def report(
+    records: list[dict], scopes: list[dict], *, retained_advisories=(), source_selections=()
+) -> dict:
     result = extraction_validation.validation_report(
         records, review=definition(), scopes=scopes, retained_advisories=retained_advisories
     )
+    contexts = _alternate_contexts(
+        source_selections, records + [w["record"] for w in retained_advisories]
+    )
+    for case in result["cases"]:
+        key = case["vendor"], case["source_url"], case["source_sha256"]
+        if case["outcome"] == "source_missing" and key in contexts:
+            case["source_context"] = contexts[key]
     result["study"] = "campus-branch-switching"
     result["vendor_results"] = []
     for vendor in VENDORS:
@@ -95,5 +132,10 @@ def rebuild(data):
         and re.fullmatch(r"[a-f0-9]{64}", s["scope_sha256"])
     ]
     data["switching_reviewed_source_scopes"] = scopes
-    data["switching_validation"] = report(records, scopes, retained_advisories=retained)
+    data["switching_validation"] = report(
+        records,
+        scopes,
+        retained_advisories=retained,
+        source_selections=data.get("source_audit", {}).get("source_selections", ()),
+    )
     data["switching_review_packet"] = packet(union)

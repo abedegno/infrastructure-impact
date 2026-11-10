@@ -1,0 +1,783 @@
+{
+  "schema_version": 1,
+  "kind": "dated_research_receipt_not_an_api_contract",
+  "publication": {
+    "id": "6d1e2458972f428ebe023e5deaa4a993",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-10T02:41:08.074204+00:00",
+  "input_provenance": {
+    "index": {
+      "url": "https://abedegno.github.io/infrastructure-impact/data/index.json",
+      "bytes": 876344,
+      "sha256": "d4aff25c24ff9735d1ac92d0399be19a235c9becf9f6ccac7b7448b44d60d0ee"
+    },
+    "bootstrap": {
+      "path": "data/1528f3b91614919193733c9ffae75da10c2ff74f5333575cc670c829776113c0.json",
+      "sha256": "1528f3b91614919193733c9ffae75da10c2ff74f5333575cc670c829776113c0",
+      "bytes": 4499440
+    },
+    "catalogue": {
+      "path": "publication-v2.json",
+      "bytes": 317835,
+      "sha256": "a5b7722ddb53aaeb69b0a1828f61086a1ba7d2a83097dc7730397cc8e6cfb429"
+    },
+    "overview": {
+      "path": "data/v2/f63fd2482a2117dae2f3ec4c499f2012eddf71b678139358d988cb5eebda497b.json",
+      "sha256": "f63fd2482a2117dae2f3ec4c499f2012eddf71b678139358d988cb5eebda497b",
+      "bytes": 2635985
+    },
+    "snapshot_archive": {
+      "path": "snapshot-v2.json.gz",
+      "bytes": 6645730,
+      "sha256": "fde3f1b114ff8d1eeaa51f0d9d079529e63070d06e1bb7593f6ee2e4ca53d669"
+    },
+    "snapshot_expanded": {
+      "path": "snapshot-v2.json",
+      "bytes": 60328058,
+      "sha256": "47b3f3276468c3ca34d64ebf794f35548152d0a3416cc23aa03ec5b471860563"
+    }
+  },
+  "observations": [
+    {
+      "vendor": "cisco",
+      "affected_advisories": 170,
+      "affected_cves": 199,
+      "remediation_publications": 159,
+      "kev_listed": 4,
+      "cvss_rated_cves": 198,
+      "cvss_missing_cves": 1,
+      "expected_advisories": null,
+      "coverage_state": "partial",
+      "period_start": "2021-01-01",
+      "period_end": "2026-11-10"
+    },
+    {
+      "vendor": "aruba",
+      "affected_advisories": 16,
+      "affected_cves": 104,
+      "remediation_publications": 2,
+      "kev_listed": 0,
+      "cvss_rated_cves": 93,
+      "cvss_missing_cves": 11,
+      "expected_advisories": null,
+      "coverage_state": "partial",
+      "period_start": "2021-01-01",
+      "period_end": "2026-11-10"
+    },
+    {
+      "vendor": "arista",
+      "affected_advisories": 53,
+      "affected_cves": 68,
+      "remediation_publications": 4,
+      "kev_listed": 0,
+      "cvss_rated_cves": 55,
+      "cvss_missing_cves": 13,
+      "expected_advisories": null,
+      "coverage_state": "partial",
+      "period_start": "2021-01-01",
+      "period_end": "2026-11-10"
+    }
+  ],
+  "observed_affected_advisories_by_year": [
+    {
+      "vendor": "cisco",
+      "advisory_publication_year": 2021,
+      "observed_affected_advisories": 50,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_publication_year": 2022,
+      "observed_affected_advisories": 24,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_publication_year": 2023,
+      "observed_affected_advisories": 19,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_publication_year": 2024,
+      "observed_affected_advisories": 26,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_publication_year": 2025,
+      "observed_affected_advisories": 33,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "cisco",
+      "advisory_publication_year": 2026,
+      "observed_affected_advisories": 18,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "aruba",
+      "advisory_publication_year": 2021,
+      "observed_affected_advisories": 0,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "aruba",
+      "advisory_publication_year": 2022,
+      "observed_affected_advisories": 4,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "aruba",
+      "advisory_publication_year": 2023,
+      "observed_affected_advisories": 3,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "aruba",
+      "advisory_publication_year": 2024,
+      "observed_affected_advisories": 3,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "aruba",
+      "advisory_publication_year": 2025,
+      "observed_affected_advisories": 3,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "aruba",
+      "advisory_publication_year": 2026,
+      "observed_affected_advisories": 3,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "arista",
+      "advisory_publication_year": 2021,
+      "observed_affected_advisories": 1,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "arista",
+      "advisory_publication_year": 2022,
+      "observed_affected_advisories": 6,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "arista",
+      "advisory_publication_year": 2023,
+      "observed_affected_advisories": 3,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "arista",
+      "advisory_publication_year": 2024,
+      "observed_affected_advisories": 5,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "arista",
+      "advisory_publication_year": 2025,
+      "observed_affected_advisories": 13,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    },
+    {
+      "vendor": "arista",
+      "advisory_publication_year": 2026,
+      "observed_affected_advisories": 25,
+      "expected_affected_advisories": null,
+      "coverage_completeness": "not_established"
+    }
+  ],
+  "validation": {
+    "benchmark": {
+      "total": 47,
+      "outcomes": {
+        "pass": 44,
+        "source_missing": 3
+      },
+      "independent_human_review_completed": false
+    },
+    "extraction_validation": {
+      "total": 25,
+      "outcomes": {
+        "pass": 13,
+        "reviewed_scope_match_source_changed": 7,
+        "source_missing": 3,
+        "source_revision_unreviewed": 2
+      },
+      "independent_human_review_completed": false
+    },
+    "switching_validation": {
+      "total": 16,
+      "outcomes": {
+        "pass": 7,
+        "source_missing": 3,
+        "reviewed_scope_match_source_changed": 6
+      },
+      "independent_human_review_completed": false
+    }
+  },
+  "local_reporting_replay": {
+    "outcomes_unchanged": true,
+    "retained_unselected_contexts": [
+      {
+        "id": "switching-cisco-2",
+        "state": "retained_unselected_representation",
+        "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+        "source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+        "selected_source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+        "selected_source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0"
+      },
+      {
+        "id": "switching-cisco-3",
+        "state": "retained_unselected_representation",
+        "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+        "source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+        "selected_source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+        "selected_source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0"
+      },
+      {
+        "id": "switching-cisco-4",
+        "state": "retained_unselected_representation",
+        "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+        "source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+        "selected_source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+        "selected_source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0"
+      }
+    ]
+  },
+  "source_failures": {
+    "last_run": {
+      "id": 74,
+      "started_at": "2026-11-10T02:37:47.196829+00:00",
+      "finished_at": "2026-11-10T02:41:05.433552+00:00",
+      "outcome": "partial",
+      "imported": 52,
+      "failures": 13,
+      "details": "Collection finished; source gaps remain visible. Data publication is distinct from code deployment."
+    },
+    "latest_run_categories": [
+      {
+        "vendor": "arista",
+        "count": 8,
+        "category": "pre_2021_retained_capture_normalization"
+      },
+      {
+        "vendor": "checkpoint",
+        "count": 4,
+        "category": "access_verification_required"
+      },
+      {
+        "vendor": "fortinet",
+        "count": 1,
+        "category": "publisher_scope_unavailable"
+      }
+    ],
+    "retained_error_count": 70,
+    "retained_errors": [
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_103.json",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-07T08:34:48.692160+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1008-security-advisory-0006",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:41.836824+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/10134-security-advisory-46",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-02T21:56:49.775056+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1015-security-advisory-7",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.277887+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/10292-security-advisory-47",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-02T21:56:49.329833+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1047-security-advisory-8",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:41.762692+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1053-security-advisory-9",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.232126+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/10702-security-advisory-48",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-02T21:56:48.897920+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/11195-security-advisory-49",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-02T21:56:48.513119+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1128-security-advisory-10",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.184990+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1144-security-advisory-11",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.139684+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1174-security-advisory-12",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.096036+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/11759-security-advisory-53",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:42.409626+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1180-security-advisory-13",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.050028+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1188-security-advisory-14",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:46.002194+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1212-security-advisory-0016",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T23:08:45.958688+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1221-security-advisory-15",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.931240+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1255-security-advisory-17",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.860490+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1260-security-advisory-18",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.780847+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1332-security-advisory-19",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.627177+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1334-security-advisory-20",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.551087+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1354-security-advisory-21",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.480780+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1356-security-advisory-22",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.406803+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1461-security-advisory-23",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:07.292891+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1749-security-advisory-24",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:16.909111+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1752-security-advisory-25",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:16.157616+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1753-security-advisory-0026",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:15.343496+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/2116-security-advisory-27",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:14.868339+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/229-security-advisory-0001",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:42.297775+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/3327-security-advisory-0028",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:14.084876+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/3328-security-advisory-0029",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:13.369330+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/3577-security-advisory-30",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-04T20:03:12.549496+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/4025-security-advisory-31",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:43.563560+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/4347-security-advisory-32",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:43.217799+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/4423-security-advisory-33",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:42.763207+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/4577-security-advisory-34",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:42.372567+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/491-security-advisory-0002",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:42.189754+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/5432-security-advisory-35",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:41.970114+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/5721-security-advisory-36",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:41.565041+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/5782-security-advisory-37",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:41.209276+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/6072-security-advisory-38",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T19:49:40.840707+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/635-security-advisory-0003",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:42.083946+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/6401-security-advisory-39",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T10:03:09.966684+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/7098-security-advisory-40",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T10:03:09.176070+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/758-security-advisory-0004",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:41.976237+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/8066-security-advisory-41",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T10:03:08.373276+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/8321-security-advisory-42",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T10:03:07.848723+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/8762-security-advisory-43",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T10:03:06.669221+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/9001-security-advisory-44",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-03T10:03:05.811607+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/9002-security-advisory-45",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-02T21:56:50.200472+00:00"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/941-security-advisory-0005",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-10T02:38:41.905605+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2019-0011",
+        "error_code": "unsupported_or_invalid_document",
+        "checked_at": "2026-11-09T22:36:08.303910+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2020-0009",
+        "error_code": "http_error",
+        "checked_at": "2026-11-01T18:07:22.283195+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2022-0001",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T11:23:04.804523+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2022-0002",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T11:23:03.667830+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2022-0003",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T11:18:44.766884+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2022-0004",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T11:18:43.375668+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2022-0005",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T11:18:41.978106+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2023-0002",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T09:33:22.267805+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2023-0004",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T09:24:00.170715+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2024-0002",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T05:51:35.412254+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2024-0005",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T05:23:27.753634+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2024-0006",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T04:59:26.925193+00:00"
+      },
+      {
+        "vendor": "paloalto",
+        "source_url": "https://security.paloaltonetworks.com/PAN-SA-2025-0003",
+        "error_code": "http_error",
+        "checked_at": "2026-10-27T01:45:27.433539+00:00"
+      },
+      {
+        "vendor": "checkpoint",
+        "source_url": "https://support.checkpoint.com/results/download/134275",
+        "error_code": "access_verification_required",
+        "checked_at": "2026-11-10T02:38:37.126605+00:00"
+      },
+      {
+        "vendor": "checkpoint",
+        "source_url": "https://support.checkpoint.com/results/download/134302",
+        "error_code": "access_verification_required",
+        "checked_at": "2026-11-10T02:38:37.166745+00:00"
+      },
+      {
+        "vendor": "checkpoint",
+        "source_url": "https://support.checkpoint.com/results/sk/sk181833",
+        "error_code": "access_verification_required",
+        "checked_at": "2026-11-10T02:38:00.932109+00:00"
+      },
+      {
+        "vendor": "checkpoint",
+        "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+        "error_code": "access_verification_required",
+        "checked_at": "2026-11-10T02:38:00.913006+00:00"
+      },
+      {
+        "vendor": "fortinet",
+        "source_url": "https://filestore.fortinet.com/fortiguard/psirt/csaf_multiple-node-js-cves_fg-ir-26-187.json",
+        "error_code": "publisher_scope_unavailable",
+        "checked_at": "2026-11-10T02:38:33.503704+00:00"
+      },
+      {
+        "vendor": "fortinet",
+        "source_url": "https://www.fortiguard.com/psirt?page=2&date=&severity=&product=FortiSwitchAXFixed,FortiAnalyzer-BigData,FortiManager%20Cloud,FortiAP-S,FortiSwitch,FortiExtender,FortiOS,FortiAP,FortiAnalyzer%20Cloud,FortiOS-6K7K,FortiSandbox,FortiSwitchManager,FortiSandbox%20Cloud,FortiAP-U,FortiManager,FortiAP-W2,FortiAnalyzer,FortiAP-C,FortiSandbox%20PaaS&component=&discovered=&attack_type=&version=",
+        "error_code": "rate_limited",
+        "checked_at": "2026-11-09T22:36:11.277165+00:00"
+      }
+    ]
+  },
+  "review_packet": {
+    "path": "review-packet.json",
+    "packet_sha256": "8c845a50263c3d885d7221e9138a53d2d236c4a36ea40bcbab79e52adb4e3aa9",
+    "documents": 9,
+    "questions": 16,
+    "independent_human_review_completed": false
+  },
+  "limitations": [
+    "Counts describe retained OS-family disclosure evidence, not comparable deployed switches or security quality.",
+    "Year is original advisory publication year, not first disclosure of each CVE or software release date.",
+    "Expected totals and coverage percentages remain unknown in every vendor/year cell.",
+    "CVSS-rated count is a union across non-Unknown source/provider/version facets, not a sum of facet counts or a risk score.",
+    "Remediation publication counts are incomplete and do not count customer upgrades.",
+    "Last-run failures and all retained source errors are different inventories.",
+    "Local source_context annotations are not live-site outcomes or extraction passes."
+  ],
+  "fresh_source_probes": [
+    {
+      "url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+      "probe_time": "2026-11-10T07:39:24.956063+00:00",
+      "http_status": 200,
+      "final_url": "https://docs.fortinet.com/document/fortiproxy/7.2.8/release-notes/534553/resolved-issues",
+      "content_type": "text/html;charset=UTF-8",
+      "bytes": 263011,
+      "sha256": "2d468348e3cf07286e45501d52a30f2e9923b1d874b45ff546bf3c083fb1edb4"
+    },
+    {
+      "url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+      "probe_time": "2026-11-10T07:39:25.628836+00:00",
+      "http_status": 200,
+      "final_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+      "content_type": "application/download;charset=UTF-8",
+      "bytes": 45925,
+      "sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96"
+    },
+    {
+      "url": "https://support.checkpoint.com/results/sk/sk181833",
+      "probe_time": "2026-11-10T07:39:26.396588+00:00",
+      "http_status": 200,
+      "final_url": "https://support.checkpoint.com/results/sk/sk181833",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 24377,
+      "sha256": "86459183829ccc8209593eebfa7245663a87b57cff288bfc2b3969f477e0d0bd"
+    },
+    {
+      "url": "https://support.checkpoint.com/results/sk/sk182459",
+      "probe_time": "2026-11-10T07:39:26.689830+00:00",
+      "http_status": 200,
+      "final_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 21853,
+      "sha256": "d7ec46f022b4d29a763ddd8ff72b5641d99e6d89d81bc2819cad177252b40c0f"
+    },
+    {
+      "url": "https://www.cisco.com/c/en/us/support/ios-nx-os-software/ios-xe-dublin-17-12-1/model.html",
+      "capture_completed_at": "2026-11-10T07:49:52.053188+00:00",
+      "http_status": 200,
+      "bytes": 120943,
+      "sha256": "2f6c9f50a4dededb423e5ba80a4873e194310499d7911b7b34f22d8aded79ba6",
+      "literal_release_date": "28-JUL-2023",
+      "reported_software_release_date": "2023-07-28",
+      "hosted_source_enabled": false
+    }
+  ]
+}

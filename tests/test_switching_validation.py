@@ -159,8 +159,22 @@ def test_switching_validation_cli_uses_separate_packet(monkeypatch, tmp_path, ca
     packet = json.loads(capsys.readouterr().out)
     assert packet["study"] == "campus-branch-switching"
     assert "switching-validation.json" in packet["instructions"]
+    from infrastructure_impact.storage import source_selections
+
+    selected_record, choice = alternate_inputs(monkeypatch)
+    original_report = validation.report
+    captured = []
+
+    def reporting(records, scopes, **kwargs):
+        captured.append(kwargs["source_selections"])
+        return original_report([selected_record], scopes, **kwargs)
+
+    monkeypatch.setattr(source_selections, "latest", lambda db: [choice])
+    monkeypatch.setattr(validation, "report", reporting)
     main(["switching-validation"])
-    assert json.loads(capsys.readouterr().out)["total"] == 16
+    result = json.loads(capsys.readouterr().out)
+    assert captured == [[choice]]
+    assert result["cases"][0]["source_context"]["state"] == ("retained_unselected_representation")
 
 
 def test_excluded_changed_bytes_keep_reviewed_scope_outcome_and_provenance(monkeypatch):
@@ -236,3 +250,100 @@ def test_excluded_pinned_source_requires_actual_nondraft_claim_support(monkeypat
         )
         assert report["cases"][0]["outcome"] == "source_missing", mismatch
         assert "decision_ids" not in report["cases"][0], mismatch
+
+
+def alternate_inputs(monkeypatch):
+    import copy
+
+    review, records, _ = synthetic_review()
+    selected = copy.deepcopy(records[0])
+    selected["source_url"] += "/selected"
+    selected["sha256"] = "a" * 64
+    monkeypatch.setattr(validation, "definition", lambda: copy.deepcopy(review))
+
+    def view(url, digest, selected):
+        return dict(
+            source_url=url,
+            source_sha256=digest,
+            selected=selected,
+            source_observed_at="2026-11-10T00:00:00Z",
+            source_format="synthetic",
+            adapter_version="synthetic-v1",
+            normalized_statements=1,
+            private_note="PRIVATE_SENTINEL",
+        )
+
+    choice = dict(
+        vendor="cisco",
+        requested_url=selected["source_url"],
+        selected_at="2026-11-10T00:00:00Z",
+        reason="Synthetic",
+        meaning="Synthetic",
+        views=[
+            view(selected["source_url"], selected["sha256"], True),
+            view(records[0]["source_url"], records[0]["sha256"], False),
+        ],
+        unavailable=[],
+        private_note="PRIVATE_SENTINEL",
+    )
+    return selected, choice
+
+
+def test_retained_alternate_context_is_metadata_only(monkeypatch):
+    import copy
+
+    record, choice = alternate_inputs(monkeypatch)
+    baseline = validation.report([record], [])
+    result = validation.report([record], [], source_selections=[choice])
+    context = result["cases"][0].pop("source_context")
+    assert context == dict(
+        state="retained_unselected_representation",
+        source_url=choice["views"][1]["source_url"],
+        source_sha256=choice["views"][1]["source_sha256"],
+        selected_source_url=record["source_url"],
+        selected_source_sha256=record["sha256"],
+    )
+    assert result == baseline
+    assert result["cases"][0]["outcome"] == "source_missing"
+    assert result["independent_human_review_completed"] is False
+    assert "PRIVATE_SENTINEL" not in str(context)
+    assert "source_context" not in str(validation.packet([record]))
+    for mismatch in ("hash", "url", "vendor", "unavailable", "anchor", "selected"):
+        changed = copy.deepcopy(choice)
+        if mismatch == "hash":
+            changed["views"][1]["source_sha256"] = "b" * 64
+        elif mismatch == "url":
+            changed["views"][1]["source_url"] += "/wrong"
+        elif mismatch == "vendor":
+            changed["vendor"] = "arista"
+        elif mismatch == "unavailable":
+            changed["unavailable"] = [
+                dict(source_url=changed["views"][1]["source_url"], error_code="fetch_failed")
+            ]
+        elif mismatch == "anchor":
+            changed["views"][0]["source_sha256"] = "c" * 64
+        else:
+            changed["views"][1]["selected"] = True
+        assert validation.report([record], [], source_selections=[changed]) == baseline, mismatch
+
+
+def test_malformed_optional_selection_fails_closed(monkeypatch):
+    import copy
+
+    record, choice = alternate_inputs(monkeypatch)
+    baseline = validation.report([record], [])
+    malformed = [
+        None,
+        3,
+        {},
+        dict(choice, views=None),
+        dict(choice, unavailable=None),
+        dict(choice, views=[None]),
+        dict(choice, reason=3),
+    ]
+    missing = copy.deepcopy(choice)
+    del missing["views"][1]["adapter_version"]
+    malformed.append(missing)
+    for value in malformed:
+        assert validation.report([record], [], source_selections=[value]) == baseline, value
+    assert validation.report([record], [], source_selections=None) == baseline

@@ -1,0 +1,321 @@
+{
+  "schema_version": 1,
+  "review_status": "awaiting_independent_reviewer",
+  "instructions": "Read the official source independently and record its exact SHA-256. Complete each adjudication before consulting switching-validation.json. Record reviewer identity/type, date, conflicts of interest and disagreements in a reviewed contribution; this packet never changes assessments or marks review complete.",
+  "documents": [
+    {
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+      "reviewed_source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0",
+      "current_source_fingerprints": [
+        "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0"
+      ],
+      "questions": [
+        {
+          "id": "switching-cisco-1",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "div#vulnerableproducts / tr[33] / IOS XE Software with NETCONF enabled",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json",
+      "reviewed_source_sha256": "6d4f25908f5740ae1144d036930019bc8fbb0a13ead92d4322d1465cc393bb96",
+      "current_source_fingerprints": [],
+      "questions": [
+        {
+          "id": "switching-cisco-2",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-238692",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-cisco-3",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-271450",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-cisco-4",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-292518",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z/csaf/cisco-sa-dhcp-dos-T3CXPO9z.json",
+      "reviewed_source_sha256": "12b27df5cfedde1fc0c3f1359c26304e61a5ad8683ab594d5b1a441815fb09d7",
+      "current_source_fingerprints": [
+        "12b27df5cfedde1fc0c3f1359c26304e61a5ad8683ab594d5b1a441815fb09d7"
+      ],
+      "questions": [
+        {
+          "id": "switching-cisco-5",
+          "cve_id": "CVE-2024-20259",
+          "source_locator": "/product_tree/branches/0/branches/0/branches/0/branches/0; /vulnerabilities/0/product_status/known_affected",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-017.json",
+      "reviewed_source_sha256": "eda14edea2bc27237302800cd27ec4ada28213e406502c5714d6c658479e93cb",
+      "current_source_fingerprints": [
+        "eda14edea2bc27237302800cd27ec4ada28213e406502c5714d6c658479e93cb"
+      ],
+      "questions": [
+        {
+          "id": "switching-aruba-6",
+          "cve_id": "CVE-2022-3602",
+          "source_locator": "/vulnerabilities/0/product_status/known_not_affected; /product_tree/branches/0/branches/5",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-aruba-7",
+          "cve_id": "CVE-2022-3786",
+          "source_locator": "/vulnerabilities/1/product_status/known_not_affected; /product_tree/branches/0/branches/5",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "reviewed_source_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "current_source_fingerprints": [
+        "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138"
+      ],
+      "questions": [
+        {
+          "id": "switching-aruba-8",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree/branches/0/branches/0/branches/4",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-aruba-9",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "/vulnerabilities/0/product_status/fixed; /product_tree/branches/0/branches/0/branches/1",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-aruba-10",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "/vulnerabilities/0/product_status/known_not_affected; /product_tree/branches/0/branches/0/branches/8",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19905-security-advisory-0101",
+      "reviewed_source_sha256": "ce7c2b84e1a342131e7c28d3cf21820195f98c938a8e778e54acc8659ec99d0c",
+      "current_source_fingerprints": [
+        "2ee9928a429a4af67dead30b433e2ca3ea444182e95eb4187f37e5dbe64b3f78"
+      ],
+      "questions": [
+        {
+          "id": "switching-arista-11",
+          "cve_id": "CVE-2024-3596",
+          "source_locator": "Affected Software and Platforms / EOS Products; Required Configuration for Exploitation",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19904-security-advisory-0100",
+      "reviewed_source_sha256": "12ac03213f9550ac59e704e5811335f89e253e753de288a9f7dfadbff11e9c98",
+      "current_source_fingerprints": [
+        "e9d41a83d4c4b0aca92b1f41cf00c101d7761f202618156eba3bf68f2464a887"
+      ],
+      "questions": [
+        {
+          "id": "switching-arista-12",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "Affected Software / CVE-2024-6387 / EOS release versions",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-arista-13",
+          "cve_id": "CVE-2024-6409",
+          "source_locator": "Affected Software / CVE-2024-6409 / EOS release versions",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        },
+        {
+          "id": "switching-arista-14",
+          "cve_id": "CVE-2024-6387",
+          "source_locator": "Resolution / CVE-2024-6387 / Arista EOS-based products",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19222-security-advisory-0095",
+      "reviewed_source_sha256": "8eb5ef89750bc621bf5fcc4f4145a91051be9630afb8bdc8b42227ea34097a8f",
+      "current_source_fingerprints": [
+        "11df9282bbe238a0481224ebd06b31311baa553faf0661963c5e5ff7c6df96c4"
+      ],
+      "questions": [
+        {
+          "id": "switching-arista-15",
+          "cve_id": "CVE-2024-3094",
+          "source_locator": "Vulnerability Assessment / No Arista products are affected.",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/11996-security-advisory-56",
+      "reviewed_source_sha256": "922f6007be550716146183ee08809107342a8ffbd22486b4771b13cca47e5309",
+      "current_source_fingerprints": [
+        "677ef5582f043d2e35797d2c074667c6bdfe207009937b45db9b37d9bd323c63"
+      ],
+      "questions": [
+        {
+          "id": "switching-arista-16",
+          "cve_id": "CVE-2020-15898",
+          "source_locator": "Affected Software / explicitly unaffected EOS platforms; revision table 1.0",
+          "adjudication": {
+            "product_scope": null,
+            "status": null,
+            "versions": null,
+            "configuration_qualifiers": null,
+            "remediation": null,
+            "date_basis": null,
+            "rationale": null
+          }
+        }
+      ]
+    }
+  ],
+  "packet_sha256": "8c845a50263c3d885d7221e9138a53d2d236c4a36ea40bcbab79e52adb4e3aa9",
+  "study": "campus-branch-switching"
+}

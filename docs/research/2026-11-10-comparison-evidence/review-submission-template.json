@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "packet_sha256": "8c845a50263c3d885d7221e9138a53d2d236c4a36ea40bcbab79e52adb4e3aa9",
+  "reviewer": {
+    "kind": null,
+    "display_name": null,
+    "reviewed_at": null,
+    "independence_statement": null
+  },
+  "adjudications": [
+    {
+      "id": "switching-cisco-1",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-cisco-2",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-cisco-3",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-cisco-4",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-cisco-5",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-aruba-6",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-aruba-7",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-aruba-8",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-aruba-9",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-aruba-10",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-arista-11",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-arista-12",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-arista-13",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-arista-14",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-arista-15",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    },
+    {
+      "id": "switching-arista-16",
+      "source_sha256": null,
+      "product_scope": null,
+      "status": null,
+      "versions": null,
+      "configuration_qualifiers": null,
+      "remediation": null,
+      "date_basis": null,
+      "rationale": null
+    }
+  ]
+}
