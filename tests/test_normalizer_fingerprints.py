@@ -29,6 +29,8 @@ def versions():
     "filename,affected",
     [
         ("adapters/juniper_apstra.py", {"juniper"}),
+        ("resources/reviewed-remediation-bindings.json", {"aruba", "arista"}),
+        ("schemas/reviewed-remediation-bindings-v1.json", {"aruba", "arista"}),
         ("plugins/juniper.py", {"juniper"}),
         ("adapters/fortinet_ranges.py", {"fortinet"}),
         ("adapters/f5_pdf.py", {"f5"}),

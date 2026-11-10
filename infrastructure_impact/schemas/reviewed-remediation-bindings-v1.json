@@ -1,0 +1,361 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "enum": ["aruba", "arista"]
+          },
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "family": {
+            "enum": ["aruba-aoscx", "arista-eos"]
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 2048
+          },
+          "source_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": ["csaf", "arista_marker_list"]
+          },
+          "product_parent": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "category": {
+                    "const": "product_name"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  }
+                },
+                "required": ["category", "name", "locator"]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected_cve_ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "uniqueItems": true
+          },
+          "resolution_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bindings": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "affected_product": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "fixed_product": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "affected_locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "fixed_locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "remediation_locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "cve_id": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                },
+                "affected_product_id": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fixed_product_id": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "affected_versions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "uniqueItems": true
+                },
+                "fixed_versions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "uniqueItems": true
+                },
+                "remediation_details_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "availability_date": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "availability_proof_literals": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "uniqueItems": true
+                },
+                "statement": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "clause_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "required": [
+                "affected_product",
+                "fixed_product",
+                "affected_locator",
+                "fixed_locator",
+                "remediation_locator",
+                "cve_id",
+                "affected_product_id",
+                "fixed_product_id",
+                "affected_versions",
+                "fixed_versions",
+                "remediation_details_sha256",
+                "availability_date",
+                "availability_proof_literals"
+              ]
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "vendor",
+          "advisory_id",
+          "family",
+          "source_url",
+          "source_sha256",
+          "kind",
+          "product_parent",
+          "source_format",
+          "expected_cve_ids",
+          "resolution_sha256",
+          "bindings"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "csaf"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "product_parent": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "category": {
+                      "const": "product_name"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    },
+                    "locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": ["category", "name", "locator"]
+                },
+                "source_format": {
+                  "type": "null"
+                },
+                "resolution_sha256": {
+                  "type": "null"
+                },
+                "bindings": {
+                  "items": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": ["statement"]
+                        },
+                        {
+                          "required": ["clause_sha256"]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "arista_marker_list"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source_sha256": {
+                  "type": "null"
+                },
+                "product_parent": {
+                  "type": "null"
+                },
+                "source_format": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                },
+                "resolution_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "bindings": {
+                  "items": {
+                    "required": ["statement", "clause_sha256"]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "required": ["schema_version", "sources"],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:reviewed-remediation-bindings:1"
+}

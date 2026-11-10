@@ -391,7 +391,8 @@
             "fixed_product": {
               "enum": [
                 "Arista EOS",
-                "AOS-CX"
+                "AOS-CX",
+                "HPE Networking AOS-CX"
               ]
             },
             "fixed_source": {
@@ -408,7 +409,7 @@
             "cve_id",
             "source"
           ],
-          "description": "Explicit reviewed linkage: same source row, the reviewed Arista 0100, 0128, 0201 and 0075 EOS sections, or the three pinned HPESBNW04669 AOS-CX product sections. Never establishes a model or software release availability date.",
+          "description": "Explicit reviewed linkage: same source row, the reviewed Arista 0100, 0128, 0201 and 0075 EOS sections, the three pinned HPESBNW04669 AOS-CX product sections, or exact packaged reviewed source bindings. Never establishes a model or software release availability date.",
           "allOf": [
             {
               "if": {
@@ -450,7 +451,7 @@
               "if": {
                 "properties": {
                   "fixed_product": {
-                    "const": "AOS-CX"
+                    "enum": ["AOS-CX", "HPE Networking AOS-CX"]
                   }
                 },
                 "required": [

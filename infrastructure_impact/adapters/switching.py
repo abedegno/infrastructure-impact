@@ -12,6 +12,7 @@ import re
 from importlib.resources import files
 
 from .common import HTML, availability, iso_date
+from .reviewed_fixes import apply_csaf
 from .standards import csaf_products
 
 FAMILIES = {
@@ -522,11 +523,18 @@ def _csaf(raw, url, vendor, document, digest):
                 )
             claims.append(claim)
     _aruba_fix_links(data, claims)
+    reviewed_issues = apply_csaf(
+        data,
+        claims,
+        url,
+        digest,
+        tracking.get("current_release_date") or tracking.get("initial_release_date"),
+    )
     return dict(
         schema_version=1,
         claims=claims,
         bundles=[],
-        issues=[] if claims else ["product_scope_unresolved"],
+        issues=reviewed_issues if claims else ["product_scope_unresolved"],
     )
 
 
