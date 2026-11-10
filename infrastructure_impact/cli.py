@@ -206,6 +206,7 @@ def main(argv=None):
         from .application import switching_validation
         from .application.source_scope import retained_scopes
         from .storage.repository import latest
+        from .storage.source_selections import latest as source_selections
 
         with closing(connect(read_only=True)) as db:
             records = latest(db)
@@ -220,6 +221,7 @@ def main(argv=None):
                     current["records"],
                     retained_scopes(db, records, switching_validation.definition()),
                     retained_advisories=current["retained_advisories"],
+                    source_selections=source_selections(db),
                 )
             )
         print(json.dumps(result, indent=2))

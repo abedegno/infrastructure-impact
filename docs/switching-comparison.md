@@ -520,3 +520,19 @@ contain compact JSON. `totals_basis=repeated_totals_nonadditive` marks every row
 never sum across severity facets or release references. Cells use the existing
 spreadsheet-control escaping policy, and v2 exports share the selected-response
 byte ceiling. JSON uses the versioned envelope schema bundled under `schemas/`.
+
+A switching case with `outcome: source_missing` may also include `source_context`
+with `state: retained_unselected_representation`. This metadata-only annotation
+means the exact reviewed vendor, source URL and SHA-256 match a retained unselected
+view in validated public source-selection metadata. `source_url` and
+`source_sha256` identify that view; `selected_source_url` and
+`selected_source_sha256` bind it to a selected capture in the published record
+inventory, including retained excluded advisories. An unavailable alternate or an
+unbound selected capture does not qualify. Malformed optional selection metadata
+is ignored for this annotation.
+
+This does not replay alternate bytes, validate extraction, or change the case
+outcome, counters, selected assessments or pending independent review. The CLI
+uses existing stored selections, and publication rebuilds context from current
+inputs rather than trusting supplied annotations. Omitted selections preserve the
+previous report shape. Blind review packets do not include this context.

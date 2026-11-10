@@ -161,3 +161,25 @@ def test_projection_keeps_exact_structural_and_missing_alternate_distinct(monkey
     assert (
         public_projection(data)["switching_validation"]["cases"][0]["outcome"] == "source_missing"
     )
+
+
+def test_rebuild_recomputes_alternate_context_and_keeps_packet_blind(monkeypatch):
+    from test_switching_validation import alternate_inputs
+
+    from infrastructure_impact.application import switching_validation
+
+    record, choice = alternate_inputs(monkeypatch)
+    data = dict(
+        records=[record],
+        source_audit=dict(source_selections=[choice]),
+        switching_validation=dict(cases=[dict(source_context={"private": "secret"})]),
+    )
+    switching_validation.rebuild(data)
+    assert data["switching_validation"]["cases"][0]["source_context"]["state"] == (
+        "retained_unselected_representation"
+    )
+    assert "source_context" not in str(data["switching_review_packet"])
+    assert "PRIVATE_SENTINEL" not in str(data["switching_validation"])
+    data["source_audit"]["source_selections"] = []
+    switching_validation.rebuild(data)
+    assert "source_context" not in str(data["switching_validation"])
