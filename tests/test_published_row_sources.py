@@ -397,3 +397,94 @@ def test_public_writer_rejects_caller_supplied_source_index_authority(native_pro
     projected["switching_row_sources"] = {"validated": True, "rows": [], "sources_count": 0}
     with pytest.raises(ValueError, match="writer-owned"):
         publication_v2.write_bundle(tmp_path, projected)
+
+
+def force_summary_diagnostic_fallback(monkeypatch):
+    """Exercise the established compatibility validator without changing it."""
+    contracts = comparison.contracts
+    compiled = contracts._compiled_validators()
+
+    class DiagnosticFallback:
+        def is_valid(self, value):
+            return False
+
+    monkeypatch.setattr(
+        contracts,
+        "_compiled_validators",
+        lambda: {**compiled, "switching-summary-v1.json": DiagnosticFallback()},
+    )
+
+
+@pytest.mark.parametrize("compatibility", [False, True])
+def test_indexed_summary_validation_avoids_pairwise_source_comparisons(
+    rich_generation, monkeypatch, compatibility
+):
+    import jsonschema._utils as utils
+
+    from infrastructure_impact.exports import switching_csv
+
+    reader = PublicationReader(rich_generation)
+    native = json.loads(b"".join(reader.stream_root("switching-comparison.json")))
+    expected = comparison.summary(comparison.select_report(native, evaluated_at=AT))
+    assert len(expected["sources"]) > 1
+    if compatibility:
+        force_summary_diagnostic_fallback(monkeypatch)
+    source_comparisons = []
+    original = utils._mapping_equal
+    fields = set(comparison.contracts._SOURCE_FIELDS)
+
+    def mapping_equal(one, two):
+        if set(one) == fields and set(two) == fields:
+            source_comparisons.append(1)
+        return original(one, two)
+
+    monkeypatch.setattr(utils, "_mapping_equal", mapping_equal)
+    monkeypatch.setattr(reader, "iter_claims", lambda: pytest.fail("eligible path read claims"))
+    actual = reader.switching_selection({}, evaluated_at=AT)
+    assert actual == expected
+    assert switching_csv(actual) == switching_csv(expected)
+    assert len(source_comparisons) == 0, "indexed summary used pairwise Source mapping equality"
+
+
+@pytest.mark.parametrize("compatibility", [False, True])
+def test_indexed_summary_validation_rejects_authenticated_duplicate_sources(
+    rich_generation, tmp_path, monkeypatch, compatibility
+):
+    reader = PublicationReader(rich_generation)
+    projected = json.loads(b"".join(reader.stream_root("snapshot.json")))
+    report = json.loads(b"".join(reader.stream_root("switching-comparison.json")))
+    projected["switching_comparison"] = report
+    projected["switching_evidence"] = report["inputs"]["evidence"]
+    if "switching-release-history.json" in reader.catalog["roots"]:
+        projected["switching_release_history"] = json.loads(
+            b"".join(reader.stream_root("switching-release-history.json"))
+        )
+    membership = derive(report)
+    row = membership["rows"][0]
+    duplicate = report["sources"][row["source_ordinals"][0]]
+    row["source_ordinals"].append(membership["sources_count"])
+    membership["sources_count"] += 1
+    original = publication_v2.Writer.root
+
+    def root(self, name, value, **kwargs):
+        # A foreign publisher can serialize duplicate Source values into distinct,
+        # correctly hashed intervals. Keep all row/header/membership proofs intact
+        # so only the final complete summary contract rejects this artifact.
+        if name == "snapshot.json":
+            value = {
+                **value,
+                "switching_comparison": {
+                    **value["switching_comparison"],
+                    "sources": [*value["switching_comparison"]["sources"], duplicate],
+                },
+            }
+        return original(self, name, value, **kwargs)
+
+    monkeypatch.setattr(publication_v2.Writer, "root", root)
+    publication_v2._write_bundle(tmp_path, projected, membership)
+    if compatibility:
+        force_summary_diagnostic_fallback(monkeypatch)
+    foreign = PublicationReader(tmp_path)
+    monkeypatch.setattr(foreign, "iter_claims", lambda: pytest.fail("eligible path read claims"))
+    with pytest.raises(ValidationError, match="duplicate|non-unique"):
+        foreign.switching_selection({"vendor": "cisco"}, evaluated_at=AT)

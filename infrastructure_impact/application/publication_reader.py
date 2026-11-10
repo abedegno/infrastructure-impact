@@ -685,6 +685,7 @@ class PublicationReader(codec.CatalogReader):
     def _published_selection(self, overview, index, vendor, *, hydrate_only=False):
         from .publication_v2 import DEFERRED, validators
         from .switching_comparison import VENDORS
+        from .switching_evidence import _validate
         from .switching_row_sources import membership_digest
 
         quota = codec.Budget(self.limits["selected"])
@@ -775,7 +776,7 @@ class PublicationReader(codec.CatalogReader):
             "effective_cve_ids": sorted(cves),
         }
         result = base
-        validate(result, "switching-summary-v1.json")
+        _validate(result, "switching-summary-v1.json")
         codec.charge_value(result, codec.Budget(self.limits["selected"]))
         return result
 
