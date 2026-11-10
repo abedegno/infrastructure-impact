@@ -52,8 +52,8 @@ No new Arista fixed-list software or availability dates are supplied.
 
 ## Replay method and observed changes
 
-`task1-replay.py/results.json` and `task2-replay.py/results.json` in the external
-replay directory already validate the exact individual captures through Python
+`task1-replay.py` with `task1-replay-results.json`, and `task2-replay.py` with
+`task2-replay-results.json`, in the external replay directory already validate the exact individual captures through Python
 full/compiled, browser full/stream and native streaming validation. The combined
 `task3-replay.py` reuses those receipts, rechecks hashes and affected-field equality,
 then projects the combined inputs through release and customer delivery.
