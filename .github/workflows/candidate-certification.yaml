@@ -8,6 +8,11 @@ on:
         description: 'Reviewed source commit (40 lowercase hexadecimal characters)'
         required: true
         type: string
+      retained_only:
+        description: 'Offline preview of retained switching fixes; no target import or captures'
+        required: false
+        type: boolean
+        default: false
       previous_capture_run_id:
         description: 'Optional earlier certification run ID containing encrypted captures'
         required: false
@@ -24,10 +29,13 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           PREVIOUS_RUN_ID: ${{ inputs.previous_capture_run_id }}
+          RETAINED_ONLY: ${{ inputs.retained_only }}
         run: |
           set -euo pipefail
           [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || exit 1
           [[ -z "$PREVIOUS_RUN_ID" || "$PREVIOUS_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          [[ "${RETAINED_ONLY:-false}" == false || "${RETAINED_ONLY:-false}" == true ]] || exit 1
+          [[ "${RETAINED_ONLY:-false}" != true || -z "$PREVIOUS_RUN_ID" ]] || exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.source_commit }}
@@ -63,7 +71,7 @@ jobs:
             --restore-only "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
             > "$RUNNER_TEMP/restore-result.json" 2> "$RUNNER_TEMP/restore-stderr"
       - name: Download prior encrypted captures
-        if: ${{ inputs.previous_capture_run_id != '' }}
+        if: ${{ !inputs.retained_only && inputs.previous_capture_run_id != '' }}
         env:
           PREVIOUS_RUN_ID: ${{ inputs.previous_capture_run_id }}
           GH_TOKEN: ${{ github.token }}
@@ -74,7 +82,7 @@ jobs:
           gh run download "$PREVIOUS_RUN_ID" --repo "$GITHUB_REPOSITORY" \
             --name candidate-certification-captures --dir "$RUNNER_TEMP/previous-captures"
       - name: Authenticate prior captures
-        if: ${{ inputs.previous_capture_run_id != '' }}
+        if: ${{ !inputs.retained_only && inputs.previous_capture_run_id != '' }}
         working-directory: source
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
@@ -97,6 +105,7 @@ jobs:
               raise RuntimeError("Requested acquisition checkpoint is unavailable")
           PY
       - name: Preview full hosted baseline
+        if: ${{ !inputs.retained_only }}
         working-directory: source
         run: |
           set -euo pipefail
@@ -109,6 +118,7 @@ jobs:
             > "$RUNNER_TEMP/preview-stdout" 2> "$RUNNER_TEMP/preview-stderr"
       - name: Stage disposable full candidate
         id: stage
+        if: ${{ !inputs.retained_only }}
         working-directory: source
         run: |
           set -euo pipefail
@@ -122,9 +132,26 @@ jobs:
             --output "$RUNNER_TEMP/private-stage" \
             --base-path /infrastructure-impact/ --publication-format v2 \
             > "$RUNNER_TEMP/stage-result.json" 2> "$RUNNER_TEMP/stage-stderr"
+      - name: Preview retained switching fixes
+        id: retained
+        timeout-minutes: 40
+        if: ${{ inputs.retained_only }}
+        working-directory: source
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+        run: |
+          set -euo pipefail
+          umask 077
+          export IMPACT_SOURCES="$GITHUB_WORKSPACE/source/infrastructure_impact/resources/sources.json"
+          uv run --no-sync python ops/switching_fix_preview.py \
+            --database "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
+            --public "$RUNNER_TEMP/private-retained-public" \
+            --output "$RUNNER_TEMP/retained-preview-result.json" \
+            --source-commit "$SOURCE_COMMIT" \
+            > "$RUNNER_TEMP/retained-preview-stdout" 2> "$RUNNER_TEMP/retained-preview-stderr"
       - name: Checkpoint private captures
         id: checkpoint
-        if: ${{ always() && steps.stage.outcome != 'skipped' && steps.stage.outcome != '' }}
+        if: ${{ always() && !inputs.retained_only && steps.stage.outcome != 'skipped' && steps.stage.outcome != '' }}
         working-directory: source
         env:
           IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
@@ -156,6 +183,8 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           STAGE_OUTCOME: ${{ steps.stage.outcome }}
+          RETAINED_ONLY: ${{ inputs.retained_only }}
+          RETAINED_OUTCOME: ${{ steps.retained.outcome }}
           RESTORE_OUTCOME: ${{ steps.restore.outcome }}
         run: |
           set -euo pipefail
@@ -187,8 +216,25 @@ jobs:
                   elif "Encrypted public-runner state requires IMPACT_STATE_KEY" in text:
                       error = {"category": "missing_key"}
               summary["restore_error"] = error
+          retained = os.environ.get("RETAINED_ONLY") == "true"
+          if retained:
+              from ops.switching_fix_preview import receipt_bytes
+              summary["retained_step"] = os.environ.get("RETAINED_OUTCOME", "")
+              receipt = root / "retained-preview-result.json"
+              summary["retained_receipt_status"] = "missing"
+              if receipt.is_file():
+                  summary["retained_receipt_status"] = "invalid"
+                  if receipt.stat().st_size <= 65_536:
+                      try:
+                          value = json.loads(receipt_bytes(json.loads(receipt.read_bytes())))
+                          if value["source_commit"] != summary["source_commit"]:
+                              raise ValueError("Source commit mismatch")
+                          summary["retained_preview"] = value
+                          summary["retained_receipt_status"] = "valid"
+                      except (ValueError, TypeError, AttributeError, KeyError, RecursionError, ValidationError):
+                          pass
           receipt = root / "stage-result.json"
-          if receipt.is_file() and receipt.stat().st_size <= 2_000_000:
+          if not retained and receipt.is_file() and receipt.stat().st_size <= 2_000_000:
               try:
                   selected = profile("campus-switching-public-gap-2026-11-07-v1")
                   value = json.loads(result_bytes(json.loads(receipt.read_bytes()),
@@ -198,7 +244,7 @@ jobs:
               except (ValueError, TypeError, AttributeError, KeyError, RecursionError, ValidationError):
                   summary["receipt_status"] = "invalid"
           log = root / "stage-stderr"
-          if log.is_file():
+          if not retained and log.is_file():
               with log.open("rb") as stream:
                   summary["diagnostics"] = parse_worker_diagnostics(stream.read(65_536))
           output = root / "certification-result"
@@ -209,7 +255,7 @@ jobs:
           (output / "result.json").write_text(raw)
           PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ always() && steps.checkpoint.outcome == 'success' }}
+        if: ${{ always() && !inputs.retained_only && steps.checkpoint.outcome == 'success' }}
         with:
           name: candidate-certification-captures
           path: ${{ runner.temp }}/certification-captures

@@ -388,3 +388,126 @@ def test_monitor_capacity_diagnostics_are_closed_and_bounded():
         ("observed_bytes", 2**50),
     ):
         assert parse_worker_diagnostics(json.dumps(dict(event, **{key: bad})).encode()) == []
+
+
+@pytest.mark.parametrize(
+    "mode,run_id,ok",
+    [
+        ("", "", True),
+        ("false", "123", True),
+        ("true", "", True),
+        ("true", "123", False),
+        ("PRIVATE", "", False),
+    ],
+)
+def test_retained_mode_input_conflict_is_rejected_before_restore(tmp_path, mode, run_id, ok):
+    result = execute(
+        "Validate manual inputs",
+        tmp_path,
+        SOURCE_COMMIT="a" * 40,
+        PREVIOUS_RUN_ID=run_id,
+        RETAINED_ONLY=mode,
+    )
+    assert (result.returncode == 0) is ok
+
+
+def test_retained_mode_disables_import_and_captures_and_has_no_credentials():
+    text = TEMPLATE.read_text()
+    assert "retained_only:" in text and "default: false" in text
+    blocks = re.split(r"^      - ", text, flags=re.M)
+    names = (
+        "Download prior encrypted captures",
+        "Authenticate prior captures",
+        "Preview full hosted baseline",
+        "Stage disposable full candidate",
+        "Checkpoint private captures",
+    )
+    for name in names:
+        block = next(b for b in blocks if b.startswith("name: " + name + "\n"))
+        assert "!inputs.retained_only" in block.split("        run:")[0]
+    retained = next(b for b in blocks if b.startswith("name: Preview retained switching fixes\n"))
+    assert "if: ${{ inputs.retained_only }}" in retained
+    assert "timeout-minutes: 40" in retained
+    assert "GH_TOKEN" not in retained and "IMPACT_STATE_KEY" not in retained
+    uploads = [b for b in blocks if "uses: actions/upload-artifact" in b]
+    capture = next(b for b in uploads if "name: candidate-certification-captures" in b)
+    assert "!inputs.retained_only" in capture
+
+
+@pytest.mark.parametrize("mutation", ["missing", "invalid", "oversized", "private"])
+def test_retained_receipt_sanitizer_never_copies_hostile_metadata(tmp_path, mutation):
+    from ops.switching_fix_preview import _empty
+
+    value = _empty("a" * 40)
+    raw = json.dumps(value)
+    if mutation == "invalid":
+        raw = "{PRIVATE"
+    elif mutation == "oversized":
+        raw = "PRIVATE" * 10000
+    elif mutation == "private":
+        value["raw"] = "PRIVATE/path"
+        raw = json.dumps(value)
+    if mutation != "missing":
+        (tmp_path / "retained-preview-result.json").write_text(raw)
+    (tmp_path / "stage-stderr").write_text("PRIVATE raw logs")
+    result = execute(
+        "Sanitize result metadata",
+        tmp_path,
+        RUNNER_TEMP=str(tmp_path),
+        SOURCE_COMMIT="a" * 40,
+        STAGE_OUTCOME="skipped",
+        RETAINED_ONLY="true",
+        RETAINED_OUTCOME="failure",
+    )
+    assert result.returncode == 0, result.stderr
+    summary = json.loads((tmp_path / "certification-result/result.json").read_text())
+    assert summary["retained_receipt_status"] == ("missing" if mutation == "missing" else "invalid")
+    assert "retained_preview" not in summary
+    assert "PRIVATE" not in json.dumps(summary)
+
+
+def test_retained_receipt_sanitizer_embeds_only_validated_receipt(tmp_path):
+    from ops.switching_fix_preview import _empty
+
+    value = _empty("a" * 40)
+    (tmp_path / "retained-preview-result.json").write_text(json.dumps(value))
+    result = execute(
+        "Sanitize result metadata",
+        tmp_path,
+        RUNNER_TEMP=str(tmp_path),
+        SOURCE_COMMIT="a" * 40,
+        STAGE_OUTCOME="skipped",
+        RETAINED_ONLY="true",
+        RETAINED_OUTCOME="failure",
+    )
+    assert result.returncode == 0, result.stderr
+    summary = json.loads((tmp_path / "certification-result/result.json").read_text())
+    assert summary["retained_preview"] == value
+    assert summary["diagnostics"] == []
+
+
+def test_retained_step_invokes_only_offline_helper_and_preserves_failure(tmp_path):
+    shim = tmp_path / "uv"
+    shim.write_text(
+        f"#!{sys.executable}\nimport json, sys\nprint(json.dumps(sys.argv[1:]))\nsys.exit(1)\n"
+    )
+    shim.chmod(0o755)
+    result = subprocess.run(
+        ["bash", "-c", script("Preview retained switching fixes")],
+        cwd=tmp_path,
+        env={
+            **os.environ,
+            "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"],
+            "RUNNER_TEMP": str(tmp_path),
+            "GITHUB_WORKSPACE": str(tmp_path / "workspace"),
+            "SOURCE_COMMIT": "a" * 40,
+        },
+        capture_output=True,
+    )
+    assert result.returncode == 1
+    argv = json.loads((tmp_path / "retained-preview-stdout").read_text())
+    assert argv[:4] == ["run", "--no-sync", "python", "ops/switching_fix_preview.py"]
+    assert argv[argv.index("--database") + 1] == str(tmp_path / "private-home/data/intel.sqlite3")
+    assert argv[argv.index("--public") + 1] == str(tmp_path / "private-retained-public")
+    assert argv[argv.index("--output") + 1] == str(tmp_path / "retained-preview-result.json")
+    assert argv[argv.index("--source-commit") + 1] == "a" * 40
