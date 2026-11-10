@@ -237,3 +237,80 @@ def test_literal_rejects_surrogates_inside_long_advisory_text(point):
     value = "a" * 100_000 + chr(point) + "z" * 100_000
     with pytest.raises(ValueError, match="surrogate"):
         codec.literal(value)
+
+
+@pytest.mark.parametrize("ascii_mode", [False, True])
+def test_ascii_string_cost_matches_serialization_without_python_character_walk(
+    monkeypatch, ascii_mode
+):
+    # Removing the C-count branch reintroduces an ord call for every ASCII byte.
+    calls = []
+    original = ord
+
+    def counted(char):
+        calls.append(char)
+        return original(char)
+
+    monkeypatch.setattr(codec, "ord", counted, raising=False)
+    values = [
+        "",
+        *(chr(i) for i in range(128)),
+        "".join(map(chr, range(128))),
+        'text "quoted" \\path\n\b\f\r\t\x00\x1f\x7f' * 17,
+    ]
+    for value in values:
+        expected = json.dumps(value, ensure_ascii=ascii_mode).encode("utf-8")
+        if ascii_mode:
+            expected = expected.replace(b"\x7f", b"\\u007f")
+        assert codec.string_cost(value, ascii_mode) == len(expected)
+    assert not calls
+
+
+@pytest.mark.parametrize("ascii_mode", [False, True])
+def test_string_cost_keeps_unicode_and_subclass_behavior(ascii_mode):
+    class IteratedString(str):
+        def __iter__(self):
+            return iter('"é😀')
+
+        def isascii(self):
+            raise AssertionError("subclass must retain the original character path")
+
+    assert codec.string_cost(IteratedString("ascii"), ascii_mode) == (22 if ascii_mode else 10)
+    for value in ["\x80\u07ff\u0800\uffff\U00010000\U0010ffff", 'é中😀"\\\n']:
+        assert codec.string_cost(value, ascii_mode) == len(
+            json.dumps(value, ensure_ascii=ascii_mode).encode()
+        )
+    for value in [None, 1, True, [], {}, "\ud800", "\udfff", "a\ud800b"]:
+        with pytest.raises(ValueError):
+            codec.string_cost(value, ascii_mode)
+
+
+@pytest.mark.parametrize("serialization", ["logical", "ascii"])
+def test_escaped_ascii_literal_exact_bound_and_preallocation(monkeypatch, serialization):
+    value = '"\\\n\x00\x1f\x7f'
+    expected = b'"\\"\\\\\\n\\u0000\\u001f' + (
+        b'\\u007f"' if serialization == "ascii" else b'\x7f"'
+    )
+    assert (
+        b"".join(
+            codec.stream_tokens(
+                [-2], [value], [], serialization=serialization, budget=codec.Budget(len(expected))
+            )
+        )
+        == expected
+    )
+
+    def allocated(*args, **kwargs):
+        raise AssertionError("allocated before precharge")
+
+    monkeypatch.setattr(codec.json, "dumps", allocated)
+    with pytest.raises(ValueError, match="budget"):
+        list(
+            codec.stream_tokens(
+                [-2],
+                [value],
+                [],
+                serialization=serialization,
+                budget=codec.Budget(len(expected) - 1),
+            )
+        )

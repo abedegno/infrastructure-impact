@@ -510,7 +510,8 @@ class PublicationReader(codec.CatalogReader):
             )
         }
         metadata["coverage"] = []
-        study = contracts.definition()
+        contracts._validate({**metadata, "claims": []}, "switching-evidence-v1.json")
+        semantics = contracts._EvidenceClaimSemantics(metadata, **self.identity)
         links, fixed, held = [], [], 0
         stream_budget = codec.Budget(self.limits["stream"])
         for i, route in enumerate(self._claim_routes()):
@@ -548,9 +549,7 @@ class PublicationReader(codec.CatalogReader):
             if claim["claim_id"] != route[0]:
                 raise ValueError("claim identity mismatch")
             contracts._validate_claim(claim)
-            contracts._validate_evidence_semantics(
-                {**metadata, "claims": [claim]}, **self.identity, _study=study, _linkage=links
-            )
+            semantics.validate_claims([claim], _linkage=links)
             if (
                 claim["vendor"] == "arista"
                 and claim["advisory_id"]

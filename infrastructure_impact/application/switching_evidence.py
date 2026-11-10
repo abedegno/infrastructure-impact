@@ -4,6 +4,7 @@ A binding records an explicit publisher statement or a reviewed literal alias;
 validation never guesses applicability from an OS family or model-like string.
 """
 
+import copy
 import hashlib
 import json
 import re
@@ -451,16 +452,31 @@ def _validate_reviewed_link(claim, remediation, binding, claims):
         raise ValueError("Reviewed section remediation requires exact retained EOS/CVE linkage")
 
 
-def _validate_evidence_semantics(
-    report, *, publication=_UNSET, generated_at=_UNSET, _study=None, _linkage=None
-):
-    """Check evidence whose complete shape was validated by its enclosing boundary."""
-    _publication(report, publication, generated_at)
-    study = definition() if _study is None else _study
-    if report["definition_sha256"] != definition_sha256(study):
-        raise ValueError("Evidence definition fingerprint does not match the packaged study")
+@dataclass(frozen=True, init=False)
+class _EvidenceClaimSemantics:
+    """Fresh header binding and isolated study rules for one validation invocation."""
+
+    _study: dict
+    _definition_sha256: str
+
+    def __init__(self, report, *, publication=_UNSET, generated_at=_UNSET):
+        _publication(report, publication, generated_at)
+        # No caller-owned definition or previously validated context is accepted.
+        study = copy.deepcopy(definition())
+        digest = definition_sha256(study)
+        if report["definition_sha256"] != digest:
+            raise ValueError("Evidence definition fingerprint does not match the packaged study")
+        object.__setattr__(self, "_study", study)
+        object.__setattr__(self, "_definition_sha256", digest)
+
+    def validate_claims(self, claims, *, _linkage=None):
+        _validate_claim_semantics(claims, self._study, _linkage=_linkage)
+
+
+def _validate_claim_semantics(claims, study, *, _linkage=None):
+    """Complete per-claim semantics shared by full reports and authenticated streams."""
     seen = set()
-    for claim in report["claims"]:
+    for claim in claims:
         identity = definition_sha256({k: v for k, v in claim.items() if k != "claim_id"})
         if claim["claim_id"] != identity or identity in seen:
             raise ValueError("Claim IDs must be deterministic and unique")
@@ -554,7 +570,7 @@ def _validate_evidence_semantics(
                         )
                 else:
                     if _linkage is None:
-                        _validate_reviewed_link(claim, remediation, binding, report["claims"])
+                        _validate_reviewed_link(claim, remediation, binding, claims)
                     else:
                         _linkage.append((claim, remediation, binding))
             product_ids = remediation["product_ids"]
@@ -608,6 +624,12 @@ def _validate_evidence_semantics(
             _missing(claim["issues"], score["value"], "score_value_missing")
             if score["scope"] == "unresolved" and "score_scope_unresolved" not in claim["issues"]:
                 raise ValueError("Unresolved score scope requires an issue code")
+
+
+def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UNSET):
+    """Check evidence whose complete shape was validated by its enclosing boundary."""
+    context = _EvidenceClaimSemantics(report, publication=publication, generated_at=generated_at)
+    context.validate_claims(report["claims"])
     for row in report.get("score_availability", []):
         _official(row["source_url"], row["vendor"])
         if row["source"] is not None:
