@@ -25,7 +25,9 @@ KEV context. Source release and hosted activation remain separate review steps.
 The [v0.13.0 candidate](docs/releases/0.13.0.md) adds customer switching comparison
 and reviewed public release/bundle references. Its
 [bounded replay result](docs/research/2026-11-09-customer-comparison-replay.md)
-is a local integration check; hosted acceptance remains pending.
+is a local integration check; hosted acceptance remains pending. The
+[10 November fix-attribution replay](docs/research/2026-11-10-switching-fix-expansion-replay.md)
+records finite Aruba/Arista coverage gains and unresolved source evidence.
 
 Missing evidence means **unknown**, never automatically **unaffected**. Comparisons
 measure documented exposure in a declared CVE cohort, not overall vendor security.

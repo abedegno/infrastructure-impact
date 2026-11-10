@@ -26,7 +26,7 @@ METHOD = (
 )
 FAMILIES = {"aruba": "aruba-aoscx", "arista": "arista-eos", "cisco": "cisco-iosxe"}
 PRODUCTS = {
-    "aruba": {"AOS-CX", "Aruba AOS-CX", "HPE Aruba Networking AOS-CX"},
+    "aruba": {"AOS-CX", "Aruba AOS-CX", "HPE Aruba Networking AOS-CX", "HPE Networking AOS-CX"},
     "arista": {
         "EOS",
         "Arista EOS",
@@ -52,12 +52,12 @@ ERROR_CODES = {
 def _literal(vendor, expression):
     """Parse only typed fixed expressions, never remediation details or affected bounds."""
     if vendor == "aruba":
-        match = re.fullmatch(r"(\d+\.\d+\.\d{4})(?:_aos-cx)?", expression)
+        match = re.fullmatch(r"(?:AOS-CX )?(\d+\.\d+\.\d{4})(?:_aos-cx)?", expression)
     elif vendor == "arista":
-        match = re.fullmatch(r"(\d+\.\d+\.\d+(?:\.\d+)?[FM]?)", expression)
+        match = re.fullmatch(r"(\d+\.\d+\.\d+(?:\.\d+)?[FM]?)(?: and onwards)?\.?", expression)
         if match is None:
             match = re.fullmatch(
-                r"(\d+\.\d+\.\d+(?:\.\d+)?[FM]?) and later releases? in the (\d+\.\d+)\.x train",
+                r"(\d+\.\d+\.\d+(?:\.\d+)?[FM]?) and later releases? in the (\d+\.\d+)\.x train\.?",
                 expression,
             )
             if match and not match[1].startswith(match[2] + "."):

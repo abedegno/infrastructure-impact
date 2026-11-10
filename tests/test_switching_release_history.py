@@ -789,3 +789,93 @@ def test_writer_accepts_authoritative_historical_bound_and_rejects_same_generati
     api().validate_report(projected["switching_release_history"])
     with pytest.raises(ValueError, match="observation"):
         publication.write_bundle(tmp_path / "mismatch", projected, publication_format=fmt)
+
+
+@pytest.mark.parametrize(
+    "vendor,expression,expected",
+    [
+        ("aruba", "AOS-CX 10.16.1006", "10.16.1006"),
+        ("aruba", "AOS-CX 10.16.1006_aos-cx", "10.16.1006"),
+        ("arista", "4.31.2F.", "4.31.2F"),
+        ("arista", "4.31.2F and later releases in the 4.31.x train.", "4.31.2F"),
+        ("arista", "4.30.0M and onwards", "4.30.0M"),
+        ("arista", "4.30.0M and onwards.", "4.30.0M"),
+        ("arista", "4.28.11Mand later releases in the 4.28.x train.", None),
+        ("arista", "4.31.2F and later releases in the 4.30.x train.", None),
+        ("arista", ">=4.31.2F.", None),
+        ("arista", "4.31.2F - 4.31.9M.", None),
+        ("arista", "4.31.2F and later", None),
+        ("arista", "4.30.0M and onwards and 4.31.2F", None),
+        ("aruba", "Other AOS-CX 10.16.1006", None),
+        ("aruba", "AOS-CX >=10.16.1006", None),
+        ("aruba", "AOS-CX 10.16.1006 and above", None),
+        ("aruba", "aos-cx 10.16.1006", None),
+    ],
+)
+def test_literal_projection_preserves_exact_publisher_spelling(vendor, expression, expected):
+    assert api()._literal(vendor, expression) == expected
+
+
+def literal_projection_evidence(product="HPE Networking AOS-CX", family="aruba-aoscx"):
+    """Authored fixed-only claim; no primary capture or affected-to-fixed linkage."""
+    ev = aruba_evidence()
+    ev["claims"] = [c for c in ev["claims"] if c["status"] == "fixed"][:1]
+    c = ev["claims"][0]
+    c.update(
+        product=product,
+        family=family,
+        version_expressions=["AOS-CX 10.16.1006"],
+        remediations=[],
+        scope_level="os_family",
+        platform_bindings=[],
+        named_platforms=[],
+    )
+    if "model_binding_unresolved" not in c["issues"]:
+        c["issues"].append("model_binding_unresolved")
+    reidentify(ev)
+    return ev
+
+
+def test_exact_hpe_networking_label_requires_existing_canonical_family_and_invents_no_dates():
+    ev = literal_projection_evidence()
+    original = copy.deepcopy(ev)
+    result = build(ev)
+    assert ev == original
+    assert [n["version"] for n in result["releases"]] == ["10.16.1006"]
+    n = result["releases"][0]
+    assert n["reported_release_dates"] == []
+    assert n["history"] == []
+    assert n["affected_scope_cve_count"] is None
+    assert {r["expression"] for r in n["references"]} == {"AOS-CX 10.16.1006"}
+    assert all(r["availability_date"] is None for r in n["references"])
+    for product, family in [
+        ("Other HPE Networking AOS-CX", "aruba-aoscx"),
+        ("HPE Networking AOS-CX", "arista-eos"),
+    ]:
+        assert build(literal_projection_evidence(product, family))["releases"] == []
+
+
+def test_arista_onwards_and_punctuation_keep_only_stated_literal_and_unresolved_typo():
+    ev = arista_evidence(CASES[0])
+    ev["claims"] = [c for c in ev["claims"] if c["status"] == "fixed"][:1]
+    expressions = [
+        "4.30.0M and onwards",
+        "4.31.2F and later releases in the 4.31.x train.",
+        "4.28.11Mand later releases in the 4.28.x train.",
+    ]
+    ev["claims"][0].update(version_expressions=expressions, remediations=[])
+    reidentify(ev)
+    original = copy.deepcopy(ev)
+    result = build(ev)
+    assert ev == original
+    assert [n["version"] for n in result["releases"]] == ["4.30.0M", "4.31.2F"]
+    assert [d["expression"] for d in result["diagnostics"]] == [expressions[2]]
+    assert {r["expression"] for n in result["releases"] for r in n["references"]} == set(
+        expressions[:2]
+    )
+    assert all(
+        n["reported_release_dates"] == []
+        and n["affected_scope_cve_count"] is None
+        and all(r["availability_date"] is None for r in n["references"])
+        for n in result["releases"]
+    )

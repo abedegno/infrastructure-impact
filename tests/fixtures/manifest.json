@@ -135,6 +135,16 @@
     "sha256": "4328faf377e1ba5e008ac0b908e44133f4d936e4f1a2680c78c09f5c76a503d0"
   },
   {
+    "file": "reviewed-arista-authored.json",
+    "kind": "synthetic",
+    "sha256": "a05c8aca3e1447f6acd016aad50747946883d0d07bae5389de232fd5c3bd0418"
+  },
+  {
+    "file": "reviewed-aruba-authored.json",
+    "kind": "synthetic",
+    "sha256": "95b3906c097e5f78bc9bca2e921bba57bd3eb81cc7e5a21658a37fc185d9a553"
+  },
+  {
     "file": "switching-arista-bridge.json",
     "kind": "synthetic",
     "sha256": "76343b3366ad75ded2419c77c5eea5ca2ab0f201e18f580ead5b61da2f67ac9a"
