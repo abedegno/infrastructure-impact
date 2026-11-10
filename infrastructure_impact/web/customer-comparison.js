@@ -25,12 +25,13 @@
     );
   }
   function literal(vendor, expression) {
-    if (vendor === 'aruba') return /^(\d+\.\d+\.\d{4})(?:_aos-cx)?$/.exec(expression)?.[1] ?? null;
+    if (vendor === 'aruba')
+      return /^(?:AOS-CX )?(\d+\.\d+\.\d{4})(?:_aos-cx)?$/.exec(expression)?.[1] ?? null;
     if (vendor !== 'arista') return null;
-    const simple = /^(\d+\.\d+\.\d+(?:\.\d+)?[FM]?)$/.exec(expression);
+    const simple = /^(\d+\.\d+\.\d+(?:\.\d+)?[FM]?)(?: and onwards)?\.?$/.exec(expression);
     if (simple) return simple[1];
     const train =
-      /^(\d+\.\d+\.\d+(?:\.\d+)?[FM]?) and later releases? in the (\d+\.\d+)\.x train$/.exec(
+      /^(\d+\.\d+\.\d+(?:\.\d+)?[FM]?) and later releases? in the (\d+\.\d+)\.x train\.?$/.exec(
         expression,
       );
     return train && train[1].startsWith(train[2] + '.') ? train[1] : null;

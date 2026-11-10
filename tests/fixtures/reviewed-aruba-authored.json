@@ -1,0 +1,1458 @@
+{
+  "notice": "Authored typed fixtures preserving public literal facts, never primary source bytes. Real reviewed hashes are injected only at the typed _csaf seam.",
+  "samples": [
+    {
+      "advisory_id": "HPESBNW04888",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2025/hpe_aruba_networking_-_hpesbnw04888.json",
+      "source_sha256": "66822b9d2cfb3de686798a8bb53f4cefea0b69426cf53e8a64ef76807d2240cd",
+      "data": {
+        "document": {
+          "tracking": {
+            "current_release_date": "2025-11-18T17:00:00.000Z",
+            "id": "HPESBNW04888",
+            "initial_release_date": "2025-11-18T17:00:00.000Z",
+            "status": "final",
+            "version": "1"
+          }
+        },
+        "product_tree": {
+          "branches": [
+            {
+              "branches": [
+                {
+                  "branches": [
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.16.1006",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.16.1006",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.15.1030",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.15.1030",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.14.1060",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.14.1060",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.13.1101",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.13.1101",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.10.1170",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.10.1170",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.16.0000|<=10.16.1000",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.16.0000|<=10.16.1000",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.15.0000|<=10.15.1020",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.15.0000|<=10.15.1020",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.14.0000|<=10.14.1050",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.14.0000|<=10.14.1050",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.13.0000|<=10.13.1090",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.13.0000|<=10.13.1090",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.10.0000|<=10.10.1160",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.10.0000|<=10.10.1160",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    }
+                  ],
+                  "category": "product_name",
+                  "name": "AOS-CX"
+                }
+              ],
+              "category": "vendor",
+              "name": "HPE Aruba Networking"
+            }
+          ]
+        },
+        "vulnerabilities": [
+          {
+            "cve": "CVE-2025-37155",
+            "product_status": {
+              "fixed": ["10.16.1006", "10.15.1030", "10.14.1060", "10.13.1101", "10.10.1170"],
+              "known_affected": [
+                ">=10.16.0000|<=10.16.1000",
+                ">=10.15.0000|<=10.15.1020",
+                ">=10.14.0000|<=10.14.1050",
+                ">=10.13.0000|<=10.13.1090",
+                ">=10.10.0000|<=10.10.1160"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "date": "2025-11-18T17:00:00.000Z",
+                "details": "To address the vulnerabilities described above in the affected software branches, it is recommended to upgrade HPE Aruba Networking AOS-CX to one of the following versions (as applicable):\n\n    - AOS-CX 10.16.xxxx: AOS-CX 10.16.1006 and above\n    - AOS-CX 10.15.xxxx: AOS-CX 10.15.1030 and above\n    - AOS-CX 10.14.xxxx: AOS-CX 10.14.1060 and above\n    - AOS-CX 10.13.xxxx: AOS-CX 10.13.1101 and above\n    - AOS-CX 10.10.xxxx: AOS-CX 10.10.1170 and above\n\nSoftware versions with resolution/fixes for the vulnerabilities covered above can be downloaded from the HPE Networking Support Portal at https://networkingsupport.hpe.com/home/\n \nHPE Aruba Networking does not evaluate or patch software branches that have reached their End of Maintenance (EoM) milestone. \nFor more information about HPE Aruba Networking End of Life policy please visit: https://www.hpe.com/psnow/doc/a00143052enw",
+                "product_ids": [
+                  "10.16.1006",
+                  "10.15.1030",
+                  "10.14.1060",
+                  "10.13.1101",
+                  "10.10.1170"
+                ]
+              },
+              {
+                "category": "workaround",
+                "date": "2025-11-18T17:00:00.000Z",
+                "details": "To minimize the likelihood of an attacker exploiting this vulnerability, HPE Aruba Networking recommends that the CLI and web-based management interfaces be restricted to a dedicated layer 2 segment/VLAN and/or controlled by firewall policies at layer 3 and above, along with accounting controls for tracking and logging user activities and resource usage.",
+                "product_ids": [
+                  ">=10.16.0000|<=10.16.1000",
+                  ">=10.15.0000|<=10.15.1020",
+                  ">=10.14.0000|<=10.14.1050",
+                  ">=10.13.0000|<=10.13.1090",
+                  ">=10.10.0000|<=10.10.1160"
+                ]
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2025-37156"
+          },
+          {
+            "cve": "CVE-2024-12084"
+          },
+          {
+            "cve": "CVE-2024-12085"
+          },
+          {
+            "cve": "CVE-2024-12086"
+          },
+          {
+            "cve": "CVE-2024-12087"
+          },
+          {
+            "cve": "CVE-2024-12088"
+          },
+          {
+            "cve": "CVE-2024-12747"
+          },
+          {
+            "cve": "CVE-2025-37157"
+          },
+          {
+            "cve": "CVE-2025-37158"
+          },
+          {
+            "cve": "CVE-2025-26466"
+          },
+          {
+            "cve": "CVE-2025-37159"
+          },
+          {
+            "cve": "CVE-2025-37160"
+          }
+        ]
+      },
+      "links": 5
+    },
+    {
+      "advisory_id": "HPESBNW05027",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2026/hpe_aruba_networking_-_hpesbnw05027.json",
+      "source_sha256": "cb5b3327c97f3dd20718278feec4413c5e3a31a524319c186d0fb6c226f629fd",
+      "data": {
+        "document": {
+          "tracking": {
+            "current_release_date": "2026-03-10T16:00:00.000Z",
+            "id": "HPESBNW05027",
+            "initial_release_date": "2026-03-10T16:00:00.000Z",
+            "status": "final",
+            "version": "1"
+          }
+        },
+        "product_tree": {
+          "branches": [
+            {
+              "branches": [
+                {
+                  "branches": [
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.17.1001",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.17.1001",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.16.1030",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.16.1030",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.13.1161",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.13.1161",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.10.1180",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.10.1180",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.17.0000|<=10.17.0001",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.17.0000|<=10.17.0001",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.16.0000|<=10.16.1020",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.16.0000|<=10.16.1020",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.13.0000|<=10.13.1160",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.13.0000|<=10.13.1160",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.10.0000|<=10.10.1170",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.10.0000|<=10.10.1170",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    }
+                  ],
+                  "category": "product_name",
+                  "name": "AOS-CX"
+                }
+              ],
+              "category": "vendor",
+              "name": "HPE Aruba Networking"
+            }
+          ]
+        },
+        "vulnerabilities": [
+          {
+            "cve": "CVE-2026-23813",
+            "product_status": {
+              "fixed": ["10.17.1001", "10.16.1030", "10.13.1161", "10.10.1180"],
+              "known_affected": [
+                ">=10.17.0000|<=10.17.0001",
+                ">=10.16.0000|<=10.16.1020",
+                ">=10.13.0000|<=10.13.1160",
+                ">=10.10.0000|<=10.10.1170"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "date": "2026-03-10T16:00:00.000Z",
+                "details": "To address the vulnerabilities described above in the affected\nsoftware branches, it is recommended to upgrade HPE Networking \nAOS-CX to one of the following versions (as applicable):\n\n    - AOS-CX 10.17.xxxx: AOS-CX 10.17.1001 and above\n    - AOS-CX 10.16.xxxx: AOS-CX 10.16.1030 and above\n    - AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above\n    - AOS-CX 10.10.xxxx: AOS-CX 10.10.1180 and above\n\nSoftware versions with resolution/fixes for the vulnerabilities\ncovered above can be downloaded from the HPE Networking \nSupport Portal at https://networkingsupport.hpe.com/home/\n \nHPE Aruba Networking does not evaluate or patch software branches \nthat have reached their End of Maintenance (EoM) milestone. \nFor more information about HPE Aruba Networking End of Life policy \nplease visit: \n\nhttps://www.hpe.com/psnow/doc/a00143052enw",
+                "product_ids": ["10.17.1001", "10.16.1030", "10.13.1161", "10.10.1180"]
+              },
+              {
+                "category": "workaround",
+                "date": "2026-03-10T16:00:00.000Z",
+                "details": "To mitigate the exposure of this vulnerability, HPE Aruba Networking recommends the following mitigation measures: Restrict access to all management interfaces to a dedicated Layer 2 segment or VLAN to isolate management traffic from general network traffic. Implement strict policies at Layer 3 and above to control access to management interfaces, permitting only authorized and trusted hosts. Disable HTTP(S) interfaces on Switched Virtual Interfaces (SVIs) and routed ports wherever management access is not required. Enforce Control Plane Access Control Lists (ACLs) to protect any REST/HTTP-enabled management interfaces, ensuring only trusted clients are allowed to connect to the HTTPS/REST endpoints. Enable comprehensive accounting, logging, and monitoring of all management interface activities to detect and respond to unauthorized access attempts promptly.",
+                "product_ids": [
+                  ">=10.17.0000|<=10.17.0001",
+                  ">=10.16.0000|<=10.16.1020",
+                  ">=10.13.0000|<=10.13.1160",
+                  ">=10.10.0000|<=10.10.1170"
+                ]
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2026-23814"
+          },
+          {
+            "cve": "CVE-2026-23815"
+          },
+          {
+            "cve": "CVE-2026-23816"
+          },
+          {
+            "cve": "CVE-2026-23817"
+          }
+        ]
+      },
+      "links": 4
+    },
+    {
+      "advisory_id": "ARUBA-PSA-2022-012",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-012.json",
+      "source_sha256": "f116fe548a9cee7d9990e751e56994bb35dbed9124e2d2812b0c6b387d21d404",
+      "data": {
+        "document": {
+          "tracking": {
+            "current_release_date": "2022-08-30T17:00:00.000Z",
+            "id": "ARUBA-PSA-2022-012",
+            "initial_release_date": "2022-08-30T17:00:00.000Z",
+            "status": "final",
+            "version": "1"
+          }
+        },
+        "product_tree": {
+          "branches": [
+            {
+              "name": "HPE Aruba Networking",
+              "category": "vendor",
+              "branches": [
+                {
+                  "category": "product_name",
+                  "name": "AOS-CX",
+                  "branches": [
+                    {
+                      "category": "product_version",
+                      "name": "10.10.1000",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.10.1000"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.10.0002",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.10.0002"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.09.1040",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.09.1040"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.09.1030",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.09.1030"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.09.1020",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.09.1020"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.09.1010",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.09.1010"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.1080",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.08.1080"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.1070",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.08.1070"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.1060",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.08.1060"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.1030",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.08.1030"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.06.0220",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.06.0220"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.06.0210",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.06.0210"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.06.0200",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.06.0200"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.06.0180",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.06.0180"
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.10.0000|<=10.10.0002",
+                      "product": {
+                        "product_id": ">=10.10.0000|<=10.10.0002",
+                        "name": "AOS-CX"
+                      }
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.09.0000|<=10.09.1030"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.09.0000|<=10.09.1030"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.09.0000|<=10.09.1020"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.09.0000|<=10.09.1020"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.09.0000|<=10.09.1010"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.09.0000|<=10.09.1010"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.08.0000|<=10.08.1070"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.08.0000|<=10.08.1070"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.08.0000|<=10.08.1060"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.08.0000|<=10.08.1060"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.08.0000|<=10.08.1050"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.08.0000|<=10.08.1050"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.08.0000|<=10.08.1030"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.08.0000|<=10.08.1030"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.06.0000|<=10.06.0210"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.06.0000|<=10.06.0210"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.06.0000|<=10.06.0200"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.06.0000|<=10.06.0200"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.06.0000|<=10.06.190"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.06.0000|<=10.06.190"
+                    },
+                    {
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.06.0000|<=10.06.0180"
+                      },
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.06.0000|<=10.06.0180"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "vulnerabilities": [
+          {
+            "cve": "CVE-2022-23679",
+            "product_status": {
+              "fixed": ["10.10.1000", "10.09.1030", "10.08.1070", "10.06.0210"],
+              "known_affected": [
+                ">=10.06.0000|<=10.06.0210",
+                ">=10.08.0000|<=10.08.1060",
+                ">=10.09.0000|<=10.09.1020",
+                ">=10.10.0000|<=10.10.0002"
+              ]
+            },
+            "remediations": [
+              {
+                "product_ids": ["10.10.1000", "10.09.1030", "10.08.1070", "10.06.0210"],
+                "category": "vendor_fix",
+                "date": "2022-08-30T17:00:00.000Z",
+                "details": "In order to address the vulnerabilities described above for the  \naffected release branches, it is recommended to upgrade the software \nto the following versions (where applicable):\n  - AOS-CX 10.10.xxxx: 10.10.1000 and above. \n  - AOS-CX 10.09.xxxx: 10.09.1040 and above.\n  - AOS-CX 10.08.xxxx: 10.08.1080 and above.\n  - AOS-CX 10.06.xxxx: 10.06.0220 and above.\n\nAruba recommends that users using the following branches\nupgrade to 10.10.1000 and above to address these vulnerabilities:\n  - AOS-CX 10.07.xxxx\n  - AOS-CX 10.05.xxxx and below."
+              },
+              {
+                "category": "workaround",
+                "date": "2022-08-30T17:00:00.000Z",
+                "details": "To minimize the likelihood of an attacker exploiting these       \nvulnerabilities, Aruba recommends that the CLI and web-based     \nmanagement interfaces be restricted to a dedicated layer 2       \nsegment/VLAN and/or controlled by firewall policies at layer 3   \nand above.  \n\nContact Aruba TAC for any configuration assistance.",
+                "product_ids": [
+                  ">=10.10.0000|<=10.10.0002",
+                  ">=10.09.0000|<=10.09.1020",
+                  ">=10.08.0000|<=10.08.1060",
+                  ">=10.06.0000|<=10.06.0200"
+                ]
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2022-23680"
+          },
+          {
+            "cve": "CVE-2022-23681"
+          },
+          {
+            "cve": "CVE-2022-23682"
+          },
+          {
+            "cve": "CVE-2022-23683",
+            "product_status": {
+              "fixed": ["10.10.1000", "10.09.1040", "10.08.1080", "10.06.0220"],
+              "known_affected": [
+                ">=10.10.0000|<=10.10.0002",
+                ">=10.09.0000|<=10.09.1030",
+                ">=10.08.0000|<=10.08.1070",
+                ">=10.06.0000|<=10.06.0210"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "details": "In order to address the vulnerabilities described above for the affected release branches, it is recommended to upgrade the software to the following versions (where applicable):\n  - AOS-CX 10.10.xxxx: 10.10.1000 and above. \n  - AOS-CX 10.09.xxxx: 10.09.1040 and above.\n  - AOS-CX 10.08.xxxx: 10.08.1080 and above.\n  - AOS-CX 10.06.xxxx: 10.06.0220 and above.\n\nAruba recommends that users using the following branches\nupgrade to 10.10.1000 and above to address these vulnerabilities:\n  - AOS-CX 10.07.xxxx\n  - AOS-CX 10.05.xxxx and below.\n",
+                "product_ids": ["10.10.1000", "10.09.1040", "10.08.1080", "10.06.0220"]
+              },
+              {
+                "product_ids": [
+                  ">=10.10.0000|<=10.10.0002",
+                  ">=10.09.0000|<=10.09.1030",
+                  ">=10.08.0000|<=10.08.1070",
+                  ">=10.06.0000|<=10.06.0210"
+                ],
+                "category": "workaround",
+                "details": "To minimize the likelihood of an attacker exploiting these       \nvulnerabilities, Aruba recommends that the CLI and web-based     \nmanagement interfaces be restricted to a dedicated layer 2       \nsegment/VLAN and/or controlled by firewall policies at layer 3   \nand above.  \n\nContact Aruba TAC for any configuration assistance. \n"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2022-23684"
+          },
+          {
+            "cve": "CVE-2022-23691"
+          },
+          {
+            "cve": "CVE-2022-23686"
+          },
+          {
+            "cve": "CVE-2022-23687"
+          },
+          {
+            "cve": "CVE-2022-23688"
+          },
+          {
+            "cve": "CVE-2022-23689"
+          },
+          {
+            "cve": "CVE-2022-23690"
+          }
+        ]
+      },
+      "links": 5
+    },
+    {
+      "advisory_id": "ARUBA-PSA-2022-004",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-004.json",
+      "source_sha256": "6b6ebf1734613aa7dcaeef1946d917dd0686ce4d49183ba6bf0818e7ac182134",
+      "data": {
+        "document": {
+          "tracking": {
+            "current_release_date": "2022-04-06T17:00:00.000Z",
+            "id": "ARUBA-PSA-2022-004",
+            "initial_release_date": "2022-02-22T18:00:00.000Z",
+            "status": "final",
+            "version": "2"
+          }
+        },
+        "product_tree": {
+          "branches": [
+            {
+              "branches": [
+                {
+                  "branches": [
+                    {
+                      "category": "product_version",
+                      "name": "10.09.0010",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.09.0010"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.1040",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.08.1040"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.07.0061",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.07.0061"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.06.0180",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.06.0180"
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.09.0000|<=10.09.0002",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.09.0000|<=10.09.0002"
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.08.0000|<=10.08.0130",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.08.0000|<=10.08.0130"
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.07.0000|<=10.07.0050",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.07.0000|<=10.07.0050"
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.00.0000|<=10.06.0170",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.00.0000|<=10.06.0170"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.09.0001",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.09.0001"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.0001",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.08.0001"
+                      }
+                    },
+                    {
+                      "name": "vers:semver/>=10.08.0000|<=10.08.0001",
+                      "category": "product_version_range",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.08.0000|<=10.08.0001"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.07.0010",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.07.0010"
+                      }
+                    },
+                    {
+                      "name": "vers:semver/>=10.07.0000|<=10.07.0009",
+                      "category": "product_version_range",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.07.0000|<=10.07.0009"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.06.0130",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": "10.06.0130"
+                      }
+                    },
+                    {
+                      "name": "vers:semver/>=10.00.0000|<=10.06.0120",
+                      "category": "product_version_range",
+                      "product": {
+                        "product_id": ">=10.00.0000|<=10.06.0120",
+                        "name": "AOS-CX"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.08.0010",
+                      "product": {
+                        "product_id": "10.08.0010",
+                        "name": "AOS-CX"
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "10.07.0030",
+                      "product": {
+                        "product_id": "10.07.0030",
+                        "name": "AOS-CX"
+                      }
+                    },
+                    {
+                      "name": "vers:semver/>=10.07.0000|<=10.07.0020",
+                      "category": "product_version_range",
+                      "product": {
+                        "name": "AOS-CX",
+                        "product_id": ">=10.07.0000|<=10.07.0020"
+                      }
+                    }
+                  ],
+                  "category": "product_name",
+                  "name": "AOS-CX"
+                }
+              ],
+              "category": "vendor",
+              "name": "HPE Aruba Networking"
+            }
+          ]
+        },
+        "vulnerabilities": [
+          {
+            "cve": "CVE-2021-41000",
+            "product_status": {
+              "fixed": ["10.09.0001", "10.08.0010", "10.07.0030", "10.06.0180"],
+              "known_affected": [
+                ">=10.00.0000|<=10.06.0170",
+                ">=10.07.0000|<=10.07.0020",
+                ">=10.08.0000|<=10.08.0001"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.09.0001", "10.08.0010", "10.07.0030", "10.06.0180"],
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2002-20001",
+            "product_status": {
+              "fixed": ["10.09.0010", "10.08.1040", "10.07.0061", "10.06.0180"],
+              "known_affected": [
+                ">=10.09.0000|<=10.09.0002",
+                ">=10.08.0000|<=10.08.0130",
+                ">=10.07.0000|<=10.07.0050",
+                ">=10.00.0000|<=10.06.0170"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.09.0010", "10.08.1040", "10.07.0061", "10.06.0180"],
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2021-3712",
+            "product_status": {
+              "fixed": ["10.09.0001", "10.08.1040", "10.07.0061", "10.06.0180"],
+              "known_affected": [
+                ">=10.08.0000|<=10.08.0130",
+                ">=10.07.0000|<=10.07.0050",
+                ">=10.00.0000|<=10.06.0170"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.09.0001", "10.08.1040", "10.07.0061", "10.06.0180"],
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2021-41001",
+            "product_status": {
+              "fixed": ["10.09.0010", "10.08.1040", "10.07.0061"],
+              "known_affected": [
+                ">=10.09.0000|<=10.09.0002",
+                ">=10.08.0000|<=10.08.0130",
+                ">=10.07.0000|<=10.07.0050"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "vendor_fix",
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.09.0010", "10.08.1040", "10.07.0061"],
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2021-41003",
+            "product_status": {
+              "fixed": ["10.09.0010", "10.08.1040", "10.07.0061", "10.06.0180"],
+              "known_affected": [
+                ">=10.09.0000|<=10.09.0002",
+                ">=10.08.0000|<=10.08.0130",
+                ">=10.07.0000|<=10.07.0050",
+                ">=10.00.0000|<=10.06.0170"
+              ]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.09.0010", "10.08.1040", "10.07.0061", "10.06.0180"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-6168",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-17382",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-17427",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-17428",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-12373",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-13098",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-1000385",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2017-13099",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2016-6883",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2012-5081",
+            "product_status": {
+              "fixed": ["10.08.0001", "10.07.0010", "10.06.0130"],
+              "known_affected": [">=10.07.0000|<=10.07.0009", ">=10.00.0000|<=10.06.0120"]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": ["10.08.0001", "10.07.0010", "10.06.0130"],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2021-41002",
+            "product_status": {
+              "fixed": ["10.09.0010", "10.08.1040", "10.07.0061", "10.06.0180"],
+              "known_affected": [
+                ">=10.09.0000|<=10.09.0002",
+                ">=10.08.0000|<=10.08.0130",
+                ">=10.07.0000|<=10.07.0050",
+                ">=10.00.0000|<=10.06.0170"
+              ]
+            },
+            "remediations": [
+              {
+                "details": "The vulnerabilities contained in this advisory can be addressed\nby patching or upgrading to one of the versions listed below\n\n\nAOS-CX 10.06.xxxx: 10.06.0180 and above\nAOS-CX 10.07.xxxx: 10.07.0061 and above\nAOS-CX 10.08.xxxx: 10.08.1040 and above\nAOS-CX 10.09.xxxx: 10.09.0010 and above\n\nAruba recommends that users using the following branches\nupgrade to 10.06.0180 and above to address these vulnerabilities:\n\nAOS-CX 10.05.xxxx and below\n\nNone of the above branch versions will address the UEFI\nvulnerabilities mentioned in ARUBA-PSA-2022-001.",
+                "product_ids": [
+                  ">=10.09.0000|<=10.09.0002",
+                  ">=10.08.0000|<=10.08.0130",
+                  ">=10.07.0000|<=10.07.0050",
+                  ">=10.00.0000|<=10.06.0170"
+                ],
+                "category": "vendor_fix",
+                "date": "2022-04-06T17:00:00.000Z"
+              }
+            ]
+          }
+        ]
+      },
+      "links": 15
+    },
+    {
+      "advisory_id": "HPESBNW05134",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2026/hpe_networking_-_hpesbnw05134.json",
+      "source_sha256": "edad24e7d759b2def8cff6b79161e6a8014e46bc4e57523399d7ec998de72e4c",
+      "data": {
+        "document": {
+          "tracking": {
+            "current_release_date": "2026-09-01T16:00:00.000Z",
+            "id": "HPESBNW05134",
+            "initial_release_date": "2026-09-01T16:00:00.000Z",
+            "status": "final",
+            "version": "1"
+          }
+        },
+        "product_tree": {
+          "branches": [
+            {
+              "branches": [
+                {
+                  "branches": [
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.18.1002",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": "10.18.1002",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.17.1030",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": "10.17.1030",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.16.1060",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": "10.16.1060",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.13.1190",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": "10.13.1190",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version",
+                      "name": "AOS-CX 10.10.1181",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": "10.10.1181",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.18.0000|<=10.18.0001",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": ">=10.18.0000|<=10.18.0001",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.17.0000|<=10.17.1021",
+                      "product": {
+                        "name": "HPE Networking AOS-CX",
+                        "product_id": ">=10.17.0000|<=10.17.1021",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.16.0000|<=10.16.1051",
+                      "product": {
+                        "name": "HPE Aruba Networking AOS-CX",
+                        "product_id": ">=10.16.0000|<=10.16.1051",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.13.0000|<=10.13.1180",
+                      "product": {
+                        "name": "HPE Aruba Networking AOS-CX",
+                        "product_id": ">=10.13.0000|<=10.13.1180",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    },
+                    {
+                      "category": "product_version_range",
+                      "name": "vers:semver/>=10.10.0000|<=10.10.1180",
+                      "product": {
+                        "name": "HPE Aruba Networking AOS-CX",
+                        "product_id": ">=10.10.0000|<=10.10.1180",
+                        "product_identification_helper": {
+                          "model_numbers": ["HPE Aruba Networking AOS-CX Switch Series"]
+                        }
+                      }
+                    }
+                  ],
+                  "category": "product_name",
+                  "name": "AOS-CX"
+                }
+              ],
+              "category": "vendor",
+              "name": "HPE Networking"
+            }
+          ]
+        },
+        "vulnerabilities": [
+          {
+            "cve": "CVE-2026-73749",
+            "product_status": {
+              "fixed": ["10.18.1002", "10.17.1030", "10.16.1060", "10.13.1190", "10.10.1181"],
+              "known_affected": [
+                ">=10.18.0000|<=10.18.0001",
+                ">=10.17.0000|<=10.17.1021",
+                ">=10.16.0000|<=10.16.1051",
+                ">=10.13.0000|<=10.13.1180",
+                ">=10.10.0000|<=10.10.1180"
+              ]
+            },
+            "remediations": [
+              {
+                "category": "workaround",
+                "date": "2026-09-01T16:00:00.000Z",
+                "details": "To minimize the likelihood of an attacker exploiting these vulnerabilities, HPE Networking recommends that the CLI and web-based management interfaces be restricted to a dedicated layer 2 segment/VLAN and/or controlled by firewall policies at layer 3 and above along with accounting controls for tracking and logging user activities and resource usage.",
+                "product_ids": [
+                  ">=10.18.0000|<=10.18.0001",
+                  ">=10.17.0000|<=10.17.1021",
+                  ">=10.16.0000|<=10.16.1051",
+                  ">=10.13.0000|<=10.13.1180",
+                  ">=10.10.0000|<=10.10.1180"
+                ]
+              },
+              {
+                "category": "vendor_fix",
+                "date": "2026-09-01T16:00:00.000Z",
+                "details": "In order to address the vulnerabilities described in the Details Section, HPE Networking recommends upgrading the HPE Aruba Networking AOS-CX software to one of the following versions (as applicable): \n \n    - AOS-CX 10.10.1181 and above \n    - AOS-CX 10.13.1190 and above \n    - AOS-CX 10.16.1060 and above \n    - AOS-CX 10.17.1030 and above \n    - AOS-CX 10.18.1002 and above \n \nSoftware versions with resolution/fixes for the disclosed vulnerabilities can be downloaded from the HPE Networking Support Portal at: https://networkingsupport.hpe.com/home/. \n \nProduct software versions that have reached End of Maintenance (EoM) are presumed to be affected by the vulnerabilities unless explicitly stated otherwise, and are not completely addressed by this security advisory. For deployments running software versions that are past End of Support (EoS), HPE Networking has not assessed exposure to the vulnerabilities referenced in this advisory. As a result, such installations should be considered potentially impacted by the listed CVE. Customers are strongly encouraged to upgrade to a supported software release to ensure proper evaluation and remediation.",
+                "product_ids": [
+                  "10.18.1002",
+                  "10.17.1030",
+                  "10.16.1060",
+                  "10.13.1190",
+                  "10.10.1181"
+                ]
+              }
+            ]
+          },
+          {
+            "cve": "CVE-2026-73750"
+          },
+          {
+            "cve": "CVE-2026-73751"
+          },
+          {
+            "cve": "CVE-2026-73752"
+          },
+          {
+            "cve": "CVE-2026-73753"
+          },
+          {
+            "cve": "CVE-2026-73782"
+          },
+          {
+            "cve": "CVE-2026-73781"
+          },
+          {
+            "cve": "CVE-2026-73780"
+          },
+          {
+            "cve": "CVE-2026-73779"
+          },
+          {
+            "cve": "CVE-2026-73778"
+          },
+          {
+            "cve": "CVE-2026-73777"
+          },
+          {
+            "cve": "CVE-2026-73776"
+          },
+          {
+            "cve": "CVE-2026-73775"
+          },
+          {
+            "cve": "CVE-2026-73774"
+          },
+          {
+            "cve": "CVE-2026-73773"
+          },
+          {
+            "cve": "CVE-2026-73771"
+          },
+          {
+            "cve": "CVE-2026-73770"
+          },
+          {
+            "cve": "CVE-2026-73768"
+          },
+          {
+            "cve": "CVE-2026-73767"
+          },
+          {
+            "cve": "CVE-2026-73766"
+          },
+          {
+            "cve": "CVE-2026-73765"
+          },
+          {
+            "cve": "CVE-2026-73764"
+          },
+          {
+            "cve": "CVE-2026-73763"
+          },
+          {
+            "cve": "CVE-2026-73762"
+          },
+          {
+            "cve": "CVE-2026-73772"
+          },
+          {
+            "cve": "CVE-2026-73761"
+          },
+          {
+            "cve": "CVE-2026-73760"
+          },
+          {
+            "cve": "CVE-2026-73759"
+          },
+          {
+            "cve": "CVE-2026-73758"
+          },
+          {
+            "cve": "CVE-2026-73757"
+          },
+          {
+            "cve": "CVE-2026-73756"
+          },
+          {
+            "cve": "CVE-2026-73755"
+          },
+          {
+            "cve": "CVE-2026-73754"
+          },
+          {
+            "cve": "CVE-2026-73783"
+          }
+        ]
+      },
+      "links": 5
+    }
+  ]
+}

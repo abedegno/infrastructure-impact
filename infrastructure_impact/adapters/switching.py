@@ -12,6 +12,7 @@ import re
 from importlib.resources import files
 
 from .common import HTML, availability, iso_date
+from .reviewed_fixes import apply_csaf, arista_assessments, attach_links
 from .standards import csaf_products
 
 FAMILIES = {
@@ -522,11 +523,18 @@ def _csaf(raw, url, vendor, document, digest):
                 )
             claims.append(claim)
     _aruba_fix_links(data, claims)
+    reviewed_issues = apply_csaf(
+        data,
+        claims,
+        url,
+        digest,
+        tracking.get("current_release_date") or tracking.get("initial_release_date"),
+    )
     return dict(
         schema_version=1,
         claims=claims,
         bundles=[],
-        issues=[] if claims else ["product_scope_unresolved"],
+        issues=reviewed_issues if claims else ["product_scope_unresolved"],
     )
 
 
@@ -884,6 +892,8 @@ def _arista_reviewed(raw, url, document, digest):
         _arista_legacy_eos(tree, parsed)
     if slug in ARISTA_FIX_RULES:
         parsed["assessments"].extend(_arista_fixes(tree, slug, parsed))
+    reviewed_fixed, reviewed_issues = arista_assessments(tree, parsed, slug)
+    parsed["assessments"].extend(reviewed_fixed)
     publisher = dict(
         id=labels[0],
         sequence=history[-1][0],
@@ -961,7 +971,9 @@ def _arista_reviewed(raw, url, document, digest):
                     category=rem["category"],
                     details=rem.get("details"),
                     product_ids=[claim["product_id"]] if claim["product_id"] else [],
-                    version_expressions=[],
+                    version_expressions=(
+                        claim["version_expressions"][:] if assessment in reviewed_fixed else []
+                    ),
                     published_availability=statement,
                     availability=rem.get("availability", "unknown"),
                     availability_date=None,
@@ -1010,7 +1022,8 @@ def _arista_reviewed(raw, url, document, digest):
                     fixed_source=fixed[0]["source"].copy(),
                 )
                 claim["remediations"].append(bound)
-    return dict(schema_version=1, claims=claims, bundles=[], issues=[])
+    attach_links(claims)
+    return dict(schema_version=1, claims=claims, bundles=[], issues=reviewed_issues)
 
 
 def extract(raw: bytes, url: str, vendor: str, document: dict) -> dict:

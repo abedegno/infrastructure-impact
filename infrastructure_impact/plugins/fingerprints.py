@@ -16,6 +16,8 @@ SHARED_SOURCES = tuple(
         "adapters/cvss.py",
         "adapters/aruba_text.py",
         "adapters/switching.py",
+        "adapters/reviewed_fixes.py",
+        "remediation_bindings.py",
         "adapters/standards.py",
         "domain.py",
         "plugins/contracts.py",
@@ -57,6 +59,12 @@ def sources(plugin):
             "schemas/switching-evidence-v1.json",
         ):
             include("research:" + name, PACKAGE / name)
+    if plugin.id in {"aruba", "arista"}:
+        for name in (
+            "resources/reviewed-remediation-bindings.json",
+            "schemas/reviewed-remediation-bindings-v1.json",
+        ):
+            include("reviewed:" + name, PACKAGE / name)
     callbacks = [
         getattr(plugin, f.name)
         for f in fields(plugin)

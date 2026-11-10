@@ -378,6 +378,10 @@ def _validate_aruba_reviewed_link(claim, remediation, binding, claims):
 
 
 def _validate_reviewed_link(claim, remediation, binding, claims):
+    from ..remediation_bindings import registered_source, validate_link
+
+    if registered_source(claim):
+        return validate_link(claim, remediation, binding, claims)
     if claim["vendor"] == "aruba":
         return _validate_aruba_reviewed_link(claim, remediation, binding, claims)
     from ..adapters.switching import ARISTA_FIX_RULES, ARISTA_FIXED_VERSIONS, arista_reviewed_rule

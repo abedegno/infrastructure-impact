@@ -536,3 +536,24 @@ outcome, counters, selected assessments or pending independent review. The CLI
 uses existing stored selections, and publication rebuilds context from current
 inputs rather than trusting supplied annotations. Omitted selections preserve the
 previous report shape. Blind review packets do not include this context.
+
+
+### Reviewed fix-attribution expansion
+
+The [10 November cached-source replay](research/2026-11-10-switching-fix-expansion-replay.md)
+records five Aruba CSAF and three Arista CVE-owned list additions, plus an excluded
+SA0062 control. A finite bundled registry pins source ownership and exact literal
+bindings. Source drift omits new fixes with a diagnostic while preserving valid
+affected evidence. Human review remains pending; subset gains are not production
+or historical completeness totals.
+
+Release projection accepts the exact `AOS-CX ` prefix, the exact
+`HPE Networking AOS-CX` product under existing `aruba-aoscx` family context, and
+Arista terminal periods or explicit `and onwards`. It retains original expressions
+and selects only the first stated literal. No later-version membership, customer
+upgrade, model applicability or release date is inferred. SA0103's malformed
+`4.28.11Mand...` remains unresolved. SA0140's truncated affected-platform evidence
+still prevents an affected-scope fix link or publication event; its complete fixed
+list may supply fixed-only context. Evidence bounds and truncation guards are
+unchanged. The report includes exact receipts, exclusions and required retained-byte
+hosted preview/apply checks; this branch does not activate a changed normalizer.

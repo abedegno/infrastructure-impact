@@ -497,6 +497,7 @@ class PublicationReader(codec.CatalogReader):
         return result
 
     def iter_claims(self, *, max_bytes=None):
+        from ..remediation_bindings import registered_source
         from . import switching_evidence as contracts
 
         metadata = {
@@ -551,15 +552,19 @@ class PublicationReader(codec.CatalogReader):
             contracts._validate_claim(claim)
             semantics.validate_claims([claim], _linkage=links)
             if (
-                claim["vendor"] == "arista"
-                and claim["advisory_id"]
-                in {
-                    "19904-security-advisory-0100",
-                    "23115-security-advisory-0128",
-                    "24847-security-advisory-0201",
-                    "15438-security-advisory-0075",
-                }
-            ) or (claim["vendor"] == "aruba" and claim["advisory_id"] == "HPESBNW04669"):
+                registered_source(claim)
+                or (
+                    claim["vendor"] == "arista"
+                    and claim["advisory_id"]
+                    in {
+                        "19904-security-advisory-0100",
+                        "23115-security-advisory-0128",
+                        "24847-security-advisory-0201",
+                        "15438-security-advisory-0075",
+                    }
+                )
+                or (claim["vendor"] == "aruba" and claim["advisory_id"] == "HPESBNW04669")
+            ):
                 held += route[3]
                 if held > self.limits["selected"]:
                     raise ValueError("cross-claim linkage byte budget")

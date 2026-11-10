@@ -30,8 +30,10 @@ def payload():
     ).encode()
     from infrastructure_impact.application import customer_comparison, switching_releases
     from infrastructure_impact.references.registry import SOURCES
+    from infrastructure_impact.remediation_bindings import definition as reviewed_definition
 
     return dict(
+        reviewed_remediation_bindings=reviewed_definition(),
         customer_limitations=customer_comparison.LIMITATIONS,
         customer_fields=customer_comparison.CUSTOMER_FIELDS,
         release_method=switching_releases.METHOD,

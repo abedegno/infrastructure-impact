@@ -68,6 +68,58 @@ for (const mutate of [
   mutate(bad);
   assert.throws(() => api.selectHistory(bad, selection));
 }
+// Authored lexical vectors use a valid history shape, without new evidence claims.
+function literalHistory(vendor, expression, version) {
+  const h = clone(base),
+    n = clone(base.releases.find((n) => n.references.length));
+  n.vendor = vendor;
+  n.family = vendor === 'aruba' ? 'aruba-aoscx' : 'arista-eos';
+  n.version = version;
+  n.release_id = context.window.InfrastructureSwitchingContracts.fingerprint({
+    vendor,
+    family: n.family,
+    version,
+  });
+  n.history = [];
+  n.reported_release_dates = [];
+  for (const ref of n.references) {
+    ref.expression = expression;
+    ref.source.source_url = ref.claim_source.source_url =
+      vendor === 'aruba'
+        ? 'https://csaf.arubanetworking.hpe.com/synthetic.json'
+        : 'https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic';
+  }
+  h.releases = [n];
+  return h;
+}
+for (const [vendor, expression, version] of [
+  ['aruba', 'AOS-CX 10.16.1006', '10.16.1006'],
+  ['aruba', 'AOS-CX 10.16.1006_aos-cx', '10.16.1006'],
+  ['arista', '4.31.2F.', '4.31.2F'],
+  ['arista', '4.31.2F and later releases in the 4.31.x train.', '4.31.2F'],
+  ['arista', '4.30.0M and onwards', '4.30.0M'],
+  ['arista', '4.30.0M and onwards.', '4.30.0M'],
+]) {
+  const h = literalHistory(vendor, expression, version),
+    original = clone(h);
+  api.validateHistory(h);
+  assert.deepStrictEqual(h, original, 'literal validation preserves expressions and dates');
+  const later = literalHistory(vendor, expression, vendor === 'aruba' ? '10.16.1007' : '4.31.9M');
+  assert.throws(() => api.validateHistory(later), 'no later-version membership inference');
+}
+for (const [vendor, expression, version] of [
+  ['aruba', 'Other AOS-CX 10.16.1006', '10.16.1006'],
+  ['aruba', 'AOS-CX >=10.16.1006', '10.16.1006'],
+  ['aruba', 'AOS-CX 10.16.1006 and above', '10.16.1006'],
+  ['aruba', 'aos-cx 10.16.1006', '10.16.1006'],
+  ['arista', '4.28.11Mand later releases in the 4.28.x train.', '4.28.11M'],
+  ['arista', '4.31.2F and later releases in the 4.30.x train.', '4.31.2F'],
+  ['arista', '>=4.31.2F.', '4.31.2F'],
+  ['arista', '4.31.2F - 4.31.9M.', '4.31.2F'],
+  ['arista', '4.31.2F and later', '4.31.2F'],
+  ['arista', '4.30.0M and onwards and 4.31.2F', '4.30.0M'],
+])
+  assert.throws(() => api.validateHistory(literalHistory(vendor, expression, version)));
 const python =
   process.env.PYTHON || (fs.existsSync('.venv/bin/python') ? '.venv/bin/python' : 'python3');
 const fixtures = JSON.parse(
