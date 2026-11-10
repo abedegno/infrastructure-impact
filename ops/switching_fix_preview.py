@@ -9,8 +9,9 @@ import hashlib
 import json
 import os
 import re
+import sys
 import tempfile
-from contextlib import closing
+from contextlib import closing, nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
@@ -203,10 +204,13 @@ def _hash(database):
     return digest.digest()
 
 
-def preview(database, public, source_commit):
+def preview(database, public, source_commit, *, diagnostic=False):
     """Validate the actual restored database without normalizing or writing it."""
     if type(source_commit) is not str or re.fullmatch(r"[0-9a-f]{40}", source_commit) is None:
         raise ValueError("source_commit")
+    from infrastructure_impact.phase_events import phase
+
+    marker = phase if diagnostic else nullcontext
     database, public = Path(database).resolve(), Path(public).resolve()
     # Establish all application settings before importing application/storage code.
     public.parent.mkdir(parents=True, exist_ok=True)
@@ -235,12 +239,13 @@ def preview(database, public, source_commit):
             try:
                 from infrastructure_impact.storage.repository import connect, now
 
-                with closing(connect(database, read_only=True)) as db:
+                with marker("retained.sources"), closing(connect(database, read_only=True)) as db:
                     result["sources"] = _sources(db)
                 from infrastructure_impact.storage.audit import audit
 
                 try:
-                    audit()
+                    with marker("retained.audit"):
+                        audit()
                 except Exception:
                     result["gates"]["audit_passed"] = False
                     result["gates"]["candidate"]["outcome"] = "audit_failed"
@@ -380,8 +385,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("database", "public", "output", "source-commit"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--diagnostic-sampling", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    value = preview(args.database, args.public, args.source_commit)
+    sampler = nullcontext()
+    if args.diagnostic_sampling:
+        if __package__:
+            from .retained_preview_progress import Sampler
+        else:
+            from retained_preview_progress import Sampler
+        sampler = Sampler(sys.stderr)
+    with sampler:
+        value = preview(
+            args.database, args.public, args.source_commit, diagnostic=args.diagnostic_sampling
+        )
     with Path(args.output).open("xb") as output:
         output.write(receipt_bytes(value))
     return 0 if value["outcome"] == "passed" else 1

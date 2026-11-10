@@ -209,6 +209,9 @@ def test_release_accepts_public_tracked_inventory_and_canonical_web(tmp_path, mo
     root = release_checkout(tmp_path)
     destination = tmp_path / "export"
     run_release(monkeypatch, root, destination)
+    assert (
+        destination / "ops/retained_preview_progress.py"
+    ).read_text() == "synthetic public source\n"
     assert (destination / "README.md").read_text() == "synthetic public source\n"
     assert (destination / "web").readlink() == Path("infrastructure_impact/web")
     assert json.loads(capsys.readouterr().out)["private_artifact_checks"] == "passed"

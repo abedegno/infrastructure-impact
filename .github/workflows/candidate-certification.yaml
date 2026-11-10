@@ -143,12 +143,12 @@ jobs:
           set -euo pipefail
           umask 077
           export IMPACT_SOURCES="$GITHUB_WORKSPACE/source/infrastructure_impact/resources/sources.json"
-          uv run --no-sync python ops/switching_fix_preview.py \
+          uv run --no-sync python ops/retained_preview_progress.py \
             --database "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
             --public "$RUNNER_TEMP/private-retained-public" \
             --output "$RUNNER_TEMP/retained-preview-result.json" \
             --source-commit "$SOURCE_COMMIT" \
-            > "$RUNNER_TEMP/retained-preview-stdout" 2> "$RUNNER_TEMP/retained-preview-stderr"
+            --progress "$RUNNER_TEMP/retained-preview-progress.json"
       - name: Checkpoint private captures
         id: checkpoint
         if: ${{ always() && !inputs.retained_only && steps.stage.outcome != 'skipped' && steps.stage.outcome != '' }}
@@ -219,6 +219,11 @@ jobs:
           retained = os.environ.get("RETAINED_ONLY") == "true"
           if retained:
               from ops.switching_fix_preview import receipt_bytes
+              from ops.retained_preview_progress import read_progress
+              try:
+                  summary["retained_progress"] = read_progress(root / "retained-preview-progress.json")
+              except (OSError, ValueError, TypeError, AttributeError, KeyError, RecursionError, OverflowError):
+                  pass
               summary["retained_step"] = os.environ.get("RETAINED_OUTCOME", "")
               receipt = root / "retained-preview-result.json"
               summary["retained_receipt_status"] = "missing"

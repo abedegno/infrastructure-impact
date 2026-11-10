@@ -286,9 +286,10 @@ def test_gate_failure_and_database_mutation_cannot_pass(retained, monkeypatch, t
     assert "PRIVATE" not in helper().receipt_bytes(result).decode()
 
 
+@pytest.mark.parametrize("diagnostic", [False, True])
 @pytest.mark.parametrize("failure", ["none", "audit", "inventory", "monitor", "parity", "capacity"])
 def test_authored_database_passes_real_v2_inventory_parity_and_loopback_monitors(
-    retained, monkeypatch, tmp_path, failure
+    retained, monkeypatch, tmp_path, failure, diagnostic
 ):
     import socket
     from contextlib import closing
@@ -348,7 +349,7 @@ def test_authored_database_passes_real_v2_inventory_parity_and_loopback_monitors
 
         monkeypatch.setattr(module, name, reject)
     before = database.read_bytes()
-    result = helper().preview(database, tmp_path / "full-public", COMMIT)
+    result = helper().preview(database, tmp_path / "full-public", COMMIT, diagnostic=diagnostic)
     if failure != "none":
         assert result["outcome"] == "failed"
         assert result["gates"]["candidate_validated"] is False
@@ -566,3 +567,23 @@ def test_0140_fixed_only_requires_fresh_original_ownership(truncated_0140, monke
     monkeypatch.setattr(registry, "research_evidence", forged)
     with pytest.raises(ValueError, match="^(source_drift|affected_changed)$"):
         helper()._sources(db)
+
+
+def test_opt_in_diagnostics_wrap_sources_and_audit_without_changing_gates(
+    retained, monkeypatch, tmp_path, capsys
+):
+    from infrastructure_impact.storage import audit
+
+    database, db, _ = retained
+    db.commit()
+    monkeypatch.setattr(audit, "audit", lambda: (_ for _ in ()).throw(ValueError("PRIVATE")))
+    value = helper().preview(database, tmp_path / "public", COMMIT, diagnostic=True)
+    assert value["failure_code"] == "audit_failed"
+    events = [json.loads(line) for line in capsys.readouterr().err.splitlines()]
+    assert [(e["phase"], e["state"]) for e in events] == [
+        ("retained.sources", "started"),
+        ("retained.sources", "completed"),
+        ("retained.audit", "started"),
+        ("retained.audit", "failed"),
+    ]
+    assert "PRIVATE" not in json.dumps(events)
