@@ -544,3 +544,61 @@ def test_cisco_explicit_software_metadata_ignores_other_owned_section_dates():
 def test_cisco_changed_nested_or_ambiguous_model_metadata_is_rejected(change):
     with pytest.raises(ValueError):
         api().parse_cisco_17_12_1(change(cisco()))
+
+
+def cisco_software_tables():
+    # Project-authored minimal tree matching reviewed Cisco model metadata ownership.
+    return b"""<title>Cisco IOS XE Dublin 17.12.1 - Cisco</title>
+<h1>Cisco IOS XE Dublin 17.12.1</h1>
+<div class="support-birth-cert" data-owner="ID">
+<div class="data-wrapper software-data-wrapper"><hr>
+<table class="birth-cert-table col1"><tbody>
+<tr><th>Series</th><td><a href="/series.html">Cisco IOS XE 17</a></td></tr>
+<tr><th>Product Type</th><td>Cisco IOS XE</td></tr>
+<tr><td colspan="2"><script src="/metrics.js"></script></td></tr>
+</tbody></table>
+<table class="birth-cert-table col2"><tbody>
+<tr><th>Release Date</th><td>28-JUL-2023</td></tr>
+<tr><th>End-of-Sale Date</th><td>30-MAR-2025</td></tr>
+<tr><th>End-of-Support Date</th><td>31-MAR-2028</td></tr>
+</tbody></table></div></div>
+<section><h2>Documentation</h2><p>Release Date: 01-JAN-2026</p></section>"""
+
+
+def test_cisco_actual_software_tables_report_only_literal_release_date():
+    row = api().parse_cisco_17_12_1(cisco_software_tables())["releases"][0]
+    assert row["version"] == "17.12.1"
+    assert row["reported_release_date"] == "2023-07-28"
+    assert row["statement"] == "Release Date: 28-JUL-2023"
+    assert "software-data-wrapper" in row["source_locator"]
+
+
+@pytest.mark.parametrize(
+    "old,new",
+    [
+        (b"17.12.1 - Cisco", b"17.12.2 - Cisco"),
+        (b"17.12.1</h1>", b"17.12.2</h1>"),
+        (b' data-owner="ID"', b' data-owner="OTHER"'),
+        (b"Cisco IOS XE 17</a>", b"Cisco Catalyst 9300</a>"),
+        (b"<td>Cisco IOS XE</td>", b"<td>Switches</td>"),
+        (b"28-JUL-2023", b"31-FEB-2023"),
+        (b"28-JUL-2023", b"2023-07-28"),
+        (b"<td>28-JUL-2023</td>", b"<td><div>28-JUL-2023</div></td>"),
+        (b"<th>Release Date</th>", b"<th>Document Date</th>"),
+        (b"<tr><th>Release Date", b"<div><tr><th>Release Date"),
+        (b'<table class="birth-cert-table col2">', b'<div><table class="birth-cert-table col2">'),
+        (b"<tbody>", b"<tbody><tr><th>Release Date</th><td>01-JAN-2026</td></tr>"),
+        (b"<tr><th>Series", b"<tr><th>Series</th><td>Cisco IOS XE 17</td></tr><tr><th>Series"),
+        (
+            b"<tr><th>Product Type",
+            b"<tr><th>Product Type</th><td>Cisco IOS XE</td></tr><tr><th>Product Type",
+        ),
+        (b"<hr>", b'<div class="software-data-wrapper"></div><hr>'),
+        (b"<hr>", b'<div class="support-birth-cert" data-owner="ID"></div><hr>'),
+        (b"<td>28-JUL-2023</td>", b"<td hidden>28-JUL-2023</td>"),
+        (b"<td>28-JUL-2023</td>", b'<td colspan="2">28-JUL-2023</td>'),
+    ],
+)
+def test_cisco_actual_software_tables_fail_closed(old, new):
+    with pytest.raises(ValueError):
+        api().parse_cisco_17_12_1(cisco_software_tables().replace(old, new))
