@@ -83,7 +83,7 @@ def test_optional_source_root_is_not_snapshot_data(generation):
     assert len(index["rows"]) == 3
     assert "sources" not in index
     for root in ("snapshot.json", "runtime-snapshot"):
-        assert "switching_row_sources" not in reader.ranges(root)
+        assert ("switching_row_sources",) not in reader.ranges(root)
 
 
 def test_open_is_metadata_only_and_narrow_runtime_does_not_touch_whole_root(generation):
