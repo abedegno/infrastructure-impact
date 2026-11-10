@@ -56,6 +56,7 @@ FILES = (
     "ops/manage_schedule.py",
     "ops/hosted_job.py",
     "ops/target_import_job.py",
+    "ops/switching_fix_preview.py",
 )
 DIRECTORIES = ("infrastructure_impact", "docs", ".github", "checks", "tests", "examples", "deploy")
 IGNORED_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".venv", "dist", "node_modules"}

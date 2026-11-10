@@ -266,3 +266,20 @@ def test_release_source_tarball_retains_existing_export_behavior(tmp_path, monke
     run_release(monkeypatch, root, destination)
     assert not (destination / "untracked-workspace").exists()
     assert json.loads(capsys.readouterr().out)["private_artifact_checks"] == "passed"
+
+
+def test_release_exports_retained_preview_helper_without_allowing_other_ops(tmp_path, monkeypatch):
+    import subprocess
+
+    root = release_checkout(tmp_path)
+    helper = root / "ops/switching_fix_preview.py"
+    helper.write_text("synthetic retained preview helper\n")
+    subprocess.run(["git", "-C", str(root), "add", str(helper)], check=True)
+    destination = tmp_path / "retained-export"
+    run_release(monkeypatch, root, destination)
+    assert (destination / "ops/switching_fix_preview.py").read_bytes() == helper.read_bytes()
+    unexpected = root / "ops/operator-private.py"
+    unexpected.write_text("SYNTHETIC PRIVATE SENTINEL")
+    subprocess.run(["git", "-C", str(root), "add", str(unexpected)], check=True)
+    with pytest.raises(ValueError):
+        run_release(monkeypatch, root, tmp_path / "rejected-export")
