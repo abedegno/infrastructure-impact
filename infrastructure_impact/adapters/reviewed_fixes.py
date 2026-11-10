@@ -1,9 +1,140 @@
 """Apply only bundled, finite reviewed source-section fix derivations."""
 
 import copy
+import hashlib
 
 from .. import remediation_bindings as registry
 from .common import availability
+
+
+def arista_assessments(tree, parsed, slug):
+    """Read finite CVE-owned direct marker/list clauses, preserving affected evidence.
+
+    The complete normalized Resolution (including separate hotfix text) is pinned.
+    Only direct marker/list pairs before the explicit Hotfix boundary own EOS fixes.
+    Neither wrapper bytes nor sorted CVE positions establish ownership.
+    """
+    from .common import Node, assessment
+
+    sources = [
+        s
+        for s in registry.definition()["sources"]
+        if s["kind"] == "arista_marker_list" and s["advisory_id"] == slug
+    ]
+    if not sources:
+        return [], []
+    source = sources[0]
+    drift = ([], ["reviewed_fix_source_drift"])
+    if (
+        parsed.get("vendor") != source["vendor"]
+        or parsed.get("advisory_id") != slug
+        or parsed.get("source_url") != source["source_url"]
+        or parsed.get("source_format") != source["source_format"]
+        or sorted(parsed.get("cves", [])) != sorted(source["expected_cve_ids"])
+    ):
+        return drift
+    articles = [n for n in tree.find({"div"}) if "item-page" in n.attrs.get("class", "").split()]
+    if len(articles) != 1:
+        return drift
+    # Raw visible qualifications must not vanish when selecting sibling nodes.
+    if any(isinstance(n, str) and n.strip() for n in articles[0].children):
+        return drift
+    nodes = [n for n in articles[0].children if isinstance(n, Node)]
+    starts = [i for i, n in enumerate(nodes) if n.tag in {"h2", "h3"} and n.text() == "Resolution"]
+    if len(starts) != 1:
+        return drift
+    start = starts[0]
+    end = next(
+        (
+            i
+            for i in range(start + 1, len(nodes))
+            if nodes[i].tag in {"h2", "h3", "h4"}
+            and (nodes[i].tag <= nodes[start].tag or nodes[i].text() == "For More Information")
+        ),
+        len(nodes),
+    )
+    resolution = " ".join(n.text() for n in nodes[start:end] if n.text())
+    if hashlib.sha256(resolution.encode("utf-8")).hexdigest() != source["resolution_sha256"]:
+        return drift
+    hotfix = [
+        i for i in range(start + 1, end) if nodes[i].tag == "h3" and nodes[i].text() == "Hotfix"
+    ]
+    if source["source_format"] == "Arista reviewed reconciliation software HTML":
+        if len(hotfix) != 1:
+            return drift
+        owned_end = hotfix[0]
+    else:
+        if hotfix or end == len(nodes) or nodes[end].text() != "For More Information":
+            return drift
+        owned_end = end
+    fixed, owned_lists = [], []
+    for rule in source["bindings"]:
+        affected = [
+            a
+            for a in parsed["assessments"]
+            if a["cve_id"] == rule["cve_id"]
+            and a["product"] == rule["affected_product"]
+            and a["status"] == "affected"
+            and a["scope"] == "cve_specific"
+            and a["evidence_locator"] == rule["affected_locator"]
+            and [v.get("expression") for v in a["versions"]] == rule["affected_versions"]
+        ]
+        markers = [
+            i
+            for i in range(start + 1, owned_end)
+            if nodes[i].tag == "div" and nodes[i].text() == rule["statement"]
+        ]
+        if len(affected) != 1 or len(markers) != 1:
+            return drift
+        marker = nodes[markers[0]]
+        if (
+            marker.attrs
+            or any(isinstance(c, Node) for c in marker.children)
+            or markers[0] + 1 >= owned_end
+        ):
+            return drift
+        listing = nodes[markers[0] + 1]
+        items = [c for c in listing.children if isinstance(c, Node)]
+        if (
+            listing.tag != "ul"
+            or listing.attrs
+            or any(isinstance(c, str) and c.strip() for c in listing.children)
+            or any(
+                c.tag != "li" or c.attrs or any(isinstance(n, Node) for n in c.children)
+                for c in items
+            )
+        ):
+            return drift
+        versions = [c.text() for c in items]
+        clause = " ".join([marker.text(), *versions])
+        if (
+            versions != rule["fixed_versions"]
+            or hashlib.sha256(clause.encode("utf-8")).hexdigest() != rule["clause_sha256"]
+        ):
+            return drift
+        owned_lists.append(listing)
+        fixed.append(
+            assessment(
+                rule["cve_id"],
+                rule["fixed_product"],
+                "fixed",
+                rule["fixed_locator"],
+                [dict(expression=v) for v in versions],
+                [
+                    dict(
+                        category="vendor_fix",
+                        availability="vendor_reports_fixed",
+                        details=marker.text(),
+                        source_locator=rule["remediation_locator"],
+                    )
+                ],
+            )
+        )
+    if [n for n in nodes[start + 1 : owned_end] if n.tag in {"ul", "ol"}] != [
+        n for n in nodes[start + 1 : owned_end] if n in owned_lists
+    ]:
+        return drift
+    return fixed, []
 
 
 def _pointer(data, locator):

@@ -1,0 +1,168 @@
+{
+  "purpose": "Synthetic minimal articles assembled in tests from literal reviewed public clauses; not raw source captures.",
+  "samples": [
+    {
+      "advisory_id": "24074-security-advisory-0140",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24074-security-advisory-0140",
+      "source_format": "Arista reviewed sibling software sections HTML",
+      "expected_cves": [
+        "CVE-2026-10040"
+      ],
+      "resolution_html": "<h2>Resolution</h2><p>The recommended resolution is to upgrade to a remediated software version at your earliest convenience. Arista recommends customers move to the latest version of each release that contains all the fixes listed below.</p><p>Note: Applying these software updates requires a standard switch reload, which will result in a temporary network disruption. Arista recommends scheduling these updates during a regular maintenance window.</p><p>For more information about upgrading see EOS User Manual: Upgrades and Downgrades</p><div>CVE-2026-10040 has been fixed in the following releases:</div><ul><li>4.32.10M and later releases in the 4.32.x train</li><li>4.33.8M and later releases in the 4.33.x train</li><li>4.34.6M and later releases in the 4.34.x train</li><li>4.35.2F and later releases in the 4.35.x train</li></ul>",
+      "assessments": [
+        {
+          "cve_id": "CVE-2026-10040",
+          "versions": [
+            "4.35.1 and below releases in the 4.35.x train",
+            "4.34.5M and below releases in the 4.34.x train",
+            "4.33.7M and below releases in the 4.33.x train",
+            "4.32.9M and below releases in the 4.32.x train",
+            "4.31.10M and below releases in the 4.31.x train",
+            "4.30.10M and below releases in the 4.30.x train"
+          ]
+        }
+      ],
+      "bindings": [
+        {
+          "cve_id": "CVE-2026-10040",
+          "affected_product": "Arista EOS",
+          "affected_locator": "Affected Software / Arista EOS",
+          "fixed_product": "Arista EOS",
+          "fixed_locator": "Resolution / CVE-2026-10040 / EOS fixed-release list",
+          "statement": "CVE-2026-10040 has been fixed in the following releases:",
+          "fixed_versions": [
+            "4.32.10M and later releases in the 4.32.x train",
+            "4.33.8M and later releases in the 4.33.x train",
+            "4.34.6M and later releases in the 4.34.x train",
+            "4.35.2F and later releases in the 4.35.x train"
+          ],
+          "clause_sha256": "5883aec96c6f02ab72b2247f3eef665b120952e0c7e4c06755989a007fa3e91e",
+          "scope": "cve_specific",
+          "product_id": null,
+          "platform_bindings": [],
+          "availability": "vendor_reports_fixed",
+          "availability_date": null
+        }
+      ]
+    },
+    {
+      "advisory_id": "19862-security-advisory-0099",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19862-security-advisory-0099",
+      "source_format": "Arista reviewed reconciliation software HTML",
+      "expected_cves": [
+        "CVE-2024-27890",
+        "CVE-2024-27892"
+      ],
+      "resolution_html": "<h2>Resolution</h2><p>The recommended resolution is to upgrade to a remediated software version at your earliest convenience. Arista recommends customers move to the latest version of each release that contains all the fixes listed below. For more information about upgrading see EOS User Manual: Upgrades and Downgrades</p><div>CVE-2024-27892 has been fixed in the following releases:</div><ul><li>4.31.3M and later releases in the 4.31.x train</li><li>4.30.6M and later release in the 4.30.x train</li><li>4.29.8M and later releases in the 4.29.x train</li><li>4.28.11M and later releases in the 4.28.x train</li></ul><div>CVE-2024-27890 has been fixed in the following releases:</div><ul><li>4.30.0M and onwards</li><li>4.29.8M and later releases in the 4.29.x train</li><li>4.28.11M and later releases in the 4.28.x train</li></ul><p>To fix both issues please upgrade to either 4.30.6, 4.31.3, or later releases.</p><h3>Hotfix</h3><p>The following hotfix can be applied to remediate CVE-2024-27890 and CVE-2024-27892. The hotfix only applies to the releases listed below and no other releases.</p><p>Note: Installing/uninstalling the SWIX will cause the OpenConfig/Octa process to restart. Services may be unavailable for up to one minute.</p><h4>EOS Versions 4.30.5</h4><p>32 bit Version: 1.0 URL: CVE-2024-27890_CVE-2024-27892_4.30.5_32_Hotfix.swix</p><pre>SWIX hash:(SHA512) 85ec967b17231edd542800a4a5b305de93308ba5365c858470e7ce848bbc6c357be614f2f668b4a1d93c7afa2cb5e62ac12efda00874f6801dff35351da9ed93</pre><p>64 bit Version: 1.0 URL: CVE-2024-27890_CVE-2024-27892_4.30.5_64_Hotfix.swix</p><pre>SWIX hash:(SHA512) 263331d15057c38e2e9c4af20f9795989ec962dc159c3136f4eb2e2370859866534b44a17ba9c2ec3249071ccfe83eb0047960693864de532de44fe36766fd70</pre><h4>EOS Versions 4.29.7</h4><p>32 bit Version: 1.0 URL: CVE-2024-27890_CVE-2024-27892_4.29.7_32_Hotfix.swix</p><pre>SWIX hash:(SHA512) 0317d77d621fa648aa15d607c6db1a8f648da82e14e0886aea0525e0d726ff83a0ed507755b733d1644797dece85203dfe6998b65108b10ba5a9b9be8f57c4f0</pre><p>64 bit Version: 1.0 URL: CVE-2024-27890_CVE-2024-27892_4.29.7_64_Hotfix.swix</p><pre>SWIX hash:(SHA512) d6d1d806fbd80d9d3972d8bb965b82cf1241c166ce960ff2af12de084c17160433188683fe48d5e3f24ba996e4b4262e95998683c50f80ce2f870fd3f02cbdc4</pre><h4>EOS Versions 4.28.10.1</h4><p>32 bit Version: 1.0 URL: CVE-2024-27890_CVE-2024-27892_4.28.10.1_32_Hotfix.swix</p><pre>SWIX hash:(SHA512) 12ec36dd68decff5d81f68504dfdba0c01697153366c6de01ac5189c0250516a01d0128179155b21bd028cbbc1b634e8bc143244a2bed089824d4dc4b6c92449</pre><p>64 bit Version: 1.0 URL: CVE-2024-27890_CVE-2024-27892_4.28.10.1_64_Hotfix.swix</p><pre>SWIX hash:(SHA512) 2f01a806867d6ffc95bef907164b3c92058382ccda5af006f66f350575a235a6f1ed491974b68dc952947d7cf9897028efa2266411e380da6a646719a420ec52</pre><p>For instructions on installation and verification of the hotfix patch, refer to the “managing eos extensions” section in the EOS User Manual. Ensure that the patch is made persistent across reboots by running the command ‘copy installed-extensions boot-extensions’.</p>",
+      "assessments": [
+        {
+          "cve_id": "CVE-2024-27890",
+          "versions": [
+            "4.29.7M and below releases in the 4.29.x train",
+            "4.28.10M and below releases in the 4.28.x train",
+            "4.27.8M and below releases in the 4.27.x train",
+            "4.26.9M and below releases in the 4.26.x train",
+            "4.25.10M and below releases in the 4.25.x train",
+            "4.24.11M and below releases in the 4.24.x train"
+          ]
+        },
+        {
+          "cve_id": "CVE-2024-27892",
+          "versions": [
+            "4.31.2F and below releases in the 4.31.x train",
+            "4.30.5M and below releases in the 4.30.x train",
+            "4.29.7M and below releases in the 4.29.x train",
+            "4.28.10M and below releases in the 4.28.x train",
+            "4.27.8M and below releases in the 4.27.x train",
+            "4.26.9M and below releases in the 4.26.x train",
+            "4.25.10M and below releases in the 4.25.x train",
+            "4.24.11M and below releases in the 4.24.x train"
+          ]
+        }
+      ],
+      "bindings": [
+        {
+          "cve_id": "CVE-2024-27890",
+          "affected_product": "Arista EOS",
+          "affected_locator": "Affected Software / CVE-2024-27890 / EOS Versions",
+          "fixed_product": "Arista EOS",
+          "fixed_locator": "Resolution / CVE-2024-27890 / EOS fixed-release list",
+          "statement": "CVE-2024-27890 has been fixed in the following releases:",
+          "fixed_versions": [
+            "4.30.0M and onwards",
+            "4.29.8M and later releases in the 4.29.x train",
+            "4.28.11M and later releases in the 4.28.x train"
+          ],
+          "clause_sha256": "d2ab0db20a2393b8ee58a4a40bd26ea91eec3dcd847efb62b96969168cdc5e54",
+          "scope": "cve_specific",
+          "product_id": null,
+          "platform_bindings": [],
+          "availability": "vendor_reports_fixed",
+          "availability_date": null
+        },
+        {
+          "cve_id": "CVE-2024-27892",
+          "affected_product": "Arista EOS",
+          "affected_locator": "Affected Software / CVE-2024-27892 / EOS Versions",
+          "fixed_product": "Arista EOS",
+          "fixed_locator": "Resolution / CVE-2024-27892 / EOS fixed-release list",
+          "statement": "CVE-2024-27892 has been fixed in the following releases:",
+          "fixed_versions": [
+            "4.31.3M and later releases in the 4.31.x train",
+            "4.30.6M and later release in the 4.30.x train",
+            "4.29.8M and later releases in the 4.29.x train",
+            "4.28.11M and later releases in the 4.28.x train"
+          ],
+          "clause_sha256": "0f78840e36a3e2adcfb2d29bb48e58fa0a64df428cfca4b8549da376b4ebd29b",
+          "scope": "cve_specific",
+          "product_id": null,
+          "platform_bindings": [],
+          "availability": "vendor_reports_fixed",
+          "availability_date": null
+        }
+      ]
+    },
+    {
+      "advisory_id": "19917-security-advisory-0103",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/19917-security-advisory-0103",
+      "source_format": "Arista reviewed reconciliation software HTML",
+      "expected_cves": [
+        "CVE-2024-6858"
+      ],
+      "resolution_html": "<h2>Resolution</h2><p>The recommended resolution is to upgrade to a remediated software version at your earliest convenience. Arista recommends customers move to the latest version of each release that contains all the fixes listed below. For more information about upgrading see EOS User Manual: Upgrades and Downgrades</p><div>CVE-2024-6858 has been fixed in the following releases:</div><ul><li>4.31.2F and later releases in the 4.31.x train.</li><li>4.30.6M and later releases in the 4.30.x train.</li><li>4.29.8M and later releases in the 4.29.x train.</li><li>4.28.11Mand later releases in the 4.28.x train.</li></ul><h3>Hotfix</h3><p>No hotfix is available</p>",
+      "assessments": [
+        {
+          "cve_id": "CVE-2024-6858",
+          "versions": [
+            "4.31.1F and below releases in the 4.31.x train.",
+            "4.30.5M and below releases in the 4.30.x train.",
+            "4.29.7M and below releases in the 4.29.x train.",
+            "4.28.10.1M and below releases in the 4.28.x train."
+          ]
+        }
+      ],
+      "bindings": [
+        {
+          "cve_id": "CVE-2024-6858",
+          "affected_product": "Arista EOS",
+          "affected_locator": "Affected Software / CVE-2024-6858 / EOS Versions",
+          "fixed_product": "Arista EOS",
+          "fixed_locator": "Resolution / CVE-2024-6858 / EOS fixed-release list",
+          "statement": "CVE-2024-6858 has been fixed in the following releases:",
+          "fixed_versions": [
+            "4.31.2F and later releases in the 4.31.x train.",
+            "4.30.6M and later releases in the 4.30.x train.",
+            "4.29.8M and later releases in the 4.29.x train.",
+            "4.28.11Mand later releases in the 4.28.x train."
+          ],
+          "clause_sha256": "1d290d3c702649fb45cf2ea6c9c8f615ea836be4c72184d38d7933b88ee0c25c",
+          "scope": "cve_specific",
+          "product_id": null,
+          "platform_bindings": [],
+          "availability": "vendor_reports_fixed",
+          "availability_date": null
+        }
+      ]
+    }
+  ]
+}
