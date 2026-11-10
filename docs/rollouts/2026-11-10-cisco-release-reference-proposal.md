@@ -68,3 +68,23 @@ or repeat download of the 174 imported targets is requested. Verify the new sour
 against the live generation; successful acquisition from this Mac does not establish
 GitHub runner access. Until that verification, hosted source acquisition remains
 unconfirmed. Human adjudication remains pending and is not part of this rollout.
+
+## Accepted collection; deployment recovery
+
+PR #52 merged as `66ef57299c15d62c1b6b4174229956bcd8562cff`; all quality jobs passed.
+Reviewed source `26dbdc745b7e8f3ae949d43198b202b040bdeae8` was pinned and ordinary
+run `42807404632` completed collection, audit, backup/readback and public artifact
+upload. The runner retained the Cisco reference, reporting `2023-07-28`, and the
+native reader's customer JSON/CSV checks passed. Affected CVEs remain 199/104/68;
+remediation publications remain 159/2/4. Three retained-alternate contexts are
+present with unchanged validation outcomes.
+
+Pages timed out at deployment; the old public generation remained live. Recovery
+uses the exact accepted public artifact `13761577124` and receipt
+[`pages-redeploy-cisco-2026-11-10.json`](../operations/pages-redeploy-cisco-2026-11-10.json),
+not collection or target import. The unchanged verifier binds producer gates,
+ZIP/TAR hashes, generation and accepted-pointer hash before publication. Only
+public artifact/run metadata and the recovery pointer's digest/source metadata
+were inspected locally; no private recovery data or worker logs were downloaded.
+The new generation is `0d1e99eaab8e41ab9f8e8afd7f448991`; it is not described as
+live until deployment and independent public checks succeed.
