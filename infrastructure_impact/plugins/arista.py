@@ -15,6 +15,8 @@ from ..adapters.arista_current_scope import (
     advance_notice,
 )
 from ..adapters.arista_current_scope import parse as current_scope
+from ..adapters.arista_hardware_notice import SLUG as HARDWARE_SLUG
+from ..adapters.arista_hardware_notice import parse as hardware_notice
 from ..adapters.arista_history import arista_release_history
 from ..adapters.arista_legacy_scope import ROUTES as OLDER_ROUTES
 from ..adapters.arista_legacy_scope import older_scope
@@ -49,6 +51,8 @@ def parse(raw, url, vendor):
         return reconciliation(raw, url, vendor)
     if is_json(raw):
         return structured(raw, url, vendor)
+    if url == PREFIX + HARDWARE_SLUG:
+        return hardware_notice(raw, url, vendor)
     if any(url == PREFIX + slug for slug, _ in ROUTES.values()):
         return current_scope(raw, url, vendor)
     if url == PREFIX + NOTICE_SLUG:
@@ -145,6 +149,7 @@ def plugin():
         current_evidence_policy=decide,
         normalizer_dependencies=(
             reconciliation,
+            hardware_notice,
             current_scope,
             advance_notice,
             arista_aggregate_notice,
