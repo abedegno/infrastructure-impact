@@ -293,3 +293,34 @@ def test_switching_json_boundary_falls_back_when_native_walk_exceeds_depth():
         actual = actual["nested"]
         normalized = normalized["nested"]
     assert actual == normalized == "leaf"
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_switching_surrogate_pair_in_product_keeps_legacy_normalization(fmt):
+    data = dataset()
+    raw = inputs()
+    raw["claims"][0]["product"] = "Rocket \ud83d\ude80"
+    data["research"]["switching_input"] = raw
+    result = publication.public_projection(data, publication_format=fmt)
+    assert result["switching_evidence"]["claims"][0]["product"] == "Rocket 🚀"
+    assert raw["claims"][0]["product"] == "Rocket \ud83d\ude80"
+
+
+def test_switching_surrogate_pair_in_key_keeps_legacy_normalization():
+    actual = publication._switching_projection_input({"\ud83d\ude80": ["value"]})
+    assert actual == {"🚀": ["value"]}
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_switching_ignored_lone_surrogate_keeps_legacy_projection(fmt):
+    data = dataset()
+    data["research"]["switching_input"] = inputs()
+    expected = publication.public_projection(data, publication_format=fmt)
+    data["research"]["switching_input"]["ignored"] = "unpaired \ud800"
+    assert publication.public_projection(data, publication_format=fmt) == expected
+
+
+def test_switching_ordinary_unicode_keeps_borrowed_native_input():
+    raw = {"claims": [{"product": "Rocket 🚀"}]}
+    actual = publication._switching_projection_input(raw)
+    assert actual["claims"] is raw["claims"]

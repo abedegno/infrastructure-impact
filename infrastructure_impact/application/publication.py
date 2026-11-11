@@ -36,12 +36,18 @@ from .release_assets import validate_asset
 def _switching_projection_input(value):
     """Validate the complete JSON boundary; borrow native claims until allowlist copying."""
 
+    surrogate = re.compile(r"[\ud800-\udfff]")
+
     def native(item):
         if type(item) is dict:
-            return all(type(k) is str and native(v) for k, v in item.items())
+            return all(
+                type(k) is str and not surrogate.search(k) and native(v) for k, v in item.items()
+            )
         if type(item) is list:
             return all(native(v) for v in item)
-        return type(item) in (str, int, float, bool, type(None))
+        if type(item) is str:
+            return not surrogate.search(item)
+        return type(item) in (int, float, bool, type(None))
 
     try:
         is_native = native(value)
@@ -50,7 +56,7 @@ def _switching_projection_input(value):
         is_native = False
     if not is_native:
         # Normalize subclasses before Python's streamed encoder can invoke their
-        # custom container methods; preserve legacy tuple/key normalization too.
+        # custom container methods; retain tuple/key and surrogate normalization.
         value = json.loads(json.dumps(value, allow_nan=False))
     else:
         # Discard chunks instead of retaining a second evidence-sized encoding.
