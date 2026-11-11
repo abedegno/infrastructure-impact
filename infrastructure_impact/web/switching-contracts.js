@@ -237,20 +237,25 @@
       );
     fail('unsupported format');
   }
+  // Expected alternative mismatches do not need an Error or a captured stack.
+  const mismatch = Symbol('schema mismatch');
+  const rejectMatch = () => {
+    throw mismatch;
+  };
   function matches(value, s, root) {
     try {
-      check(value, s, root);
+      check(value, s, root, rejectMatch);
       return true;
     } catch {
       return false;
     }
   }
-  function check(value, s, root) {
+  function check(value, s, root, failure = fail) {
     if (s === true) return;
-    if (s === false) fail('forbidden value');
+    if (s === false) failure('forbidden value');
     if (s.$ref) {
       const [shape, next] = resolve(s.$ref, root);
-      check(value, shape, next);
+      check(value, shape, next, failure);
     }
     if (s.type) {
       const types = Array.isArray(s.type) ? s.type : [s.type];
@@ -270,18 +275,18 @@
                     : typeof value === t,
         )
       )
-        fail('type');
+        failure('type');
     }
-    if (Object.hasOwn(s, 'const') && !equal(value, s.const)) fail('constant');
-    if (s.enum && !s.enum.some((v) => equal(value, v))) fail('enum');
+    if (Object.hasOwn(s, 'const') && !equal(value, s.const)) failure('constant');
+    if (s.enum && !s.enum.some((v) => equal(value, v))) failure('enum');
     if (s.oneOf && s.oneOf.filter((shape) => matches(value, shape, root)).length !== 1)
-      fail('oneOf');
-    if (s.anyOf && !s.anyOf.some((shape) => matches(value, shape, root))) fail('anyOf');
-    for (const shape of s.allOf || []) check(value, shape, root);
-    if (s.not && matches(value, s.not, root)) fail('not');
+      failure('oneOf');
+    if (s.anyOf && !s.anyOf.some((shape) => matches(value, shape, root))) failure('anyOf');
+    for (const shape of s.allOf || []) check(value, shape, root, failure);
+    if (s.not && matches(value, s.not, root)) failure('not');
     if (s.if) {
       const branch = matches(value, s.if, root) ? s.then : s.else;
-      if (branch) check(value, branch, root);
+      if (branch) check(value, branch, root, failure);
     }
     if (
       (typeof value === 'number' || typeof value === 'bigint') &&
@@ -289,7 +294,7 @@
         (s.minimum !== undefined && value < s.minimum) ||
         (s.maximum !== undefined && value > s.maximum))
     )
-      fail('number bounds');
+      failure('number bounds');
     if (typeof value === 'string') {
       const length = Array.from(value).length;
       if (
@@ -298,7 +303,7 @@
         (s.pattern && !new RegExp(s.pattern).test(value)) ||
         (s.format && !format(value, s.format))
       )
-        fail('string constraint');
+        failure('string constraint');
     }
     if (Array.isArray(value)) {
       if (
@@ -306,10 +311,10 @@
         (s.maxItems !== undefined && value.length > s.maxItems) ||
         (s.uniqueItems && new Set(value.map(canonical)).size !== value.length)
       )
-        fail('array bounds/uniqueness');
+        failure('array bounds/uniqueness');
       for (let i = 0; i < value.length; i++) {
-        if (i < (s.prefixItems?.length || 0)) check(value[i], s.prefixItems[i], root);
-        else if (s.items !== undefined) check(value[i], s.items, root);
+        if (i < (s.prefixItems?.length || 0)) check(value[i], s.prefixItems[i], root, failure);
+        else if (s.items !== undefined) check(value[i], s.items, root, failure);
       }
     } else if (value !== null && typeof value === 'object') {
       const keys = Object.keys(value);
@@ -317,12 +322,13 @@
         (s.maxProperties !== undefined && keys.length > s.maxProperties) ||
         (s.required || []).some((k) => !Object.hasOwn(value, k))
       )
-        fail('object fields');
+        failure('object fields');
       for (const key of keys) {
-        if (s.propertyNames) check(key, s.propertyNames, root);
-        if (Object.hasOwn(s.properties || {}, key)) check(value[key], s.properties[key], root);
+        if (s.propertyNames) check(key, s.propertyNames, root, failure);
+        if (Object.hasOwn(s.properties || {}, key))
+          check(value[key], s.properties[key], root, failure);
         else if (s.additionalProperties !== undefined)
-          check(value[key], s.additionalProperties, root);
+          check(value[key], s.additionalProperties, root, failure);
       }
     }
   }
