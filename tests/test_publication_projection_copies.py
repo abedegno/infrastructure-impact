@@ -243,3 +243,53 @@ def test_switching_array_of_pairs_claim_is_not_coerced_to_object(fmt):
     data["research"]["switching_input"] = raw
     with pytest.raises(AttributeError, match="get"):
         publication.public_projection(data, publication_format=fmt)
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+@pytest.mark.parametrize("container", ["list", "dict"])
+def test_switching_container_subclass_length_keeps_legacy_normalization(fmt, container):
+    class Claims(list):
+        def __len__(self):
+            raise RuntimeError("custom length must not be called")
+
+    class Claim(dict):
+        def __len__(self):
+            raise RuntimeError("custom length must not be called")
+
+    data = dataset()
+    raw = inputs()
+    if container == "list":
+        raw["claims"] = Claims(raw["claims"])
+    else:
+        raw["claims"][0] = Claim(raw["claims"][0])
+    data["research"]["switching_input"] = raw
+    result = publication.public_projection(data, publication_format=fmt)
+    assert len(result["switching_evidence"]["claims"]) == 1
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_switching_deep_native_unknown_field_keeps_legacy_json_acceptance(fmt):
+    data = dataset()
+    raw = inputs()
+    nested = "leaf"
+    for _ in range(350):
+        nested = {"nested": nested}
+    raw["ignored"] = nested
+    data["research"]["switching_input"] = raw
+    result = publication.public_projection(data, publication_format=fmt)
+    assert len(result["switching_evidence"]["claims"]) == 1
+
+
+def test_switching_json_boundary_falls_back_when_native_walk_exceeds_depth():
+    nested = "leaf"
+    for _ in range(600):
+        nested = {"nested": nested}
+    raw = {"ignored": nested}
+    # The legacy JSON boundary accepts this depth even if the Python guard
+    # consumes its recursion budget sooner than the C encoder/decoder.
+    normalized = json.loads(json.dumps(raw, allow_nan=False))["ignored"]
+    actual = publication._switching_projection_input(raw)["ignored"]
+    for _ in range(600):
+        actual = actual["nested"]
+        normalized = normalized["nested"]
+    assert actual == normalized == "leaf"

@@ -35,10 +35,6 @@ from .release_assets import validate_asset
 
 def _switching_projection_input(value):
     """Validate the complete JSON boundary; borrow native claims until allowlist copying."""
-    # Discard chunks instead of retaining a second evidence-sized encoding. This
-    # also rejects cycles/unsupported values before the native-container walk.
-    for _ in json.JSONEncoder(allow_nan=False).iterencode(value):
-        pass
 
     def native(item):
         if type(item) is dict:
@@ -47,9 +43,19 @@ def _switching_projection_input(value):
             return all(native(v) for v in item)
         return type(item) in (str, int, float, bool, type(None))
 
-    if not native(value):
-        # Preserve legacy tuple/key/subclass normalization for Python callers.
+    try:
+        is_native = native(value)
+    except RecursionError:
+        # Cycles and deep trees must retain the legacy JSON boundary's outcome.
+        is_native = False
+    if not is_native:
+        # Normalize subclasses before Python's streamed encoder can invoke their
+        # custom container methods; preserve legacy tuple/key normalization too.
         value = json.loads(json.dumps(value, allow_nan=False))
+    else:
+        # Discard chunks instead of retaining a second evidence-sized encoding.
+        for _ in json.JSONEncoder(allow_nan=False).iterencode(value):
+            pass
     # Only the header is assigned to (score_availability); nested input stays
     # read-only until switching_evidence._project makes its owned allowlist copy.
     return value.copy() if type(value) is dict else value
