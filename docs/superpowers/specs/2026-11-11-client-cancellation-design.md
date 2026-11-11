@@ -9,3 +9,14 @@ Preserve run results/rejections, existing cancellation/deadline errors and300000
 Prove an O(in-flight), not O(total completed reads), cancellation-registration bound with a resource regression. Retain cancelled/pending/failed reads, nested aliases, external already-aborted and deadline behavior. Run existing JS/publication/selection tests and a fresh browser check against unchanged actual public data through a transparent local test proxy if needed; any local asset override is test-only and must not be represented as a published artifact/manifest acceptance. Full live QA follows ordinary source-pin rollout.
 
 Backend source, schemas, resources and dependencies remain byte-identical to fully certified892f45a. Reuse that backend acceptance plus new full CI/client tests rather than rerunning a38-minute unchanged backend workload; activate through the existing collector with reparse_limit0 only after review/tests. Publication still applies its unchanged audit and public-health gates.
+
+
+## Measured second bottleneck: schema branch probes
+
+The bounded-waiter fix is independently necessary but did not alone resolve the actual-data deadline. The page-reparse hypothesis was disproven: an existing one-page parsed memo already handles32claims with1–2page parses. Do not change page decoding/caching on that hypothesis.
+
+Two30-second actual-data CPU windows identified switching-contracts.js as77–79% of non-idle sampled time, especially frame-start line33 (failure/Error construction), with heap110–151MB. The validator's private matches() probes schema alternatives by calling check() and catching failures. Creating full Error stacks for expected branch nonmatches is avoidable.
+
+Use a private shared mismatch sentinel only inside speculative matches() checks. Add an internal failure-handler parameter/default to check() and propagate it through its recursive ref/allOf/conditional/property/item checks. The public validation path retains the existing real Error factory and messages; matches() retains its existing boolean/catch semantics. Run exactly the same logical tests, alternatives/order and validation constraints. Do not cache validation results, skip branches or relax any schema/format/identity/byte/deadline rules. No sentinel may escape public validation. Generated bundle/schema/definition contents stay byte-identical; modify only runtime validator code outside the generated region.
+
+Prove valid anyOf/oneOf probes stop constructing Error objects with an isolated error-constructor counter, not a timing-only assertion. Compare valid/invalid decisions and public Error type/messages across nested refs, alternatives, conditionals, negation, numbers/bigints, arrays/objects and formats. Real-data browser selection under the unchanged300s ceiling is the acceptance criterion; metadata-only CPU profiling is diagnostic evidence, not acceptance.
