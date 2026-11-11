@@ -73,7 +73,8 @@
       const error = Error(
         Date.now() >= deadline ? 'Publication v2: stream deadline' : 'Publication v2: cancelled',
       );
-      for (const reject of waiters) reject(error);
+      // Match Promise.race ordering against input reactions already queued.
+      for (const reject of waiters) Promise.resolve().then(() => reject(error));
       waiters.clear();
     };
     controller.signal.addEventListener('abort', onAbort, { once: true });
@@ -98,17 +99,20 @@
           promise.then(
             (value) => {
               waiters.delete(reject);
-              if (Date.now() >= deadline) {
-                abort();
-                reject(Error('Publication v2: stream deadline'));
-              } else if (controller.signal.aborted) reject(Error('Publication v2: cancelled'));
-              else resolve(value);
+              resolve(value);
             },
             (error) => {
               waiters.delete(reject);
               reject(error);
             },
           );
+        }).then((value) => {
+          if (Date.now() >= deadline) {
+            abort();
+            throw Error('Publication v2: stream deadline');
+          }
+          if (controller.signal.aborted) throw Error('Publication v2: cancelled');
+          return value;
         });
       },
       close() {

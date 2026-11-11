@@ -1518,7 +1518,7 @@ for (const v of vectors.materialization ?? [])
   }
   const pendingRead = (options = {}, failImmediately = false) => {
     let resolve, reject;
-    const read = new Promise((yes, no) => {
+    const read = new TrackedPromise((yes, no) => {
       resolve = yes;
       reject = no;
       if (failImmediately) no(Error('already rejected read'));
@@ -1531,6 +1531,22 @@ for (const v of vectors.materialization ?? [])
     );
     return { stream, result: stream.next(), resolve, reject };
   };
+  for (const ordering of ['reject-abort', 'abort-reject', 'reject-microtask-abort']) {
+    const owner = new AbortController();
+    const pending = pendingRead({ signal: owner.signal });
+    const original = Error('original rejection before cancellation');
+    if (ordering === 'abort-reject') owner.abort();
+    pending.reject(original);
+    if (ordering === 'reject-microtask-abort') await Promise.resolve();
+    owner.abort();
+    await assert.rejects(
+      () => pending.result,
+      (error) =>
+        ordering === 'abort-reject' ? /cancelled/.test(error.message) : error === original,
+      ordering,
+    );
+    assert.strictEqual(activeWaiters, 0);
+  }
   const controller = new AbortController();
   let externalListeners = 0;
   const addListener = controller.signal.addEventListener.bind(controller.signal),
@@ -1588,6 +1604,37 @@ for (const v of vectors.materialization ?? [])
       return now;
     }
   };
+  // A fulfilled final read must still check cancellation/deadline in the next reaction.
+  for (const ordering of ['abort-before', 'abort-after', 'deadline-before', 'deadline-after']) {
+    const owner = new AbortController();
+    let finish,
+      reads = 0;
+    const done = new TrackedPromise((resolve) => {
+      finish = resolve;
+    });
+    const stream = isolatedApi.streamTokens(
+      {
+        [Symbol.asyncIterator]: () => ({
+          next: () => (reads++ === 0 ? TrackedPromise.resolve({ value: null, done: false }) : done),
+        }),
+      },
+      [],
+      [],
+      { signal: owner.signal, deadline: now + 10000 },
+    );
+    assert.strictEqual((await stream.next()).value, 'null');
+    const result = stream.next();
+    const interrupt = () => {
+      if (ordering.startsWith('abort')) owner.abort();
+      else now += 10001;
+    };
+    if (ordering.endsWith('before')) interrupt();
+    finish({ done: true });
+    if (ordering.endsWith('after')) queueMicrotask(interrupt);
+    await assert.rejects(() => result, ordering.startsWith('abort') ? /cancelled/ : /deadline/);
+    assert.strictEqual(activeWaiters, 0);
+    assert.strictEqual(timers.size, 0);
+  }
   const overdue = pendingRead({ deadline: now + 10000 });
   now += 10001;
   overdue.resolve({ value: null, done: false });
