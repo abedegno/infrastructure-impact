@@ -505,9 +505,45 @@ def test_retained_step_invokes_only_offline_helper_and_preserves_failure(tmp_pat
         capture_output=True,
     )
     assert result.returncode == 1
-    argv = json.loads((tmp_path / "retained-preview-stdout").read_text())
-    assert argv[:4] == ["run", "--no-sync", "python", "ops/switching_fix_preview.py"]
+    argv = json.loads(result.stdout)
+    assert argv[:4] == ["run", "--no-sync", "python", "ops/retained_preview_progress.py"]
     assert argv[argv.index("--database") + 1] == str(tmp_path / "private-home/data/intel.sqlite3")
     assert argv[argv.index("--public") + 1] == str(tmp_path / "private-retained-public")
     assert argv[argv.index("--output") + 1] == str(tmp_path / "retained-preview-result.json")
     assert argv[argv.index("--source-commit") + 1] == "a" * 40
+
+
+@pytest.mark.parametrize("bad", [False, True])
+def test_retained_progress_is_fresh_validated_inside_existing_artifact(tmp_path, bad):
+    value = {
+        "schema_version": 1,
+        "events": [
+            {
+                "event": "phase",
+                "phase": "retained.sources",
+                "state": "started",
+                "elapsed_seconds": 0,
+            }
+        ],
+    }
+    if bad:
+        value["events"][0]["raw"] = "PRIVATE"
+    (tmp_path / "retained-preview-progress.json").write_text(json.dumps(value))
+    result = execute(
+        "Sanitize result metadata",
+        tmp_path,
+        RUNNER_TEMP=str(tmp_path),
+        SOURCE_COMMIT="a" * 40,
+        STAGE_OUTCOME="skipped",
+        RETAINED_ONLY="true",
+        RETAINED_OUTCOME="failure",
+    )
+    assert result.returncode == 0, result.stderr
+    raw = (tmp_path / "certification-result/result.json").read_text()
+    summary = json.loads(raw)
+    assert "PRIVATE" not in raw
+    if bad:
+        assert "retained_progress" not in summary
+    else:
+        assert summary["retained_progress"] == value
+    assert summary["retained_receipt_status"] == "missing"

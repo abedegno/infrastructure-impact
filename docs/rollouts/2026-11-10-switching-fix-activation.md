@@ -13,7 +13,8 @@ retained-only mode fails before checkout or authenticated restore.
 
 After the existing private authenticated restore, retained-only mode skips
 acquisition, import preview/staging, capture checkpointing and capture upload. It
-runs the offline helper without recovery or GitHub credentials, with a 40-minute
+runs the fixed offline helper through `ops/retained_preview_progress.py` without
+recovery or GitHub credentials, with a 40-minute
 step timeout matching the existing worker budget, then uploads only
 the existing bounded `candidate-certification-result` artifact. The workflow does
 not promote recovery, change the runtime source pin, or upload/deploy Pages.
@@ -97,6 +98,51 @@ and exact source-commit matching, under `retained_preview`. Its
 preserves the workflow step outcome. Malformed, oversized or unsafe receipt
 metadata yields a bounded invalid status. Private preview logs are never copied
 into this artifact. Default target-import receipt handling is unchanged.
+
+## Bounded diagnostic supervision
+
+The retained-only workflow uses the following fixed driver interface (the direct
+helper interface above remains available without instrumentation):
+
+```sh
+python ops/retained_preview_progress.py \
+  --database "$RUNNER_TEMP/private-home/data/intel.sqlite3" \
+  --public "$RUNNER_TEMP/private-retained-public" \
+  --output "$RUNNER_TEMP/retained-preview-result.json" \
+  --source-commit "$SOURCE_COMMIT" \
+  --progress "$RUNNER_TEMP/retained-preview-progress.json"
+```
+
+The driver accepts no command or alternate worker. It launches only its sibling
+helper with the current Python executable and internal diagnostic opt-in. Worker
+stdout and stderr stay in a private temporary directory; only fresh closed
+metadata appears in driver notices. Cancellation terminates the owned worker,
+then kills and reaps it if necessary. The 40-minute step and 60-minute job limits
+remain unchanged.
+
+`retained.sources` and `retained.audit` bracket source proof and audit. The
+existing publication phases retain their meanings. An opt-in worker thread
+samples its own main Python thread every 30 seconds, at most 80 times, reading
+only code filename and line number. Trusted public first-party package/allowlisted
+ops code and installed `jsonschema` Python files map to relative paths with line
+bounds. Every other frame becomes `external`, line 0. No values, function names,
+source text or arbitrary log text enter progress.
+
+The parent reads at most 65,536 private log bytes per poll. It rejects unknown
+fields and events, deduplicates phase/state pairs and refreshes one cumulative
+top-three sampled-location aggregate at most every 120 seconds, plus a final
+flush. Progress holds at most 32 events; one slot is reserved for samples. At
+most 32 bounded notices are emitted, while the private progress file stays
+current. `progress_bytes(value)` freshly validates the closed
+`{schema_version: 1, events: [...]}` form before notices, atomic writes and
+artifact projection; the file is at most 16,384 bytes. Existing, symlinked,
+hardlinked, stale or oversized progress files fail closed. Progress never writes
+or substitutes for the helper result.
+
+The existing artifact adds `retained_progress` only after fresh bounded validation
+of the private progress file. A missing or invalid progress file adds no progress.
+Only the complete validated helper receipt and mandatory gates establish preview
+acceptance. Partial diagnostics do not authorize activation or publication.
 
 ## Pending activation
 
