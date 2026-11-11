@@ -1,0 +1,408 @@
+{
+  "publication": {
+    "id": "c2115c35b1c84b7dbdb3134ccac98acd",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-11T10:29:39.376925+00:00",
+  "public_parts": [
+    {
+      "name": "bootstrap.json",
+      "url": "https://abedegno.github.io/infrastructure-impact/data/a382570147e1d63b6182630475f013db8c48ad4c7eaf530e18e9b2f5faed03a6.json",
+      "bytes": 4555264,
+      "sha256": "a382570147e1d63b6182630475f013db8c48ad4c7eaf530e18e9b2f5faed03a6"
+    },
+    {
+      "name": "publication-v2.json",
+      "url": "https://abedegno.github.io/infrastructure-impact/publication-v2.json",
+      "bytes": 329612,
+      "sha256": "ef13ea097de2f3a5f954e8c250a8d1e48bde2acbc1287dd9b32bea35769f1619"
+    },
+    {
+      "name": "switching-overview.json",
+      "path": "data/v2/d002df7a0d4aaedf1e40241471dcc998d54276e83e26b720dffc31dea6680e44.json",
+      "sha256": "d002df7a0d4aaedf1e40241471dcc998d54276e83e26b720dffc31dea6680e44",
+      "bytes": 2639444
+    }
+  ],
+  "last_run": {
+    "id": 78,
+    "started_at": "2026-11-11T10:26:05.592696+00:00",
+    "finished_at": "2026-11-11T10:29:36.165386+00:00",
+    "outcome": "partial",
+    "imported": 57,
+    "failures": 14,
+    "details": "Collection finished; source gaps remain visible. Data publication is distinct from code deployment."
+  },
+  "record_counts": {
+    "advisories": 1240,
+    "evidence_snapshots": 5645,
+    "current": 1240,
+    "excluded": 1,
+    "retained_total": 1241
+  },
+  "unique_health_identities": 1291,
+  "retained_source_errors_by_vendor": {
+    "arista": 52,
+    "checkpoint": 4,
+    "fortinet": 3,
+    "paloalto": 14
+  },
+  "latest_run_errors": [
+    {
+      "id": 11589,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1015-security-advisory-7",
+      "checked_at": "2026-11-11T10:27:20.868241+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11588,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1053-security-advisory-9",
+      "checked_at": "2026-11-11T10:27:20.793653+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11587,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1128-security-advisory-10",
+      "checked_at": "2026-11-11T10:27:20.722529+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11586,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1144-security-advisory-11",
+      "checked_at": "2026-11-11T10:27:20.654639+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11585,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1174-security-advisory-12",
+      "checked_at": "2026-11-11T10:27:20.580922+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11584,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1180-security-advisory-13",
+      "checked_at": "2026-11-11T10:27:20.507145+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11583,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1188-security-advisory-14",
+      "checked_at": "2026-11-11T10:27:20.437194+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11582,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/1212-security-advisory-0016",
+      "checked_at": "2026-11-11T10:27:20.361346+00:00",
+      "outcome": "error",
+      "details": "Retained capture remains unsupported; no network retry performed.",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11541,
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/25048-security-advisory-0226",
+      "checked_at": "2026-11-11T10:27:05.777437+00:00",
+      "outcome": "error",
+      "details": "No product assessments extracted; source layout may have changed",
+      "error_code": "unsupported_or_invalid_document"
+    },
+    {
+      "id": 11564,
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/download/134275",
+      "checked_at": "2026-11-11T10:27:14.364764+00:00",
+      "outcome": "error",
+      "details": "Source requires interactive bot verification. No challenge execution or product inference performed.",
+      "error_code": "access_verification_required"
+    },
+    {
+      "id": 11565,
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/download/134302",
+      "checked_at": "2026-11-11T10:27:14.428404+00:00",
+      "outcome": "error",
+      "details": "Source requires interactive bot verification. No challenge execution or product inference performed.",
+      "error_code": "access_verification_required"
+    },
+    {
+      "id": 11464,
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk181833",
+      "checked_at": "2026-11-11T10:26:21.309005+00:00",
+      "outcome": "error",
+      "details": "Source requires interactive bot verification. No challenge execution or product inference performed.",
+      "error_code": "access_verification_required"
+    },
+    {
+      "id": 11463,
+      "vendor": "checkpoint",
+      "source_url": "https://support.checkpoint.com/results/sk/sk182459",
+      "checked_at": "2026-11-11T10:26:21.235216+00:00",
+      "outcome": "error",
+      "details": "Source requires interactive bot verification. No challenge execution or product inference performed.",
+      "error_code": "access_verification_required"
+    },
+    {
+      "id": 11598,
+      "vendor": "paloalto",
+      "source_url": "https://security.paloaltonetworks.com/PAN-SA-2016-0033",
+      "checked_at": "2026-11-11T10:27:23.845652+00:00",
+      "outcome": "error",
+      "details": "Normalized advisory /cves/0: 'PAN-SA-2016-0033' does not match '^CVE-[0-9]{4}-[0-9]{4,}$'",
+      "error_code": "unsupported_or_invalid_document"
+    }
+  ],
+  "study_rows": [
+    {
+      "vendor": "cisco",
+      "counts": {
+        "advisories": 170,
+        "affected_advisories": 170,
+        "cves": 199,
+        "claims": 34920,
+        "affected_cves": 199,
+        "conditional_cves": 1,
+        "conditionality_unclassified_cves": 198,
+        "draft_advisories": 0,
+        "remediation_events": 159,
+        "bundled_events": 1,
+        "unbundled_publications": 158,
+        "fixed_only_claims": 0,
+        "planned_fix_claims": 0,
+        "workaround_claims": 0,
+        "model_unresolved_claims": 34831
+      },
+      "denominators": {
+        "affected_cves": 199,
+        "observed_advisories": 170,
+        "expected_advisories": null
+      }
+    },
+    {
+      "vendor": "aruba",
+      "counts": {
+        "advisories": 21,
+        "affected_advisories": 16,
+        "cves": 119,
+        "claims": 882,
+        "affected_cves": 104,
+        "conditional_cves": 0,
+        "conditionality_unclassified_cves": 104,
+        "draft_advisories": 0,
+        "remediation_events": 6,
+        "bundled_events": 0,
+        "unbundled_publications": 6,
+        "fixed_only_claims": 443,
+        "planned_fix_claims": 20,
+        "workaround_claims": 380,
+        "model_unresolved_claims": 882
+      },
+      "denominators": {
+        "affected_cves": 104,
+        "observed_advisories": 21,
+        "expected_advisories": null
+      }
+    },
+    {
+      "vendor": "arista",
+      "counts": {
+        "advisories": 60,
+        "affected_advisories": 55,
+        "cves": 106,
+        "claims": 654,
+        "affected_cves": 70,
+        "conditional_cves": 1,
+        "conditionality_unclassified_cves": 69,
+        "draft_advisories": 22,
+        "remediation_events": 6,
+        "bundled_events": 0,
+        "unbundled_publications": 6,
+        "fixed_only_claims": 397,
+        "planned_fix_claims": 0,
+        "workaround_claims": 0,
+        "model_unresolved_claims": 478
+      },
+      "denominators": {
+        "affected_cves": 70,
+        "observed_advisories": 60,
+        "expected_advisories": null
+      }
+    }
+  ],
+  "archive_observations": {
+    "cisco": {
+      "rss_window": 50,
+      "per_pass_limit": 4,
+      "expected_applicable_advisories": null
+    },
+    "aruba": {
+      "index_documents": 113,
+      "done": 113,
+      "pending": 0,
+      "errors": 0,
+      "expected_applicable_advisories": null
+    },
+    "arista": {
+      "discovered": 219,
+      "done": 155,
+      "errors": 51,
+      "pending": 13,
+      "listing_pages": 21,
+      "known_queue_exhausted": false,
+      "pending_identities_available_in_compact_report": false,
+      "expected_applicable_advisories": null
+    }
+  },
+  "primary_sources": {
+    "arista_sa0226": {
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/25048-security-advisory-0226",
+      "bytes": 113647,
+      "sha256": "a13c363d04840f17d5c31cd41e1301478150bf6b367d10759a583eba54a2aeb7",
+      "retrieved_at": "2026-11-11T11:24:59.077561+00:00"
+    },
+    "arista_listing_access": {
+      "url": "https://www.arista.com/en/support/advisories-notices",
+      "bytes": 3038,
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "retrieved_at": "2026-11-11T11:25:41.692938+00:00"
+    },
+    "cisco_same_row_fix": {
+      "url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+      "http_status": 200,
+      "bytes": 280606,
+      "sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0",
+      "matches_pinned": true,
+      "retrieved_at": null,
+      "retrieval_date": "2026-11-11",
+      "retrieval_time_note": "Exact fetch timestamp was not recorded; no timestamp inferred from replay."
+    }
+  },
+  "local_replays": {
+    "cisco": {
+      "claims": 1,
+      "cve_id": "CVE-2024-6387",
+      "product": "IOS XE Software with NETCONF enabled",
+      "conditional_affected": true,
+      "before_release_count": 0,
+      "after_release_count": 1,
+      "after_releases": [
+        {
+          "vendor": "cisco",
+          "version": "17.15.1",
+          "vendor_reported_fixed_cve_count": null,
+          "affected_scope_cve_count": 1,
+          "reported_release_dates": [],
+          "issues": ["release_date_unknown"]
+        }
+      ]
+    },
+    "arista": {
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/25048-security-advisory-0226",
+      "source_bytes": 113647,
+      "source_sha256": "a13c363d04840f17d5c31cd41e1301478150bf6b367d10759a583eba54a2aeb7",
+      "source_format": "Arista reviewed hardware notice HTML",
+      "published_at": "2026-11-10",
+      "updated_at": "2026-11-10",
+      "advisory_cves": [
+        "CVE-2024-38798",
+        "CVE-2024-42446",
+        "CVE-2025-11187",
+        "CVE-2025-15467",
+        "CVE-2025-15468",
+        "CVE-2025-15469",
+        "CVE-2025-31648",
+        "CVE-2025-66199",
+        "CVE-2025-68160",
+        "CVE-2025-69418",
+        "CVE-2025-69419",
+        "CVE-2025-69420",
+        "CVE-2025-69421",
+        "CVE-2026-22795",
+        "CVE-2026-22796"
+      ],
+      "assessments": 15,
+      "research_claims": 15,
+      "statuses": {
+        "unaffected": 15
+      },
+      "scopes": {
+        "bulletin_shared": 15
+      },
+      "platform_count": 27,
+      "public_comparison_counts": {
+        "advisories": 1,
+        "affected_advisories": 0,
+        "cves": 15,
+        "claims": 15,
+        "affected_cves": 0,
+        "conditional_cves": 0,
+        "conditionality_unclassified_cves": 0,
+        "draft_advisories": 0,
+        "remediation_events": 0,
+        "bundled_events": 0,
+        "unbundled_publications": 0,
+        "fixed_only_claims": 0,
+        "planned_fix_claims": 0,
+        "workaround_claims": 0,
+        "model_unresolved_claims": 15
+      },
+      "model_qualified_cves": 0,
+      "all_platform_bindings_unresolved": true,
+      "capture_identity_note": "Fresh cached primary capture; hosted failed-capture byte identity is unestablished."
+    }
+  },
+  "limits": {
+    "historical_completeness_established": false,
+    "independent_human_review_completed": false,
+    "customer_upgrade_counts_established": false,
+    "hosted_configuration_changed": false,
+    "fresh_per_year_totals_established": false,
+    "yearly_historical_receipt": "../2026-11-10-comparison-evidence/coverage-by-year.csv"
+  },
+  "context_sources": [
+    {
+      "url": "https://www.anthropic.com/glasswing",
+      "reviewed_on": "2026-11-11",
+      "source_kind": "primary_statement",
+      "raw_sha256": null,
+      "limit": "Vendor/programme-reported context; no per-CVE causal attribution; raw bytes not archived by this metadata check."
+    },
+    {
+      "url": "https://blogs.arista.com/blog/racing-against-machine-speed-threats",
+      "reviewed_on": "2026-11-11",
+      "source_kind": "primary_statement",
+      "raw_sha256": null,
+      "limit": "Vendor/programme-reported context; no per-CVE causal attribution; raw bytes not archived by this metadata check."
+    },
+    {
+      "url": "https://sec.cloudapps.cisco.com/security/center/resources/risk-based-disclosure",
+      "reviewed_on": "2026-11-11",
+      "source_kind": "primary_statement",
+      "raw_sha256": null,
+      "limit": "Vendor/programme-reported context; no per-CVE causal attribution; raw bytes not archived by this metadata check."
+    }
+  ]
+}

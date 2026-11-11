@@ -540,6 +540,24 @@ previous report shape. Blind review packets do not include this context.
 
 ### Reviewed fix-attribution expansion
 
+The [11 November coverage audit](research/2026-11-11-comparison-evidence-audit.md)
+supersedes earlier present-tense source inventories without rewriting their dated
+receipts. Its [customer assessment](research/2026-11-11-customer-comparison-assessment.md)
+distinguishes observed CVE volume from security quality and customer upgrade work.
+The bounded Cisco release projection recognizes the existing exact reviewed
+`IOS XE Software with NETCONF enabled` same-row fix at bare literal `17.15.1`.
+It adds affected-scope release context with unknown software date, without changing
+affected CVEs, remediation-publication counts or model applicability. Other Cisco
+version syntax and product labels remain unsupported by this narrow projection;
+affected numeric CSAF leaves are not fixed releases.
+
+The exact reviewed SA-0226 hardware notice contributes shared-bulletin
+EOS-unaffected context only. Its CVA tables and explicit EOS exclusion own the
+claim identities; server/OEM fixed matrices are not projected. Slash-labelled
+platforms remain unresolved, and `750X` is not the study's `750` model.
+These source/projection changes require normal reviewed deployment before they
+appear in a hosted generation; local replay is not live acceptance.
+
 The [10 November cached-source replay](research/2026-11-10-switching-fix-expansion-replay.md)
 records five Aruba CSAF and three Arista CVE-owned list additions, plus an excluded
 SA0062 control. A finite bundled registry pins source ownership and exact literal
