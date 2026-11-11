@@ -314,3 +314,106 @@ def test_escaped_ascii_literal_exact_bound_and_preallocation(monkeypatch, serial
                 budget=codec.Budget(len(expected) - 1),
             )
         )
+
+
+def test_repeated_literal_encoding_reused_with_observers(monkeypatch):
+    original = json.dumps
+    calls = []
+
+    def counted(value, **kwargs):
+        calls.append(value)
+        return original(value, **kwargs)
+
+    monkeypatch.setattr(codec.json, "dumps", counted)
+    observed = []
+    budget = codec.Budget()
+    raw = b"".join(
+        codec.stream_tokens(
+            [[-1, 3], -2, -2, -2],
+            ["é🚀\x7f\n"],
+            [],
+            serialization="ascii",
+            budget=budget,
+            observer=observed.append,
+        )
+    )
+    assert raw == b"[" + b",".join([original("é🚀\x7f\n").encode()] * 3) + b"]"
+    assert (
+        b"".join(observed)
+        == ("[" + ",".join([original("é🚀\x7f\n", ensure_ascii=False)] * 3) + "]").encode()
+    )
+    assert budget.used == len(raw)
+    assert len(calls) == 2
+
+
+def test_literal_cache_bounded_and_modes():
+    cache = codec.LiteralCache()
+    for index in range(5000):
+        cache.quoted(str(index))
+    assert len(cache.entries) == 4096
+    assert cache.payload_bytes <= 1048576
+    for index in range(100):
+        cache.quoted(str(index) + "é" * 10000, ascii=True)
+    assert cache.payload_bytes == sum(map(len, cache.entries.values()))
+    assert cache.payload_bytes <= 1048576
+    before = cache.payload_bytes
+    cache.quoted("x" * 1048576)
+    assert cache.payload_bytes == before
+    assert codec.Budget().literals is not codec.Budget().literals
+    parent = codec.Budget()
+    assert codec.Budget(parent=parent).literals is parent.literals
+    assert codec.NodeBudget(parent, 100).literals is parent.literals
+
+
+def test_cached_literal_still_rejects_deadline_and_bytes():
+    budget = codec.Budget(max_bytes=5)
+    assert b"".join(codec.stream_tokens([-2], ["a"], [], budget=budget)) == b'"a"'
+    with pytest.raises(ValueError, match="byte budget"):
+        b"".join(codec.stream_tokens([-2], ["a"], [], budget=budget))
+    budget.deadline = 0
+    with pytest.raises(ValueError, match="deadline"):
+        b"".join(codec.stream_tokens([-2], ["a"], [], budget=budget))
+
+
+def test_literal_cache_keeps_subclass_legacy_serialization(monkeypatch):
+    class Text(str):
+        pass
+
+    cache = codec.LiteralCache()
+    original = json.dumps
+    calls = []
+
+    def counted(value, **kwargs):
+        calls.append(value)
+        return original(value, **kwargs)
+
+    monkeypatch.setattr(codec.json, "dumps", counted)
+    for _ in range(2):
+        assert cache.quoted(Text("x")) == b'"x"'
+    assert len(calls) == 2
+    assert cache.entries == {}
+
+
+def test_alias_reuses_literal_cache_and_calls_observer(monkeypatch):
+    original = json.dumps
+    calls = []
+
+    def counted(value, **kwargs):
+        calls.append(value)
+        return original(value, **kwargs)
+
+    monkeypatch.setattr(codec.json, "dumps", counted)
+    observed = []
+    raw = b"".join(
+        codec.stream_tokens(
+            [[0], [1], [-3, "switching-evidence.json"], -2],
+            ["repeat"],
+            [["inputs", "tail"], ["evidence"]],
+            root="switching-comparison.json",
+            aliases=lambda _: iter([-2]),
+            observer=observed.append,
+        )
+    )
+    assert raw == b'{"inputs":{"evidence":"repeat"},"tail":"repeat"}'
+    assert b"".join(observed) == raw
+    assert calls.count("repeat") == 1

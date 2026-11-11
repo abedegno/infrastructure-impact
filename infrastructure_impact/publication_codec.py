@@ -10,7 +10,7 @@ import math
 import re
 import time
 import zlib
-from collections import deque
+from collections import OrderedDict, deque
 from dataclasses import dataclass, field
 from hashlib import sha256
 
@@ -259,6 +259,29 @@ class LogicalNumber:
         return int(self.lexeme) if self.kind == "i" else float(self.lexeme)
 
 
+class LiteralCache:
+    """Invocation-local FIFO of pure built-in string encodings, never validation."""
+
+    def __init__(self):
+        self.entries = OrderedDict()
+        self.payload_bytes = 0
+
+    def quoted(self, value, *, ascii=False):
+        if type(value) is not str:
+            return json.dumps(value, ensure_ascii=ascii, separators=(",", ":")).encode("utf-8")
+        key = (value, ascii)
+        raw = self.entries.get(key)
+        if raw is not None:
+            return raw
+        raw = json.dumps(value, ensure_ascii=ascii, separators=(",", ":")).encode("utf-8")
+        if len(raw) <= 1_048_576:
+            while len(self.entries) >= 4096 or self.payload_bytes + len(raw) > 1_048_576:
+                self.payload_bytes -= len(self.entries.popitem(last=False)[1])
+            self.entries[key] = raw
+            self.payload_bytes += len(raw)
+        return raw
+
+
 @dataclass
 class Budget:
     max_bytes: int = MAX_STREAM
@@ -266,6 +289,8 @@ class Budget:
     used: int = 0
     costs: dict = field(default_factory=dict)
     parent: "Budget | None" = None
+
+    literals: LiteralCache = field(default_factory=LiteralCache, init=False, repr=False)
 
     def __post_init__(self):
         self.max_bytes = min(safe_int(self.max_bytes), MAX_STREAM)
@@ -276,6 +301,7 @@ class Budget:
         if self.parent is not None:
             self.deadline = min(self.deadline, self.parent.deadline)
             self.costs = self.parent.costs
+            self.literals = self.parent.literals
 
     def charge(self, canonical, requested):
         if time.monotonic() > self.deadline:
@@ -296,6 +322,7 @@ class NodeBudget:
         self.canonical_limit = safe_int(canonical_limit, minimum=1)
         self.canonical_used = 0
         self.costs = parent.costs
+        self.literals = parent.literals
 
     @property
     def max_bytes(self):
@@ -376,8 +403,8 @@ def stream_tokens(
         canonical, escaped = budget.costs[value]
         budget.charge(canonical, escaped if ascii else canonical)
         if observer is not None:
-            observer(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
-        return json.dumps(value, ensure_ascii=ascii, separators=(",", ":")).encode("utf-8")
+            observer(budget.literals.quoted(value))
+        return budget.literals.quoted(value, ascii=ascii)
 
     def node(level, location):
         nonlocal position

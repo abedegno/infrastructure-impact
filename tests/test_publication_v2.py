@@ -201,3 +201,54 @@ def test_archive_record_route_authority(tmp_path, fault):
     catalog["archive"]["gzip"].update(bytes=len(compressed), sha256=sha256(compressed).hexdigest())
     with pytest.raises((AssertionError, ValueError)):
         verify_publication_v2_archive(compressed, catalog, reader.identity)
+
+
+def test_writer_reuses_strings_without_changing_root_bytes(tmp_path, monkeypatch):
+    from infrastructure_impact.application.publication_v2 import Writer
+
+    original = json.dumps
+    calls = []
+
+    def counted(value, **kwargs):
+        if type(value) is str:
+            calls.append(value)
+        return original(value, **kwargs)
+
+    monkeypatch.setattr(json, "dumps", counted)
+    value = [{"key": "é🚀\x7f"}] * 10
+    writer = Writer(tmp_path, {})
+    writer.root("snapshot.json", value)
+    expected = original(value, ensure_ascii=False, separators=(",", ":")).encode()
+    assert writer.root_data["snapshot.json"]["logical"] == {
+        "bytes": len(expected),
+        "sha256": sha256(expected).hexdigest(),
+    }
+    assert calls.count("key") == 1
+    assert calls.count("é🚀\x7f") == 2
+
+
+def test_writer_cache_preserves_all_fixture_files(tmp_path, monkeypatch):
+    from infrastructure_impact import publication_codec as codec
+    from infrastructure_impact.application.publication_v2 import Writer
+
+    value = {"key": ["é🚀\x7f\n", "repeat", None, True, 1, 1.5] * 5}
+    cached = Writer(tmp_path / "cached", {})
+    cached.root("snapshot.json", value)
+
+    def uncached(self, value, *, ascii=False):
+        return json.dumps(value, ensure_ascii=ascii, separators=(",", ":")).encode()
+
+    monkeypatch.setattr(codec.LiteralCache, "quoted", uncached)
+    reference = Writer(tmp_path / "reference", {})
+    reference.root("snapshot.json", value)
+    assert cached.root_data == reference.root_data
+    assert cached.root_ranges == reference.root_ranges
+    assert {
+        p.relative_to(cached.destination): p.read_bytes()
+        for p in cached.destination.rglob("*")
+        if p.is_file()
+    } == {
+        p.relative_to(reference.destination): p.read_bytes()
+        for p in reference.destination.rglob("*")
+        if p.is_file()
+    }
