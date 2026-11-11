@@ -98,6 +98,8 @@ def parse(raw, url, vendor):
     safe(heading)
     if heading.text() not in {"Security Advisory 0226", "Security Advisory 0226 PDF"}:
         raise ValueError("Arista hardware notice title changed")
+    if any(isinstance(c, str) and c.strip() for c in a.children):
+        raise ValueError("Unbound Arista hardware article text requires review")
     nodes = children(a)
     sections = {}
     current = None

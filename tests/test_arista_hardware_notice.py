@@ -267,3 +267,21 @@ def test_literal_publisher_nesting_keeps_exchange_but_not_outer_product_peers():
             "DCA-400-CV",
             "DCA-450-CV",
         } & set(a["platforms"])
+
+
+def test_bare_article_qualifier_between_exclusion_marker_and_list_requires_review():
+    raw = source(
+        lambda s: s.replace(
+            f"<div>{MARKER}</div>",
+            f"<div>{MARKER}</div> Except EOS platforms with option X enabled.",
+        )
+    )
+    with pytest.raises(ValueError):
+        normalize(raw)
+
+
+def test_article_whitespace_between_exclusion_marker_and_list_is_preserved_as_boundary():
+    raw = source(lambda s: s.replace(f"<div>{MARKER}</div>", f"<div>{MARKER}</div> \n\t \n"))
+    doc = normalize(raw)
+    assert len(doc["assessments"]) == 15
+    assert all(a["platforms"] == PLATFORMS for a in doc["assessments"])
