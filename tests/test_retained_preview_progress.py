@@ -198,8 +198,14 @@ def test_fixed_child_private_output_and_cancel_cleanup(tmp_path, monkeypatch, ca
         return child
 
     monkeypatch.setattr(progress.subprocess, "Popen", synthetic)
+    # Cancel the driver without replacing the stdlib sleep used by subprocess.wait.
     monkeypatch.setattr(
-        progress.time, "sleep", lambda _: (_ for _ in ()).throw(KeyboardInterrupt())
+        progress,
+        "time",
+        SimpleNamespace(
+            monotonic=progress.time.monotonic,
+            sleep=lambda _: (_ for _ in ()).throw(KeyboardInterrupt()),
+        ),
     )
     with pytest.raises(KeyboardInterrupt):
         progress.run(
