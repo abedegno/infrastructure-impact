@@ -33,6 +33,28 @@ from .readiness import readiness
 from .release_assets import validate_asset
 
 
+def _switching_projection_input(value):
+    """Validate the complete JSON boundary; borrow native claims until allowlist copying."""
+    # Discard chunks instead of retaining a second evidence-sized encoding. This
+    # also rejects cycles/unsupported values before the native-container walk.
+    for _ in json.JSONEncoder(allow_nan=False).iterencode(value):
+        pass
+
+    def native(item):
+        if type(item) is dict:
+            return all(type(k) is str and native(v) for k, v in item.items())
+        if type(item) is list:
+            return all(native(v) for v in item)
+        return type(item) in (str, int, float, bool, type(None))
+
+    if not native(value):
+        # Preserve legacy tuple/key/subclass normalization for Python callers.
+        value = json.loads(json.dumps(value, allow_nan=False))
+    # Only the header is assigned to (score_availability); nested input stays
+    # read-only until switching_evidence._project makes its owned allowlist copy.
+    return value.copy() if type(value) is dict else value
+
+
 @phase("publication.projection")
 def public_projection(data, public_release_urls=(), *, publication_format="v1"):
     """The publication boundary never copies raw evidence or private review notes."""
@@ -45,10 +67,11 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
     validate_format(publication_format)
     # Consume private frames before any general clone or public serialization.
     release_input = data["research"].get("release_input", [])
+    switching_input = data["research"].get("switching_input")
     research = {
         k: v
         for k, v in data["research"].items()
-        if k not in {"current_evidence_input", "release_input"}
+        if k not in {"current_evidence_input", "release_input", "switching_input"}
     }
     # Supplied reports are never authority at the public boundary.
     data = {k: v for k, v in data.items() if k != "switching_release_history"}
@@ -71,8 +94,9 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
             raise ValueError("Supplied retained partition differs from recomputed decisions")
     elif data.get("retained_advisories"):
         raise ValueError("Retained exclusions require decision references")
+    switching_input = _switching_projection_input(switching_input)
     data = json.loads(json.dumps({**data, "research": research}, allow_nan=False))
-    data = rebuild(data, computed)
+    data = rebuild(data, computed, switching_input=switching_input)
     from ..adapters.cvss import public_metrics
 
     has_score_input = "score_input" in data["research"]
