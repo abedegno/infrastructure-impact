@@ -73,7 +73,7 @@ function literalHistory(vendor, expression, version) {
   const h = clone(base),
     n = clone(base.releases.find((n) => n.references.length));
   n.vendor = vendor;
-  n.family = vendor === 'aruba' ? 'aruba-aoscx' : 'arista-eos';
+  n.family = { aruba: 'aruba-aoscx', arista: 'arista-eos', cisco: 'cisco-iosxe' }[vendor];
   n.version = version;
   n.release_id = context.window.InfrastructureSwitchingContracts.fingerprint({
     vendor,
@@ -84,15 +84,18 @@ function literalHistory(vendor, expression, version) {
   n.reported_release_dates = [];
   for (const ref of n.references) {
     ref.expression = expression;
-    ref.source.source_url = ref.claim_source.source_url =
-      vendor === 'aruba'
-        ? 'https://csaf.arubanetworking.hpe.com/synthetic.json'
-        : 'https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic';
+    ref.source.source_url = ref.claim_source.source_url = {
+      aruba: 'https://csaf.arubanetworking.hpe.com/synthetic.json',
+      arista: 'https://www.arista.com/en/support/advisories-notices/security-advisory/synthetic',
+      cisco:
+        'https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/synthetic',
+    }[vendor];
   }
   h.releases = [n];
   return h;
 }
 for (const [vendor, expression, version] of [
+  ['cisco', '17.15.1', '17.15.1'],
   ['aruba', 'AOS-CX 10.16.1006', '10.16.1006'],
   ['aruba', 'AOS-CX 10.16.1006_aos-cx', '10.16.1006'],
   ['arista', '4.31.2F.', '4.31.2F'],
@@ -104,10 +107,33 @@ for (const [vendor, expression, version] of [
     original = clone(h);
   api.validateHistory(h);
   assert.deepStrictEqual(h, original, 'literal validation preserves expressions and dates');
-  const later = literalHistory(vendor, expression, vendor === 'aruba' ? '10.16.1007' : '4.31.9M');
+  const later = literalHistory(
+    vendor,
+    expression,
+    { aruba: '10.16.1007', arista: '4.31.9M', cisco: '17.15.2' }[vendor],
+  );
   assert.throws(() => api.validateHistory(later), 'no later-version membership inference');
 }
 for (const [vendor, expression, version] of [
+  ...[
+    '17.15',
+    '17.15.x',
+    '>=17.15.1',
+    'vers:semver/17.15.1',
+    '17.15.1 or later',
+    'IOS XE 17.15.1',
+    'Upgrade to 17.15.1',
+    '17.15.1 - 17.16.1',
+    '17.15.1.',
+    '17.15.1a',
+    '17.15.1S',
+    '17.15.1(1)',
+    '17.15.1.bin',
+    ' 17.15.1',
+    '17.15.1 ',
+    '17.15.1\n',
+    '١٧.١٥.١',
+  ].map((expression) => ['cisco', expression, '17.15.1']),
   ['aruba', 'Other AOS-CX 10.16.1006', '10.16.1006'],
   ['aruba', 'AOS-CX >=10.16.1006', '10.16.1006'],
   ['aruba', 'AOS-CX 10.16.1006 and above', '10.16.1006'],
@@ -132,7 +158,7 @@ sys.path.insert(0,'tests')
 from test_customer_comparison import selected
 from test_static_delivery import dataset
 from test_switching_aruba_fix_links import projected,reidentify
-from test_switching_release_history import frame,study,build as build_history
+from test_switching_release_history import frame,study,cisco_evidence,build as build_history
 from test_software_release_sources import ARISTA,MODELS,bundle,models
 from infrastructure_impact.references import software_releases as source_docs
 from infrastructure_impact.application import customer_comparison as customer,publication,switching_releases,switching_comparison
@@ -141,7 +167,8 @@ import copy
 from infrastructure_impact.application.publication_reader import PublicationReader
 summary,history=selected(vendor='aruba',window='2024')
 envelope=customer.build(summary,history)
-data=dataset();data['research']['switching_input']=projected();data['research']['release_input']=[frame()]
+data=dataset();combined=projected();combined['claims']+=cisco_evidence()['claims'];reidentify(combined)
+data['research']['switching_input']=combined;data['research']['release_input']=[frame()]
 root=tempfile.mkdtemp(prefix='customer-browser-')
 paths={fmt:str(publication.publish(data,root+'/'+fmt,publication_format=fmt)) for fmt in ['v1','v2']}
 reader=PublicationReader(paths['v2']);overview=reader.switching_overview(evaluated_at=data['generated_at'])
@@ -161,9 +188,15 @@ scored_envelope=customer.build(scored_study,switching_releases.select_report(Non
 fixed_ev=projected();fixed_ev['claims']=[c for c in fixed_ev['claims'] if c['status']=='fixed'];reidentify(fixed_ev)
 fixed_study=study(fixed_ev,vendor='aruba',window='2024')
 fixed_envelope=customer.build(fixed_study,switching_releases.select_report(build_history(fixed_ev),fixed_study))
+cisco_ev=cisco_evidence();cisco_full=build_history(cisco_ev)
+cisco_cases=[]
+for options in [dict(window='all'),dict(window='2024'),dict(window='2025'),dict(scope_level='model_qualified'),dict(cve_ids=['CVE-2024-99999'])]:
+ s=study(cisco_ev,vendor='cisco',**options)
+ h=switching_releases.select_report(cisco_full,s)
+ cisco_cases.append(dict(study=s,history=h,envelope=customer.build(s,h)))
 vectors=json.load(open('tests/fixtures/switching-release-history-vectors.json'))
 selections=[switching_releases.select_report(vectors['histories'].get(v['history']),v['study_selection']) for v in vectors['vectors']]
-print(json.dumps(dict(selections=selections,cases=[dict(envelope=e,csv=customer.csv_export(e)) for e in [envelope,other,context_envelope,scored_envelope,fixed_envelope]],paths=paths,temporary=root)))`,
+print(json.dumps(dict(selections=selections,cisco_full=cisco_full,cisco_cases=cisco_cases,cases=[dict(envelope=e,csv=customer.csv_export(e)) for e in [envelope,other,context_envelope,scored_envelope,fixed_envelope,cisco_cases[1]['envelope']]],paths=paths,temporary=root)))`,
     ],
     { encoding: 'utf8' },
   ),
@@ -175,6 +208,18 @@ shared.vectors.forEach((vector, i) =>
     vector.name + ' full Python parity',
   ),
 );
+for (const test of fixtures.cisco_cases) {
+  const selected = api.selectHistory(fixtures.cisco_full, test.study);
+  assert.deepStrictEqual(clone(selected), test.history, 'Cisco selected-history Python parity');
+  assert.deepStrictEqual(clone(api.build(test.study, selected)), test.envelope);
+}
+const ciscoNode = fixtures.cisco_cases[1].history.releases[0];
+assert.strictEqual(ciscoNode.version, '17.15.1');
+assert.strictEqual(ciscoNode.vendor_reported_fixed_cve_count, null);
+assert.strictEqual(ciscoNode.affected_scope_cve_count, 1);
+assert.deepStrictEqual(ciscoNode.reported_release_dates, []);
+assert.strictEqual(ciscoNode.references[0].availability_date, null);
+assert.strictEqual(ciscoNode.references[0].link_basis, 'same_source_row');
 // Catch missing/reordered overview facts, conflated fix counts and unsafe labels.
 const overviewCase = fixtures.cases[2].envelope;
 const overviewHTML = api.render(overviewCase);
@@ -295,6 +340,11 @@ for (const test of fixtures.cases) {
           );
     const history = await loader.switchingReleaseHistory(study);
     api.build(study, history);
+    const cisco = history.releases.find((n) => n.vendor === 'cisco');
+    assert.strictEqual(cisco.version, '17.15.1', 'Cisco lazy publication transport');
+    assert.strictEqual(cisco.vendor_reported_fixed_cve_count, null);
+    assert.strictEqual(cisco.affected_scope_cve_count, 1);
+    assert.deepStrictEqual(clone(cisco.references[0].source), ciscoNode.references[0].source);
     assert(!reads.some((p) => /snapshot\.json/.test(p)), 'no whole runtime snapshot');
     if (fmt === 'v1') {
       const file = require('path').join(dir, 'switching-release-history.json'),

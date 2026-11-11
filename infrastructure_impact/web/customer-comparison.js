@@ -25,6 +25,10 @@
     );
   }
   function literal(vendor, expression) {
+    if (vendor === 'cisco') {
+      const match = /^([0-9]+\.[0-9]+\.[0-9]+)$/.exec(expression);
+      return match?.[0] === expression ? match[1] : null;
+    }
     if (vendor === 'aruba')
       return /^(?:AOS-CX )?(\d+\.\d+\.\d{4})(?:_aos-cx)?$/.exec(expression)?.[1] ?? null;
     if (vendor !== 'arista') return null;

@@ -6,7 +6,7 @@ import json
 from hashlib import sha256
 
 import pytest
-from test_software_release_sources import ARUBA, ARUBA16, CISCO, history, models
+from test_software_release_sources import ARUBA, ARUBA16, CISCO, cisco, history, models
 from test_switching_arista_fix_links import CASES, VERSIONS
 from test_switching_arista_fix_links import projected as arista_evidence
 from test_switching_aruba_fix_links import AT, reidentify
@@ -75,6 +75,159 @@ def study(ev, **options):
 
 def release(report, version):
     return next(r for r in report["releases"] if r["version"] == version)
+
+
+def cisco_evidence():
+    """Authored conditional same-row claim, not a retained publisher capture."""
+    from test_switching_evidence import same_row_report
+
+    raw = same_row_report()
+    claim = raw["claims"][0]
+    claim.update(
+        vendor="cisco",
+        family="cisco-iosxe",
+        product="IOS XE Software with NETCONF enabled",
+        cve_id="CVE-2024-6387",
+        initial_published_at="2024-07-02T16:00:00Z",
+        scope_level="os_family",
+        named_platforms=[],
+        platform_bindings=[],
+        conditions=["NETCONF enabled"],
+        conditional_affected=True,
+        version_expressions=["affected versions unspecified"],
+        bundle=None,
+        issues=[],
+    )
+    claim["source"]["source_url"] = (
+        "https://sec.cloudapps.cisco.com/security/center/content/"
+        "CiscoSecurityAdvisory/synthetic-same-row"
+    )
+    rem = claim["remediations"][0]
+    rem.update(
+        details="17.15.1",
+        published_availability="17.15.1",
+        availability="vendor_reports_fixed",
+        version_expressions=["17.15.1"],
+        source={**claim["source"], "source_locator": claim["source"]["source_locator"] + "/td[2]"},
+        scope_binding=dict(
+            basis="same_source_row", cve_id=claim["cve_id"], source=copy.deepcopy(claim["source"])
+        ),
+    )
+    raw["coverage"] = []
+    return evidence.project(raw, publication=None, generated_at=AT)
+
+
+def test_cisco_same_row_fix_keeps_unknown_dates_counts_and_original_ownership():
+    ev = cisco_evidence()
+    original = copy.deepcopy(ev)
+    selected_study = study(ev, vendor="cisco")
+    result = build(ev, [frame(CISCO, sources.parse_cisco_17_12_1(cisco()))])
+    assert ev == original
+    node = release(result, "17.15.1")
+    assert node["vendor_reported_fixed_cve_count"] is None
+    assert node["vendor_reported_fixed_cve_ids"] == []
+    assert node["affected_scope_cve_ids"] == ["CVE-2024-6387"]
+    assert node["affected_scope_cve_count"] == 1
+    assert node["history"] == node["reported_release_dates"] == []
+    assert node["issues"] == ["release_date_unknown"]
+    (ref,) = node["references"]
+    claim = ev["claims"][0]
+    assert ref["kind"] == "affected_scope_fix"
+    assert ref["link_basis"] == "same_source_row"
+    assert ref["expression"] == "17.15.1"
+    assert ref["source"] == claim["remediations"][0]["source"]
+    assert ref["claim_source"] == claim["source"]
+    assert ref["availability_date"] is None
+    assert ref["scope_level"] == "os_family"
+    unrelated = release(result, "17.12.1")
+    assert unrelated["reported_release_dates"] == ["2023-07-31"]
+    assert unrelated["references"] == []
+    assert study(ev, vendor="cisco") == selected_study
+    assert selected_study["rows"][0]["affected_cve_ids"] == ["CVE-2024-6387"]
+    assert selected_study["rows"][0]["counts"]["remediation_events"] == 1
+    assert selected_study["rows"][0]["counts"]["conditional_cves"] == 1
+
+
+@pytest.mark.parametrize(
+    "options,retained",
+    [
+        ({"window": "all"}, True),
+        ({"window": "2024"}, True),
+        ({"window": "2025"}, False),
+        ({"scope_level": "model_qualified"}, False),
+        ({"cve_ids": ["CVE-2024-99999"]}, False),
+    ],
+)
+def test_cisco_same_row_release_follows_selected_advisory_cohort(options, retained):
+    ev = cisco_evidence()
+    result = api().select_report(build(ev), study(ev, vendor="cisco", **options))
+    assert bool(result["releases"]) is retained
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "product",
+        "ancestor",
+        "family",
+        "missing",
+        "unowned",
+        "unknown",
+        "planned",
+        "unavailable",
+        "no_fix_planned",
+        "partial_mitigation",
+        "future",
+        "draft",
+        "affected_only",
+    ],
+)
+def test_cisco_release_requires_exact_product_and_available_owned_typed_fix(change):
+    ev = cisco_evidence()
+    ordinary = build(ev)
+    claim = ev["claims"][0]
+    rem = claim["remediations"][0]
+    if change in {"product", "ancestor"}:
+        claim["product"] = "17.15.1" if change == "product" else "IOS XE Software"
+    elif change == "family":
+        claim["family"] = "arista-eos"
+    elif change == "missing":
+        claim["remediations"] = []
+    elif change == "unowned":
+        rem.pop("scope_binding")
+        claim["issues"].append("remediation_product_scope_unresolved")
+    elif change == "future":
+        rem["availability_date"] = "2027-01-01"
+    elif change == "draft":
+        claim["publisher"]["status"] = "draft"
+    elif change == "affected_only":
+        claim["version_expressions"] = ["17.15.1"]
+        rem["version_expressions"] = []
+    else:
+        rem["availability"] = change
+    reidentify(ev)
+    assert build(ev)["releases"] == []
+    ordinary["releases"][0]["references"][0]["claim_id"] = ev["claims"][0]["claim_id"]
+    with pytest.raises(ValueError, match="reference"):
+        api().validate_current_references(ordinary, ev)
+
+
+@pytest.mark.parametrize("owned", [True, False])
+def test_cisco_same_row_availability_conflict_requires_ownership(owned):
+    ev = cisco_evidence()
+    claim = ev["claims"][0]
+    negative = copy.deepcopy(claim["remediations"][0])
+    negative["availability"] = "planned"
+    if not owned:
+        negative.pop("scope_binding")
+        claim["issues"].append("remediation_product_scope_unresolved")
+    claim["remediations"].append(negative)
+    reidentify(ev)
+    result = build(ev)
+    assert bool(result["releases"]) is not owned
+    assert [d["code"] for d in result["diagnostics"]] == (
+        ["fixed_availability_conflicting"] if owned else []
+    )
 
 
 def test_exact_aruba_links_merge_history_without_counting_other_rows_as_zero_fixes():
@@ -276,11 +429,14 @@ def test_projection_rebuilds_forged_report_and_removes_private_input():
 
 
 @pytest.mark.parametrize("fmt", ["v1", "v2"])
-def test_public_history_is_lazy_optional_and_generation_bound(tmp_path, fmt):
+@pytest.mark.parametrize("vendor", ["aruba", "cisco"])
+def test_public_history_is_lazy_optional_and_generation_bound(tmp_path, fmt, vendor):
     from test_static_delivery import dataset
 
     data = dataset()
-    data["research"]["switching_input"] = aruba_evidence()
+    data["research"]["switching_input"] = (
+        aruba_evidence() if vendor == "aruba" else cisco_evidence()
+    )
     data["research"]["release_input"] = [frame()]
     out = publication.publish(data, tmp_path / fmt, publication_format=fmt)
     index = json.loads((out / "data/index.json").read_text())
@@ -295,7 +451,15 @@ def test_public_history_is_lazy_optional_and_generation_bound(tmp_path, fmt):
         assert "switching_release_history" not in reader.runtime_snapshot()
         selected = reader.switching_release_history(overview)
         assert "switching-evidence.json" not in reader._roots
-        assert release(selected, "10.14.0007")["affected_scope_cve_count"] == 1
+        node = release(selected, "10.14.0007" if vendor == "aruba" else "17.15.1")
+        assert node["affected_scope_cve_count"] == 1
+        if vendor == "cisco":
+            assert node["vendor_reported_fixed_cve_count"] is None
+            assert node["reported_release_dates"] == []
+            assert (
+                node["references"][0]["source"]
+                == data["research"]["switching_input"]["claims"][0]["remediations"][0]["source"]
+            )
         old = PublicationReader(out)
         old.catalog["roots"].pop("switching-release-history.json")
         missing = old.switching_release_history(overview)
@@ -414,11 +578,14 @@ def test_current_report_rejects_forged_derived_counts_and_wrong_generation():
         api().select_report(result, study(aruba_evidence()))
 
 
-def test_publication_writer_rejects_forged_current_claim_references(tmp_path):
+@pytest.mark.parametrize("vendor", ["aruba", "cisco"])
+def test_publication_writer_rejects_forged_current_claim_references(tmp_path, vendor):
     from test_static_delivery import dataset
 
     data = dataset()
-    data["research"]["switching_input"] = aruba_evidence()
+    data["research"]["switching_input"] = (
+        aruba_evidence() if vendor == "aruba" else cisco_evidence()
+    )
     out = publication.publish(data, tmp_path / "good")
     projected = json.loads((out / "snapshot.json").read_text())
     for name in ("switching_comparison", "switching_evidence", "switching_release_history"):
@@ -794,6 +961,29 @@ def test_writer_accepts_authoritative_historical_bound_and_rejects_same_generati
 @pytest.mark.parametrize(
     "vendor,expression,expected",
     [
+        ("cisco", "17.15.1", "17.15.1"),
+        *[
+            ("cisco", value, None)
+            for value in [
+                "17.15",
+                "17.15.x",
+                ">=17.15.1",
+                "vers:semver/17.15.1",
+                "17.15.1 or later",
+                "IOS XE 17.15.1",
+                "Upgrade to 17.15.1",
+                "17.15.1 - 17.16.1",
+                "17.15.1.",
+                "17.15.1a",
+                "17.15.1S",
+                "17.15.1(1)",
+                "17.15.1.bin",
+                " 17.15.1",
+                "17.15.1 ",
+                "17.15.1\n",
+                "١٧.١٥.١",
+            ]
+        ],
         ("aruba", "AOS-CX 10.16.1006", "10.16.1006"),
         ("aruba", "AOS-CX 10.16.1006_aos-cx", "10.16.1006"),
         ("arista", "4.31.2F.", "4.31.2F"),

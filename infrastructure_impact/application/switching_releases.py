@@ -26,6 +26,7 @@ METHOD = (
 )
 FAMILIES = {"aruba": "aruba-aoscx", "arista": "arista-eos", "cisco": "cisco-iosxe"}
 PRODUCTS = {
+    "cisco": {"IOS XE Software with NETCONF enabled"},
     "aruba": {"AOS-CX", "Aruba AOS-CX", "HPE Aruba Networking AOS-CX", "HPE Networking AOS-CX"},
     "arista": {
         "EOS",
@@ -51,7 +52,9 @@ ERROR_CODES = {
 
 def _literal(vendor, expression):
     """Parse only typed fixed expressions, never remediation details or affected bounds."""
-    if vendor == "aruba":
+    if vendor == "cisco":
+        match = re.fullmatch(r"([0-9]+\.[0-9]+\.[0-9]+)", expression)
+    elif vendor == "aruba":
         match = re.fullmatch(r"(?:AOS-CX )?(\d+\.\d+\.\d{4})(?:_aos-cx)?", expression)
     elif vendor == "arista":
         match = re.fullmatch(r"(\d+\.\d+\.\d+(?:\.\d+)?[FM]?)(?: and onwards)?\.?", expression)
