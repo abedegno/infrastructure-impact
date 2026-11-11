@@ -1434,3 +1434,171 @@ for (const v of vectors.materialization ?? [])
   );
   console.log('Raw fractional/exponent transport lexeme rejection passed');
 }
+
+// Completed reads must not retain reactions on an operation-long pending promise.
+(async () => {
+  let peak = 0;
+  class TrackedPromise extends Promise {
+    constructor(executor) {
+      const state = { settled: false, subscriptions: 0 };
+      super((resolve, reject) =>
+        executor(
+          (value) => {
+            state.settled = true;
+            resolve(value);
+          },
+          (error) => {
+            state.settled = true;
+            reject(error);
+          },
+        ),
+      );
+      this.trackedState = state;
+    }
+    then(...args) {
+      if (!this.trackedState.settled) peak = Math.max(peak, ++this.trackedState.subscriptions);
+      return super.then(...args);
+    }
+  }
+  let activeWaiters = 0,
+    peakWaiters = 0;
+  class TrackedSet extends Set {
+    add(value) {
+      if (typeof value === 'function' && !this.has(value)) {
+        activeWaiters++;
+        peakWaiters = Math.max(peakWaiters, activeWaiters);
+      }
+      return super.add(value);
+    }
+    delete(value) {
+      if (typeof value === 'function' && this.has(value)) activeWaiters--;
+      return super.delete(value);
+    }
+    clear() {
+      for (const value of this) this.delete(value);
+    }
+  }
+  const timers = new Set();
+  const isolated = {
+    ...context,
+    window: {},
+    Promise: TrackedPromise,
+    Set: TrackedSet,
+    setTimeout(fn, delay) {
+      const timer = setTimeout(() => {
+        timers.delete(timer);
+        fn();
+      }, delay);
+      timers.add(timer);
+      return timer;
+    },
+    clearTimeout(timer) {
+      timers.delete(timer);
+      clearTimeout(timer);
+    },
+  };
+  vm.createContext(isolated);
+  for (const name of ['lossless-json', 'publication-v2'])
+    vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), isolated);
+  const isolatedApi = isolated.window.InfrastructurePublicationV2;
+  for (const count of [32, 2048]) {
+    peak = 0;
+    let result = '';
+    for await (const chunk of isolatedApi.streamTokens(
+      [[-1, count], ...Array(count).fill(null)],
+      [],
+      [],
+    ))
+      result += chunk;
+    assert.strictEqual(result, '[' + Array(count).fill('null').join(',') + ']');
+    assert(peak <= 4, `${count} completed reads retained ${peak} subscriptions on one promise`);
+    assert(peakWaiters <= 1, 'completed reads release cancellation registrations');
+    assert.strictEqual(activeWaiters, 0);
+    assert.strictEqual(timers.size, 0, 'completed operation clears its timer');
+  }
+  const pendingRead = (options = {}, failImmediately = false) => {
+    let resolve, reject;
+    const read = new Promise((yes, no) => {
+      resolve = yes;
+      reject = no;
+      if (failImmediately) no(Error('already rejected read'));
+    });
+    const stream = isolatedApi.streamTokens(
+      { [Symbol.asyncIterator]: () => ({ next: () => read }) },
+      [],
+      [],
+      options,
+    );
+    return { stream, result: stream.next(), resolve, reject };
+  };
+  const controller = new AbortController();
+  let externalListeners = 0;
+  const addListener = controller.signal.addEventListener.bind(controller.signal),
+    removeListener = controller.signal.removeEventListener.bind(controller.signal);
+  controller.signal.addEventListener = (...args) => {
+    externalListeners++;
+    return addListener(...args);
+  };
+  controller.signal.removeEventListener = (...args) => {
+    externalListeners--;
+    return removeListener(...args);
+  };
+  const first = pendingRead({ signal: controller.signal });
+  const second = pendingRead({ signal: controller.signal });
+  assert.strictEqual(activeWaiters, 2, 'concurrent operations own independent active reads');
+  controller.abort();
+  controller.abort();
+  await Promise.all([
+    assert.rejects(() => first.result, /cancelled/),
+    assert.rejects(() => second.result, /cancelled/),
+  ]);
+  assert.strictEqual(activeWaiters, 0, 'abort clears all active registrations');
+  assert.strictEqual(timers.size, 0, 'abort closes both operation timers');
+  assert.strictEqual(externalListeners, 0, 'close removes external abort listeners');
+  first.reject(Error('late rejected read'));
+  second.resolve({ value: null, done: false });
+  await first.stream.return();
+  await first.stream.return();
+  const failure = Error('original failed read');
+  const failed = pendingRead();
+  failed.reject(failure);
+  await assert.rejects(
+    () => failed.result,
+    (error) => error === failure,
+  );
+  assert.strictEqual(activeWaiters, 0, 'failed read unregisters');
+  const alreadyAborted = pendingRead({ signal: controller.signal }, true);
+  await assert.rejects(() => alreadyAborted.result, /cancelled/);
+  const expired = pendingRead({ deadline: 0 }, true);
+  await assert.rejects(() => expired.result, /deadline/);
+  assert.strictEqual(
+    await isolatedApi.decodeTokens(
+      [[0], [1], [-3, 'switching-evidence.json']],
+      [],
+      [['inputs'], ['evidence']],
+      { root: 'switching-comparison.json', aliases: () => [[-1, 2], null, null] },
+    ),
+    '{"inputs":{"evidence":[null,null]}}',
+  );
+  assert.strictEqual(activeWaiters, 0, 'nested alias completion releases registrations');
+  // Move the clock past the deadline while an input read is awaiting settlement.
+  let now = Date.now();
+  isolated.Date = class extends Date {
+    static now() {
+      return now;
+    }
+  };
+  const overdue = pendingRead({ deadline: now + 10000 });
+  now += 10001;
+  overdue.resolve({ value: null, done: false });
+  await assert.rejects(() => overdue.result, /deadline/);
+  assert.strictEqual(activeWaiters, 0);
+  assert.strictEqual(timers.size, 0);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  console.log(
+    'Completed token reads retain bounded pending-promise subscriptions and active waiters',
+  );
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

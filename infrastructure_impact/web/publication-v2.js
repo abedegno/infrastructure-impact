@@ -68,37 +68,47 @@
     const abort = () => controller.abort();
     options.signal?.addEventListener('abort', abort, { once: true });
     if (options.signal?.aborted) abort();
-    let rejectAbort;
-    const interrupted = new Promise((_, reject) => {
-      rejectAbort = reject;
-    });
-    const onAbort = () =>
-      rejectAbort(
-        Error(
-          Date.now() >= deadline ? 'Publication v2: stream deadline' : 'Publication v2: cancelled',
-        ),
+    const waiters = new Set();
+    const onAbort = () => {
+      const error = Error(
+        Date.now() >= deadline ? 'Publication v2: stream deadline' : 'Publication v2: cancelled',
       );
+      for (const reject of waiters) reject(error);
+      waiters.clear();
+    };
     controller.signal.addEventListener('abort', onAbort, { once: true });
-    // Attach a handler immediately: abort may happen between awaited reads.
-    interrupted.catch(() => {});
     const timer = setTimeout(abort, Math.max(0, deadline - Date.now()));
     return {
       id: ++operationId,
       signal: controller.signal,
       deadline,
       run(promise) {
-        if (Date.now() >= deadline) {
-          abort();
-          return Promise.reject(Error('Publication v2: stream deadline'));
-        }
-        if (controller.signal.aborted) return Promise.reject(Error('Publication v2: cancelled'));
-        return Promise.race([promise, interrupted]).then((value) => {
+        promise = Promise.resolve(promise);
+        if (Date.now() >= deadline || controller.signal.aborted) {
+          // The read may already have failed, even when cancellation wins.
+          promise.catch(() => {});
           if (Date.now() >= deadline) {
             abort();
-            throw Error('Publication v2: stream deadline');
+            return Promise.reject(Error('Publication v2: stream deadline'));
           }
-          if (controller.signal.aborted) throw Error('Publication v2: cancelled');
-          return value;
+          return Promise.reject(Error('Publication v2: cancelled'));
+        }
+        return new Promise((resolve, reject) => {
+          waiters.add(reject);
+          promise.then(
+            (value) => {
+              waiters.delete(reject);
+              if (Date.now() >= deadline) {
+                abort();
+                reject(Error('Publication v2: stream deadline'));
+              } else if (controller.signal.aborted) reject(Error('Publication v2: cancelled'));
+              else resolve(value);
+            },
+            (error) => {
+              waiters.delete(reject);
+              reject(error);
+            },
+          );
         });
       },
       close() {
