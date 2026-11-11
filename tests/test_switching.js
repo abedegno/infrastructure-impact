@@ -261,3 +261,142 @@ for (const value of [NaN, Infinity, -Infinity]) {
   console.error(e);
   process.exitCode = 1;
 });
+
+// Count allocations through the public API, without exporting validator internals.
+{
+  let errors = 0;
+  const probe = {
+    window: {},
+    Error: (...args) => {
+      errors++;
+      return Error(...args);
+    },
+  };
+  vm.createContext(probe);
+  for (const name of ['lossless-json', 'switching-contracts'])
+    vm.runInContext(fs.readFileSync(`infrastructure_impact/web/${name}.js`, 'utf8'), probe);
+  const validator = probe.window.InfrastructureSwitchingContracts;
+  const tokens = [null, true, -2, [0], [-1, 0], [-2, 'i', '123'], [-3, 'switching-evidence.json']];
+  errors = 0;
+  for (let i = 0; i < 50; i++)
+    assert.strictEqual(validator.validate('publication-v2.json', tokens, '/$defs/tokens'), tokens);
+  assert.strictEqual(errors, 0, 'valid token alternatives must not construct Error stacks');
+  function invalid(name, value, fragment, message) {
+    errors = 0;
+    assert.throws(
+      () => validator.validate(name, value, fragment),
+      (error) =>
+        error instanceof Error && error.message === 'Invalid switching contract: ' + message,
+    );
+    assert.strictEqual(errors, 1, 'only the public mismatch constructs an Error');
+  }
+  for (const value of [0, -1, [], [0, 1], [-1, -1], [-2, 'x', '1'], [-2, 'i', '01'], [-3, 'other']])
+    invalid('publication-v2.json', value, '/$defs/token', 'oneOf');
+  const evidence = 'switching-evidence-v1.json';
+  const datePath = '/$defs/claim/properties/initial_published_at';
+  for (const value of [null, '2024-02-29', '2024-02-29T12:34:56Z'])
+    assert.strictEqual(validator.validate(evidence, value, datePath), value);
+  invalid(evidence, '2023-02-29', datePath, 'anyOf');
+  invalid(evidence, '2024-02-29T25:00:00Z', datePath, 'anyOf');
+
+  // An isolated copy of the publicly exposed policy exercises every recursive
+  // check edge under an alternative, including branches uncommon in fixtures.
+  const defs = validator.policy.schemas['publication-v2.json'].$defs;
+  defs.probeLeaf = { type: 'string', minLength: 1, maxLength: 1 };
+  defs.probe = {
+    anyOf: [
+      { type: 'null' },
+      {
+        type: 'object',
+        required: ['kind', 'values'],
+        additionalProperties: false,
+        propertyNames: { minLength: 1 },
+        properties: {
+          kind: { enum: ['text', 'number'] },
+          values: { type: 'array', minItems: 1, items: { $ref: '#/$defs/probeLeaf' } },
+          count: { type: 'integer', minimum: 0, maximum: 10 },
+          extra: false,
+        },
+        allOf: [
+          {
+            if: { properties: { kind: { const: 'text' } } },
+            then: { not: { required: ['count'] } },
+            else: { required: ['count'] },
+          },
+        ],
+      },
+    ],
+  };
+  for (const value of [
+    null,
+    { kind: 'text', values: ['😀'] },
+    { kind: 'number', values: ['é'], count: 10n },
+  ]) {
+    errors = 0;
+    assert.strictEqual(validator.validate('publication-v2.json', value, '/$defs/probe'), value);
+    assert.strictEqual(errors, 0);
+  }
+  for (const value of [
+    { kind: 'text', values: ['ab'] },
+    { kind: 'text', values: [1] },
+    { kind: 'text', values: ['a'], count: 1 },
+    { kind: 'number', values: ['a'] },
+    { kind: 'number', values: ['a'], count: 11n },
+    { kind: 'number', values: ['a'], count: 1.5 },
+    { kind: 'text', values: ['a'], extra: true },
+    { kind: 'text', values: ['a'], '': true },
+  ])
+    invalid('publication-v2.json', value, '/$defs/probe', 'anyOf');
+  invalid('publication-v2.json', 'ab', '/$defs/probeLeaf', 'string constraint');
+  invalid('publication-v2.json', {}, '/$defs/probe/anyOf/1', 'object fields');
+  invalid(
+    'publication-v2.json',
+    { kind: 'text', values: ['a'], count: 1 },
+    '/$defs/probe/anyOf/1',
+    'not',
+  );
+  invalid(
+    'publication-v2.json',
+    { kind: 'number', values: ['a'] },
+    '/$defs/probe/anyOf/1',
+    'object fields',
+  );
+  defs.probeExtras = {
+    anyOf: [
+      { type: 'null' },
+      { type: 'object', additionalProperties: { $ref: '#/$defs/probeLeaf' } },
+    ],
+  };
+  invalid('publication-v2.json', { x: 'ab' }, '/$defs/probeExtras', 'anyOf');
+  const visits = [];
+  defs.probeOrder = {
+    oneOf: [0, 1, 2].map((index) => ({
+      get const() {
+        visits.push(index);
+        return index === 1 ? 1 : 2;
+      },
+    })),
+  };
+  assert.strictEqual(validator.validate('publication-v2.json', 1, '/$defs/probeOrder'), 1);
+  assert.deepStrictEqual(
+    visits,
+    [0, 1, 2],
+    'oneOf must continue probing every alternative in order',
+  );
+  invalid('publication-v2.json', 'x', '/$defs/probeOrder', 'oneOf');
+  defs.probeCatch = {
+    anyOf: [
+      {
+        get type() {
+          throw new TypeError('probe failure');
+        },
+      },
+      { type: 'null' },
+    ],
+  };
+  assert.strictEqual(validator.validate('publication-v2.json', null, '/$defs/probeCatch'), null);
+  invalid('publication-v2.json', 'x', '/$defs/probeCatch', 'anyOf');
+  console.log(
+    'Speculative schema probes allocate no Errors; public mismatches retain Error messages',
+  );
+}
