@@ -20,7 +20,7 @@
 
 - [ ] RED regression proving switching_input is absent from the generic clone/rebuild tree while actual projected evidence/comparison/release outputs remain equivalent; use existing synthetic full publication fixture and both formats as appropriate.
 - [ ] Add compatibility/isolation tests: unknown-field nonfinite/unsupported values still reject, noncanonical tuple/key containers normalize through old fallback, null/missing input unchanged, original nested claims/score-availability unaffected by output mutations and vice versa. Keep tests small and behavior-focused.
-- [ ] Implement smallest streamed strict JSON compatibility check/native-tree guard+legacy fallback; shallow isolated header for score availability; remove input from generic research clone, consume saved header later. Do not change projector/reducer validators.
+- [ ] Implement smallest native-tree guard then legacy fallback for nonnative/recursive inputs, streamed strict JSON validation only for native trees; shallow isolated header for score availability; remove input from generic research clone, consume saved header later. Do not change projector/reducer validators.
 - [ ] Run meaningful focused tests, lint/format/diff; compare authored-shell cached4k diagnostic peakRSS/timing before/after if feasible without vendor fetch or full dataset reconstruction. Save exact evidence; do not infer hosted speed.
 - [ ] Commit scoped files, report command/output/test coverage, limitations and readiness. Root owns independent review/fullCI/hosted acceptance/activation.
 
