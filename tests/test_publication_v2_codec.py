@@ -417,3 +417,11 @@ def test_alias_reuses_literal_cache_and_calls_observer(monkeypatch):
     assert raw == b'{"inputs":{"evidence":"repeat"},"tail":"repeat"}'
     assert b"".join(observed) == raw
     assert calls.count("repeat") == 1
+
+
+def test_budget_equality_preserves_legacy_positional_fields():
+    first = codec.Budget(100, 123, 0, {}, None)
+    second = codec.Budget(100, 123, 0, {}, None)
+    assert first == second
+    first.literals.quoted("cached")
+    assert first == second

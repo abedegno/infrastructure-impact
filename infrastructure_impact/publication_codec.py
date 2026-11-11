@@ -290,7 +290,9 @@ class Budget:
     costs: dict = field(default_factory=dict)
     parent: "Budget | None" = None
 
-    literals: LiteralCache = field(default_factory=LiteralCache, init=False, repr=False)
+    literals: LiteralCache = field(
+        default_factory=LiteralCache, init=False, repr=False, compare=False
+    )
 
     def __post_init__(self):
         self.max_bytes = min(safe_int(self.max_bytes), MAX_STREAM)
