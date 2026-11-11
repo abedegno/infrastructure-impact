@@ -233,3 +233,13 @@ def test_switching_severity_filter_keeps_borrowed_claim_unchanged(delivery, fmt)
     result = publication.public_projection(delivery, publication_format=fmt)
     assert result["switching_evidence"]["claims"][0]["vendor_severity"] == []
     assert delivery == original
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_switching_array_of_pairs_claim_is_not_coerced_to_object(fmt):
+    data = dataset()
+    raw = inputs()
+    raw["claims"][0] = list(raw["claims"][0].items())
+    data["research"]["switching_input"] = raw
+    with pytest.raises(AttributeError, match="get"):
+        publication.public_projection(data, publication_format=fmt)

@@ -76,7 +76,10 @@ def rebuild(data: dict, partition_result: dict, *, switching_input=None) -> dict
         # nested values remain read-only until the public allowlist projection.
         data["research"]["switching_input"] = {
             **switching_input,
-            "claims": [dict(claim) for claim in switching_input.get("claims", [])],
+            "claims": [
+                dict(claim) if isinstance(claim, dict) else claim
+                for claim in switching_input.get("claims", [])
+            ],
         }
     records = data["records"]
     retained = data["retained_advisories"]
