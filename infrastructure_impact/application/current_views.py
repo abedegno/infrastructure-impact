@@ -42,7 +42,7 @@ def validate_partition(data, *, require_targets=False):
         raise ValueError("Inconsistent current-evidence partition")
 
 
-def rebuild(data: dict, partition_result: dict) -> dict:
+def rebuild(data: dict, partition_result: dict, *, switching_input=None) -> dict:
     """Rebuild every current reducer from one partition; leave audit facts intact."""
     from .casefiles import casefiles
     from .cohort import coverage_from_checks
@@ -70,6 +70,17 @@ def rebuild(data: dict, partition_result: dict) -> dict:
             },
         }
     )
+    if switching_input is not None:
+        # Publication keeps this large input outside the general deep copy.
+        # Own the headers assigned by the existing ownership filters below;
+        # nested values remain read-only until the public allowlist projection.
+        data["research"]["switching_input"] = {
+            **switching_input,
+            "claims": [
+                dict(claim) if isinstance(claim, dict) else claim
+                for claim in switching_input.get("claims", [])
+            ],
+        }
     records = data["records"]
     retained = data["retained_advisories"]
     for wrapper in retained:

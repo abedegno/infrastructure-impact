@@ -151,6 +151,7 @@ class Writer:
         return name == "switching-comparison.json" and path == ("inputs", "kev")
 
     def root(self, name, value, *, alias=None):
+        literals = codec.LiteralCache()
         pages, ranges, active = [], [], []
         tokens, encoded, decoded, position, page_first = [], 0, 0, 0, 0
         root_hash, root_bytes, ascii_bytes = sha256(), 0, 0
@@ -265,10 +266,12 @@ class Writer:
                 for i, (key, child) in enumerate(node.items()):
                     if i:
                         logical(b",")
-                    raw = json.dumps(key, ensure_ascii=False).encode()
+                    raw = literals.quoted(key)
                     # ensure_ascii also escapes DEL, although it is an ASCII byte.
                     ascii_raw = (
-                        raw if raw.isascii() and b"\x7f" not in raw else json.dumps(key).encode()
+                        raw
+                        if raw.isascii() and b"\x7f" not in raw
+                        else literals.quoted(key, ascii=True)
                     )
                     logical(raw, ascii_raw)
                     logical(b":")
@@ -284,13 +287,19 @@ class Writer:
                 logical(b"]")
             else:
                 item = next(self.encoder.encode(node))
-                raw = json.dumps(
-                    node, ensure_ascii=False, allow_nan=False, separators=(",", ":")
-                ).encode()
+                raw = (
+                    literals.quoted(node)
+                    if type(node) is str
+                    else json.dumps(
+                        node, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+                    ).encode()
+                )
                 token(item, len(raw))
                 ascii_raw = (
                     raw
                     if raw.isascii() and b"\x7f" not in raw
+                    else literals.quoted(node, ascii=True)
+                    if type(node) is str
                     else json.dumps(node, allow_nan=False, separators=(",", ":")).encode()
                 )
                 logical(raw, ascii_raw)
