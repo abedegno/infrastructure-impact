@@ -70,8 +70,19 @@ def source(edit=lambda s: s):
     {table(["AGNI SKU", "OEM Product Name"], [["DCA-AGNI-100", "PowerEdge R450"]])}
     <div>{MARKER}</div><div class="clear10"> </div>
     <ul><li>Arista EOS-based products:</li><ul>{"".join(f"<li>{p}</li>" for p in PLATFORMS)}</ul>
-    <li>Wi-Fi Access Points</li><li>CloudVision Appliance</li><ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>
-    <li>CloudVision Appliance Software</li></ul>
+    <li>Wi-Fi Access Points</li><li>CloudVision CUE cloud service delivery</li>
+    <li>CloudVision Appliance</li><ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>
+    <li>CloudVision Portal on-premises, virtual appliance (including the CV-CUE on premises software)</li>
+    <li>CloudVision Appliance Software</li><li>CloudVision as-a-Service</li>
+    <li>CloudVision AGNI - Cloud service delivery</li>
+    <li>Arista Converged Cloud Fabric (formerly Big Switch BCF)</li>
+    <li>Arista Multi Cloud Director (formerly Big Switch MCD)</li>
+    <li>Arista Network Detection and Response (NDR) Security Platform (Formerly Awake NDR)</li>
+    <li>Arista Edge Threat Management - Arista NG Firewall and Arista Micro Edge (Formerly Untangle)</li>
+    <li>Arista NetVisor OS, Arista NetVisor UNUM, and Insight Analytics (Formerly Pluribus)</li>
+    <li>VeloCloud Orchestrator (Formerly VeloCloud Orchestrator by Broadcom)</li>
+    <li>VeloCloud Gateway (Formerly VeloCloud Gateway by Broadcom)</li>
+    <li>VeloCloud Edge (Formerly VeloCloud Edge by Broadcom)</li></ul>
     <h2>Required Configuration for Exploitation</h2><p>No configuration exists.</p>
     <h2>Indicators of Compromise</h2><p>Refer to appropriate Dell advisory.</p>
     <h2>Mitigation</h2><p>No mitigation exists.</p>
@@ -285,3 +296,65 @@ def test_article_whitespace_between_exclusion_marker_and_list_is_preserved_as_bo
     doc = normalize(raw)
     assert len(doc["assessments"]) == 15
     assert all(a["platforms"] == PLATFORMS for a in doc["assessments"])
+
+
+def test_outer_sibling_exception_requires_review_before_unconditional_eos_claims():
+    raw = source(
+        lambda s: s.replace(
+            "<li>Wi-Fi Access Points</li>",
+            "<li>Except EOS platforms with option X enabled.</li><li>Wi-Fi Access Points</li>",
+        )
+    )
+    with pytest.raises(ValueError):
+        normalize(raw)
+
+
+@pytest.mark.parametrize(
+    "old,new",
+    [
+        ("<li>Wi-Fi Access Points</li>", ""),
+        (
+            "<li>Wi-Fi Access Points</li>",
+            "<li>Wi-Fi Access Points</li><li>Wi-Fi Access Points</li>",
+        ),
+        (
+            "<li>CloudVision Appliance Software</li><li>CloudVision as-a-Service</li>",
+            "<li>CloudVision as-a-Service</li><li>CloudVision Appliance Software</li>",
+        ),
+        (
+            "<li>CloudVision Appliance Software</li>",
+            "<li>CloudVision Appliance Software except EOS platforms with option X enabled.</li>",
+        ),
+        ("<ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>", ""),
+        (
+            "<ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>",
+            "<ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>"
+            "<ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>",
+        ),
+        (
+            "<li>CloudVision Appliance</li><ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul>",
+            "<ul><li>DCA-400-CV</li><li>DCA-450-CV</li></ul><li>CloudVision Appliance</li>",
+        ),
+        (
+            "<li>Wi-Fi Access Points</li>",
+            "<li>Wi-Fi Access Points</li><ul><li>Except EOS platforms with option X enabled.</li></ul>",
+        ),
+        ("<li>DCA-450-CV</li>", "<li>DCA-460-CV</li>"),
+    ],
+    ids=[
+        "removed-peer",
+        "duplicated-peer",
+        "reordered-peers",
+        "changed-peer",
+        "missing-appliance-list",
+        "duplicate-appliance-list",
+        "moved-appliance-list",
+        "extra-sibling-list",
+        "changed-appliance-list",
+    ],
+)
+def test_outer_exclusion_peer_or_appliance_boundary_drift_requires_review(old, new):
+    raw = source()
+    assert raw.count(old.encode()) == 1
+    with pytest.raises(ValueError):
+        normalize(raw.replace(old.encode(), new.encode()))

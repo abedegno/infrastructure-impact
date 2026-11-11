@@ -204,17 +204,32 @@ def parse(raw, url, vendor):
     ):
         raise ValueError("Arista EOS sibling-list boundary changed")
     platforms = leaves(exclusions[1])
-    # A second reviewed sibling list belongs to CVA hardware, not EOS.
-    previous = None
-    for n in exclusions[2:]:
-        if n.tag == "li":
-            previous = inline(n)
-        elif n.tag == "ul" and previous == "CloudVision Appliance":
-            if leaves(n) != ["DCA-400-CV", "DCA-450-CV"]:
-                raise ValueError("Arista separate appliance exclusion changed")
-            previous = None
-        else:
-            raise ValueError("Unbound Arista non-EOS exclusion")
+    # Reviewed outer peers cannot silently acquire an EOS exclusion qualifier.
+    peer_labels = [
+        "Wi-Fi Access Points",
+        "CloudVision CUE cloud service delivery",
+        "CloudVision Appliance",
+        "CloudVision Portal on-premises, virtual appliance (including the CV-CUE on premises software)",
+        "CloudVision Appliance Software",
+        "CloudVision as-a-Service",
+        "CloudVision AGNI - Cloud service delivery",
+        "Arista Converged Cloud Fabric (formerly Big Switch BCF)",
+        "Arista Multi Cloud Director (formerly Big Switch MCD)",
+        "Arista Network Detection and Response (NDR) Security Platform (Formerly Awake NDR)",
+        "Arista Edge Threat Management - Arista NG Firewall and Arista Micro Edge (Formerly Untangle)",
+        "Arista NetVisor OS, Arista NetVisor UNUM, and Insight Analytics (Formerly Pluribus)",
+        "VeloCloud Orchestrator (Formerly VeloCloud Orchestrator by Broadcom)",
+        "VeloCloud Gateway (Formerly VeloCloud Gateway by Broadcom)",
+        "VeloCloud Edge (Formerly VeloCloud Edge by Broadcom)",
+    ]
+    peers = exclusions[2:]
+    if [n.tag for n in peers] != ["li"] * 3 + ["ul"] + ["li"] * (len(peer_labels) - 3) or [
+        inline(n) for n in peers if n.tag == "li"
+    ] != peer_labels:
+        raise ValueError("Arista reviewed non-EOS exclusion peers changed")
+    # The sole second sibling list belongs immediately to CVA hardware, not EOS.
+    if leaves(peers[3]) != ["DCA-400-CV", "DCA-450-CV"]:
+        raise ValueError("Arista separate appliance exclusion changed")
     if sum(n.text() == MARKER for n in a.find({"div"})) != 1:
         raise ValueError("Repeated Arista exclusion marker")
     locator = (
