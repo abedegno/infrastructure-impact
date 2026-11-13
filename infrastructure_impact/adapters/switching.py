@@ -944,6 +944,14 @@ def _arista_reviewed(raw, url, document, digest):
             claim["product_id"] = None
         if assessment["product"] in {"Arista EOS", "EOS release (source platform scope applies)"}:
             claim["family"] = "arista-eos"
+        if (
+            slug == "24005-security-advisory-0137"
+            and assessment["status"] == "affected"
+            and assessment.get("product_context") == [["product_family", "Arista EOS"]]
+        ):
+            # The reviewed parser validates the EOS parent of these six local
+            # platform groups. Literal model bindings remain unresolved below.
+            claim["family"] = "arista-eos"
         if slug in software_cves and assessment["product"] == "EOS (source platform scope applies)":
             claim["family"] = "arista-eos"
         claim["version_expressions"] = [

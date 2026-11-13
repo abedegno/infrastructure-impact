@@ -390,3 +390,31 @@ def test_actual_source_validation_cases_remain_awaiting_human_review():
     assert len(cases) == 3
     assert all(c["source_url"] == URL for c in cases)
     assert report([], [])["independent_human_review_completed"] is False
+
+
+def test_positive_platforms_preserve_explicit_eos_parent():
+    from infrastructure_impact.adapters.arista_sa0137 import AFFECTED
+
+    registry = default_registry()
+    raw = RAW.read_bytes()
+    document = registry.normalize(raw, URL, "arista")
+    owned = [a for a in document["assessments"] if a["product"] in AFFECTED]
+    assert len(owned) == 6
+    assert all(a["product_context"] == [["product_family", "Arista EOS"]] for a in owned)
+    claims = registry.research_evidence(raw, URL, "arista", document)["claims"]
+    assert len(claims) == 52
+    assert sum(c["family"] == "arista-eos" for c in claims) == 36
+    assert sum(c["status"] == "affected" for c in claims) == 7
+    assert all(c["family"] == "arista-eos" for c in claims if c["status"] == "affected")
+    assert sum(c["family"] == "arista-eos" and c["status"] == "unaffected" for c in claims) == 29
+    assert all(
+        c["family"] is None
+        for c in claims
+        if c["status"] == "unaffected" and c["product"] != "Arista EOS"
+    )
+    assert all(
+        b["basis"] == "unresolved" and b["model"] is None
+        for c in claims
+        for b in c["platform_bindings"]
+    )
+    assert not any(r["category"] == "vendor_fix" for c in claims for r in c["remediations"])

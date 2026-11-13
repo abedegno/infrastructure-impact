@@ -173,6 +173,9 @@ def parse(raw, url, vendor):
     out["assessments"] = [family]
     for i, label in enumerate(AFFECTED):
         claim = assessment(CVES[0], label, "affected", "Affected Platforms / affected / " + label)
+        # The validated outer EOS-based list owns the software family; this
+        # does not resolve the literal hardware label to a study model.
+        claim["product_context"] = [["product_family", "Arista EOS"]]
         claim["platforms"] = [label]
         claim["exposure"] = [config]
         if i >= 3:
