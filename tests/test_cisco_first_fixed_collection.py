@@ -151,7 +151,7 @@ def test_429_persists_cooldown_and_resume_uses_existing_quota():
     assert collector.run(db, releases=["17.2.1"], client=transport)["counts"] == {"success": 1}
 
 
-def test_interrupt_after_accepted_capture_resumes_offline_without_refetch():
+def test_interrupt_after_raw_capture_is_not_completion_acknowledgement():
     db = connect(":memory:")
 
     class Interrupted:
@@ -162,10 +162,10 @@ def test_interrupt_after_accepted_capture_resumes_offline_without_refetch():
 
     with pytest.raises(KeyboardInterrupt):
         collector.run(db, releases=["17.2.1"], client=Interrupted())
-    assert collector.run(db, releases=["17.2.1"], client=client(db, Network()))["counts"] == {
-        "success": 1
-    }
-    assert len(collector.results(db)) == 1
+    resumed = collector.run(db, releases=["17.2.1"], client=client(db, Network()))
+    assert resumed["counts"] == {"pending": 1}
+    assert resumed["queries"][0]["error_code"] == "request_state_unresolved"
+    assert not collector.results(db)
 
 
 def test_interrupt_without_capture_fails_closed_and_preserves_pending_http():
@@ -354,7 +354,7 @@ def test_additive_migration_adopts_015_database_without_mutating_existing_eviden
         "actual-time",
         b"\x01",
     )
-    assert db.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 16
+    assert db.execute("SELECT max(version) FROM schema_migrations").fetchone()[0] == 17
 
 
 def test_observations_preserve_literal_array_order_and_duplicates():
@@ -373,3 +373,190 @@ def test_client_construction_failure_uses_closed_diagnostic(monkeypatch):
     result = collector.run(connect(":memory:"), releases=["17.2.1"])
     assert result["queries"][0]["error_code"] == "collection_error"
     assert "PRIVATE_CONSTRUCTOR_MESSAGE" not in json.dumps(result)
+
+
+def test_old_same_url_capture_does_not_resolve_unknown_current_request():
+    from infrastructure_impact.storage.switching import SERVICE, reserve_request
+
+    db = connect(":memory:")
+    collector.plan(db, ["17.2.1"])
+    with db:
+        captured = evidence(db, response(), URL)
+        db.execute(
+            "UPDATE evidence SET observed_at='2020-01-01T00:00:00+00:00' WHERE id=?",
+            (captured["id"],),
+        )
+        db.execute("UPDATE cisco_first_fixed_queries SET started=1")
+    reserve_request(db, SERVICE, Clock()().isoformat(), pending=True)
+    result = collector.run(db, releases=["17.2.1"], client=client(db, Network()))
+    assert result["counts"] == {"pending": 1}
+    assert result["queries"][0]["error_code"] == "request_state_unresolved"
+    assert result["http_requests_reserved"] == 0
+    assert not collector.results(db)
+    assert db.execute("SELECT pending FROM switching_requests").fetchone()[0] == 1
+
+
+@pytest.mark.parametrize("old_raw,old_url", [(b"not json", URL), (response(), URL + "0")])
+def test_old_invalid_or_unrelated_capture_cannot_prevent_current_fetch(old_raw, old_url):
+    db = connect(":memory:")
+    with db:
+        evidence(db, old_raw, old_url)
+    network = Network(token(), Response(response()))
+    result = collector.run(db, releases=["17.2.1"], client=client(db, network))
+    assert result["counts"] == {"success": 1}
+    assert result["http_requests_reserved"] == 2
+    assert collector.results(db)[0]["source"]["sha256"] == hashlib.sha256(response()).hexdigest()
+
+
+def test_current_successful_same_body_call_acknowledges_deduplicated_old_capture():
+    db = connect(":memory:")
+    with db:
+        old = evidence(db, response(), URL)
+        db.execute(
+            "UPDATE evidence SET observed_at='2020-01-01T00:00:00+00:00' WHERE id=?", (old["id"],)
+        )
+    network = Network(token(), Response(response()))
+    result = collector.run(db, releases=["17.2.1"], client=client(db, network))
+    assert result["http_requests_reserved"] == 2
+    frame = collector.results(db)[0]
+    assert frame["source"]["evidence_id"] == old["id"]
+    assert frame["source"]["retrieved_at"] == "2020-01-01T00:00:00+00:00"
+    row = db.execute("SELECT * FROM cisco_first_fixed_queries").fetchone()
+    assert row["response_attempt"] == row["attempt"] == 1
+    assert row["response_evidence_id"] == old["id"]
+    assert row["response_acknowledged_at"] != frame["source"]["retrieved_at"]
+
+
+def test_interruption_after_completed_call_receipt_recovers_without_refetch(monkeypatch, tmp_path):
+    path = tmp_path / "receipts.sqlite3"
+    owner = connect(path)
+    original_accept = collector._accept
+
+    def interrupted(*args):
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr(collector, "_accept", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        collector.run(
+            owner, releases=["17.2.1"], client=client(owner, Network(token(), Response(response())))
+        )
+    owner.close()
+    monkeypatch.setattr(collector, "_accept", original_accept)
+    resumed = connect(path)
+    result = collector.run(resumed, releases=["17.2.1"], client=client(resumed, Network()))
+    assert result["counts"] == {"success": 1}
+    assert result["http_requests_reserved"] == 0
+    assert len(collector.results(resumed)) == 1
+    assert (
+        collector.run(resumed, releases=["17.2.1"], client=client(resumed, Network()))[
+            "release_queries_attempted"
+        ]
+        == 0
+    )
+
+
+def test_second_connection_cannot_complete_live_post_capture_owner_then_late_failure(tmp_path):
+    from infrastructure_impact.storage.switching import SERVICE, reserve_request
+
+    path = tmp_path / "two-connections.sqlite3"
+    owner, other = connect(path), connect(path)
+    observed = {}
+
+    class LiveOwner:
+        def get_json(self, url):
+            reserve_request(owner, SERVICE, Clock()().isoformat(), pending=True)
+            with owner:
+                evidence(owner, response(), url)
+            before = dict(other.execute("SELECT * FROM cisco_first_fixed_queries").fetchone())
+            observed["other_run"] = collector.run(
+                other, releases=["17.2.1"], client=client(other, Network())
+            )
+            after = dict(other.execute("SELECT * FROM cisco_first_fixed_queries").fetchone())
+            observed["claims"] = before["started"], after["started"]
+            observed["pending"] = other.execute(
+                "SELECT pending FROM switching_requests"
+            ).fetchone()[0]
+            observed["results"] = collector.results(other)
+            raise RuntimeError("PRIVATE_POST_RETENTION_FAILURE")
+
+    result = collector.run(owner, releases=["17.2.1"], client=LiveOwner())
+    assert observed["other_run"]["counts"] == {"pending": 1}
+    assert observed["claims"] == (1, 1)
+    assert observed["pending"] == 1 and observed["results"] == []
+    assert result["counts"] == {"error": 1}
+    assert result["queries"][0]["error_code"] == "collection_error"
+    assert owner.execute("SELECT pending FROM switching_requests").fetchone()[0] == 1
+
+
+def test_stale_owner_cannot_overwrite_recovered_receipt_or_new_attempt(tmp_path):
+    from infrastructure_impact.storage import cisco_first_fixed as work
+
+    path = tmp_path / "stale-owner.sqlite3"
+    owner, other = connect(path), connect(path)
+    collector.plan(owner, ["17.2.1"])
+    attempt1 = work.start(owner, URL)
+    assert work.outcome(owner, URL, attempt1, "error", error_code="collection_error")
+    attempt2 = work.start(other, URL)
+    assert attempt2 != attempt1
+    assert not work.outcome(owner, URL, attempt1, "error", error_code="collection_error")
+    assert other.execute("SELECT started FROM cisco_first_fixed_queries").fetchone()[0] == 1
+    with other:
+        captured = evidence(other, response(), URL)
+    assert not work.acknowledge(owner, URL, attempt1, captured["id"])
+    assert not work.accepted(owner, URL, attempt1, captured["id"], "old-parser", {})
+    work.unknown(owner, URL, attempt1)
+    assert other.execute("SELECT error_code FROM cisco_first_fixed_queries").fetchone()[0] is None
+    assert work.acknowledge(other, URL, attempt2, captured["id"])
+    result = collector.run(owner, releases=["17.2.1"], client=client(owner, Network()))
+    assert result["counts"] == {"success": 1}
+    assert not work.outcome(other, URL, attempt2, "error", error_code="collection_error")
+    assert not work.outcome(owner, URL, attempt1, "error", error_code="collection_error")
+    assert collector.status(owner)["counts"] == {"success": 1}
+    assert len(collector.results(other)) == 1
+
+
+def test_parser_error_receipt_does_not_block_next_generation_fetch():
+    db = connect(":memory:")
+    network = Network(
+        token(), Response(b'{"advisoryId":"cisco-sa-authored"}'), Response(response())
+    )
+    transport = client(db, network)
+    first = collector.run(db, releases=["17.2.1"], client=transport)
+    assert first["counts"] == {"error": 1}
+    assert first["queries"][0]["error_code"] == "unsupported_response"
+    second = collector.run(db, releases=["17.2.1"], client=transport)
+    assert second["counts"] == {"success": 1}
+    assert second["http_requests_reserved"] == 1
+    assert db.execute("SELECT attempt FROM cisco_first_fixed_queries").fetchone()[0] == 2
+
+
+def test_migration_017_does_not_invent_receipt_for_legacy_success(tmp_path):
+    import sqlite3
+    from pathlib import Path
+
+    from infrastructure_impact.storage.migrations import migrate
+
+    directory = tmp_path / "legacy-migrations"
+    directory.mkdir()
+    for path in Path("infrastructure_impact/migrations").glob("*.sql"):
+        if int(path.name.split("_", 1)[0]) <= 16:
+            (directory / path.name).write_bytes(path.read_bytes())
+    db = sqlite3.connect(":memory:")
+    db.row_factory = sqlite3.Row
+    migrate(db, directory)
+    with db:
+        captured = evidence(db, response(), URL)
+        db.execute(
+            "INSERT INTO cisco_first_fixed_queries(url,os_type,query_release,state,evidence_id,result_json) VALUES(?,'iosxe','17.2.1','success',?,'{}')",
+            (URL, captured["id"]),
+        )
+    migrate(db)
+    result = collector.run(db, releases=["17.2.1"], client=client(db, Network()))
+    assert result["counts"] == {"pending": 1}
+    assert result["queries"][0]["error_code"] == "request_state_unresolved"
+    assert result["http_requests_reserved"] == 0
+    assert not collector.results(db)
+    assert (
+        db.execute("SELECT response_evidence_id FROM cisco_first_fixed_queries").fetchone()[0]
+        is None
+    )

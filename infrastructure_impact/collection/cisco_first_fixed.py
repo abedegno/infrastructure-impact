@@ -167,9 +167,9 @@ def _accept(db, row, capture):
             "response_too_large",
         )
     ):
-        work.outcome(db, row["url"], "error", error_code="unsupported_response")
+        work.outcome(db, row["url"], row["attempt"], "error", error_code="unsupported_response")
         return
-    work.accepted(db, row["url"], capture["id"], PARSER_REVISION, parsed)
+    work.accepted(db, row["url"], row["attempt"], capture["id"], PARSER_REVISION, parsed)
 
 
 def run(db, *, releases: list[str], max_releases: int = 10, client=None) -> dict:
@@ -184,16 +184,18 @@ def run(db, *, releases: list[str], max_releases: int = 10, client=None) -> dict
             continue
         if attempted >= max_releases:
             break
-        capture = work.capture(db, row["url"])
-        if capture:
-            _accept(db, row, capture)
-            attempted += 1
-            continue
         if row["started"]:
-            work.unknown(db, row["url"])
+            capture = work.receipt(db, row["url"], row["attempt"])
+            if capture:
+                _accept(db, row, capture)
+                attempted += 1
+            else:
+                work.unknown(db, row["url"], row["attempt"])
             continue
-        if not work.start(db, row["url"]):
+        attempt = work.start(db, row["url"])
+        if attempt is None:
             continue
+        row = {**row, "attempt": attempt}
         attempted += 1
         # Constructing the client is itself explicit-run-only. No config file.
         code, retry_at, raw = None, None, None
@@ -225,7 +227,7 @@ def run(db, *, releases: list[str], max_releases: int = 10, client=None) -> dict
                 }
                 else "error"
             )
-            work.outcome(db, row["url"], state, error_code=code, retry_at=retry_at)
+            work.outcome(db, row["url"], attempt, state, error_code=code, retry_at=retry_at)
             if state in {"deferred", "auth_not_configured"}:
                 break
             continue
@@ -235,8 +237,8 @@ def run(db, *, releases: list[str], max_releases: int = 10, client=None) -> dict
             else None
         )
         if capture is None:
-            work.outcome(db, row["url"], "error", error_code="retained_response_missing")
-        else:
+            work.outcome(db, row["url"], attempt, "error", error_code="retained_response_missing")
+        elif work.acknowledge(db, row["url"], attempt, capture["id"]):
             _accept(db, row, capture)
     receipt = status(db)
     receipt["release_queries_attempted"] = attempted
