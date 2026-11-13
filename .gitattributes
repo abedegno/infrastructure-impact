@@ -6,3 +6,5 @@
 # Applied migrations are byte-preserved because their checksums are immutable.
 infrastructure_impact/migrations/001_initial.sql -text whitespace=-blank-at-eol
 *.fernet binary
+# Public source fixture retains its publisher bytes for the pinned SHA-256.
+tests/fixtures/cisco-model-priv-esc.csaf.json -text whitespace=-blank-at-eol
