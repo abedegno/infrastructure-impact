@@ -1,0 +1,1582 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:switching-disclosure:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "method_version": {
+      "const": "selected-owned-disclosure-v1"
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requested_vendor": {
+          "anyOf": [
+            {
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_vendors": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "scope_level": {
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
+        },
+        "requested_window": {
+          "type": "string",
+          "pattern": "^(all|pre|post|undated|[0-9]{4})$"
+        },
+        "effective_windows": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "requested_cve_ids": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+              },
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+          },
+          "uniqueItems": true
+        },
+        "definition_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "requested_vendor",
+        "effective_vendors",
+        "scope_level",
+        "requested_window",
+        "effective_windows",
+        "requested_cve_ids",
+        "effective_cve_ids",
+        "definition_sha256"
+      ]
+    },
+    "observation_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "policy_source": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": {
+              "const": "https://sec.cloudapps.cisco.com/security/center/resources/risk-based-disclosure"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "retrieved_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "url",
+            "sha256",
+            "retrieved_at"
+          ]
+        }
+      ]
+    },
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vendor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1
+          },
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cve_id": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+          },
+          "initial_published_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "original_published_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "date_period": {
+            "enum": [
+              "pre_july",
+              "from_july",
+              "unknown"
+            ]
+          },
+          "date_precision": {
+            "enum": [
+              "day",
+              "timestamp",
+              "unknown"
+            ]
+          },
+          "method": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "classification": {
+                "enum": [
+                  null,
+                  "pre_risk_based",
+                  "risk_based",
+                  "outside_policy"
+                ]
+              },
+              "basis": {
+                "enum": [
+                  "unknown",
+                  "explicit",
+                  "dated_rule",
+                  "date_and_type_rule",
+                  "third_party_exception"
+                ]
+              },
+              "locator": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "classification",
+              "basis",
+              "locator"
+            ]
+          },
+          "umbrella": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "cve_id": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                  },
+                  "cwe_id": {
+                    "type": "string",
+                    "pattern": "^CWE-[0-9]+$"
+                  },
+                  "highest_cvss": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  "locator": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "cve_id",
+                  "cwe_id",
+                  "highest_cvss",
+                  "locator"
+                ]
+              }
+            ]
+          },
+          "fact_id": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            ]
+          },
+          "claim_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "uniqueItems": true
+          },
+          "product_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "source_url",
+              "source_sha256",
+              "retrieved_at",
+              "source_locator"
+            ]
+          },
+          "severity": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "provider": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "origin": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "preferred": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "band": {
+                  "enum": [
+                    "None",
+                    "Low",
+                    "Medium",
+                    "High",
+                    "Critical",
+                    "Unknown"
+                  ]
+                }
+              },
+              "required": [
+                "version",
+                "provider",
+                "origin",
+                "preferred",
+                "band"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "vendor",
+          "family",
+          "advisory_id",
+          "cve_id",
+          "initial_published_at",
+          "original_published_at",
+          "date_period",
+          "date_precision",
+          "method",
+          "umbrella",
+          "fact_id",
+          "claim_ids",
+          "product_ids",
+          "models",
+          "source",
+          "severity",
+          "missing"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "advisory_facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "vendor": {
+            "const": "cisco"
+          },
+          "advisory_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "source_url",
+              "source_sha256",
+              "retrieved_at",
+              "source_locator"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "parser": {
+                "const": "cisco-owned-disclosure-v1"
+              },
+              "advisory_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "advisory_type": {
+                "enum": [
+                  "security_hardening",
+                  "unknown"
+                ]
+              },
+              "initial_published_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "date_precision": {
+                "enum": [
+                  "day",
+                  "timestamp",
+                  "unknown"
+                ]
+              },
+              "method": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "classification": {
+                    "enum": [
+                      null,
+                      "pre_risk_based",
+                      "risk_based",
+                      "outside_policy"
+                    ]
+                  },
+                  "basis": {
+                    "enum": [
+                      "unknown",
+                      "explicit",
+                      "dated_rule",
+                      "date_and_type_rule",
+                      "third_party_exception"
+                    ]
+                  },
+                  "locator": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "classification",
+                  "basis",
+                  "locator"
+                ]
+              },
+              "grouping_wording": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "grouping_locator": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "highest_cvss_wording": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "highest_cvss_locator": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "umbrella_cves": {
+                "type": "array",
+                "maxItems": 1000,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "cve_id": {
+                      "type": "string",
+                      "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                    },
+                    "cwe_id": {
+                      "type": "string",
+                      "pattern": "^CWE-[0-9]+$"
+                    },
+                    "highest_cvss": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 10
+                    },
+                    "locator": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "cve_id",
+                    "cwe_id",
+                    "highest_cvss",
+                    "locator"
+                  ]
+                }
+              },
+              "bug_count": {
+                "type": "null"
+              },
+              "bug_count_status": {
+                "const": "not_disclosed"
+              },
+              "bundle": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "kind": {
+                        "const": "security_hardening"
+                      },
+                      "initial_published_at": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "date_locator": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "advisory_ids": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 1,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "cve_ids": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "kind",
+                      "initial_published_at",
+                      "date_locator",
+                      "advisory_ids",
+                      "cve_ids"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "parser",
+              "advisory_id",
+              "advisory_type",
+              "initial_published_at",
+              "date_precision",
+              "method",
+              "grouping_wording",
+              "grouping_locator",
+              "highest_cvss_wording",
+              "highest_cvss_locator",
+              "umbrella_cves",
+              "bug_count",
+              "bug_count_status",
+              "bundle"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "vendor",
+          "advisory_id",
+          "source",
+          "metadata"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "bundles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "security_hardening",
+              "explicit_publisher_bundle"
+            ]
+          },
+          "publisher_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initial_published_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "date_period": {
+            "enum": [
+              "pre_july",
+              "from_july",
+              "unknown"
+            ]
+          },
+          "member_advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "member_cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "uniqueItems": true
+          },
+          "selected_advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "selected_cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "uniqueItems": true
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "source_url",
+              "source_sha256",
+              "retrieved_at",
+              "source_locator"
+            ]
+          },
+          "upstream": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "publication": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{32}$"
+                          },
+                          "advisory_schema_version": {
+                            "type": "integer",
+                            "const": 2
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "advisory_schema_version"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "generated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "definition_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": [
+                  "publication",
+                  "generated_at",
+                  "definition_sha256"
+                ]
+              }
+            ]
+          },
+          "vendor": {
+            "enum": [
+              "cisco",
+              "arista",
+              "aruba"
+            ]
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "kind",
+          "publisher_id",
+          "initial_published_at",
+          "date_period",
+          "member_advisory_ids",
+          "member_cve_ids",
+          "selected_advisory_ids",
+          "selected_cve_ids",
+          "source",
+          "upstream",
+          "vendor",
+          "family"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "periods": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pre_july": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "counts": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "advisories": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cves": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "owned_pairs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "umbrella_cves": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "advisories",
+                "cves",
+                "owned_pairs",
+                "umbrella_cves"
+              ]
+            },
+            "advisory_ids": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "vendor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "advisory_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "vendor",
+                  "advisory_id"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+              },
+              "uniqueItems": true
+            },
+            "umbrella_cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+              },
+              "uniqueItems": true
+            },
+            "method_counts": {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "unknown",
+                  "pre_risk_based",
+                  "risk_based",
+                  "outside_policy"
+                ]
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "severity": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "provider": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "origin": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "preferred": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "band": {
+                    "enum": [
+                      "None",
+                      "Low",
+                      "Medium",
+                      "High",
+                      "Critical",
+                      "Unknown"
+                    ]
+                  },
+                  "cve_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                    },
+                    "uniqueItems": true
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "version",
+                  "provider",
+                  "origin",
+                  "preferred",
+                  "band",
+                  "cve_ids",
+                  "count"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "counts",
+            "advisory_ids",
+            "cve_ids",
+            "umbrella_cve_ids",
+            "method_counts",
+            "severity"
+          ]
+        },
+        "from_july": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "counts": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "advisories": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cves": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "owned_pairs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "umbrella_cves": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "advisories",
+                "cves",
+                "owned_pairs",
+                "umbrella_cves"
+              ]
+            },
+            "advisory_ids": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "vendor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "advisory_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "vendor",
+                  "advisory_id"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+              },
+              "uniqueItems": true
+            },
+            "umbrella_cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+              },
+              "uniqueItems": true
+            },
+            "method_counts": {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "unknown",
+                  "pre_risk_based",
+                  "risk_based",
+                  "outside_policy"
+                ]
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "severity": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "provider": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "origin": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "preferred": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "band": {
+                    "enum": [
+                      "None",
+                      "Low",
+                      "Medium",
+                      "High",
+                      "Critical",
+                      "Unknown"
+                    ]
+                  },
+                  "cve_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                    },
+                    "uniqueItems": true
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "version",
+                  "provider",
+                  "origin",
+                  "preferred",
+                  "band",
+                  "cve_ids",
+                  "count"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "counts",
+            "advisory_ids",
+            "cve_ids",
+            "umbrella_cve_ids",
+            "method_counts",
+            "severity"
+          ]
+        },
+        "unknown": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "counts": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "advisories": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cves": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "owned_pairs": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "umbrella_cves": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "advisories",
+                "cves",
+                "owned_pairs",
+                "umbrella_cves"
+              ]
+            },
+            "advisory_ids": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "vendor": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "advisory_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "vendor",
+                  "advisory_id"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+              },
+              "uniqueItems": true
+            },
+            "umbrella_cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+              },
+              "uniqueItems": true
+            },
+            "method_counts": {
+              "type": "object",
+              "propertyNames": {
+                "enum": [
+                  "unknown",
+                  "pre_risk_based",
+                  "risk_based",
+                  "outside_policy"
+                ]
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "severity": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "version": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "provider": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "origin": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "preferred": {
+                    "type": [
+                      "boolean",
+                      "null"
+                    ]
+                  },
+                  "band": {
+                    "enum": [
+                      "None",
+                      "Low",
+                      "Medium",
+                      "High",
+                      "Critical",
+                      "Unknown"
+                    ]
+                  },
+                  "cve_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                    },
+                    "uniqueItems": true
+                  },
+                  "count": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "version",
+                  "provider",
+                  "origin",
+                  "preferred",
+                  "band",
+                  "cve_ids",
+                  "count"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "counts",
+            "advisory_ids",
+            "cve_ids",
+            "umbrella_cve_ids",
+            "method_counts",
+            "severity"
+          ]
+        }
+      },
+      "required": [
+        "pre_july",
+        "from_july",
+        "unknown"
+      ]
+    },
+    "years": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[0-9]{4}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "counts": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "advisories": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "cves": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "owned_pairs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "umbrella_cves": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "advisories",
+              "cves",
+              "owned_pairs",
+              "umbrella_cves"
+            ]
+          },
+          "advisory_ids": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "vendor": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "advisory_id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "vendor",
+                "advisory_id"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "uniqueItems": true
+          },
+          "umbrella_cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+            },
+            "uniqueItems": true
+          },
+          "method_counts": {
+            "type": "object",
+            "propertyNames": {
+              "enum": [
+                "unknown",
+                "pre_risk_based",
+                "risk_based",
+                "outside_policy"
+              ]
+            },
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "severity": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "provider": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "origin": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "preferred": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "band": {
+                  "enum": [
+                    "None",
+                    "Low",
+                    "Medium",
+                    "High",
+                    "Critical",
+                    "Unknown"
+                  ]
+                },
+                "cve_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+                  },
+                  "uniqueItems": true
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "version",
+                "provider",
+                "origin",
+                "preferred",
+                "band",
+                "cve_ids",
+                "count"
+              ]
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "counts",
+          "advisory_ids",
+          "cve_ids",
+          "umbrella_cve_ids",
+          "method_counts",
+          "severity"
+        ]
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "selected_affected_claims": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "owned_source_pairs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metadata_advisories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "unsupported_advisory_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "selected_affected_claims",
+        "owned_source_pairs",
+        "metadata_advisories",
+        "missing_counts",
+        "unsupported_advisory_types"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "method_version",
+    "publication",
+    "generated_at",
+    "definition_sha256",
+    "selection",
+    "observation_end",
+    "policy_source",
+    "pairs",
+    "advisory_facts",
+    "bundles",
+    "periods",
+    "years",
+    "coverage",
+    "limitations"
+  ]
+}
