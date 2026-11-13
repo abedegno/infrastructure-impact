@@ -22,6 +22,7 @@ def record(aid, versions=(), fixed=None):
         assessments=[
             dict(
                 status="affected",
+                cve_id="CVE-2099-12345",
                 product_family="Cisco IOS XE Software",
                 product_context=[["service_pack", v]],
                 versions=[],
@@ -378,3 +379,173 @@ def test_catalogue_collapses_cve_locator_duplicates_deterministically():
     assert cat == build_catalogue([b])
     b["revision_id"] = 2
     assert len(build_catalogue([a, b])["versions"][0]["provenance"]) == 2
+
+
+def scoped_rows():
+    a = record("target", ["17.9.9", "17.9.11"], ["17.9.10"])
+    for assessment, cid in zip(a["assessments"], ["CVE-2099-12345", "CVE-2099-12346"]):
+        assessment["cve_id"] = cid
+    first = a["first_fixed"][0]
+    first.update(scope="cve_specific", cve_ids=["CVE-2099-12345"])
+    a["first_fixed"].append(dict(first, cve_ids=["CVE-2099-12346"], fixed_versions=["17.9.12"]))
+    return a
+
+
+def test_disjoint_cve_rows_keep_independent_candidates_and_units():
+    out = report([scoped_rows(), record("other", ["17.9.10", "17.9.12"])])
+    assert out["validation"]["eligible"] == 2
+    assert out["validation"]["conflict"] == 0
+    assert [u["candidate"]["maximum_affected"] for u in out["units"]] == ["17.9.9", "17.9.11"]
+    assert out["validation"]["correct"] == 2
+    target_candidates = [
+        c["candidate"] for c in out["candidates"] if c["identity"]["advisory_id"] == "target"
+    ]
+    assert sorted(c["maximum_affected"] for c in target_candidates) == ["17.9.11", "17.9.9"]
+    assert all(c["input_scope"]["cve_ids"] for c in target_candidates)
+    a = scoped_rows()
+    a["first_fixed"][1]["fixed_versions"] = ["17.9.10"]
+    assert len(report([a])["units"]) == 2  # same locator/value cannot erase distinct CVEs
+
+
+@pytest.mark.parametrize(
+    "axis, values", [("product_ids", [["p1"], ["p2"]]), ("product", ["model one", "model two"])]
+)
+def test_disjoint_products_do_not_conflict_or_share_affected_maximum(axis, values):
+    a = scoped_rows()
+    for index, fact in enumerate(a["first_fixed"]):
+        fact["cve_ids"] = ["CVE-2099-12345"]
+        fact[axis] = values[index]
+        a["assessments"][index]["cve_id"] = "CVE-2099-12345"
+        a["assessments"][index]["product_id" if axis == "product_ids" else "product"] = (
+            values[index][0] if axis == "product_ids" else values[index]
+        )
+    out = report([a, record("other", ["17.9.10", "17.9.12"])])
+    assert out["validation"]["eligible"] == 2
+    assert out["validation"]["correct"] == 2
+    assert [u["candidate"]["maximum_affected"] for u in out["units"]] == ["17.9.9", "17.9.11"]
+
+
+def test_overlapping_owned_scope_conflicts_and_unknown_product_comparison_is_diagnostic():
+    a = scoped_rows()
+    a["first_fixed"][0].update(
+        scope="bulletin_shared", cve_ids=["CVE-2099-12345", "CVE-2099-12346"]
+    )
+    out = report([a])
+    assert out["validation"]["conflict"] == 2
+    a["first_fixed"][1]["product_ids"] = ["p2"]
+    out = report([a])
+    assert out["validation"]["conflict"] == 0
+    assert "scope_comparison_unknown" in out["diagnostics"]
+    assert out["units"][1]["candidate"] is None  # no matching owned product assessment
+
+
+@pytest.mark.parametrize(
+    "target_time, successor_time, expected",
+    [
+        ("2026-11-14T00:00:00Z", "2026-11-10T00:00:00Z", "future_to_report"),
+        ("2026-11-13T01:00:00+01:00", "2026-11-12T23:00:00-01:00", "latest_known_retrospective"),
+        ("2026-11-12T23:30:00-01:00", "2026-11-10T00:00:00Z", "future_to_report"),
+        (None, "2026-11-10T00:00:00Z", "evidence_time_unknown"),
+        ("not a date", "2026-11-10T00:00:00Z", "evidence_time_unknown"),
+        ("2026-11-10T00:00:00Z", "2026-11-10", "evidence_time_unknown"),
+    ],
+)
+def test_candidate_timing_covers_target_and_successor_with_parsed_dates(
+    target_time, successor_time, expected
+):
+    a = record("target", ["17.9.9"], ["17.9.10"])
+    a["source_observed_at"] = target_time
+    b = record("other", ["17.9.10"])
+    b["source_observed_at"] = successor_time
+    out = report([a, b])
+    assert out["units"][0]["candidate"]["evidence_timing"] == expected
+    validate_report(out)
+
+
+def test_api_compares_only_overlapping_product_and_cve_owned_rows():
+    a = scoped_rows()
+    # Same query is owned by CVE A on product p1; CVE B's table is unrelated.
+    a["assessments"][0]["product_id"] = "p1"
+    a["first_fixed"][0]["product_ids"] = ["p1"]
+    a["first_fixed"][1]["product_ids"] = ["p2"]
+    frame = api_frame(cves=["CVE-2099-12345"], fixed=["17.9.10"])
+    out = build_report(
+        [a], api_results=[frame], publication=None, generated_at="2026-11-13T00:00:00Z"
+    )
+    assert out["api_facts"][0]["binding_state"] == "bound"
+    assert out["validation"]["conflict"] == 0
+    assert out["api_facts"][0]["fact"]["product_ids"] == ["p1"]
+    frame["advisory_context"][0]["source_first_fixed"] = ["17.9.13"]
+    bad = build_report(
+        [a], api_results=[frame], publication=None, generated_at="2026-11-13T00:00:00Z"
+    )
+    assert bad["validation"]["conflict"] == 1
+    assert bad["units"][1]["stratum"] == "eligible"
+
+
+@pytest.mark.parametrize("field", ["sha256", "source_url", "source_observed_at"])
+def test_incomplete_target_receipt_and_unknown_report_time_stay_explicit(field):
+    a = record("target", ["17.9.9"], ["17.9.10"])
+    del a[field]
+    out = report([a, record("other", ["17.9.10"])])
+    assert out["units"][0]["candidate"]["evidence_timing"] == "evidence_time_unknown"
+    validate_report(out)
+    known = record("target", ["17.9.9"], ["17.9.10"])
+    unknown = build_report(
+        [known, record("other", ["17.9.10"])],
+        api_results=[],
+        publication=None,
+        generated_at="2026-11-13",
+    )
+    assert unknown["units"][0]["candidate"]["evidence_timing"] == "evidence_time_unknown"
+
+
+def test_api_unknown_product_axes_preserve_observation_without_false_table_conflict():
+    a = scoped_rows()
+    a["assessments"][0]["product_id"] = "p1"
+    a["first_fixed"][0]["product"] = "model one"  # no known mapping from p1 to this name
+    frame = api_frame(cves=["CVE-2099-12345"], fixed=["17.9.13"])
+    out = build_report(
+        [a], api_results=[frame], publication=None, generated_at="2026-11-13T00:00:00Z"
+    )
+    assert out["api_facts"][0]["table_source"] == {}
+    assert out["api_observations"][0]["binding_state"] == "bound"  # only retained-query binding
+    assert out["validation"]["conflict"] == 0
+    assert "scope_comparison_unknown" in out["diagnostics"]
+
+
+def test_validator_rejects_stale_evidence_timing_label():
+    a = record("target", ["17.9.9"], ["17.9.10"])
+    a["source_observed_at"] = "2026-11-14T00:00:00Z"
+    out = report([a, record("other", ["17.9.10"])])
+    out["units"][0]["candidate"]["evidence_timing"] = "latest_known_retrospective"
+    with pytest.raises(ValueError, match="timing"):
+        validate_report(out)
+
+
+@pytest.mark.parametrize(
+    "axis, values",
+    [("product_ids", [["p1", "p2"], ["p2", "p3"]]), ("product", ["same model", "same model"])],
+)
+def test_explicit_overlapping_products_remain_genuine_conflicts(axis, values):
+    a = scoped_rows()
+    for fact, value in zip(a["first_fixed"], values):
+        fact["cve_ids"] = ["CVE-2099-12345"]
+        fact[axis] = value
+    assert report([a])["validation"]["conflict"] == 2
+
+
+def test_api_subset_cves_compare_shared_table_without_selecting_unrelated_row():
+    a = scoped_rows()
+    a["first_fixed"][0].update(
+        scope="bulletin_shared", cve_ids=["CVE-2099-12345", "CVE-2099-12346"]
+    )
+    # The other CVE's independent row agrees with the shared source statement.
+    a["first_fixed"][1]["fixed_versions"] = ["17.9.10"]
+    frame = api_frame(cves=["CVE-2099-12345"], fixed=["17.9.13"])
+    out = build_report(
+        [a], api_results=[frame], publication=None, generated_at="2026-11-13T00:00:00Z"
+    )
+    assert out["api_facts"][0]["binding_state"] == "conflicting"
+    assert out["validation"]["conflict"] == 1
+    assert out["units"][1]["stratum"] == "eligible"

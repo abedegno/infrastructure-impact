@@ -79,6 +79,47 @@
               "issued",
               "abstain"
             ]
+          },
+          "input_scope": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "scope": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cve_ids": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "maxItems": 1000,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "product": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "product_ids": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "maxItems": 1000,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "required": [
@@ -617,13 +658,59 @@
           "items": {
             "$ref": "#/$defs/proof"
           },
-          "maxItems": 1000
+          "maxItems": 1000,
+          "minItems": 1
         },
         "evidence_timing": {
           "enum": [
             "future_to_report",
-            "latest_known_retrospective"
+            "latest_known_retrospective",
+            "evidence_time_unknown"
           ]
+        },
+        "affected_source": {
+          "$ref": "#/$defs/source"
+        },
+        "input_scope": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cve_ids": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "maxItems": 1000,
+              "items": {
+                "type": "string"
+              }
+            },
+            "product": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "product_ids": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "maxItems": 1000,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       },
       "required": [
@@ -637,7 +724,9 @@
         "excluded_advisory",
         "catalogue_fingerprint",
         "provenance",
-        "evidence_timing"
+        "evidence_timing",
+        "affected_source",
+        "input_scope"
       ],
       "additionalProperties": false
     },
