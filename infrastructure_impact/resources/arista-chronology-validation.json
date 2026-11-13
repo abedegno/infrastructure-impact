@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "description": "Supplementary automated date validation, checked by the explicit offline chronology replay. Human review remains pending.",
+  "cases": [
+    {
+      "number": 165,
+      "html_initial": "2026-09-09",
+      "csaf_initial": "2026-09-17T11:48:16Z",
+      "rss_publication": null,
+      "source_hashes": {
+        "csaf": "dd01cc22bc290d4fe0dfe316880e8b99fe95bb79c12675d39b4b50a0d629c354",
+        "html": "ecb887d8d6608382e733b65de311dfa7dff212ee79229320fda4ed544db50a51",
+        "rss": "df223223a975d1c47647a934cbbeb970b6ecd43ed7f873bb7adfe648a1abc660"
+      },
+      "human_review": "pending"
+    },
+    {
+      "number": 183,
+      "html_initial": "2026-09-22",
+      "csaf_initial": "2026-09-23T03:26:26Z",
+      "rss_publication": null,
+      "source_hashes": {
+        "csaf": "68128649d537df7c708e78f9dbf91c6bdfe12201ad21cd35833067efaddd2c8b",
+        "html": "f0dba5f01e1d3d8ba7e55116793135a56373242d91d1be1c0a86a4271973bde5",
+        "rss": "df223223a975d1c47647a934cbbeb970b6ecd43ed7f873bb7adfe648a1abc660"
+      },
+      "human_review": "pending"
+    },
+    {
+      "number": 188,
+      "html_initial": "2026-10-06",
+      "csaf_initial": "2026-10-05T20:27:47Z",
+      "rss_publication": "2026-10-02T15:29:01+00:00",
+      "source_hashes": {
+        "csaf": "9e9adfb1dcda6d59098da0b068e1799e33fa4393d30c65325a927a49b89efc99",
+        "html": "a296638150f8caecef4576ed3d892c928d2af0df8ec65081e1f62b047c4314cf",
+        "rss": "df223223a975d1c47647a934cbbeb970b6ecd43ed7f873bb7adfe648a1abc660"
+      },
+      "human_review": "pending"
+    }
+  ]
+}

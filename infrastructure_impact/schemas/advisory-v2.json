@@ -190,6 +190,9 @@
       "items": {
         "$ref": "#/$defs/first_fixed"
       }
+    },
+    "publisher_chronology": {
+      "$ref": "#/$defs/publisherChronology"
     }
   },
   "additionalProperties": false,
@@ -480,6 +483,222 @@
         }
       },
       "additionalProperties": false
+    },
+    "publisherChronology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "advisory_id",
+        "cve_ids",
+        "effective_initial",
+        "original_published_at",
+        "original_updated_at",
+        "html_source",
+        "csaf_source",
+        "rss_source",
+        "observations",
+        "issues"
+      ],
+      "properties": {
+        "method": {
+          "const": "arista_owned_html_initial_v1"
+        },
+        "advisory_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "cve_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
+          }
+        },
+        "effective_initial": {
+          "type": "string",
+          "format": "date"
+        },
+        "original_published_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "original_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "html_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "sha256",
+            "retrieved_at"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "pattern": "^https://www\\.arista\\.com/(?:en/support/advisories-notices/security-advisory/\\d+-security-advisory-\\d+|assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_\\d+_CSAF\\.json|en/support/advisories-notices/security-advisory-rss)$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "retrieved_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          }
+        },
+        "csaf_source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "sha256",
+            "retrieved_at"
+          ],
+          "properties": {
+            "url": {
+              "type": "string",
+              "pattern": "^https://www\\.arista\\.com/(?:en/support/advisories-notices/security-advisory/\\d+-security-advisory-\\d+|assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_\\d+_CSAF\\.json|en/support/advisories-notices/security-advisory-rss)$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "retrieved_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            }
+          }
+        },
+        "rss_source": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "url",
+                "sha256",
+                "retrieved_at"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "pattern": "^https://www\\.arista\\.com/(?:en/support/advisories-notices/security-advisory/\\d+-security-advisory-\\d+|assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_\\d+_CSAF\\.json|en/support/advisories-notices/security-advisory-rss)$"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "retrieved_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 1000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "event",
+              "literal",
+              "value",
+              "source",
+              "locator",
+              "revision",
+              "summary"
+            ],
+            "properties": {
+              "event": {
+                "enum": [
+                  "html_revision",
+                  "csaf_initial",
+                  "csaf_current",
+                  "csaf_revision",
+                  "rss_publication"
+                ]
+              },
+              "literal": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                ]
+              },
+              "source": {
+                "enum": [
+                  "html",
+                  "csaf",
+                  "rss"
+                ]
+              },
+              "locator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "revision": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 2000
+              },
+              "summary": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 2000
+              }
+            }
+          }
+        },
+        "issues": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "csaf_current_revision_conflict",
+              "rss_item_not_observed",
+              "rss_not_supplied"
+            ]
+          }
+        }
+      }
     }
   }
 }

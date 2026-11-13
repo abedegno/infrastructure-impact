@@ -65,6 +65,22 @@ def validate_advisory(document, *, vendor=None, source_url=None):
     url = urlsplit(document["source_url"])
     if not url.hostname or url.username or url.password or url.scheme != "https":
         raise NormalizationError("Source must be an absolute HTTPS URL without credentials")
+    if "publisher_chronology" in document:
+        from .adapters.arista_chronology import validate_chronology_binding
+
+        try:
+            validate_chronology_binding(
+                document["publisher_chronology"],
+                vendor=document["vendor"],
+                advisory_id=document["advisory_id"],
+                cve_ids=document["cves"],
+                source_url=document["source_url"],
+                source_sha256=document.get("sha256"),
+                initial=document.get("published_at"),
+                updated=document.get("updated_at"),
+            )
+        except ValueError as error:
+            raise NormalizationError(str(error)) from error
     seen = set()
     for assessment in document["assessments"]:
         if assessment["cve_id"] not in document["cves"]:
