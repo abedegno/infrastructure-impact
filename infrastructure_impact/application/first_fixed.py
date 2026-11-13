@@ -191,13 +191,14 @@ def _evidence_timing(record, proof, generated_at):
     return "future_to_report" if any(t > reference for t in times) else "latest_known_retrospective"
 
 
-def _complete_literal_scope(record, family):
-    """Ranges/unknown expressions cannot silently disappear from an affected maximum.
+def _complete_literal_scope(record, family, train):
+    """Prove the requested ordinary-train maximum without ordering special releases.
 
-    This reducer's documented special-variant exclusions remain exclusions; it
-    does not interpret ranges or construct a new release inventory.
+    Coarse train labels may annotate finite siblings in the same owned scope.
+    Actual ranges in the requested train and unknown predicates still abstain.
     """
     vendor = record["vendor"]
+    expressions = set()
     for assessment in _bound(record.get("assessments", []), MAX_GRAPH):
         if assessment.get("status") != "affected":
             continue
@@ -215,7 +216,7 @@ def _complete_literal_scope(record, family):
             continue
         if len(families) != 1:
             return False
-        expressions = {
+        values = {
             p[1]
             for p in context
             if isinstance(p, (list, tuple))
@@ -223,24 +224,53 @@ def _complete_literal_scope(record, family):
             and p[0] in {"product_version", "service_pack"}
             and isinstance(p[1], str)
         }
-        expressions.update(
+        values.update(
             v["expression"]
             for v in _bound(assessment.get("versions", []))
             if isinstance(v, dict) and isinstance(v.get("expression"), str)
         )
-        if not expressions:
+        if not values:
             return False
-        for expression in expressions:
-            if release_train(vendor, expression) is not None:
+        parents = {
+            p[1]
+            for p in context
+            if isinstance(p, (list, tuple))
+            and len(p) == 2
+            and p[0] == "product_version"
+            and isinstance(p[1], str)
+            and re.fullmatch(r"[0-9]+\.[0-9]+", p[1])
+        }
+        if vendor == "cisco" and len(parents) == 1 and train not in parents:
+            # These are opaque legacy leaf fragments under a proven disjoint
+            # typed parent, not predicates. Never concatenate or order them.
+            values = {
+                value
+                for value in values
+                if not re.fullmatch(
+                    r"(?:\.[0-9]+|\(?[0-9]+(?:\.[0-9]+)*\)[A-Za-z][A-Za-z0-9]*(?:\.[0-9]+)*)", value
+                )
+            }
+        expressions.update(values)
+    finite_trains = {release_train(vendor, value) for value in expressions} - {None}
+    for expression in expressions:
+        if release_train(vendor, expression) is not None:
+            continue
+        if vendor == "cisco" and re.fullmatch(
+            r"[0-9]+\.[0-9]+(?:\.[0-9]+)?[A-Za-z][A-Za-z0-9]*", expression
+        ):
+            continue  # Opaque special identifier; excluded, never stripped or ordered.
+        if re.fullmatch(r"[0-9]+\.[0-9]+", expression):
+            if expression != train or train in finite_trains:
                 continue
-            if vendor == "cisco" and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+[A-Za-z]+", expression):
-                continue  # Explicitly excluded special release, not a range.
-            if re.fullmatch(r"[0-9]+\.[0-9]+", expression) and any(
-                re.fullmatch(re.escape(expression) + r"\.[0-9]+[A-Za-z]*", leaf)
-                for leaf in expressions
-            ):
-                continue  # Train annotation accompanying a finite source leaf.
             return False
+        bounds = re.fullmatch(
+            r"vers:semver/>=?([0-9]+\.[0-9]+\.[0-9]+)\|<=?([0-9]+\.[0-9]+\.[0-9]+)", expression
+        )
+        if bounds:
+            left, right = (release_train(vendor, value) for value in bounds.groups())
+            if left is not None and left == right and left != train:
+                continue  # Proven different-train predicate, not an affected maximum.
+        return False
     return True
 
 
@@ -254,7 +284,7 @@ def _candidate(record, family, train, catalogue, generated_at, scope=None):
             assessments=[a for a in record.get("assessments", []) if _assessment_owned(a, scope)],
         )
     )
-    if not _complete_literal_scope(scoped_record, family):
+    if not _complete_literal_scope(scoped_record, family, train):
         return None
     observed = {v for r, f, t, v, _ in _observations([scoped_record]) if f == family and t == train}
     if not observed:

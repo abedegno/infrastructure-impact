@@ -575,3 +575,90 @@ def test_explicit_special_variant_exclusion_remains_separate_from_range_complete
     out = report([record("target", ["17.9.1", "17.9.9w"], ["17.9.2"]), record("other", ["17.9.2"])])
     assert out["units"][0]["candidate"]["fixed_versions"] == ["17.9.2"]
     assert out["units"][0]["candidate"]["affected_inputs"] == ["17.9.1"]
+
+
+@pytest.mark.parametrize(
+    "special",
+    [
+        "3.16S",
+        "3.18SP",
+        "3.11E",
+        "3.2SG",
+        "17.9.1x1",
+        "17.9.3m1",
+        "17.9.1y1",
+        "17.12.1z1",
+        "17.12.1z6",
+        "17.18EFT",
+        "17.15.4s1",
+    ],
+)
+def test_excluded_opaque_special_identifiers_do_not_veto_ordinary_train(special):
+    out = report([record("target", ["17.9.1", special], ["17.9.2"]), record("other", ["17.9.2"])])
+    assert out["units"][0]["candidate"]["fixed_versions"] == ["17.9.2"]
+    assert out["units"][0]["candidate"]["affected_inputs"] == ["17.9.1"]
+
+
+def test_coarse_train_annotation_on_sibling_assessment_is_context():
+    out = report(
+        [
+            record("target", ["17.9", "17.9.1", "17.12", "17.12.1"], ["17.9.2"]),
+            record("other", ["17.9.2"]),
+        ]
+    )
+    assert out["units"][0]["candidate"]["fixed_versions"] == ["17.9.2"]
+
+
+def test_proven_other_train_range_cannot_veto_requested_train():
+    a = record("target", ["17.9.1"], ["17.9.2"])
+    a["assessments"].append(
+        dict(
+            a["assessments"][0],
+            product_context=[],
+            versions=[dict(expression="vers:semver/>=17.12.1|<=17.12.9")],
+        )
+    )
+    out = report([a, record("other", ["17.9.2"])])
+    assert out["units"][0]["candidate"]["fixed_versions"] == ["17.9.2"]
+
+
+@pytest.mark.parametrize(
+    "expression", ["affected versions unspecified", "vers:semver/>=17.8.1|<=17.10.9"]
+)
+def test_unknown_or_cross_train_predicate_still_blocks_requested_maximum(expression):
+    a = record("target", ["17.9.1"], ["17.9.10"])
+    a["assessments"].append(
+        dict(a["assessments"][0], product_context=[], versions=[dict(expression=expression)])
+    )
+    out = report([a, record("other", ["17.9.2", "17.9.10"])])
+    assert out["units"][0]["candidate"] is None
+
+
+@pytest.mark.parametrize(
+    "parent,fragment",
+    [("3.16", ".0"), ("3.16", ".1"), ("15.5", "(3)S2.1"), ("15.5", "3)S"), ("15.4", "(1.14)T")],
+)
+def test_opaque_legacy_leaf_under_other_typed_train_is_not_requested_range(parent, fragment):
+    a = record("target", ["17.9.1"], ["17.9.2"])
+    a["assessments"].append(
+        dict(
+            a["assessments"][0],
+            product_context=[["product_version", parent], ["service_pack", fragment]],
+            versions=[],
+        )
+    )
+    out = report([a, record("other", ["17.9.2"])])
+    assert out["units"][0]["candidate"]["fixed_versions"] == ["17.9.2"]
+
+
+def test_unresolved_fragment_in_requested_train_cannot_disappear():
+    a = record("target", ["17.9.1"], ["17.9.10"])
+    a["assessments"].append(
+        dict(
+            a["assessments"][0],
+            product_context=[["product_version", "17.9"], ["service_pack", ".9"]],
+            versions=[],
+        )
+    )
+    out = report([a, record("other", ["17.9.2", "17.9.10"])])
+    assert out["units"][0]["candidate"] is None
