@@ -376,3 +376,29 @@ def test_old_record_without_facts_survives_actual_public_projection():
     output = public_projection(view)
     assert len(output["records"]) == 1
     assert "first_fixed" not in output["records"][0]
+
+
+@pytest.mark.parametrize(
+    "qualifier",
+    [
+        "Cisco IOS XE Software with UTD",
+        "Cisco IOS XE Unified Threat Defense",
+        "Cisco IOS XE Wireless Controller Software",
+        "Cisco IOS XE WLC Software",
+        "Cisco IOS XE Software with ROMMON updates",
+    ],
+)
+@pytest.mark.parametrize("placement", ["title", "note"])
+def test_qualified_product_context_cannot_become_generic_iosxe_facts(qualifier, placement):
+    from infrastructure_impact.adapters.cisco_first_fixed import extract_cisco_first_fixed
+
+    data = source()
+    if placement == "title":
+        data["document"]["title"] = qualifier + " security advisory"
+    else:
+        data["document"]["notes"][1]["text"] = (
+            qualifier + "\n" + data["document"]["notes"][1]["text"]
+        )
+    result = extract_cisco_first_fixed(data)
+    assert result["first_fixed"] == []
+    assert result["issues"]

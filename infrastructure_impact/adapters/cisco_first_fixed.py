@@ -97,6 +97,15 @@ def extract_cisco_first_fixed(data: dict) -> dict:
     text = note.get("text")
     if note.get("category") != "general" or not isinstance(text, str) or len(text) > 131072:
         return rejected("unsupported Fixed Software note")
+    title = data["document"].get("title", "")
+    if not isinstance(title, str) or len(title) > 8192:
+        return rejected("unsupported document title")
+    if re.search(
+        r"\b(?:UTD|Unified\s+Threat\s+Defense|WLC|Wireless\s+(?:LAN\s+)?Controller|ROMMON)\b",
+        title + " " + text,
+        re.I,
+    ):
+        return rejected("qualified IOS XE scope requires product-specific interpretation")
     # Normalize whitespace for recognition only. Row splitting still uses
     # the original two-column separators; a descriptive locator names the row.
     normalized = " ".join(text.split())
