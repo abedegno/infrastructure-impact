@@ -89,7 +89,26 @@ def test_inputs_immutable_and_csv_typed_parity_and_bounds():
     out = api().build_report(ev, ff, None, k, publication=None, generated_at=AT)
     assert (ev, ff, k) == before
     lines = list(csv.DictReader(io.StringIO(api().csv_export(out))))
-    assert [{key: json.loads(value) for key, value in r.items()} for r in lines] == out["rows"]
+    nested = {"events", "unresolved", "affected_claim_ids"}
+    numbers = {"year", "event_count", "supported_event_count"}
+    nullable = {"event_count", "start_version", "end_version"}
+    decoded = []
+    for line in lines:
+        decoded.append(
+            {
+                key: json.loads(value)
+                if key in nested
+                else None
+                if key in nullable and value == ""
+                else int(value)
+                if key in numbers
+                else value == "true"
+                if key == "partial_year"
+                else value
+                for key, value in line.items()
+            }
+        )
+    assert decoded == out["rows"]
     with pytest.raises(ValueError):
         api().csv_export(out, max_bytes=10)
     out["unexpected"] = True
@@ -492,3 +511,55 @@ def test_stated_fixed_target_does_not_require_ordering_affected_leaf():
     assert row(out, 2025, "publisher_first_fixed")["event_count"] == 1
     assert row(out, 2025, "publisher_first_fixed")["events"][0]["target"] == "17.15.2"
     assert all(c["train_binding"]["unsupported"] for c in out["constraints"])
+
+
+@pytest.mark.parametrize(
+    "shape", ["same_leaf_range", "separate_range", "separate_variant", "unassigned_leaf"]
+)
+def test_inference_abstains_when_complete_owned_maximum_is_unprovable(shape):
+    from test_first_fixed import record
+
+    expressions = ["17.15.1", "vers:semver/>=17.15.1|<=17.15.9"]
+    if shape == "separate_variant":
+        expressions[1] = "17.15.9w"
+    elif shape == "unassigned_leaf":
+        expressions[1] = "affected versions unspecified"
+    ev, _, k = inputs([("2025-01-01", [])] * (1 if shape == "same_leaf_range" else 2))
+    raw = copy.deepcopy(ev)
+    for index, claim in enumerate(raw["claims"]):
+        claim["advisory_id"] = "complete-owned-group"
+        claim["publisher"]["id"] = claim["advisory_id"]
+        claim["version_expressions"] = (
+            expressions if shape == "same_leaf_range" else [expressions[index]]
+        )
+    ev = contracts.project(raw, publication=None, generated_at=AT)
+    ff = first_fixed.build_report(
+        [record("heldout", ["17.15.2", "17.15.10"])],
+        api_results=[],
+        publication=None,
+        generated_at=AT,
+    )
+    out = api().build_report(ev, ff, None, k, publication=None, generated_at=AT)
+    inferred = [c for c in out["constraints"] if c["scenario"] == "inferred_inclusive"]
+    assert all(c["target"] is None for c in inferred)
+    assert any("inference_group_incomplete" in c["issues"] for c in inferred)
+    assert out["inference_groups"] == []
+
+
+def test_csv_scalar_missing_boolean_and_escaped_nested_values():
+    out = build([("2025-01-01", [])])
+    c = out["constraints"][0]
+    c["train"] = '=1+1,"typed train"\nnext line'
+    c["issues"] = ['literal comma, quote " and newline\nvalue', ""]
+    out["rows"] = api()._rows(
+        out["constraints"], end=out["observation_end"], vendors=list(api().TRAINS)
+    )
+    lines = list(csv.DictReader(io.StringIO(api().csv_export(out))))
+    escaped = next(r for r in lines if "typed train" in r["train"])
+    assert escaped["vendor"] == "cisco"
+    assert escaped["train"] == "'" + c["train"]
+    assert escaped["event_count"] == ""
+    assert escaped["start_version"] == ""
+    assert escaped["partial_year"] in ("true", "false")
+    annual = next(r for r in lines if "typed train" in r["train"] and r["year"] == "2025")
+    assert json.loads(annual["unresolved"])[0]["issues"] == sorted(c["issues"])

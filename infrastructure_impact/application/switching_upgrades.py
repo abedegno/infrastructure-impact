@@ -4,8 +4,6 @@ This is a conditional greedy walk, not a universal minimum or observed operation
 """
 
 import copy
-import csv
-import io
 import json
 import re
 from collections import defaultdict
@@ -118,32 +116,39 @@ def _minimum(vendor, alternatives, train):
 
 def _scoped_inference(claims, ff):
     """Group current source/CVE/train leaves before invoking the owned holdout reducer."""
-    groups = defaultdict(list)
+    owners = defaultdict(list)
     for claim in claims:
         if claim["vendor"] != "cisco":
             continue
         source = claim["source"]
-        for train in {release_train("cisco", v) for v in claim["version_expressions"]} - {None}:
-            key = (
-                claim["advisory_id"],
-                claim["cve_id"],
-                claim["family"],
-                train,
-                source["source_url"],
-                source["source_sha256"],
-                source["retrieved_at"],
-            )
-            groups[key].append(claim)
-    result = defaultdict(list)
-    for (aid, cve, family, train, url, sha, retrieved), group in groups.items():
-        versions = sorted(
-            {
-                v
-                for c in group
-                for v in c["version_expressions"]
-                if release_train("cisco", v) == train
-            }
+        key = (
+            claim["advisory_id"],
+            claim["cve_id"],
+            claim["family"],
+            source["source_url"],
+            source["source_sha256"],
+            source["retrieved_at"],
         )
+        owners[key].append(claim)
+    groups = []
+    for identity, owner_claims in owners.items():
+        bindings = [(claim, *_affected_trains(claim)) for claim in owner_claims]
+        trains = set().union(*(trains for _, trains, _ in bindings))
+        for train in sorted(trains):
+            # Unknown train scope can overlap any train in this owned source/CVE.
+            group = [
+                claim
+                for claim, trains, binding in bindings
+                if train in trains or not trains or binding["partial"]
+            ]
+            groups.append((identity, train, group))
+    result = defaultdict(list)
+    for (aid, cve, family, url, sha, retrieved), train, group in groups:
+        versions = _complete_affected_versions(group, train)
+        if versions is None:
+            for claim in group:
+                result[claim["claim_id"]].append(dict(train=train, candidate=None))
+            continue
         scope = dict(scope="cve_specific", cve_ids=[cve], product=None, product_ids=None)
         record = dict(
             vendor="cisco",
@@ -184,6 +189,31 @@ def _scoped_inference(claims, ff):
             for claim in group:
                 result[claim["claim_id"]].append(value)
     return result
+
+
+def _complete_affected_versions(group, train):
+    """Withhold inference unless every owned expression permits a literal maximum.
+
+    Train-only annotations accompanying a literal leaf add no affected bound.
+    Ranges and unsupported leaves are retained as blockers, never silently dropped.
+    """
+    versions = set()
+    for claim in group:
+        trains, binding = _affected_trains(claim)
+        if not trains or binding["partial"]:
+            return None
+        literals = {v for v in claim["version_expressions"] if release_train("cisco", v) == train}
+        for expression in claim["version_expressions"]:
+            literal_train = release_train("cisco", expression)
+            if literal_train is not None:
+                if literal_train == train:
+                    versions.add(expression)
+                continue
+            # A standalone train expression is not a finite affected maximum.
+            if re.fullmatch(r"[0-9]+\.[0-9]+", expression) and expression == train and literals:
+                continue
+            return None
+    return sorted(versions) if versions else None
 
 
 def _affected_trains(claim):
@@ -367,6 +397,9 @@ def _constraints(claim, ff, membership, end, inferred):
             if not alternatives and not conflict and scenario == "inferred_inclusive":
                 for candidate in inferred:
                     c = candidate["candidate"]
+                    if candidate["train"] == train and c is None:
+                        reasons.append("inference_group_incomplete")
+                        continue
                     if (
                         candidate["train"] == train
                         and c["evidence_timing"] == "latest_known_retrospective"
@@ -653,7 +686,7 @@ def build_report(
                 value["group"]["group_id"]: value["group"]
                 for values in inference.values()
                 for value in values
-                if value["group"]["group_id"] in used_inference
+                if value.get("group") and value["group"]["group_id"] in used_inference
             }.values()
         ),
         constraints=constraints,
@@ -792,18 +825,19 @@ def select_report(report, study_selection):
 
 
 def csv_export(report, *, max_bytes=128_000_000):
+    """Use normal scalar/blank-null cells and the shared spreadsheet-safe policy."""
+    from ..exports import csv_table
+
     validate_report(report)
-    out = io.StringIO(newline="")
     fields = list(_SCHEMA["$defs"]["row"]["properties"])
-    writer = csv.DictWriter(out, fieldnames=fields)
-    writer.writeheader()
-    for row in report["rows"]:
-        writer.writerow(
-            {k: json.dumps(row[k], ensure_ascii=False, separators=(",", ":")) for k in fields}
-        )
-        if out.tell() > max_bytes:
-            raise ValueError("Upgrade CSV exceeds export byte bound")
-    value = out.getvalue()
-    if len(value.encode()) > max_bytes:
-        raise ValueError("Upgrade CSV exceeds export byte bound")
-    return value
+
+    def rows():
+        for row in report["rows"]:
+            yield {
+                key: json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+                if isinstance(value, (list, dict))
+                else value
+                for key, value in row.items()
+            }
+
+    return csv_table(fields, rows, max_bytes=max_bytes)

@@ -549,3 +549,29 @@ def test_api_subset_cves_compare_shared_table_without_selecting_unrelated_row():
     assert out["api_facts"][0]["binding_state"] == "conflicting"
     assert out["validation"]["conflict"] == 1
     assert out["units"][1]["stratum"] == "eligible"
+
+
+@pytest.mark.parametrize("separate", [False, True])
+def test_owned_affected_range_prevents_literal_only_candidate(separate):
+    a = record("target", ["17.9.1"], ["17.9.10"])
+    expression = dict(expression="vers:semver/>=17.9.1|<=17.9.9")
+    if separate:
+        a["assessments"].append(
+            dict(a["assessments"][0], product_context=[], versions=[expression])
+        )
+    else:
+        a["assessments"][0]["versions"] = [expression]
+    out = report([a, record("other", ["17.9.2", "17.9.10"])])
+    assert out["units"][0]["candidate"] is None
+    assert out["units"][0]["stratum"] == "eligible"
+    assert all(
+        c["candidate"] is None
+        for c in out["candidates"]
+        if c["identity"]["advisory_id"] == "target"
+    )
+
+
+def test_explicit_special_variant_exclusion_remains_separate_from_range_completeness():
+    out = report([record("target", ["17.9.1", "17.9.9w"], ["17.9.2"]), record("other", ["17.9.2"])])
+    assert out["units"][0]["candidate"]["fixed_versions"] == ["17.9.2"]
+    assert out["units"][0]["candidate"]["affected_inputs"] == ["17.9.1"]

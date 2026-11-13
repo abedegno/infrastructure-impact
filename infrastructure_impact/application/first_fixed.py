@@ -5,6 +5,7 @@ Holding out the target advisory prevents its fixes from teaching its prediction.
 """
 
 import json
+import re
 from collections import Counter
 from copy import deepcopy
 from hashlib import sha256
@@ -190,6 +191,59 @@ def _evidence_timing(record, proof, generated_at):
     return "future_to_report" if any(t > reference for t in times) else "latest_known_retrospective"
 
 
+def _complete_literal_scope(record, family):
+    """Ranges/unknown expressions cannot silently disappear from an affected maximum.
+
+    This reducer's documented special-variant exclusions remain exclusions; it
+    does not interpret ranges or construct a new release inventory.
+    """
+    vendor = record["vendor"]
+    for assessment in _bound(record.get("assessments", []), MAX_GRAPH):
+        if assessment.get("status") != "affected":
+            continue
+        context = _bound(assessment.get("product_context", []))
+        names = [assessment.get("product_family"), assessment.get("product")]
+        names += [
+            p[1]
+            for p in context
+            if isinstance(p, (list, tuple))
+            and len(p) == 2
+            and p[0] in {"product_family", "product_name"}
+        ]
+        families = {FAMILIES[(vendor, name)] for name in names if (vendor, name) in FAMILIES}
+        if family not in families:
+            continue
+        if len(families) != 1:
+            return False
+        expressions = {
+            p[1]
+            for p in context
+            if isinstance(p, (list, tuple))
+            and len(p) == 2
+            and p[0] in {"product_version", "service_pack"}
+            and isinstance(p[1], str)
+        }
+        expressions.update(
+            v["expression"]
+            for v in _bound(assessment.get("versions", []))
+            if isinstance(v, dict) and isinstance(v.get("expression"), str)
+        )
+        if not expressions:
+            return False
+        for expression in expressions:
+            if release_train(vendor, expression) is not None:
+                continue
+            if vendor == "cisco" and re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+[A-Za-z]+", expression):
+                continue  # Explicitly excluded special release, not a range.
+            if re.fullmatch(r"[0-9]+\.[0-9]+", expression) and any(
+                re.fullmatch(re.escape(expression) + r"\.[0-9]+[A-Za-z]*", leaf)
+                for leaf in expressions
+            ):
+                continue  # Train annotation accompanying a finite source leaf.
+            return False
+    return True
+
+
 def _candidate(record, family, train, catalogue, generated_at, scope=None):
     vendor, aid = record["vendor"], record["advisory_id"]
     scoped_record = (
@@ -200,6 +254,8 @@ def _candidate(record, family, train, catalogue, generated_at, scope=None):
             assessments=[a for a in record.get("assessments", []) if _assessment_owned(a, scope)],
         )
     )
+    if not _complete_literal_scope(scoped_record, family):
+        return None
     observed = {v for r, f, t, v, _ in _observations([scoped_record]) if f == family and t == train}
     if not observed:
         return None
