@@ -81,6 +81,13 @@ def validate_advisory(document, *, vendor=None, source_url=None):
             )
         except ValueError as error:
             raise NormalizationError(str(error)) from error
+    if "disclosure_metadata" in document:
+        from .adapters.cisco_disclosure import validate_binding
+
+        try:
+            validate_binding(document["disclosure_metadata"], document)
+        except ValueError as error:
+            raise NormalizationError(str(error)) from error
     seen = set()
     for assessment in document["assessments"]:
         if assessment["cve_id"] not in document["cves"]:
