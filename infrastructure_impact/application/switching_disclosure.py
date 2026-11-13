@@ -87,6 +87,30 @@ def _summary(pairs):
     )
 
 
+def _year_periods(pairs):
+    years = sorted(
+        {
+            comparison.day(p["initial_published_at"])[:4]
+            for p in pairs
+            if comparison.day(p["initial_published_at"])
+        }
+    )
+    return {
+        year: {
+            period: _summary(
+                [
+                    p
+                    for p in pairs
+                    if (comparison.day(p["initial_published_at"]) or "")[:4] == year
+                    and p["date_period"] == period
+                ]
+            )
+            for period in ("pre_july", "from_july", "unknown")
+        }
+        for year in years
+    }
+
+
 def build_report(
     records,
     study_selection,
@@ -271,6 +295,33 @@ def build_report(
                     upstream=None,
                 )
             )
+    for c in selected:
+        b = c["bundle"]
+        if b is None:
+            continue
+        members = [
+            p
+            for p in pairs
+            if p["vendor"] == c["vendor"]
+            and p["family"] == c["family"]
+            and p["advisory_id"] in b["member_advisory_ids"]
+        ]
+        value = dict(
+            kind="explicit_publisher_bundle",
+            vendor=c["vendor"],
+            family=c["family"],
+            publisher_id=b["publisher_id"],
+            initial_published_at=b["published_at"],
+            date_period=_period(b["published_at"]),
+            member_advisory_ids=deepcopy(b["member_advisory_ids"]),
+            member_cve_ids=[],
+            selected_advisory_ids=sorted({p["advisory_id"] for p in members}),
+            selected_cve_ids=sorted({p["cve_id"] for p in members}),
+            source=deepcopy(b["source"]),
+            upstream=None,
+        )
+        if value not in bundles:
+            bundles.append(value)
     if bundle_history is not None:
         from .switching_releases import validate_report as validate_history
 
@@ -305,6 +356,23 @@ def build_report(
                     ),
                 )
             )
+    # Bundle proof may come from the accepted native claim parser or a retained
+    # primary-source history, independently of document disclosure metadata.
+    for p in pairs:
+        if any(
+            p["vendor"] == b["vendor"]
+            and p["family"] == b["family"]
+            and p["advisory_id"] in b["selected_advisory_ids"]
+            and p["cve_id"] in b["selected_cve_ids"]
+            for b in bundles
+        ):
+            p["missing"] = [m for m in p["missing"] if m != "explicit_bundle_unavailable"]
+    unique = {}
+    for b in bundles:
+        key = contracts._json({k: v for k, v in b.items() if k != "upstream"})
+        if key not in unique or b["upstream"] is not None:
+            unique[key] = b
+    bundles = list(unique.values())
     result = dict(
         schema_version=1,
         method_version=VERSION,
@@ -337,6 +405,7 @@ def build_report(
                 }
             )
         },
+        year_periods=_year_periods(pairs),
         coverage=dict(
             selected_affected_claims=len(selected),
             owned_source_pairs=len(pairs),
@@ -418,7 +487,11 @@ def validate_report(report):
             }
         )
     }
-    if report["periods"] != expected_periods or report["years"] != expected_years:
+    if (
+        report["periods"] != expected_periods
+        or report["years"] != expected_years
+        or report["year_periods"] != _year_periods(report["pairs"])
+    ):
         raise ValueError("Disclosure distinct counts mismatch")
     if (
         report["coverage"]["selected_affected_claims"] != len(claim_ids)

@@ -147,3 +147,28 @@ def test_method_and_precision_must_match_owned_initial_date():
     record["disclosure_metadata"]["date_precision"] = "day"
     with pytest.raises(NormalizationError, match="precision"):
         validate_advisory(record)
+
+
+def test_supplemental_capture_receipt_is_bounded_and_hash_verified(tmp_path):
+    from hashlib import sha256
+
+    from infrastructure_impact.application import cisco_disclosure_replay as replay
+
+    raw = tmp_path / "source.json"
+    raw.write_bytes(FIXTURE.read_bytes())
+    receipt = dict(
+        source_url="https://sec.cloudapps.cisco.com/example.json",
+        sha256="b" * 64,
+        retrieved_at="2026-11-13T12:00:00Z",
+        path=str(raw),
+    )
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps([receipt]))
+    with pytest.raises(ValueError, match="supplemental"):
+        replay._supplemental_captures(manifest)
+    receipt["sha256"] = sha256(raw.read_bytes()).hexdigest()
+    manifest.write_text(json.dumps([receipt]))
+    assert replay._supplemental_captures(manifest) == [(receipt, raw.read_bytes())]
+    manifest.write_text(json.dumps([receipt, receipt]))
+    with pytest.raises(ValueError, match="supplemental"):
+        replay._supplemental_captures(manifest)

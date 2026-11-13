@@ -2,11 +2,14 @@
 
 import argparse
 import json
+from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 
 from ..adapters.standards import csaf
+from ..plugins.cisco import parse as cisco_parse
 from ..settings import PACKAGE
+from ..source_policy import allowed
 from ..storage.repository import connect, ingest, latest
 from . import kev, switching_comparison, switching_disclosure, switching_evidence
 
@@ -51,6 +54,28 @@ def validate_cases(records):
     return results
 
 
+def _supplemental_captures(path):
+    if path is None:
+        return []
+    entries = json.loads(Path(path).read_text())
+    if not isinstance(entries, list) or len(entries) != 1:
+        raise ValueError("Cisco supplemental manifest requires exactly one source")
+    captures = []
+    for e in entries:
+        if (
+            set(e) != {"source_url", "sha256", "retrieved_at", "path"}
+            or not allowed(e["source_url"], "cisco")
+            or not datetime.fromisoformat(e["retrieved_at"].replace("Z", "+00:00")).tzinfo
+            or Path(e["path"]).stat().st_size > 8000000
+        ):
+            raise ValueError("Cisco supplemental receipt invalid")
+        raw = Path(e["path"]).read_bytes()
+        if sha256(raw).hexdigest() != e["sha256"]:
+            raise ValueError("Cisco supplemental capture hash mismatch")
+        captures.append((e, raw))
+    return captures
+
+
 def replay(
     manifest_path,
     policy_receipt_path,
@@ -58,6 +83,7 @@ def replay(
     generated_at,
     bundle_history_path=None,
     checkpoint_path=None,
+    supplemental_manifest_path=None,
 ):
     """Read verified caller-owned public captures and use isolated in-memory storage."""
     manifest_raw = Path(manifest_path).read_bytes()
@@ -77,6 +103,7 @@ def replay(
         ):
             raise ValueError("Cisco capture size or hash mismatch")
         captures.append((entry, raw))
+    supplemental = _supplemental_captures(supplemental_manifest_path)
     receipt = json.loads(Path(policy_receipt_path).read_text())
     policy_raw = Path(receipt["path"]).read_bytes()
     if sha256(policy_raw).hexdigest() != receipt["sha256"] or len(policy_raw) != receipt["bytes"]:
@@ -94,6 +121,12 @@ def replay(
             db.execute(
                 "UPDATE evidence SET observed_at=? WHERE source_url=? AND sha256=?",
                 (entry["retrieved_at"], url, entry["response_sha256"]),
+            )
+        for entry, raw in supplemental:
+            ingest(db, raw, entry["source_url"], cisco_parse, "cisco")
+            db.execute(
+                "UPDATE evidence SET observed_at=? WHERE source_url=? AND sha256=?",
+                (entry["retrieved_at"], entry["source_url"], entry["sha256"]),
             )
         records = latest(db)
         e = switching_evidence.project(
@@ -131,6 +164,10 @@ def replay(
         manifest_sha256=sha256(manifest_raw).hexdigest(),
         verified_raw_sources=len(captures),
         verified_bytes=total,
+        verified_supplemental_sources=len(supplemental),
+        supplemental_sources=[
+            {k: e[k] for k in ("source_url", "sha256", "retrieved_at")} for e, _ in supplemental
+        ],
         normalized_records=len(records),
         finalized_claims=len(e["claims"]),
         validation_cases=validations,
@@ -151,6 +188,7 @@ def main():
     parser.add_argument("--generated-at", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path)
+    parser.add_argument("--supplemental-manifest", type=Path)
     args = parser.parse_args()
     result = replay(
         args.manifest,
@@ -158,6 +196,7 @@ def main():
         generated_at=args.generated_at,
         bundle_history_path=args.bundle_history,
         checkpoint_path=args.checkpoint,
+        supplemental_manifest_path=args.supplemental_manifest,
     )
     args.output.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     print(

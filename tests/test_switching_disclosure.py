@@ -242,3 +242,50 @@ def test_bundle_cannot_add_unselected_cve_or_inherit_member_date():
     result["bundles"][0]["selected_cve_ids"].append("CVE-2026-99999")
     with pytest.raises(ValueError, match="bundle"):
         disclosure.validate_report(result)
+
+
+def test_year_period_table_uses_same_distinct_selected_pairs():
+    result = run([claim("A", day="2025-12-01"), claim("B"), claim("C", day="2026-07-01")])
+    assert result["year_periods"]["2025"]["pre_july"]["counts"]["advisories"] == 1
+    assert result["year_periods"]["2025"]["from_july"]["counts"]["advisories"] == 0
+    assert result["year_periods"]["2026"]["pre_july"]["counts"]["advisories"] == 1
+    assert result["year_periods"]["2026"]["from_july"]["counts"]["advisories"] == 1
+
+
+def test_retained_bundle_proof_resolves_bundle_coverage_without_document_metadata():
+    from infrastructure_impact.application import switching_releases
+
+    c, r = cisco_owned()
+    c["bundle"] = dict(
+        publisher_id="ERP-synthetic",
+        title="Owned EventResponse bundle",
+        member_advisory_ids=[r["advisory_id"]],
+        published_at=None,
+        source=copy.deepcopy(c["source"]),
+    )
+    e, s = inputs([c])
+    history = switching_releases.build(
+        e, [], publication=None, generated_at=AT, observation_end="2026-11-13"
+    )
+    r.pop("disclosure_metadata")
+    result = disclosure.build_report(
+        [r], s, evidence=e, publication=None, generated_at=AT, bundle_history=history
+    )
+    assert "explicit_bundle_unavailable" not in result["pairs"][0]["missing"]
+    assert "disclosure_metadata_unavailable" in result["pairs"][0]["missing"]
+
+
+def test_native_current_bundle_is_proof_without_optional_retained_history():
+    c, r = cisco_owned()
+    c["bundle"] = dict(
+        publisher_id="ERP-current",
+        title="Owned EventResponse bundle",
+        member_advisory_ids=[r["advisory_id"]],
+        published_at=None,
+        source=copy.deepcopy(c["source"]),
+    )
+    r.pop("disclosure_metadata")
+    result = run([c], [r])
+    assert result["bundles"][0]["publisher_id"] == "ERP-current"
+    assert result["bundles"][0]["initial_published_at"] is None
+    assert "explicit_bundle_unavailable" not in result["pairs"][0]["missing"]
