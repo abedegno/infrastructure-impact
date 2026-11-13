@@ -402,3 +402,131 @@ def test_qualified_product_context_cannot_become_generic_iosxe_facts(qualifier, 
     result = extract_cisco_first_fixed(data)
     assert result["first_fixed"] == []
     assert result["issues"]
+
+
+@pytest.mark.parametrize("namespace", ["full_product_names", "relationships"])
+def test_conflicting_product_definition_namespaces_prevent_shared_facts(namespace):
+    from infrastructure_impact.adapters.cisco_first_fixed import extract_cisco_first_fixed
+
+    data = source()
+    conflicting = {"name": "Cisco NX-OS Software", "product_id": "p1"}
+    if namespace == "full_product_names":
+        data["product_tree"][namespace] = [conflicting]
+    else:
+        data["product_tree"][namespace] = [
+            {
+                "full_product_name": conflicting,
+                "category": "installed_on",
+                "product_reference": "p1",
+                "relates_to_product_reference": "missing",
+            }
+        ]
+    result = extract_cisco_first_fixed(data)
+    assert result["first_fixed"] == []
+    assert result["issues"]
+    record = normalized(data)
+    assert not record.get("first_fixed")
+    assert any("ambiguous_product_id" in warning for warning in record["warnings"])
+
+
+def test_unreferenced_flat_definition_does_not_erase_owned_branch_scope():
+    from infrastructure_impact.adapters.cisco_first_fixed import extract_cisco_first_fixed
+
+    data = source()
+    data["product_tree"]["full_product_names"] = [
+        {"name": "Cisco NX-OS Software", "product_id": "unrelated"}
+    ]
+    result = extract_cisco_first_fixed(data)
+    assert len(result["first_fixed"]) == 6
+    assert result["issues"] == []
+
+
+@pytest.mark.parametrize("collection", ["remediations", "threats"])
+@pytest.mark.parametrize(
+    "scope_case",
+    [
+        "direct_mixed",
+        "direct_unresolved",
+        "unknown_group",
+        "mixed_group",
+        "unresolved_group_member",
+        "duplicate_group",
+        "malformed_group_members",
+        "malformed_group_reference",
+        "malformed_direct_reference",
+    ],
+)
+def test_scoped_remediation_and_threat_ownership_must_resolve(collection, scope_case):
+    from infrastructure_impact.adapters.cisco_first_fixed import extract_cisco_first_fixed
+
+    data = source()
+    data["product_tree"]["full_product_names"] = [
+        {"name": "Cisco NX-OS Software", "product_id": "p2"}
+    ]
+    scoped = {
+        "category": "vendor_fix" if collection == "remediations" else "impact",
+        "details": "Synthetic scoped statement",
+    }
+    data["vulnerabilities"][0][collection] = [scoped]
+    groups = [{"group_id": "g1", "product_ids": ["p1"]}]
+    data["product_tree"]["product_groups"] = groups
+    if scope_case == "direct_mixed":
+        scoped["product_ids"] = ["p2"]
+    elif scope_case == "direct_unresolved":
+        scoped["product_ids"] = ["missing"]
+    elif scope_case == "malformed_direct_reference":
+        scoped["product_ids"] = "p1"
+    else:
+        scoped["group_ids"] = ["g1"]
+        if scope_case == "unknown_group":
+            scoped["group_ids"] = ["missing"]
+        elif scope_case == "mixed_group":
+            groups[0]["product_ids"] = ["p1", "p2"]
+        elif scope_case == "unresolved_group_member":
+            groups[0]["product_ids"] = ["missing"]
+        elif scope_case == "duplicate_group":
+            groups.append(copy.deepcopy(groups[0]))
+        elif scope_case == "malformed_group_members":
+            groups[0]["product_ids"] = "p1"
+        elif scope_case == "malformed_group_reference":
+            scoped["group_ids"] = "g1"
+    result = extract_cisco_first_fixed(data)
+    assert result["first_fixed"] == []
+    assert result["issues"]
+
+
+@pytest.mark.parametrize("collection", ["remediations", "threats"])
+@pytest.mark.parametrize("reference", ["product_ids", "group_ids"])
+def test_owned_iosxe_direct_and_group_scopes_preserve_shared_facts(collection, reference):
+    from infrastructure_impact.adapters.cisco_first_fixed import extract_cisco_first_fixed
+
+    data = source()
+    data["product_tree"]["product_groups"] = [{"group_id": "g1", "product_ids": ["p1"]}]
+    data["vulnerabilities"][0][collection] = [
+        {
+            "category": "vendor_fix" if collection == "remediations" else "impact",
+            "details": "Synthetic owned statement",
+            reference: ["p1" if reference == "product_ids" else "g1"],
+        }
+    ]
+    result = extract_cisco_first_fixed(data)
+    assert len(result["first_fixed"]) == 6
+    assert result["issues"] == []
+    assert len(normalized(data)["first_fixed"]) == 6
+
+
+@pytest.mark.parametrize("collection,field", [("flags", "product_ids"), ("scores", "products")])
+@pytest.mark.parametrize("product_id,want_facts", [("p1", 6), ("p2", 0), ("missing", 0)])
+def test_other_explicit_cve_product_references_use_the_same_scope_gate(
+    collection, field, product_id, want_facts
+):
+    from infrastructure_impact.adapters.cisco_first_fixed import extract_cisco_first_fixed
+
+    data = source()
+    data["product_tree"]["full_product_names"] = [
+        {"name": "Cisco NX-OS Software", "product_id": "p2"}
+    ]
+    data["vulnerabilities"][0][collection] = [{field: [product_id]}]
+    result = extract_cisco_first_fixed(data)
+    assert len(result["first_fixed"]) == want_facts
+    assert bool(result["issues"]) == (want_facts == 0)
