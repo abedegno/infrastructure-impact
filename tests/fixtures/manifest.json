@@ -163,5 +163,10 @@
     "file": "target-import-candidate.json",
     "kind": "synthetic",
     "sha256": "14d58255c8f1749b896b378b60c528b81094ae4ee5c4028cb369a9ad3244512c"
+  },
+  {
+    "file": "arista-sa0137-authored.html",
+    "kind": "synthetic",
+    "sha256": "12ba564963478b0bd436689e31ff3f9cb250b911c807200a05abce78bb375cfb"
   }
 ]

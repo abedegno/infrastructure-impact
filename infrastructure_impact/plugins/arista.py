@@ -28,6 +28,9 @@ from ..adapters.arista_reconciliation import ROUTES as RECONCILIATION_ROUTES
 from ..adapters.arista_reconciliation import parse as reconciliation
 from ..adapters.arista_routing_scope import ROUTES as ROUTING_ROUTES
 from ..adapters.arista_routing_scope import routing_scope
+from ..adapters.arista_sa0137 import CSAF as CSAF137
+from ..adapters.arista_sa0137 import URL as URL137
+from ..adapters.arista_sa0137 import parse as sa0137
 from ..adapters.arista_scoped import (
     airsnitch_notice,
     grouped_software,
@@ -45,8 +48,10 @@ from .shared import is_json, structured
 
 
 def parse(raw, url, vendor):
-    if url == CSAF103:
+    if url in {CSAF103, CSAF137}:
         raise ValueError("Reviewed Arista CSAF requires HTML source selection")
+    if url == URL137:
+        return sa0137(raw, url, vendor)
     if url in RECONCILIATION_ROUTES:
         return reconciliation(raw, url, vendor)
     if is_json(raw):
@@ -104,7 +109,7 @@ def parse(raw, url, vendor):
 
 
 def research_evidence(raw, url, vendor, document):
-    if url == CSAF103:
+    if url in {CSAF103, CSAF137}:
         return dict(
             schema_version=1, claims=[], bundles=[], issues=["reviewed_html_selection_required"]
         )
@@ -148,6 +153,7 @@ def plugin():
         research_evidence=research_evidence,
         current_evidence_policy=decide,
         normalizer_dependencies=(
+            sa0137,
             reconciliation,
             hardware_notice,
             current_scope,
