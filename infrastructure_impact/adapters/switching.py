@@ -11,6 +11,7 @@ import json
 import re
 from importlib.resources import files
 
+from .cisco_models import STRUCTURAL_NAMES, note_bindings
 from .common import HTML, availability, iso_date
 from .reviewed_fixes import apply_csaf, arista_assessments, attach_links
 from .standards import csaf_products
@@ -211,6 +212,8 @@ def _models(vendor):
             elif vendor == "cisco":
                 result["Cisco Catalyst " + model] = model
                 result["Catalyst " + model] = model
+    if vendor == "cisco":
+        result.update(STRUCTURAL_NAMES)
     return result
 
 
@@ -472,10 +475,26 @@ def _csaf(raw, url, vendor, document, digest):
                     )
                     if binding not in claim["platform_bindings"]:
                         claim["platform_bindings"].append(binding)
+            if vendor == "cisco" and not product["issues"] and not claim["platform_bindings"]:
+                owned = note_bindings(
+                    data,
+                    url,
+                    digest,
+                    claim["cve_id"],
+                    claim["status"],
+                    claim["family"],
+                    next(
+                        (name for _, name, _ in fields if name in FAMILIES["cisco"][1]),
+                        claim["product"],
+                    ),
+                )
+                claim["platform_bindings"].extend(owned["bindings"])
+                claim["named_platforms"].extend(b["platform"] for b in owned["bindings"])
+                claim["conditions"].extend(owned["conditions"])
+                claim["issues"].extend(owned["diagnostics"])
             if claim["platform_bindings"]:
                 claim["scope_level"] = "model_qualified"
-            # Notes remain literal CVE context; no prose conditions are used for
-            # model assignment. Scoped threats retain only their own product set.
+            # Unreviewed notes remain literal CVE context. Scoped threats retain only their own product set.
             for note in vuln.get("notes", []):
                 text = _bounded(note.get("text"), claim["issues"])
                 if text:

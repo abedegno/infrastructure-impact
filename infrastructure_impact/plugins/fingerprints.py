@@ -21,6 +21,7 @@ SHARED_SOURCES = tuple(
         "adapters/standards.py",
         "adapters/cisco_first_fixed.py",
         "adapters/cisco_disclosure.py",
+        "adapters/cisco_models.py",
         "domain.py",
         "plugins/contracts.py",
         "plugins/registry.py",
@@ -61,6 +62,9 @@ def sources(plugin):
             "schemas/switching-evidence-v1.json",
         ):
             include("research:" + name, PACKAGE / name)
+    if plugin.id == "cisco":
+        name = "resources/cisco-model-notes.json"
+        include("research:" + name, PACKAGE / name)
     if plugin.id in {"aruba", "arista"}:
         for name in (
             "resources/reviewed-remediation-bindings.json",
