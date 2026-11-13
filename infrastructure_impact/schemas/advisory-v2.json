@@ -183,6 +183,13 @@
     "source_observed_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "first_fixed": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/first_fixed"
+      }
     }
   },
   "additionalProperties": false,
@@ -358,6 +365,118 @@
             }
           },
           "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "first_fixed": {
+      "type": "object",
+      "required": [
+        "method",
+        "evidence_state",
+        "scope",
+        "cve_ids",
+        "family",
+        "product",
+        "product_ids",
+        "train",
+        "train_expression",
+        "fixed_versions",
+        "disposition",
+        "source_locator"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "stated_table",
+            "openvuln_api",
+            "inferred_next_release"
+          ]
+        },
+        "evidence_state": {
+          "enum": [
+            "publisher_stated",
+            "inferred_candidate"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "bulletin_shared",
+            "cve_specific",
+            "unresolved"
+          ]
+        },
+        "cve_ids": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/cve"
+          }
+        },
+        "family": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "product": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "product_ids": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "maxItems": 1000,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "train": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        },
+        "train_expression": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "fixed_versions": {
+          "type": "array",
+          "maxItems": 100,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "disposition": {
+          "enum": [
+            "fixed",
+            "migrate",
+            "unknown",
+            "conflicting"
+          ]
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
         }
       },
       "additionalProperties": false

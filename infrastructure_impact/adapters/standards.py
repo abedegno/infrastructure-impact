@@ -2,6 +2,7 @@
 
 import json
 
+from .cisco_first_fixed import extract_cisco_first_fixed
 from .common import availability, base, cves, remediation_reference
 
 
@@ -141,6 +142,11 @@ def csaf(raw, url, vendor):
         out["warnings"].append(
             "Source document is not final; assess publisher status before relying on its assertions."
         )
+    if vendor == "cisco":
+        first_fixed = extract_cisco_first_fixed(d)
+        if first_fixed["first_fixed"]:
+            out["first_fixed"] = first_fixed["first_fixed"]
+        out["warnings"].extend(first_fixed["issues"])
     return out
 
 

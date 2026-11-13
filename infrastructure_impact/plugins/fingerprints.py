@@ -19,6 +19,7 @@ SHARED_SOURCES = tuple(
         "adapters/reviewed_fixes.py",
         "remediation_bindings.py",
         "adapters/standards.py",
+        "adapters/cisco_first_fixed.py",
         "domain.py",
         "plugins/contracts.py",
         "plugins/registry.py",
