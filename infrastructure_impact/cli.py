@@ -72,6 +72,12 @@ def main(argv=None):
     switching.add_argument("--page-limit", type=int, default=2)
     switching.add_argument("--document-limit", type=int, default=8)
     switching.add_argument("--score-limit", type=int, default=0)
+    first_fixed = sub.add_parser(
+        "cisco-first-fixed", help="Explicit optional local IOS XE first-fixed queries"
+    )
+    first_fixed.add_argument("operation", choices=("plan", "run", "status"))
+    first_fixed.add_argument("--release", action="append", default=[])
+    first_fixed.add_argument("--max-releases", type=int, default=10)
     triage = sub.add_parser(
         "triage", help="Group a bounded pending/error archive sample by layout and parser outcome"
     )
@@ -407,6 +413,27 @@ def main(argv=None):
                     )
                 except ValueError:
                     parser.error("Invalid switching source, date or budget")
+        print(json.dumps(receipt, indent=2))
+    elif args.command == "cisco-first-fixed":
+        import os
+
+        from .collection import cisco_first_fixed
+
+        if not os.environ.get("IMPACT_DATABASE"):
+            parser.error("Set IMPACT_DATABASE to an explicit staging database")
+        with closing(connect()) as db:
+            try:
+                receipt = (
+                    cisco_first_fixed.plan(db, args.release)
+                    if args.operation == "plan"
+                    else cisco_first_fixed.status(db)
+                    if args.operation == "status"
+                    else cisco_first_fixed.run(
+                        db, releases=args.release, max_releases=args.max_releases
+                    )
+                )
+            except ValueError:
+                parser.error("Invalid Cisco first-fixed release selection or budget")
         print(json.dumps(receipt, indent=2))
     elif args.command == "coverage-gaps":
         import sqlite3
