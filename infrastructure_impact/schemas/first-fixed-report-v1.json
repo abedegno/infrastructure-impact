@@ -1,0 +1,762 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "maxLength": 8192
+    },
+    "catalogue": {
+      "type": "object",
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "completeness": {
+          "const": "observed_only"
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/version"
+          },
+          "maxItems": 20000
+        },
+        "basis": {
+          "const": "affected_version_context_only"
+        },
+        "release_inventory_verified": {
+          "const": false
+        }
+      },
+      "required": [
+        "fingerprint",
+        "completeness",
+        "versions",
+        "basis",
+        "release_inventory_verified"
+      ],
+      "additionalProperties": false
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unit"
+      },
+      "maxItems": 20000
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "identity": {
+            "$ref": "#/$defs/identity"
+          },
+          "family": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "train": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "candidate": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/candidate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "issued",
+              "abstain"
+            ]
+          }
+        },
+        "required": [
+          "identity",
+          "family",
+          "train",
+          "candidate",
+          "state"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 20000
+    },
+    "validation": {
+      "type": "object",
+      "properties": {
+        "eligible": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "issued": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "correct": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mismatch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "abstain": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exact_set_correct": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "migration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unknown": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conflict": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unsupported": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "any_alternative_rate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "exact_set_rate": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "eligible",
+        "issued",
+        "correct",
+        "mismatch",
+        "abstain",
+        "exact_set_correct",
+        "migration",
+        "unknown",
+        "conflict",
+        "unsupported",
+        "any_alternative_rate",
+        "exact_set_rate"
+      ],
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "maxProperties": 1000,
+      "additionalProperties": {
+        "$ref": "#/$defs/coverage"
+      }
+    },
+    "api_coverage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 8192
+      },
+      "maxItems": 1000
+    },
+    "publication": {
+      "type": "object",
+      "properties": {
+        "raw_source_manifest_supplied": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 8192
+        },
+        "advisory_schema_version": {
+          "const": 2
+        },
+        "raw_source_manifest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "raw_source_manifest_supplied"
+      ],
+      "additionalProperties": false
+    },
+    "api_observations": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "type": "object",
+            "properties": {
+              "advisory_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "source_locator": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "source_first_fixed": {
+                "type": "array",
+                "maxItems": 1000,
+                "items": {
+                  "type": "string",
+                  "maxLength": 8192
+                }
+              },
+              "first_fixed_state": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "cve_refs": {
+                "type": "array",
+                "maxItems": 1000,
+                "items": {
+                  "type": "string",
+                  "maxLength": 8192
+                }
+              },
+              "ownership_state": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              }
+            },
+            "additionalProperties": false
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "retrieved_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "evidence_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "query_release": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 8192
+          },
+          "parser_revision": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 8192
+          },
+          "binding_state": {
+            "enum": [
+              "bound",
+              "ownership_unresolved",
+              "conflicting"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "context",
+          "source",
+          "query_release",
+          "binding_state"
+        ]
+      }
+    },
+    "api_facts": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "properties": {
+          "identity": {
+            "$ref": "#/$defs/identity"
+          },
+          "fact": {
+            "$ref": "urn:infrastructure-impact:advisory:2#/$defs/first_fixed"
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "retrieved_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 8192
+              },
+              "evidence_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          "table_source": {
+            "$ref": "#/$defs/source"
+          },
+          "query_release": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 8192
+          },
+          "binding_state": {
+            "enum": [
+              "bound",
+              "ownership_unresolved",
+              "conflicting"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "catalogue",
+    "units",
+    "candidates",
+    "validation",
+    "coverage",
+    "api_coverage",
+    "diagnostics",
+    "publication",
+    "api_observations",
+    "api_facts"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infrastructure-impact:first-fixed-report:1",
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "advisory_id": {
+          "type": "string",
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "vendor",
+        "advisory_id"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "source_url": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "sha256": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "source_observed_at": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "revision_id": {
+          "type": [
+            "string",
+            "integer",
+            "object",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "integer",
+            "object",
+            "null"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "proof": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "advisory_id": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "source_url": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "sha256": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "source_observed_at": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "revision_id": {
+          "type": [
+            "string",
+            "integer",
+            "object",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "integer",
+            "object",
+            "null"
+          ]
+        },
+        "source_locator": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "vendor",
+        "advisory_id",
+        "source_locator"
+      ],
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "family": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "train": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/proof"
+          },
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "vendor",
+        "family",
+        "train",
+        "version",
+        "provenance"
+      ],
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "const": "inferred_next_release"
+        },
+        "evidence_state": {
+          "const": "inferred_candidate"
+        },
+        "family": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "train": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "fixed_versions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "maxItems": 100
+        },
+        "maximum_affected": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "affected_inputs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "maxItems": 1000
+        },
+        "excluded_advisory": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "catalogue_fingerprint": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "provenance": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/proof"
+          },
+          "maxItems": 1000
+        },
+        "evidence_timing": {
+          "enum": [
+            "future_to_report",
+            "latest_known_retrospective"
+          ]
+        }
+      },
+      "required": [
+        "method",
+        "evidence_state",
+        "family",
+        "train",
+        "fixed_versions",
+        "maximum_affected",
+        "affected_inputs",
+        "excluded_advisory",
+        "catalogue_fingerprint",
+        "provenance",
+        "evidence_timing"
+      ],
+      "additionalProperties": false
+    },
+    "unit": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/identity"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "fact": {
+          "allOf": [
+            {
+              "$ref": "urn:infrastructure-impact:advisory:2#/$defs/first_fixed"
+            },
+            {
+              "properties": {
+                "method": {
+                  "const": "stated_table"
+                },
+                "evidence_state": {
+                  "const": "publisher_stated"
+                }
+              }
+            }
+          ]
+        },
+        "stratum": {
+          "enum": [
+            "eligible",
+            "migration",
+            "unknown",
+            "conflict",
+            "unsupported"
+          ]
+        },
+        "candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/candidate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "correct",
+            "mismatch",
+            "abstain"
+          ]
+        },
+        "any_alternative_agreement": {
+          "type": "boolean"
+        },
+        "exact_set_agreement": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "identity",
+        "source",
+        "fact",
+        "stratum",
+        "candidate",
+        "outcome",
+        "any_alternative_agreement",
+        "exact_set_agreement"
+      ],
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "records": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "with_stated_table": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "without_stated_table": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "known_fixed_target_records": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stated_table_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inferred_issued": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inferred_abstain": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "openvuln_api_units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "openvuln_api_conflicts": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "records",
+        "known_fixed_target_records"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
