@@ -903,18 +903,17 @@ def _kev_selected(report, selection):
 
     out = copy.deepcopy(report["kev_reconciliation"])
     out["selection"] = copy.deepcopy(selection)
+    claim_index = {}
+    for claim in claim_facets(report):
+        claim_index.setdefault((claim["vendor"], claim["family"], claim["cve_id"]), []).append(
+            claim
+        )
     entries = []
     for e in out["entries"]:
         vendor = e["mapping"]["vendor"]
         if vendor is not None and vendor not in selection["effective_vendors"]:
             continue
-        claims = [
-            c
-            for c in claim_facets(report)
-            if c["vendor"] == vendor
-            and c["family"] == e["mapping"]["family"]
-            and c["cve_id"] == e["cve_id"]
-        ]
+        claims = claim_index.get((vendor, e["mapping"]["family"], e["cve_id"]), [])
         state, reasons = (
             reconciliation._state(
                 claims,

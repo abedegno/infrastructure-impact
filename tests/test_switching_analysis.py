@@ -849,3 +849,26 @@ def test_complete_feed_compact_audit_matches_native_core(options):
     broken["publication"] = {"id": "a" * 32, "advisory_schema_version": 2}
     with pytest.raises(ValueError):
         reconciliation.from_compiled(compiled, broken, [], [], evaluated_at=evaluated)
+
+
+def test_complete_feed_selection_inflates_source_facets_once(monkeypatch):
+    from test_switching_kev_reconciliation import inputs as kev_inputs
+
+    _, _, _, study = kev_inputs()
+    compiled = api().build_report([], [], study)
+    second = copy.deepcopy(compiled["kev_reconciliation"]["entries"][0])
+    second["cve_id"] = "CVE-2026-99999"
+    compiled["kev_reconciliation"]["entries"].append(second)
+    original = api().claim_facets
+    calls = []
+
+    def counted(value):
+        calls.append(True)
+        yield from original(value)
+
+    monkeypatch.setattr(api(), "claim_facets", counted)
+    selection = api().selection_context(compiled, {})["selection"]
+    calls.clear()
+    result = api()._kev_selected(compiled, selection)
+    assert len(result["entries"]) == 2
+    assert len(calls) == 1
