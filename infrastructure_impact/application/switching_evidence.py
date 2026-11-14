@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from functools import lru_cache
 from importlib.resources import files
+from json.encoder import encode_basestring
 from urllib.parse import urlsplit
 
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError, validators
@@ -109,19 +110,22 @@ def definition_sha256(value: dict) -> str:
         if type(node) is dict:
             return (
                 "{"
-                + ",".join(
-                    json.dumps(k, ensure_ascii=False) + ":" + canonical(node[k])
-                    for k in sorted(node)
-                )
+                + ",".join(encode_basestring(k) + ":" + canonical(node[k]) for k in sorted(node))
                 + "}"
             )
         if type(node) is list:
             return "[" + ",".join(canonical(v) for v in node) + "]"
+        if type(node) is str:
+            return encode_basestring(node)
         if type(node) is float:
             if node.is_integer():
                 return str(int(node))
             return format(Decimal.from_float(node), "f").rstrip("0")
-        return json.dumps(node, ensure_ascii=False, allow_nan=False)
+        if node is None:
+            return "null"
+        if type(node) is bool:
+            return "true" if node else "false"
+        return str(node)  # Strict prevalidation leaves only built-in integers.
 
     return hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
 

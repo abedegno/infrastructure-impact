@@ -977,7 +977,16 @@ def charge_value(value, budget, *, ascii=True, depth=0, spaced=False):
         budget.charge(size, size + (max(0, len(value) - 1) if spaced else 0))
         for key, item in value.items() if isinstance(value, dict) else enumerate(value):
             if isinstance(value, dict):
-                budget.charge(string_cost(key) + 1, string_cost(key, ascii) + 1 + spaced)
+                if type(key) is str:
+                    # Key costs are invocation-local and pure only for built-ins.
+                    # Separate them from value entries, which can contain subclasses.
+                    cache_key = (str, key)
+                    if cache_key not in budget.costs:
+                        budget.costs[cache_key] = (string_cost(key), string_cost(key, True))
+                    canonical, escaped = budget.costs[cache_key]
+                    budget.charge(canonical + 1, (escaped if ascii else canonical) + 1 + spaced)
+                else:
+                    budget.charge(string_cost(key) + 1, string_cost(key, ascii) + 1 + spaced)
             charge_value(item, budget, ascii=ascii, depth=depth + 1, spaced=spaced)
     else:
         raise ValueError("unsupported logical value")
