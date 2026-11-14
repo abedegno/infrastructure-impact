@@ -519,6 +519,7 @@ def test_reviewed_sa178_refresh_preserves_old_history_and_accepts_new_vendor_fac
     assert {"code": "reviewed_owner_refresh", "source_url": refresh["source_url"]} in preview[
         "issues"
     ]
+    assert json.loads(maintenance.preview_bytes(preview))["profile_version"] == "2"
     called = []
 
     def fetch(connection, url, vendor, **kwargs):
