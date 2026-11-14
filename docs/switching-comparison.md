@@ -580,3 +580,7 @@ methods and verification](research/2026-11-14-switching-analysis-delivery.md). T
 unchanged. Annual unknowns remain unknown; supported partial steps are not reliable
 bounds, retrospective KEV is not historical exposure, and per-model counts overlap.
 Independent human review remains pending.
+
+The [14 November retained-source run](research/2026-11-14-switching-source-run.md)
+records actual target coverage, annual unknowns, source limitations and full-size
+Python/browser parity measurements.

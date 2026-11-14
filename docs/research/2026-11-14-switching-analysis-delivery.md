@@ -134,6 +134,17 @@ one byte before decoding the optional sidecar. A present JSON null is malformed.
 `publication-export --root switching-analysis.json` uses the existing
 v2 streaming exporter.
 
+```sh
+PYTHONPATH="$PWD" IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.json" \
+  IMPACT_HOME=/tmp/impact-analysis-local IMPACT_DATABASE=/tmp/impact-analysis-local/public.sqlite \
+  .venv/bin/python -m infrastructure_impact.cli publication-export \
+  --publication /tmp/switching-public --root switching-analysis.json \
+  --output /tmp/compiled-analysis.json
+```
+
+The export reads the named publication and writes a new file. It does not perform
+source acquisition or rebuild the snapshot.
+
 Both native formats expose `/api/v1/switching-analysis` and
 `/api/v1/switching-upgrades`, accepting the existing strict `vendor`, `scope`,
 `window`, `cves`, and `format=json|csv` queries. Unknown, blank, repeated and
@@ -228,11 +239,22 @@ requirements carry only proof/train-binding references. Selected upgrade repacki
 prunes unused claim-only sources and remains exactly native-oracle equivalent.
 
 The first full-source attempt failed the unchanged 128 MB aggregate bound.
-Preflight measured 82,311,614 bytes of requirements and 46,729,260 bytes of exact
-study-family facets; their sum already exceeded the bound before other children.
-Source pooling preserved the same facts and brought the actual compiled root to
-122,303,798 bytes, accepted by native validation and the publication writer at
-backend commit `03720a3`. This establishes compiled-root fit only: the full-cohort
-selected output has a separate unchanged 128 MB gate, and its first actual replay
-exceeded that gate. A valid published compiled root must not be presented as proof
-that every selected export fits. Unknowns are not dropped to fit.
+Source pooling preserved its facts and brought the actual compiled root to
+122,303,798 bytes. The first detailed selected output also failed its separate
+128 MB gate. Indexed, pooled row evidence then reduced the accepted full-cohort
+selected JSON to 120,680,817 logical bytes; both expanded CSVs fit and match the
+browser outputs byte for byte. Limits are unchanged and unknowns were not dropped.
+See the [pinned source-run summary](2026-11-14-switching-source-run.md) for exact
+receipts, substantial runtime/memory costs, source coverage and unknowns.
+
+Opt-in composition uses the complete retained KEV detail catalogue before the
+ordinary current-CVE enrichment filter. This discovers exact mapped candidates
+with no observed vendor advisory; ordinary public KEV and comparison payloads
+keep their existing scope. Missing collection-health receipts still produce
+unknown current membership even when historical entries are retained.
+`switching_kev_reconciliation.from_compiled` supports a separately identified
+complete-feed audit against validated compiled facets and authoritative
+current/retained records. It calls the same native reconciliation core, does not
+synthesize native claims, and retains the source publication identity with a
+separate `evaluated_at`. An audit wrapper must identify source publication/hash,
+computation time and code pin; it must not masquerade as a rebuilt publication.

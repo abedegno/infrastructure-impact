@@ -289,3 +289,7 @@ methods and verification](docs/research/2026-11-14-switching-analysis-delivery.m
 unchanged. Annual unknowns remain unknown; supported partial steps are not reliable
 bounds, retrospective KEV is not historical exposure, and per-model counts overlap.
 Independent human review remains pending.
+
+See the [retained-source switching analysis run](docs/research/2026-11-14-switching-source-run.md)
+for measured target coverage, unknown annual estimates, the separate complete-feed
+KEV audit and native/browser export parity.
