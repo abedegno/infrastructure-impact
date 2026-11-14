@@ -1,0 +1,1401 @@
+{
+  "publication": {
+    "id": "a3a7a1fcdc194599b2903d39484ba340",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-14T17:42:54.283949+00:00",
+  "observation_end": "2026-11-14",
+  "period_start": "2021-01-01",
+  "period_basis": "initial_publisher_date_utc_day; not CVE identifier year",
+  "source_identity": {
+    "proof": {
+      "schema_version": 1,
+      "publication": {
+        "id": "a3a7a1fcdc194599b2903d39484ba340",
+        "advisory_schema_version": 2
+      },
+      "generated_at": "2026-11-14T17:42:54.283949+00:00",
+      "profile": {
+        "profile_id": "campus-switching-openvuln-2026-11-14-v1",
+        "input_sha256": "e8cc5e131c3c2bd835185795357044f427ec9c796f708a98eb652f9831289356",
+        "api_frames": 59
+      },
+      "analysis_json": {
+        "path": "selected-analysis.json",
+        "sha256": "530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a",
+        "bytes": 119474455
+      },
+      "analysis_csv": {
+        "sha256": "43d3df454861d5930ef0c82288968d9f8cb750d62681a0714443def9682ece1d",
+        "bytes": 46194750
+      },
+      "upgrades_csv": {
+        "sha256": "e7ebb582ca75eed15c4aae18b6df47bdf14007d790599627fc979603d1f6e482",
+        "bytes": 38640528
+      }
+    },
+    "attestation": {
+      "run": 43622373473,
+      "source_commit": "4e982748b2b45c9e2ffbeb522103645af4c39fa2",
+      "profile": {
+        "profile_id": "campus-switching-openvuln-2026-11-14-v1",
+        "input_sha256": "e8cc5e131c3c2bd835185795357044f427ec9c796f708a98eb652f9831289356",
+        "api_frames": 59
+      },
+      "publication": {
+        "id": "a3a7a1fcdc194599b2903d39484ba340",
+        "advisory_schema_version": 2
+      },
+      "generated_at": "2026-11-14T17:42:54.283949+00:00",
+      "manifest_sha256": "087ff4ca5eb8789082f0659c5995294bbc3e013136a35a9c66e1c4b45e79f4f1",
+      "publication_v2_sha256": "64cb68bfac11c71c43a64783847d212b1ee7fe8eae6a3ae1997e156c90c49854",
+      "full_native_parity_passed": true,
+      "recovery_verified": true,
+      "public_health_status": "fresh",
+      "actual_publication_identity_matches": true
+    },
+    "overview_descriptor": {
+      "path": "data/v2/23358e5fc2c04866221015281be69e1dd300ab221ae37b9c7c1bfd604b29867c.json",
+      "sha256": "23358e5fc2c04866221015281be69e1dd300ab221ae37b9c7c1bfd604b29867c",
+      "bytes": 2640194
+    },
+    "locally_verified_selected_analysis_sha256": "530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a"
+  },
+  "field_semantics": {
+    "overview_counts": "switching_overview.rows: counts.advisories/cves include nonaffected statuses; counts.affected_advisories/affected_cves restrict affected evidence. os_family includes model-qualified claims.",
+    "disclosure_counts": "selected-analysis.disclosure.pairs: source-owned affected advisory/CVE pairs, distinct advisory IDs and CVE IDs per vendor and initial publication year; shared CVEs make calendar years nonadditive.",
+    "models": "selected-analysis.model_coverage.models; per-vendor unions deduplicate advisory_ids, cve_ids and claim_ids across named models; zero means no explicit binding, not unaffected.",
+    "target_usable": "requirements.target is not null AND requirements.issues is empty; members supplies vendor/advisory/CVE identity. Train-specific requirement rows are not advisories or upgrades.",
+    "severity": "overview.rows.severity retains version/provider/origin/preferred/band; facets are nonadditive; vendor_severity is separate from CVSS.",
+    "upgrade_event_count": "rows.event_count null means unresolved total, supported_event_count records supported steps, not upper/lower bounds."
+  },
+  "vendors": {
+    "cisco": {
+      "os_family": {
+        "counts": {
+          "advisories": 170,
+          "affected_advisories": 170,
+          "cves": 199,
+          "claims": 34920,
+          "affected_cves": 199,
+          "conditional_cves": 1,
+          "conditionality_unclassified_cves": 198,
+          "draft_advisories": 0,
+          "remediation_events": 159,
+          "bundled_events": 1,
+          "unbundled_publications": 158,
+          "fixed_only_claims": 0,
+          "planned_fix_claims": 0,
+          "workaround_claims": 0,
+          "model_unresolved_claims": 34630
+        },
+        "kev": {
+          "availability": "available",
+          "listed_cve_ids": [
+            "CVE-2023-20109",
+            "CVE-2023-20198",
+            "CVE-2023-20273",
+            "CVE-2025-20352"
+          ],
+          "unknown_cve_ids": [],
+          "listed_count": 4,
+          "unknown_count": 0,
+          "denominator": 199
+        },
+        "denominators": {
+          "affected_cves": 199,
+          "observed_advisories": 170,
+          "expected_advisories": null
+        },
+        "issues": [
+          "model_binding_unresolved",
+          "period_coverage_unknown",
+          "reviewed_html_selection_required",
+          "sets_nonadditive",
+          "source_layout_unsupported",
+          "source_normalization_unavailable"
+        ]
+      },
+      "coverage": {
+        "state": "partial",
+        "expected_advisories": null,
+        "observed_advisories": 170,
+        "basis": "retained_source_windows_not_period_completeness"
+      },
+      "severity_facets": [
+        {
+          "version": "3.1",
+          "provider": "Cisco",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Critical",
+          "count": 7
+        },
+        {
+          "version": "3.0",
+          "provider": "Cisco",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "High",
+          "count": 1
+        },
+        {
+          "version": "3.1",
+          "provider": "Cisco",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "High",
+          "count": 102
+        },
+        {
+          "version": "3.0",
+          "provider": "Cisco",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Medium",
+          "count": 3
+        },
+        {
+          "version": "3.1",
+          "provider": "Cisco",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Medium",
+          "count": 85
+        },
+        {
+          "version": null,
+          "provider": null,
+          "origin": null,
+          "preferred": null,
+          "band": "Unknown",
+          "count": 1
+        }
+      ],
+      "vendor_severity": [],
+      "explicit_models": {
+        "union_counts": {
+          "claims": 290,
+          "advisories": 4,
+          "cves": 5
+        },
+        "models": [
+          {
+            "model": "9200",
+            "counts": {
+              "claims": 110,
+              "advisories": 2,
+              "cves": 2
+            },
+            "by_status": {
+              "affected": {
+                "claims": 110,
+                "advisories": 2,
+                "cves": 2
+              }
+            }
+          },
+          {
+            "model": "9300",
+            "counts": {
+              "claims": 182,
+              "advisories": 3,
+              "cves": 4
+            },
+            "by_status": {
+              "affected": {
+                "claims": 182,
+                "advisories": 3,
+                "cves": 4
+              }
+            }
+          },
+          {
+            "model": "9300L",
+            "counts": {
+              "claims": 89,
+              "advisories": 1,
+              "cves": 2
+            },
+            "by_status": {
+              "affected": {
+                "claims": 89,
+                "advisories": 1,
+                "cves": 2
+              }
+            }
+          },
+          {
+            "model": "C9407R",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          },
+          {
+            "model": "C9410R",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          },
+          {
+            "model": "9500",
+            "counts": {
+              "claims": 91,
+              "advisories": 1,
+              "cves": 1
+            },
+            "by_status": {
+              "affected": {
+                "claims": 91,
+                "advisories": 1,
+                "cves": 1
+              }
+            }
+          },
+          {
+            "model": "C9606R",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          }
+        ]
+      },
+      "affected_disclosure": {
+        "common_period": {
+          "advisories": 170,
+          "cves": 199,
+          "owned_pairs": 199
+        },
+        "calendar_years": {
+          "2021": {
+            "advisories": 50,
+            "cves": 55,
+            "owned_pairs": 55
+          },
+          "2022": {
+            "advisories": 24,
+            "cves": 24,
+            "owned_pairs": 24
+          },
+          "2023": {
+            "advisories": 19,
+            "cves": 20,
+            "owned_pairs": 20
+          },
+          "2024": {
+            "advisories": 26,
+            "cves": 27,
+            "owned_pairs": 27
+          },
+          "2025": {
+            "advisories": 33,
+            "cves": 49,
+            "owned_pairs": 49
+          },
+          "2026": {
+            "advisories": 18,
+            "cves": 24,
+            "owned_pairs": 24
+          }
+        },
+        "unknown_initial_date": {
+          "advisories": 0,
+          "cves": 0,
+          "owned_pairs": 0
+        }
+      },
+      "targets_by_scenario": {
+        "publisher_first_fixed": {
+          "target_present": {
+            "requirement_rows": 2183,
+            "advisories": 76,
+            "cves": 91,
+            "owned_pairs": 91
+          },
+          "usable_no_issues": {
+            "requirement_rows": 2183,
+            "advisories": 76,
+            "cves": 91,
+            "owned_pairs": 91
+          }
+        },
+        "known_fixed_target": {
+          "target_present": {
+            "requirement_rows": 2184,
+            "advisories": 77,
+            "cves": 92,
+            "owned_pairs": 92
+          },
+          "usable_no_issues": {
+            "requirement_rows": 2184,
+            "advisories": 77,
+            "cves": 92,
+            "owned_pairs": 92
+          }
+        },
+        "inferred_inclusive": {
+          "target_present": {
+            "requirement_rows": 2851,
+            "advisories": 116,
+            "cves": 134,
+            "owned_pairs": 134
+          },
+          "usable_no_issues": {
+            "requirement_rows": 2851,
+            "advisories": 116,
+            "cves": 134,
+            "owned_pairs": 134
+          }
+        }
+      },
+      "upgrade_rows": {
+        "publisher_first_fixed": {
+          "rows": 684,
+          "known_event_totals": 0,
+          "coverage": {
+            "unknown": 143,
+            "partial": 541
+          }
+        },
+        "known_fixed_target": {
+          "rows": 684,
+          "known_event_totals": 0,
+          "coverage": {
+            "unknown": 143,
+            "partial": 541
+          }
+        },
+        "inferred_inclusive": {
+          "rows": 684,
+          "known_event_totals": 0,
+          "coverage": {
+            "unknown": 143,
+            "partial": 541
+          }
+        }
+      }
+    },
+    "aruba": {
+      "os_family": {
+        "counts": {
+          "advisories": 21,
+          "affected_advisories": 16,
+          "cves": 119,
+          "claims": 882,
+          "affected_cves": 104,
+          "conditional_cves": 0,
+          "conditionality_unclassified_cves": 104,
+          "draft_advisories": 0,
+          "remediation_events": 6,
+          "bundled_events": 0,
+          "unbundled_publications": 6,
+          "fixed_only_claims": 443,
+          "planned_fix_claims": 20,
+          "workaround_claims": 380,
+          "model_unresolved_claims": 882
+        },
+        "kev": {
+          "availability": "available",
+          "listed_cve_ids": [],
+          "unknown_cve_ids": [],
+          "listed_count": 0,
+          "unknown_count": 0,
+          "denominator": 104
+        },
+        "denominators": {
+          "affected_cves": 104,
+          "observed_advisories": 21,
+          "expected_advisories": null
+        },
+        "issues": [
+          "model_binding_unresolved",
+          "period_coverage_unknown",
+          "reviewed_html_selection_required",
+          "sets_nonadditive",
+          "source_layout_unsupported",
+          "source_normalization_unavailable"
+        ]
+      },
+      "coverage": {
+        "state": "partial",
+        "expected_advisories": null,
+        "observed_advisories": 21,
+        "basis": "retained_source_windows_not_period_completeness"
+      },
+      "severity_facets": [
+        {
+          "version": "3.1",
+          "provider": "HPE Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Critical",
+          "count": 2
+        },
+        {
+          "version": "3.1",
+          "provider": "HPE Aruba Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Critical",
+          "count": 4
+        },
+        {
+          "version": "3.1",
+          "provider": "HPE Aruba Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "High",
+          "count": 22
+        },
+        {
+          "version": "3.1",
+          "provider": "HPE Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "High",
+          "count": 25
+        },
+        {
+          "version": "3.1",
+          "provider": "HPE Aruba Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Low",
+          "count": 2
+        },
+        {
+          "version": "3.1",
+          "provider": "HPE Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Medium",
+          "count": 12
+        },
+        {
+          "version": "3.1",
+          "provider": "HPE Aruba Networking",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Medium",
+          "count": 26
+        },
+        {
+          "version": null,
+          "provider": null,
+          "origin": null,
+          "preferred": null,
+          "band": "Unknown",
+          "count": 14
+        }
+      ],
+      "vendor_severity": [
+        {
+          "rating": "High",
+          "scheme": null,
+          "namespace": null,
+          "scope": "advisory",
+          "advisory_ids": ["ARUBA-PSA-2021-013"],
+          "count": 1
+        },
+        {
+          "rating": "Critical",
+          "scheme": null,
+          "namespace": null,
+          "scope": "advisory",
+          "advisory_ids": ["ARUBA-PSA-2021-019"],
+          "count": 1
+        },
+        {
+          "rating": "Medium",
+          "scheme": null,
+          "namespace": "https://www.first.org/cvss/v3.1/specification-document#Qualitative-Severity-Rating-Scale",
+          "scope": "advisory",
+          "advisory_ids": ["ARUBA-PSA-2022-003", "ARUBA-PSA-2024-005", "HPESBNW04818"],
+          "count": 3
+        },
+        {
+          "rating": "High",
+          "scheme": null,
+          "namespace": "https://www.first.org/cvss/v3.1/specification-document#Qualitative-Severity-Rating-Scale",
+          "scope": "advisory",
+          "advisory_ids": [
+            "ARUBA-PSA-2022-004",
+            "ARUBA-PSA-2022-009",
+            "ARUBA-PSA-2022-012",
+            "ARUBA-PSA-2022-017",
+            "ARUBA-PSA-2023-001",
+            "ARUBA-PSA-2023-004",
+            "ARUBA-PSA-2023-010",
+            "HPESBNW04669",
+            "HPESBNW05081"
+          ],
+          "count": 9
+        },
+        {
+          "rating": "Critical",
+          "scheme": null,
+          "namespace": "https://www.first.org/cvss/v3.1/specification-document#Qualitative-Severity-Rating-Scale",
+          "scope": "advisory",
+          "advisory_ids": [
+            "ARUBA-PSA-2022-006",
+            "ARUBA-PSA-2022-010",
+            "HPESBNW04662",
+            "HPESBNW05134"
+          ],
+          "count": 4
+        },
+        {
+          "rating": "N/A",
+          "scheme": null,
+          "namespace": "https://www.first.org/cvss/v3.1/specification-document#Qualitative-Severity-Rating-Scale",
+          "scope": "advisory",
+          "advisory_ids": ["HPESBNW04772"],
+          "count": 1
+        },
+        {
+          "rating": "High",
+          "scheme": null,
+          "namespace": "https://www.first.org/cvss/v3-1/specification-document",
+          "scope": "advisory",
+          "advisory_ids": ["HPESBNW04888"],
+          "count": 1
+        },
+        {
+          "rating": "Critical",
+          "scheme": null,
+          "namespace": "https://www.first.org/cvss/v3-1/specification-document",
+          "scope": "advisory",
+          "advisory_ids": ["HPESBNW05027"],
+          "count": 1
+        }
+      ],
+      "explicit_models": {
+        "union_counts": {
+          "claims": 0,
+          "advisories": 0,
+          "cves": 0
+        },
+        "models": [
+          {
+            "model": "6300M",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          },
+          {
+            "model": "6410",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          }
+        ]
+      },
+      "affected_disclosure": {
+        "common_period": {
+          "advisories": 16,
+          "cves": 104,
+          "owned_pairs": 104
+        },
+        "calendar_years": {
+          "2021": {
+            "advisories": 0,
+            "cves": 0,
+            "owned_pairs": 0
+          },
+          "2022": {
+            "advisories": 4,
+            "cves": 34,
+            "owned_pairs": 34
+          },
+          "2023": {
+            "advisories": 3,
+            "cves": 6,
+            "owned_pairs": 6
+          },
+          "2024": {
+            "advisories": 3,
+            "cves": 4,
+            "owned_pairs": 4
+          },
+          "2025": {
+            "advisories": 3,
+            "cves": 17,
+            "owned_pairs": 17
+          },
+          "2026": {
+            "advisories": 3,
+            "cves": 43,
+            "owned_pairs": 43
+          }
+        },
+        "unknown_initial_date": {
+          "advisories": 0,
+          "cves": 0,
+          "owned_pairs": 0
+        }
+      },
+      "targets_by_scenario": {
+        "publisher_first_fixed": {
+          "target_present": {
+            "requirement_rows": 0,
+            "advisories": 0,
+            "cves": 0,
+            "owned_pairs": 0
+          },
+          "usable_no_issues": {
+            "requirement_rows": 0,
+            "advisories": 0,
+            "cves": 0,
+            "owned_pairs": 0
+          }
+        },
+        "known_fixed_target": {
+          "target_present": {
+            "requirement_rows": 289,
+            "advisories": 6,
+            "cves": 64,
+            "owned_pairs": 64
+          },
+          "usable_no_issues": {
+            "requirement_rows": 285,
+            "advisories": 6,
+            "cves": 63,
+            "owned_pairs": 63
+          }
+        },
+        "inferred_inclusive": {
+          "target_present": {
+            "requirement_rows": 289,
+            "advisories": 6,
+            "cves": 64,
+            "owned_pairs": 64
+          },
+          "usable_no_issues": {
+            "requirement_rows": 285,
+            "advisories": 6,
+            "cves": 63,
+            "owned_pairs": 63
+          }
+        }
+      },
+      "upgrade_rows": {
+        "publisher_first_fixed": {
+          "rows": 156,
+          "known_event_totals": 0,
+          "coverage": {
+            "unknown": 54,
+            "partial": 102
+          }
+        },
+        "known_fixed_target": {
+          "rows": 156,
+          "known_event_totals": 3,
+          "coverage": {
+            "unknown": 55,
+            "observed_constraints_only": 3,
+            "partial": 98
+          }
+        },
+        "inferred_inclusive": {
+          "rows": 156,
+          "known_event_totals": 3,
+          "coverage": {
+            "unknown": 55,
+            "observed_constraints_only": 3,
+            "partial": 98
+          }
+        }
+      }
+    },
+    "arista": {
+      "os_family": {
+        "counts": {
+          "advisories": 60,
+          "affected_advisories": 55,
+          "cves": 105,
+          "claims": 653,
+          "affected_cves": 70,
+          "conditional_cves": 1,
+          "conditionality_unclassified_cves": 69,
+          "draft_advisories": 21,
+          "remediation_events": 6,
+          "bundled_events": 0,
+          "unbundled_publications": 6,
+          "fixed_only_claims": 397,
+          "planned_fix_claims": 0,
+          "workaround_claims": 0,
+          "model_unresolved_claims": 478
+        },
+        "kev": {
+          "availability": "available",
+          "listed_cve_ids": [],
+          "unknown_cve_ids": [],
+          "listed_count": 0,
+          "unknown_count": 0,
+          "denominator": 70
+        },
+        "denominators": {
+          "affected_cves": 70,
+          "observed_advisories": 60,
+          "expected_advisories": null
+        },
+        "issues": [
+          "model_binding_unresolved",
+          "period_coverage_unknown",
+          "reviewed_html_selection_required",
+          "sets_nonadditive",
+          "source_layout_unsupported",
+          "source_normalization_unavailable"
+        ]
+      },
+      "coverage": {
+        "state": "partial",
+        "expected_advisories": null,
+        "observed_advisories": 60,
+        "basis": "retained_source_windows_not_period_completeness"
+      },
+      "severity_facets": [
+        {
+          "version": "3.1",
+          "provider": "Arista PSIRT",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Critical",
+          "count": 3
+        },
+        {
+          "version": "3.1",
+          "provider": "Arista PSIRT",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "High",
+          "count": 15
+        },
+        {
+          "version": "3.1",
+          "provider": "Arista PSIRT",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Low",
+          "count": 5
+        },
+        {
+          "version": "3.1",
+          "provider": "Arista PSIRT",
+          "origin": "vendor_advisory",
+          "preferred": true,
+          "band": "Medium",
+          "count": 34
+        },
+        {
+          "version": null,
+          "provider": null,
+          "origin": null,
+          "preferred": null,
+          "band": "Unknown",
+          "count": 13
+        }
+      ],
+      "vendor_severity": [],
+      "explicit_models": {
+        "union_counts": {
+          "claims": 0,
+          "advisories": 0,
+          "cves": 0
+        },
+        "models": [
+          {
+            "model": "7050X3",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          },
+          {
+            "model": "720XP",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          },
+          {
+            "model": "750",
+            "counts": {
+              "claims": 0,
+              "advisories": 0,
+              "cves": 0
+            },
+            "by_status": {}
+          }
+        ]
+      },
+      "affected_disclosure": {
+        "common_period": {
+          "advisories": 55,
+          "cves": 70,
+          "owned_pairs": 70
+        },
+        "calendar_years": {
+          "2021": {
+            "advisories": 1,
+            "cves": 1,
+            "owned_pairs": 1
+          },
+          "2022": {
+            "advisories": 6,
+            "cves": 7,
+            "owned_pairs": 7
+          },
+          "2023": {
+            "advisories": 3,
+            "cves": 4,
+            "owned_pairs": 4
+          },
+          "2024": {
+            "advisories": 5,
+            "cves": 7,
+            "owned_pairs": 7
+          },
+          "2025": {
+            "advisories": 13,
+            "cves": 15,
+            "owned_pairs": 15
+          },
+          "2026": {
+            "advisories": 27,
+            "cves": 36,
+            "owned_pairs": 36
+          }
+        },
+        "unknown_initial_date": {
+          "advisories": 0,
+          "cves": 0,
+          "owned_pairs": 0
+        }
+      },
+      "targets_by_scenario": {
+        "publisher_first_fixed": {
+          "target_present": {
+            "requirement_rows": 0,
+            "advisories": 0,
+            "cves": 0,
+            "owned_pairs": 0
+          },
+          "usable_no_issues": {
+            "requirement_rows": 0,
+            "advisories": 0,
+            "cves": 0,
+            "owned_pairs": 0
+          }
+        },
+        "known_fixed_target": {
+          "target_present": {
+            "requirement_rows": 28,
+            "advisories": 6,
+            "cves": 8,
+            "owned_pairs": 8
+          },
+          "usable_no_issues": {
+            "requirement_rows": 28,
+            "advisories": 6,
+            "cves": 8,
+            "owned_pairs": 8
+          }
+        },
+        "inferred_inclusive": {
+          "target_present": {
+            "requirement_rows": 28,
+            "advisories": 6,
+            "cves": 8,
+            "owned_pairs": 8
+          },
+          "usable_no_issues": {
+            "requirement_rows": 28,
+            "advisories": 6,
+            "cves": 8,
+            "owned_pairs": 8
+          }
+        }
+      },
+      "upgrade_rows": {
+        "publisher_first_fixed": {
+          "rows": 240,
+          "known_event_totals": 0,
+          "coverage": {
+            "unknown": 108,
+            "partial": 132
+          }
+        },
+        "known_fixed_target": {
+          "rows": 240,
+          "known_event_totals": 9,
+          "coverage": {
+            "unknown": 118,
+            "partial": 113,
+            "observed_constraints_only": 9
+          }
+        },
+        "inferred_inclusive": {
+          "rows": 240,
+          "known_event_totals": 9,
+          "coverage": {
+            "unknown": 118,
+            "partial": 113,
+            "observed_constraints_only": 9
+          }
+        }
+      }
+    }
+  },
+  "disclosure_coverage": {
+    "selected_affected_claims": 35413,
+    "owned_source_pairs": 373,
+    "metadata_advisories": 169,
+    "missing_counts": {
+      "disclosure_metadata_unavailable": 175,
+      "explicit_bundle_unavailable": 353
+    },
+    "unsupported_advisory_types": ["unknown"]
+  },
+  "model_unresolved": [
+    {
+      "reason": "cisco_model_embedded_controller_host_context",
+      "counts": {
+        "claims": 1395,
+        "advisories": 23,
+        "cves": 25
+      }
+    },
+    {
+      "reason": "cisco_model_family_only_9400_9600_context",
+      "counts": {
+        "claims": 297,
+        "advisories": 3,
+        "cves": 3
+      }
+    },
+    {
+      "reason": "cisco_model_unreviewed_note_layout",
+      "counts": {
+        "claims": 32936,
+        "advisories": 138,
+        "cves": 164
+      }
+    },
+    {
+      "reason": "cisco_model_unsupported_rommon_qualification",
+      "counts": {
+        "claims": 1,
+        "advisories": 1,
+        "cves": 1
+      }
+    },
+    {
+      "reason": "model_binding_unresolved",
+      "counts": {
+        "claims": 1536,
+        "advisories": 103,
+        "cves": 221
+      }
+    }
+  ],
+  "release_history": {
+    "coverage": {
+      "expected_releases": null,
+      "expected_advisories": null,
+      "completeness": "not_established"
+    },
+    "method": "Release and fix evidence for the selected advisory CVE cohort; releases need not have been published in the selected advisory window. Publisher-reported fixed CVEs and affected-scope linked CVEs are separate observations. Vendor-fixed context follows selected study CVEs; affected-scope links additionally require the selected affected CVE cohort. Remediation availability dates retain advisory context and never supply a software release date; only publisher release-history dates do. Fixed-only statements do not establish affectedness, model applicability, deployed exposure or an upgrade event. Exact literal identities only; no version ordering, first-fix, fix-delay or security ranking inference. Retained sources are a bounded reviewed set, not a complete vendor release archive; coverage denominators are unknown.",
+    "by_vendor": {
+      "cisco": {
+        "releases": 2,
+        "releases_with_reported_release_dates": 1,
+        "platform_support_rows": 0
+      },
+      "aruba": {
+        "releases": 70,
+        "releases_with_reported_release_dates": 10,
+        "platform_support_rows": 57
+      },
+      "arista": {
+        "releases": 28,
+        "releases_with_reported_release_dates": 0,
+        "platform_support_rows": 0
+      }
+    },
+    "bundles": [
+      {
+        "vendor": "arista",
+        "publisher_id": "0148",
+        "source_id": "arista-eos-advisory-bundle-0148",
+        "initial_published_at": "2026-09-02",
+        "member_publication_date": "2026-09-09",
+        "member_advisory_ids": [
+          "149",
+          "150",
+          "151",
+          "152",
+          "153",
+          "154",
+          "155",
+          "156",
+          "157",
+          "158",
+          "159",
+          "160",
+          "161",
+          "162",
+          "163",
+          "164",
+          "165",
+          "166",
+          "167",
+          "168",
+          "169",
+          "170",
+          "171",
+          "172",
+          "173",
+          "174",
+          "175",
+          "176",
+          "177",
+          "178"
+        ],
+        "source": {
+          "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24535-security-advisory-0148",
+          "source_sha256": "12cae9d499d8eb210474e5751daf5feb44a2d00ce38908403133a3ccbd828e9b",
+          "retrieved_at": "2026-11-13T20:01:40.515104+00:00",
+          "source_locator": "Security Advisory # / Product (Component) table; 149: /en/support/advisories-notices/security-advisory/24705-security-advisory-0149; 150: /en/support/advisories-notices/security-advisory/24706-security-advisory-0150; 151: /en/support/advisories-notices/security-advisory/24707-security-advisory-0151; 152: /en/support/advisories-notices/security-advisory/24708-security-advisory-0152; 153: /en/support/advisories-notices/security-advisory/24709-security-advisory-0153; 154: /en/support/advisories-notices/security-advisory/24710-security-advisory-0154; 155: /en/support/advisories-notices/security-advisory/24711-security-advisory-0155; 156: /en/support/advisories-notices/security-advisory/24712-security-advisory-0156; 157: /en/support/advisories-notices/security-advisory/24713-security-advisory-0157; 158: /en/support/advisories-notices/security-advisory/24714-security-advisory-0158; 159: /en/support/advisories-notices/security-advisory/24715-security-advisory-0159; 160: /en/support/advisories-notices/security-advisory/24716-security-advisory-0160; 161: /en/support/advisories-notices/security-advisory/24717-security-advisory-0161; 162: /en/support/advisories-notices/security-advisory/24718-security-advisory-0162; 163: /en/support/advisories-notices/security-advisory/24719-security-advisory-0163; 164: /en/support/advisories-notices/security-advisory/24720-security-advisory-0164; 165: /en/support/advisories-notices/security-advisory/24721-security-advisory-0165; 166: /en/support/advisories-notices/security-advisory/24722-security-advisory-0166; 167: /en/support/advisories-notices/security-advisory/24723-security-advisory-0167; 168: /en/support/advisories-notices/security-advisory/24724-security-advisory-0168; 169: /en/support/advisories-notices/security-advisory/24725-security-advisory-0169; 170: /en/support/advisories-notices/security-advisory/24726-security-advisory-0170; 171: /en/support/advisories-notices/security-advisory/24727-security-advisory-0171; 172: /en/support/advisories-notices/security-advisory/24728-security-advisory-0172; 173: /en/support/advisories-notices/security-advisory/24729-security-advisory-0173; 174: /en/support/advisories-notices/security-advisory/24730-security-advisory-0174; 175: /en/support/advisories-notices/security-advisory/24731-security-advisory-0175; 176: /en/support/advisories-notices/security-advisory/24732-security-advisory-0176; 177: /en/support/advisories-notices/security-advisory/24733-security-advisory-0177; 178: /en/support/advisories-notices/security-advisory/24734-security-advisory-0178"
+        }
+      },
+      {
+        "vendor": "cisco",
+        "publisher_id": "ERP-75056",
+        "source_id": null,
+        "initial_published_at": "2024-03-27T16:00:00Z",
+        "member_publication_date": null,
+        "member_advisory_ids": [
+          "cisco-sa-aux-333WBz8f",
+          "cisco-sa-dhcp-dos-T3CXPO9z",
+          "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+          "cisco-sa-ikev1-NO2ccFWz",
+          "cisco-sa-ios-dos-Hq4d3tZG",
+          "cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG",
+          "cisco-sa-iosxe-ospf-dos-dR9Sfrxp",
+          "cisco-sa-iosxe-priv-esc-seAx6NLX",
+          "cisco-sa-iosxe-utd-cmd-JbL8KvHT",
+          "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+          "cisco-sa-isis-sGjyOUHX",
+          "cisco-sa-lisp-3gYXs3qP",
+          "cisco-sa-wlc-mdns-dos-4hv6pBGf"
+        ],
+        "source": {
+          "source_url": "https://sec.cloudapps.cisco.com/security/center/viewErp.x?alertId=ERP-75056",
+          "source_sha256": "3ca993c5411757fe2567f966978c329f54c138b8139231b4d8161201e6563cb2",
+          "retrieved_at": "2026-11-09T13:52:50.924514+00:00",
+          "source_locator": "Details table: HTML tr[3] through tr[15], linked advisory identities"
+        }
+      }
+    ]
+  },
+  "disclosure_bundles": [
+    {
+      "kind": "security_hardening",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "publisher_id": "cisco-sa-hardening-iosxe-V8NMuMZJ",
+      "initial_published_at": "2026-08-05T16:00:00+00:00",
+      "date_period": "from_july",
+      "member_advisory_ids": ["cisco-sa-hardening-iosxe-V8NMuMZJ"],
+      "member_cve_ids": [
+        "CVE-2026-20267",
+        "CVE-2026-20268",
+        "CVE-2026-20269",
+        "CVE-2026-20270",
+        "CVE-2026-20271",
+        "CVE-2026-20272",
+        "CVE-2026-20273"
+      ],
+      "selected_advisory_ids": ["cisco-sa-hardening-iosxe-V8NMuMZJ"],
+      "selected_cve_ids": [
+        "CVE-2026-20267",
+        "CVE-2026-20268",
+        "CVE-2026-20269",
+        "CVE-2026-20270",
+        "CVE-2026-20271",
+        "CVE-2026-20272",
+        "CVE-2026-20273"
+      ],
+      "source": {
+        "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-hardening-iosxe-V8NMuMZJ/csaf/cisco-sa-hardening-iosxe-V8NMuMZJ.json",
+        "source_sha256": "0f51863687793ec84cfa51289e3028b712ec0695061eafa576e6ea5f62fe8149",
+        "retrieved_at": "2026-11-08T17:14:12.884877+00:00",
+        "source_locator": "advisory"
+      },
+      "upstream": null
+    },
+    {
+      "kind": "explicit_publisher_bundle",
+      "vendor": "cisco",
+      "family": "cisco-iosxe",
+      "publisher_id": "ERP-75056",
+      "initial_published_at": "2024-03-27T16:00:00Z",
+      "date_period": "pre_july",
+      "member_advisory_ids": [
+        "cisco-sa-aux-333WBz8f",
+        "cisco-sa-dhcp-dos-T3CXPO9z",
+        "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+        "cisco-sa-ikev1-NO2ccFWz",
+        "cisco-sa-ios-dos-Hq4d3tZG",
+        "cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG",
+        "cisco-sa-iosxe-ospf-dos-dR9Sfrxp",
+        "cisco-sa-iosxe-priv-esc-seAx6NLX",
+        "cisco-sa-iosxe-utd-cmd-JbL8KvHT",
+        "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+        "cisco-sa-isis-sGjyOUHX",
+        "cisco-sa-lisp-3gYXs3qP",
+        "cisco-sa-wlc-mdns-dos-4hv6pBGf"
+      ],
+      "member_cve_ids": [],
+      "selected_advisory_ids": [
+        "cisco-sa-aux-333WBz8f",
+        "cisco-sa-dhcp-dos-T3CXPO9z",
+        "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+        "cisco-sa-ikev1-NO2ccFWz",
+        "cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG",
+        "cisco-sa-iosxe-ospf-dos-dR9Sfrxp",
+        "cisco-sa-iosxe-priv-esc-seAx6NLX",
+        "cisco-sa-iosxe-utd-cmd-JbL8KvHT",
+        "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+        "cisco-sa-isis-sGjyOUHX",
+        "cisco-sa-lisp-3gYXs3qP",
+        "cisco-sa-wlc-mdns-dos-4hv6pBGf"
+      ],
+      "selected_cve_ids": [
+        "CVE-2024-20259",
+        "CVE-2024-20278",
+        "CVE-2024-20303",
+        "CVE-2024-20306",
+        "CVE-2024-20307",
+        "CVE-2024-20308",
+        "CVE-2024-20309",
+        "CVE-2024-20311",
+        "CVE-2024-20312",
+        "CVE-2024-20313",
+        "CVE-2024-20314",
+        "CVE-2024-20316",
+        "CVE-2024-20324"
+      ],
+      "source": {
+        "source_url": "https://sec.cloudapps.cisco.com/security/center/viewErp.x?alertId=ERP-75056",
+        "source_sha256": "3ca993c5411757fe2567f966978c329f54c138b8139231b4d8161201e6563cb2",
+        "retrieved_at": "2026-11-09T13:52:50.924514+00:00",
+        "source_locator": "Details table: HTML tr[3] through tr[15], linked advisory identities"
+      },
+      "upstream": {
+        "publication": {
+          "id": "a3a7a1fcdc194599b2903d39484ba340",
+          "advisory_schema_version": 2
+        },
+        "generated_at": "2026-11-14T17:42:54.283949+00:00",
+        "definition_sha256": "5224471b014fccc278f985d08328926bac29ebc6bfb96d25f98972f91be6fd33"
+      }
+    }
+  ],
+  "kev_catalogue": {
+    "version": "2026.11.13",
+    "released_at": "2026-11-13T17:49:24.9532Z",
+    "count": 1781,
+    "parser_version": 1,
+    "sha256": "2b19960330815db7c8f43b31cfd433f1d44c3a1d17173345dcaed56a6fca3298",
+    "revision_id": "78",
+    "source_observed_at": "2026-11-13T20:01:38.050498+00:00",
+    "parsed_at": "2026-11-13T20:01:38.101512+00:00"
+  },
+  "limitations": [
+    "Counts describe disclosure and scrutiny, not security quality or underlying bug counts.",
+    "July date eras are independent of the unchanged 7 April study windows.",
+    "Dates and advisory types do not attribute an individual CVE to AI or a disclosure programme.",
+    "Unknown method, missing metadata and unavailable bundle proof are not negative findings.",
+    "Source-specific severity facets are nonadditive and retain publisher score provenance.",
+    "Human extraction review remains pending.",
+    "Method counts use source-owned advisory/CVE pairs; shared CVEs make era and year totals nonadditive."
+  ],
+  "customer_answerability": {
+    "can_answer": [
+      "Observed affected OS-family disclosure counts in a shared 2021-01-01 to 2026-11-14 window and by initial publication calendar year.",
+      "Explicit named-model evidence presence and source-specific CVSS/retrospective KEV membership.",
+      "Which observed advisories have usable publisher-first-fixed, known-fixed-target, or inferred-inclusive requirements, considered separately.",
+      "Bounded publisher release-history and explicit bundle context with unknown completeness."
+    ],
+    "cannot_answer": [
+      "Which vendor is inherently more secure or why its observed counts differ.",
+      "Apples-to-apples deployed exposure, role-equivalent model risk or a customer upgrade count without deployed versions, configurations, dates, lifecycle and complete evidence.",
+      "Complete vendor release archives, total disclosure populations, fix delays, or causal AI/programme attribution."
+    ]
+  },
+  "disclosure_explanation_sources": {
+    "retrieved_at": "2026-11-14T19:13:16Z",
+    "research_scope": "Official primary sources only. Four targeted search queries total, followed by direct official-page reads. No downloads or repository/product edits.",
+    "sources": [
+      {
+        "id": "cisco_glasswing",
+        "publisher": "Cisco",
+        "title": "Rising to the Era of AI-Powered Cyber Defense",
+        "url": "https://blogs.cisco.com/news/rising-to-the-era-of-ai-powered-cyber-defense",
+        "publication_date": "2026-04-07",
+        "author": "Anthony Grieco",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "dated header; opening paragraphs; paragraph beginning For some time",
+        "supported_paraphrase": "Cisco announced joining Project Glasswing and said it had been testing its own products and infrastructure using advanced AI tools, including Claude Mythos Preview.",
+        "evidence_type": "first-party participation confirmation"
+      },
+      {
+        "id": "anthropic_glasswing",
+        "publisher": "Anthropic",
+        "title": "Project Glasswing: Securing critical software for the AI era",
+        "url": "https://www.anthropic.com/glasswing",
+        "publication_date": "2026-04-07",
+        "additional_dated_update": "2026-10-06",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "Introduction April 7 entry; Cisco partner statement; October 6 update",
+        "supported_paraphrase": "The April 7 launch names Cisco among the participants and says partners will use Mythos Preview for defensive security work. An October 6 update says existing members will transition to the Specialized Access tier of the expanded Cyber Verification Program.",
+        "evidence_type": "programme-operator corroboration"
+      },
+      {
+        "id": "cisco_may_disclosure",
+        "publisher": "Cisco",
+        "title": "Cisco\u2019s Risk-Based Vulnerability Disclosure in the Age of AI",
+        "url": "https://blogs.cisco.com/security/ciscos-risk-based-vulnerability-disclosure-in-the-age-of-ai",
+        "publication_date": "2026-05-22",
+        "author": "Russ Smoak",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "Harnessing AI; Prioritizing Risk; Updating the Disclosure Cycle",
+        "supported_paraphrase": "Cisco says it uses advanced AI to accelerate discovery and remediation. It may reduce detail for lower-risk internally discovered issues, including replacing some standalone advisories with release-level information. Third-party and open-source disclosure practices remain unchanged.",
+        "evidence_type": "publisher account of discovery and disclosure policy"
+      },
+      {
+        "id": "cisco_june_cadence",
+        "publisher": "Cisco",
+        "title": "Strengthening the Foundation: A Predictable, Customer-Focused Response to AI-Accelerated Vulnerability Discovery",
+        "url": "https://blogs.cisco.com/security/strengthening-the-foundation-a-predictable-customer-focused-response-to-ai-accelerated-vulnerability-discovery",
+        "publication_date": "2026-06-02",
+        "author": "Russ Smoak",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "What is changing; What this means for you; What PSIRT will publish",
+        "supported_paraphrase": "Cisco announced July twice-monthly disclosures, seven-day advance notice and planned quarterly core NOS hardening. It says consolidating fixes into scheduled releases reduces maintenance events and describes release volume as clearing latent defects. It promises release-note CVE details correlated to fixed releases. These are Cisco\u2019s stated rationale and intentions, not independently measured customer outcomes.",
+        "evidence_type": "publisher account and forward-looking release plans"
+      },
+      {
+        "id": "cisco_policy_faq",
+        "publisher": "Cisco",
+        "title": "Cisco\u2019s Transition to a Risk-Based Vulnerability Disclosure Model",
+        "url": "https://sec.cloudapps.cisco.com/security/center/resources/risk-based-disclosure",
+        "publication_date": null,
+        "publication_date_note": "No original publication date stated on retrieved page; it says the process took effect July 2026.",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "Summary; FAQ Q3-Q4 and Q9-Q10",
+        "supported_paraphrase": "Cisco says it groups bugs sharing a CWE into umbrella CVE IDs and uses the highest severity within each group. Hardening releases are organized by NOS platform. The process took effect in July 2026; scheduled advisories generally follow fix availability, with exceptions for emergencies.",
+        "evidence_type": "current publisher policy explanation"
+      },
+      {
+        "id": "cve_rules_current",
+        "publisher": "CVE Program",
+        "title": "CVE Numbering Authority Operational Rules",
+        "url": "https://www.cve.org/ResourcesSupport/AllResources/CNARules",
+        "publication_date": "2026-10-14",
+        "effective_date": "2026-10-20",
+        "version": "4.2.1",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "official search-index excerpt: version header and section 4.4",
+        "supported_paraphrase": "The official indexed page states version 4.2.1, approved October 14 and effective October 20, 2026. Its indexed text says CNA judgment includes the number of vulnerabilities and CVE assignments and that newly available information can change assigned ID counts.",
+        "evidence_type": "official indexed primary text",
+        "access_limitation": "Direct page rendering returned a JavaScript-required shell. Current-version metadata and narrow statements above are from the official search excerpt, not a full rendered current-rules review."
+      },
+      {
+        "id": "cve_rules_historical",
+        "publisher": "CVE Program",
+        "title": "CNA Operational Rules Version 4.0",
+        "url": "https://www.cve.org/Resources/Roles/Cnas/CNA_Rules_v4.0.pdf",
+        "publication_date": "2024-05-08",
+        "effective_date": "2024-08-08",
+        "version": "4.0",
+        "retrieved_at": "2026-11-14T19:13:16Z",
+        "locator": "section 1.1; section 3.2.6; sections 4.1.10-4.1.12 and 4.2.6-4.2.13",
+        "supported_paraphrase": "This historical version describes CVE as identifying publicly disclosed vulnerabilities, allows differing disclosure policies, and distinguishes independently fixable vulnerabilities, fixes and shared vulnerable code. It is historical context and does not certify current rules or Cisco compliance.",
+        "evidence_type": "historical normative primary document"
+      }
+    ],
+    "findings": [
+      {
+        "id": "glasswing_participation",
+        "status": "verified",
+        "statement": "Cisco participation in Glasswing is confirmed by Cisco and the programme operator.",
+        "source_ids": ["cisco_glasswing", "anthropic_glasswing"]
+      },
+      {
+        "id": "discovery_process",
+        "status": "verified_publisher_statement",
+        "statement": "Cisco says AI expands vulnerability discovery and remediation capacity. This establishes its account of its process, not the share of the selected switching CVEs discovered by AI.",
+        "source_ids": ["cisco_glasswing", "cisco_may_disclosure"]
+      },
+      {
+        "id": "grouping_changes_counting_unit",
+        "status": "verified_policy_and_analytical_inference",
+        "statement": "Cisco documents multi-bug umbrella CVEs. Therefore a CVE count cannot be treated as a count of individual underlying bugs; the exact number of bugs in a group requires explicit evidence.",
+        "source_ids": ["cisco_policy_faq"]
+      },
+      {
+        "id": "batching_and_operations",
+        "status": "verified_policy_and_analytical_inference",
+        "statement": "Cisco documents release batching and intends to reduce maintenance events. Therefore advisory/CVE volume cannot be translated one-for-one into customer upgrades. Actual burden still depends on supported fixed targets and deployed versions, configurations and timing.",
+        "source_ids": ["cisco_june_cadence", "cisco_policy_faq"]
+      },
+      {
+        "id": "quality_causal_rank",
+        "status": "analytical_inference_not_direct_vendor_comparison",
+        "statement": "Discovery intensity, grouping and disclosure policy can change observed counts. The checked sources do not establish that Cisco is more or less secure than Aruba or Arista, or quantitatively explain the differences in the selected public cohort.",
+        "source_ids": [
+          "cisco_may_disclosure",
+          "cisco_june_cadence",
+          "cisco_policy_faq",
+          "cve_rules_historical"
+        ]
+      },
+      {
+        "id": "glasswing_causal_count",
+        "status": "unavailable_evidence",
+        "statement": "No source checked supplies claim-by-claim Glasswing attribution or a controlled causal estimate for the selected switching advisories/CVEs. Programme participation and date-era correlations do not prove that Glasswing caused any observed count change.",
+        "source_ids": ["cisco_glasswing", "anthropic_glasswing"]
+      },
+      {
+        "id": "rules_compliance",
+        "status": "not_assessed",
+        "statement": "Cisco\u2019s stated grouping practice is documented. A full current-rules interpretation, exception assessment or compliance judgment was not performed.",
+        "source_ids": ["cisco_policy_faq", "cve_rules_current", "cve_rules_historical"]
+      }
+    ],
+    "customer_ready_explanation": "Cisco\u2019s larger observed disclosure count does not by itself establish poorer security. Cisco publicly confirms joining Glasswing and says AI increases discovery and remediation capacity. It also changed disclosure granularity, including umbrella CVEs and scheduled hardening releases. These facts explain why disclosure totals, bug totals and upgrade events are different quantities. They do not prove how much Glasswing changed this cohort, identify which selected CVEs it found, or establish a relative vendor security ranking.",
+    "temporal_caveat": "Glasswing launch April 7 and disclosure-policy July changes are distinct dates. Neither date is a causal treatment boundary for the selected counts. Current pages may have been updated after their original publication dates."
+  }
+}

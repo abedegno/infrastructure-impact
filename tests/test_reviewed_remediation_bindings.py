@@ -63,9 +63,9 @@ def test_packaged_registry_is_closed_finite_and_mutation_isolated():
     value = registry.definition()
     schema = json.loads((PACKAGE / "schemas/reviewed-remediation-bindings-v1.json").read_text())
     Draft202012Validator(schema).validate(value)
-    assert len(value["sources"]) == 8
+    assert len(value["sources"]) == 9
     csaf = [s for s in value["sources"] if s["kind"] == "csaf"]
-    assert [len(s["bindings"]) for s in csaf] == [65, 20, 16, 15, 170]
+    assert [len(s["bindings"]) for s in csaf] == [65, 20, 16, 15, 170, 2]
     html = [s for s in value["sources"] if s["kind"] == "arista_marker_list"]
     assert sorted(len(s["bindings"]) for s in html) == [1, 1, 2]
     value["sources"][0]["operator_path"] = "/private/not-allowed"

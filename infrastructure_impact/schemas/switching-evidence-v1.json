@@ -391,6 +391,7 @@
             "fixed_product": {
               "enum": [
                 "Arista EOS",
+                "EOS version 4.34.8",
                 "AOS-CX",
                 "HPE Networking AOS-CX"
               ]
@@ -452,6 +453,7 @@
                 "properties": {
                   "fixed_product": {
                     "enum": [
+                      "EOS version 4.34.8",
                       "AOS-CX",
                       "HPE Networking AOS-CX"
                     ]
