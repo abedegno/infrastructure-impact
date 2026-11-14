@@ -132,6 +132,9 @@ def test_certification_retained_selected_rejected_before_checkout(tmp_path):
         "request_hash",
         "request_null",
         "paired_null",
+        "paired_missing",
+        "paired_injection",
+        "default",
     ],
 )
 def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
@@ -166,11 +169,17 @@ def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
     real_verify = import_candidate.verify
 
     def verify(database, public, profile, **kwargs):
-        assert kwargs["switching_analysis_profile"] == PROFILE
+        expected_selector = "" if mutation in ("paired_injection", "default") else PROFILE
+        assert kwargs.get("switching_analysis_profile", "") == expected_selector
         context_path = database.parent.parent / "home/target-import-context.json"
         context = json.loads(context_path.read_bytes())
-        assert context["switching_analysis_profile"] == profiles.profile(PROFILE).identity()
-        if mutation == "missing":
+        if expected_selector:
+            assert context["switching_analysis_profile"] == profiles.profile(PROFILE).identity()
+        else:
+            assert "switching_analysis_profile" not in context
+        if mutation == "paired_injection":
+            context["switching_analysis_profile"] = profiles.profile(PROFILE).identity()
+        if mutation in ("missing", "paired_missing"):
             del context["switching_analysis_profile"]
         if mutation == "hash":
             context["switching_analysis_profile"]["input_sha256"] = "0" * 64
@@ -182,22 +191,37 @@ def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
         real_run = import_candidate.subprocess.run
 
         def tampered_run(*args, **options):
+            import sys
+
+            expected_argv = [
+                sys.executable,
+                "-I",
+                "-m",
+                import_candidate.__name__,
+                "--worker",
+                str(database),
+                str(public),
+                "v2",
+            ]
+            if expected_selector:
+                expected_argv += ["--switching-analysis-profile", expected_selector]
+            assert args[0] == expected_argv
             request_path = database.parent.parent / "home/target-import-request.json"
             request = json.loads(request_path.read_bytes())
-            if mutation == "request_missing":
+            if mutation in ("request_missing", "paired_missing"):
                 del request["switching_analysis_profile"]
+            elif mutation == "paired_injection":
+                request["switching_analysis_profile"] = profiles.profile(PROFILE).identity()
             elif mutation == "request_hash":
                 request["switching_analysis_profile"]["input_sha256"] = "0" * 64
-            else:
+            elif mutation in ("request_null", "paired_null"):
                 request["switching_analysis_profile"] = None
             request_path.write_text(json.dumps(request))
             return real_run(*args, **options)
 
-        if mutation in ("request_missing", "request_hash", "request_null", "paired_null"):
-            with monkeypatch.context() as patch:
-                patch.setattr(import_candidate.subprocess, "run", tampered_run)
-                return real_verify(database, public, profile, **kwargs)
-        return real_verify(database, public, profile, **kwargs)
+        with monkeypatch.context() as patch:
+            patch.setattr(import_candidate.subprocess, "run", tampered_run)
+            return real_verify(database, public, profile, **kwargs)
 
     monkeypatch.setattr(target_import_stage, "verify", verify)
     result = target_import_stage.stage(
@@ -208,20 +232,27 @@ def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
         lock_home=home,
         accepted_preview=accepted,
         publication_format="v2",
-        switching_analysis_profile=PROFILE,
+        **(
+            {"switching_analysis_profile": PROFILE}
+            if mutation not in ("paired_injection", "default")
+            else {}
+        ),
     )
     assert snapshot(database) == before
-    assert (result["outcome"] == "completed") is (mutation is None), __import__("json").dumps(
-        result
-    )
-    if mutation is None:
+    assert (result["outcome"] == "completed") is (mutation in (None, "default")), __import__(
+        "json"
+    ).dumps(result)
+    if mutation in (None, "default"):
         from infrastructure_impact.application.publication_reader import PublicationReader
 
-        assert (
-            PublicationReader(output / "public").switching_analysis()["availability"] == "available"
+        assert PublicationReader(output / "public").switching_analysis()["availability"] == (
+            "unavailable" if mutation == "default" else "available"
         )
         request = json.loads((output / "private/home/target-import-request.json").read_bytes())
-        assert request["switching_analysis_profile"] == profiles.profile(PROFILE).identity()
+        if mutation == "default":
+            assert "switching_analysis_profile" not in request
+        else:
+            assert request["switching_analysis_profile"] == profiles.profile(PROFILE).identity()
         assert len(json.dumps(request)) < 30_000
     else:
         assert result["staged_database"] is None
