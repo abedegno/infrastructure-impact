@@ -42,9 +42,14 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-# Exact current table definitions after migrations 1..15, normalized for whitespace.
+# Exact table definitions derived from migrations 1..15, 1..16 and 1..17.
+# The added API query/receipt table is deliberately excluded from the projection.
 # A different schema requires an explicit reader review, never a migration here.
-_SCHEMA_SHA256 = "c20eeff5c13ab8a85b72b401105999a38843c1b8e17600dad0e0459880442add"
+_SCHEMA_SHA256 = {
+    15: "c20eeff5c13ab8a85b72b401105999a38843c1b8e17600dad0e0459880442add",
+    16: "a9ed7e3fd944f5a9f8b2917a3b426807ab2b2eec9bd246353458260ca1febfed",
+    17: "f70eacddd896eaae445fc363dbe66709a76e9845b8878b810fa0ce35d4790e8a",
+}
 _FORMAT = "infrastructure-impact-collection-baseline"
 _FAMILIES = {"cisco-iosxe", "aruba-aoscx", "arista-eos"}
 _CVE = re.compile(r"CVE-[0-9]{4}-[0-9]{4,}")
@@ -245,13 +250,18 @@ def _check_schema(db):
             "SELECT name,sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
         )
     ]
-    if _sha(_canonical(tables)) != _SCHEMA_SHA256:
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type IN ('view','trigger')").fetchone():
         raise BaselineError("unsupported_schema")
     versions = list(db.execute("SELECT version,checksum FROM schema_migrations ORDER BY version"))
     paths = sorted((PACKAGE / "migrations").glob("*.sql"))
-    if [r[0] for r in versions] != list(range(1, 16)):
+    count = len(versions)
+    if (
+        count not in _SCHEMA_SHA256
+        or [r[0] for r in versions] != list(range(1, count + 1))
+        or _sha(_canonical(tables)) != _SCHEMA_SHA256[count]
+    ):
         raise BaselineError("unsupported_schema")
-    if len(paths) != 15 or any(
+    if len(paths) < count or any(
         r[1] not in (None, _sha(p.read_bytes())) for r, p in zip(versions, paths)
     ):
         raise BaselineError("unsupported_schema")
