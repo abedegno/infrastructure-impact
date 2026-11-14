@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from cryptography.fernet import Fernet
+from test_arista_hosted_batch import authored_batch  # noqa: F401 -- shared authored pytest fixture
 from test_targeted_maintenance import PROFILE, sources
 
 from infrastructure_impact.adapters.arista_reconciliation import CSAF103, URL103
@@ -181,8 +182,15 @@ def test_invalid_controls_refuse_before_key_or_recovery(
     assert not (tmp_path / "output").exists()
 
 
+@pytest.mark.parametrize(
+    "selected_profile,expected_targets",
+    [
+        (PROFILE, 2),
+        ("arista-reviewed-sa0137-chronology-0165-0198-v1", 34),
+    ],
+)
 def test_hosted_preview_has_no_writer_or_publication_side_effects(
-    recovery, tmp_path, monkeypatch, capsys
+    recovery, tmp_path, monkeypatch, capsys, selected_profile, expected_targets
 ):
     state, database, key, effects = recovery
     before = {p.name: p.read_bytes() for p in state.iterdir()}
@@ -204,7 +212,7 @@ def test_hosted_preview_has_no_writer_or_publication_side_effects(
         state,
         output,
         "--maintenance-profile",
-        PROFILE,
+        selected_profile,
         "--maintenance-mode",
         "preview",
     )
@@ -219,7 +227,7 @@ def test_hosted_preview_has_no_writer_or_publication_side_effects(
     assert len(raw) <= 2_000_000
     receipt = json.loads(raw)
     assert receipt["format"] == "impact-maintenance-preview"
-    assert len(receipt["targets"]) == 2
+    assert len(receipt["targets"]) == expected_targets
     assert "raw" not in receipt and "synthetic" not in raw.decode()
     assert effect_values(effects) == {"mode": "preview", "preview_ready": "true"}
     assert json.loads(capsys.readouterr().out)["outcome"] == "preview"
@@ -318,8 +326,12 @@ def test_apply_rebuilds_under_one_lock_and_authenticates_before_publication(
     assert hosted.restore(state, restored, key)
     with closing(connect(restored, read_only=True)) as db:
         run = dict(db.execute("SELECT * FROM pipeline_runs ORDER BY id DESC LIMIT 1").fetchone())
-        assert run["outcome"] == "partial" and "Targeted" in run["details"]
-        assert "benchmark" in run["details"]
+        assert run["outcome"] == "partial"
+        assert run["failures"] == 1
+        assert run["details"] == (
+            "Targeted maintenance completed; expected alternate scope conflict; "
+            "benchmark acquisition not run."
+        )
         assert db.execute("SELECT count(*) FROM revisions").fetchone()[0] == 3
 
 
@@ -747,3 +759,103 @@ def test_apply_retains_existing_three_copy_budget(recovery, tmp_path, monkeypatc
     assert len(after) == 3 and len(after & prior) == 2
     assert json.loads((state / "current.json").read_text())["archive"] in after
     assert hosted.validate_encrypted_state(state, key)
+
+
+def test_new_arista_batch_missing_owners_preserves_recovery_without_publication(
+    recovery, tmp_path, monkeypatch, capsys
+):
+    state, database, key, effects = recovery
+    selected = "arista-reviewed-sa0137-chronology-0165-0198-v1"
+    accepted = maintenance.preview(database, selected)
+    for target in (
+        "infrastructure_impact.collection.transport.fetch",
+        "infrastructure_impact.application.reporting.report",
+        "infrastructure_impact.application.publication.build",
+    ):
+        monkeypatch.setattr(target, forbidden)
+    output = tmp_path / "failed-batch"
+    with pytest.raises(RuntimeError):
+        invoke(
+            monkeypatch,
+            state,
+            output,
+            "--maintenance-profile",
+            selected,
+            "--maintenance-mode",
+            "apply",
+            "--maintenance-preview-fingerprint",
+            accepted["fingerprint"],
+        )
+    assert effect_values(effects)["recovery_ready"] == "true"
+    assert hosted.validate_encrypted_state(state, key)
+    assert effect_values(effects).get("publish_ready") != "true"
+    assert not output.exists()
+    receipt = json.loads(capsys.readouterr().out)["maintenance"]
+    assert receipt["outcome"] == "failed_primary_validation"
+    assert receipt["imported"] == 0
+
+
+def test_new_arista_batch_success_records_ok_without_expected_conflict(
+    authored_batch,  # noqa: F811 -- shared authored pytest fixture
+    recovery,
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    from infrastructure_impact.collection.maintenance_profiles import profile
+
+    authored_db, _, _, _ = authored_batch
+    state, _, key, effects = recovery
+    database = tmp_path / "authored-batch.sqlite3"
+    with closing(connect(database)) as db:
+        authored_db.backup(db)
+    hosted.backup(state, database, key)
+    selected = profile("arista-reviewed-sa0137-chronology-0165-0198-v1")
+    accepted = maintenance.preview(database, selected.profile_id)
+    monkeypatch.setattr("infrastructure_impact.collection.transport.fetch", forbidden)
+    monkeypatch.setattr("infrastructure_impact.application.reporting.report", lambda: None)
+    monkeypatch.setattr("infrastructure_impact.storage.audit.audit", lambda: None)
+
+    def build(*, output, **kwargs):
+        assert kwargs["publication_format"] == "v2"
+        output.mkdir()
+        (output / "authored-candidate.txt").write_text("authored candidate")
+
+    monkeypatch.setattr("infrastructure_impact.application.publication.build", build)
+    output = tmp_path / "public-batch"
+    invoke(
+        monkeypatch,
+        state,
+        output,
+        "--maintenance-profile",
+        selected.profile_id,
+        "--maintenance-mode",
+        "apply",
+        "--maintenance-preview-fingerprint",
+        accepted["fingerprint"],
+        "--publication-format",
+        "v2",
+        "--switching-analysis-profile",
+        "campus-switching-openvuln-2026-11-14-v1",
+    )
+    receipt = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert receipt["outcome"] == "completed"
+    assert receipt["maintenance"]["outcome"] == "completed"
+    assert receipt["maintenance"]["imported"] == 34
+    assert all(r["outcome"] == "validated" for r in receipt["maintenance"]["alternate_outcomes"])
+    assert receipt["benchmark_acquisition"] == "not_run"
+    assert receipt["private_recovery"] == "verified"
+    assert effect_values(effects) == {
+        "mode": "apply",
+        "recovery_ready": "true",
+        "publish_ready": "true",
+    }
+    assert (output / "authored-candidate.txt").read_text() == "authored candidate"
+    restored = tmp_path / "recovered-authored-batch.sqlite3"
+    assert hosted.restore(state, restored, key)
+    with closing(connect(restored, read_only=True)) as db:
+        run = dict(db.execute("SELECT * FROM pipeline_runs ORDER BY id DESC LIMIT 1").fetchone())
+        assert run["outcome"] == "ok"
+        assert run["failures"] == 0
+        assert run["imported"] == 34
+        assert run["details"] == "Targeted maintenance completed; benchmark acquisition not run."

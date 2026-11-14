@@ -6,7 +6,7 @@ from contextlib import closing
 from hashlib import sha256
 from pathlib import Path
 
-from ..collection.maintenance_profiles import MaintenanceProfile
+from ..collection.maintenance_profiles import ARISTA_BATCH, MaintenanceProfile
 from ..collection.maintenance_profiles import profile as registered_profile
 from ..plugins.registry import default_registry
 from ..storage.repository import connect, latest, now
@@ -57,6 +57,10 @@ def _binding(db, selected):
         ]
         inventory.update(canonical_json(facts))
         inventory.update(b"\n")
+    if selected.profile_id == ARISTA_BATCH:
+        from .arista_hosted_batch import capture_state
+
+        inventory.update(canonical_json(capture_state(db)[0]))
     baseline = inventory.hexdigest()
     identities = {
         "baseline_fingerprint": baseline,
@@ -83,7 +87,12 @@ def _preview(db, selected):
         targets.append({**target, "before_keys": [record_key(r) for r in found]})
         if not found:
             issues.append({"code": "missing_primary_record", "source_url": target["source_url"]})
-    if not any(
+    if selected.profile_id == ARISTA_BATCH:
+        from .arista_hosted_batch import capture_state, owner_issues
+
+        issues.extend(capture_state(db)[1])
+        issues.extend(owner_issues(records))
+    elif not any(
         r["vendor"] == selected.vendor
         and r["advisory_id"] == CSAF103_ID
         and r["source_url"] == CSAF103
@@ -194,7 +203,20 @@ def validate_preview(value, selected):
         "missing_primary_record": set(selected.primary_urls),
         "missing_reviewed_legacy_record": selected.allowed_urls - set(selected.primary_urls),
     }
-    if type(value["issues"]) is not list or len(value["issues"]) > 3:
+    if selected.profile_id == ARISTA_BATCH:
+        pins = selected.metadata()["batch"]["captures"]
+        owner_urls = {p["url"] for p in pins if p["kind"] in {"csaf", "csaf_draft"}}
+        allowed_issues = {
+            "missing_primary_record": set(selected.primary_urls),
+            "missing_optional_rss": {p["url"] for p in pins if p["kind"] == "rss"},
+            "missing_required_capture": {p["url"] for p in pins if p["kind"] != "rss"},
+            "invalid_pinned_capture": selected.allowed_urls,
+            "missing_required_owner": owner_urls,
+            "changed_required_owner": owner_urls | set(selected.primary_urls),
+        }
+    if type(value["issues"]) is not list or len(value["issues"]) > (
+        137 if selected.profile_id == ARISTA_BATCH else 3
+    ):
         raise ValueError("invalid_maintenance_preview")
     seen = set()
     for issue in value["issues"]:
@@ -271,6 +293,10 @@ def apply_profile(
     before = _preview(db, selected)
     if before["fingerprint"] != expected_preview_fingerprint:
         raise MaintenanceBaselineChanged("maintenance_baseline_changed")
+    if selected.profile_id == ARISTA_BATCH:
+        from .arista_hosted_batch import apply_batch
+
+        return apply_batch(db, selected, before, fetcher=fetcher)
     receipt = {
         "format": "impact-maintenance-apply",
         "schema_version": 1,
@@ -420,6 +446,13 @@ def validate_receipt(receipt):
 
     from .current_evidence import policy_metadata, validate_report
 
+    try:
+        selected = registered_profile(receipt["profile_id"])
+    except (ValueError, TypeError, KeyError):
+        raise ValueError("invalid_maintenance_receipt") from None
+    batch = selected.profile_id == ARISTA_BATCH
+    count = 34 if batch else 2
+    alternate_count = 35 if batch else 1
     digest = {"type": "string", "pattern": "^[0-9a-f]{64}$"}
     keys = {"type": "array", "items": digest, "uniqueItems": True}
     failure = {
@@ -490,16 +523,16 @@ def validate_receipt(receipt):
             },
             "primary_outcomes": {
                 "type": "array",
-                "maxItems": 2,
+                "maxItems": count,
                 "items": {"anyOf": [outcome, failed]},
             },
             "alternate_outcomes": {
                 "type": "array",
-                "maxItems": 1,
+                "maxItems": alternate_count,
                 "items": {"anyOf": [outcome, failed]},
             },
-            "imported": {"type": "integer", "minimum": 0, "maximum": 2},
-            "unchanged": {"type": "integer", "minimum": 0, "maximum": 2},
+            "imported": {"type": "integer", "minimum": 0, "maximum": count},
+            "unchanged": {"type": "integer", "minimum": 0, "maximum": count},
             "before_keys": keys,
             "after_keys": keys,
             "proof_fingerprints": keys,
@@ -544,7 +577,12 @@ def validate_receipt(receipt):
         alternate_urls = selected.allowed_urls - set(selected.primary_urls)
         if any(
             r["source_url"] not in alternate_urls
-            or r["outcome"] not in ("expected_scope_conflict", "failed", "not_attempted")
+            or r["outcome"]
+            not in (
+                ("validated", "failed", "not_attempted")
+                if batch
+                else ("expected_scope_conflict", "failed", "not_attempted")
+            )
             for r in alternate
         ):
             raise ValueError()
@@ -583,14 +621,15 @@ def validate_receipt(receipt):
             receipt[k] != sum(r["outcome"] == k for r in primary) for k in ("imported", "unchanged")
         ):
             raise ValueError()
-        if receipt["imported"] + receipt["unchanged"] > 2:
+        if receipt["imported"] + receipt["unchanged"] > count:
             raise ValueError()
         if receipt["outcome"] == "completed" and (
-            receipt["imported"] + receipt["unchanged"] != 2
-            or len(primary) != 2
+            receipt["imported"] + receipt["unchanged"] != count
+            or len(primary) != count
             or any(r["outcome"] not in ("imported", "unchanged") for r in primary)
-            or len(alternate) != 1
-            or alternate[0]["outcome"] != "expected_scope_conflict"
+            or len(alternate) != alternate_count
+            or (not batch and alternate[0]["outcome"] != "expected_scope_conflict")
+            or (batch and not _batch_completed(receipt, selected))
             or not decisions
             or receipt["issues"]
         ):
@@ -598,6 +637,34 @@ def validate_receipt(receipt):
     except (ValueError, TypeError, KeyError, IndexError):
         raise ValueError("invalid_maintenance_receipt") from None
     return receipt
+
+
+def _batch_completed(receipt, selected):
+    from ..adapters import arista_sa0137 as sa137
+
+    pins = selected.metadata()["batch"]["captures"]
+    supplements = [p for p in pins if p["url"] not in selected.primary_urls]
+    alternate = receipt["alternate_outcomes"]
+    if len({r["source_url"] for r in alternate}) != len(supplements):
+        return False
+    by_url = {r["source_url"]: r["outcome"] for r in alternate}
+    if any(
+        by_url.get(p["url"])
+        not in (("validated", "not_attempted") if p["kind"] == "rss" else ("validated",))
+        for p in supplements
+    ):
+        return False
+    return any(
+        d["vendor"] == "arista"
+        and d["target"]["advisory_id"] == sa137.CSAF_ID
+        and d["target"]["source_url"] == sa137.CSAF
+        and d["target"]["sha256"] == sa137.REVIEWED_SHA256
+        and any(
+            p["source_url"] == sa137.CSAF and p["source_sha256"] == sa137.REVIEWED_SHA256
+            for p in d["proofs"]
+        )
+        for d in receipt["decisions"]
+    )
 
 
 def receipt_bytes(receipt):

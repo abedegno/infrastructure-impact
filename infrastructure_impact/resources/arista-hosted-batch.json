@@ -1,0 +1,866 @@
+{
+  "captures": [
+    {
+      "number": 165,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_165_CSAF.json",
+      "sha256": "dd01cc22bc290d4fe0dfe316880e8b99fe95bb79c12675d39b4b50a0d629c354",
+      "bytes": 6828,
+      "retrieved_at": "2026-11-13T19:55:01.176718+00:00",
+      "cve_ids": ["CVE-2026-73454"]
+    },
+    {
+      "number": 166,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_166_CSAF.json",
+      "sha256": "2f3325d337ed6ad97f7b4a152d0e50194bc8aac80fe64175b1ea63b493b8158b",
+      "bytes": 6975,
+      "retrieved_at": "2026-11-13T20:37:42.482785+00:00",
+      "cve_ids": ["CVE-2026-73464"]
+    },
+    {
+      "number": 167,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_167_CSAF.json",
+      "sha256": "16c7f423557f728832408f6c92d237bc233699de4d969165b0c958840dff0e91",
+      "bytes": 7345,
+      "retrieved_at": "2026-11-13T20:37:42.503171+00:00",
+      "cve_ids": ["CVE-2026-73445"]
+    },
+    {
+      "number": 168,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_168_CSAF.json",
+      "sha256": "bbc93b34fbd5dd15b2dfac77fe5fecc8ed570d15886be38b66e9b8508e4b057b",
+      "bytes": 7468,
+      "retrieved_at": "2026-11-13T20:37:42.476293+00:00",
+      "cve_ids": ["CVE-2026-2380"]
+    },
+    {
+      "number": 169,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_169_CSAF.json",
+      "sha256": "408d4c46af5b06b6418f9ed63d504f5f84a8ffe786381d8173c2bd9b77adfa04",
+      "bytes": 7264,
+      "retrieved_at": "2026-11-13T20:37:42.471547+00:00",
+      "cve_ids": ["CVE-2026-73463"]
+    },
+    {
+      "number": 170,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_170_CSAF.json",
+      "sha256": "d15d556260194bade893c74ba699bef0d85201d9b90ff6a4df3769e24faf9193",
+      "bytes": 11463,
+      "retrieved_at": "2026-11-13T20:37:43.042925+00:00",
+      "cve_ids": ["CVE-2026-19640"]
+    },
+    {
+      "number": 171,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_171_CSAF.json",
+      "sha256": "4e2aa570586463c289227365c063e84fb5016517b62b30b244400de224fee539",
+      "bytes": 15339,
+      "retrieved_at": "2026-11-13T20:37:43.172150+00:00",
+      "cve_ids": ["CVE-2026-73435", "CVE-2026-73436"]
+    },
+    {
+      "number": 172,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_172_CSAF.json",
+      "sha256": "bbabd67e6ffbb8b1ea0d5b97de526bb07b3eb455015fb8d27c651fa496c3d7c1",
+      "bytes": 6941,
+      "retrieved_at": "2026-11-13T20:37:43.074790+00:00",
+      "cve_ids": ["CVE-2026-73438"]
+    },
+    {
+      "number": 173,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_173_CSAF.json",
+      "sha256": "e4a79a8cb4ab9ecffb07bdca2aa45e85366bf8b5cd4411a735a3fc0878d15f5c",
+      "bytes": 10878,
+      "retrieved_at": "2026-11-13T20:37:42.882067+00:00",
+      "cve_ids": ["CVE-2026-73455"]
+    },
+    {
+      "number": 174,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_174_CSAF.json",
+      "sha256": "01cb70a500043ee412307d9eb974d9cf76b9bb71075c57dc45e8204fb8593698",
+      "bytes": 6821,
+      "retrieved_at": "2026-11-13T20:37:43.462267+00:00",
+      "cve_ids": ["CVE-2026-73453"]
+    },
+    {
+      "number": 175,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_175_CSAF.json",
+      "sha256": "8560615139fbe7d75469737625d161dbd572fb4732487d121fe6c693212c4db6",
+      "bytes": 6047,
+      "retrieved_at": "2026-11-13T20:37:43.452522+00:00",
+      "cve_ids": ["CVE-2026-73468"]
+    },
+    {
+      "number": 176,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_176_CSAF.json",
+      "sha256": "3001468514e95509ae56d5d25a7135f3c64b6c9a3c6688215cca19e299e24395",
+      "bytes": 5069,
+      "retrieved_at": "2026-11-13T20:37:43.659366+00:00",
+      "cve_ids": ["CVE-2026-73469"]
+    },
+    {
+      "number": 177,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_177_CSAF.json",
+      "sha256": "474f03e7af993a044a1b71d00273cadb532b0f661d00e96180f3610e12ec78a6",
+      "bytes": 5474,
+      "retrieved_at": "2026-11-13T20:37:43.545360+00:00",
+      "cve_ids": ["CVE-2026-77190"]
+    },
+    {
+      "number": 178,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_178_CSAF.json",
+      "sha256": "08041ea904a15e30fe60790e83c8061a833ff220b22826dfdab351069f9525bc",
+      "bytes": 7237,
+      "retrieved_at": "2026-11-13T20:37:43.654549+00:00",
+      "cve_ids": ["CVE-2026-73440"]
+    },
+    {
+      "number": 179,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_179_CSAF.json",
+      "sha256": "a4feaf91c695a036779b4e979e530a6ba63b53ec2e108a317fa14b1ada0b4986",
+      "bytes": 4621,
+      "retrieved_at": "2026-11-13T20:37:43.873882+00:00",
+      "cve_ids": ["CVE-2026-86106"]
+    },
+    {
+      "number": 180,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_180_CSAF.json",
+      "sha256": "16a6d696308b8c2cad6a22a7433b6f1a6a89e9201c62ac4fe3584c4853889e58",
+      "bytes": 4233,
+      "retrieved_at": "2026-11-13T20:37:43.718349+00:00",
+      "cve_ids": ["CVE-2026-86107"]
+    },
+    {
+      "number": 181,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_181_CSAF.json",
+      "sha256": "435a161d6fdfc99d57dfd17b0cc2597228420838a5988ab1690e9ec8567c4069",
+      "bytes": 8264,
+      "retrieved_at": "2026-11-13T20:37:43.976854+00:00",
+      "cve_ids": ["CVE-2026-86108"]
+    },
+    {
+      "number": 182,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_182_CSAF.json",
+      "sha256": "0ba9f784c842cbd21fe91e1add4c78936eb48bfa2adb4488863d8263af14f7a2",
+      "bytes": 5209,
+      "retrieved_at": "2026-11-13T20:37:44.093753+00:00",
+      "cve_ids": ["CVE-2026-86109"]
+    },
+    {
+      "number": 183,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_183_CSAF.json",
+      "sha256": "68128649d537df7c708e78f9dbf91c6bdfe12201ad21cd35833067efaddd2c8b",
+      "bytes": 6892,
+      "retrieved_at": "2026-11-13T19:55:01.593078+00:00",
+      "cve_ids": ["CVE-2026-93952"]
+    },
+    {
+      "number": 185,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_185_CSAF.json",
+      "sha256": "3789cbe3ce14fa3e5fa4e97c678776231886967b0f9fd31ff22def8a3cf31d1b",
+      "bytes": 7480,
+      "retrieved_at": "2026-11-13T20:37:44.272333+00:00",
+      "cve_ids": ["CVE-2026-101158"]
+    },
+    {
+      "number": 186,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_186_CSAF.json",
+      "sha256": "8a55588c8770435efd2536c094893573f981697f0905f5c7cb634b8b9208cfc8",
+      "bytes": 11495,
+      "retrieved_at": "2026-11-13T20:37:44.385718+00:00",
+      "cve_ids": ["CVE-2026-101149", "CVE-2026-101150"]
+    },
+    {
+      "number": 187,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_187_CSAF.json",
+      "sha256": "af865e64e96f3c69975d9ba25d39a2b3efaa6594689088e9110fb3a2b3def44c",
+      "bytes": 9884,
+      "retrieved_at": "2026-11-13T20:37:44.193627+00:00",
+      "cve_ids": ["CVE-2026-101151", "CVE-2026-101152"]
+    },
+    {
+      "number": 188,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_188_CSAF.json",
+      "sha256": "9e9adfb1dcda6d59098da0b068e1799e33fa4393d30c65325a927a49b89efc99",
+      "bytes": 7525,
+      "retrieved_at": "2026-11-13T19:55:02.162897+00:00",
+      "cve_ids": ["CVE-2026-101153"]
+    },
+    {
+      "number": 189,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_189_CSAF.json",
+      "sha256": "bebe6ca5748a3625579eb733c853cfa0eedef43463287678bfc6759edfbf99d5",
+      "bytes": 9024,
+      "retrieved_at": "2026-11-13T20:37:44.654389+00:00",
+      "cve_ids": ["CVE-2026-101154", "CVE-2026-101155"]
+    },
+    {
+      "number": 190,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_190_CSAF.json",
+      "sha256": "d0d09f8bce3f7ff6fdcecf3a03858f1356688c3d6a088dacb30c56244834c593",
+      "bytes": 16400,
+      "retrieved_at": "2026-11-13T20:37:44.666903+00:00",
+      "cve_ids": [
+        "CVE-2026-102155",
+        "CVE-2026-102157",
+        "CVE-2026-102158",
+        "CVE-2026-102159",
+        "CVE-2026-102160",
+        "CVE-2026-102161"
+      ]
+    },
+    {
+      "number": 191,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_191_CSAF.json",
+      "sha256": "ce7e579bc3572640e572366362bd4aaae212d989cda1970ffd8aa691e17ceeea",
+      "bytes": 5170,
+      "retrieved_at": "2026-11-13T20:37:44.645995+00:00",
+      "cve_ids": ["CVE-2026-102156"]
+    },
+    {
+      "number": 192,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_192_CSAF.json",
+      "sha256": "e49dced71f0a97b34942891f0d6be4746426e9e3609120fe635542c77390b0c7",
+      "bytes": 7732,
+      "retrieved_at": "2026-11-13T20:37:44.929525+00:00",
+      "cve_ids": ["CVE-2026-101156", "CVE-2026-101157"]
+    },
+    {
+      "number": 193,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_193_CSAF.json",
+      "sha256": "145db423f96d202dffd7905abebc7c6ea328474af2283fd6b3bd97dd405a3e3b",
+      "bytes": 5497,
+      "retrieved_at": "2026-11-13T20:37:45.188217+00:00",
+      "cve_ids": ["CVE-2026-102162"]
+    },
+    {
+      "number": 194,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_194_CSAF.json",
+      "sha256": "e131ebadb8805fae72c6260b7aad1a79bb66080e952e28ccb9206097a402bdbe",
+      "bytes": 7796,
+      "retrieved_at": "2026-11-13T20:37:45.083210+00:00",
+      "cve_ids": ["CVE-2026-102168", "CVE-2026-102169"]
+    },
+    {
+      "number": 195,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_195_CSAF.json",
+      "sha256": "9247529b9b884245585e78d5435cadc82bed4a2e8458f5ee04cfd46227800bdd",
+      "bytes": 5246,
+      "retrieved_at": "2026-11-13T20:37:45.062943+00:00",
+      "cve_ids": ["CVE-2026-102163"]
+    },
+    {
+      "number": 196,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_196_CSAF.json",
+      "sha256": "35c649c3202f49d58531690a1ba59b551066f00823bf5db5496531b66ccd1134",
+      "bytes": 5391,
+      "retrieved_at": "2026-11-13T20:37:45.455046+00:00",
+      "cve_ids": ["CVE-2026-102164"]
+    },
+    {
+      "number": 197,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_197_CSAF.json",
+      "sha256": "265c71ee2a583b821cb93fbb9025e802985e1ae1748db02575ca8249a939f2f5",
+      "bytes": 4892,
+      "retrieved_at": "2026-11-13T20:37:45.602807+00:00",
+      "cve_ids": ["CVE-2026-102167"]
+    },
+    {
+      "number": 198,
+      "kind": "csaf",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_198_CSAF.json",
+      "sha256": "48fb08135b499d378928581895a3d8edf1d76fc751eb0d0bac9d112c661ce278",
+      "bytes": 5409,
+      "retrieved_at": "2026-11-13T20:37:45.483577+00:00",
+      "cve_ids": ["CVE-2026-102165"]
+    },
+    {
+      "number": 165,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24721-security-advisory-0165",
+      "sha256": "ecb887d8d6608382e733b65de311dfa7dff212ee79229320fda4ed544db50a51",
+      "bytes": 108815,
+      "retrieved_at": "2026-11-13T19:56:16.568600+00:00",
+      "cve_ids": ["CVE-2026-73454"]
+    },
+    {
+      "number": 166,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24722-security-advisory-0166",
+      "sha256": "0dba1ea429588489a83f75c3e9ec7f14522e4351d1275181eee6dc47bd56b86b",
+      "bytes": 110771,
+      "retrieved_at": "2026-11-13T20:37:46.150292+00:00",
+      "cve_ids": ["CVE-2026-73464"]
+    },
+    {
+      "number": 167,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24723-security-advisory-0167",
+      "sha256": "356c842ff1edf0c65289f46890e22e970507c948045558e9d07c82653e105ea4",
+      "bytes": 114053,
+      "retrieved_at": "2026-11-13T20:37:46.399784+00:00",
+      "cve_ids": ["CVE-2026-73445"]
+    },
+    {
+      "number": 168,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24724-security-advisory-0168",
+      "sha256": "2ea1c94dfd881c0678137b1c293552d5cf85b3d5e8c9d91147adbe2f281d511d",
+      "bytes": 114240,
+      "retrieved_at": "2026-11-13T20:37:46.174647+00:00",
+      "cve_ids": ["CVE-2026-2380"]
+    },
+    {
+      "number": 169,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24725-security-advisory-0169",
+      "sha256": "cd8be48c92557b1ada85b8965a72e994ccdd1e5f37fe6c0e63a70e1fa552e2aa",
+      "bytes": 108913,
+      "retrieved_at": "2026-11-13T20:37:46.264901+00:00",
+      "cve_ids": ["CVE-2026-73463"]
+    },
+    {
+      "number": 170,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24726-security-advisory-0170",
+      "sha256": "9aaefaabe2044d0b31a741904ee4a610fe0de00d0c7a409f12beeaec037eb679",
+      "bytes": 110711,
+      "retrieved_at": "2026-11-13T20:37:47.219177+00:00",
+      "cve_ids": ["CVE-2026-19640"]
+    },
+    {
+      "number": 171,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24727-security-advisory-0171",
+      "sha256": "16820defc3187bf788950f0c41b351b00e3be8c377c304ada3096fce188b9742",
+      "bytes": 115182,
+      "retrieved_at": "2026-11-13T20:37:46.842698+00:00",
+      "cve_ids": ["CVE-2026-73435", "CVE-2026-73436"]
+    },
+    {
+      "number": 172,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24728-security-advisory-0172",
+      "sha256": "63518327efe2d0142524b47020f2df97d9219c82e0ebca684ec07f822645c62e",
+      "bytes": 109853,
+      "retrieved_at": "2026-11-13T20:37:47.291013+00:00",
+      "cve_ids": ["CVE-2026-73438"]
+    },
+    {
+      "number": 173,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24729-security-advisory-0173",
+      "sha256": "bf732dcc87add6e11772e22c195f78e337971097bed22385b6e6ad3696fcdf8e",
+      "bytes": 111849,
+      "retrieved_at": "2026-11-13T20:37:47.239478+00:00",
+      "cve_ids": ["CVE-2026-73455"]
+    },
+    {
+      "number": 174,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24730-security-advisory-0174",
+      "sha256": "5fb76a57083f0dab8ee84520fa1cde27d02a26c29d173dff8c87aa6f6edcc748",
+      "bytes": 112542,
+      "retrieved_at": "2026-11-13T20:37:47.478712+00:00",
+      "cve_ids": ["CVE-2026-73453"]
+    },
+    {
+      "number": 175,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24731-security-advisory-0175",
+      "sha256": "49eab531cca52b05a1584979ca72a8b7effefb7e8a11aba205c6a341421c4ac3",
+      "bytes": 109925,
+      "retrieved_at": "2026-11-13T20:37:48.107580+00:00",
+      "cve_ids": ["CVE-2026-73468"]
+    },
+    {
+      "number": 176,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24732-security-advisory-0176",
+      "sha256": "0ddc54fffbab5ed0776a6ac5a721c76911533fa8e0c5548a7f4d3120f894296c",
+      "bytes": 109430,
+      "retrieved_at": "2026-11-13T20:37:47.752418+00:00",
+      "cve_ids": ["CVE-2026-73469"]
+    },
+    {
+      "number": 177,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24733-security-advisory-0177",
+      "sha256": "47b444a93b27d1f68b4ec17276898beceba3ad3b018c11675b268322fc425bf2",
+      "bytes": 108838,
+      "retrieved_at": "2026-11-13T20:37:47.764498+00:00",
+      "cve_ids": ["CVE-2026-77190"]
+    },
+    {
+      "number": 178,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24734-security-advisory-0178",
+      "sha256": "fdaa5a539452f61e60f29a44f3525a37d3ecfd8f844d0f790d234a5f5d014890",
+      "bytes": 113219,
+      "retrieved_at": "2026-11-13T20:37:48.566599+00:00",
+      "cve_ids": ["CVE-2026-73440"]
+    },
+    {
+      "number": 179,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24735-security-advisory-0179",
+      "sha256": "c9b6669a39c9bc295dd2b3975aae61f60be9efecf407d8a5de3e2c3d0c2c0f3f",
+      "bytes": 108151,
+      "retrieved_at": "2026-11-13T20:37:48.824728+00:00",
+      "cve_ids": ["CVE-2026-86106"]
+    },
+    {
+      "number": 180,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24736-security-advisory-0180",
+      "sha256": "3df477eb05f1a9a3d2c45d642072b479f74dd5f1a2f6b8f69b4a6c1063595269",
+      "bytes": 108415,
+      "retrieved_at": "2026-11-13T20:37:48.596031+00:00",
+      "cve_ids": ["CVE-2026-86107"]
+    },
+    {
+      "number": 181,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24737-security-advisory-0181",
+      "sha256": "90be7c49d1c2feadedee44e0cd03b19a16be6cb07417945b7cd60cf89d4bf05e",
+      "bytes": 108976,
+      "retrieved_at": "2026-11-13T20:37:49.105749+00:00",
+      "cve_ids": ["CVE-2026-86108"]
+    },
+    {
+      "number": 182,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24738-security-advisory-0182",
+      "sha256": "653c97790bce4511c808e7bec350c7bbf687ef5d576fe27885a00ca2c3a1eb3b",
+      "bytes": 108535,
+      "retrieved_at": "2026-11-13T20:37:49.328883+00:00",
+      "cve_ids": ["CVE-2026-86109"]
+    },
+    {
+      "number": 183,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24765-security-advisory-0183",
+      "sha256": "f0dba5f01e1d3d8ba7e55116793135a56373242d91d1be1c0a86a4271973bde5",
+      "bytes": 110776,
+      "retrieved_at": "2026-11-13T19:56:17.690430+00:00",
+      "cve_ids": ["CVE-2026-93952"]
+    },
+    {
+      "number": 185,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24801-security-advisory-0185",
+      "sha256": "5976bc3a96e0fbb078a47ff5c85278696e79076152a55e72f0fc1d7abb21bb1a",
+      "bytes": 110441,
+      "retrieved_at": "2026-11-13T20:37:49.264878+00:00",
+      "cve_ids": ["CVE-2026-101158"]
+    },
+    {
+      "number": 186,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24802-security-advisory-0186",
+      "sha256": "982a44712243d400c143c84c3d7dfa380fea33182e48948c7b9df3661d22f26b",
+      "bytes": 111422,
+      "retrieved_at": "2026-11-13T20:37:49.335817+00:00",
+      "cve_ids": ["CVE-2026-101149", "CVE-2026-101150"]
+    },
+    {
+      "number": 187,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24803-security-advisory-0187",
+      "sha256": "a44b25de2fb63454e140c4644ad9a91d8e5077eaf9bdd4da89560ac037117659",
+      "bytes": 109676,
+      "retrieved_at": "2026-11-13T20:37:49.928429+00:00",
+      "cve_ids": ["CVE-2026-101151", "CVE-2026-101152"]
+    },
+    {
+      "number": 188,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24804-security-advisory-0188",
+      "sha256": "a296638150f8caecef4576ed3d892c928d2af0df8ec65081e1f62b047c4314cf",
+      "bytes": 109721,
+      "retrieved_at": "2026-11-13T19:56:18.818445+00:00",
+      "cve_ids": ["CVE-2026-101153"]
+    },
+    {
+      "number": 189,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24805-security-advisory-0189",
+      "sha256": "7be4af460cb04da431b3557d5f68d43ed86f5796e5b1ee5e123dc7b3cf85682a",
+      "bytes": 109351,
+      "retrieved_at": "2026-11-13T20:37:50.580941+00:00",
+      "cve_ids": ["CVE-2026-101154", "CVE-2026-101155"]
+    },
+    {
+      "number": 190,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24806-security-advisory-0190",
+      "sha256": "0908a9905a306993005fb6a554f96c000bef161921d24f6a6467dc293152ef38",
+      "bytes": 114315,
+      "retrieved_at": "2026-11-13T20:37:50.461998+00:00",
+      "cve_ids": [
+        "CVE-2026-102155",
+        "CVE-2026-102157",
+        "CVE-2026-102158",
+        "CVE-2026-102159",
+        "CVE-2026-102160",
+        "CVE-2026-102161"
+      ]
+    },
+    {
+      "number": 191,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24807-security-advisory-0191",
+      "sha256": "d315c5011932a30c3cc0c2cb71e8fd3e5aff90cec59b61ba28993c307b37b44d",
+      "bytes": 109398,
+      "retrieved_at": "2026-11-13T20:37:50.512344+00:00",
+      "cve_ids": ["CVE-2026-102156"]
+    },
+    {
+      "number": 192,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24808-security-advisory-0192",
+      "sha256": "50f7e554f49d8f0f4bbe498721509a5611bbdf5d37e48f39425eacd985ecb4a0",
+      "bytes": 109348,
+      "retrieved_at": "2026-11-13T20:37:50.749643+00:00",
+      "cve_ids": ["CVE-2026-101156", "CVE-2026-101157"]
+    },
+    {
+      "number": 193,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24809-security-advisory-0193",
+      "sha256": "4a759520a8bb76595e4e32b4b556a688e084562ba882a9a504e8c4106e23b95e",
+      "bytes": 108256,
+      "retrieved_at": "2026-11-13T20:37:51.297061+00:00",
+      "cve_ids": ["CVE-2026-102162"]
+    },
+    {
+      "number": 194,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24810-security-advisory-0194",
+      "sha256": "a046ce830f5369392ec5186eafcaeeab5a9a5cdd2ca6001b27658d22f3969ebc",
+      "bytes": 108812,
+      "retrieved_at": "2026-11-13T20:37:51.341899+00:00",
+      "cve_ids": ["CVE-2026-102168", "CVE-2026-102169"]
+    },
+    {
+      "number": 195,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24811-security-advisory-0195",
+      "sha256": "3fde380bc0912baa12650fdbe63791f8f880458777c823681195826f314d1733",
+      "bytes": 107552,
+      "retrieved_at": "2026-11-13T20:37:51.417516+00:00",
+      "cve_ids": ["CVE-2026-102163"]
+    },
+    {
+      "number": 196,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24812-security-advisory-0196",
+      "sha256": "6a5d3f4b0f9d5941471d065b05f448b50cafd07595dbda7966d985d080428dbe",
+      "bytes": 107932,
+      "retrieved_at": "2026-11-13T20:37:51.576889+00:00",
+      "cve_ids": ["CVE-2026-102164"]
+    },
+    {
+      "number": 197,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24813-security-advisory-0197",
+      "sha256": "72004b67bd83ea9669ff1ac82fccce01e1792c3e71e60841657975044c71583f",
+      "bytes": 107376,
+      "retrieved_at": "2026-11-13T20:37:52.067802+00:00",
+      "cve_ids": ["CVE-2026-102167"]
+    },
+    {
+      "number": 198,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24814-security-advisory-0198",
+      "sha256": "30881d03f19cf1043746ff16ef87f63064927178cd6f8d3a6aa29362aae6d227",
+      "bytes": 108008,
+      "retrieved_at": "2026-11-13T20:37:51.791902+00:00",
+      "cve_ids": ["CVE-2026-102165"]
+    },
+    {
+      "number": null,
+      "kind": "rss",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory-rss",
+      "sha256": "df223223a975d1c47647a934cbbeb970b6ecd43ed7f873bb7adfe648a1abc660",
+      "bytes": 39346,
+      "retrieved_at": "2026-11-13T19:53:21.727707+00:00",
+      "cve_ids": []
+    },
+    {
+      "number": 137,
+      "kind": "csaf_draft",
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_137_CSAF.json",
+      "sha256": "5f7b0449565fc1aa4ab5ffe88a0e40dba8f2725ed33824c062e230e3b5035d24",
+      "bytes": 5687,
+      "retrieved_at": "2026-11-13T19:55:00.597624+00:00",
+      "cve_ids": ["CVE-2026-7473"]
+    },
+    {
+      "number": 137,
+      "kind": "html",
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24005-security-advisory-0137",
+      "sha256": "21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
+      "bytes": 132228,
+      "retrieved_at": "2026-11-13T19:55:03.939828+00:00",
+      "cve_ids": ["CVE-2026-7473"]
+    }
+  ],
+  "pins_sha256": "6053fad4d6006294dc53df6cd9b8bb67650b04f8dce2d8d5cc63793dbae7351b",
+  "expected_primaries": [
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_165_CSAF.json",
+      "sha256": "dd01cc22bc290d4fe0dfe316880e8b99fe95bb79c12675d39b4b50a0d629c354",
+      "advisory_id": "Arista Networks Security Advisory 165",
+      "cve_ids": ["CVE-2026-73454"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_166_CSAF.json",
+      "sha256": "2f3325d337ed6ad97f7b4a152d0e50194bc8aac80fe64175b1ea63b493b8158b",
+      "advisory_id": "Arista Networks Security Advisory 166",
+      "cve_ids": ["CVE-2026-73464"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_167_CSAF.json",
+      "sha256": "16c7f423557f728832408f6c92d237bc233699de4d969165b0c958840dff0e91",
+      "advisory_id": "Arista Networks Security Advisory 167",
+      "cve_ids": ["CVE-2026-73445"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_168_CSAF.json",
+      "sha256": "bbc93b34fbd5dd15b2dfac77fe5fecc8ed570d15886be38b66e9b8508e4b057b",
+      "advisory_id": "Arista Networks Security Advisory 168",
+      "cve_ids": ["CVE-2026-2380"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_169_CSAF.json",
+      "sha256": "408d4c46af5b06b6418f9ed63d504f5f84a8ffe786381d8173c2bd9b77adfa04",
+      "advisory_id": "Arista Networks Security Advisory 169",
+      "cve_ids": ["CVE-2026-73463"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_170_CSAF.json",
+      "sha256": "d15d556260194bade893c74ba699bef0d85201d9b90ff6a4df3769e24faf9193",
+      "advisory_id": "Arista Networks Security Advisory 170",
+      "cve_ids": ["CVE-2026-19640"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_171_CSAF.json",
+      "sha256": "4e2aa570586463c289227365c063e84fb5016517b62b30b244400de224fee539",
+      "advisory_id": "Arista Networks Security Advisory 171",
+      "cve_ids": ["CVE-2026-73435", "CVE-2026-73436"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_172_CSAF.json",
+      "sha256": "bbabd67e6ffbb8b1ea0d5b97de526bb07b3eb455015fb8d27c651fa496c3d7c1",
+      "advisory_id": "Arista Networks Security Advisory 172",
+      "cve_ids": ["CVE-2026-73438"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_173_CSAF.json",
+      "sha256": "e4a79a8cb4ab9ecffb07bdca2aa45e85366bf8b5cd4411a735a3fc0878d15f5c",
+      "advisory_id": "Arista Networks Security Advisory 173",
+      "cve_ids": ["CVE-2026-73455"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_174_CSAF.json",
+      "sha256": "01cb70a500043ee412307d9eb974d9cf76b9bb71075c57dc45e8204fb8593698",
+      "advisory_id": "Arista Networks Security Advisory 174",
+      "cve_ids": ["CVE-2026-73453"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_175_CSAF.json",
+      "sha256": "8560615139fbe7d75469737625d161dbd572fb4732487d121fe6c693212c4db6",
+      "advisory_id": "Arista Networks Security Advisory 175",
+      "cve_ids": ["CVE-2026-73468"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_176_CSAF.json",
+      "sha256": "3001468514e95509ae56d5d25a7135f3c64b6c9a3c6688215cca19e299e24395",
+      "advisory_id": "Arista Networks Security Advisory 176",
+      "cve_ids": ["CVE-2026-73469"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_177_CSAF.json",
+      "sha256": "474f03e7af993a044a1b71d00273cadb532b0f661d00e96180f3610e12ec78a6",
+      "advisory_id": "Arista Networks Security Advisory 177",
+      "cve_ids": ["CVE-2026-77190"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_178_CSAF.json",
+      "sha256": "08041ea904a15e30fe60790e83c8061a833ff220b22826dfdab351069f9525bc",
+      "advisory_id": "Arista Networks Security Advisory 178",
+      "cve_ids": ["CVE-2026-73440"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_179_CSAF.json",
+      "sha256": "a4feaf91c695a036779b4e979e530a6ba63b53ec2e108a317fa14b1ada0b4986",
+      "advisory_id": "Arista Networks Security Advisory 179",
+      "cve_ids": ["CVE-2026-86106"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_180_CSAF.json",
+      "sha256": "16a6d696308b8c2cad6a22a7433b6f1a6a89e9201c62ac4fe3584c4853889e58",
+      "advisory_id": "Arista Networks Security Advisory 180",
+      "cve_ids": ["CVE-2026-86107"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_181_CSAF.json",
+      "sha256": "435a161d6fdfc99d57dfd17b0cc2597228420838a5988ab1690e9ec8567c4069",
+      "advisory_id": "Arista Networks Security Advisory 181",
+      "cve_ids": ["CVE-2026-86108"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_182_CSAF.json",
+      "sha256": "0ba9f784c842cbd21fe91e1add4c78936eb48bfa2adb4488863d8263af14f7a2",
+      "advisory_id": "Arista Networks Security Advisory 182",
+      "cve_ids": ["CVE-2026-86109"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_183_CSAF.json",
+      "sha256": "68128649d537df7c708e78f9dbf91c6bdfe12201ad21cd35833067efaddd2c8b",
+      "advisory_id": "Arista Networks Security Advisory 183",
+      "cve_ids": ["CVE-2026-93952"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_185_CSAF.json",
+      "sha256": "3789cbe3ce14fa3e5fa4e97c678776231886967b0f9fd31ff22def8a3cf31d1b",
+      "advisory_id": "Arista Networks Security Advisory 185",
+      "cve_ids": ["CVE-2026-101158"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_186_CSAF.json",
+      "sha256": "8a55588c8770435efd2536c094893573f981697f0905f5c7cb634b8b9208cfc8",
+      "advisory_id": "Arista Networks Security Advisory 186",
+      "cve_ids": ["CVE-2026-101149", "CVE-2026-101150"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_187_CSAF.json",
+      "sha256": "af865e64e96f3c69975d9ba25d39a2b3efaa6594689088e9110fb3a2b3def44c",
+      "advisory_id": "Arista Networks Security Advisory 187",
+      "cve_ids": ["CVE-2026-101151", "CVE-2026-101152"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_188_CSAF.json",
+      "sha256": "9e9adfb1dcda6d59098da0b068e1799e33fa4393d30c65325a927a49b89efc99",
+      "advisory_id": "Arista Networks Security Advisory 188",
+      "cve_ids": ["CVE-2026-101153"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_189_CSAF.json",
+      "sha256": "bebe6ca5748a3625579eb733c853cfa0eedef43463287678bfc6759edfbf99d5",
+      "advisory_id": "Arista Networks Security Advisory 189",
+      "cve_ids": ["CVE-2026-101154", "CVE-2026-101155"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_190_CSAF.json",
+      "sha256": "d0d09f8bce3f7ff6fdcecf3a03858f1356688c3d6a088dacb30c56244834c593",
+      "advisory_id": "Arista Networks Security Advisory 190",
+      "cve_ids": [
+        "CVE-2026-102155",
+        "CVE-2026-102157",
+        "CVE-2026-102158",
+        "CVE-2026-102159",
+        "CVE-2026-102160",
+        "CVE-2026-102161"
+      ]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_191_CSAF.json",
+      "sha256": "ce7e579bc3572640e572366362bd4aaae212d989cda1970ffd8aa691e17ceeea",
+      "advisory_id": "Arista Networks Security Advisory 191",
+      "cve_ids": ["CVE-2026-102156"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_192_CSAF.json",
+      "sha256": "e49dced71f0a97b34942891f0d6be4746426e9e3609120fe635542c77390b0c7",
+      "advisory_id": "Arista Networks Security Advisory 192",
+      "cve_ids": ["CVE-2026-101156", "CVE-2026-101157"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_193_CSAF.json",
+      "sha256": "145db423f96d202dffd7905abebc7c6ea328474af2283fd6b3bd97dd405a3e3b",
+      "advisory_id": "Arista Networks Security Advisory 193",
+      "cve_ids": ["CVE-2026-102162"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_194_CSAF.json",
+      "sha256": "e131ebadb8805fae72c6260b7aad1a79bb66080e952e28ccb9206097a402bdbe",
+      "advisory_id": "Arista Networks Security Advisory 194",
+      "cve_ids": ["CVE-2026-102168", "CVE-2026-102169"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_195_CSAF.json",
+      "sha256": "9247529b9b884245585e78d5435cadc82bed4a2e8458f5ee04cfd46227800bdd",
+      "advisory_id": "Arista Networks Security Advisory 195",
+      "cve_ids": ["CVE-2026-102163"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_196_CSAF.json",
+      "sha256": "35c649c3202f49d58531690a1ba59b551066f00823bf5db5496531b66ccd1134",
+      "advisory_id": "Arista Networks Security Advisory 196",
+      "cve_ids": ["CVE-2026-102164"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_197_CSAF.json",
+      "sha256": "265c71ee2a583b821cb93fbb9025e802985e1ae1748db02575ca8249a939f2f5",
+      "advisory_id": "Arista Networks Security Advisory 197",
+      "cve_ids": ["CVE-2026-102167"]
+    },
+    {
+      "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_198_CSAF.json",
+      "sha256": "48fb08135b499d378928581895a3d8edf1d76fc751eb0d0bac9d112c661ce278",
+      "advisory_id": "Arista Networks Security Advisory 198",
+      "cve_ids": ["CVE-2026-102165"]
+    },
+    {
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24005-security-advisory-0137",
+      "sha256": "21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
+      "advisory_id": "24005-security-advisory-0137",
+      "cve_ids": ["CVE-2026-7473"]
+    }
+  ],
+  "analysis_profile": "campus-switching-openvuln-2026-11-14-v1",
+  "analysis_input_sha256": "e8cc5e131c3c2bd835185795357044f427ec9c796f708a98eb652f9831289356",
+  "required_captures": 68,
+  "normalized_primaries": 34,
+  "chronology_pairs": 33,
+  "reference_capture_bytes": 4061372,
+  "retrieval_policy": {
+    "required_owner_kinds": ["csaf", "csaf_draft"],
+    "fetch_missing_kinds": ["html"],
+    "rss": "optional_retained_only",
+    "max_document_bytes": 2000000,
+    "max_accepted_capture_bytes": 4061372
+  }
+}
