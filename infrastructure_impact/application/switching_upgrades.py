@@ -600,8 +600,30 @@ def eligible_claims_for(evidence):
 def prepare_report(
     evidence, first_fixed_report, release_history, kev_selection, *, publication, generated_at
 ):
+    return _prepare_report(
+        evidence,
+        first_fixed_report,
+        release_history,
+        kev_selection,
+        publication=publication,
+        generated_at=generated_at,
+    )
+
+
+def _prepare_report(
+    evidence,
+    first_fixed_report,
+    release_history,
+    kev_selection,
+    *,
+    publication,
+    generated_at,
+    evidence_proof=None,
+):
     """Validate complete owned groups, then yield requirements without a global matrix."""
-    contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
+    contracts._require_evidence(
+        evidence, publication=publication, generated_at=generated_at, evidence_proof=evidence_proof
+    )
     first_fixed.validate_report(first_fixed_report)
     if first_fixed_report["generated_at"] != generated_at or first_fixed_report["publication"].get(
         "id"

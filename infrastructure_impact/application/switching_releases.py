@@ -311,8 +311,22 @@ def _base(publication, generated_at, observation_end, *, available=True):
 
 
 def build(evidence, release_input, *, publication, generated_at, observation_end):
+    return _build(
+        evidence,
+        release_input,
+        publication=publication,
+        generated_at=generated_at,
+        observation_end=observation_end,
+    )
+
+
+def _build(
+    evidence, release_input, *, publication, generated_at, observation_end, evidence_proof=None
+):
     """Build from validated current evidence and five registered source frames."""
-    contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
+    contracts._require_evidence(
+        evidence, publication=publication, generated_at=generated_at, evidence_proof=evidence_proof
+    )
     _validate_observation_end(generated_at, observation_end)
     result = _base(publication, generated_at, observation_end)
     nodes = {}

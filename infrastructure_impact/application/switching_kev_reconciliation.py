@@ -205,6 +205,30 @@ def build_report(
     evaluated_at,
     selection,
 ):
+    return _build_report(
+        kev_report,
+        study_definition,
+        current_claims,
+        retained_dispositions,
+        publication=publication,
+        generated_at=generated_at,
+        evaluated_at=evaluated_at,
+        selection=selection,
+    )
+
+
+def _build_report(
+    kev_report,
+    study_definition,
+    current_claims,
+    retained_dispositions,
+    *,
+    publication,
+    generated_at,
+    evaluated_at,
+    selection,
+    evidence_proof=None,
+):
     """Reconcile captured labels with validated current vendor claims, without I/O.
 
     ``selection`` is a full native selected comparison report, not a list of CVEs.
@@ -213,9 +237,18 @@ def build_report(
     """
     kev._timestamp(generated_at)
     kev._timestamp(evaluated_at)
-    contracts.validate_evidence(current_claims, publication=publication, generated_at=generated_at)
+    contracts._require_evidence(
+        current_claims,
+        publication=publication,
+        generated_at=generated_at,
+        evidence_proof=evidence_proof,
+    )
     kev.validate_report(kev_report)
-    contracts.validate_comparison(selection, publication=publication, generated_at=generated_at)
+    validate = (
+        contracts.validate_comparison if evidence_proof is None else contracts._validate_comparison
+    )
+    proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
+    validate(selection, publication=publication, generated_at=generated_at, **proof_args)
     _validate(retained_dispositions, inventory=True)
     digest = contracts.definition_sha256(study_definition)
     for value in (kev_report, current_claims, retained_dispositions, selection):

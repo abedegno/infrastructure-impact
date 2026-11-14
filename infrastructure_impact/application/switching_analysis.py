@@ -117,16 +117,56 @@ def compile_requirements(
     generated_at,
     max_bytes=codec.MAX_SELECTED,
 ):
-    header, requirements = upgrades.prepare_report(
+    return _compile_requirements(
         evidence,
         first_fixed_report,
         release_history,
         kev_selection,
         publication=publication,
         generated_at=generated_at,
+        max_bytes=max_bytes,
     )
+
+
+def _compile_requirements(
+    evidence,
+    first_fixed_report,
+    release_history,
+    kev_selection,
+    *,
+    publication,
+    generated_at,
+    max_bytes=codec.MAX_SELECTED,
+    evidence_proof=None,
+):
+    prepare = upgrades.prepare_report if evidence_proof is None else upgrades._prepare_report
+    proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
+    header, requirements = prepare(
+        evidence,
+        first_fixed_report,
+        release_history,
+        kev_selection,
+        publication=publication,
+        generated_at=generated_at,
+        **proof_args,
+    )
+    if evidence_proof is not None:
+        contracts._require_evidence(
+            evidence,
+            publication=publication,
+            generated_at=generated_at,
+            evidence_proof=evidence_proof,
+        )
     result = _pack(header, requirements, max_bytes=max_bytes)
-    validate_requirements(result, evidence=evidence)
+    if evidence_proof is not None:
+        contracts._require_evidence(
+            evidence,
+            publication=publication,
+            generated_at=generated_at,
+            evidence_proof=evidence_proof,
+        )
+    validate = validate_requirements if evidence_proof is None else _validate_requirements
+    validate(result, evidence=evidence, **proof_args)
     return result
 
 
@@ -141,6 +181,12 @@ def _expand(report, requirement):
 
 
 def validate_requirements(report, *, evidence=None):
+    return _validate_requirements(report, evidence=evidence)
+
+
+def _validate_requirements(report, *, evidence=None, evidence_proof=None):
+    if evidence_proof is not None and evidence is None:
+        raise ValueError("Evidence capability requires actual evidence")
     codec.charge_value(report, codec.Budget(codec.MAX_SELECTED))
     _validate_shape(report, "compact")
     if report["observation_end"] != comparison.day(report["generated_at"]):
@@ -203,8 +249,11 @@ def validate_requirements(report, *, evidence=None):
     ):
         raise ValueError("Compact member reference closure differs")
     if evidence is not None:
-        contracts.validate_evidence(
-            evidence, publication=report["publication"], generated_at=report["generated_at"]
+        contracts._require_evidence(
+            evidence,
+            publication=report["publication"],
+            generated_at=report["generated_at"],
+            evidence_proof=evidence_proof,
         )
         if _hash(evidence) != report["evidence_sha256"]:
             raise ValueError("Compact current evidence differs")
@@ -528,6 +577,14 @@ def claim_facets(report):
 
 
 def build_report(records, retained, study, *, release_history=None, source_frame=None):
+    return _build_report(
+        records, retained, study, release_history=release_history, source_frame=source_frame
+    )
+
+
+def _build_report(
+    records, retained, study, *, release_history=None, source_frame=None, evidence_proof=None
+):
     from . import first_fixed
     from . import switching_disclosure as disclosure
     from . import switching_kev_reconciliation as reconciliation
@@ -537,7 +594,11 @@ def build_report(records, retained, study, *, release_history=None, source_frame
         raise ValueError("Optional analysis source input must be an object")
     if set(source_frame) - {"api_results", "policy_source", "calibration_records"}:
         raise ValueError("Unknown optional analysis source input")
-    contracts.validate_comparison(study)
+    proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
+    validate = (
+        contracts.validate_comparison if evidence_proof is None else contracts._validate_comparison
+    )
+    validate(study, **proof_args)
     if (
         study["selection"]["requested_vendor"] is not None
         or study["selection"]["requested_cve_ids"] is not None
@@ -559,20 +620,26 @@ def build_report(records, retained, study, *, release_history=None, source_frame
     ff = first_fixed.build_report(
         records + calibration, api_results=source_frame.get("api_results", []), **identity
     )
-    requirements = compile_requirements(evidence, ff, release_history, kev, **identity)
+    compile = compile_requirements if evidence_proof is None else _compile_requirements
+    requirements = compile(evidence, ff, release_history, kev, **proof_args, **identity)
     inventory = reconciliation.build_inventory(
         [r for r in records if r["vendor"] in comparison.VENDORS],
         [r for r in retained if r["vendor"] in comparison.VENDORS],
         study_definition=study["definition"],
         **identity,
     )
-    gap = reconciliation.build_report(
+    reconcile = (
+        reconciliation.build_report if evidence_proof is None else reconciliation._build_report
+    )
+    disclose = disclosure.build_report if evidence_proof is None else disclosure._build_report
+    gap = reconcile(
         kev,
         study["definition"],
         evidence,
         inventory,
         evaluated_at=study["generated_at"],
         selection=study,
+        **proof_args,
         **identity,
     )
     claims, budget = {}, codec.Budget(codec.MAX_SELECTED)
@@ -596,29 +663,60 @@ def build_report(records, retained, study, *, release_history=None, source_frame
         requirements=requirements,
         claims=claims,
         release_history=copy.deepcopy(release_history),
-        disclosure=disclosure.build_report(
+        disclosure=disclose(
             records,
             study,
             evidence=evidence,
             policy_source=source_frame.get("policy_source"),
             bundle_history=release_history,
+            **proof_args,
             **identity,
         ),
         kev_reconciliation=gap,
     )
     out["content_sha256"] = _hash(out)
-    validate_report(out, evidence=evidence, records=records, retained=retained)
+    validate = validate_report if evidence_proof is None else _validate_report
+    validate(out, evidence=evidence, records=records, retained=retained, **proof_args)
     return out
 
 
 def validate_report(
     report, *, evidence=None, records=None, retained=None, publication=None, generated_at=None
 ):
+    return _validate_report(
+        report,
+        evidence=evidence,
+        records=records,
+        retained=retained,
+        publication=publication,
+        generated_at=generated_at,
+    )
+
+
+def _validate_report(
+    report,
+    *,
+    evidence=None,
+    records=None,
+    retained=None,
+    publication=None,
+    generated_at=None,
+    evidence_proof=None,
+):
     from . import switching_disclosure as disclosure
     from . import switching_kev_reconciliation as reconciliation
 
     codec.charge_value(report, codec.Budget(codec.MAX_SELECTED))
     _validate_shape(report, "compiled")
+    if evidence_proof is not None:
+        if evidence is None:
+            raise ValueError("Evidence capability requires actual evidence")
+        contracts._require_evidence(
+            evidence,
+            publication=report["publication"],
+            generated_at=report["generated_at"],
+            evidence_proof=evidence_proof,
+        )
     if report["release_history"] is not None:
         upgrades.releases.validate_report(
             report["release_history"],
@@ -654,7 +752,9 @@ def validate_report(
         for key in ("publication", "generated_at", "definition_sha256", "observation_end"):
             if report[child][key] != report[key]:
                 raise ValueError("Analysis child identity differs")
-    validate_requirements(report["requirements"], evidence=evidence)
+    validate = validate_requirements if evidence_proof is None else _validate_requirements
+    proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
+    validate(report["requirements"], evidence=evidence, **proof_args)
     disclosure.validate_report(report["disclosure"])
     reconciliation.validate_report(report["kev_reconciliation"])
     _validate_child_ownership(report, evidence=evidence, records=records, retained=retained)
@@ -672,6 +772,14 @@ def validate_report(
                 c[k] != expected[cid].get(k) for k in CLAIM_FIELDS
             ):
                 raise ValueError("Analysis source membership differs")
+
+    if evidence_proof is not None:
+        contracts._require_evidence(
+            evidence,
+            publication=report["publication"],
+            generated_at=report["generated_at"],
+            evidence_proof=evidence_proof,
+        )
 
 
 def _validate_child_ownership(report, *, evidence=None, records=None, retained=None):

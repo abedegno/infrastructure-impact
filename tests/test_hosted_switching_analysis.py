@@ -82,17 +82,36 @@ def test_selected_native_projection_reloads_profile_and_requires_exact_roots(tmp
     from infrastructure_impact.storage import repository
 
     native = dataset()
+    from infrastructure_impact.application import switching_evidence as evidence
+
+    minted = []
+    mint = evidence._ValidatedEvidence.__init__
+
+    def fresh_mint(self, *args, **kwargs):
+        mint(self, *args, **kwargs)
+        minted.append(self)
+
+    monkeypatch.setattr(evidence._ValidatedEvidence, "__init__", fresh_mint)
     options = profiles.profile(PROFILE).build_options()
     built = copy.deepcopy(native)
     built["research"]["switching_analysis_input"] = options["switching_analysis_input"]
     out = publication.publish(
         built, tmp_path / "public", publication_format="v2", include_switching_analysis=True
     )
+    assert len(minted) == 2  # Initial projection and independent writer boundary.
+    queries = []
+
+    def fresh_query(db):
+        queries.append(db)
+        return copy.deepcopy(native)
+
     monkeypatch.setattr(repository, "connect", lambda *a, **k: StringIO())
-    monkeypatch.setattr(query, "state", lambda db: copy.deepcopy(native))
+    monkeypatch.setattr(query, "state", fresh_query)
     publication_v2.native_parity(
         "authored", out, tmp_path, PublicationReader(out), switching_analysis_profile=PROFILE
     )
+    assert len(queries) == 1
+    assert len(minted) == 3 and len({id(proof) for proof in minted}) == 3
     with pytest.raises(ValueError, match="logical root"):
         publication_v2.native_parity("authored", out, tmp_path, PublicationReader(out))
 
