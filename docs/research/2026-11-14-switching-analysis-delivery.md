@@ -58,7 +58,7 @@ source interpretation, credentials, or calibration inference engine is added.
 
 - `compile_requirements(evidence, first_fixed_report, release_history, kev_selection, *, publication, generated_at, max_bytes=128_000_000)`.
 - `build_report(records, retained, study, *, release_history=None, source_frame=None)`.
-- `validate_requirements(report, *, evidence=None)` and `validate_report(report, *, evidence=None, publication=None, generated_at=None)`.
+- `validate_requirements(report, *, evidence=None)` and `validate_report(report, *, evidence=None, records=None, retained=None, publication=None, generated_at=None)`.
 - `selection_context(compiled, options)`, `select_report(compiled_or_none, context, *, max_bytes=128_000_000)`, and `select_upgrades(requirements_or_none, context, *, max_bytes=128_000_000)`.
 - `project_native(native_upgrade_report, full_native_study_selection)` is an offline oracle; it checks actual native contributing ownership, risk, methods and proofs before the same public projection.
 - `csv_export(selected_upgrades, *, max_bytes=128_000_000)` and `analysis_csv_export(selected_analysis, *, max_bytes=128_000_000)`.
@@ -112,7 +112,16 @@ limits are unchanged; oversized results fail rather than discard facts.
 `PublicationReader.switching_analysis(study_selection=None, *, options=None)`
 authenticates identity before reading arrays. Missing optional roots return an
 unavailable envelope; malformed present roots and current-reference mismatches
-fail closed. `publication-export --root switching-analysis.json` uses the existing
+fail closed. Disclosure child pairs must have complete, exact claim/source
+ownership in the compact current membership; KEV current-claim references must
+equal their native projections. The builder and common writer pass both
+`records` and `retained` to validate child record references against the
+authoritative current/retained partition. When validating with complete
+`evidence`, record-bearing children require both record authorities; omitting
+them cannot silently skip that proof. V1 HTTP also checks against its accepted
+current/retained records and strictly reads at most the selected-byte limit plus
+one byte before decoding the optional sidecar. A present JSON null is malformed.
+`publication-export --root switching-analysis.json` uses the existing
 v2 streaming exporter.
 
 Both native formats expose `/api/v1/switching-analysis` and

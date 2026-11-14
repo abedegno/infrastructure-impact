@@ -427,3 +427,129 @@ def test_explicit_local_source_frame_cli_and_absent_calibration(tmp_path, monkey
     assert api().build_report([], [], study, source_frame=frame) == api().build_report(
         [], [], study
     )
+
+
+@pytest.mark.parametrize("payload", ["null", "duplicate", "oversize"])
+def test_v1_present_analysis_is_strict_bounded_and_never_absent(tmp_path, monkeypatch, payload):
+    from test_kev_delivery import request
+    from test_static_delivery import dataset
+    from test_switching_aruba_fix_links import projected
+
+    from infrastructure_impact.application import publication
+    from infrastructure_impact.http import Application
+
+    data = dataset()
+    data["research"]["switching_input"] = projected()
+    root = tmp_path / "public"
+    generation = publication.publish(data, root, include_switching_analysis=True)
+    asset = generation / "switching-analysis.json"
+    if payload == "null":
+        raw = b"null"
+    elif payload == "duplicate":
+        raw = asset.read_bytes().replace(
+            b'"schema_version": 1,', b'"schema_version": 1, "schema_version": 1,', 1
+        )
+    else:
+        from infrastructure_impact import publication_codec
+
+        monkeypatch.setattr(publication_codec, "MAX_SELECTED", 1024)
+        raw = b" " * 1025 + b"null"
+    asset.write_bytes(raw)
+    app = Application(root)
+    for endpoint in ("switching-analysis", "switching-upgrades"):
+        code, body = request(app, "/api/v1/" + endpoint)
+        assert code >= 500, body
+
+
+@pytest.mark.parametrize("mutation", ["foreign", "misbound_source", "misbound_cve"])
+def test_disclosure_child_closure_rejects_rehashed_refs(mutation):
+    ev, _, _, study = fixture()
+    bad = api().build_report([], [], study)
+    pair = bad["disclosure"]["pairs"][0]
+    if mutation == "foreign":
+        pair["claim_ids"] = ["f" * 64]
+    elif mutation == "misbound_source":
+        pair["source"]["source_locator"] = "foreign-owned-row"
+    else:
+        pair["cve_id"] = "CVE-2025-99999"
+        # Keep internal child aggregates coherent, to exercise composition ownership.
+        from infrastructure_impact.application import switching_disclosure as disclosure
+
+        pairs = bad["disclosure"]["pairs"]
+        bad["disclosure"]["periods"] = {
+            p: disclosure._summary([x for x in pairs if x["date_period"] == p])
+            for p in ("pre_july", "from_july", "unknown")
+        }
+        bad["disclosure"]["years"] = {
+            y: disclosure._summary(
+                [
+                    x
+                    for x in pairs
+                    if (comparison.day(x["initial_published_at"]) or "unknown")[:4] == y
+                ]
+            )
+            for y in bad["disclosure"]["years"]
+        }
+        bad["disclosure"]["year_periods"] = disclosure._year_periods(pairs)
+    bad["content_sha256"] = api()._hash({k: v for k, v in bad.items() if k != "content_sha256"})
+    with pytest.raises(ValueError):
+        api().validate_report(bad, evidence=ev)
+
+
+@pytest.mark.parametrize("mutation", ["source", "claim_id"])
+def test_kev_claim_reference_closure_rejects_rehashed_source(mutation):
+    from test_switching_kev_reconciliation import claim
+    from test_switching_kev_reconciliation import inputs as kev_inputs
+
+    _, ev, _, study = kev_inputs([claim()])
+    bad = api().build_report([], [], study)
+    ref = bad["kev_reconciliation"]["entries"][0]["current_claims"][0]
+    if mutation == "source":
+        ref["source"]["source_locator"] = "foreign-row"
+    else:
+        ref["claim_id"] = "f" * 64
+    bad["content_sha256"] = api()._hash({k: v for k, v in bad.items() if k != "content_sha256"})
+    with pytest.raises(ValueError):
+        api().validate_report(bad, evidence=ev)
+
+
+@pytest.mark.parametrize("field", ["current_records", "retained_records"])
+def test_kev_record_reference_ownership_uses_authoritative_records(field):
+    from test_switching_kev_reconciliation import CID
+    from test_switching_kev_reconciliation import inputs as kev_inputs
+
+    from infrastructure_impact.adapters.common import base
+
+    _, ev, _, study = kev_inputs()
+    current = base(
+        "arista",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/123",
+        "current",
+        "Authored",
+        "2026-05-01",
+    )
+    current.update(cves=[CID], sha256="a" * 64, source_observed_at=study["generated_at"])
+    retained = copy.deepcopy(current)
+    retained.update(advisory_id="retained", sha256="b" * 64)
+    bad = api().build_report([current], [retained], study)
+    bad["kev_reconciliation"]["entries"][0][field][0]["source"]["source_sha256"] = "f" * 64
+    bad["content_sha256"] = api()._hash({k: v for k, v in bad.items() if k != "content_sha256"})
+    with pytest.raises(ValueError):
+        api().validate_report(bad, evidence=ev, records=[current], retained=[retained])
+
+
+@pytest.mark.parametrize("fmt", ["v1", "v2"])
+def test_common_writer_rejects_present_null_analysis(tmp_path, fmt):
+    from test_static_delivery import dataset
+    from test_switching_aruba_fix_links import projected
+
+    from infrastructure_impact.application import publication
+
+    data = dataset()
+    data["research"]["switching_input"] = projected()
+    data["publication"] = {"id": "a" * 32, "advisory_schema_version": 2}
+    data["current_evidence"]["publication"] = data["publication"]
+    public = publication.public_projection(data)
+    public["switching_analysis"] = None
+    with pytest.raises(ValueError):
+        publication.write_bundle(tmp_path / fmt, public, publication_format=fmt)

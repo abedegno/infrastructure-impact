@@ -430,11 +430,13 @@ def build_report(records, retained, study, *, release_history=None, source_frame
         kev_reconciliation=gap,
     )
     out["content_sha256"] = _hash(out)
-    validate_report(out, evidence=evidence)
+    validate_report(out, evidence=evidence, records=records, retained=retained)
     return out
 
 
-def validate_report(report, *, evidence=None, publication=None, generated_at=None):
+def validate_report(
+    report, *, evidence=None, records=None, retained=None, publication=None, generated_at=None
+):
     from . import switching_disclosure as disclosure
     from . import switching_kev_reconciliation as reconciliation
 
@@ -478,6 +480,7 @@ def validate_report(report, *, evidence=None, publication=None, generated_at=Non
     validate_requirements(report["requirements"], evidence=evidence)
     disclosure.validate_report(report["disclosure"])
     reconciliation.validate_report(report["kev_reconciliation"])
+    _validate_child_ownership(report, evidence=evidence, records=records, retained=retained)
     if evidence is not None:
         expected = {c["claim_id"]: c for c in evidence["claims"]}
         if set(expected) != set(report["claims"]):
@@ -491,6 +494,103 @@ def validate_report(report, *, evidence=None, publication=None, generated_at=Non
                 c[k] != expected[cid].get(k) for k in CLAIM_FIELDS
             ):
                 raise ValueError("Analysis source membership differs")
+
+
+def _validate_child_ownership(report, *, evidence=None, records=None, retained=None):
+    """Prove child membership against compact claims and native record authorities.
+
+    Readers authenticate the compiled root's transport first. The publication gate
+    additionally supplies the complete current/retained source records; an evidence
+    validation cannot silently accept record references without that authority.
+    """
+    from collections import defaultdict
+
+    from . import switching_disclosure as disclosure
+    from . import switching_kev_reconciliation as reconciliation
+
+    context = selection_context(report, {})
+    for name in ("disclosure", "kev_reconciliation"):
+        if report[name]["selection"] != context["selection"]:
+            raise ValueError("Analysis child complete selection differs")
+    owned_pairs = defaultdict(list)
+    for claim in _selected_claims(report, context["selection"]):
+        if comparison._explicit(claim):
+            owned_pairs[disclosure._key(claim)].append(claim)
+    pairs = report["disclosure"]["pairs"]
+    if {disclosure._key(p) for p in pairs} != set(owned_pairs):
+        raise ValueError("Disclosure child source pair ownership differs")
+    for pair in pairs:
+        claims = owned_pairs[disclosure._key(pair)]
+        severity = {contracts._json(f): f for c in claims for f in c["disclosure_severity"]}
+        if (
+            pair["severity"] != [severity[k] for k in sorted(severity)]
+            or pair["claim_ids"] != sorted(c["claim_id"] for c in claims)
+            or pair["source"] != claims[0]["source"]
+            or any(pair["initial_published_at"] != c["initial_published_at"] for c in claims)
+            or pair["product_ids"]
+            != sorted({c["product_id"] for c in claims if c["product_id"] is not None})
+            or pair["models"]
+            != sorted(
+                {
+                    b["model"]
+                    for c in claims
+                    for b in c["platform_bindings"]
+                    if b["model"] is not None
+                }
+            )
+        ):
+            raise ValueError("Disclosure child claim/source ownership differs")
+    entries = report["kev_reconciliation"]["entries"]
+    if (records is None) != (retained is None):
+        raise ValueError("Both current and retained record authorities are required")
+    inventory = None
+    if records is not None:
+        inventory = reconciliation.build_inventory(
+            [r for r in records if r["vendor"] in comparison.VENDORS],
+            [r for r in retained if r["vendor"] in comparison.VENDORS],
+            publication=report["publication"],
+            generated_at=report["generated_at"],
+            study_definition=contracts.definition(),
+        )
+        current = {disclosure._source_key(r): r for r in records}
+        for fact in report["disclosure"]["advisory_facts"]:
+            key = (
+                fact["vendor"],
+                fact["advisory_id"],
+                fact["source"]["source_url"],
+                fact["source"]["source_sha256"],
+            )
+            source = current.get(key)
+            if (
+                source is None
+                or fact["metadata"] != source.get("disclosure_metadata")
+                or fact["source"]["retrieved_at"] != source["source_observed_at"]
+                or fact["source"]["source_locator"] != "advisory"
+            ):
+                raise ValueError("Disclosure child current record source differs")
+    elif evidence is not None and (
+        report["disclosure"]["advisory_facts"]
+        or any(e["current_records"] or e["retained_records"] for e in entries)
+    ):
+        raise ValueError("Child source references require authoritative current/retained records")
+    claim_index = defaultdict(list)
+    for claim in report["claims"].values():
+        claim_index[claim["vendor"], claim["family"], claim["cve_id"]].append(claim)
+    record_indexes = {name: defaultdict(list) for name in ("current_records", "retained_records")}
+    if inventory is not None:
+        for name, index in record_indexes.items():
+            for record in inventory[name]:
+                for cid in record["cve_ids"]:
+                    index[record["vendor"], cid].append(record)
+    for entry in entries:
+        mapping = entry["mapping"]
+        claims = claim_index[mapping["vendor"], mapping["family"], entry["cve_id"]]
+        if entry["current_claims"] != [reconciliation._claim_ref(c) for c in claims]:
+            raise ValueError("KEV child current claim/source ownership differs")
+        if inventory is not None:
+            for name, index in record_indexes.items():
+                if entry[name] != index[mapping["vendor"], entry["cve_id"]]:
+                    raise ValueError("KEV child current/retained record ownership differs")
 
 
 def _selected_claims(report, selection, *, window=True):

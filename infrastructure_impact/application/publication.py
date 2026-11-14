@@ -399,6 +399,8 @@ def write_bundle(destination, data, *, publication_format="v1"):
         validate_analysis(
             data["switching_analysis"],
             evidence=data["switching_evidence"],
+            records=data["records"],
+            retained=[w["record"] for w in data.get("retained_advisories", [])],
             publication=data["publication"],
             generated_at=data["generated_at"],
         )

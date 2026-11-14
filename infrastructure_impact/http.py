@@ -285,10 +285,18 @@ class Application:
             except ValueError as error:
                 raise BadRequest("Invalid study query") from error
             asset = generation / "switching-analysis.json"
-            value = json.loads(asset.read_text()) if asset.exists() else None
-            if value is not None:
+            value = None
+            if asset.exists():
+                from .publication_codec import MAX_SELECTED, strict_loads
+
+                with asset.open("rb") as stream:
+                    value = strict_loads(stream.read(MAX_SELECTED + 1), max_bytes=MAX_SELECTED)
                 analysis.validate_report(
-                    value, publication=data["publication"], generated_at=data["generated_at"]
+                    value,
+                    publication=data["publication"],
+                    generated_at=data["generated_at"],
+                    records=data["records"],
+                    retained=[w["record"] for w in data.get("retained_advisories", [])],
                 )
             context = analysis.selection_context(
                 value
