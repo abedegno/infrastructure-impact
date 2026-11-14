@@ -12,7 +12,7 @@ from infrastructure_impact.collection.maintenance_profiles import profile
 from infrastructure_impact.storage.repository import connect, evidence
 
 PROFILE = "arista-reviewed-sa0137-chronology-0165-0198-v1"
-PINS_DIGEST = "6053fad4d6006294dc53df6cd9b8bb67650b04f8dce2d8d5cc63793dbae7351b"
+PINS_DIGEST = "655bea2a0ecdfe552eb7324bacd68153e30cd245fff9d7db83658ae8d98adfc4"
 
 
 def no_http(*args, **kwargs):
@@ -26,6 +26,8 @@ def test_installed_batch_perimeter_and_path_free_pins():
     assert len(selected.primary_urls) == 34
     assert len(selected.allowed_urls) == len(pins) == 69
     assert sum(p["kind"] != "rss" for p in pins) == 68
+    assert sum("joomla_csrf_sha256" in p for p in pins) == 34
+    assert all(("joomla_csrf_sha256" in p) == (p["kind"] == "html") for p in pins)
     assert sum(p["bytes"] for p in pins) == 4_061_372
     assert {p["number"] for p in pins if p["kind"] == "csaf"} == set(range(165, 199)) - {184}
     assert (
@@ -36,7 +38,7 @@ def test_installed_batch_perimeter_and_path_free_pins():
     local_home_prefix = "/" + "Users" + "/"
     assert local_home_prefix not in raw and "local_public_path" not in raw and "raw_b64" not in raw
     assert batch["analysis_profile"] == "campus-switching-openvuln-2026-11-14-v1"
-    assert selected.version == "2" and batch["curation_revision"] == 2
+    assert selected.version == "3" and batch["curation_revision"] == 3
     refreshes = batch["reviewed_owner_refreshes"]
     assert len(refreshes) == 1
     assert refreshes[0]["advisory_id"] == "Arista Networks Security Advisory 178"
@@ -519,7 +521,7 @@ def test_reviewed_sa178_refresh_preserves_old_history_and_accepts_new_vendor_fac
     assert {"code": "reviewed_owner_refresh", "source_url": refresh["source_url"]} in preview[
         "issues"
     ]
-    assert json.loads(maintenance.preview_bytes(preview))["profile_version"] == "2"
+    assert json.loads(maintenance.preview_bytes(preview))["profile_version"] == "3"
     called = []
 
     def fetch(connection, url, vendor, **kwargs):
@@ -714,3 +716,277 @@ def test_sa178_curation_revision_and_refresh_policy_invalidate_old_acceptance(
     assert selected.fingerprint != fingerprint
     with pytest.raises(maintenance.MaintenanceBaselineChanged):
         maintenance.apply_profile(db, selected, accepted["fingerprint"], fetcher=no_http)
+
+
+JOOMLA_TOKEN = b"1234567890abcdef1234567890abcdef"
+JOOMLA_OTHER_TOKEN = b"abcdef1234567890abcdef1234567890"
+
+
+def joomla_page(body=b"<p>Authored advisory body</p>"):
+    return (
+        b'<html><head><script type="application/json" class="joomla-script-options new">'
+        b'{"csrf.token":"' + JOOMLA_TOKEN + b'","system.paths":{"root":"","base":""}}'
+        b"</script></head><body>" + body + b"</body></html>"
+    )
+
+
+def test_joomla_projection_masks_only_the_exact_token_bytes():
+    from infrastructure_impact.application import arista_hosted_batch as implementation
+
+    raw = joomla_page()
+    expected = sha256(raw.replace(JOOMLA_TOKEN, b"0" * 32, 1)).hexdigest()
+    assert implementation.joomla_csrf_digest(raw) == expected
+    changed = raw.replace(JOOMLA_TOKEN, JOOMLA_OTHER_TOKEN, 1)
+    assert sha256(changed).hexdigest() != sha256(raw).hexdigest()
+    assert implementation.joomla_csrf_digest(changed) == expected
+    assert implementation.joomla_csrf_digest(raw.replace(b"Authored", b"Changed")) != expected
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "missing",
+        "uppercase",
+        "short",
+        "duplicate_key",
+        "duplicate_script",
+        "nonhead",
+        "nonjson",
+        "duplicate_head",
+    ],
+)
+def test_joomla_projection_rejects_ambiguous_or_wrong_context(mutation):
+    from infrastructure_impact.application import arista_hosted_batch as implementation
+
+    raw = joomla_page()
+    if mutation == "missing":
+        raw = raw.replace(b'"csrf.token":"' + JOOMLA_TOKEN + b'",', b"")
+    elif mutation == "uppercase":
+        raw = raw.replace(JOOMLA_TOKEN, JOOMLA_TOKEN.upper())
+    elif mutation == "short":
+        raw = raw.replace(JOOMLA_TOKEN, JOOMLA_TOKEN[:-1])
+    elif mutation == "duplicate_key":
+        raw = raw.replace(b'{"csrf.token":', b'{"csrf.token":"' + JOOMLA_TOKEN + b'","csrf.token":')
+    elif mutation == "duplicate_script":
+        raw = raw.replace(
+            b"</head>",
+            raw[raw.index(b"<script") : raw.index(b"</script>") + len(b"</script>")] + b"</head>",
+        )
+    elif mutation == "nonhead":
+        script = raw[raw.index(b"<script") : raw.index(b"</script>") + len(b"</script>")]
+        raw = raw.replace(script, b"").replace(b"<body>", b"<body>" + script)
+    elif mutation == "nonjson":
+        raw = raw.replace(b"application/json", b"text/javascript")
+    elif mutation == "duplicate_head":
+        raw = raw.replace(b"</head>", b"</head><head></head>")
+    elif mutation == "unclosed_head":
+        raw = raw.replace(b"</head>", b"")
+    elif mutation == "invalid_json":
+        raw = raw.replace(b'"system.paths":', b'"system.paths"::')
+    else:
+        raw = raw.replace(b'"system.paths":', b'"invalid":NaN,"system.paths":')
+    with pytest.raises(ValueError, match="maintenance_html_projection_invalid"):
+        implementation.joomla_csrf_digest(raw)
+
+
+@pytest.fixture
+def nonce_batch(authored_batch):
+    """Two HTML fixtures expose only one valid nonce difference from reference bytes."""
+    from infrastructure_impact.collection.maintenance_profiles import profile
+
+    db, _, batch, bodies = authored_batch
+    changed = {}
+    references = {}
+    for pin in batch["captures"]:
+        if pin["kind"] != "html" or pin["number"] not in {165, 137}:
+            continue
+        reference = joomla_page(bodies[pin["url"]])
+        references[pin["url"]] = reference
+        pin["sha256"], pin["bytes"] = sha256(reference).hexdigest(), len(reference)
+        pin["joomla_csrf_sha256"] = sha256(
+            reference.replace(JOOMLA_TOKEN, b"0" * 32, 1)
+        ).hexdigest()
+        bodies[pin["url"]] = reference.replace(JOOMLA_TOKEN, JOOMLA_OTHER_TOKEN, 1)
+        changed[pin["number"]] = pin
+        with db:
+            db.execute("DELETE FROM evidence WHERE source_url=?", (pin["url"],))
+    for target in batch["expected_primaries"]:
+        if target["url"] in references:
+            target["sha256"] = sha256(references[target["url"]]).hexdigest()
+    return (db, profile(PROFILE), batch, bodies), changed, references
+
+
+@pytest.mark.parametrize("cached", [False, True])
+def test_nonce_only_html_variants_retain_actual_raw_sha_and_repeat_without_http(
+    nonce_batch, cached
+):
+    from infrastructure_impact.storage.repository import latest
+
+    authored, changed, _ = nonce_batch
+    db, selected, _, bodies = authored
+    if cached:
+        with db:
+            for pin in changed.values():
+                evidence(db, bodies[pin["url"]], pin["url"])
+    called = []
+
+    def fetch(connection, url, vendor, **kwargs):
+        assert not cached, "matching retained HTML must be reused"
+        called.append(url)
+        assert (
+            connection is db and vendor == "arista" and url in {p["url"] for p in changed.values()}
+        )
+        return bodies[url]
+
+    accepted = maintenance._preview(db, selected)
+    maintenance.preview_bytes(accepted)
+    result = maintenance.apply_profile(db, selected, accepted["fingerprint"], fetcher=fetch)
+    assert result["outcome"] == "completed" and result["imported"] == 34
+    assert called == ([] if cached else [changed[165]["url"], changed[137]["url"]])
+    for pin in changed.values():
+        actual_sha = sha256(bodies[pin["url"]]).hexdigest()
+        assert actual_sha != pin["sha256"]
+        row = db.execute(
+            "SELECT * FROM evidence WHERE source_url=? AND sha256=?", (pin["url"], actual_sha)
+        ).fetchone()
+        assert bytes(row["raw"]) == bodies[pin["url"]]
+        assert row["observed_at"] != pin["retrieved_at"]
+    records = latest(db)
+    primary = next(r for r in records if r["advisory_id"] == "24005-security-advisory-0137")
+    assert primary["sha256"] == sha256(bodies[changed[137]["url"]]).hexdigest()
+    chronology = next(
+        r for r in records if r["advisory_id"] == "Arista Networks Security Advisory 165"
+    )["publisher_chronology"]
+    assert chronology["html_source"]["sha256"] == sha256(bodies[changed[165]["url"]]).hexdigest()
+    count = db.execute("SELECT count(*) FROM revisions").fetchone()[0]
+    again = execute(authored, no_http)
+    assert (again["outcome"], again["imported"], again["unchanged"]) == ("completed", 0, 34)
+    assert db.execute("SELECT count(*) FROM revisions").fetchone()[0] == count
+
+
+def test_existing_nonce_html_owner_is_checked_and_bound_even_when_not_latest_capture(nonce_batch):
+    from infrastructure_impact.storage.repository import latest
+
+    authored, changed, _ = nonce_batch
+    db, selected, _, bodies = authored
+    with db:
+        for pin in changed.values():
+            evidence(db, bodies[pin["url"]], pin["url"])
+    assert execute(authored)["outcome"] == "completed"
+    owner = next(r for r in latest(db) if r["advisory_id"] == "24005-security-advisory-0137")
+    with db:
+        evidence(db, b"newer unrelated HTML", changed[137]["url"])
+    accepted = maintenance._preview(db, selected)
+    with db:
+        db.execute(
+            "UPDATE evidence SET raw=? WHERE id=?",
+            (b"corrupt actual HTML owner", owner["evidence_id"]),
+        )
+    refreshed = maintenance._preview(db, selected)
+    assert refreshed["fingerprint"] != accepted["fingerprint"]
+    assert {"code": "changed_required_owner", "source_url": changed[137]["url"]} in refreshed[
+        "issues"
+    ]
+    with pytest.raises(maintenance.MaintenanceBaselineChanged):
+        maintenance.apply_profile(db, selected, accepted["fingerprint"], fetcher=no_http)
+    result = execute(authored, no_http)
+    assert result["outcome"] == "failed_primary_validation" and result["imported"] == 0
+
+
+@pytest.mark.parametrize(
+    "mutation", ["advisory", "outside", "csaf_link", "malformed", "duplicate", "nonhead"]
+)
+def test_nonce_projection_never_admits_other_fetched_html_changes(
+    nonce_batch, monkeypatch, mutation
+):
+    from infrastructure_impact.plugins.registry import default_registry
+
+    authored, changed, _ = nonce_batch
+    db, _, _, bodies = authored
+    pin = changed[165]
+    raw = bodies[pin["url"]]
+    if mutation == "advisory":
+        raw = raw.replace(b"CVE-2026-73454", b"CVE-2026-73455")
+    elif mutation == "outside":
+        raw = raw.replace(b"system.paths", b"system.pathz")
+    elif mutation == "csaf_link":
+        raw = raw.replace(b"advisory_165_CSAF", b"advisory_166_CSAF")
+    elif mutation == "malformed":
+        raw = raw.replace(JOOMLA_OTHER_TOKEN, JOOMLA_OTHER_TOKEN.upper())
+    elif mutation == "duplicate":
+        raw = raw.replace(b'{"csrf.token":', b'{"csrf.token":"' + JOOMLA_TOKEN + b'","csrf.token":')
+    else:
+        script = raw[raw.index(b"<script") : raw.index(b"</script>") + len(b"</script>")]
+        raw = raw.replace(script, b"").replace(b"<body>", b"<body>" + script)
+    called = []
+
+    def fetch(connection, url, vendor, **kwargs):
+        called.append(url)
+        assert url == pin["url"]
+        return raw
+
+    before = [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")]
+    monkeypatch.setattr(type(default_registry()), "normalize", no_http)
+    result = execute(authored, fetch)
+    assert result["outcome"] == "failed_primary_validation" and result["imported"] == 0
+    assert called == [pin["url"]] and result["primary_outcomes"] == []
+    assert [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")] == before
+
+
+@pytest.mark.parametrize("kind", ["csaf", "csaf_draft", "rss"])
+def test_projection_is_never_used_for_structured_or_rss_captures(kind):
+    from infrastructure_impact.application.arista_hosted_batch import _capture_matches
+
+    raw = joomla_page()
+    pin = dict(
+        kind=kind,
+        bytes=len(raw),
+        sha256=sha256(raw).hexdigest(),
+        joomla_csrf_sha256=sha256(raw.replace(JOOMLA_TOKEN, b"0" * 32, 1)).hexdigest(),
+    )
+    assert _capture_matches(raw, pin)
+    assert not _capture_matches(raw.replace(JOOMLA_TOKEN, JOOMLA_OTHER_TOKEN, 1), pin)
+
+
+@pytest.mark.parametrize("mutation", ["advisory", "evidence_url"])
+def test_html_primary_owner_cannot_hide_behind_valid_reference_capture(nonce_batch, mutation):
+    from infrastructure_impact.storage.repository import latest
+
+    authored, changed, references = nonce_batch
+    db, selected, _, bodies = authored
+    with db:
+        for pin in changed.values():
+            evidence(db, bodies[pin["url"]], pin["url"])
+    assert execute(authored)["outcome"] == "completed"
+    owner = next(r for r in latest(db) if r["advisory_id"] == "24005-security-advisory-0137")
+    pin = changed[137]
+    with db:
+        evidence(db, references[pin["url"]], pin["url"])
+        if mutation == "advisory":
+            bad = bodies[pin["url"]].replace(b"CVE-2026-7473", b"CVE-2026-9999")
+            ev = evidence(db, bad, pin["url"])
+            db.execute(
+                "UPDATE revisions SET evidence_id=? WHERE id=?", (ev["id"], owner["revision_id"])
+            )
+        else:
+            db.execute(
+                "UPDATE evidence SET source_url=? WHERE id=?",
+                ("https://www.arista.com/unreviewed-owner", owner["evidence_id"]),
+            )
+    preview = maintenance._preview(db, selected)
+    assert {"code": "changed_required_owner", "source_url": pin["url"]} in preview["issues"]
+    result = execute(authored, no_http)
+    assert result["outcome"] == "failed_primary_validation" and result["imported"] == 0
+
+
+def test_exact_reference_capture_is_preferred_to_valid_nonce_variant(nonce_batch):
+    from infrastructure_impact.application.arista_hosted_batch import exact_capture
+
+    authored, changed, references = nonce_batch
+    db, _, _, bodies = authored
+    pin = changed[165]
+    with db:
+        evidence(db, references[pin["url"]], pin["url"])
+        evidence(db, bodies[pin["url"]], pin["url"])
+    raw, receipt = exact_capture(db, pin)
+    assert raw == references[pin["url"]] and receipt["sha256"] == pin["sha256"]

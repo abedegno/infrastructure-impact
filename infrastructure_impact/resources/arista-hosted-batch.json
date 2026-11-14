@@ -311,7 +311,8 @@
       "sha256": "ecb887d8d6608382e733b65de311dfa7dff212ee79229320fda4ed544db50a51",
       "bytes": 108815,
       "retrieved_at": "2026-11-13T19:56:16.568600+00:00",
-      "cve_ids": ["CVE-2026-73454"]
+      "cve_ids": ["CVE-2026-73454"],
+      "joomla_csrf_sha256": "46f247fe32078ca0bc84bd2599b36a4a27abf211b9dd50737474f956d7ab43c3"
     },
     {
       "number": 166,
@@ -320,7 +321,8 @@
       "sha256": "0dba1ea429588489a83f75c3e9ec7f14522e4351d1275181eee6dc47bd56b86b",
       "bytes": 110771,
       "retrieved_at": "2026-11-13T20:37:46.150292+00:00",
-      "cve_ids": ["CVE-2026-73464"]
+      "cve_ids": ["CVE-2026-73464"],
+      "joomla_csrf_sha256": "a34f801b52412d471b47b5739b0ac30c5db9b2989cfa1058113f3abd25a1cb87"
     },
     {
       "number": 167,
@@ -329,7 +331,8 @@
       "sha256": "356c842ff1edf0c65289f46890e22e970507c948045558e9d07c82653e105ea4",
       "bytes": 114053,
       "retrieved_at": "2026-11-13T20:37:46.399784+00:00",
-      "cve_ids": ["CVE-2026-73445"]
+      "cve_ids": ["CVE-2026-73445"],
+      "joomla_csrf_sha256": "ad74152916b93d46038f82d875d7dbf384affb9b401c13101c60558dd7810f71"
     },
     {
       "number": 168,
@@ -338,7 +341,8 @@
       "sha256": "2ea1c94dfd881c0678137b1c293552d5cf85b3d5e8c9d91147adbe2f281d511d",
       "bytes": 114240,
       "retrieved_at": "2026-11-13T20:37:46.174647+00:00",
-      "cve_ids": ["CVE-2026-2380"]
+      "cve_ids": ["CVE-2026-2380"],
+      "joomla_csrf_sha256": "84c282ba07fc3ac082fde958879f0ac77f110b6ae8c97ffc90d255c70f535c7e"
     },
     {
       "number": 169,
@@ -347,7 +351,8 @@
       "sha256": "cd8be48c92557b1ada85b8965a72e994ccdd1e5f37fe6c0e63a70e1fa552e2aa",
       "bytes": 108913,
       "retrieved_at": "2026-11-13T20:37:46.264901+00:00",
-      "cve_ids": ["CVE-2026-73463"]
+      "cve_ids": ["CVE-2026-73463"],
+      "joomla_csrf_sha256": "14ce7002c2db9988f10fbcd6e2ee8d8cee42e677767c5391209b03a1ee88ad4b"
     },
     {
       "number": 170,
@@ -356,7 +361,8 @@
       "sha256": "9aaefaabe2044d0b31a741904ee4a610fe0de00d0c7a409f12beeaec037eb679",
       "bytes": 110711,
       "retrieved_at": "2026-11-13T20:37:47.219177+00:00",
-      "cve_ids": ["CVE-2026-19640"]
+      "cve_ids": ["CVE-2026-19640"],
+      "joomla_csrf_sha256": "59bb54d3e02daf2e66bfcd49f33ea880dd9082ebe48f74167f699fa8869c819e"
     },
     {
       "number": 171,
@@ -365,7 +371,8 @@
       "sha256": "16820defc3187bf788950f0c41b351b00e3be8c377c304ada3096fce188b9742",
       "bytes": 115182,
       "retrieved_at": "2026-11-13T20:37:46.842698+00:00",
-      "cve_ids": ["CVE-2026-73435", "CVE-2026-73436"]
+      "cve_ids": ["CVE-2026-73435", "CVE-2026-73436"],
+      "joomla_csrf_sha256": "b6c46200462ee67210ec51ab422106aa934901cf24dbd1cf66e8c73d4c2d4e8c"
     },
     {
       "number": 172,
@@ -374,7 +381,8 @@
       "sha256": "63518327efe2d0142524b47020f2df97d9219c82e0ebca684ec07f822645c62e",
       "bytes": 109853,
       "retrieved_at": "2026-11-13T20:37:47.291013+00:00",
-      "cve_ids": ["CVE-2026-73438"]
+      "cve_ids": ["CVE-2026-73438"],
+      "joomla_csrf_sha256": "d4a4c2e5071292b424a5b7795cd7ee6bc018398f23d1788a46e5a312d0adc73c"
     },
     {
       "number": 173,
@@ -383,7 +391,8 @@
       "sha256": "bf732dcc87add6e11772e22c195f78e337971097bed22385b6e6ad3696fcdf8e",
       "bytes": 111849,
       "retrieved_at": "2026-11-13T20:37:47.239478+00:00",
-      "cve_ids": ["CVE-2026-73455"]
+      "cve_ids": ["CVE-2026-73455"],
+      "joomla_csrf_sha256": "7205685527a5a0e3dbf07449528fbc749c2000775f8db9afa04cdd20f9e2d5b8"
     },
     {
       "number": 174,
@@ -392,7 +401,8 @@
       "sha256": "5fb76a57083f0dab8ee84520fa1cde27d02a26c29d173dff8c87aa6f6edcc748",
       "bytes": 112542,
       "retrieved_at": "2026-11-13T20:37:47.478712+00:00",
-      "cve_ids": ["CVE-2026-73453"]
+      "cve_ids": ["CVE-2026-73453"],
+      "joomla_csrf_sha256": "d0c8053713021f4f6bcfa9a7824b5d0ff9efa58f060724f001181512e0e2a3dd"
     },
     {
       "number": 175,
@@ -401,7 +411,8 @@
       "sha256": "49eab531cca52b05a1584979ca72a8b7effefb7e8a11aba205c6a341421c4ac3",
       "bytes": 109925,
       "retrieved_at": "2026-11-13T20:37:48.107580+00:00",
-      "cve_ids": ["CVE-2026-73468"]
+      "cve_ids": ["CVE-2026-73468"],
+      "joomla_csrf_sha256": "4613db1f4334faf5f7227ac7befdf1d7c0b415220d3625d2e747abc292fe1c90"
     },
     {
       "number": 176,
@@ -410,7 +421,8 @@
       "sha256": "0ddc54fffbab5ed0776a6ac5a721c76911533fa8e0c5548a7f4d3120f894296c",
       "bytes": 109430,
       "retrieved_at": "2026-11-13T20:37:47.752418+00:00",
-      "cve_ids": ["CVE-2026-73469"]
+      "cve_ids": ["CVE-2026-73469"],
+      "joomla_csrf_sha256": "6c64d139782abbe57843ae1d6aff7f381dccbc3cbd10deab084e5788c5a513d6"
     },
     {
       "number": 177,
@@ -419,7 +431,8 @@
       "sha256": "47b444a93b27d1f68b4ec17276898beceba3ad3b018c11675b268322fc425bf2",
       "bytes": 108838,
       "retrieved_at": "2026-11-13T20:37:47.764498+00:00",
-      "cve_ids": ["CVE-2026-77190"]
+      "cve_ids": ["CVE-2026-77190"],
+      "joomla_csrf_sha256": "74cf1d9981eee3dbbdb239327dbdba76ae64c48e967f97baf65a2da582c64322"
     },
     {
       "number": 178,
@@ -428,7 +441,8 @@
       "sha256": "fdaa5a539452f61e60f29a44f3525a37d3ecfd8f844d0f790d234a5f5d014890",
       "bytes": 113219,
       "retrieved_at": "2026-11-13T20:37:48.566599+00:00",
-      "cve_ids": ["CVE-2026-73440"]
+      "cve_ids": ["CVE-2026-73440"],
+      "joomla_csrf_sha256": "120ea63370a5874efad958f9473a1d8318559b0c835bcf07bee01f9f38d26f40"
     },
     {
       "number": 179,
@@ -437,7 +451,8 @@
       "sha256": "c9b6669a39c9bc295dd2b3975aae61f60be9efecf407d8a5de3e2c3d0c2c0f3f",
       "bytes": 108151,
       "retrieved_at": "2026-11-13T20:37:48.824728+00:00",
-      "cve_ids": ["CVE-2026-86106"]
+      "cve_ids": ["CVE-2026-86106"],
+      "joomla_csrf_sha256": "a5c02af05fb44f67bebbfe92dc3b257ea345a8bdf0f67305c36c79f8c2bf0164"
     },
     {
       "number": 180,
@@ -446,7 +461,8 @@
       "sha256": "3df477eb05f1a9a3d2c45d642072b479f74dd5f1a2f6b8f69b4a6c1063595269",
       "bytes": 108415,
       "retrieved_at": "2026-11-13T20:37:48.596031+00:00",
-      "cve_ids": ["CVE-2026-86107"]
+      "cve_ids": ["CVE-2026-86107"],
+      "joomla_csrf_sha256": "4af3b1e637dce3c2933c1fc15846f105d34d8e56ff4124abe377c923a898a2b3"
     },
     {
       "number": 181,
@@ -455,7 +471,8 @@
       "sha256": "90be7c49d1c2feadedee44e0cd03b19a16be6cb07417945b7cd60cf89d4bf05e",
       "bytes": 108976,
       "retrieved_at": "2026-11-13T20:37:49.105749+00:00",
-      "cve_ids": ["CVE-2026-86108"]
+      "cve_ids": ["CVE-2026-86108"],
+      "joomla_csrf_sha256": "facabf01b65520521f48658e988a5df5ddda4cfcf2e8b40d4704ac4595306c64"
     },
     {
       "number": 182,
@@ -464,7 +481,8 @@
       "sha256": "653c97790bce4511c808e7bec350c7bbf687ef5d576fe27885a00ca2c3a1eb3b",
       "bytes": 108535,
       "retrieved_at": "2026-11-13T20:37:49.328883+00:00",
-      "cve_ids": ["CVE-2026-86109"]
+      "cve_ids": ["CVE-2026-86109"],
+      "joomla_csrf_sha256": "5c795bcbd12e3aa0743287780d9223b66962cb1bb42f80640d42cfca87885689"
     },
     {
       "number": 183,
@@ -473,7 +491,8 @@
       "sha256": "f0dba5f01e1d3d8ba7e55116793135a56373242d91d1be1c0a86a4271973bde5",
       "bytes": 110776,
       "retrieved_at": "2026-11-13T19:56:17.690430+00:00",
-      "cve_ids": ["CVE-2026-93952"]
+      "cve_ids": ["CVE-2026-93952"],
+      "joomla_csrf_sha256": "ecb5aa77c9aec3bd8a5b32a0dbe7e3ea9e0feb00356d611359e75175c3c5c3f8"
     },
     {
       "number": 185,
@@ -482,7 +501,8 @@
       "sha256": "5976bc3a96e0fbb078a47ff5c85278696e79076152a55e72f0fc1d7abb21bb1a",
       "bytes": 110441,
       "retrieved_at": "2026-11-13T20:37:49.264878+00:00",
-      "cve_ids": ["CVE-2026-101158"]
+      "cve_ids": ["CVE-2026-101158"],
+      "joomla_csrf_sha256": "94182fcb378ebefdd6265b37dc5cc8e5effb6e802370df89682183b842c6c6c2"
     },
     {
       "number": 186,
@@ -491,7 +511,8 @@
       "sha256": "982a44712243d400c143c84c3d7dfa380fea33182e48948c7b9df3661d22f26b",
       "bytes": 111422,
       "retrieved_at": "2026-11-13T20:37:49.335817+00:00",
-      "cve_ids": ["CVE-2026-101149", "CVE-2026-101150"]
+      "cve_ids": ["CVE-2026-101149", "CVE-2026-101150"],
+      "joomla_csrf_sha256": "880fc9eef4e8e0c81cdb9420e8e8c64c2e0dd3bc14d065f28def545946a3d74f"
     },
     {
       "number": 187,
@@ -500,7 +521,8 @@
       "sha256": "a44b25de2fb63454e140c4644ad9a91d8e5077eaf9bdd4da89560ac037117659",
       "bytes": 109676,
       "retrieved_at": "2026-11-13T20:37:49.928429+00:00",
-      "cve_ids": ["CVE-2026-101151", "CVE-2026-101152"]
+      "cve_ids": ["CVE-2026-101151", "CVE-2026-101152"],
+      "joomla_csrf_sha256": "ab5e9af5eb4687cc5e12eb3f22c0933d52204c0d2269a84ca0bd10c31fba5dfd"
     },
     {
       "number": 188,
@@ -509,7 +531,8 @@
       "sha256": "a296638150f8caecef4576ed3d892c928d2af0df8ec65081e1f62b047c4314cf",
       "bytes": 109721,
       "retrieved_at": "2026-11-13T19:56:18.818445+00:00",
-      "cve_ids": ["CVE-2026-101153"]
+      "cve_ids": ["CVE-2026-101153"],
+      "joomla_csrf_sha256": "b6f13f840e7573aa5854ffa5b7552311c0b2b6baefeaf6e367d906577eee98e7"
     },
     {
       "number": 189,
@@ -518,7 +541,8 @@
       "sha256": "7be4af460cb04da431b3557d5f68d43ed86f5796e5b1ee5e123dc7b3cf85682a",
       "bytes": 109351,
       "retrieved_at": "2026-11-13T20:37:50.580941+00:00",
-      "cve_ids": ["CVE-2026-101154", "CVE-2026-101155"]
+      "cve_ids": ["CVE-2026-101154", "CVE-2026-101155"],
+      "joomla_csrf_sha256": "f7794b6ae5a91c5c1e4954ac0c6be6bc7372c374df63c314882c6ed09057b220"
     },
     {
       "number": 190,
@@ -534,7 +558,8 @@
         "CVE-2026-102159",
         "CVE-2026-102160",
         "CVE-2026-102161"
-      ]
+      ],
+      "joomla_csrf_sha256": "3035c93e3ea8eec05b4cc93b84323cb02a4d41e26fa909a6eaec5e020880b9c0"
     },
     {
       "number": 191,
@@ -543,7 +568,8 @@
       "sha256": "d315c5011932a30c3cc0c2cb71e8fd3e5aff90cec59b61ba28993c307b37b44d",
       "bytes": 109398,
       "retrieved_at": "2026-11-13T20:37:50.512344+00:00",
-      "cve_ids": ["CVE-2026-102156"]
+      "cve_ids": ["CVE-2026-102156"],
+      "joomla_csrf_sha256": "dec90f6adee774a5b87d5f3f2edcf18288caabcacaf649d181a34c30f8a672f5"
     },
     {
       "number": 192,
@@ -552,7 +578,8 @@
       "sha256": "50f7e554f49d8f0f4bbe498721509a5611bbdf5d37e48f39425eacd985ecb4a0",
       "bytes": 109348,
       "retrieved_at": "2026-11-13T20:37:50.749643+00:00",
-      "cve_ids": ["CVE-2026-101156", "CVE-2026-101157"]
+      "cve_ids": ["CVE-2026-101156", "CVE-2026-101157"],
+      "joomla_csrf_sha256": "67ce3730ef51c78c9ed907c88d9a4cb280980bb1f63bae940db35863f1eff2d1"
     },
     {
       "number": 193,
@@ -561,7 +588,8 @@
       "sha256": "4a759520a8bb76595e4e32b4b556a688e084562ba882a9a504e8c4106e23b95e",
       "bytes": 108256,
       "retrieved_at": "2026-11-13T20:37:51.297061+00:00",
-      "cve_ids": ["CVE-2026-102162"]
+      "cve_ids": ["CVE-2026-102162"],
+      "joomla_csrf_sha256": "2528371b8bc1cfbc2d8d424c7e89765ca17dc3a698dbf3dc09eb1bcb1be713c4"
     },
     {
       "number": 194,
@@ -570,7 +598,8 @@
       "sha256": "a046ce830f5369392ec5186eafcaeeab5a9a5cdd2ca6001b27658d22f3969ebc",
       "bytes": 108812,
       "retrieved_at": "2026-11-13T20:37:51.341899+00:00",
-      "cve_ids": ["CVE-2026-102168", "CVE-2026-102169"]
+      "cve_ids": ["CVE-2026-102168", "CVE-2026-102169"],
+      "joomla_csrf_sha256": "f99cc338930ece8792d6b8be6ba642f0a72dd6a0e04a0c83844e5a3e74325460"
     },
     {
       "number": 195,
@@ -579,7 +608,8 @@
       "sha256": "3fde380bc0912baa12650fdbe63791f8f880458777c823681195826f314d1733",
       "bytes": 107552,
       "retrieved_at": "2026-11-13T20:37:51.417516+00:00",
-      "cve_ids": ["CVE-2026-102163"]
+      "cve_ids": ["CVE-2026-102163"],
+      "joomla_csrf_sha256": "a6967ca02f59e77668d1dede0f335168096776774dfca8ff64ad5a86c0cdaadb"
     },
     {
       "number": 196,
@@ -588,7 +618,8 @@
       "sha256": "6a5d3f4b0f9d5941471d065b05f448b50cafd07595dbda7966d985d080428dbe",
       "bytes": 107932,
       "retrieved_at": "2026-11-13T20:37:51.576889+00:00",
-      "cve_ids": ["CVE-2026-102164"]
+      "cve_ids": ["CVE-2026-102164"],
+      "joomla_csrf_sha256": "39b3e0c81623123ce0a2541b254a9a4053cc0f49a99087834881f9e4bdd23bf9"
     },
     {
       "number": 197,
@@ -597,7 +628,8 @@
       "sha256": "72004b67bd83ea9669ff1ac82fccce01e1792c3e71e60841657975044c71583f",
       "bytes": 107376,
       "retrieved_at": "2026-11-13T20:37:52.067802+00:00",
-      "cve_ids": ["CVE-2026-102167"]
+      "cve_ids": ["CVE-2026-102167"],
+      "joomla_csrf_sha256": "3b8c06f1d04307524c2f37320a5e63135a79a4638c82793721bbaa8bf858b4df"
     },
     {
       "number": 198,
@@ -606,7 +638,8 @@
       "sha256": "30881d03f19cf1043746ff16ef87f63064927178cd6f8d3a6aa29362aae6d227",
       "bytes": 108008,
       "retrieved_at": "2026-11-13T20:37:51.791902+00:00",
-      "cve_ids": ["CVE-2026-102165"]
+      "cve_ids": ["CVE-2026-102165"],
+      "joomla_csrf_sha256": "cd25d8d186b59217dbe3b2ecd43fefe281063b44acef3cc0a27ae12b4e705661"
     },
     {
       "number": null,
@@ -633,10 +666,11 @@
       "sha256": "21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
       "bytes": 132228,
       "retrieved_at": "2026-11-13T19:55:03.939828+00:00",
-      "cve_ids": ["CVE-2026-7473"]
+      "cve_ids": ["CVE-2026-7473"],
+      "joomla_csrf_sha256": "46dd2725d4fe4adc57961c382f240296df7862a05b8ab3356d656ec4540f6dcc"
     }
   ],
-  "pins_sha256": "6053fad4d6006294dc53df6cd9b8bb67650b04f8dce2d8d5cc63793dbae7351b",
+  "pins_sha256": "655bea2a0ecdfe552eb7324bacd68153e30cd245fff9d7db83658ae8d98adfc4",
   "expected_primaries": [
     {
       "url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_165_CSAF.json",
@@ -862,9 +896,10 @@
     "rss": "optional_retained_only",
     "max_document_bytes": 2000000,
     "max_accepted_capture_bytes": 4061372,
-    "reviewed_owner_refresh": "Only the exact registered SA178 old owner and verified retained old raw permit fetching its missing pinned new CSAF."
+    "reviewed_owner_refresh": "Only the exact registered SA178 old owner and verified retained old raw permit fetching its missing pinned new CSAF.",
+    "html_binding": "Exact reference raw first; otherwise exact length and SHA256 over all original bytes with only one validated 32-lowercase-hex head Joomla JSON csrf.token value masked to 32 ASCII zeroes. Actual raw SHA and time retained."
   },
-  "curation_revision": 2,
+  "curation_revision": 3,
   "reviewed_owner_refreshes": [
     {
       "advisory_id": "Arista Networks Security Advisory 178",
