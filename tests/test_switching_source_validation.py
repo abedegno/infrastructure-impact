@@ -83,3 +83,47 @@ def test_hardening_checks_use_metadata_and_stated_rows_not_claim_counts():
     assert report([record])["cases"][0]["outcome"] == "fail"
     record["sha256"] = "0" * 64
     assert [c["outcome"] for c in report([record])["cases"][:2]] == ["unavailable", "unavailable"]
+
+
+def test_sa137_historical_membership_does_not_invent_current_health(monkeypatch):
+    from infrastructure_impact.adapters import arista_sa0137
+    from infrastructure_impact.application import switching_analysis
+
+    monkeypatch.setattr(switching_analysis, "validate_report", lambda value: None)
+    claims = [
+        dict(
+            vendor="arista",
+            advisory_id=arista_sa0137.ID,
+            source=dict(
+                source_url=arista_sa0137.URL,
+                source_sha256="21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
+            ),
+            status="affected",
+            scope="cve_specific",
+            scope_level="os_family",
+            cve_id=cid,
+        )
+        for cid in arista_sa0137.CVES
+    ]
+    monkeypatch.setattr(switching_analysis, "claim_facets", lambda value: claims)
+    entry = dict(
+        mapping=dict(vendor="arista"),
+        cve_id=arista_sa0137.CVES[0],
+        historically_listed=True,
+        membership="unknown",
+        claim_state="documented_affected",
+    )
+    compiled = dict(kev_reconciliation=dict(availability="missing", entries=[entry]))
+    case = report([], compiled=compiled)["cases"][3]
+    assert case["outcome"] == "pass"
+    assert case["observed"] == dict(
+        historically_listed=True,
+        current_membership="unknown",
+        current_availability="missing",
+        claim_state="documented_affected",
+    )
+    entry["historically_listed"] = False
+    assert report([], compiled=compiled)["cases"][3]["outcome"] == "fail"
+    entry["historically_listed"] = True
+    entry["claim_state"] = "unknown"
+    assert report([], compiled=compiled)["cases"][3]["outcome"] == "fail"

@@ -118,9 +118,15 @@ def report(records, *, compiled=None, chronology_rows=()):
         bool(entries) and bool(claims),
         len(entries) == 1
         and entries[0]["claim_state"] == "documented_affected"
-        and entries[0]["membership"] == "listed",
+        and entries[0]["historically_listed"] is True,
         source_receipts,
-        "Retrospective mapped KEV membership and family affectedness remain distinct from campus model scope",
+        "Retained historical KEV listing and family affectedness; current membership and campus model scope remain separate",
+    )
+    cases[-1]["observed"] = dict(
+        historically_listed=entries[0]["historically_listed"] if len(entries) == 1 else None,
+        current_membership=entries[0]["membership"] if len(entries) == 1 else None,
+        current_availability=compiled["kev_reconciliation"]["availability"] if compiled else None,
+        claim_state=entries[0]["claim_state"] if len(entries) == 1 else None,
     )
     for case in validate_cases(chronology_rows):
         row = next((r for r in chronology_rows if r["number"] == case["number"]), None)
