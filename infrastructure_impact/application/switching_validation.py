@@ -49,7 +49,13 @@ def _alternate_contexts(selections, records):
             for view in choice["views"]:
                 if view["selected"] or view["source_url"] in unavailable:
                     continue
-                key = choice["vendor"], view["source_url"], view["source_sha256"]
+                key = (
+                    choice["vendor"],
+                    view["source_url"],
+                    view["source_sha256"],
+                    selected["source_url"],
+                    selected["source_sha256"],
+                )
                 contexts[key] = dict(
                     state="retained_unselected_representation",
                     source_url=view["source_url"],
@@ -71,8 +77,36 @@ def report(
     )
     for case in result["cases"]:
         key = case["vendor"], case["source_url"], case["source_sha256"]
-        if case["outcome"] == "source_missing" and key in contexts:
-            case["source_context"] = contexts[key]
+        if case["outcome"] != "source_missing":
+            continue
+        exact = sorted(k for k in contexts if k[:3] == key)
+        if exact:
+            case["source_context"] = contexts[exact[0]]
+            continue
+        # Same-URL metadata explains availability without supporting the reviewed bytes.
+        revisions = {
+            (
+                digest,
+                context["selected_source_url"],
+                context["selected_source_sha256"],
+            )
+            for (vendor, url, digest, _, _), context in contexts.items()
+            if (vendor, url) == key[:2]
+        }
+        if revisions:
+            case["source_context"] = dict(
+                state="retained_unselected_different_revision",
+                source_url=case["source_url"],
+                reviewed_source_sha256=case["source_sha256"],
+                available_revisions=[
+                    dict(
+                        available_source_sha256=digest,
+                        selected_source_url=url,
+                        selected_source_sha256=selected_digest,
+                    )
+                    for digest, url, selected_digest in sorted(revisions)
+                ],
+            )
     result["study"] = "campus-branch-switching"
     result["vendor_results"] = []
     for vendor in VENDORS:
