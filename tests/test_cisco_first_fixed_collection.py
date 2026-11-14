@@ -43,6 +43,59 @@ def test_parser_retains_alternatives_without_inventing_cve_product_or_train_bind
     } <= set(parsed["issues"])
 
 
+def test_parser_retains_underscore_advisory_identity_without_inventing_ownership():
+    parsed = collector.parse_response(
+        response(advisoryId="cisco-sa-authored_example-123", firstFixed=["17.2.2"]),
+        query_release="17.2.1",
+    )
+    assert parsed["first_fixed"] == []
+    assert parsed["advisory_context"] == [
+        {
+            "advisory_id": "cisco-sa-authored_example-123",
+            "source_locator": "/advisories/0/firstFixed",
+            "source_first_fixed": ["17.2.2"],
+            "first_fixed_state": "present",
+            "cve_refs": ["CVE-2026-12345"],
+            "ownership_state": "ownership_unresolved",
+        }
+    ]
+    assert "advisory_identity_unresolved" not in parsed["issues"]
+
+
+@pytest.mark.parametrize(
+    "advisory_id",
+    [
+        "cisco-sa-authored/other",
+        "cisco-sa-authored?other",
+        "cisco-sa-authored other",
+        "cisco-sa-authored.other",
+        "cisco-sa-authored\nother",
+        "cisco-sa-authored_é",
+        "cisco-sa-",
+        "cisco-sa-" + "a" * 181,
+    ],
+)
+def test_advisory_identity_keeps_closed_ascii_namespace(advisory_id):
+    parsed = collector.parse_response(response(advisoryId=advisory_id), query_release="17.2.1")
+    assert parsed["advisory_context"] == []
+    assert "advisory_identity_unresolved" in parsed["issues"]
+
+
+def test_underscore_advisory_capture_remains_acknowledged_and_cached():
+    db = connect(":memory:")
+    raw = response(advisoryId="cisco-sa-authored_example-123", firstFixed=["17.2.2"])
+    network = Network(token(), Response(raw))
+    transport = client(db, network)
+    assert collector.run(db, releases=["17.2.1"], client=transport)["counts"] == {"success": 1}
+    result = collector.results(db)[0]
+    assert len(result["advisory_context"]) == 1
+    assert result["advisory_context"][0]["advisory_id"] == "cisco-sa-authored_example-123"
+    assert result["source"]["sha256"] == hashlib.sha256(raw).hexdigest()
+    assert result["parser_revision"] == collector.PARSER_REVISION
+    assert collector.run(db, releases=["17.2.1"], client=transport)["http_requests_reserved"] == 0
+    assert len(network.calls) == 2
+
+
 @pytest.mark.parametrize(
     "raw,issue",
     [

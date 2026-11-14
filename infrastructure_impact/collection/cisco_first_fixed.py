@@ -15,10 +15,10 @@ from ..storage.switching import SERVICE
 from .cisco_openvuln import MAX_BYTES, CiscoOpenVuln, _has_private_content, _strict_json
 from .errors import CiscoAccessError
 
-PARSER_REVISION = "cisco-first-fixed-api-1"
+PARSER_REVISION = "cisco-first-fixed-api-2"
 ENDPOINT = "https://apix.cisco.com/security/advisories/v2/OSType/iosxe"
 _RELEASE = re.compile(r"[0-9]{1,6}\.[0-9]{1,6}\.[0-9]{1,6}[a-z]?")
-_ADVISORY = re.compile(r"cisco-sa-[A-Za-z0-9-]{1,180}")
+_ADVISORY = re.compile(r"cisco-sa-[A-Za-z0-9_-]{1,180}")
 _CVE = re.compile(r"CVE-[0-9]{4}-[0-9]{4,12}")
 
 
