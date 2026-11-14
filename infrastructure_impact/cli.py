@@ -39,6 +39,16 @@ def main(argv=None):
         "snapshot", help="Publish a validated generation and export static assets"
     )
     snap.add_argument("--output", type=Path)
+    snap.add_argument(
+        "--include-switching-analysis",
+        action="store_true",
+        help="Include optional source-owned switching analysis in this local export",
+    )
+    snap.add_argument(
+        "--switching-analysis-input",
+        type=Path,
+        help="Explicit local JSON source frame for optional analysis",
+    )
     snap.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
     export = sub.add_parser(
         "publication-export", help="Stream a complete logical v2 root to a new local file"
@@ -322,8 +332,23 @@ def main(argv=None):
     elif args.command == "snapshot":
         from .application.publication import build
 
+        if args.switching_analysis_input is not None and not args.include_switching_analysis:
+            parser.error("--switching-analysis-input requires --include-switching-analysis")
+        analysis_input = {}
+        if args.switching_analysis_input is not None:
+            from .publication_codec import MAX_SELECTED, strict_loads
+
+            if args.switching_analysis_input.stat().st_size > MAX_SELECTED:
+                raise ValueError("Analysis input exceeds selected byte bound")
+            analysis_input["switching_analysis_input"] = strict_loads(
+                args.switching_analysis_input.read_bytes(), max_bytes=MAX_SELECTED
+            )
+
         build(
-            args.output, **({"publication_format": "v2"} if args.publication_format == "v2" else {})
+            args.output,
+            **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
+            **({"include_switching_analysis": True} if args.include_switching_analysis else {}),
+            **analysis_input,
         )
     elif args.command == "collect":
         if args.dry_run:

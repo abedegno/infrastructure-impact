@@ -75,6 +75,14 @@ def build_report(evidence, study_selection, *, publication, generated_at):
         raise ValueError("Model coverage selection evidence identity mismatch")
     ids = {cid for row in study_selection["rows"] for cid in row["claim_ids"]}
     selected = [c for c in evidence["claims"] if c["claim_id"] in ids]
+    return from_selected(
+        selected, study_selection, publication=publication, generated_at=generated_at
+    )
+
+
+def from_selected(selected, study_selection, *, publication, generated_at):
+    """Internal delivery seam; caller authenticates compact claim ownership first."""
+    ids = {c["claim_id"] for c in selected}
     models = []
     for target in study_selection["definition"]["targets"]:
         if target["vendor"] not in study_selection["selection"]["effective_vendors"]:
@@ -120,7 +128,7 @@ def build_report(evidence, study_selection, *, publication, generated_at):
         schema_version=1,
         publication=publication,
         generated_at=generated_at,
-        definition_sha256=evidence["definition_sha256"],
+        definition_sha256=study_selection["selection"]["definition_sha256"],
         observation_end=study_selection["observation_end"],
         selection=deepcopy(study_selection["selection"]),
         nonadditive=True,

@@ -585,9 +585,22 @@ def _rows(constraints, *, end, vendors, window="all"):
     return result
 
 
-def build_report(
+def eligible_claims_for(evidence):
+    """Shared exact ownership membership for native and compiled requirements."""
+    return [
+        claim
+        for claim in evidence["claims"]
+        if claim["status"] == "affected"
+        and claim["scope"] == "cve_specific"
+        and claim["family"] == releases.FAMILIES.get(claim["vendor"])
+        and (claim["publisher"]["status"] or "").casefold() != "draft"
+    ]
+
+
+def prepare_report(
     evidence, first_fixed_report, release_history, kev_selection, *, publication, generated_at
 ):
+    """Validate complete owned groups, then yield requirements without a global matrix."""
     contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
     first_fixed.validate_report(first_fixed_report)
     if first_fixed_report["generated_at"] != generated_at or first_fixed_report["publication"].get(
@@ -608,14 +621,7 @@ def build_report(
         sorted({c["cve_id"] for c in evidence["claims"] if c["cve_id"]}),
         evaluated_at=generated_at,
     )
-    eligible_claims = [
-        claim
-        for claim in evidence["claims"]
-        if claim["status"] == "affected"
-        and claim["scope"] == "cve_specific"
-        and claim["family"] == releases.FAMILIES.get(claim["vendor"])
-        and (claim["publisher"]["status"] or "").casefold() != "draft"
-    ]
+    eligible_claims = eligible_claims_for(evidence)
     inference = _scoped_inference(eligible_claims, first_fixed_report)
     # Index source facts once, without copying the validated catalogue.
     facts = defaultdict(lambda: dict(units=[], api_facts=[], generated_at=generated_at))
@@ -623,17 +629,17 @@ def build_report(
         for fact in first_fixed_report[kind]:
             identity = fact["identity"]
             facts[identity["vendor"], identity["advisory_id"]][kind].append(fact)
-    constraints = []
-    for claim in eligible_claims:
-        constraints.extend(
-            _constraints(
+
+    def constraints():
+        for claim in eligible_claims:
+            yield from _constraints(
                 claim,
                 facts[claim["vendor"], claim["advisory_id"]],
                 selected_kev["selection"]["membership"].get(claim["cve_id"], "unknown"),
                 end,
                 inference.get(claim["claim_id"], []),
             )
-        )
+
     source_groups = []
     claim_index = defaultdict(list)
     for claim in eligible_claims:
@@ -664,7 +670,6 @@ def build_report(
         )
         group["group_id"] = contracts.definition_sha256(group)
         source_groups.append(group)
-    used_inference = {c["inference"]["group_id"] for c in constraints if c["inference"]}
     report = dict(
         schema_version=1,
         publication=copy.deepcopy(publication),
@@ -686,11 +691,29 @@ def build_report(
                 value["group"]["group_id"]: value["group"]
                 for values in inference.values()
                 for value in values
-                if value.get("group") and value["group"]["group_id"] in used_inference
+                if value.get("group")
             }.values()
         ),
-        constraints=constraints,
-        rows=_rows(constraints, end=end, vendors=list(TRAINS)),
+    )
+    return report, constraints()
+
+
+def build_report(
+    evidence, first_fixed_report, release_history, kev_selection, *, publication, generated_at
+):
+    report, requirements = prepare_report(
+        evidence,
+        first_fixed_report,
+        release_history,
+        kev_selection,
+        publication=publication,
+        generated_at=generated_at,
+    )
+    report["constraints"] = list(requirements)
+    used = {c["inference"]["group_id"] for c in report["constraints"] if c["inference"]}
+    report["inference_groups"] = [g for g in report["inference_groups"] if g["group_id"] in used]
+    report["rows"] = _rows(
+        report["constraints"], end=report["observation_end"], vendors=list(TRAINS)
     )
     validate_report(report)
     return report

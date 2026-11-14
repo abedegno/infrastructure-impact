@@ -535,7 +535,7 @@ def logical_views(data):
     compact = {
         k: v
         for k, v in data.items()
-        if k not in ("switching_evidence", "switching_release_history")
+        if k not in ("switching_evidence", "switching_release_history", "switching_analysis")
     }
     compact["switching_comparison"] = summary(data["switching_comparison"])
     yield "snapshot.json", compact
@@ -543,6 +543,8 @@ def logical_views(data):
     yield "switching-comparison.json", data["switching_comparison"]
     if "switching_release_history" in data:
         yield "switching-release-history.json", data["switching_release_history"]
+    if "switching_analysis" in data:
+        yield "switching-analysis.json", data["switching_analysis"]
     yield "current-evidence.json", data["current_evidence"]
     yield "release-assets.json", data["research"].get("release_assets", [])
     yield "catalogue.json", data.get("catalogue", {})
@@ -617,7 +619,12 @@ def _write_bundle(destination, data, row_sources):
     for name, value in logical_views(data):
         # Existing small report/download endpoints remain ordinary assets. The
         # three giant logical documents are served only from bounded v2 roots.
-        if name not in ("snapshot.json", "switching-evidence.json", "switching-comparison.json"):
+        if name not in (
+            "snapshot.json",
+            "switching-evidence.json",
+            "switching-comparison.json",
+            "switching-analysis.json",
+        ):
             path = destination / name
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("w") as stream:
@@ -631,7 +638,13 @@ def _write_bundle(destination, data, row_sources):
     runtime = {
         k: v
         for k, v in data.items()
-        if k not in ("switching_evidence", "switching_comparison", "switching_release_history")
+        if k
+        not in (
+            "switching_evidence",
+            "switching_comparison",
+            "switching_release_history",
+            "switching_analysis",
+        )
     }
     runtime["switching_overview"] = overview
     writer.root("runtime-snapshot", runtime)
@@ -882,7 +895,13 @@ def verify_projection(reader, projected):
         **{
             k: v
             for k, v in projected.items()
-            if k not in ("switching_evidence", "switching_comparison", "switching_release_history")
+            if k
+            not in (
+                "switching_evidence",
+                "switching_comparison",
+                "switching_release_history",
+                "switching_analysis",
+            )
         },
         "switching_overview": overview,
     }

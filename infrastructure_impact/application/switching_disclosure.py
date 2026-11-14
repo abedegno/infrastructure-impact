@@ -111,6 +111,26 @@ def _year_periods(pairs):
     }
 
 
+def severity_facets(claims):
+    """Source-owned facets shared with compact delivery; no cross-claim score join."""
+    severity = {}
+    for v in claims:
+        for s in v["scores"]:
+            if s["scope"] == "cve_specific" and s["cve_id"] == v["cve_id"]:
+                facet = dict(
+                    version=s.get("version"),
+                    provider=s.get("provider"),
+                    origin=s.get("origin"),
+                    preferred=s.get("preferred"),
+                    band=comparison.severity_band(
+                        s.get("version"),
+                        s.get("value") if s.get("validation") != "incomplete" else None,
+                    ),
+                )
+                severity[contracts._json(facet)] = facet
+    return [severity[k] for k in sorted(severity)]
+
+
 def build_report(
     records,
     study_selection,
@@ -214,21 +234,7 @@ def build_report(
             if meta
             else dict(classification=None, basis="unknown", locator=None)
         )
-        severity = {}
-        for v in claims:
-            for s in v["scores"]:
-                if s["scope"] == "cve_specific" and s["cve_id"] == v["cve_id"]:
-                    facet = dict(
-                        version=s.get("version"),
-                        provider=s.get("provider"),
-                        origin=s.get("origin"),
-                        preferred=s.get("preferred"),
-                        band=comparison.severity_band(
-                            s.get("version"),
-                            s.get("value") if s.get("validation") != "incomplete" else None,
-                        ),
-                    )
-                    severity[contracts._json(facet)] = facet
+        severity = severity_facets(claims)
         if not initial_day(literal):
             missing.append("publisher_initial_date_unavailable")
         if not meta or meta["bundle"] is None:
@@ -271,7 +277,7 @@ def build_report(
                     }
                 ),
                 source=deepcopy(c["source"]),
-                severity=[severity[k] for k in sorted(severity)],
+                severity=severity,
                 missing=missing,
             )
         )

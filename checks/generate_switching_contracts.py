@@ -19,6 +19,7 @@ NAMES = (
     "switching-row-sources-v1.json",
     "current-evidence-v1.json",
     "switching-release-history-v1.json",
+    "switching-analysis-v1.json",
     "customer-comparison-v1.json",
 )
 

@@ -129,6 +129,7 @@ def write_static_delivery(destination, data, *, publication_v2=None):
         "switching_evidence",
         "switching_comparison",
         "switching_release_history",
+        "switching_analysis",
         "retained_advisories",
         "current_evidence",
     }
@@ -203,6 +204,8 @@ def write_static_delivery(destination, data, *, publication_v2=None):
         cohorts={cid: chunks(rows) for cid, rows in by_cve.items()},
         changes=chunks(data["changes"]),
     )
+    if "switching_analysis" in data:
+        index["switching_analysis"] = summary_delivery(data["switching_analysis"])
     if "current_evidence" in data:
         retained_parts = chunks(data.get("retained_advisories", []))
         index["current_evidence"] = dict(
