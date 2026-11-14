@@ -157,20 +157,22 @@ def test_missing_database_preview_is_closed_and_does_not_create_database(tmp_pat
     assert "PRIVATE" not in helper().receipt_bytes(result).decode()
 
 
-def test_all_eight_authored_sources_use_real_typed_extraction(retained, monkeypatch):
+def test_all_registered_authored_sources_use_real_typed_extraction(retained, monkeypatch):
     from test_reviewed_remediation_bindings import SAMPLES as CSAF
+    from test_switching_sa158_fix_links import ADVISORY, URL, authored_csaf
 
+    sa158 = dict(vendor="arista", source_url=URL, advisory_id=ADVISORY, data=authored_csaf())
     _, db, _ = retained
     db.execute("DELETE FROM revisions")
     db.execute("DELETE FROM evidence")
     data, owned, index = copy.deepcopy(remediation_bindings._metadata())
-    for i, sample in enumerate([*CSAF, *SAMPLES], 1):
-        vendor = "aruba" if "data" in sample else "arista"
+    for i, sample in enumerate([*CSAF, *SAMPLES, sa158], 1):
+        vendor = sample.get("vendor", "aruba" if "data" in sample else "arista")
         url = sample["source_url"]
-        raw = json.dumps(sample["data"]).encode() if vendor == "aruba" else authored(sample)
+        raw = json.dumps(sample["data"]).encode() if "data" in sample else authored(sample)
         digest = hashlib.sha256(raw).hexdigest()
         doc = (
-            {"advisory_id": sample["advisory_id"]} if vendor == "aruba" else parse(raw, url, vendor)
+            {"advisory_id": sample["advisory_id"]} if "data" in sample else parse(raw, url, vendor)
         )
         db.execute("INSERT INTO evidence VALUES(?,?,?,?,?)", (i, url, digest, AT, raw))
         db.execute(
@@ -178,7 +180,7 @@ def test_all_eight_authored_sources_use_real_typed_extraction(retained, monkeypa
             (i, vendor, sample["advisory_id"], url, i, AT, json.dumps(doc)),
         )
         # Authored CSAF bytes use explicit test-only pins, never production bytes.
-        if vendor == "aruba":
+        if "data" in sample:
             for source in data["sources"]:
                 if source["advisory_id"] == sample["advisory_id"]:
                     source["source_sha256"] = digest
@@ -189,8 +191,8 @@ def test_all_eight_authored_sources_use_real_typed_extraction(retained, monkeypa
     monkeypatch.setattr(remediation_bindings, "_metadata", lambda: (data, owned, index))
     monkeypatch.setattr(remediation_bindings, "definition", lambda: copy.deepcopy(data))
     sources = helper()._sources(db)
-    assert len(sources) == 8
-    assert [s["after"]["reviewed_links"] for s in sources] == [5, 4, 5, 15, 5, 1, 2, 1]
+    assert len(sources) == len(data["sources"]) == 9
+    assert [s["after"]["reviewed_links"] for s in sources] == [5, 4, 5, 15, 5, 1, 2, 1, 2]
     assert all(s["before"]["reviewed_links"] == 0 for s in sources)
     assert all(s["affected_fields_unchanged"] for s in sources)
 
