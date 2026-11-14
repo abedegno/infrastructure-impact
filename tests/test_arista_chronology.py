@@ -119,6 +119,11 @@ def test_real_ingest_retains_revision_and_study_dates_are_corrected_before_ident
             {k: v for k, v in c.items() if k != "claim_id"}
         )
     assert old["published_at"] == record["published_at"]
+    db.execute(
+        "INSERT INTO evidence(source_url,sha256,observed_at,raw,media_type) VALUES(?,?,?,?,?)",
+        (kw["html_source"]["url"], kw["html_source"]["sha256"], AT, kw["html_raw"], "text/html"),
+    )
+    db.commit()
     assert not ingest(db, raw, url, lambda *_: fixed, "arista")
 
 
@@ -199,6 +204,33 @@ def test_replay_verifies_manifest_before_writing_and_exports_explicit_paths(tmp_
     assert result["finalized_claim_count"] > 0
     assert result["rows"][0]["finalized_claim_initials"] == ["2026-09-09"]
     assert [s["retrieved_at"] for s in result["sources"]] == [AT, AT]
+    from infrastructure_impact.application.replay import replay_report
+    from infrastructure_impact.plugins.registry import default_registry
+
+    dbpath = tmp_path / "scratch.sqlite"
+    registry = default_registry()
+    with connect(dbpath) as db:
+        before = latest(db)[0]
+        assert not ingest(db, kw["csaf_raw"], record["source_url"], registry.normalize, "arista")
+        assert latest(db)[0]["publisher_chronology"] == before["publisher_chronology"]
+    assert replay(path, database=dbpath, staging=True)["ingested_revisions"] == 0
+    maintenance = replay_report(db_path=dbpath, vendor="arista", force=True)
+    assert maintenance["unchanged"] == 1
+    assert maintenance["reparsed_revisions"] == 0
+    with connect(dbpath) as db:
+        after = latest(db)[0]
+        assert after["publisher_chronology"] == before["publisher_chronology"]
+        assert after["source_observed_at"] == AT
+        with pytest.raises(ValueError, match="chronology"):
+            ingest(db, kw["csaf_raw"] + b" ", record["source_url"], registry.normalize, "arista")
+        html = before["publisher_chronology"]["html_source"]
+        db.execute("UPDATE evidence SET raw=? WHERE source_url=?", (b"missing proof", html["url"]))
+        db.commit()
+        with pytest.raises(ValueError, match="chronology"):
+            ingest(db, kw["csaf_raw"], record["source_url"], registry.normalize, "arista")
+    unresolved = replay_report(db_path=dbpath, vendor="arista", force=True)
+    assert unresolved["failed"] == 1
+    assert unresolved["failures"][0]["error_code"] == "chronology_unresolved_requires_review"
     manifest[0]["bytes"] += 1
     path.write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="receipt"):
@@ -384,3 +416,77 @@ def test_source_pinned_validation_rejects_incorrect_finalized_date(number, expec
     row["finalized_claim_initials"] = ["2026-01-01"]
     result = next(c for c in validate_cases([row]) if c["number"] == number)
     assert result == dict(number=number, automated_validation="failed", human_review="pending")
+
+
+@pytest.mark.parametrize("change", ["identity", "cve", "url", "metadata", "missing_html"])
+def test_retained_chronology_rejects_changed_binding_without_source_disclosure(change):
+    from infrastructure_impact.adapters.arista_chronology import retained_chronology
+    from infrastructure_impact.plugins.registry import default_registry
+
+    record, kw = inputs()
+    record = default_registry().normalize(kw["csaf_raw"], record["source_url"], "arista")
+    fixed = chronology.reconcile(record, **kw)["corrected_record"]
+    candidate = copy.deepcopy(record)
+    if change == "identity":
+        candidate["advisory_id"] += " changed"
+    elif change == "cve":
+        candidate["cves"] = ["CVE-2026-99999"]
+    elif change == "url":
+        candidate["source_url"] += "?changed"
+    elif change == "metadata":
+        fixed["publisher_chronology"]["effective_initial"] = "2026-01-01"
+
+    def lookup(_receipt):
+        if change == "missing_html":
+            raise ValueError("/private/customer/raw bytes")
+        return kw["html_raw"]
+
+    with pytest.raises(ValueError, match="^chronology_unresolved_requires_review$"):
+        retained_chronology(kw["csaf_raw"], candidate, fixed, lookup)
+
+
+def test_staging_repair_requires_current_primary_ownership(tmp_path):
+    from infrastructure_impact.application.arista_chronology_repair import replay
+    from infrastructure_impact.plugins.registry import default_registry
+
+    record, kw = inputs()
+    manifest = []
+    for kind, raw, url in [
+        ("html", kw["html_raw"], kw["html_source"]["url"]),
+        ("csaf", kw["csaf_raw"], record["source_url"]),
+    ]:
+        path = tmp_path / kind
+        path.write_bytes(raw)
+        manifest.append(
+            dict(
+                number=165,
+                kind=kind,
+                path=str(path),
+                url=url,
+                status=200,
+                bytes=len(raw),
+                sha256=sha256(raw).hexdigest(),
+                retrieved_at=AT,
+            )
+        )
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+    dbpath = tmp_path / "staging.sqlite"
+    with connect(dbpath) as db:
+        ingest(
+            db, kw["csaf_raw"] + b" ", record["source_url"], default_registry().normalize, "arista"
+        )
+        original = latest(db)[0]
+    with pytest.raises(ValueError, match="ownership"):
+        replay(path, database=dbpath, staging=True)
+    with connect(dbpath) as db:
+        assert latest(db)[0] == original
+        assert db.execute("SELECT COUNT(*) FROM evidence").fetchone()[0] == 1
+        ingest(db, kw["csaf_raw"], record["source_url"], default_registry().normalize, "arista")
+        capture_time = latest(db)[0]["source_observed_at"]
+    assert replay(path, database=dbpath, staging=True)["ingested_revisions"] == 1
+    with connect(dbpath) as db:
+        assert latest(db)[0]["source_observed_at"] == capture_time
+        assert not ingest(
+            db, kw["csaf_raw"], record["source_url"], default_registry().normalize, "arista"
+        )

@@ -337,3 +337,39 @@ def apply_claim_chronology(extracted, record, raw):
         claim["initial_published_at"] = meta["effective_initial"]
         claim["initial_date_provenance"] = deepcopy(meta)
     return result
+
+
+def retained_chronology(raw, document, previous, lookup):
+    """Recompute accepted enrichment from exact local receipts, or fail closed."""
+    meta = previous.get("publisher_chronology")
+    if meta is None:
+        return document
+    try:
+        if (
+            document["source_url"] != meta["csaf_source"]["url"]
+            or sha256(_bytes(raw)).hexdigest() != meta["csaf_source"]["sha256"]
+            or document["advisory_id"] != meta["advisory_id"]
+            or sorted(document["cves"]) != sorted(meta["cve_ids"])
+        ):
+            raise ValueError("chronology_source_changed_requires_review")
+        fresh = deepcopy(document)
+        if meta["csaf_source"]["retrieved_at"] is not None:
+            fresh["source_observed_at"] = meta["csaf_source"]["retrieved_at"]
+        html = lookup(meta["html_source"])
+        rss = lookup(meta["rss_source"]) if meta["rss_source"] else None
+        result = reconcile(
+            fresh,
+            html_raw=html,
+            html_source=meta["html_source"],
+            csaf_raw=raw,
+            rss_raw=rss,
+            rss_source=meta["rss_source"],
+        )
+        if result["chronology"] != meta:
+            raise ValueError("chronology_proof_invalid_requires_review")
+        fixed = result["corrected_record"]
+        if "source_observed_at" not in document:
+            fixed.pop("source_observed_at", None)
+        return fixed
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("chronology_unresolved_requires_review") from None

@@ -155,6 +155,7 @@ class VendorPlugin:
     normalizer_dependencies: tuple[Callable, ...] | None = None
     research_evidence: Callable[[bytes, str, str, dict], dict] | None = None
     current_evidence_policy: Callable[[list[dict], dict], dict] | None = None
+    retained_enrichment: Callable | None = None
 
 
 @dataclass(frozen=True)

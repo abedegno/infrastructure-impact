@@ -1,7 +1,7 @@
 """Offline, explicit-path Arista chronology replay/export; never opens default storage.
 
 Run with --manifest, --output-json, --output-csv. Optional --database must name
-an absent public scratch database. HTTP captures are read only and verified in
+an absent public scratch database; --staging explicitly permits an existing public database. HTTP captures are read only and verified in
 full before any ingestion. The helper neither fetches nor publishes anything.
 """
 
@@ -57,7 +57,7 @@ def validate_cases(rows):
     return results
 
 
-def replay(manifest_path, *, database=None):
+def replay(manifest_path, *, database=None, staging=False):
     """Replay a caller-owned public manifest; all receipt checks precede writes."""
     manifest_raw = Path(manifest_path).read_bytes()
     manifest = json.loads(manifest_raw)
@@ -74,7 +74,9 @@ def replay(manifest_path, *, database=None):
         ):
             raise ValueError("source receipt verification failed")
         captures[key] = (entry, raw)
-    if database is not None and Path(database).exists():
+    if staging and (database is None or not Path(database).is_file()):
+        raise ValueError("staging requires an explicit existing database")
+    if not staging and database is not None and Path(database).exists():
         raise ValueError("scratch database must not already exist")
     registry = default_registry()
     rows = []
@@ -175,7 +177,34 @@ def replay(manifest_path, *, database=None):
     # Exercise the real retained-evidence and claim-ID pipeline for every replay.
     # In-memory storage is explicit; the default user's database is never opened.
     with connect(database if database is not None else ":memory:") as db:
+        # Check all current owners before retaining any new evidence or revision.
+        if staging:
+            for raw, url, fixed in prepared:
+                owner = db.execute(
+                    "SELECT r.source_url,e.sha256 FROM revisions r JOIN evidence e ON e.id=r.evidence_id "
+                    "WHERE r.vendor='arista' AND r.advisory_id=? ORDER BY r.id DESC LIMIT 1",
+                    (fixed["advisory_id"],),
+                ).fetchone()
+                if (
+                    owner is None
+                    or owner["source_url"] != url
+                    or owner["sha256"] != sha256(raw).hexdigest()
+                ):
+                    raise ValueError("staging primary ownership mismatch")
+        with db:
+            for entry, raw in captures.values():
+                db.execute(
+                    "INSERT OR IGNORE INTO evidence(source_url,sha256,observed_at,raw,media_type) VALUES(?,?,?,?,?)",
+                    (
+                        entry["url"],
+                        entry["sha256"],
+                        entry["retrieved_at"],
+                        raw,
+                        "text/html" if entry["kind"] == "html" else "application/json",
+                    ),
+                )
         for raw, url, fixed in prepared:
+            fixed.pop("source_observed_at", None)
             ingested += bool(ingest(db, raw, url, lambda *_args, fixed=fixed: fixed, "arista"))
         evidence = switching_evidence.project(
             switching_evidence.inputs(db, latest(db)), publication=None, generated_at=now()
@@ -226,8 +255,11 @@ def main(argv=None):
     parser.add_argument("--output-json", type=Path, required=True)
     parser.add_argument("--output-csv", type=Path, required=True)
     parser.add_argument("--database", type=Path)
+    parser.add_argument(
+        "--staging", action="store_true", help="Repair an explicit existing public staging database"
+    )
     args = parser.parse_args(argv)
-    result = replay(args.manifest, database=args.database)
+    result = replay(args.manifest, database=args.database, staging=args.staging)
     args.output_json.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     columns = [
         "number",
