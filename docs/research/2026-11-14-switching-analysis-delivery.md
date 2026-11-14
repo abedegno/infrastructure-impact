@@ -194,6 +194,7 @@ PYTHONPATH="$PWD" IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.j
   -m infrastructure_impact.application.switching_source_validation \
   --records-input /tmp/public-current-evidence.json \
   --analysis /tmp/compiled-analysis.json --chronology /tmp/chronology-repair.json \
+  --kev-input /tmp/retained-kev.json \
   --output /tmp/switching-source-validation.json
 ```
 
@@ -207,6 +208,18 @@ membership remains unknown. The check does not manufacture collection health.
 Unavailable sources stay outside evaluated denominators; Aruba has no pinned
 supplementary case and is explicitly unavailable, not a zero-error success.
 No source acquisition or default database is opened by this command.
+
+Typed checks establish availability from source prerequisites, independently of the
+facts being tested. An exact Cisco record with missing disclosure metadata or
+stated rows fails; an exact SA137 record plus compiled analysis with missing
+expected claims fails. The historical KEV check also requires `--kev-input`, an
+independent validated KEV report whose retained catalogue receipt matches the
+analysis (including version, hash and capture time). Complete details or a partial
+report containing the pinned CVE detail suffice; a missing or insufficient feed
+leaves that check unavailable. Missing current-health receipts do not erase
+retained historical availability. Missing expected reconciliation output with
+intact prerequisites fails. Existing source-run receipts retain their original
+code/time identity; these revised checks do not restamp those results.
 
 The local source frame does not configure credentials. If acknowledged official
 API acquisitions are available, supply their native receipt-bound frames through
