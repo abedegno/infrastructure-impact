@@ -1,0 +1,139 @@
+{
+  "document": {
+    "category": "security_advisory",
+    "csaf_version": "2.0",
+    "title": "Authored Security Hardening Release",
+    "publisher": {
+      "category": "vendor",
+      "name": "Example fixture publisher",
+      "namespace": "https://example.test"
+    },
+    "tracking": {
+      "id": "cisco-sa-authored-hardening",
+      "status": "final",
+      "version": "1",
+      "initial_release_date": "2026-09-01T00:00:00Z",
+      "current_release_date": "2026-09-01T00:00:00Z",
+      "revision_history": [
+        {
+          "number": "1",
+          "date": "2026-09-01T00:00:00Z",
+          "summary": "Authored initial example"
+        }
+      ]
+    },
+    "notes": [
+      {
+        "title": "Summary",
+        "category": "summary",
+        "text": "Authored marker example: Cisco has grouped these issues by their underlying vulnerability class; Common Weakness Enumeration; assigned a single Common Vulnerabilities and Exposures identifier."
+      },
+      {
+        "title": "Details",
+        "category": "details",
+        "text": "Authored score marker: maximum potential severity of the single most impactful underlying bug within that specific CWE category.\r\nCVE-2026-20273 7.0 CWE-20\r\nCVE-2026-20272 7.0 CWE-74\r\nCVE-2026-20271 7.0 CWE-691\r\nCVE-2026-20270 7.0 CWE-682\r\nCVE-2026-20269 7.0 CWE-664\r\nCVE-2026-20268 7.0 CWE-119\r\nCVE-2026-20267 7.0 CWE-284"
+      }
+    ]
+  },
+  "product_tree": {},
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2026-20267",
+      "cwe": {
+        "id": "CWE-284",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-20268",
+      "cwe": {
+        "id": "CWE-119",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-20269",
+      "cwe": {
+        "id": "CWE-664",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-20270",
+      "cwe": {
+        "id": "CWE-682",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-20271",
+      "cwe": {
+        "id": "CWE-691",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-20272",
+      "cwe": {
+        "id": "CWE-74",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-20273",
+      "cwe": {
+        "id": "CWE-20",
+        "name": "Authored class"
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "baseScore": 7.0
+          }
+        }
+      ]
+    }
+  ]
+}

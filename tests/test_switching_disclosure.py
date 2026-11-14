@@ -113,7 +113,7 @@ def test_inputs_and_legacy_events_unchanged():
 def cisco_owned():
     from infrastructure_impact.adapters.standards import csaf
 
-    raw = (Path(__file__).parent / "fixtures/cisco-disclosure-hardening.json").read_text()
+    raw = (Path(__file__).parent / "fixtures/cisco-disclosure-authored.json").read_text()
     url = "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-hardening-iosxe-V8NMuMZJ/csaf/cisco-sa-hardening-iosxe-V8NMuMZJ.json"
     r = csaf(raw, url, "cisco")
     r.update(sha256="a" * 64, source_observed_at=AT)

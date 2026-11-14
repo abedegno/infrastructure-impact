@@ -10,7 +10,7 @@ from infrastructure_impact.adapters import cisco_disclosure as disclosure
 from infrastructure_impact.adapters.standards import csaf
 from infrastructure_impact.domain import NormalizationError, validate_advisory
 
-FIXTURE = Path(__file__).parent / "fixtures/cisco-disclosure-hardening.json"
+FIXTURE = Path(__file__).parent / "fixtures/cisco-disclosure-authored.json"
 
 
 def source():
@@ -108,11 +108,31 @@ def test_method_boundary_unknown_and_explicit_third_party():
     )
 
 
-def test_actual_case_checker_checks_values_and_never_accepts_human_review():
+def test_authored_case_checker_checks_values_and_never_accepts_human_review(monkeypatch):
     from infrastructure_impact.application.cisco_disclosure_replay import validate_cases
 
     record = csaf(FIXTURE.read_text(), "https://sec.cloudapps.cisco.com/example.json", "cisco")
-    record["sha256"] = "0f51863687793ec84cfa51289e3028b712ec0695061eafa576e6ea5f62fe8149"
+    from hashlib import sha256
+
+    from infrastructure_impact.application import cisco_disclosure_replay
+
+    record["sha256"] = sha256(FIXTURE.read_bytes()).hexdigest()
+    monkeypatch.setattr(
+        cisco_disclosure_replay,
+        "CASES",
+        [
+            dict(
+                advisory_id=record["advisory_id"],
+                sha256=record["sha256"],
+                initial_published_at="2026-09-01T00:00:00Z",
+                cwe_by_cve={
+                    f"CVE-2026-{20267 + i}": f"CWE-{cwe}"
+                    for i, cwe in enumerate([284, 119, 664, 682, 691, 74, 20])
+                },
+                highest_cvss_wording=source()["document"]["notes"][1]["text"].split("\r\n")[0],
+            )
+        ],
+    )
     assert validate_cases([record])[0] == dict(
         advisory_id=record["advisory_id"], automated_validation="passed", human_review="pending"
     )

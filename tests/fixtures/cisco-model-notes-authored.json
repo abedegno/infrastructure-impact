@@ -1,0 +1,272 @@
+[
+  {
+    "data": {
+      "document": {
+        "category": "security_advisory",
+        "csaf_version": "2.0",
+        "title": "Authored parser example",
+        "publisher": {
+          "category": "vendor",
+          "name": "Example fixture publisher",
+          "namespace": "https://example.test"
+        },
+        "tracking": {
+          "id": "cisco-sa-authored-model-0",
+          "status": "final",
+          "version": "1",
+          "initial_release_date": "2026-10-05T20:27:47Z",
+          "current_release_date": "2026-10-05T20:27:47Z",
+          "revision_history": [
+            {
+              "number": "1",
+              "date": "2026-10-05T20:27:47Z",
+              "summary": "Authored initial example"
+            }
+          ]
+        },
+        "notes": [
+          {
+            "title": "Summary",
+            "category": "summary",
+            "text": "Authored model parser exercise."
+          },
+          {
+            "title": "Vulnerable Products",
+            "category": "general",
+            "text": "Authored condition: enable example feature on 9200, 9300. No other platforms are assigned."
+          }
+        ]
+      },
+      "product_tree": {
+        "branches": [
+          {
+            "category": "product_family",
+            "name": "Cisco IOS XE Software",
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "17.7",
+                "branches": [
+                  {
+                    "category": "product_version",
+                    "name": "17.7.1",
+                    "product": {
+                      "product_id": "p0",
+                      "name": "17.7.1"
+                    }
+                  }
+                ]
+              },
+              {
+                "category": "product_version",
+                "name": "17.8",
+                "branches": [
+                  {
+                    "category": "product_version",
+                    "name": "17.8.1",
+                    "product": {
+                      "product_id": "p1",
+                      "name": "17.8.1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "vulnerabilities": [
+        {
+          "cve": "CVE-2026-90000",
+          "product_status": {
+            "known_affected": ["p0", "p1"]
+          }
+        }
+      ]
+    },
+    "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-authored-model-0/csaf/cisco-sa-authored-model-0.json",
+    "source_sha256": "d1a84908c7e1bc8d98ded7bf1957bd92b889fdbed52246b099502581946153e7",
+    "cve_id": "CVE-2026-90000",
+    "expected_models": ["9200", "9300"]
+  },
+  {
+    "data": {
+      "document": {
+        "category": "security_advisory",
+        "csaf_version": "2.0",
+        "title": "Authored parser example",
+        "publisher": {
+          "category": "vendor",
+          "name": "Example fixture publisher",
+          "namespace": "https://example.test"
+        },
+        "tracking": {
+          "id": "cisco-sa-authored-model-1",
+          "status": "final",
+          "version": "1",
+          "initial_release_date": "2026-10-05T20:27:47Z",
+          "current_release_date": "2026-10-05T20:27:47Z",
+          "revision_history": [
+            {
+              "number": "1",
+              "date": "2026-10-05T20:27:47Z",
+              "summary": "Authored initial example"
+            }
+          ]
+        },
+        "notes": [
+          {
+            "title": "Summary",
+            "category": "summary",
+            "text": "Authored model parser exercise."
+          },
+          {
+            "title": "Vulnerable Products",
+            "category": "general",
+            "text": "Authored condition: enable example feature on 9300, 9300L. No other platforms are assigned."
+          }
+        ]
+      },
+      "product_tree": {
+        "branches": [
+          {
+            "category": "product_family",
+            "name": "Cisco IOS XE Software",
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "17.7",
+                "branches": [
+                  {
+                    "category": "product_version",
+                    "name": "17.7.1",
+                    "product": {
+                      "product_id": "p0",
+                      "name": "17.7.1"
+                    }
+                  }
+                ]
+              },
+              {
+                "category": "product_version",
+                "name": "17.8",
+                "branches": [
+                  {
+                    "category": "product_version",
+                    "name": "17.8.1",
+                    "product": {
+                      "product_id": "p1",
+                      "name": "17.8.1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "vulnerabilities": [
+        {
+          "cve": "CVE-2026-90001",
+          "product_status": {
+            "known_affected": ["p0", "p1"]
+          }
+        }
+      ]
+    },
+    "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-authored-model-1/csaf/cisco-sa-authored-model-1.json",
+    "source_sha256": "608607cbacc5d20c0370ab06b308dc01470c3e865ca58183eed2e84d3b01548b",
+    "cve_id": "CVE-2026-90001",
+    "expected_models": ["9300", "9300L"]
+  },
+  {
+    "data": {
+      "document": {
+        "category": "security_advisory",
+        "csaf_version": "2.0",
+        "title": "Authored parser example",
+        "publisher": {
+          "category": "vendor",
+          "name": "Example fixture publisher",
+          "namespace": "https://example.test"
+        },
+        "tracking": {
+          "id": "cisco-sa-authored-model-2",
+          "status": "final",
+          "version": "1",
+          "initial_release_date": "2026-10-05T20:27:47Z",
+          "current_release_date": "2026-10-05T20:27:47Z",
+          "revision_history": [
+            {
+              "number": "1",
+              "date": "2026-10-05T20:27:47Z",
+              "summary": "Authored initial example"
+            }
+          ]
+        },
+        "notes": [
+          {
+            "title": "Summary",
+            "category": "summary",
+            "text": "Authored model parser exercise."
+          },
+          {
+            "title": "Vulnerable Products",
+            "category": "general",
+            "text": "Authored condition: enable example feature on 9500. No other platforms are assigned."
+          }
+        ]
+      },
+      "product_tree": {
+        "branches": [
+          {
+            "category": "product_family",
+            "name": "Cisco IOS XE Software",
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "17.7",
+                "branches": [
+                  {
+                    "category": "product_version",
+                    "name": "17.7.1",
+                    "product": {
+                      "product_id": "p0",
+                      "name": "17.7.1"
+                    }
+                  }
+                ]
+              },
+              {
+                "category": "product_version",
+                "name": "17.8",
+                "branches": [
+                  {
+                    "category": "product_version",
+                    "name": "17.8.1",
+                    "product": {
+                      "product_id": "p1",
+                      "name": "17.8.1"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "vulnerabilities": [
+        {
+          "cve": "CVE-2026-90002",
+          "product_status": {
+            "known_affected": ["p0", "p1"]
+          }
+        }
+      ]
+    },
+    "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-authored-model-2/csaf/cisco-sa-authored-model-2.json",
+    "source_sha256": "451df6b4724ef0593006c3f6c1e7b9a4a8c98a9750b7e0850a7e2bf69f7a26ec",
+    "cve_id": "CVE-2026-90002",
+    "expected_models": ["9500"]
+  }
+]

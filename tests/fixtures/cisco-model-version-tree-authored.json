@@ -1,0 +1,84 @@
+{
+  "document": {
+    "category": "security_advisory",
+    "csaf_version": "2.0",
+    "title": "Authored parser example",
+    "publisher": {
+      "category": "vendor",
+      "name": "Example fixture publisher",
+      "namespace": "https://example.test"
+    },
+    "tracking": {
+      "id": "cisco-sa-authored-model-0",
+      "status": "final",
+      "version": "1",
+      "initial_release_date": "2026-10-05T20:27:47Z",
+      "current_release_date": "2026-10-05T20:27:47Z",
+      "revision_history": [
+        {
+          "number": "1",
+          "date": "2026-10-05T20:27:47Z",
+          "summary": "Authored initial example"
+        }
+      ]
+    },
+    "notes": [
+      {
+        "title": "Summary",
+        "category": "summary",
+        "text": "Authored model parser exercise."
+      },
+      {
+        "title": "Vulnerable Products",
+        "category": "general",
+        "text": "Authored condition: enable example feature on 9200, 9300. No other platforms are assigned."
+      }
+    ]
+  },
+  "product_tree": {
+    "branches": [
+      {
+        "category": "product_family",
+        "name": "Cisco IOS XE Software",
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "17.7",
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "17.7.1",
+                "product": {
+                  "product_id": "p0",
+                  "name": "17.7.1"
+                }
+              }
+            ]
+          },
+          {
+            "category": "product_version",
+            "name": "17.8",
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "17.8.1",
+                "product": {
+                  "product_id": "p1",
+                  "name": "17.8.1"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2026-90000",
+      "product_status": {
+        "known_affected": ["p0", "p1"]
+      }
+    }
+  ]
+}

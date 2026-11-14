@@ -9,8 +9,12 @@ notes, firmware, trademarks or third-party dependencies.
 `tests/fixtures/` contains project-authored synthetic inputs. They retain selected
 product/CVE identifiers and literal format markers needed to exercise the parsers,
 but are not captured vendor documents or evidence of real product exposure.
-`checks/generate_fixtures.py` rebuilds them; `manifest.json` records their hashes.
+`checks/generate_fixtures.py` rebuilds generated examples and fingerprints the
+manually maintained authored examples; `manifest.json` records their hashes.
 The tiny PDF is authored by that generator without a bundled publisher attachment.
+The chronology, model-note and disclosure examples are authored test inputs, not
+vendor reproductions. Test-scoped receipt overrides refer only to their authored
+bytes; actual source-pinned replay evidence remains external to Git.
 
 Captured vendor fixtures from development are retained only in the ignored private
 workspace. Do not add full source captures, logos, embedded scripts or CMS responses

@@ -9,7 +9,33 @@ import pytest
 
 from infrastructure_impact.adapters.switching import extract
 
-FIXTURE = Path(__file__).parent / "fixtures/cisco-model-notes.json"
+FIXTURE = Path(__file__).parent / "fixtures/cisco-model-notes-authored.json"
+
+
+@pytest.fixture(autouse=True)
+def authored_note_rules(monkeypatch):
+    """Only these tests trust authored receipts; production pinned rules stay intact."""
+    from infrastructure_impact.adapters import cisco_models
+
+    rules = []
+    for case in json.loads(FIXTURE.read_text()):
+        rules.append(
+            dict(
+                source_url=case["source_url"],
+                source_sha256=case["source_sha256"],
+                advisory_id=case["data"]["document"]["tracking"]["id"],
+                cve_ids=[case["cve_id"]],
+                locator="/document/notes/1/text",
+                note_sha256=hashlib.sha256(
+                    case["data"]["document"]["notes"][1]["text"].encode()
+                ).hexdigest(),
+                platforms={
+                    f"Cisco Catalyst {model} Series Switches": model
+                    for model in case["expected_models"]
+                },
+            )
+        )
+    monkeypatch.setattr(cisco_models, "_rules", lambda: rules)
 
 
 def run(data, url="https://example.test/cisco.json"):
@@ -128,11 +154,11 @@ def test_reviewed_positive_notes_keep_conditions_status_and_versions():
         )["bindings"]
 
 
-def test_cached_public_source_binds_version_descendants_without_changing_os_facts():
+def test_authored_source_binds_version_descendants_without_changing_os_facts():
     from infrastructure_impact.adapters import switching
 
-    case = next(c for c in json.loads(FIXTURE.read_text()) if c["cve_id"] == "CVE-2023-20029")
-    raw = (FIXTURE.parent / "cisco-model-priv-esc.csaf.json").read_bytes()
+    case = next(c for c in json.loads(FIXTURE.read_text()) if c["cve_id"] == "CVE-2026-90000")
+    raw = (FIXTURE.parent / "cisco-model-version-tree-authored.json").read_bytes()
     assert hashlib.sha256(raw).hexdigest() == case["source_sha256"]
     result = switching.extract(
         raw,
@@ -176,10 +202,10 @@ def test_explicit_9300l_and_chassis_do_not_alias_other_targets():
         assert {b["model"] for b in run(structural(name))[0]["platform_bindings"]} == {expected}
 
 
-def test_cached_negative_notes_and_mixed_platform_table_never_assign_models():
+def test_authored_negative_notes_and_mixed_platform_table_never_assign_models():
     from infrastructure_impact.adapters.cisco_models import note_bindings
 
-    controls = json.loads((FIXTURE.parent / "cisco-model-controls.json").read_text())
+    controls = json.loads((FIXTURE.parent / "cisco-model-controls-authored.json").read_text())
     assert len(controls) == 4
     for case in controls:
         r = note_bindings(
@@ -197,8 +223,8 @@ def test_cached_negative_notes_and_mixed_platform_table_never_assign_models():
 
 
 def test_source_revision_change_only_abstains_locally_and_keeps_os_claims():
-    case = next(c for c in json.loads(FIXTURE.read_text()) if c["cve_id"] == "CVE-2023-20029")
-    data = json.loads((FIXTURE.parent / "cisco-model-priv-esc.csaf.json").read_text())
+    case = next(c for c in json.loads(FIXTURE.read_text()) if c["cve_id"] == "CVE-2026-90000")
+    data = json.loads((FIXTURE.parent / "cisco-model-version-tree-authored.json").read_text())
     data["document"]["notes"][1]["text"] += " Unknown new qualification."
     claims = run(data, case["source_url"])
     assert len(claims) == 2
@@ -207,11 +233,11 @@ def test_source_revision_change_only_abstains_locally_and_keeps_os_claims():
     assert all("cisco_model_note_rule_mismatch" in c["issues"] for c in claims)
 
 
-def test_real_cached_model_claims_pass_native_public_evidence_contract():
+def test_authored_model_claims_pass_native_public_evidence_contract():
     from infrastructure_impact.application import switching_evidence as evidence
 
-    case = next(c for c in json.loads(FIXTURE.read_text()) if c["cve_id"] == "CVE-2023-20029")
-    raw = (FIXTURE.parent / "cisco-model-priv-esc.csaf.json").read_bytes()
+    case = next(c for c in json.loads(FIXTURE.read_text()) if c["cve_id"] == "CVE-2026-90000")
+    raw = (FIXTURE.parent / "cisco-model-version-tree-authored.json").read_bytes()
     result = extract(
         raw,
         case["source_url"],

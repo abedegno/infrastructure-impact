@@ -1,4 +1,4 @@
-"""Reduced publisher-shaped fixtures; actual capture validation is the offline replay."""
+"""Authored chronology examples; actual capture validation is the external offline replay."""
 
 import copy
 import json
@@ -14,7 +14,7 @@ from infrastructure_impact.plugins.arista import research_evidence
 from infrastructure_impact.plugins.shared import structured
 from infrastructure_impact.storage.repository import connect, ingest, latest
 
-FIXTURES = Path(__file__).parent / "fixtures/arista-chronology"
+FIXTURES = Path(__file__).parent / "fixtures"
 AT = "2026-11-13T20:00:00Z"
 
 
@@ -23,9 +23,9 @@ def receipt(raw, url):
 
 
 def inputs(n=165):
-    urls = json.loads((FIXTURES / f"{n}-sources.json").read_text())
-    html = (FIXTURES / f"{n}.html").read_bytes()
-    raw = (FIXTURES / f"{n}.json").read_bytes()
+    urls = json.loads((FIXTURES / f"arista-chronology-{n}-sources-authored.json").read_text())
+    html = (FIXTURES / f"arista-chronology-{n}-authored.html").read_bytes()
+    raw = (FIXTURES / f"arista-chronology-{n}-authored.json").read_bytes()
     record = structured(raw, urls["csaf"], "arista")
     return record, dict(html_raw=html, html_source=receipt(html, urls["html"]), csaf_raw=raw)
 
@@ -77,7 +77,7 @@ def test_ambiguous_or_unowned_pair_is_unchanged(mutation):
     if mutation == "footer_link":
         import re
 
-        link = re.search(r'<a title="Download CSAF".*?</a>', html).group()
+        link = re.search(r'<a\s+title="Download CSAF".*?</a\s*>', html, re.S).group()
         html = html.replace(link, "") + "</div><footer>" + link + "</footer>"
     if mutation == "duplicate_initial":
         html = html.replace("<td>1.1</td>", "<td>1.0</td>")
@@ -152,9 +152,7 @@ def test_multiple_cves_require_complete_owned_intro_scope(layout):
     record = structured(kw["csaf_raw"], record["source_url"], "arista")
     text = kw["html_raw"].decode()
     if layout == "tracked_paragraphs":
-        text = text.replace(
-            "</div></main>", "<p>The CVE-ID tracking this issue: CVE-2026-99999</p></div></main>"
-        )
+        text = text.replace("</div>", "<p>The CVE-ID tracking this issue: CVE-2026-99999</p></div>")
     else:
         import re
 
