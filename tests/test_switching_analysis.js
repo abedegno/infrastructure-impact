@@ -169,3 +169,32 @@ assert.throws(
   /target differs/,
   'rehashed target must match compiled alternatives',
 );
+
+for (const vector of vectors.numeric_cases)
+  assert.strictEqual(
+    A.csv(vector.selected),
+    vector.expected,
+    'exact fractional/exponent/signed-zero CSV tokens',
+  );
+
+for (const reference of [
+  '0'.repeat(64),
+  Object.keys(vectors.compiled.requirements.facts).find((k) =>
+    Array.isArray(vectors.compiled.requirements.facts[k]),
+  ),
+]) {
+  const r = JSON.parse(JSON.stringify(vectors.compiled));
+  Object.values(r.claims)[0].source_ref = reference;
+  r.content_sha256 = context.window.InfrastructureSwitchingContracts.fingerprint(
+    Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'content_sha256')),
+  );
+  assert.throws(
+    () => A.select(r, vectors.cases[0].context),
+    /source reference/,
+    'absent or wrongly typed pooled source',
+  );
+}
+for (const requirement of vectors.compiled.requirements.requirements) {
+  assert(!Object.hasOwn(requirement, 'source_ref'));
+  assert(!Object.hasOwn(requirement, 'severity_facets_ref'));
+}

@@ -79,7 +79,7 @@ def report(records, *, compiled=None, chronology_rows=()):
         if compiled is None
         else [
             c
-            for c in compiled["claims"].values()
+            for c in switching_analysis.claim_facets(compiled)
             if c["vendor"] == "arista"
             and c["advisory_id"] == arista_sa0137.ID
             and c["source"]["source_url"] == arista_sa0137.URL

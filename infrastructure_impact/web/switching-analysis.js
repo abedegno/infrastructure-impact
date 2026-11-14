@@ -28,6 +28,24 @@
   function shape(v, name) {
     C.validate('switching-analysis-v1.json', v, '/$defs/' + name);
   }
+  function claimFacets(report) {
+    return Object.entries(report.claims).map(([id, value]) => {
+      const source = report.requirements.facts[value.source_ref];
+      if (
+        value.claim_id !== id ||
+        !source ||
+        Array.isArray(source) ||
+        !eq(Object.keys(source).sort(), [
+          'retrieved_at',
+          'source_locator',
+          'source_sha256',
+          'source_url',
+        ])
+      )
+        fail('source reference ownership/type differs');
+      return { ...omit(value, ['source_ref']), source };
+    });
+  }
   function validate(report, identity = report) {
     measure(report);
     C.identity(report, identity);
@@ -45,8 +63,10 @@
       fail('requirement fingerprint differs');
     for (const [id, f] of Object.entries(r.facts))
       if (id !== hash(f)) fail('fact fingerprint differs');
+    const expandedClaims = claimFacets(report),
+      claimsById = new Map(expandedClaims.map((c) => [c.claim_id, c]));
     for (const [id, m] of Object.entries(r.members)) {
-      const c = report.claims[id];
+      const c = claimsById.get(id);
       if (
         !c ||
         c.claim_sha256 !== m.claim_sha256 ||
@@ -183,7 +203,7 @@
         fail('disclosure claim ownership differs');
     }
     for (const e of report.kev_reconciliation.entries) {
-      const claims = Object.values(report.claims).filter(
+      const claims = expandedClaims.filter(
           (c) =>
             c.vendor === e.mapping.vendor && c.family === e.mapping.family && c.cve_id === e.cve_id,
         ),
@@ -205,7 +225,7 @@
   }
   function selectedClaims(report, s) {
     const [start, end] = S.bounds(D, report.observation_end, s.requested_window);
-    return Object.values(report.claims).filter((c) => {
+    return claimFacets(report).filter((c) => {
       const d = S.day(c.initial_published_at);
       return (
         s.effective_vendors.includes(c.vendor) &&
@@ -788,8 +808,9 @@
     out.entries = out.entries.filter(
       (e) => e.mapping.vendor === null || s.effective_vendors.includes(e.mapping.vendor),
     );
+    const allClaims = claimFacets(report);
     for (const e of out.entries) {
-      const claims = Object.values(report.claims).filter(
+      const claims = allClaims.filter(
           (c) =>
             c.vendor === e.mapping.vendor && c.family === e.mapping.family && c.cve_id === e.cve_id,
         ),
@@ -909,6 +930,7 @@
   }
   window.InfrastructureSwitchingAnalysis = {
     validate,
+    claimFacets,
     context,
     select,
     upgrades,

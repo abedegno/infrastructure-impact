@@ -29,7 +29,9 @@ def produce():
                     system="CVSS",
                     version="3.1",
                     value=value,
-                    vector=None,
+                    vector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+                    if value == 10.0
+                    else "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
                     cve_id=claim["cve_id"],
                     product_ids=[],
                     scope="cve_specific",
@@ -52,6 +54,11 @@ def produce():
     compiled = analysis.build_report([], [], study)
     ff = first_fixed.build_report([], api_results=[], publication=None, generated_at=AT)
     native = upgrades.build_report(ev, ff, None, kev, publication=None, generated_at=AT)
+    assert {
+        f["value"]
+        for m in compiled["requirements"]["members"].values()
+        for f in compiled["requirements"]["facts"][m["severity_facets_ref"]]
+    } == {10.0, 7.5}
     cases = []
     for name, options in [
         ("all_vendors", {}),
@@ -84,11 +91,19 @@ def produce():
             highest_cvss=value,
             locator="authored numeric CSV boundary",
         )
+    numeric_cases = []
+    for value in (10.0, 8.6, 1e-7, 2 / 3, -0.0):
+        selected_numeric = copy.deepcopy(numeric)
+        selected_numeric["disclosure"]["pairs"][0]["umbrella"]["highest_cvss"] = value
+        numeric_cases.append(
+            dict(selected=selected_numeric, expected=analysis.analysis_csv_export(selected_numeric))
+        )
     return dict(
         schema_version=1,
         compiled=compiled,
         cases=cases,
         numeric_csv=dict(selected=numeric, expected=analysis.analysis_csv_export(numeric)),
+        numeric_cases=numeric_cases,
         numeric_fingerprints=[
             dict(value=value, sha256=evidence.definition_sha256(value))
             for value in [

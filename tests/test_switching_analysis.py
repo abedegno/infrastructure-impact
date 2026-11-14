@@ -351,6 +351,8 @@ def test_portable_vectors_exact_json_and_csv():
     vectors = json.loads(
         (Path(__file__).parent / "fixtures/switching-analysis-vectors.json").read_text()
     )
+    for vector in vectors["numeric_cases"]:
+        assert api().analysis_csv_export(vector["selected"]) == vector["expected"]
     for case in vectors["cases"]:
         context = api().selection_context(vectors["compiled"], case["options"])
         assert context == case["context"]
@@ -661,3 +663,35 @@ def test_compact_facets_keep_exact_frozen_families_without_losing_unknowns_or_in
     )
     with pytest.raises(ValueError, match="membership|claim/source"):
         api().validate_report(missing, evidence=ev, records=[record], retained=[])
+
+
+def test_claim_sources_are_pooled_with_typed_closure_and_no_redundant_requirement_refs():
+    ev, _, _, study = fixture()
+    before = copy.deepcopy(study)
+    compiled = api().build_report([], [], study)
+    assert study == before
+    assert all("source" not in c and "source_ref" in c for c in compiled["claims"].values())
+    assert all(
+        "source_ref" not in r and "severity_facets_ref" not in r
+        for r in compiled["requirements"]["requirements"]
+    )
+    expanded = {c["claim_id"]: c for c in api().claim_facets(compiled)}
+    assert all(expanded[c["claim_id"]]["source"] == c["source"] for c in ev["claims"])
+    for cid, member in compiled["requirements"]["members"].items():
+        assert compiled["claims"][cid]["source_ref"] == member["source_ref"]
+    for ref in (
+        "0" * 64,
+        next(k for k, v in compiled["requirements"]["facts"].items() if isinstance(v, list)),
+    ):
+        changed = copy.deepcopy(compiled)
+        next(iter(changed["claims"].values()))["source_ref"] = ref
+        changed["content_sha256"] = contracts.definition_sha256(
+            {k: v for k, v in changed.items() if k != "content_sha256"}
+        )
+        with pytest.raises(ValueError, match="source reference"):
+            api().validate_report(changed)
+    selected = api().select_report(compiled, api().selection_context(compiled, {}))
+    next(iter(selected["upgrades"]["requirements"]["facts"].values())).update(
+        {"unused-test-key": True}
+    )
+    api().validate_report(compiled)

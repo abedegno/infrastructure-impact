@@ -386,6 +386,20 @@ def study_claim_facets(evidence):
     return (claim for claim in evidence["claims"] if (claim["vendor"], claim["family"]) in pairs)
 
 
+def claim_facets(report):
+    """Inflate only source receipts for slim facets, never the native claim archive."""
+    facts = report["requirements"]["facts"]
+    for cid, value in report["claims"].items():
+        source = facts.get(value["source_ref"])
+        if (
+            value["claim_id"] != cid
+            or not isinstance(source, dict)
+            or set(source) != set(contracts._SOURCE_FIELDS)
+        ):
+            raise ValueError("Analysis source reference ownership/type differs")
+        yield {k: v for k, v in value.items() if k != "source_ref"} | {"source": source}
+
+
 def build_report(records, retained, study, *, release_history=None, source_frame=None):
     from . import first_fixed
     from . import switching_disclosure as disclosure
@@ -436,12 +450,16 @@ def build_report(records, retained, study, *, release_history=None, source_frame
     )
     claims, budget = {}, codec.Budget(codec.MAX_SELECTED)
     for c in study_claim_facets(evidence):
-        value = {k: copy.deepcopy(c.get(k)) for k in CLAIM_FIELDS}
+        value = {k: copy.deepcopy(c.get(k)) for k in CLAIM_FIELDS if k != "source"}
+        value["source_ref"] = _intern(requirements["facts"], c["source"], budget)
         value["disclosure_severity"] = disclosure.severity_facets([c])
         value["issues"] = [i for i in c["issues"] if i.startswith("cisco_model_")]
         value["claim_sha256"] = _hash(c)
         codec.charge_value(value, budget)
         claims[c["claim_id"]] = value
+    requirements["content_sha256"] = _hash(
+        {k: v for k, v in requirements.items() if k != "content_sha256"}
+    )
     out = dict(
         schema_version=1,
         representation="compiled-analysis",
@@ -517,7 +535,8 @@ def validate_report(
         expected = {c["claim_id"]: c for c in study_claim_facets(evidence)}
         if set(expected) != set(report["claims"]):
             raise ValueError("Analysis complete membership differs")
-        for cid, c in report["claims"].items():
+        for c in claim_facets(report):
+            cid = c["claim_id"]
             if c["issues"] != [i for i in expected[cid]["issues"] if i.startswith("cisco_model_")]:
                 raise ValueError("Analysis model diagnostic ownership differs")
             if c["disclosure_severity"] != disclosure.severity_facets([expected[cid]]):
@@ -606,7 +625,7 @@ def _validate_child_ownership(report, *, evidence=None, records=None, retained=N
     ):
         raise ValueError("Child source references require authoritative current/retained records")
     claim_index = defaultdict(list)
-    for claim in report["claims"].values():
+    for claim in claim_facets(report):
         claim_index[claim["vendor"], claim["family"], claim["cve_id"]].append(claim)
     record_indexes = {name: defaultdict(list) for name in ("current_records", "retained_records")}
     if inventory is not None:
@@ -633,7 +652,7 @@ def _selected_claims(report, selection, *, window=True):
     requested = selection["requested_cve_ids"]
     return [
         c
-        for c in report["claims"].values()
+        for c in claim_facets(report)
         if c["vendor"] in selection["effective_vendors"]
         and c["family"] == upgrades.releases.FAMILIES[c["vendor"]]
         and (selection["scope_level"] == "os_family" or c["scope_level"] == "model_qualified")
@@ -764,7 +783,7 @@ def _kev_selected(report, selection):
             continue
         claims = [
             c
-            for c in report["claims"].values()
+            for c in claim_facets(report)
             if c["vendor"] == vendor
             and c["family"] == e["mapping"]["family"]
             and c["cve_id"] == e["cve_id"]

@@ -199,3 +199,24 @@ requirements, advisory current/retained inventories and all CISA candidates are
 unchanged. Full-source run receipts separately record excluded-facet count and
 identity digest. `study_claim_facets(evidence)` exposes this exact projection to
 reproducible measurement code.
+
+Compact claim facets store `source_ref`, a content-addressed receipt in
+`requirements.facts`, instead of repeating source objects. Native
+`claim_facets(report)` and browser `claimFacets(report)` inflate only that receipt;
+they never load full claims. References must resolve to the closed source type.
+Affected members already own these source facts; only missing receipts for other
+study-family statuses are added. The requirement content fingerprint is recomputed
+after pooling, while the complete membership/evidence digests retain their meaning.
+Source and severity references remain solely on each owning requirement member;
+requirements carry only proof/train-binding references. Selected upgrade repacking
+prunes unused claim-only sources and remains exactly native-oracle equivalent.
+
+The first full-source attempt failed the unchanged128MB aggregate bound. Size
+preflight measured82,311,614 bytes of requirements and46,729,260 bytes of exact
+study-family facets. Their129,040,874-byte sum already exceeded that bound before
+other child reports. Source pooling addresses15,131,048 bytes of inline receipt
+values: replacing36,482 values with64-character hashes has an estimated net saving
+of12,577,308 bytes, before any newly interned nonaffected receipts. Thus116,463,566
+bytes is only a partial two-component estimate, not proof of aggregate fit. Actual
+root/selected/working measurements and remaining children belong to the final
+source-run receipt. Limits are unchanged; unknowns are not dropped to fit.
