@@ -387,7 +387,9 @@ def verify(
                     env=_environment(database, public, home, base_path=_base_path(home)),
                     stdout=log,
                     stderr=log,
-                    timeout=2400,
+                    # Opt-in full analysis includes an independent native rebuild.
+                    # Leave headroom within the unchanged 60-minute hosted job.
+                    timeout=3300 if analysis is not None else 2400,
                     check=False,
                 )
             except subprocess.TimeoutExpired:

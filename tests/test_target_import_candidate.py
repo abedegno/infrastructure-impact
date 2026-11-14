@@ -749,8 +749,24 @@ def test_explicit_v2_candidate_runs_complete_fresh_worker(candidate):
         ("launch", "launch_error", None),
     ],
 )
+@pytest.mark.parametrize(
+    "selector,publication_format,timeout",
+    [
+        ("", "v1", 2400),
+        ("", "v2", 2400),
+        ("campus-switching-openvuln-2026-11-14-v1", "v2", 3300),
+    ],
+)
 def test_worker_process_diagnostics_do_not_change_fail_closed_result(
-    tmp_path, monkeypatch, capsys, exit_kind, state, returncode
+    tmp_path,
+    monkeypatch,
+    capsys,
+    exit_kind,
+    state,
+    returncode,
+    selector,
+    publication_format,
+    timeout,
 ):
     import subprocess
     from types import SimpleNamespace
@@ -765,21 +781,27 @@ def test_worker_process_diagnostics_do_not_change_fail_closed_result(
     profile = SimpleNamespace(metadata=lambda: {})
 
     def worker(*args, **kwargs):
-        assert kwargs["timeout"] == 2400
+        assert kwargs["timeout"] == timeout
         kwargs["stderr"].write(
             b'{"event":"phase","phase":"publication.query","state":"started",'
             b'"elapsed_seconds":0,"secret":"SOURCE_SECRET"}\n'
         )
         kwargs["stderr"].flush()
         if exit_kind == "timeout":
-            raise subprocess.TimeoutExpired(["SOURCE_SECRET"], 2400, stderr=b"SOURCE_SECRET")
+            raise subprocess.TimeoutExpired(["SOURCE_SECRET"], timeout, stderr=b"SOURCE_SECRET")
         if exit_kind == "launch":
             raise OSError("SOURCE_SECRET")
         return subprocess.CompletedProcess(["SOURCE_SECRET"], returncode)
 
     monkeypatch.setattr(module.subprocess, "run", worker)
-    result = module.verify(database, tmp_path / "public", profile)
-    assert result == module._empty()
+    result = module.verify(
+        database,
+        tmp_path / "public",
+        profile,
+        publication_format=publication_format,
+        switching_analysis_profile=selector,
+    )
+    assert result == module._empty(publication_format=publication_format)
     output = capsys.readouterr()
     assert not output.out
     assert "SOURCE_SECRET" not in output.err
