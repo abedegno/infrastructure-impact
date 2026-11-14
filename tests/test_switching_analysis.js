@@ -151,3 +151,21 @@ assert.throws(
   /budget|limit|exceed/i,
   'typed CSV byte bound',
 );
+
+const misboundTarget = JSON.parse(JSON.stringify(vectors.compiled));
+const targetRequirement = misboundTarget.requirements.requirements.find((r) => r.target !== null);
+targetRequirement.target = '17.15.99';
+misboundTarget.requirements.content_sha256 =
+  context.window.InfrastructureSwitchingContracts.fingerprint(
+    Object.fromEntries(
+      Object.entries(misboundTarget.requirements).filter(([k]) => k !== 'content_sha256'),
+    ),
+  );
+misboundTarget.content_sha256 = context.window.InfrastructureSwitchingContracts.fingerprint(
+  Object.fromEntries(Object.entries(misboundTarget).filter(([k]) => k !== 'content_sha256')),
+);
+assert.throws(
+  () => A.select(misboundTarget, vectors.cases[0].context),
+  /target differs/,
+  'rehashed target must match compiled alternatives',
+);

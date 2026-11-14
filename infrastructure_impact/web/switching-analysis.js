@@ -50,13 +50,13 @@
       if (
         !c ||
         c.claim_sha256 !== m.claim_sha256 ||
-        c.vendor !== m.vendor ||
-        c.cve_id !== m.cve_id ||
-        c.advisory_id !== m.advisory_id
+        ['vendor', 'family', 'cve_id', 'advisory_id', 'scope_level'].some((k) => c[k] !== m[k]) ||
+        S.day(c.initial_published_at) !== m.date
       )
         fail('member ownership differs');
       for (const k of ['source_ref', 'severity_facets_ref'])
         if (!Object.hasOwn(r.facts, m[k])) fail('missing fact');
+      if (!eq(c.source, r.facts[m.source_ref])) fail('member source ownership differs');
     }
     for (const q of r.requirements)
       if (
@@ -90,6 +90,28 @@
       const m = r.members[q.claim_id],
         key = JSON.stringify([q.claim_id, q.train, q.scenario]),
         scope = JSON.stringify([q.claim_id, q.train]);
+      shape(
+        {
+          ...omit(m, ['source_ref', 'severity_facets_ref']),
+          ...omit(q, ['proof_ref', 'train_binding_ref']),
+          source: r.facts[m.source_ref],
+          severity_facets: r.facts[m.severity_facets_ref],
+          proof: r.facts[q.proof_ref],
+          train_binding: r.facts[q.train_binding_ref],
+        },
+        'upgrade_constraint',
+      );
+      let minimum = q.alternatives[0] ?? null;
+      for (const value of q.alternatives) {
+        const parts = /^([0-9]+)\.([0-9]+)\./.exec(value),
+          order = compare(m.vendor, value, minimum);
+        if (!parts || `${BigInt(parts[1])}.${BigInt(parts[2])}` !== q.train || order === null) {
+          minimum = null;
+          break;
+        }
+        if (order < 0) minimum = value;
+      }
+      if (q.target !== minimum) fail('compiled target differs');
       if (seen.has(key)) fail('duplicate requirement');
       seen.add(key);
       if (!membership.has(scope)) membership.set(scope, new Set());
