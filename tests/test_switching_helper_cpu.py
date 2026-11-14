@@ -145,6 +145,10 @@ def test_repeated_builtin_keys_are_costed_once_across_child_budgets(monkeypatch,
     assert first.used == second.used == expected
     assert parent.used == expected * 2
     assert costs == Counter({(key, mode): 1 for key in rows[0] for mode in (False, True)})
+    codec.charge_value(rows, codec.NodeBudget(second, 100_000), ascii=ascii, spaced=spaced)
+    assert first.used == expected and second.used == expected * 2
+    assert parent.used == expected * 3
+    assert costs == Counter({(key, mode): 1 for key in rows[0] for mode in (False, True)})
     codec.charge_value(rows, codec.Budget(100_000), ascii=ascii, spaced=spaced)
     assert costs == Counter({(key, mode): 2 for key in rows[0] for mode in (False, True)})
 
@@ -201,3 +205,72 @@ def test_key_costing_rejects_invalid_keys_even_after_valid_cached_key(key):
     codec.charge_value({"valid": 0}, budget)
     with pytest.raises(ValueError):
         codec.charge_value({key: 0}, budget)
+
+
+def collision_value(target):
+    class Collision(str):
+        def __hash__(self):
+            return hash((str, target))
+
+        def __eq__(self, other):
+            return isinstance(other, tuple) and other == (str, target)
+
+    return Collision("x")
+
+
+@pytest.fixture(params=["root", "child", "node"])
+def collision_budget(request):
+    parent = codec.Budget(1000)
+    budget = (
+        codec.Budget(1000, parent=parent)
+        if request.param == "child"
+        else codec.NodeBudget(parent, 1000)
+        if request.param == "node"
+        else parent
+    )
+    return parent, budget
+
+
+def test_subclass_hash_equality_cannot_replace_builtin_key_cost(collision_budget):
+    parent, budget = collision_budget
+    value = collision_value("long-key")
+    codec.charge_value(value, budget)
+    assert budget.used == parent.used == 3
+    codec.charge_value({"long-key": 0}, budget)
+    assert budget.used == parent.used == 17  # Original object cost is 14, not 7.
+    codec.charge_value(value, budget)  # Accepted subclass-value cache behavior is retained.
+    assert budget.used == parent.used == 20
+    if isinstance(budget, codec.NodeBudget):
+        assert budget.canonical_used == 20
+
+
+def test_subclass_hash_equality_cannot_bypass_parent_byte_limit(collision_budget):
+    parent, budget = collision_budget
+    parent.max_bytes = 10
+    codec.charge_value(collision_value("long-key"), budget)
+    with pytest.raises(ValueError, match="decoded byte budget"):
+        codec.charge_value({"long-key": 0}, budget)
+    assert budget.used == parent.used == 5  # Only the first scalar and object braces charged.
+    if isinstance(budget, codec.NodeBudget):
+        assert budget.canonical_used == 5
+
+
+def test_subclass_hash_equality_cannot_bypass_surrogate_key_rejection(collision_budget):
+    parent, budget = collision_budget
+    codec.charge_value(collision_value("\ud800"), budget)
+    with pytest.raises(ValueError, match="unpaired surrogate"):
+        codec.charge_value({"\ud800": 0}, budget)
+    assert budget.used == parent.used == 5
+    if isinstance(budget, codec.NodeBudget):
+        assert budget.canonical_used == 5
+
+
+def test_key_memo_does_not_change_budget_positional_repr_or_equality(monkeypatch):
+    monkeypatch.setattr(codec.time, "monotonic", lambda: 0)
+    first = codec.Budget(100, 123, 0, {}, None)
+    second = codec.Budget(100, 123, 0, {}, None)
+    codec.charge_value({"cached": 0}, first)
+    second.used = first.used
+    assert first == second
+    assert repr(first) == repr(second)
+    assert first.costs == {}  # Existing caller-supplied value cache stays independent.

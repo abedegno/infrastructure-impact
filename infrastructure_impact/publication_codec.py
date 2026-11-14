@@ -293,6 +293,7 @@ class Budget:
     literals: LiteralCache = field(
         default_factory=LiteralCache, init=False, repr=False, compare=False
     )
+    _key_costs: dict = field(default_factory=dict, init=False, repr=False, compare=False)
 
     def __post_init__(self):
         self.max_bytes = min(safe_int(self.max_bytes), MAX_STREAM)
@@ -304,6 +305,7 @@ class Budget:
             self.deadline = min(self.deadline, self.parent.deadline)
             self.costs = self.parent.costs
             self.literals = self.parent.literals
+            self._key_costs = self.parent._key_costs
 
     def charge(self, canonical, requested):
         if time.monotonic() > self.deadline:
@@ -325,6 +327,7 @@ class NodeBudget:
         self.canonical_used = 0
         self.costs = parent.costs
         self.literals = parent.literals
+        self._key_costs = parent._key_costs
 
     @property
     def max_bytes(self):
@@ -979,11 +982,10 @@ def charge_value(value, budget, *, ascii=True, depth=0, spaced=False):
             if isinstance(value, dict):
                 if type(key) is str:
                     # Key costs are invocation-local and pure only for built-ins.
-                    # Separate them from value entries, which can contain subclasses.
-                    cache_key = (str, key)
-                    if cache_key not in budget.costs:
-                        budget.costs[cache_key] = (string_cost(key), string_cost(key, True))
-                    canonical, escaped = budget.costs[cache_key]
+                    # A separate map prevents subclass value hash/equality collisions.
+                    if key not in budget._key_costs:
+                        budget._key_costs[key] = (string_cost(key), string_cost(key, True))
+                    canonical, escaped = budget._key_costs[key]
                     budget.charge(canonical + 1, (escaped if ascii else canonical) + 1 + spaced)
                 else:
                     budget.charge(string_cost(key) + 1, string_cost(key, ascii) + 1 + spaced)
