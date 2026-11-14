@@ -11,6 +11,7 @@ import json
 import re
 from importlib.resources import files
 
+from .cisco_models import STRUCTURAL_NAMES, note_bindings
 from .common import HTML, availability, iso_date
 from .reviewed_fixes import apply_csaf, arista_assessments, attach_links
 from .standards import csaf_products
@@ -211,6 +212,8 @@ def _models(vendor):
             elif vendor == "cisco":
                 result["Cisco Catalyst " + model] = model
                 result["Catalyst " + model] = model
+    if vendor == "cisco":
+        result.update(STRUCTURAL_NAMES)
     return result
 
 
@@ -472,10 +475,26 @@ def _csaf(raw, url, vendor, document, digest):
                     )
                     if binding not in claim["platform_bindings"]:
                         claim["platform_bindings"].append(binding)
+            if vendor == "cisco" and not product["issues"] and not claim["platform_bindings"]:
+                owned = note_bindings(
+                    data,
+                    url,
+                    digest,
+                    claim["cve_id"],
+                    claim["status"],
+                    claim["family"],
+                    next(
+                        (name for _, name, _ in fields if name in FAMILIES["cisco"][1]),
+                        claim["product"],
+                    ),
+                )
+                claim["platform_bindings"].extend(owned["bindings"])
+                claim["named_platforms"].extend(b["platform"] for b in owned["bindings"])
+                claim["conditions"].extend(owned["conditions"])
+                claim["issues"].extend(owned["diagnostics"])
             if claim["platform_bindings"]:
                 claim["scope_level"] = "model_qualified"
-            # Notes remain literal CVE context; no prose conditions are used for
-            # model assignment. Scoped threats retain only their own product set.
+            # Unreviewed notes remain literal CVE context. Scoped threats retain only their own product set.
             for note in vuln.get("notes", []):
                 text = _bounded(note.get("text"), claim["issues"])
                 if text:
@@ -803,6 +822,7 @@ def _arista_reviewed(raw, url, document, digest):
     from ..plugins.arista import parse
 
     routes = {
+        "24005-security-advisory-0137": "Arista reviewed SA-0137 tunnel applicability HTML",
         "25048-security-advisory-0226": "Arista reviewed hardware notice HTML",
         "19862-security-advisory-0099": "Arista reviewed reconciliation software HTML",
         "19917-security-advisory-0103": "Arista reviewed reconciliation software HTML",
@@ -924,6 +944,7 @@ def _arista_reviewed(raw, url, document, digest):
             scope=assessment["scope"],
         )
         if slug in {
+            "24005-security-advisory-0137",
             "25048-security-advisory-0226",
             "23115-security-advisory-0128",
             "24847-security-advisory-0201",
@@ -942,6 +963,14 @@ def _arista_reviewed(raw, url, document, digest):
             claim["product_id"] = None
         if assessment["product"] in {"Arista EOS", "EOS release (source platform scope applies)"}:
             claim["family"] = "arista-eos"
+        if (
+            slug == "24005-security-advisory-0137"
+            and assessment["status"] == "affected"
+            and assessment.get("product_context") == [["product_family", "Arista EOS"]]
+        ):
+            # The reviewed parser validates the EOS parent of these six local
+            # platform groups. Literal model bindings remain unresolved below.
+            claim["family"] = "arista-eos"
         if slug in software_cves and assessment["product"] == "EOS (source platform scope applies)":
             claim["family"] = "arista-eos"
         claim["version_expressions"] = [
@@ -952,7 +981,10 @@ def _arista_reviewed(raw, url, document, digest):
             for e in assessment.get("exposure", [])
             if (text := _bounded(e.get("details"), claim["issues"]))
         ]
-        if slug == "19905-security-advisory-0101" and claim["status"] == "affected":
+        if (
+            slug in {"19905-security-advisory-0101", "24005-security-advisory-0137"}
+            and claim["status"] == "affected"
+        ):
             claim["conditional_affected"] = True
         claim["named_platforms"] = assessment.get("platforms", [])
         claim["platform_bindings"] = [

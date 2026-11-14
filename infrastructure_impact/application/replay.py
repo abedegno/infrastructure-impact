@@ -5,7 +5,7 @@ from contextlib import closing, nullcontext
 
 from ..plugins.registry import default_registry
 from ..storage.locking import writer_lock
-from ..storage.repository import connect, ingest, latest, semantic_diff
+from ..storage.repository import connect, ingest, latest, retained_enrichment, semantic_diff
 from .cohort import COHORT
 
 
@@ -144,13 +144,17 @@ def replay_report(*, dry_run=False, vendor=None, limit=1000, force=False, db_pat
                     document = normalized_record(
                         registry, record, row["raw"], feed_cache=feed_cache
                     )
+                    document = retained_enrichment(db, row["raw"], document, record["vendor"])
                 except Exception as error:
                     # Installed parsers are trusted code, but one failed record
                     # must not prevent independent valid records from being checked.
                     # Do not echo raw exception values/source text into job logs.
                     report["failed"] += 1
                     code = (
-                        "vendor_plugin_unavailable"
+                        "chronology_unresolved_requires_review"
+                        if isinstance(error, ValueError)
+                        and str(error) == "chronology_unresolved_requires_review"
+                        else "vendor_plugin_unavailable"
                         if isinstance(error, MissingNormalizerError)
                         else "stable_identity_requires_review"
                         if isinstance(error, ReparseIdentityError)

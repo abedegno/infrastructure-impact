@@ -121,6 +121,11 @@ console.log(
   'Synthetic switching reader rendering, safety, controls, missingness and stale KEV passed.',
 );
 
+vm.runInContext(
+  fs.readFileSync('infrastructure_impact/web/switching-analysis.js', 'utf8'),
+  context,
+);
+
 // Actual app request owner: delayed successes/failures cannot replace accepted controls/exports.
 (async () => {
   const nodes = new Map();
@@ -129,8 +134,15 @@ console.log(
       nodes.set(id, {
         value: id === '#cohort' ? 'benchmark' : '',
         innerHTML: '',
+        insertAdjacentHTML(position, html) {
+          this.innerHTML += html;
+        },
         textContent: '',
-        addEventListener() {},
+        querySelector: node,
+        handlers: new Map(),
+        addEventListener(kind, callback) {
+          this.handlers.set(kind, callback);
+        },
         setAttribute() {},
         removeAttribute() {},
       });
@@ -262,6 +274,59 @@ console.log(
     await context.switchingDownload('csv').text(),
     api.csvExport(beforeGenerationFailure),
   );
+  // Exercise the real analysis download listener with the real bounded serializer.
+  // Scale only the injected test budget: no 128 MB allocation/source replay is needed.
+  const analysisFixture = JSON.parse(
+    fs.readFileSync('tests/fixtures/switching-analysis-vectors.json'),
+  ).cases[0].expected;
+  context.analysisFixture = analysisFixture;
+  vm.runInContext(
+    'analysisStudy=switchingReport; analysisReport=analysisFixture; analysisError="";',
+    context,
+  );
+  paintAccepted();
+  const serializer = context.window.InfrastructureJSON,
+    bounded = serializer.stringifyBounded,
+    compact = bounded(analysisFixture, null, '', 128000000),
+    boundary = Buffer.byteLength(compact);
+  assert.throws(() => bounded(analysisFixture, null, 2, boundary), /budget|limit/i);
+  assert.strictEqual(bounded(analysisFixture, null, '', boundary), compact);
+  let downloadedBlob, clickedDownload;
+  const originalURL = context.URL;
+  context.URL = class extends URL {
+    static createObjectURL(blob) {
+      downloadedBlob = blob;
+      return 'blob:analysis-test';
+    }
+    static revokeObjectURL() {}
+  };
+  context.document.createElement = () => ({
+    click() {
+      clickedDownload = this.download;
+    },
+  });
+  serializer.stringifyBounded = (value, replacer, indent, limit) => {
+    assert.strictEqual(limit, 128000000, 'production export cap stays unchanged');
+    assert.strictEqual(value, analysisFixture, 'listener owns its accepted report');
+    return bounded(value, replacer, indent, boundary);
+  };
+  try {
+    // Later mutable app state must not change this already-rendered export owner.
+    vm.runInContext('analysisReport=null;', context);
+    node('#analysis-json').handlers.get('click')();
+    assert(downloadedBlob, 'compact-fitting accepted analysis reaches the download');
+    assert.strictEqual(await downloadedBlob.text(), compact);
+    assert.deepStrictEqual(JSON.parse(await downloadedBlob.text()), analysisFixture);
+    assert.strictEqual(
+      clickedDownload,
+      'switching-analysis-' + analysisFixture.publication?.id + '.json',
+    );
+    assert.strictEqual(vm.runInContext('analysisError', context), '');
+  } finally {
+    serializer.stringifyBounded = bounded;
+    context.URL = originalURL;
+    vm.runInContext('analysisStudy=null; analysisReport=null; analysisError="";', context);
+  }
   context.window.InfrastructureSwitchingView.mount = mount;
   vm.runInContext('data={...data, publication:fullReport.publication};', context);
   const legacy = context.loadSwitching();
@@ -543,5 +608,6 @@ for (const phrase of [
   'publications without grouping evidence',
   'does not prove independent patch cycles',
   'Report-wide limitations',
-]) assert(html.includes(phrase), phrase);
+])
+  assert(html.includes(phrase), phrase);
 assert(!html.includes(' unbundled</small>'));

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "description": "Supplementary automated exact-source model cases; not independent adjudication or a statistical accuracy estimate.",
+  "human_review": "pending",
+  "cases": [
+    {
+      "advisory_id": "cisco-sa-fast-Zqr6DD5",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fast-Zqr6DD5/csaf/cisco-sa-fast-Zqr6DD5.json",
+      "source_sha256": "e38453288e918dcba73661b7c7fa507c4521b695bd8cfdfd9099cd08af4bbe69",
+      "source_locator": "/document/notes/1/text",
+      "cve_ids": [
+        "CVE-2021-1376",
+        "CVE-2021-1375"
+      ],
+      "expected_models": [
+        "9300",
+        "9300L"
+      ],
+      "status": "affected",
+      "human_review": "pending"
+    },
+    {
+      "advisory_id": "cisco-sa-ios-xe-cat-verify-D4NEQA6q",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cat-verify-D4NEQA6q/csaf/cisco-sa-ios-xe-cat-verify-D4NEQA6q.json",
+      "source_sha256": "c9b3b04fcbb0ccd52bf179142dba94e3c38933ba8aa1a2f14646fb871af20e5f",
+      "source_locator": "/document/notes/1/text",
+      "cve_ids": [
+        "CVE-2022-20944"
+      ],
+      "expected_models": [
+        "9200"
+      ],
+      "status": "affected",
+      "human_review": "pending"
+    },
+    {
+      "advisory_id": "cisco-sa-iosxe-mpls-dos-Ab4OUL3",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-mpls-dos-Ab4OUL3/csaf/cisco-sa-iosxe-mpls-dos-Ab4OUL3.json",
+      "source_sha256": "b69ce4e4987ce07a81926c882df85c326fcccd311cfa59c7cf1cf3581e3e5982",
+      "source_locator": "/document/notes/1/text",
+      "cve_ids": [
+        "CVE-2022-20870"
+      ],
+      "expected_models": [
+        "9300",
+        "9500"
+      ],
+      "status": "affected",
+      "human_review": "pending"
+    },
+    {
+      "advisory_id": "cisco-sa-iosxe-priv-esc-sABD8hcU",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-sABD8hcU/csaf/cisco-sa-iosxe-priv-esc-sABD8hcU.json",
+      "source_sha256": "fec2a77384af8d3981ce71e965b79186ed72d5d3463d4337fd4e6d6ac81d1f94",
+      "source_locator": "/document/notes/1/text",
+      "cve_ids": [
+        "CVE-2023-20029"
+      ],
+      "expected_models": [
+        "9200",
+        "9300"
+      ],
+      "status": "affected",
+      "human_review": "pending"
+    }
+  ],
+  "negative_controls": [
+    "Firepower 9300",
+    "embedded WLC host",
+    "explicit not vulnerable",
+    "mixed first-affected table",
+    "9500X is not 9500",
+    "9400 is not C9407R or C9410R",
+    "9600 is not C9606R"
+  ]
+}

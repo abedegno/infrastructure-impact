@@ -431,6 +431,11 @@ for (const test of fixtures.cases) {
   process.exitCode = 1;
 });
 
+vm.runInContext(
+  fs.readFileSync('infrastructure_impact/web/switching-analysis.js', 'utf8'),
+  context,
+);
+
 // Actual app state and hash navigation, using a minimal DOM boundary.
 (async () => {
   const ctx = {
@@ -445,6 +450,9 @@ for (const test of fixtures.cases) {
       nodes.set(id, {
         value: id === '#cohort' ? 'benchmark' : '',
         innerHTML: '',
+        insertAdjacentHTML(position, html) {
+          this.innerHTML += html;
+        },
         hidden: false,
         addEventListener(event, fn) {
           this[event] = fn;

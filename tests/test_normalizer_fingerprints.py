@@ -29,6 +29,7 @@ def versions():
     "filename,affected",
     [
         ("adapters/juniper_apstra.py", {"juniper"}),
+        ("resources/cisco-model-notes.json", {"cisco"}),
         ("resources/reviewed-remediation-bindings.json", {"aruba", "arista"}),
         ("schemas/reviewed-remediation-bindings-v1.json", {"aruba", "arista"}),
         ("plugins/juniper.py", {"juniper"}),

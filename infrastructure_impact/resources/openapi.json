@@ -1612,6 +1612,222 @@
           }
         }
       }
+    },
+    "/api/v1/switching-analysis": {
+      "get": {
+        "summary": "Read optional source-owned switching analysis",
+        "description": "Default-off local export only. Uses complete authenticated compact source membership, filters vendor/CVE/model-qualified scope before chronological upgrade walks, then applies the display window. Missing optional analysis returns 200 with availability unavailable; malformed or mixed-generation data fails closed. Unknown risk/counts remain null, CSV blanks. Current CVE membership and latest fixed targets do not prove first CVE disclosure or historical fix availability. Strict unknown, duplicate and blank query rejection. No collection or full claim hydration. Static hosting uses the same immutable compiled asset and selection contract. JSON uses compact selected row evidence: zero-based indices into lexically sorted selected requirements.members, with typed hashed affected and unresolved tables and member-order digest. CSV expands those same facts into the detailed row columns; neither format drops unknowns.",
+        "parameters": [
+          {
+            "name": "vendor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            "description": "Optional single vendor; omission selects all registered study vendors."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ],
+              "default": "os_family"
+            },
+            "description": "OS-family context or explicitly qualified model subset."
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "all"
+            },
+            "description": "all, pre, post, undated, or an observed year from 2021 through observation_end year. Cutoff 2026-04-07 is post."
+          },
+          {
+            "name": "cves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}(,CVE-[0-9]{4}-[0-9]{4,19})*$"
+            },
+            "description": "Canonical distinct comma-separated IDs. Omission selects full study independently of ordinary benchmark/KEV controls. Unmatched selection is empty."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "default": "json"
+            },
+            "description": "JSON contains selected upgrades, disclosure, KEV reconciliation, model coverage and release history. CSV columns row_type,vendor,cve_id,year,event_count,payload; payload is the exact typed section row as JSON."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Selected source-owned optional analysis, or explicit unavailable envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/switching-analysis-v1.json#/$defs/selected"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request: blank, repeated, unknown or invalid study control."
+          },
+          "503": {
+            "description": "Missing legacy study: {\"error\":\"switching_unavailable\"}. Damaged publication: {\"error\":\"Publication temporarily unavailable\"}."
+          }
+        }
+      }
+    },
+    "/api/v1/switching-upgrades": {
+      "get": {
+        "summary": "Read optional source-owned switching upgrades",
+        "description": "Default-off local export only. Uses complete authenticated compact source membership, filters vendor/CVE/model-qualified scope before chronological upgrade walks, then applies the display window. Missing optional analysis returns 200 with availability unavailable; malformed or mixed-generation data fails closed. Unknown risk/counts remain null, CSV blanks. Current CVE membership and latest fixed targets do not prove first CVE disclosure or historical fix availability. Strict unknown, duplicate and blank query rejection. No collection or full claim hydration. Static hosting uses the same immutable compiled asset and selection contract. JSON uses compact selected row evidence: zero-based indices into lexically sorted selected requirements.members, with typed hashed affected and unresolved tables and member-order digest. CSV expands those same facts into the detailed row columns; neither format drops unknowns.",
+        "parameters": [
+          {
+            "name": "vendor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            "description": "Optional single vendor; omission selects all registered study vendors."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ],
+              "default": "os_family"
+            },
+            "description": "OS-family context or explicitly qualified model subset."
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "all"
+            },
+            "description": "all, pre, post, undated, or an observed year from 2021 through observation_end year. Cutoff 2026-04-07 is post."
+          },
+          {
+            "name": "cves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}(,CVE-[0-9]{4}-[0-9]{4,19})*$"
+            },
+            "description": "Canonical distinct comma-separated IDs. Omission selects full study independently of ordinary benchmark/KEV controls. Unmatched selection is empty."
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "csv"
+              ],
+              "default": "json"
+            },
+            "description": "Typed native upgrade rows; nested facts use JSON cells and unknown scalar counts are blank."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Selected source-owned optional analysis, or explicit unavailable envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/switching-analysis-v1.json#/$defs/selected_upgrades"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request: blank, repeated, unknown or invalid study control."
+          },
+          "503": {
+            "description": "Missing legacy study: {\"error\":\"switching_unavailable\"}. Damaged publication: {\"error\":\"Publication temporarily unavailable\"}."
+          }
+        }
+      }
+    },
+    "/schemas/switching-analysis-v1.json": {
+      "get": {
+        "summary": "Closed optional compiled and selected switching analysis schema",
+        "responses": {
+          "200": {
+            "description": "switching-analysis-v1.json schema"
+          }
+        }
+      }
+    },
+    "/switching-analysis.json": {
+      "get": {
+        "summary": "Optional immutable compact source-owned analysis",
+        "responses": {
+          "200": {
+            "description": "Compiled facts; never a detailed native upgrade matrix",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./schemas/switching-analysis-v1.json#/$defs/compiled"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Optional analysis not included"
+          }
+        }
+      }
     }
   }
 }

@@ -574,9 +574,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     );
     return results.flat();
   }
-  load.switchingSummary = async () => {
-    const study = studyIndex();
-    if (!study) return null;
+  async function readSummary(study) {
     let result;
     if (Object.hasOwn(study, 'summary')) result = await read(study.summary);
     else {
@@ -612,8 +610,32 @@ async function createStaticDelivery(fetchPart, siteBase) {
       if (digest !== fragments.sha256) throw Error('Summary reconstruction fingerprint mismatch');
       result = window.InfrastructureJSON.parse(text);
     }
+    return result;
+  }
+  load.switchingSummary = async () => {
+    const descriptor = studyIndex();
+    if (!descriptor) return null;
+    const result = await readSummary(descriptor);
     window.InfrastructureSwitchingContracts.summary(result, index);
     return JSON.parse(JSON.stringify(result));
+  };
+  let analysisPromise;
+  load.switchingAnalysis = async (study) => {
+    window.InfrastructureSwitchingContracts.identity(study, index);
+    if (!analysisPromise)
+      analysisPromise = (async () => {
+        if (!Object.hasOwn(index, 'switching_analysis')) return null;
+        window.InfrastructureSwitchingContracts.validate(
+          index.schema_version === 2 ? 'static-index-v2.json' : 'static-index-v1.json',
+          index,
+        );
+        const report = await readSummary(index.switching_analysis);
+        return window.InfrastructureSwitchingAnalysis.validate(report, index);
+      })().catch((error) => {
+        analysisPromise = null;
+        throw error;
+      });
+    return window.InfrastructureSwitchingAnalysis.select(await analysisPromise, study);
   };
   load.switchingClaims = async (ids) => {
     const study = studyIndex();
@@ -719,6 +741,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
   };
   if (publicationV2) {
     load.switchingReleaseHistory = publicationV2.switchingReleaseHistory;
+    load.switchingAnalysis = publicationV2.switchingAnalysis;
     load.switchingOverview = publicationV2.switchingOverview;
     load.switchingSummary = publicationV2.switchingOverview;
     load.switchingSelection = publicationV2.switchingSelection;

@@ -1,0 +1,1085 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "evaluated_at",
+    "definition_sha256",
+    "mapping_version",
+    "selection",
+    "observation_end",
+    "source",
+    "catalogue",
+    "availability",
+    "entries",
+    "family_observations",
+    "summary",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "advisory_schema_version": {
+              "const": 2,
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "mapping_version": {
+      "const": "switching-kev-exact-pairs-v1"
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requested_vendor": {
+          "anyOf": [
+            {
+              "enum": [
+                "cisco",
+                "aruba",
+                "arista"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_vendors": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "cisco",
+              "aruba",
+              "arista"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "scope_level": {
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
+        },
+        "requested_window": {
+          "type": "string",
+          "pattern": "^(all|pre|post|undated|[0-9]{4})$"
+        },
+        "effective_windows": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "requested_cve_ids": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+              },
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+          },
+          "uniqueItems": true
+        },
+        "definition_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "requested_vendor",
+        "effective_vendors",
+        "scope_level",
+        "requested_window",
+        "effective_windows",
+        "requested_cve_ids",
+        "effective_cve_ids",
+        "definition_sha256"
+      ]
+    },
+    "observation_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "retrieval_url",
+        "catalogue_url",
+        "configured",
+        "enabled",
+        "availability",
+        "latest_attempt",
+        "checked_at"
+      ],
+      "properties": {
+        "id": {
+          "const": "cisa-kev"
+        },
+        "retrieval_url": {
+          "const": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json"
+        },
+        "catalogue_url": {
+          "const": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+        },
+        "configured": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "availability": {
+          "enum": [
+            "available",
+            "not_configured",
+            "disabled",
+            "missing",
+            "failed",
+            "stale",
+            "future"
+          ]
+        },
+        "latest_attempt": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "checked_at",
+                "outcome",
+                "error_code"
+              ],
+              "properties": {
+                "checked_at": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "outcome": {
+                  "enum": [
+                    "ok",
+                    "error"
+                  ]
+                },
+                "error_code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checked_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "catalogue": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "released_at",
+            "count",
+            "sha256",
+            "revision_id",
+            "source_observed_at",
+            "parsed_at",
+            "parser_version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "released_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20000
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "revision_id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "source_observed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "parsed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "parser_version": {
+              "type": "integer",
+              "const": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "availability": {
+      "enum": [
+        "available",
+        "not_configured",
+        "disabled",
+        "missing",
+        "failed",
+        "stale",
+        "future"
+      ]
+    },
+    "entries": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cve_id",
+          "vendorProject",
+          "product",
+          "mapping",
+          "membership",
+          "historically_listed",
+          "claim_state",
+          "current_claims",
+          "current_records",
+          "retained_records",
+          "reason_codes",
+          "in_requested_cve_filter",
+          "in_effective_study_cohort"
+        ],
+        "properties": {
+          "cve_id": {
+            "type": "string",
+            "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+          },
+          "vendorProject": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "product": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "mapping": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "rule_id",
+              "vendor",
+              "family"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "mapped",
+                  "unmapped",
+                  "ambiguous"
+                ]
+              },
+              "rule_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4000
+              },
+              "vendor": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4000
+              },
+              "family": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4000
+              }
+            }
+          },
+          "membership": {
+            "enum": [
+              "listed",
+              "not_listed",
+              "unknown"
+            ]
+          },
+          "historically_listed": {
+            "const": true
+          },
+          "claim_state": {
+            "enum": [
+              "no_observed_vendor_record",
+              "observed_no_study_claim",
+              "retained_only",
+              "draft_only",
+              "affected_scope_unresolved",
+              "documented_unaffected_for_selected_scope",
+              "documented_affected",
+              "conflicting_representations",
+              "outside_study_window",
+              "unknown"
+            ]
+          },
+          "current_claims": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "claim_id",
+                "advisory_id",
+                "status",
+                "publisher_status",
+                "scope",
+                "scope_level",
+                "initial_published_at",
+                "models",
+                "conditional_affected",
+                "source"
+              ],
+              "properties": {
+                "claim_id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "advisory_id": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "status": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "publisher_status": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 4000
+                },
+                "scope": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "scope_level": {
+                  "enum": [
+                    "os_family",
+                    "model_qualified"
+                  ]
+                },
+                "initial_published_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 4000
+                },
+                "models": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 4000
+                  }
+                },
+                "conditional_affected": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://"
+                    },
+                    "source_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "retrieved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "source_locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "source_sha256",
+                    "retrieved_at",
+                    "source_locator"
+                  ]
+                }
+              }
+            }
+          },
+          "current_records": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "vendor",
+                "advisory_id",
+                "cve_ids",
+                "document_status",
+                "disposition",
+                "source"
+              ],
+              "properties": {
+                "vendor": {
+                  "enum": [
+                    "cisco",
+                    "arista",
+                    "aruba"
+                  ]
+                },
+                "advisory_id": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "cve_ids": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                "document_status": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 4000
+                },
+                "disposition": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://"
+                    },
+                    "source_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "retrieved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "source_locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "source_sha256",
+                    "retrieved_at",
+                    "source_locator"
+                  ]
+                },
+                "revision_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1
+                },
+                "evidence_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "retained_records": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "vendor",
+                "advisory_id",
+                "cve_ids",
+                "document_status",
+                "disposition",
+                "source"
+              ],
+              "properties": {
+                "vendor": {
+                  "enum": [
+                    "cisco",
+                    "arista",
+                    "aruba"
+                  ]
+                },
+                "advisory_id": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "cve_ids": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                "document_status": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 4000
+                },
+                "disposition": {
+                  "type": "string",
+                  "maxLength": 4000
+                },
+                "source": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "pattern": "^https://"
+                    },
+                    "source_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "retrieved_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "source_locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "source_url",
+                    "source_sha256",
+                    "retrieved_at",
+                    "source_locator"
+                  ]
+                },
+                "revision_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1
+                },
+                "evidence_id": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "reason_codes": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "enum": [
+                "publisher_initial_date_missing",
+                "publisher_initial_date_outside_window",
+                "selected_model_binding_unresolved",
+                "vendor_claim_not_explicit_affected_or_unaffected",
+                "exact_pair_unmapped",
+                "outside_explicit_cve_filter",
+                "outside_effective_study_cohort"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "in_requested_cve_filter": {
+            "type": "boolean"
+          },
+          "in_effective_study_cohort": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "family_observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arista-eos",
+        "cisco-iosxe",
+        "aruba-aoscx"
+      ],
+      "properties": {
+        "arista-eos": {
+          "enum": [
+            "matching_catalogue_pair_observed",
+            "no_matching_catalogue_pair_observed",
+            "catalogue_details_incomplete"
+          ]
+        },
+        "cisco-iosxe": {
+          "enum": [
+            "matching_catalogue_pair_observed",
+            "no_matching_catalogue_pair_observed",
+            "catalogue_details_incomplete"
+          ]
+        },
+        "aruba-aoscx": {
+          "enum": [
+            "matching_catalogue_pair_observed",
+            "no_matching_catalogue_pair_observed",
+            "catalogue_details_incomplete"
+          ]
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_cves",
+        "entry_count",
+        "unmapped_entries",
+        "unknown_membership_entries",
+        "state_counts",
+        "completeness"
+      ],
+      "properties": {
+        "candidate_cves": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entry_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unmapped_entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unknown_membership_entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "no_observed_vendor_record": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "observed_no_study_claim": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "retained_only": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "draft_only": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "affected_scope_unresolved": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "documented_unaffected_for_selected_scope": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "documented_affected": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "conflicting_representations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "outside_study_window": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unknown": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "completeness": {
+          "const": "not_established"
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "maxItems": 20000,
+      "items": {
+        "type": "string",
+        "maxLength": 4000
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "publication",
+        "generated_at",
+        "definition_sha256",
+        "current_records",
+        "retained_records"
+      ],
+      "properties": {
+        "publication": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "advisory_schema_version": {
+                  "const": 2,
+                  "type": "integer"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "definition_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "current_records": {
+          "type": "array",
+          "maxItems": 20000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "vendor",
+              "advisory_id",
+              "cve_ids",
+              "document_status",
+              "disposition",
+              "source"
+            ],
+            "properties": {
+              "vendor": {
+                "enum": [
+                  "cisco",
+                  "arista",
+                  "aruba"
+                ]
+              },
+              "advisory_id": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "cve_ids": {
+                "type": "array",
+                "maxItems": 20000,
+                "items": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                },
+                "uniqueItems": true
+              },
+              "document_status": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4000
+              },
+              "disposition": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://"
+                  },
+                  "source_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "retrieved_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "source_locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
+              },
+              "revision_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "evidence_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "retained_records": {
+          "type": "array",
+          "maxItems": 20000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "vendor",
+              "advisory_id",
+              "cve_ids",
+              "document_status",
+              "disposition",
+              "source"
+            ],
+            "properties": {
+              "vendor": {
+                "enum": [
+                  "cisco",
+                  "arista",
+                  "aruba"
+                ]
+              },
+              "advisory_id": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "cve_ids": {
+                "type": "array",
+                "maxItems": 20000,
+                "items": {
+                  "type": "string",
+                  "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                },
+                "uniqueItems": true
+              },
+              "document_status": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 4000
+              },
+              "disposition": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://"
+                  },
+                  "source_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "retrieved_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "source_locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
+              },
+              "revision_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "evidence_id": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

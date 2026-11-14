@@ -26,6 +26,7 @@ _SCHEMAS = (
     "switching-comparison-v1.json",
     "switching-summary-v1.json",
     "switching-release-history-v1.json",
+    "switching-analysis-v1.json",
     "customer-comparison-v1.json",
     "switching-overview-v2.json",
     "publication-v2.json",
@@ -507,6 +508,19 @@ def _validate_claim_semantics(claims, study, *, _linkage=None):
                 for key in ("source_url", "source_sha256", "retrieved_at")
             ):
                 raise ValueError("Publisher metadata must share the claim source identity")
+        if "initial_date_provenance" in claim:
+            from ..adapters.arista_chronology import validate_chronology_binding
+
+            validate_chronology_binding(
+                claim["initial_date_provenance"],
+                vendor=vendor,
+                advisory_id=claim["advisory_id"],
+                cve_ids=[claim["cve_id"]],
+                source_url=claim["source"]["source_url"],
+                source_sha256=claim["source"]["source_sha256"],
+                initial=claim["initial_published_at"],
+                updated=claim["updated_at"],
+            )
         bindings = claim["platform_bindings"]
         qualified = (
             bool(bindings)

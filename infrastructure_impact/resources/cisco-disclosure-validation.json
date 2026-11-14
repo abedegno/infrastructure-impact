@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Source-pinned automated disclosure facts checked by offline replay; human review remains pending.",
+  "cases": [{
+    "advisory_id": "cisco-sa-hardening-iosxe-V8NMuMZJ",
+    "sha256": "0f51863687793ec84cfa51289e3028b712ec0695061eafa576e6ea5f62fe8149",
+    "initial_published_at": "2026-08-05T16:00:00+00:00",
+    "cwe_by_cve": {
+      "CVE-2026-20267": "CWE-284", "CVE-2026-20268": "CWE-119",
+      "CVE-2026-20269": "CWE-664", "CVE-2026-20270": "CWE-682",
+      "CVE-2026-20271": "CWE-691", "CVE-2026-20272": "CWE-74",
+      "CVE-2026-20273": "CWE-20"
+    },
+    "highest_cvss_wording": "The following table outlines the vulnerability classes that are addressed in these software hardening releases. The CVSS score that is assigned to each CVE ID represents the maximum potential severity of the single most impactful underlying bug within that specific CWE category.",
+    "human_review": "pending"
+  }]
+}

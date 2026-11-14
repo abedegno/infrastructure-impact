@@ -52,6 +52,11 @@ let comparisonMode = location.hash === '#customer-comparison' ? 'customer' : 'be
   customerStudy = null,
   customerAcceptedDelivery = null,
   switchingReport = null,
+  analysisReport = null,
+  analysisStudy = null,
+  analysisSequence = 0,
+  analysisLoading = false,
+  analysisError = '',
   switchingLoading = false,
   switchingError = '',
   switchingSequence = 0,
@@ -503,6 +508,42 @@ function renderComparison() {
     validationPublication: data.publication,
     validationGeneratedAt: data.generated_at,
   });
+  const acceptedAnalysis = analysisStudy === accepted ? analysisReport : null;
+  $('#comparison-content').insertAdjacentHTML(
+    'beforeend',
+    window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
+      loading: analysisLoading,
+      error: analysisError,
+    }),
+  );
+  window.InfrastructureSwitchingAnalysis.mount($('#comparison-content'), acceptedAnalysis);
+  $('#analysis-load').addEventListener('click', () => loadAnalysis(accepted, delivery));
+  for (const kind of ['json', 'csv', 'upgrades-csv'])
+    $('#analysis-' + kind)?.addEventListener('click', () => {
+      try {
+        const body =
+            kind === 'json'
+              ? appJSON.stringifyBounded(acceptedAnalysis, null, '', 128000000)
+              : window.InfrastructureSwitchingAnalysis.csv(acceptedAnalysis, {
+                  upgradesOnly: kind === 'upgrades-csv',
+                }),
+          url = URL.createObjectURL(
+            new Blob([body], { type: kind === 'json' ? 'application/json' : 'text/csv' }),
+          ),
+          a = document.createElement('a');
+        a.href = url;
+        a.download =
+          'switching-analysis-' +
+          acceptedAnalysis.publication?.id +
+          '.' +
+          (kind === 'json' ? 'json' : 'csv');
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (error) {
+        analysisError = 'Analysis export rejected: ' + error.message;
+        renderComparison();
+      }
+    });
   window.InfrastructureSwitchingView.mount(
     $('#comparison-content'),
     accepted,
@@ -576,6 +617,31 @@ function renderComparison() {
   )
     loadSwitching(switchingReport ? studyOptions(switchingReport) : {});
 }
+async function loadAnalysis(study, delivery) {
+  if (!study || !delivery) return;
+  const sequence = ++analysisSequence,
+    studySequence = switchingSequence;
+  analysisLoading = true;
+  analysisError = '';
+  renderComparison();
+  try {
+    const loader = await delivery.promise;
+    window.InfrastructureSwitchingContracts.identity(loader, study);
+    const report = await loader.switchingAnalysis(study);
+    if (sequence !== analysisSequence || studySequence !== switchingSequence) return;
+    window.InfrastructureSwitchingContracts.identity(report, {
+      publication: data.publication,
+      generated_at: data.generated_at,
+    });
+    analysisReport = report;
+    analysisStudy = study;
+  } catch (error) {
+    if (sequence !== analysisSequence || studySequence !== switchingSequence) return;
+    analysisError = 'Analysis selection rejected: ' + error.message;
+  }
+  analysisLoading = false;
+  if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode)) renderComparison();
+}
 function studyOptions(report) {
   return {
     vendor: report.selection.requested_vendor,
@@ -587,6 +653,9 @@ function studyOptions(report) {
 async function loadSwitching(options = {}) {
   const customer = comparisonMode === 'customer';
   const sequence = ++switchingSequence;
+  ++analysisSequence;
+  analysisLoading = false;
+  analysisError = '';
   const identity = { publication: data.publication, generated_at: data.generated_at };
   switchingLoading = true;
   switchingError = '';

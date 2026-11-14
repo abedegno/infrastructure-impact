@@ -1,0 +1,74 @@
+[
+  {
+    "data": {
+      "document": {
+        "tracking": {
+          "id": "authored-control-0"
+        },
+        "notes": [
+          {
+            "title": "Vulnerable Products",
+            "text": "Authored ROMMON condition without a pinned rule."
+          }
+        ]
+      }
+    },
+    "source_url": "https://example.test/control-0",
+    "source_sha256": "f0df11734c44616be645900cf55c0cf2b9c291acada4d2a7c77ea87c5218ca72",
+    "cve_id": "CVE-2026-99990"
+  },
+  {
+    "data": {
+      "document": {
+        "tracking": {
+          "id": "authored-control-1"
+        },
+        "notes": [
+          {
+            "title": "Vulnerable Products",
+            "text": "Authored Embedded Wireless Controller host context."
+          }
+        ]
+      }
+    },
+    "source_url": "https://example.test/control-1",
+    "source_sha256": "1bf32557061398dc16867d92a5fd5eb3546b6bfb9eebe9874b1e1cb7800dd452",
+    "cve_id": "CVE-2026-99990"
+  },
+  {
+    "data": {
+      "document": {
+        "tracking": {
+          "id": "authored-control-2"
+        },
+        "notes": [
+          {
+            "title": "Vulnerable Products",
+            "text": "Authored Catalyst 9400 and Catalyst 9600 family-only example."
+          }
+        ]
+      }
+    },
+    "source_url": "https://example.test/control-2",
+    "source_sha256": "a868d490eb290eef97beb55abe6a0f21e87914cb0849c7d626c8e182f8ec8a03",
+    "cve_id": "CVE-2026-99990"
+  },
+  {
+    "data": {
+      "document": {
+        "tracking": {
+          "id": "authored-control-3"
+        },
+        "notes": [
+          {
+            "title": "Vulnerable Products",
+            "text": "Authored mixed platform list: Firepower 9300 and Catalyst 9500X."
+          }
+        ]
+      }
+    },
+    "source_url": "https://example.test/control-3",
+    "source_sha256": "2619e8ed72f6a1ef6c01b748261e07c3fb3334474001e00ebc84abf5471af6c3",
+    "cve_id": "CVE-2026-99990"
+  }
+]

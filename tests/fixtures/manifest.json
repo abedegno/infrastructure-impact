@@ -10,6 +10,51 @@
     "sha256": "50d85c192e29acb1d368ebace53568b63a4a3543f109eb34a0d9263f6eb7e619"
   },
   {
+    "file": "arista-chronology-165-authored.html",
+    "kind": "synthetic",
+    "sha256": "adbdc43d7a39888bf2658a56efda5e2639b57e64336de5042e3d807167e19ab6"
+  },
+  {
+    "file": "arista-chronology-165-authored.json",
+    "kind": "synthetic",
+    "sha256": "44d0b5377ab55583323d564922569859ceb98a9b62244ea18cee33c013b14f1f"
+  },
+  {
+    "file": "arista-chronology-165-sources-authored.json",
+    "kind": "synthetic",
+    "sha256": "0830e3ffbd891eed36de6a3425e062c0cab4bb368433d30b7f9f0b469ff00bdc"
+  },
+  {
+    "file": "arista-chronology-183-authored.html",
+    "kind": "synthetic",
+    "sha256": "360b768be49d168dd510ce25f5dfc9a361469d7e7e9903b84476838c678402a5"
+  },
+  {
+    "file": "arista-chronology-183-authored.json",
+    "kind": "synthetic",
+    "sha256": "e4d6674f9574c474ea0fc3dc5f908f564eb93ceec1602aab88ae58d536bda5af"
+  },
+  {
+    "file": "arista-chronology-183-sources-authored.json",
+    "kind": "synthetic",
+    "sha256": "3b4c06339e317996215763d59e71c98c2b82628453ed64a87f9ea874b266bf5d"
+  },
+  {
+    "file": "arista-chronology-188-authored.html",
+    "kind": "synthetic",
+    "sha256": "1830f259362d57b376e1b99bf25712e5459b2f51b13e566cc99a8cd688d028b6"
+  },
+  {
+    "file": "arista-chronology-188-authored.json",
+    "kind": "synthetic",
+    "sha256": "850027249094b3a676f0e022bbc64a0a7de0194f3371475a956bd9a50c374405"
+  },
+  {
+    "file": "arista-chronology-188-sources-authored.json",
+    "kind": "synthetic",
+    "sha256": "4a0dbcdd27e2727980f53185e1c3267221f928fa370c0a9b62e32a3401426c10"
+  },
+  {
     "file": "arista-log4shell.html",
     "kind": "synthetic",
     "sha256": "60c7840469457fa1c6321ef07d41504ef6401a9a857cdbfbe142b496aec674bc"
@@ -23,6 +68,11 @@
     "file": "arista-openssl.html",
     "kind": "synthetic",
     "sha256": "0cbcb3ca1e0a265fbf22a36246d4300fbf484338556f397b69572f80d81eb77c"
+  },
+  {
+    "file": "arista-sa0137-authored.html",
+    "kind": "synthetic",
+    "sha256": "12ba564963478b0bd436689e31ff3f9cb250b911c807200a05abce78bb375cfb"
   },
   {
     "file": "arista120.json",
@@ -53,6 +103,26 @@
     "file": "cisco-curl.html",
     "kind": "synthetic",
     "sha256": "1ec31dba12bb2f3e1ec35c45cc7666b601e4ecc44b4a7afa13555d4eaf2b9988"
+  },
+  {
+    "file": "cisco-disclosure-authored.json",
+    "kind": "synthetic",
+    "sha256": "39ec5a1dfe63e766b1a3de48251a2d1902ff2c39249474c4941a0d8962af7a31"
+  },
+  {
+    "file": "cisco-model-controls-authored.json",
+    "kind": "synthetic",
+    "sha256": "95bb31d018a4993633c358366b30d821d598a9dbda67734d3ecc1d0b419c4f73"
+  },
+  {
+    "file": "cisco-model-notes-authored.json",
+    "kind": "synthetic",
+    "sha256": "e2f2aef881ae7b72b6b8fa7c96fe6f3c3f94094731f7865c9ec88d009fa387b6"
+  },
+  {
+    "file": "cisco-model-version-tree-authored.json",
+    "kind": "synthetic",
+    "sha256": "d1a84908c7e1bc8d98ded7bf1957bd92b889fdbed52246b099502581946153e7"
   },
   {
     "file": "cisco-php.html",
@@ -143,6 +213,11 @@
     "file": "reviewed-aruba-authored.json",
     "kind": "synthetic",
     "sha256": "95b3906c097e5f78bc9bca2e921bba57bd3eb81cc7e5a21658a37fc185d9a553"
+  },
+  {
+    "file": "switching-analysis-vectors.json",
+    "kind": "synthetic",
+    "sha256": "c9dc0b01a3cb3ee4bdb8fb82c5bc68f9faf6a596fd15246b2cd54d100fa94d7d"
   },
   {
     "file": "switching-arista-bridge.json",

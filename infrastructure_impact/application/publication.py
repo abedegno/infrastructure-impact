@@ -68,7 +68,9 @@ def _switching_projection_input(value):
 
 
 @phase("publication.projection")
-def public_projection(data, public_release_urls=(), *, publication_format="v1"):
+def public_projection(
+    data, public_release_urls=(), *, publication_format="v1", include_switching_analysis=False
+):
     """The publication boundary never copies raw evidence or private review notes."""
     from ..plugins.registry import default_registry
     from .current_evidence import partition
@@ -78,15 +80,26 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
 
     validate_format(publication_format)
     # Consume private frames before any general clone or public serialization.
+    analysis_input = data["research"].get("switching_analysis_input", {})
     release_input = data["research"].get("release_input", [])
     switching_input = data["research"].get("switching_input")
     research = {
         k: v
         for k, v in data["research"].items()
-        if k not in {"current_evidence_input", "release_input", "switching_input"}
+        if k
+        not in {
+            "current_evidence_input",
+            "release_input",
+            "switching_input",
+            "switching_analysis_input",
+        }
     }
     # Supplied reports are never authority at the public boundary.
-    data = {k: v for k, v in data.items() if k != "switching_release_history"}
+    data = {
+        k: v
+        for k, v in data.items()
+        if k not in ("switching_release_history", "switching_analysis")
+    }
     context = data["research"].get("current_evidence_input", {"selections": [], "sources": []})
     union = data["records"] + [w["record"] for w in data.get("retained_advisories", [])]
     computed = partition(
@@ -198,6 +211,30 @@ def public_projection(data, public_release_urls=(), *, publication_format="v1"):
             generated_at=data["generated_at"],
             observation_end=observation_end,
         )
+    if include_switching_analysis and "switching_comparison" in data:
+        from .switching_analysis import build_report as build_analysis
+
+        analysis_study = data["switching_comparison"]
+        if kev_input is not None and kev_input.get("retained") is not None:
+            # Candidate discovery needs retained details outside current CVEs.
+            # Keep ordinary public KEV/comparison payloads scoped as before.
+            complete_kev = build_report(
+                kev_input,
+                sorted(kev_input["retained"]["catalogue"]["entries"]),
+                publication=data.get("publication"),
+                generated_at=data["generated_at"],
+            )
+            analysis_study = dict(
+                analysis_study,
+                inputs=dict(analysis_study["inputs"], kev=complete_kev),
+            )
+        data["switching_analysis"] = build_analysis(
+            data["records"],
+            [w["record"] for w in data.get("retained_advisories", [])],
+            analysis_study,
+            release_history=data.get("switching_release_history"),
+            source_frame=analysis_input,
+        )
     data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
     data["research"]["release_assets"] = [
@@ -299,9 +336,12 @@ def write_bundle(destination, data, *, publication_format="v1"):
     from .research_reports import validate
 
     validate_partition(data, require_targets=True)
-    if {"current_evidence_input", "score_input", "release_input"}.intersection(
-        data.get("research", {})
-    ):
+    if {
+        "current_evidence_input",
+        "score_input",
+        "release_input",
+        "switching_analysis_input",
+    }.intersection(data.get("research", {})):
         raise ValueError("Private evidence input cannot be published")
     validate_kev(data["kev"])
     if (
@@ -367,6 +407,17 @@ def write_bundle(destination, data, *, publication_format="v1"):
                 "Release history observation bound or definition differs from comparison"
             )
         validate_current_references(data["switching_release_history"], data["switching_evidence"])
+    if "switching_analysis" in data:
+        from .switching_analysis import validate_report as validate_analysis
+
+        validate_analysis(
+            data["switching_analysis"],
+            evidence=data["switching_evidence"],
+            records=data["records"],
+            retained=[w["record"] for w in data.get("retained_advisories", [])],
+            publication=data["publication"],
+            generated_at=data["generated_at"],
+        )
     if publication_format == "v2":
         from .publication_v2 import _write_bundle as write_v2
 
@@ -377,7 +428,7 @@ def write_bundle(destination, data, *, publication_format="v1"):
     compact = {
         k: v
         for k, v in data.items()
-        if k not in ("switching_evidence", "switching_release_history")
+        if k not in ("switching_evidence", "switching_release_history", "switching_analysis")
     }
     if "switching_release_history" in data:
         (destination / "switching-release-history.json").write_text(
@@ -387,6 +438,10 @@ def write_bundle(destination, data, *, publication_format="v1"):
         compact["switching_comparison"] = summary(data["switching_comparison"])
         for name in ("switching_evidence", "switching_comparison"):
             (destination / (name.replace("_", "-") + ".json")).write_text(json.dumps(data[name]))
+    if "switching_analysis" in data:
+        (destination / "switching-analysis.json").write_text(
+            json.dumps(data["switching_analysis"], allow_nan=False)
+        )
     snapshot = (json.dumps(compact, separators=(",", ":")) + "\n").encode("utf-8")
     (destination / "snapshot.json").write_bytes(snapshot)
     compressed = io.BytesIO()
@@ -495,6 +550,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching.js",
         "switching-view.js",
         "customer-comparison.js",
+        "switching-analysis.js",
         "snapshot.js",
         "delivery.js",
     ):
@@ -504,7 +560,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/customer-comparison.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/customer-comparison.js"></script><script defer src="/switching-analysis.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
         )
     )
     if publication_format == "v2":
@@ -527,6 +583,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching.js",
         "switching-view.js",
         "customer-comparison.js",
+        "switching-analysis.js",
         "snapshot.js",
         "delivery.js",
         "style.css",
@@ -602,6 +659,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         "switching-comparison-v1.json",
         "switching-summary-v1.json",
         "switching-release-history-v1.json",
+        "switching-analysis-v1.json",
         "customer-comparison-v1.json",
         "switching-inputs-v1.json",
         "research-dossiers-v1.json",
@@ -617,7 +675,14 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
     )
 
 
-def publish(data, root=None, public_release_urls=(), *, publication_format="v1"):
+def publish(
+    data,
+    root=None,
+    public_release_urls=(),
+    *,
+    publication_format="v1",
+    include_switching_analysis=False,
+):
     from .publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
@@ -639,6 +704,7 @@ def publish(data, root=None, public_release_urls=(), *, publication_format="v1")
     data = public_projection(
         data,
         public_release_urls,
+        **({"include_switching_analysis": True} if include_switching_analysis else {}),
         **({"publication_format": "v2"} if publication_format == "v2" else {}),
     )
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
@@ -656,23 +722,36 @@ def publish(data, root=None, public_release_urls=(), *, publication_format="v1")
     return final
 
 
-def build(output=None, *, publication_format="v1"):
+def build(
+    output=None,
+    *,
+    publication_format="v1",
+    include_switching_analysis=False,
+    switching_analysis_input=None,
+):
     """Publish from the evidence vault and export a static reader bundle."""
     from ..collection.config import load_config
 
+    if switching_analysis_input is not None and not include_switching_analysis:
+        raise ValueError("Analysis source input requires explicit opt-in")
     paths = Paths.from_env()
     with closing(connect(read_only=True)) as db:
         data = state(db)
         data["coverage"] = coverage(
             db, data["records"], sorted(set(data["all_cves"]) | set(COHORT))
         )
+    if switching_analysis_input is not None:
+        data["research"]["switching_analysis_input"] = switching_analysis_input
     if publication_format == "v2":
         from .reporting import _report_from_state
 
         _report_from_state(data)
     public_urls = [d["url"] for d in load_config().get("release_documents", [])]
     generation = publish(
-        data, public_release_urls=public_urls, publication_format=publication_format
+        data,
+        public_release_urls=public_urls,
+        publication_format=publication_format,
+        include_switching_analysis=include_switching_analysis,
     )
     destination = Path(output or paths.snapshot)
     # Deployment archives need regular assets, not an external current symlink.

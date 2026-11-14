@@ -1,0 +1,1063 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "publication": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$"
+            },
+            "advisory_schema_version": {
+              "type": "integer",
+              "const": 2
+            }
+          },
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "observation_end": {
+      "type": "string"
+    },
+    "definition_sha256": {
+      "type": "string"
+    },
+    "evidence_sha256": {
+      "type": "string"
+    },
+    "selection": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "requested_vendor": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_vendors": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "scope_level": {
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
+            },
+            "requested_window": {
+              "type": "string",
+              "pattern": "^(all|pre|post|undated|[0-9]{4})$"
+            },
+            "effective_windows": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "uniqueItems": true
+            },
+            "requested_cve_ids": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+                  },
+                  "uniqueItems": true
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effective_cve_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$"
+              },
+              "uniqueItems": true
+            },
+            "definition_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          },
+          "required": [
+            "requested_vendor",
+            "effective_vendors",
+            "scope_level",
+            "requested_window",
+            "effective_windows",
+            "requested_cve_ids",
+            "effective_cve_ids",
+            "definition_sha256"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "method": {
+      "type": "string"
+    },
+    "severity_provider": {
+      "type": "string"
+    },
+    "kev_basis": {
+      "type": "string"
+    },
+    "kev_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "retrieval_url",
+            "catalogue_url",
+            "configured",
+            "enabled",
+            "availability",
+            "latest_attempt",
+            "checked_at"
+          ],
+          "properties": {
+            "id": {
+              "const": "cisa-kev"
+            },
+            "retrieval_url": {
+              "const": "https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json"
+            },
+            "catalogue_url": {
+              "const": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+            },
+            "configured": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "enabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "availability": {
+              "enum": [
+                "available",
+                "not_configured",
+                "disabled",
+                "missing",
+                "failed",
+                "stale",
+                "future"
+              ]
+            },
+            "latest_attempt": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "checked_at",
+                    "outcome",
+                    "error_code"
+                  ],
+                  "properties": {
+                    "checked_at": {
+                      "$ref": "#/$defs/timestamp"
+                    },
+                    "outcome": {
+                      "enum": [
+                        "ok",
+                        "error"
+                      ]
+                    },
+                    "error_code": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "checked_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "catalogue": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "released_at",
+                "count",
+                "sha256",
+                "revision_id",
+                "source_observed_at",
+                "parsed_at",
+                "parser_version"
+              ],
+              "properties": {
+                "version": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "released_at": {
+                  "$ref": "#/$defs/timestamp"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 20000
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "revision_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "source_observed_at": {
+                  "$ref": "#/$defs/timestamp"
+                },
+                "parsed_at": {
+                  "$ref": "#/$defs/timestamp"
+                },
+                "parser_version": {
+                  "type": "integer",
+                  "const": 1
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_bytes",
+            "max_entries",
+            "fresh_for_seconds",
+            "future_tolerance_seconds"
+          ],
+          "properties": {
+            "max_bytes": {
+              "type": "integer",
+              "const": 8000000
+            },
+            "max_entries": {
+              "type": "integer",
+              "const": 20000
+            },
+            "fresh_for_seconds": {
+              "type": "integer",
+              "const": 129600
+            },
+            "future_tolerance_seconds": {
+              "type": "integer",
+              "const": 300
+            }
+          }
+        }
+      },
+      "required": [
+        "evaluated_at",
+        "source",
+        "catalogue",
+        "policy"
+      ]
+    },
+    "source_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "group_id": {
+            "type": "string"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "advisory_id": {
+            "type": "string"
+          },
+          "cve_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100000
+          },
+          "product": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "product_ids": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "train_expression": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "disposition": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "source_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://"
+              },
+              "source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "source_url",
+              "source_sha256",
+              "retrieved_at",
+              "source_locator"
+            ]
+          }
+        },
+        "required": [
+          "group_id",
+          "vendor",
+          "advisory_id",
+          "cve_ids",
+          "product",
+          "product_ids",
+          "train_expression",
+          "disposition",
+          "method",
+          "source"
+        ]
+      },
+      "maxItems": 100000
+    },
+    "inference_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "group_id": {
+            "type": "string"
+          },
+          "maximum_affected": {
+            "type": "string"
+          },
+          "affected_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100000
+          },
+          "affected_claim_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100000
+          },
+          "catalogue_fingerprint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "group_id",
+          "maximum_affected",
+          "affected_inputs",
+          "affected_claim_ids",
+          "catalogue_fingerprint"
+        ]
+      },
+      "maxItems": 100000
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/constraint"
+      },
+      "maxItems": 100000
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/row"
+      },
+      "maxItems": 100000
+    }
+  },
+  "required": [
+    "schema_version",
+    "publication",
+    "generated_at",
+    "observation_end",
+    "definition_sha256",
+    "evidence_sha256",
+    "selection",
+    "method",
+    "severity_provider",
+    "kev_basis",
+    "kev_context",
+    "source_groups",
+    "inference_groups",
+    "constraints",
+    "rows"
+  ],
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cve": {
+      "type": "string",
+      "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}$",
+      "not": {
+        "pattern": "[^A-Z0-9-]"
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cveID",
+        "vendorProject",
+        "product",
+        "vulnerabilityName",
+        "shortDescription",
+        "requiredAction",
+        "dateAdded",
+        "dueDate",
+        "knownRansomwareCampaignUse",
+        "forensicTriage",
+        "notes",
+        "cwes"
+      ],
+      "properties": {
+        "cveID": {
+          "$ref": "#/$defs/cve"
+        },
+        "vendorProject": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "vulnerabilityName": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "shortDescription": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "requiredAction": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "dateAdded": {
+          "type": "string",
+          "format": "date"
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "knownRansomwareCampaignUse": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "forensicTriage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cwes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {
+          "type": "string"
+        },
+        "claim_sha256": {
+          "type": "string"
+        },
+        "vendor": {
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
+        },
+        "family": {
+          "type": "string"
+        },
+        "train": {
+          "type": "string"
+        },
+        "advisory_id": {
+          "type": "string"
+        },
+        "cve_id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_url": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://"
+            },
+            "source_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "retrieved_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "source_locator": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "source_url",
+            "source_sha256",
+            "retrieved_at",
+            "source_locator"
+          ]
+        },
+        "scope_level": {
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenario": {
+          "enum": [
+            "publisher_first_fixed",
+            "known_fixed_target",
+            "inferred_inclusive"
+          ]
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100000
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100000
+        },
+        "proof": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "method": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "publisher_first_fixed",
+                  "known_fixed_target",
+                  "inferred_candidate",
+                  "publisher_api_first_fixed"
+                ]
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://"
+                  },
+                  "source_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "retrieved_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "source_locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
+              },
+              "locator": {
+                "type": "string"
+              },
+              "fingerprint": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "kind",
+              "source",
+              "locator",
+              "fingerprint"
+            ]
+          },
+          "maxItems": 100000
+        },
+        "train_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "basis": {
+              "type": "string"
+            },
+            "expressions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 100000
+            },
+            "partial": {
+              "type": "boolean"
+            },
+            "unsupported": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "basis",
+            "expressions",
+            "partial",
+            "unsupported"
+          ]
+        },
+        "inference": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "maximum_affected": {
+                  "type": "string"
+                },
+                "group_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "maximum_affected",
+                "group_id"
+              ]
+            }
+          ]
+        },
+        "high_risk": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "severity_facets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "origin": {
+                "type": "string"
+              },
+              "provider": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://"
+                  },
+                  "source_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "retrieved_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "source_locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  }
+                },
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
+              }
+            },
+            "required": [
+              "origin",
+              "provider",
+              "version",
+              "value",
+              "source"
+            ]
+          },
+          "maxItems": 100000
+        },
+        "kev_membership": {
+          "enum": [
+            "listed",
+            "not_listed",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "claim_id",
+        "claim_sha256",
+        "vendor",
+        "family",
+        "train",
+        "advisory_id",
+        "cve_id",
+        "source",
+        "scope_level",
+        "date",
+        "scenario",
+        "alternatives",
+        "target",
+        "issues",
+        "proof",
+        "train_binding",
+        "inference",
+        "high_risk",
+        "severity_facets",
+        "kev_membership"
+      ]
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vendor": {
+          "type": "string"
+        },
+        "family": {
+          "type": "string"
+        },
+        "train": {
+          "type": "string"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "policy": {
+          "type": "string"
+        },
+        "event_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "supported_event_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "date": {
+                "type": "string"
+              },
+              "previous": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "target": {
+                "type": "string"
+              },
+              "claim_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "date",
+              "previous",
+              "target",
+              "claim_ids"
+            ]
+          },
+          "maxItems": 100000
+        },
+        "unresolved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "claim_id": {
+                "type": "string"
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "claim_id",
+              "issues"
+            ]
+          },
+          "maxItems": 100000
+        },
+        "affected_claim_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100000
+        },
+        "start_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "end_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "coverage": {
+          "enum": [
+            "partial",
+            "observed_constraints_only",
+            "unknown"
+          ]
+        },
+        "baseline": {
+          "const": "assumed_below_first_target_actual_unknown"
+        },
+        "partial_year": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "vendor",
+        "family",
+        "train",
+        "year",
+        "scenario",
+        "policy",
+        "event_count",
+        "supported_event_count",
+        "events",
+        "unresolved",
+        "affected_claim_ids",
+        "start_version",
+        "end_version",
+        "coverage",
+        "baseline",
+        "partial_year"
+      ]
+    }
+  }
+}

@@ -286,3 +286,35 @@ def test_release_exports_retained_preview_helper_without_allowing_other_ops(tmp_
     subprocess.run(["git", "-C", str(root), "add", str(unexpected)], check=True)
     with pytest.raises(ValueError):
         run_release(monkeypatch, root, tmp_path / "rejected-export")
+
+
+def test_public_fixture_manifest_is_complete():
+    from checks.release import fixture_check
+
+    fixture_check(Path(__file__).resolve().parents[1])
+
+
+@pytest.mark.parametrize("fault", ["unlisted", "directory", "capture", "nested", "hash"])
+def test_public_fixture_guard_stays_flat_synthetic_and_exact(tmp_path, fault):
+    import hashlib
+
+    from checks.release import fixture_check
+
+    fixtures = tmp_path / "tests/fixtures"
+    fixtures.mkdir(parents=True)
+    (fixtures / "README.md").write_text("Authored test example")
+    (fixtures / "example.json").write_text("{}")
+    entry = dict(file="example.json", kind="synthetic", sha256=hashlib.sha256(b"{}").hexdigest())
+    if fault == "unlisted":
+        (fixtures / "unlisted.json").write_text("{}")
+    elif fault == "directory":
+        (fixtures / "nested").mkdir()
+    elif fault == "capture":
+        entry["kind"] = "publisher_capture"
+    elif fault == "nested":
+        entry["file"] = "nested/example.json"
+    else:
+        entry["sha256"] = "0" * 64
+    (fixtures / "manifest.json").write_text(json.dumps([entry]))
+    with pytest.raises(AssertionError):
+        fixture_check(tmp_path)

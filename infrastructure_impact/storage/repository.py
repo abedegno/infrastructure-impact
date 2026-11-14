@@ -94,9 +94,51 @@ def semantic_diff(before, after):
     return changes
 
 
+def retained_enrichment(db, raw, document, vendor):
+    """Optional vendor-owned revalidation using only retained exact captures."""
+    registry = default_registry()
+    if vendor not in registry.names():
+        return document
+    hook = registry.get(vendor).retained_enrichment
+    if hook is None:
+        return document
+    row = db.execute(
+        "SELECT normalized FROM revisions WHERE vendor=? AND (advisory_id=? OR source_url=?) ORDER BY id DESC LIMIT 1",
+        (vendor, document["advisory_id"], document["source_url"]),
+    ).fetchone()
+    if row is None:
+        return document
+
+    def lookup(receipt):
+        capture = db.execute(
+            "SELECT raw FROM evidence WHERE source_url=? AND sha256=?",
+            (receipt["url"], receipt["sha256"]),
+        ).fetchone()
+        if capture is None:
+            raise ValueError("chronology_capture_missing")
+        return capture[0]
+
+    previous = json.loads(row[0])
+    candidate = document
+    if document.get("publisher_chronology") and previous.get("publisher_chronology"):
+        candidate = json.loads(json.dumps(document))
+        meta = candidate.pop("publisher_chronology")
+        candidate["published_at"] = meta["original_published_at"]
+        candidate["updated_at"] = meta["original_updated_at"]
+    result = hook(raw, candidate, previous, lookup)
+    if (
+        candidate is not document
+        and result.get("publisher_chronology") != document["publisher_chronology"]
+    ):
+        raise ValueError("chronology_incompatible_metadata_requires_review")
+    validate_advisory(result, vendor=vendor, source_url=document["source_url"])
+    return result
+
+
 def ingest(db, raw, url, adapter, vendor):
     """A->B->A reversions are revisions, while repeated identical states are not."""
     normalized = json.loads(json.dumps(adapter(raw, url, vendor)))
+    normalized = retained_enrichment(db, raw, normalized, vendor)
     unlinked = (
         not normalized.get("cves")
         and not normalized.get("assessments")

@@ -52,3 +52,23 @@ route shapes and literal parser markers exercise dispatch; all vulnerability,
 version, timestamp and applicability content is synthetic. It is maintained
 directly and preserved/fingerprinted by the generator. It contains no retained
 vendor capture and does not certify real-source acquisition or hosted acceptance.
+
+`arista-chronology-*-authored.{html,json}` and their flat `*-sources-authored.json`
+companions are minimal authored date/identity examples. Official route shapes,
+advisory numbers, CVE identifiers and date literals exercise ownership and event
+separation; these files are not reduced publisher captures. The authored HTML
+contains only the headings, source link, revision table and CVE marker used by tests.
+
+`cisco-model-*-authored.json` exercises version descendants, literal conditions,
+source revisions and conservative model abstention. Tests install scoped authored
+note rules using the complete authored body and note hashes. They do not alter the
+production source-pinned rules or certify those rules against real sources.
+`cisco-disclosure-authored.json` is an invented seven-row example with only the
+literal grouping/score markers required by the parser. Its synthetic case-checker
+receipt is scoped to the test; actual validation resources remain separate.
+
+`switching-analysis-vectors.json` is authored shared native/browser contract data,
+reproduced by `checks/generate_switching_analysis_vectors.py`. These manually
+maintained authored examples and generated vectors are fingerprinted by the fixture
+manifest generator. Actual source replay bodies and receipts remain external to Git;
+a successful synthetic test is not evidence of a successful primary-source replay.

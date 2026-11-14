@@ -276,6 +276,52 @@ class Application:
                 }
             )
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        if path in ("/api/v1/switching-analysis", "/api/v1/switching-upgrades"):
+            from .application import switching_analysis as analysis
+            from .application.switching_comparison import day, query_options
+
+            try:
+                options, output = query_options(query, day(data["generated_at"]))
+            except ValueError as error:
+                raise BadRequest("Invalid study query") from error
+            asset = generation / "switching-analysis.json"
+            value = None
+            if asset.exists():
+                from .publication_codec import MAX_SELECTED, strict_loads
+
+                with asset.open("rb") as stream:
+                    value = strict_loads(stream.read(MAX_SELECTED + 1), max_bytes=MAX_SELECTED)
+                analysis.validate_report(
+                    value,
+                    publication=data["publication"],
+                    generated_at=data["generated_at"],
+                    records=data["records"],
+                    retained=[w["record"] for w in data.get("retained_advisories", [])],
+                )
+            context = analysis.selection_context(
+                value
+                or {
+                    "publication": data["publication"],
+                    "generated_at": data["generated_at"],
+                    "observation_end": day(data["generated_at"]),
+                    "definition_sha256": analysis._hash(analysis.contracts.definition()),
+                },
+                options,
+            )
+            envelope = analysis.select_report(value, context)
+            if output == "csv":
+                return (
+                    200,
+                    "text/csv",
+                    (
+                        analysis.csv_export(envelope["upgrades"])
+                        if path.endswith("switching-upgrades")
+                        else analysis.analysis_csv_export(envelope)
+                    ).encode(),
+                )
+            return respond(
+                envelope["upgrades"] if path.endswith("switching-upgrades") else envelope
+            )
         if path in ("/api/v1/switching-comparison", "/api/v1/customer-comparison"):
             from .application.switching_comparison import day, query_options, select_report, summary
             from .exports import switching_csv
@@ -611,15 +657,18 @@ class Application:
             "/switching.js",
             "/switching-view.js",
             "/customer-comparison.js",
+            "/switching-analysis.js",
             "/switching-evidence.json",
             "/switching-comparison.json",
             "/switching-release-history.json",
+            "/switching-analysis.json",
             "/switching-study.json",
             "/schemas/switching-study-v1.json",
             "/schemas/switching-evidence-v1.json",
             "/schemas/switching-comparison-v1.json",
             "/schemas/switching-summary-v1.json",
             "/schemas/switching-release-history-v1.json",
+            "/schemas/switching-analysis-v1.json",
             "/schemas/customer-comparison-v1.json",
             "/schemas/switching-overview-v2.json",
             "/schemas/publication-v2.json",
@@ -741,6 +790,35 @@ class Application:
                 return 200, mimetypes.guess_type(target)[0] or "application/octet-stream", chunks()
             return self.route(environ, _opened=(generation, reader.metadata()))
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        if path in ("/api/v1/switching-analysis", "/api/v1/switching-upgrades"):
+            from .application import switching_analysis as analysis
+            from .application.switching_comparison import query_options
+
+            try:
+                options, output = query_options(
+                    query, reader.switching_overview()["observation_end"]
+                )
+            except ValueError as error:
+                raise BadRequest("Invalid study query") from error
+            envelope = reader.switching_analysis(options=options)
+            if output == "csv":
+                return (
+                    200,
+                    "text/csv",
+                    (
+                        analysis.csv_export(
+                            envelope["upgrades"], max_bytes=reader.limits["selected"]
+                        )
+                        if path.endswith("switching-upgrades")
+                        else analysis.analysis_csv_export(
+                            envelope, max_bytes=reader.limits["selected"]
+                        )
+                    ).encode(),
+                )
+            return self.json(
+                envelope["upgrades"] if path.endswith("switching-upgrades") else envelope,
+                max_bytes=reader.limits["selected"],
+            )
         if path in ("/api/v1/switching-comparison", "/api/v1/customer-comparison"):
             from .application.switching_comparison import query_options
             from .exports import switching_csv

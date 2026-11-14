@@ -65,6 +65,29 @@ def validate_advisory(document, *, vendor=None, source_url=None):
     url = urlsplit(document["source_url"])
     if not url.hostname or url.username or url.password or url.scheme != "https":
         raise NormalizationError("Source must be an absolute HTTPS URL without credentials")
+    if "publisher_chronology" in document:
+        from .adapters.arista_chronology import validate_chronology_binding
+
+        try:
+            validate_chronology_binding(
+                document["publisher_chronology"],
+                vendor=document["vendor"],
+                advisory_id=document["advisory_id"],
+                cve_ids=document["cves"],
+                source_url=document["source_url"],
+                source_sha256=document.get("sha256"),
+                initial=document.get("published_at"),
+                updated=document.get("updated_at"),
+            )
+        except ValueError as error:
+            raise NormalizationError(str(error)) from error
+    if "disclosure_metadata" in document:
+        from .adapters.cisco_disclosure import validate_binding
+
+        try:
+            validate_binding(document["disclosure_metadata"], document)
+        except ValueError as error:
+            raise NormalizationError(str(error)) from error
     seen = set()
     for assessment in document["assessments"]:
         if assessment["cve_id"] not in document["cves"]:
@@ -75,6 +98,29 @@ def validate_advisory(document, *, vendor=None, source_url=None):
                 "Duplicate CVE/product identity; resolve or retain a conflicting status"
             )
         seen.add(key)
+    for fact in document.get("first_fixed", []):
+        inferred = fact["method"] == "inferred_next_release"
+        if inferred != (fact["evidence_state"] == "inferred_candidate"):
+            raise NormalizationError("First-fixed method/evidence state mismatch")
+        # Candidates require a separate report derivation contract, not a source
+        # fact on an advisory. Foreign API responses likewise own their receipt.
+        if inferred:
+            raise NormalizationError("First-fixed inferred candidates require an analysis report")
+        owners = fact["cve_ids"]
+        scope = fact["scope"]
+        if scope == "unresolved":
+            if owners or fact["disposition"] not in {"unknown", "conflicting"}:
+                raise NormalizationError("First-fixed unresolved scope cannot assert owned fixes")
+        elif not owners or not set(owners).issubset(document["cves"]):
+            raise NormalizationError("First-fixed CVE outside advisory scope")
+        elif (scope == "cve_specific" and len(owners) != 1) or (
+            scope == "bulletin_shared" and len(owners) < 2
+        ):
+            raise NormalizationError("First-fixed scope/CVE ownership mismatch")
+        if fact["disposition"] == "fixed" and not fact["fixed_versions"]:
+            raise NormalizationError("First-fixed fixed disposition requires release literals")
+        if fact["disposition"] in {"migrate", "unknown"} and fact["fixed_versions"]:
+            raise NormalizationError("First-fixed disposition contradicts release literals")
     return document
 
 

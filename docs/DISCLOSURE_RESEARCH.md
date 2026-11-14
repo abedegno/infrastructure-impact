@@ -87,3 +87,49 @@ five independent evidence gates and concealment state remain unchanged.
 See [CVE research dossiers](RESEARCH_DOSSIERS.md) for the initial curated scope,
 strict report and definition schemas, selected JSON downloads, chronology meanings
 and fixed research limits.
+
+### Explicit Arista paired chronology staging
+
+The offline helper can repair an existing, caller-selected public staging database:
+
+```sh
+export IMPACT_HOME=/tmp/impact-arista-staging
+export IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.json"
+export PYTHONPATH="$PWD"
+.venv/bin/python -m infrastructure_impact.application.arista_chronology_repair \
+  --manifest /tmp/impact-arista-staging/source-manifest.json \
+  --database /tmp/impact-arista-staging/staging.sqlite --staging \
+  --output-json /tmp/impact-arista-staging/repair.json \
+  --output-csv /tmp/impact-arista-staging/repair.csv
+```
+
+The database must already contain the exact current primary URL and CSAF bytes
+for each corrected advisory. Receipt verification and all primary ownership
+checks precede writes. Without `--staging`, an explicit database must still be
+absent. Neither mode opens default storage. The helper retains exact paired HTML,
+CSAF and optional RSS captures with their supplied receipt times; existing source
+capture times remain intact. Repeated identical repair adds no advisory revision.
+
+Ordinary ingest and normalization maintenance revalidate accepted chronology
+against these retained bytes without fetching. Changed primary bytes, URL,
+identity or CVE scope, incompatible proof, or missing secondary bytes require
+review: ingest raises `chronology_unresolved_requires_review`, and maintenance
+reports that error code while preserving the previous revision. Rejection does
+not establish the current truth of the old source. An operator must review and
+explicitly repair a new pair before accepting a replacement chronology.
+
+After review, create a local export using the same explicit staging database:
+
+```sh
+IMPACT_DATABASE=/tmp/impact-arista-staging/staging.sqlite \
+  .venv/bin/python -m infrastructure_impact.cli snapshot \
+  --output /tmp/impact-arista-staging/site --publication-format v2
+.venv/bin/python -m infrastructure_impact.cli publication-export \
+  --publication /tmp/impact-arista-staging/publications/current \
+  --root switching-evidence.json \
+  --output /tmp/impact-arista-staging/switching-evidence.json
+```
+
+This creates local artifacts only. Hosted activation and independent human
+review remain separate operational steps; source-shaped test fixtures do not
+constitute historical capture validation.

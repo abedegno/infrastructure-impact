@@ -573,6 +573,30 @@ class PublicationReader(codec.CatalogReader):
         for claim, remediation, binding in links:
             contracts._validate_reviewed_link(claim, remediation, binding, fixed)
 
+    def switching_analysis(self, study_selection=None, *, options=None):
+        """Optional identity-first root; never hydrate the switching claim catalogue."""
+        from . import switching_analysis as analysis
+
+        name = "switching-analysis.json"
+        if study_selection is not None:
+            self._identity(study_selection)
+        if name not in self.catalog["roots"]:
+            context = study_selection or analysis.selection_context(
+                {
+                    **self.switching_overview(),
+                    "definition_sha256": self.switching_overview()["selection"][
+                        "definition_sha256"
+                    ],
+                },
+                options or {},
+            )
+            return analysis.select_report(None, context)
+        self._identity({k: self.field(name, k) for k in self.identity})
+        value = self.materialize_range(self.ranges(name)[()])
+        analysis.validate_report(value)
+        context = study_selection or analysis.selection_context(value, options or {})
+        return analysis.select_report(value, context, max_bytes=self.limits["selected"])
+
     def switching_release_history(self, study_selection):
         """Optional lazy root; authenticate generation before reading release arrays."""
         from .switching_releases import select_report

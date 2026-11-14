@@ -1,0 +1,61 @@
+{
+  "review_status": "automated rules; independent human review pending",
+  "entries": [
+    {
+      "advisory_id": "cisco-sa-fast-Zqr6DD5",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-fast-Zqr6DD5/csaf/cisco-sa-fast-Zqr6DD5.json",
+      "source_sha256": "e38453288e918dcba73661b7c7fa507c4521b695bd8cfdfd9099cd08af4bbe69",
+      "locator": "/document/notes/1/text",
+      "note_sha256": "378e7ee0b62ae457b0666d62d6d1326d792305f293b030e6c769b2f06eb0c796",
+      "cve_ids": [
+        "CVE-2021-1376",
+        "CVE-2021-1375"
+      ],
+      "platforms": {
+        "Cisco Catalyst 9300": "9300",
+        "Cisco Catalyst 9300L Series Switches": "9300L"
+      }
+    },
+    {
+      "advisory_id": "cisco-sa-ios-xe-cat-verify-D4NEQA6q",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ios-xe-cat-verify-D4NEQA6q/csaf/cisco-sa-ios-xe-cat-verify-D4NEQA6q.json",
+      "source_sha256": "c9b3b04fcbb0ccd52bf179142dba94e3c38933ba8aa1a2f14646fb871af20e5f",
+      "locator": "/document/notes/1/text",
+      "note_sha256": "3effafea64eca091f21ed7c707a4655732baab3cdd7964bf6ae7e1a7d02f1105",
+      "cve_ids": [
+        "CVE-2022-20944"
+      ],
+      "platforms": {
+        "Cisco Catalyst 9200 Series Switches": "9200"
+      }
+    },
+    {
+      "advisory_id": "cisco-sa-iosxe-mpls-dos-Ab4OUL3",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-mpls-dos-Ab4OUL3/csaf/cisco-sa-iosxe-mpls-dos-Ab4OUL3.json",
+      "source_sha256": "b69ce4e4987ce07a81926c882df85c326fcccd311cfa59c7cf1cf3581e3e5982",
+      "locator": "/document/notes/1/text",
+      "note_sha256": "9a77d98fda726df3c2bd9bd0e33e7baca4c8529b4f3a9c7cf4d759c1d956c8f7",
+      "cve_ids": [
+        "CVE-2022-20870"
+      ],
+      "platforms": {
+        "Catalyst 9300 Series Switches": "9300",
+        "Catalyst 9500 Series Switches": "9500"
+      }
+    },
+    {
+      "advisory_id": "cisco-sa-iosxe-priv-esc-sABD8hcU",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-iosxe-priv-esc-sABD8hcU/csaf/cisco-sa-iosxe-priv-esc-sABD8hcU.json",
+      "source_sha256": "fec2a77384af8d3981ce71e965b79186ed72d5d3463d4337fd4e6d6ac81d1f94",
+      "locator": "/document/notes/1/text",
+      "note_sha256": "7f44107b99bb1d02c4f7f0d70e1f46b575c7f467d3e1144ac4d0e8bbf7c287a6",
+      "cve_ids": [
+        "CVE-2023-20029"
+      ],
+      "platforms": {
+        "Catalyst 9200 Series Switches": "9200",
+        "Catalyst 9300 Series Switches": "9300"
+      }
+    }
+  ]
+}

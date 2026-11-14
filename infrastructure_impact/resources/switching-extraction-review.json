@@ -271,6 +271,50 @@
         "scheme": "arista_advisory_body_v1",
         "sha256": "06bed0e67d62fe830dc905f7953b73d5b05d61d32e12045fa10c1821dd008484"
       }
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24005-security-advisory-0137",
+      "source_sha256": "21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
+      "cve_id": "CVE-2026-7473",
+      "expected_scope": "cve_specific",
+      "id": "switching-arista-sa0137-family",
+      "product_pattern": "^Arista EOS$",
+      "expected_status": "affected",
+      "source_locator": "Affected Software / EOS Versions",
+      "rationale": "Automated source case awaiting independent human review: nine literal EOS expressions are conditional on separately owned platforms and tunnel endpoint configuration; no software fix is inferred.",
+      "version_contains": "All releases in trains newer than 4.36.x",
+      "exposure_contains": "The device must be configured as a tunnel endpoint with a decapsulation IP",
+      "remediation_availability": "not_a_fix"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24005-security-advisory-0137",
+      "source_sha256": "21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
+      "cve_id": "CVE-2026-7473",
+      "expected_scope": "cve_specific",
+      "id": "switching-arista-sa0137-r3",
+      "product_pattern": "^7280R3 Series$",
+      "expected_status": "affected",
+      "source_locator": "Affected Platforms / affected / 7280R3 Series",
+      "rationale": "Automated source case awaiting independent human review: embedded limited-exposure marker belongs to the final three R3 groups; no target model binding is inferred.",
+      "exposure_contains": "Limited exposure (IP-in-IPv6 and GUEv6) on:"
+    },
+    {
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24005-security-advisory-0137",
+      "source_sha256": "21540eabc1c78ff4d0a6122ff5b03e103017b4e9ef38551712936f26f64d5c7d",
+      "cve_id": "CVE-2026-7473",
+      "expected_scope": "cve_specific",
+      "id": "switching-arista-sa0137-cvx",
+      "product_pattern": "^CloudVision eXchange, virtual or physical appliance$",
+      "expected_status": "unaffected",
+      "source_locator": "Affected Platforms / not affected / CloudVision eXchange, virtual or physical appliance",
+      "rationale": "Automated source case awaiting independent human review: publisher placement inside the negative EOS-labelled list does not rename CloudVision eXchange to EOS software.",
+      "forbidden_statuses": [
+        "affected",
+        "fixed"
+      ]
     }
   ]
 }

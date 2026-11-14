@@ -1,0 +1,39 @@
+{
+  "document": {
+    "category": "security_advisory",
+    "csaf_version": "2.0",
+    "title": "Security Advisory 188",
+    "publisher": {
+      "category": "vendor",
+      "name": "Example fixture publisher",
+      "namespace": "https://example.test"
+    },
+    "tracking": {
+      "id": "Arista Networks Security Advisory 188",
+      "status": "final",
+      "version": "1",
+      "initial_release_date": "2026-10-05T20:27:47Z",
+      "current_release_date": "2026-10-05T20:27:47Z",
+      "revision_history": [
+        {
+          "number": "1",
+          "date": "2026-10-05T20:27:47Z",
+          "summary": "Authored initial example"
+        }
+      ]
+    },
+    "references": [
+      {
+        "category": "self",
+        "summary": "Authored canonical route",
+        "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/99999-security-advisory-0188"
+      }
+    ]
+  },
+  "product_tree": {},
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2026-101153"
+    }
+  ]
+}

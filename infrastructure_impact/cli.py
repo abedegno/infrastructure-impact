@@ -39,6 +39,16 @@ def main(argv=None):
         "snapshot", help="Publish a validated generation and export static assets"
     )
     snap.add_argument("--output", type=Path)
+    snap.add_argument(
+        "--include-switching-analysis",
+        action="store_true",
+        help="Include optional source-owned switching analysis in this local export",
+    )
+    snap.add_argument(
+        "--switching-analysis-input",
+        type=Path,
+        help="Explicit local JSON source frame for optional analysis",
+    )
     snap.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
     export = sub.add_parser(
         "publication-export", help="Stream a complete logical v2 root to a new local file"
@@ -72,6 +82,12 @@ def main(argv=None):
     switching.add_argument("--page-limit", type=int, default=2)
     switching.add_argument("--document-limit", type=int, default=8)
     switching.add_argument("--score-limit", type=int, default=0)
+    first_fixed = sub.add_parser(
+        "cisco-first-fixed", help="Explicit optional local IOS XE first-fixed queries"
+    )
+    first_fixed.add_argument("operation", choices=("plan", "run", "status"))
+    first_fixed.add_argument("--release", action="append", default=[])
+    first_fixed.add_argument("--max-releases", type=int, default=10)
     triage = sub.add_parser(
         "triage", help="Group a bounded pending/error archive sample by layout and parser outcome"
     )
@@ -316,8 +332,23 @@ def main(argv=None):
     elif args.command == "snapshot":
         from .application.publication import build
 
+        if args.switching_analysis_input is not None and not args.include_switching_analysis:
+            parser.error("--switching-analysis-input requires --include-switching-analysis")
+        analysis_input = {}
+        if args.switching_analysis_input is not None:
+            from .publication_codec import MAX_SELECTED, strict_loads
+
+            if args.switching_analysis_input.stat().st_size > MAX_SELECTED:
+                raise ValueError("Analysis input exceeds selected byte bound")
+            analysis_input["switching_analysis_input"] = strict_loads(
+                args.switching_analysis_input.read_bytes(), max_bytes=MAX_SELECTED
+            )
+
         build(
-            args.output, **({"publication_format": "v2"} if args.publication_format == "v2" else {})
+            args.output,
+            **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
+            **({"include_switching_analysis": True} if args.include_switching_analysis else {}),
+            **analysis_input,
         )
     elif args.command == "collect":
         if args.dry_run:
@@ -407,6 +438,27 @@ def main(argv=None):
                     )
                 except ValueError:
                     parser.error("Invalid switching source, date or budget")
+        print(json.dumps(receipt, indent=2))
+    elif args.command == "cisco-first-fixed":
+        import os
+
+        from .collection import cisco_first_fixed
+
+        if not os.environ.get("IMPACT_DATABASE"):
+            parser.error("Set IMPACT_DATABASE to an explicit staging database")
+        with closing(connect()) as db:
+            try:
+                receipt = (
+                    cisco_first_fixed.plan(db, args.release)
+                    if args.operation == "plan"
+                    else cisco_first_fixed.status(db)
+                    if args.operation == "status"
+                    else cisco_first_fixed.run(
+                        db, releases=args.release, max_releases=args.max_releases
+                    )
+                )
+            except ValueError:
+                parser.error("Invalid Cisco first-fixed release selection or budget")
         print(json.dumps(receipt, indent=2))
     elif args.command == "coverage-gaps":
         import sqlite3

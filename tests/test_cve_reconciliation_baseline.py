@@ -542,3 +542,36 @@ def test_reader_rejects_queue_vendor_mismatch_with_recomputed_identity(inputs, t
     write_rehashed(path, data)
     with pytest.raises(baseline.BaselineError, match="invalid_baseline"):
         baseline.load_baseline(path)
+
+
+@pytest.mark.parametrize("version", [15, 16, 17])
+def test_reviewed_migration_schemas_and_drift(tmp_path, version):
+    import shutil
+    import sqlite3
+
+    from infrastructure_impact.storage.migrations import migrate
+
+    directory = tmp_path / "migrations"
+    directory.mkdir()
+    for path in sorted((baseline.PACKAGE / "migrations").glob("*.sql"))[:version]:
+        shutil.copyfile(path, directory / path.name)
+    with closing(sqlite3.connect(":memory:")) as db:
+        migrate(db, directory)
+        baseline._check_schema(db)
+        db.execute("UPDATE schema_migrations SET checksum=NULL")
+        baseline._check_schema(db)  # Historical pre-checksum receipts remain supported.
+        for statement in (
+            "CREATE TABLE extra(id INTEGER)",
+            "ALTER TABLE evidence ADD COLUMN unexpected TEXT",
+            "CREATE VIEW extra AS SELECT id FROM evidence",
+            "CREATE TRIGGER extra AFTER INSERT ON evidence BEGIN SELECT 1; END",
+            "INSERT INTO schema_migrations VALUES(18,'future',NULL)",
+            "UPDATE schema_migrations SET checksum='wrong' WHERE version=1",
+            "DELETE FROM schema_migrations WHERE version=1",
+        ):
+            db.execute("SAVEPOINT drift")
+            db.execute(statement)
+            with pytest.raises(baseline.BaselineError, match="unsupported_schema"):
+                baseline._check_schema(db)
+            db.execute("ROLLBACK TO drift")
+            db.execute("RELEASE drift")
