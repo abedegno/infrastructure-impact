@@ -1071,6 +1071,7 @@
     upgrades,
     walk,
     detailedRows,
+    reconciliation: kev,
     compare,
     csv,
   };

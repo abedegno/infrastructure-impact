@@ -234,6 +234,66 @@ def build_report(
         or selection["inputs"]["kev"] != kev_report
     ):
         raise ValueError("Reconciliation selection input identity mismatch")
+    return _reconcile(
+        kev_report,
+        study_definition,
+        current_claims["claims"],
+        retained_dispositions,
+        publication=publication,
+        generated_at=generated_at,
+        evaluated_at=evaluated_at,
+        selection=selection,
+    )
+
+
+def from_compiled(
+    compiled, kev_report, current_records, retained_records, *, evaluated_at, options=None
+):
+    """Audit a retained complete feed against validated compact source-owned facets.
+
+    The report retains the source publication identity; evaluated_at is the separate
+    audit time. No native claims are synthesized or source records reparsed.
+    """
+    from . import switching_analysis as analysis
+
+    analysis.validate_report(compiled, records=current_records, retained=retained_records)
+    kev.validate_report(kev_report)
+    for key in ("publication", "generated_at"):
+        if kev_report[key] != compiled[key]:
+            raise ValueError("Compiled reconciliation source identity mismatch")
+    context = analysis.selection_context(compiled, {} if options is None else options)
+    definition = contracts.definition()
+    inventory = build_inventory(
+        [r for r in current_records if r["vendor"] in comparison.VENDORS],
+        [r for r in retained_records if r["vendor"] in comparison.VENDORS],
+        study_definition=definition,
+        publication=compiled["publication"],
+        generated_at=compiled["generated_at"],
+    )
+    return _reconcile(
+        kev_report,
+        definition,
+        list(analysis.claim_facets(compiled)),
+        inventory,
+        publication=compiled["publication"],
+        generated_at=compiled["generated_at"],
+        evaluated_at=evaluated_at,
+        selection=context,
+    )
+
+
+def _reconcile(
+    kev_report,
+    study_definition,
+    source_claims,
+    retained_dispositions,
+    *,
+    publication,
+    generated_at,
+    evaluated_at,
+    selection,
+):
+    digest = contracts.definition_sha256(study_definition)
     selected = deepcopy(selection["selection"])
     catalogue = kev.select_report(
         kev_report, sorted(kev_report["entries"]), evaluated_at=evaluated_at
@@ -254,7 +314,7 @@ def build_report(
         )
         claims = [
             c
-            for c in current_claims["claims"]
+            for c in source_claims
             if rule and c["cve_id"] == cid and c["vendor"] == rule[1] and c["family"] == rule[2]
         ]
 

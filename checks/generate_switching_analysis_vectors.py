@@ -103,10 +103,29 @@ def produce():
         numeric_cases.append(
             dict(selected=selected_numeric, expected=analysis.analysis_csv_export(selected_numeric))
         )
+    from test_switching_kev_reconciliation import inputs as kev_inputs
+
+    _, _, _, complete_study = kev_inputs()
+    complete_compiled = analysis.build_report([], [], complete_study)
+    reconciliation_cases = []
+    for options in (
+        {},
+        {"scope_level": "model_qualified"},
+        {"cve_ids": []},
+        {"cve_ids": ["CVE-2026-7473"]},
+    ):
+        context = analysis.selection_context(complete_compiled, options)
+        reconciliation_cases.append(
+            dict(
+                options=options,
+                expected=analysis._kev_selected(complete_compiled, context["selection"]),
+            )
+        )
     return dict(
         schema_version=1,
         compiled=compiled,
         cases=cases,
+        complete_kev=dict(compiled=complete_compiled, cases=reconciliation_cases),
         numeric_csv=dict(selected=numeric, expected=analysis.analysis_csv_export(numeric)),
         numeric_cases=numeric_cases,
         numeric_fingerprints=[

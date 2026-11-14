@@ -214,10 +214,24 @@ def public_projection(
     if include_switching_analysis and "switching_comparison" in data:
         from .switching_analysis import build_report as build_analysis
 
+        analysis_study = data["switching_comparison"]
+        if kev_input is not None and kev_input.get("retained") is not None:
+            # Candidate discovery needs retained details outside current CVEs.
+            # Keep ordinary public KEV/comparison payloads scoped as before.
+            complete_kev = build_report(
+                kev_input,
+                sorted(kev_input["retained"]["catalogue"]["entries"]),
+                publication=data.get("publication"),
+                generated_at=data["generated_at"],
+            )
+            analysis_study = dict(
+                analysis_study,
+                inputs=dict(analysis_study["inputs"], kev=complete_kev),
+            )
         data["switching_analysis"] = build_analysis(
             data["records"],
             [w["record"] for w in data.get("retained_advisories", [])],
-            data["switching_comparison"],
+            analysis_study,
             release_history=data.get("switching_release_history"),
             source_frame=analysis_input,
         )

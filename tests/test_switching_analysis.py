@@ -747,3 +747,105 @@ def test_indexed_row_evidence_exact_native_walk_and_tampering():
             row["affected_ref"] = new
         with pytest.raises(ValueError):
             list(api().detailed_rows(bad))
+
+
+@pytest.mark.parametrize("publication_format", ["v1", "v2"])
+def test_opt_in_publication_discovers_full_feed_candidates_absent_from_collection(
+    publication_format,
+):
+    from test_static_delivery import dataset
+    from test_switching_aruba_fix_links import projected
+    from test_switching_kev_reconciliation import AT as kev_at
+    from test_switching_kev_reconciliation import CID
+
+    from infrastructure_impact.application import publication
+    from infrastructure_impact.references.kev import parse
+
+    data = dataset()
+    data["research"]["switching_input"] = projected()
+    raw = json.dumps(
+        dict(
+            catalogVersion="2026.11.13",
+            dateReleased=kev_at,
+            count=1,
+            vulnerabilities=[
+                dict(
+                    cveID=CID,
+                    vendorProject="Arista",
+                    product="Extensible Operating System",
+                    vulnerabilityName="Absent example",
+                    dateAdded="2026-11-12",
+                    shortDescription="Example",
+                    requiredAction="Review",
+                    dueDate="2026-12-01",
+                )
+            ],
+        )
+    ).encode()
+    data["research"]["kev_input"] = dict(
+        configured=True,
+        enabled=True,
+        checked_at=None,
+        latest_attempt=None,
+        retained=dict(
+            catalogue=parse(raw),
+            sha256="a" * 64,
+            revision_id="1",
+            source_observed_at=kev_at,
+            parsed_at=kev_at,
+        ),
+    )
+    public = publication.public_projection(
+        data, include_switching_analysis=True, publication_format=publication_format
+    )
+    assert CID not in public["kev"]["entries"]
+    assert CID not in public["switching_comparison"]["inputs"]["kev"]["entries"]
+    gap = public["switching_analysis"]["kev_reconciliation"]
+    entry = next(e for e in gap["entries"] if e["cve_id"] == CID)
+    assert entry["claim_state"] == "no_observed_vendor_record"
+    assert entry["historically_listed"] is True and entry["membership"] == "unknown"
+    assert entry["current_claims"] == entry["current_records"] == entry["retained_records"] == []
+    for options, requested in [({}, True), ({"cve_ids": []}, False), ({"cve_ids": [CID]}, True)]:
+        selected = api().select_report(
+            public["switching_analysis"],
+            api().selection_context(public["switching_analysis"], options),
+        )
+        row = next(e for e in selected["kev_reconciliation"]["entries"] if e["cve_id"] == CID)
+        assert row["in_requested_cve_filter"] is requested
+        assert row["in_effective_study_cohort"] is False
+    default = publication.public_projection(data, publication_format=publication_format)
+    assert "switching_analysis" not in default and CID not in default["kev"]["entries"]
+
+
+@pytest.mark.parametrize(
+    "options",
+    [{}, {"scope_level": "model_qualified"}, {"cve_ids": []}, {"cve_ids": ["CVE-2026-7473"]}],
+)
+def test_complete_feed_compact_audit_matches_native_core(options):
+    from test_switching_kev_reconciliation import AT as evaluated
+    from test_switching_kev_reconciliation import claim
+    from test_switching_kev_reconciliation import inputs as source_inputs
+
+    from infrastructure_impact.application import switching_kev_reconciliation as reconciliation
+
+    k, ev, inventory, study = source_inputs([claim()])
+    compiled = api().build_report([], [], study)
+    context = comparison.select_report(study, **options, evaluated_at=evaluated)
+    native = reconciliation.build_report(
+        k,
+        study["definition"],
+        ev,
+        inventory,
+        publication=None,
+        generated_at=evaluated,
+        evaluated_at=evaluated,
+        selection=context,
+    )
+    audited = reconciliation.from_compiled(
+        compiled, k, [], [], evaluated_at=evaluated, options=options
+    )
+    assert audited == native
+    broken = copy.deepcopy(k)
+    broken["publication"] = {"id": "a" * 32, "advisory_schema_version": 2}
+    with pytest.raises(ValueError):
+        reconciliation.from_compiled(compiled, broken, [], [], evaluated_at=evaluated)

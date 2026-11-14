@@ -238,3 +238,12 @@ for (const mutation of ['digest', 'missing', 'index', 'duplicate', 'unused']) {
   }
   assert.throws(() => [...A.detailedRows(report)], undefined, 'selected evidence ' + mutation);
 }
+for (const vector of vectors.complete_kev.cases) {
+  const compiled = vectors.complete_kev.compiled;
+  const selected = A.reconciliation(compiled, A.context(compiled, vector.options).selection);
+  assert.deepStrictEqual(
+    JSON.parse(JSON.stringify(selected)),
+    vector.expected,
+    'complete-feed missing-record reconciliation',
+  );
+}
