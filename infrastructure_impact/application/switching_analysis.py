@@ -376,6 +376,16 @@ CLAIM_FIELDS = (
 )
 
 
+def study_claim_facets(evidence):
+    """All facets admissible by the frozen study's exact vendor/family pairs.
+
+    No status, date, CVE, scope or model filter belongs here. Full evidence and
+    its digest remain native authority, including every out-of-study claim.
+    """
+    pairs = {(target["vendor"], target["family"]) for target in contracts.definition()["targets"]}
+    return (claim for claim in evidence["claims"] if (claim["vendor"], claim["family"]) in pairs)
+
+
 def build_report(records, retained, study, *, release_history=None, source_frame=None):
     from . import first_fixed
     from . import switching_disclosure as disclosure
@@ -425,7 +435,7 @@ def build_report(records, retained, study, *, release_history=None, source_frame
         **identity,
     )
     claims, budget = {}, codec.Budget(codec.MAX_SELECTED)
-    for c in evidence["claims"]:
+    for c in study_claim_facets(evidence):
         value = {k: copy.deepcopy(c.get(k)) for k in CLAIM_FIELDS}
         value["disclosure_severity"] = disclosure.severity_facets([c])
         value["issues"] = [i for i in c["issues"] if i.startswith("cisco_model_")]
@@ -504,7 +514,7 @@ def validate_report(
     reconciliation.validate_report(report["kev_reconciliation"])
     _validate_child_ownership(report, evidence=evidence, records=records, retained=retained)
     if evidence is not None:
-        expected = {c["claim_id"]: c for c in evidence["claims"]}
+        expected = {c["claim_id"]: c for c in study_claim_facets(evidence)}
         if set(expected) != set(report["claims"]):
             raise ValueError("Analysis complete membership differs")
         for cid, c in report["claims"].items():

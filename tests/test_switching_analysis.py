@@ -553,3 +553,111 @@ def test_common_writer_rejects_present_null_analysis(tmp_path, fmt):
     public["switching_analysis"] = None
     with pytest.raises(ValueError):
         publication.write_bundle(tmp_path / fmt, public, publication_format=fmt)
+
+
+def test_compact_facets_keep_exact_frozen_families_without_losing_unknowns_or_inventory():
+    from test_switching_kev_reconciliation import AT as kev_at
+    from test_switching_kev_reconciliation import CID, claim
+    from test_switching_kev_reconciliation import inputs as kev_inputs
+
+    from infrastructure_impact.adapters.common import base
+    from infrastructure_impact.application import first_fixed
+    from infrastructure_impact.application import switching_disclosure as disclosure
+    from infrastructure_impact.application import switching_kev_reconciliation as reconciliation
+    from infrastructure_impact.application import switching_model_coverage as models
+
+    # Same CVE and vendor must not pull unrelated/unclassified software into the
+    # study. All in-family statuses, missing dates and unresolved model scopes stay.
+    inside = [
+        claim(
+            advisory_id="inside-" + str(i),
+            status=status,
+            initial_published_at=date,
+            platform_bindings=[],
+            named_platforms=[],
+            scope_level="os_family",
+            publisher=dict(id="inside-" + str(i), sequence="1", status=publisher),
+        )
+        for i, (status, date, publisher) in enumerate(
+            [
+                ("affected", "2025-01-01", "final"),
+                ("unknown", None, "final"),
+                ("unaffected", "2026-05-05", "final"),
+                ("affected", "2026-05-06", "draft"),
+                ("fixed", "2020-01-01", "final"),
+                ("investigating", "2027-01-01", "final"),
+            ]
+        )
+    ]
+    inside.append(claim(advisory_id="inside-qualified", initial_published_at="2026-08-01"))
+    outside = [
+        claim(
+            advisory_id="outside-" + str(i),
+            family=None if i % 2 else "cisco-iosxe",
+            status="affected",
+            cve_id=CID if i % 2 else "CVE-2025-99999",
+            product="Unclassified source context",
+            platform_bindings=[],
+            named_platforms=[],
+            scope_level="os_family",
+        )
+        for i in range(80)
+    ]
+    kev, ev, _, study = kev_inputs(inside + outside)
+    record = base(
+        "arista",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/authored-outside",
+        "outside-inventory",
+        "Authored inventory context",
+        "2025-01-01",
+    )
+    record.update(
+        cves=[CID], sha256="b" * 64, source_observed_at=kev_at, document_status="published"
+    )
+    compiled = api().build_report([record], [], study)
+    expected_ids = {c["claim_id"] for c in ev["claims"] if c["family"] == "arista-eos"}
+    assert set(compiled["claims"]) == expected_ids
+    assert len(compiled["claims"]) == len(inside)
+    assert compiled["requirements"]["evidence_sha256"] == contracts.definition_sha256(ev)
+    assert len(compiled["kev_reconciliation"]["entries"][0]["current_records"]) == 1
+    assert (
+        compiled["kev_reconciliation"]["entries"][0]["current_records"][0]["advisory_id"]
+        == "outside-inventory"
+    )
+    ff = first_fixed.build_report([record], api_results=[], publication=None, generated_at=kev_at)
+    native = upgrades.build_report(ev, ff, None, kev, publication=None, generated_at=kev_at)
+    inventory = reconciliation.build_inventory(
+        [record], [], publication=None, generated_at=kev_at, study_definition=contracts.definition()
+    )
+    for scope in ("os_family", "model_qualified"):
+        for window in ("all", "pre", "post", "undated", "2025", "2026"):
+            options = dict(vendor="arista", scope_level=scope, window=window, cve_ids=[CID])
+            selected = comparison.select_report(study, **options, evaluated_at=kev_at)
+            actual = api().select_report(compiled, api().selection_context(compiled, options))
+            assert actual["selection"] == selected["selection"]
+            assert actual["upgrades"] == api().project_native(native, selected)
+            assert actual["model_coverage"] == models.build_report(
+                ev, selected, publication=None, generated_at=kev_at
+            )
+            assert actual["disclosure"] == disclosure.build_report(
+                [record], selected, evidence=ev, publication=None, generated_at=kev_at
+            )
+            assert actual["kev_reconciliation"] == reconciliation.build_report(
+                kev,
+                contracts.definition(),
+                ev,
+                inventory,
+                publication=None,
+                generated_at=kev_at,
+                evaluated_at=kev_at,
+                selection=selected,
+            )
+    # Complete-membership validation still rejects omission of an in-family unknown.
+    missing = copy.deepcopy(compiled)
+    unknown = next(cid for cid, c in missing["claims"].items() if c["status"] == "unknown")
+    del missing["claims"][unknown]
+    missing["content_sha256"] = contracts.definition_sha256(
+        {k: v for k, v in missing.items() if k != "content_sha256"}
+    )
+    with pytest.raises(ValueError, match="membership|claim/source"):
+        api().validate_report(missing, evidence=ev, records=[record], retained=[])

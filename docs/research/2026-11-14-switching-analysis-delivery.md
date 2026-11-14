@@ -189,3 +189,13 @@ API acquisitions are available, supply their native receipt-bound frames through
 `api_results`; otherwise leave it empty. Keep any collection credentials in the
 collector's documented environment outside the exported JSON. This feature adds
 no secret mapping, new API client, hosted activation, schedule or deployment.
+
+The optional claim-facet table contains every claim within the frozen study's
+exact vendor/family pairs, including unknown statuses, missing/future dates,
+drafts and unresolved model scope. It omits only unclassified or other-family
+facets that no supported study selection can admit. This is not a zero-exposure
+claim. The complete native evidence and its digest remain authoritative; upgrade
+requirements, advisory current/retained inventories and all CISA candidates are
+unchanged. Full-source run receipts separately record excluded-facet count and
+identity digest. `study_claim_facets(evidence)` exposes this exact projection to
+reproducible measurement code.
