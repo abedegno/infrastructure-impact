@@ -8,6 +8,18 @@ extraction commit `52f344f68df964c92c2426640e019819fa7029f0`. Independent human 
 is pending. Counts describe disclosed evidence, not security quality, concealed
 vulnerability counts, deployed exposure or observed customer upgrades.
 
+Recorded identifiers above and below refer to the preserved local audit history. Public commit equivalents have identical product and test code; public preparation omitted internal planning and agent scratch files.
+
+| Stage | Recorded audit pin | Public equivalent |
+| --- | --- | --- |
+| Extraction | `52f344f` | [8aa3738](https://github.com/abedegno/infrastructure-impact/commit/8aa37385642c27e02ab22776704f5ca960e3489b) |
+| Snapshot compiler | `03720a3` | [dd21329](https://github.com/abedegno/infrastructure-impact/commit/dd2132937003cab38451581a0a6f8b20571d7378) |
+| Selected projection | `3646827` | [791d119](https://github.com/abedegno/infrastructure-impact/commit/791d119d622c10ae44bf9e36243bf652a72315a6) |
+| Complete KEV audit | `a41a8c2` | [c82108c](https://github.com/abedegno/infrastructure-impact/commit/c82108c120629b3777d7e546f1e6c5fdec6978b3) |
+| KEV selector index | `505c61c` | [15127ce](https://github.com/abedegno/infrastructure-impact/commit/15127ce4c540c7c2328ad9ccdd1da608d88e737f) |
+| Coverage label | `ac0913f` | [674f33f](https://github.com/abedegno/infrastructure-impact/commit/674f33f6e1b8508197468e01605fe7698b6cd355) |
+| Browser export fix | `c6f95e5` | [40c82ef](https://github.com/abedegno/infrastructure-impact/commit/40c82ef6b4c3c36532d0209c5d0d96a673c0673b) |
+
 ## Retained source coverage
 
 The verified staging database contains 313 latest representations: 312 current
