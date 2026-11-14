@@ -83,7 +83,7 @@ See [the study method](../switching-comparison.md) for scope and limitations.
 
 ## Pinned observations
 
-Publication `a3a7a1fcdc194599b2903d39484ba340`, generated `2026-11-14T17:42:54.283949+00:00`. Shared observation window: 2021-01-01 through 2026-11-14 (2026 is partial). Source commit `4e982748b2b45c9e2ffbeb522103645af4c39fa2`. Selected public analysis SHA-256 `530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a` verified locally; overview read through PublicationReader with descriptor byte/hash verification. Full provenance and exact field semantics are in baseline-findings.json.
+Publication `a3a7a1fcdc194599b2903d39484ba340`, generated `2026-11-14T17:42:54.283949+00:00`. Shared observation window: 2021-01-01 through 2026-11-14 (2026 is partial). Source commit `4e982748b2b45c9e2ffbeb522103645af4c39fa2`. Selected public analysis SHA-256 `530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a` verified locally; overview read through PublicationReader with descriptor byte/hash verification. Full provenance and exact field semantics are in the [machine-readable evidence](2026-11-14-vendor-comparison-evidence.json).
 
 Counts describe observed disclosure and scrutiny, not security quality, underlying bug counts, prevalence, or a causal ranking. Coverage denominators, role equivalence, lifecycle and release-train completeness remain unresolved.
 

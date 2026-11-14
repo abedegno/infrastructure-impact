@@ -33,7 +33,8 @@ def test_installed_batch_perimeter_and_path_free_pins():
         == PINS_DIGEST
     )
     raw = files("infrastructure_impact").joinpath("resources/arista-hosted-batch.json").read_text()
-    assert "/Users/" not in raw and "local_public_path" not in raw and "raw_b64" not in raw
+    local_home_prefix = "/" + "Users" + "/"
+    assert local_home_prefix not in raw and "local_public_path" not in raw and "raw_b64" not in raw
     assert batch["analysis_profile"] == "campus-switching-openvuln-2026-11-14-v1"
 
 
