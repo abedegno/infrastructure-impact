@@ -448,15 +448,17 @@
     for (const r of requirements)
       for (const k of ['proof_ref', 'train_binding_ref']) facts[r[k]] = report.facts[r[k]];
     const compact = {
-      ...omit(report, [
-        'representation',
-        'members',
-        'facts',
-        'requirements',
-        'membership_sha256',
-        'membership_count',
-        'content_sha256',
-      ]),
+      ...clone(
+        omit(report, [
+          'representation',
+          'members',
+          'facts',
+          'requirements',
+          'membership_sha256',
+          'membership_count',
+          'content_sha256',
+        ]),
+      ),
       representation: 'compact-requirements',
       members: clone(members),
       facts: clone(facts),
@@ -663,7 +665,7 @@
       const facets = new Map(
         owned.flatMap((c) => c.disclosure_severity).map((f) => [canonical(f), f]),
       );
-      p.severity = [...facets.keys()].sort().map((k) => facets.get(k));
+      p.severity = [...facets.keys()].sort().map((k) => clone(facets.get(k)));
       p.source = clone(owned[0].source);
     }
     const facts = new Set(out.pairs.map((p) => p.fact_id));

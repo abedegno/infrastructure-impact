@@ -198,3 +198,15 @@ for (const requirement of vectors.compiled.requirements.requirements) {
   assert(!Object.hasOwn(requirement, 'source_ref'));
   assert(!Object.hasOwn(requirement, 'severity_facets_ref'));
 }
+
+const ownedInput = JSON.parse(JSON.stringify(vectors.compiled)),
+  beforeOwnership = JSON.stringify(ownedInput),
+  ownedOutput = A.select(ownedInput, A.context(ownedInput, {}));
+ownedOutput.upgrades.requirements.kev_context.evaluated_at = 'changed-output-only';
+const ownedFacet = ownedOutput.disclosure.pairs.flatMap((p) => p.severity)[0];
+if (ownedFacet) ownedFacet.band = 'changed-output-only';
+assert.strictEqual(
+  JSON.stringify(ownedInput),
+  beforeOwnership,
+  'selected nested metadata/facets must not alias immutable compiled input',
+);
