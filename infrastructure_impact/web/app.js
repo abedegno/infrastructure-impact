@@ -523,7 +523,7 @@ function renderComparison() {
       try {
         const body =
             kind === 'json'
-              ? appJSON.stringifyBounded(acceptedAnalysis, null, 2, 128000000)
+              ? appJSON.stringifyBounded(acceptedAnalysis, null, '', 128000000)
               : window.InfrastructureSwitchingAnalysis.csv(acceptedAnalysis, {
                   upgradesOnly: kind === 'upgrades-csv',
                 }),
