@@ -14,7 +14,10 @@ source URLs, exact hashes and byte counts; no raw document bodies or local paths
 Reference capture timestamps do not become new hosted retrieval timestamps.
 
 Current CSAF owners must match the exact source and CVE identities. Required
-structured captures must already be retained. Missing supporting HTML may be
+structured captures must already be retained, except for the single
+[reviewed SA178 source refresh](../arista-chronology-repair.md#manual-hosted-batch-and-reviewed-sa178-source-refresh)
+in curation revision 2. That transition verifies the old retained raw capture
+before permitting retrieval of the exact new source revision. Missing supporting HTML may be
 fetched only through the bounded vendor allowlist, with exact size/hash checks.
 RSS is retained-only: absence remains visible, and a refreshed rolling feed is
 not silently substituted. Changed source ownership requires a reviewed pin update.
@@ -43,7 +46,9 @@ gh workflow run collect.yaml --repo abedegno/infrastructure-impact --ref main \
 ```
 
 Review its bounded `maintenance-preview.json`. Missing or changed required owners
-block apply. Missing HTML is a bounded retrieval prerequisite, not permission to
+block apply. The explicit `reviewed_owner_refresh` diagnostic is permitted only
+for the installed SA178 transition; apply still verifies its old raw capture.
+Missing HTML is a bounded retrieval prerequisite, not permission to
 replace a changed primary. Optional RSS absence is nonblocking. The fingerprint
 binds source inventory, selection policy, normalizers and capture identities or
 absence; apply rechecks it under the writer lock.

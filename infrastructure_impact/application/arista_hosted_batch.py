@@ -1,5 +1,7 @@
 """One installed, source-pinned Arista maintenance batch; no discovery or ambient storage."""
 
+import json
+from copy import deepcopy
 from hashlib import sha256
 
 from ..adapters import arista_sa0137 as sa137
@@ -20,6 +22,67 @@ def exact_capture(db, pin):
     return raw, dict(url=row["source_url"], sha256=row["sha256"], retrieved_at=row["observed_at"])
 
 
+def _reviewed_refresh(owner, pin, batch):
+    """This installed batch permits one reviewed SA178 source transition only."""
+    refreshes = batch.get("reviewed_owner_refreshes", [])
+    if pin["number"] != 178 or pin["kind"] != "csaf" or len(refreshes) != 1:
+        return None
+    refresh = refreshes[0]
+    if (
+        refresh["advisory_id"] == owner["advisory_id"] == "Arista Networks Security Advisory 178"
+        and refresh["source_url"] == owner["source_url"] == pin["url"]
+        and refresh["old_sha256"] == owner["sha256"]
+        and refresh["cve_ids"] == owner["cves"] == pin["cve_ids"]
+        and refresh["old_document_status"] == owner.get("document_status")
+        and refresh["new_sha256"] == pin["sha256"]
+        and refresh["new_bytes"] == pin["bytes"]
+    ):
+        return refresh
+    return None
+
+
+def _verified_refreshes(db, records):
+    """Verify the actual retained old capture before any retrieval or normalization."""
+    batch = batch_metadata()
+    pin = next(p for p in batch["captures"] if p["number"] == 178 and p["kind"] == "csaf")
+    owners = [
+        r
+        for r in records
+        if r["vendor"] == "arista" and r["advisory_id"] == "Arista Networks Security Advisory 178"
+    ]
+    if len(owners) != 1:
+        return {}
+    owner = owners[0]
+    refresh = _reviewed_refresh(owner, pin, batch)
+    if refresh is None:
+        return {}
+    row = db.execute("SELECT * FROM evidence WHERE id=?", (owner["evidence_id"],)).fetchone()
+    if (
+        row is None
+        or row["source_url"] != refresh["source_url"]
+        or row["sha256"] != refresh["old_sha256"]
+    ):
+        raise ValueError("maintenance_reviewed_owner_capture_missing")
+    raw = bytes(row["raw"])
+    if len(raw) > 2_000_000 or sha256(raw).hexdigest() != refresh["old_sha256"]:
+        raise ValueError("maintenance_reviewed_owner_capture_changed")
+    data = json.loads(raw)
+    document = data["document"]
+    if (
+        document["tracking"]["id"] != refresh["advisory_id"]
+        or document["tracking"]["status"] != refresh["old_document_status"]
+        or document["title"] != refresh["document_title"]
+        or owner["title"] != refresh["document_title"]
+        or sorted({v["cve"] for v in data["vulnerabilities"]}) != refresh["cve_ids"]
+    ):
+        raise ValueError("maintenance_reviewed_owner_header_changed")
+    return {pin["url"]: refresh}
+
+
+def _blocking_owner_issues(records):
+    return [issue for issue in owner_issues(records) if issue["code"] != "reviewed_owner_refresh"]
+
+
 def owner_issues(records):
     """CSAF owners are mandatory; an existing SA137 HTML owner must also match."""
     batch = batch_metadata()
@@ -36,6 +99,8 @@ def owner_issues(records):
         owners = [r for r in records if r["vendor"] == "arista" and r["advisory_id"] == identity]
         if not owners and required:
             issues.append(dict(code="missing_required_owner", source_url=pin["url"]))
+        elif len(owners) == 1 and _reviewed_refresh(owners[0], pin, batch):
+            issues.append(dict(code="reviewed_owner_refresh", source_url=pin["url"]))
         elif owners and (
             len(owners) != 1
             or owners[0]["source_url"] != pin["url"]
@@ -50,11 +115,21 @@ def capture_state(db):
     """Bind exact capture identities, bytes, original timestamps and explicit absence."""
     states = []
     issues = []
-    for pin in batch_metadata()["captures"]:
+    batch = batch_metadata()
+    for pin in batch["captures"]:
+        refresh_hashes = [
+            r["old_sha256"]
+            for r in batch.get("reviewed_owner_refreshes", [])
+            if r["source_url"] == pin["url"]
+        ]
+        hashes = [pin["sha256"], *refresh_hashes]
+        marks = ",".join("?" for _ in hashes)
         rows = db.execute(
             "SELECT id,sha256,observed_at,length(raw) AS bytes,raw FROM evidence "
-            "WHERE source_url=? AND (sha256=? OR id=(SELECT MAX(id) FROM evidence WHERE source_url=?)) ORDER BY id",
-            (pin["url"], pin["sha256"], pin["url"]),
+            "WHERE source_url=? AND (sha256 IN ("
+            + marks
+            + ") OR id=(SELECT MAX(id) FROM evidence WHERE source_url=?)) ORDER BY id",
+            (pin["url"], *hashes, pin["url"]),
         ).fetchall()
         states.append(
             dict(
@@ -141,6 +216,8 @@ def apply_batch(db, selected, before, *, fetcher=None):
     captures = {}
     accepted_bytes = 0
     retrieve = fetcher or fetch
+    active_refreshes = {}
+    source_refreshed = False
 
     def load(pin):
         nonlocal accepted_bytes
@@ -149,7 +226,7 @@ def apply_batch(db, selected, before, *, fetcher=None):
         if capture is None:
             if pin["kind"] == "rss":
                 return None
-            if pin["kind"] != "html":
+            if pin["kind"] != "html" and url not in active_refreshes:
                 raise ValueError("maintenance_required_capture_missing")
             raw = retrieve(
                 db, url, "arista", max_bytes=selected.max_bytes, allowed_urls=selected.allowed_urls
@@ -162,7 +239,7 @@ def apply_batch(db, selected, before, *, fetcher=None):
                 raise ValueError("maintenance_capture_changed")
             # Preserve actual runner retrieval time. Reference pin timestamps are never used here.
             with db:
-                evidence(db, raw, url, "text/html")
+                evidence(db, raw, url, "text/html" if pin["kind"] == "html" else "application/json")
             capture = exact_capture(db, pin)
         accepted_bytes += len(capture[0])
         if accepted_bytes > batch["reference_capture_bytes"]:
@@ -176,12 +253,20 @@ def apply_batch(db, selected, before, *, fetcher=None):
         return captures[url][0]
 
     try:
-        # All current owners and all mandatory retained structured captures precede HTTP.
-        if owner_issues(latest(db)):
+        # Verify the one exact old owner and every other structured capture before HTTP.
+        records = latest(db)
+        if _blocking_owner_issues(records):
             return finish("failed_primary_validation")
+        active_refreshes = _verified_refreshes(db, records)
+        pending_refresh = []
         for pin in pins:
             if pin["kind"] in {"csaf", "csaf_draft"}:
-                load(pin)
+                if pin["url"] in active_refreshes and exact_capture(db, pin) is None:
+                    pending_refresh.append(pin)
+                else:
+                    load(pin)
+        for pin in pending_refresh:
+            load(pin)
         for pin in pins:
             if pin["kind"] not in {"csaf", "csaf_draft"}:
                 load(pin)
@@ -193,6 +278,7 @@ def apply_batch(db, selected, before, *, fetcher=None):
             return finish("failed_alternate_validation")
         registry = default_registry()
         prepared = []
+        source_refreshes = []
         chronologies = {}
         rss_pin = next(p for p in pins if p["kind"] == "rss")
         rss = captures.get(rss_pin["url"])
@@ -212,6 +298,8 @@ def apply_batch(db, selected, before, *, fetcher=None):
             parsed = registry.normalize(raw, url, "arista")
             if parsed["advisory_id"] != advisory_id or parsed["cves"] != list(cves):
                 raise ValueError("maintenance_primary_identity_changed")
+            if url in active_refreshes:
+                source_refreshes.append((url, raw, deepcopy(parsed)))
             if pin["kind"] == "csaf":
                 h = next(p for p in pins if p["number"] == pin["number"] and p["kind"] == "html")
                 html = captures[h["url"]]
@@ -237,8 +325,20 @@ def apply_batch(db, selected, before, *, fetcher=None):
                 parsed = fixed
             prepared.append((url, raw, parsed, resolved))
             receipt["primary_outcomes"].append(dict(source_url=url, outcome="validated"))
-        if len(prepared) != 34 or len(chronologies) != 33 or owner_issues(latest(db)):
+        if (
+            len(prepared) != 34
+            or len(chronologies) != 33
+            or _blocking_owner_issues(latest(db))
+            or _verified_refreshes(db, latest(db)) != active_refreshes
+        ):
             return finish("failed_primary_validation")
+        # Every required pair is prepared before retaining the reviewed vendor revision.
+        # Its changed fixes are a source update, followed by the existing chronology repair.
+        for url, raw, fresh in source_refreshes:
+            source_refreshed = (
+                bool(ingest(db, raw, url, lambda *_args, fresh=fresh: fresh, "arista"))
+                or source_refreshed
+            )
         for i, (url, raw, parsed, resolved) in enumerate(prepared):
             changed = ingest(db, raw, url, lambda *_args, parsed=parsed: parsed, "arista")
             state = "imported" if changed else "unchanged"
@@ -326,7 +426,7 @@ def apply_batch(db, selected, before, *, fetcher=None):
     except (ValueError, KeyError, TypeError):
         return finish(
             "failed_primary_validation"
-            if not receipt["imported"] and not receipt["unchanged"]
+            if not source_refreshed and not receipt["imported"] and not receipt["unchanged"]
             else "failed_cleanup_proof"
         )
     except Exception as error:
@@ -341,6 +441,6 @@ def apply_batch(db, selected, before, *, fetcher=None):
             ]
         return finish(
             "failed_cleanup_proof"
-            if receipt["imported"] or receipt["unchanged"]
+            if source_refreshed or receipt["imported"] or receipt["unchanged"]
             else "failed_primary_validation"
         )

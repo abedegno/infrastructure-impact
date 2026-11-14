@@ -60,7 +60,7 @@ def profile(profile_id: str) -> MaintenanceProfile:
         expected = batch["expected_primaries"]
         return MaintenanceProfile(
             profile_id,
-            "1",
+            str(batch["curation_revision"]),
             "arista",
             tuple(e["url"] for e in expected),
             frozenset(e["url"] for e in batch["captures"]),

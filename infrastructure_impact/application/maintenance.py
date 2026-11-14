@@ -213,6 +213,10 @@ def validate_preview(value, selected):
             "invalid_pinned_capture": selected.allowed_urls,
             "missing_required_owner": owner_urls,
             "changed_required_owner": owner_urls | set(selected.primary_urls),
+            "reviewed_owner_refresh": {
+                r["source_url"]
+                for r in selected.metadata()["batch"].get("reviewed_owner_refreshes", [])
+            },
         }
     if type(value["issues"]) is not list or len(value["issues"]) > (
         137 if selected.profile_id == ARISTA_BATCH else 3

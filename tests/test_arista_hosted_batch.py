@@ -36,6 +36,21 @@ def test_installed_batch_perimeter_and_path_free_pins():
     local_home_prefix = "/" + "Users" + "/"
     assert local_home_prefix not in raw and "local_public_path" not in raw and "raw_b64" not in raw
     assert batch["analysis_profile"] == "campus-switching-openvuln-2026-11-14-v1"
+    assert selected.version == "2" and batch["curation_revision"] == 2
+    refreshes = batch["reviewed_owner_refreshes"]
+    assert len(refreshes) == 1
+    assert refreshes[0]["advisory_id"] == "Arista Networks Security Advisory 178"
+    assert (
+        refreshes[0]["old_sha256"]
+        == "192901b6a2f6352f5ff2dd2540e52bd4d732e0201a4c5881d626e38dcd34b8da"
+    )
+    assert refreshes[0]["old_document_status"] == "interim"
+    assert refreshes[0]["cve_ids"] == ["CVE-2026-73440"]
+    assert (
+        refreshes[0]["new_sha256"]
+        == "08041ea904a15e30fe60790e83c8061a833ff220b22826dfdab351069f9525bc"
+    )
+    assert refreshes[0]["new_bytes"] == 7237
 
 
 def test_empty_preview_no_http_and_capture_sensitive_stale_apply(tmp_path, monkeypatch):
@@ -423,3 +438,278 @@ def test_completed_batch_receipt_requires_every_supporting_capture_and_exact_dra
             forged["raw_b64"] = "authored private field"
         with pytest.raises(ValueError, match="invalid_maintenance_receipt"):
             maintenance.receipt_bytes(forged)
+
+
+@pytest.fixture
+def reviewed_sa178_refresh(authored_batch):
+    """A reviewed old owner and a distinct vendor update, using authored bytes."""
+    from copy import deepcopy
+
+    from infrastructure_impact.plugins.registry import default_registry
+    from infrastructure_impact.storage.repository import ingest
+
+    db, _, batch, bodies = authored_batch
+    pin = next(p for p in batch["captures"] if p["kind"] == "csaf" and p["number"] == 178)
+    data = json.loads(bodies[pin["url"]])
+    data["document"]["tracking"]["status"] = "interim"
+    data["product_tree"] = {
+        "branches": [
+            {
+                "category": "product_name",
+                "name": "EOS",
+                "branches": [
+                    {
+                        "category": "product_version",
+                        "name": "EOS version 4.34.9",
+                        "product": {"name": "EOS version 4.34.9", "product_id": "fixed178"},
+                    }
+                ],
+            }
+        ]
+    }
+    data["vulnerabilities"][0]["product_status"] = {"fixed": ["fixed178"]}
+    new_raw = json.dumps(data).encode()
+    old_data = deepcopy(data)
+    old_data["product_tree"]["branches"][0]["branches"][0]["name"] = "EOS version 4.34.8"
+    old_data["product_tree"]["branches"][0]["branches"][0]["product"]["name"] = "EOS version 4.34.8"
+    old_raw = json.dumps(old_data).encode()
+    pin["sha256"], pin["bytes"] = sha256(new_raw).hexdigest(), len(new_raw)
+    bodies[pin["url"]] = new_raw
+    next(t for t in batch["expected_primaries"] if t["url"] == pin["url"])["sha256"] = pin["sha256"]
+    refresh = dict(
+        advisory_id="Arista Networks Security Advisory 178",
+        source_url=pin["url"],
+        old_sha256=sha256(old_raw).hexdigest(),
+        old_document_status="interim",
+        cve_ids=pin["cve_ids"],
+        document_title="Security Advisory 178",
+        new_sha256=pin["sha256"],
+        new_bytes=pin["bytes"],
+        reason="Reviewed authored vendor update changes fixed version 4.34.8 to 4.34.9.",
+    )
+    batch["reviewed_owner_refreshes"] = [refresh]
+    registry = default_registry()
+    ingest(db, old_raw, pin["url"], registry.normalize, "arista")
+    # Keep the exact new bytes absent, as measured by the hosted readiness preview.
+    with db:
+        db.execute(
+            "DELETE FROM evidence WHERE source_url=? AND id NOT IN (SELECT evidence_id FROM revisions)",
+            (pin["url"],),
+        )
+    from infrastructure_impact.collection.maintenance_profiles import profile
+
+    return (db, profile(PROFILE), batch, bodies), refresh, old_raw
+
+
+@pytest.mark.parametrize("cached", [False, True])
+def test_reviewed_sa178_refresh_preserves_old_history_and_accepts_new_vendor_facts(
+    reviewed_sa178_refresh, cached
+):
+    from infrastructure_impact.storage.repository import latest
+
+    authored, refresh, old_raw = reviewed_sa178_refresh
+    db, selected, _, bodies = authored
+    new_raw = bodies[refresh["source_url"]]
+    if cached:
+        with db:
+            evidence(db, new_raw, refresh["source_url"])
+    before_revisions = [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")]
+    before_evidence = [tuple(r) for r in db.execute("SELECT * FROM evidence ORDER BY id")]
+    preview = maintenance._preview(db, selected)
+    assert {"code": "reviewed_owner_refresh", "source_url": refresh["source_url"]} in preview[
+        "issues"
+    ]
+    called = []
+
+    def fetch(connection, url, vendor, **kwargs):
+        assert not cached, "exact retained new capture must avoid HTTP"
+        assert connection is db and url == refresh["source_url"] and vendor == "arista"
+        assert kwargs == dict(max_bytes=2_000_000, allowed_urls=selected.allowed_urls)
+        called.append(url)
+        return new_raw
+
+    result = execute(authored, fetch)
+    assert result["outcome"] == "completed" and result["imported"] == 34
+    assert called == ([] if cached else [refresh["source_url"]])
+    current = next(r for r in latest(db) if r["advisory_id"] == refresh["advisory_id"])
+    assert current["sha256"] == refresh["new_sha256"]
+    assert any(a["product"] == "EOS version 4.34.9" for a in current["assessments"])
+    assert not any(a["product"] == "EOS version 4.34.8" for a in current["assessments"])
+    assert [
+        tuple(r)
+        for r in db.execute("SELECT * FROM revisions ORDER BY id LIMIT ?", (len(before_revisions),))
+    ] == before_revisions
+    assert [
+        tuple(r)
+        for r in db.execute("SELECT * FROM evidence ORDER BY id LIMIT ?", (len(before_evidence),))
+    ] == before_evidence
+    assert (
+        db.execute(
+            "SELECT raw FROM evidence WHERE source_url=? AND sha256=?",
+            (refresh["source_url"], refresh["old_sha256"]),
+        ).fetchone()[0]
+        == old_raw
+    )
+    repeated = execute(authored, no_http)
+    assert (repeated["outcome"], repeated["imported"], repeated["unchanged"]) == (
+        "completed",
+        0,
+        34,
+    )
+
+
+@pytest.mark.parametrize(
+    "mutation", ["third_hash", "cves", "url", "status", "old_raw", "old_evidence_url", "old_header"]
+)
+def test_unregistered_or_unverified_sa178_old_owner_fails_before_http_and_normalization(
+    reviewed_sa178_refresh, monkeypatch, mutation
+):
+    from infrastructure_impact.plugins.registry import default_registry
+
+    authored, refresh, old_raw = reviewed_sa178_refresh
+    db, _, _, _ = authored
+    row = db.execute(
+        "SELECT id,evidence_id,normalized FROM revisions WHERE advisory_id=? ORDER BY id DESC LIMIT 1",
+        (refresh["advisory_id"],),
+    ).fetchone()
+    normalized = json.loads(row["normalized"])
+    with db:
+        if mutation == "third_hash":
+            ev = evidence(db, old_raw + b" ", refresh["source_url"])
+            db.execute("UPDATE revisions SET evidence_id=? WHERE id=?", (ev["id"], row["id"]))
+        elif mutation in {"cves", "url", "status"}:
+            field, value = {
+                "cves": ("cves", ["CVE-2026-999999"]),
+                "url": ("source_url", "https://www.arista.com/unreviewed-owner"),
+                "status": ("document_status", "final"),
+            }[mutation]
+            normalized[field] = value
+            db.execute(
+                "UPDATE revisions SET normalized=? WHERE id=?", (json.dumps(normalized), row["id"])
+            )
+        elif mutation == "old_raw":
+            db.execute("UPDATE evidence SET raw=? WHERE id=?", (old_raw + b" ", row["evidence_id"]))
+        elif mutation == "old_evidence_url":
+            db.execute(
+                "UPDATE evidence SET source_url=? WHERE id=?",
+                ("https://www.arista.com/unreviewed-owner", row["evidence_id"]),
+            )
+        else:
+            wrong = json.loads(old_raw)
+            wrong["document"]["tracking"]["id"] = "Arista Networks Security Advisory 179"
+            wrong_raw = json.dumps(wrong).encode()
+            # A matching declared old hash still cannot waive header ownership checks.
+            refresh["old_sha256"] = sha256(wrong_raw).hexdigest()
+            ev = evidence(db, wrong_raw, refresh["source_url"])
+            db.execute("UPDATE revisions SET evidence_id=? WHERE id=?", (ev["id"], row["id"]))
+    before = [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")]
+    monkeypatch.setattr(type(default_registry()), "normalize", no_http)
+    result = execute(authored, no_http)
+    assert result["outcome"] == "failed_primary_validation"
+    assert result["imported"] == result["unchanged"] == 0
+    assert result["primary_outcomes"] == []
+    assert [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")] == before
+
+
+@pytest.mark.parametrize(
+    "mutation", ["download_drift", "corrupt_cached_new", "other_required_csaf"]
+)
+def test_sa178_refresh_validates_all_required_structured_bytes_before_normalization(
+    reviewed_sa178_refresh, monkeypatch, mutation
+):
+    from infrastructure_impact.plugins.registry import default_registry
+
+    authored, refresh, _ = reviewed_sa178_refresh
+    db, _, batch, bodies = authored
+    called = []
+    if mutation == "corrupt_cached_new":
+        with db:
+            ev = evidence(db, bodies[refresh["source_url"]], refresh["source_url"])
+            db.execute(
+                "UPDATE evidence SET raw=? WHERE id=?", (b"changed cached new source", ev["id"])
+            )
+    elif mutation == "other_required_csaf":
+        pin = next(p for p in batch["captures"] if p["number"] == 198 and p["kind"] == "csaf")
+        with db:
+            db.execute(
+                "UPDATE evidence SET raw=? WHERE source_url=? AND sha256=?",
+                (b"changed other required CSAF", pin["url"], pin["sha256"]),
+            )
+
+    def fetch(connection, url, vendor, **kwargs):
+        assert mutation == "download_drift", (
+            "all retained required CSAF bytes must validate before HTTP"
+        )
+        called.append(url)
+        assert url == refresh["source_url"]
+        return bodies[url] + b" "
+
+    before = [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")]
+    monkeypatch.setattr(type(default_registry()), "normalize", no_http)
+    result = execute(authored, fetch)
+    assert result["outcome"] == "failed_primary_validation" and result["imported"] == 0
+    assert called == ([refresh["source_url"]] if mutation == "download_drift" else [])
+    assert [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")] == before
+
+
+def test_sa178_old_capture_is_preview_bound_even_when_newer_captures_exist(reviewed_sa178_refresh):
+    authored, refresh, old_raw = reviewed_sa178_refresh
+    db, selected, _, bodies = authored
+    with db:
+        evidence(db, bodies[refresh["source_url"]], refresh["source_url"])
+        evidence(db, b"newer unrelated capture", refresh["source_url"])
+    accepted = maintenance._preview(db, selected)
+    with db:
+        db.execute(
+            "UPDATE evidence SET raw=? WHERE source_url=? AND sha256=?",
+            (old_raw + b" ", refresh["source_url"], refresh["old_sha256"]),
+        )
+    assert maintenance._preview(db, selected)["fingerprint"] != accepted["fingerprint"]
+    with pytest.raises(maintenance.MaintenanceBaselineChanged):
+        maintenance.apply_profile(db, selected, accepted["fingerprint"], fetcher=no_http)
+
+
+def test_sa178_new_capture_presence_invalidates_missing_capture_preview(reviewed_sa178_refresh):
+    authored, refresh, _ = reviewed_sa178_refresh
+    db, selected, _, bodies = authored
+    accepted = maintenance._preview(db, selected)
+    with db:
+        evidence(db, bodies[refresh["source_url"]], refresh["source_url"])
+    with pytest.raises(maintenance.MaintenanceBaselineChanged):
+        maintenance.apply_profile(db, selected, accepted["fingerprint"], fetcher=no_http)
+
+
+def test_sa178_refresh_waits_for_last_chronology_preflight_before_vendor_revision(
+    reviewed_sa178_refresh, monkeypatch
+):
+    from infrastructure_impact.adapters import arista_chronology
+
+    authored, refresh, _ = reviewed_sa178_refresh
+    db, _, _, bodies = authored
+    original = arista_chronology.reconcile
+
+    def fail_last(record, **kwargs):
+        if record["advisory_id"].endswith("198"):
+            return {"status": "unchanged", "chronology": None}
+        return original(record, **kwargs)
+
+    monkeypatch.setattr(arista_chronology, "reconcile", fail_last)
+    before = [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")]
+    result = execute(authored, lambda connection, url, vendor, **kwargs: bodies[url])
+    assert result["outcome"] == "failed_primary_validation" and result["imported"] == 0
+    assert [tuple(r) for r in db.execute("SELECT * FROM revisions ORDER BY id")] == before
+
+
+def test_sa178_curation_revision_and_refresh_policy_invalidate_old_acceptance(
+    reviewed_sa178_refresh,
+):
+    authored, refresh, _ = reviewed_sa178_refresh
+    db, selected, _, _ = authored
+    accepted = maintenance._preview(db, selected)
+    with pytest.raises(ValueError, match="invalid_maintenance_preview"):
+        maintenance.validate_preview(accepted | {"profile_version": "1"}, selected)
+    fingerprint = selected.fingerprint
+    refresh["reason"] += " Independently renewed review."
+    assert selected.fingerprint != fingerprint
+    with pytest.raises(maintenance.MaintenanceBaselineChanged):
+        maintenance.apply_profile(db, selected, accepted["fingerprint"], fetcher=no_http)
