@@ -11,6 +11,7 @@ from checks import distribution, release
 
 ROOT = Path(__file__).resolve().parents[1]
 NEW_MODULES = (
+    "infrastructure_impact/application/switching_analysis_profiles.py",
     "infrastructure_impact/application/import_candidate.py",
     "infrastructure_impact/application/target_import.py",
     "infrastructure_impact/application/target_import_contracts.py",
@@ -34,6 +35,7 @@ def test_new_production_modules_are_in_public_release_allowlist():
 def test_exact_import_resources_and_monitor_pair_have_installed_hash_probes():
     resources = distribution.public_resource_fingerprints(ROOT)
     for name in (
+        "resources/switching-analysis/campus-switching-openvuln-2026-11-14-v1.json",
         "resources/target-imports/campus-switching-public-gap-2026-11-07-v1.json",
         "schemas/target-import-manifest-v1.json",
         "schemas/target-import-preview-v1.json",
