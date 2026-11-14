@@ -1397,5 +1397,740 @@
     ],
     "customer_ready_explanation": "Cisco\u2019s larger observed disclosure count does not by itself establish poorer security. Cisco publicly confirms joining Glasswing and says AI increases discovery and remediation capacity. It also changed disclosure granularity, including umbrella CVEs and scheduled hardening releases. These facts explain why disclosure totals, bug totals and upgrade events are different quantities. They do not prove how much Glasswing changed this cohort, identify which selected CVEs it found, or establish a relative vendor security ranking.",
     "temporal_caveat": "Glasswing launch April 7 and disclosure-policy July changes are distinct dates. Neither date is a causal treatment boundary for the selected counts. Current pages may have been updated after their original publication dates."
+  },
+  "unresolved_kev_case": {
+    "cve_id": "CVE-2026-7473",
+    "vendor": "arista",
+    "family": "arista-eos",
+    "official_catalogue_membership": "listed",
+    "retained_advisory_state": "draft_only",
+    "in_effective_study_cohort": false,
+    "source_url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_137_CSAF.json",
+    "source_sha256": "5f7b0449565fc1aa4ab5ffe88a0e40dba8f2725ed33824c062e230e3b5035d24",
+    "retrieved_at": "2026-10-26T21:33:21.979373+00:00",
+    "catalogue_url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+    "interpretation": "Zero listed CVEs in the observed affected cohort does not establish no known-exploited vendor vulnerabilities."
+  },
+  "api_fixed_release_context": {
+    "publication": {
+      "id": "a3a7a1fcdc194599b2903d39484ba340",
+      "advisory_schema_version": 2
+    },
+    "analysis_sha256": "530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a",
+    "derivation": "Select issue-free publisher_first_fixed requirements with openvuln_api/publisher_api_first_fixed proof. Join claim_id to members and proof_ref/source_ref to facts. Group each literal alternatives item by vendor/family/version; union cve_id. Preserve every owning claim and proof. Other scenarios are duplicate views and are not added. Do not use target-only reductions or cumulative version ordering.",
+    "method": "openvuln_api",
+    "scenario": "publisher_first_fixed",
+    "scope": "Observed IOS XE family evidence; not named-switch applicability or a complete release catalogue.",
+    "release_availability_dates": "not_established",
+    "observed": {
+      "release_history_identities": {
+        "arista": 28,
+        "aruba": 70,
+        "cisco": 2
+      },
+      "api_backed_issue_free_requirements_by_scenario": {
+        "publisher_first_fixed": 1518,
+        "known_fixed_target": 1518,
+        "inferred_inclusive": 1518
+      },
+      "distinct_owned_claims": 1518,
+      "distinct_advisories": 75,
+      "distinct_cves": 84,
+      "distinct_literal_fixed_releases": 38,
+      "distinct_release_cve_pairs": 241,
+      "overlap_with_current_cisco_history_versions": []
+    },
+    "releases": [
+      {
+        "version": "17.12.1a",
+        "distinct_cve_count": 9,
+        "cve_ids": [
+          "CVE-2024-20324",
+          "CVE-2024-20434",
+          "CVE-2025-20188",
+          "CVE-2025-20189",
+          "CVE-2025-20202",
+          "CVE-2025-20293",
+          "CVE-2025-20316",
+          "CVE-2026-20084",
+          "CVE-2026-20104"
+        ],
+        "advisory_ids": [
+          "cisco-sa-9800cl-openscep-SB4xtxzP",
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+          "cisco-sa-vlan-dos-27Pur5RT",
+          "cisco-sa-wlc-file-uplpd-rHZG9UfC",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.12.2",
+        "distinct_cve_count": 1,
+        "cve_ids": ["CVE-2024-20324"],
+        "advisory_ids": ["cisco-sa-iosxe-wlc-privesc-RjSMrmPK"]
+      },
+      {
+        "version": "17.12.2a",
+        "distinct_cve_count": 11,
+        "cve_ids": [
+          "CVE-2024-20434",
+          "CVE-2025-20162",
+          "CVE-2025-20186",
+          "CVE-2025-20188",
+          "CVE-2025-20192",
+          "CVE-2025-20202",
+          "CVE-2025-20221",
+          "CVE-2025-20293",
+          "CVE-2025-20316",
+          "CVE-2026-20084",
+          "CVE-2026-20104"
+        ],
+        "advisory_ids": [
+          "cisco-sa-9800cl-openscep-SB4xtxzP",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks",
+          "cisco-sa-iosxe-ikev1-dos-XHk3HzFC",
+          "cisco-sa-snmp-bypass-HHUVujdn",
+          "cisco-sa-vlan-dos-27Pur5RT",
+          "cisco-sa-webui-cmdinj-gVn3OKNC",
+          "cisco-sa-wlc-file-uplpd-rHZG9UfC",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.12.3",
+        "distinct_cve_count": 5,
+        "cve_ids": [
+          "CVE-2024-20309",
+          "CVE-2024-20316",
+          "CVE-2024-20455",
+          "CVE-2025-20214",
+          "CVE-2025-20293"
+        ],
+        "advisory_ids": [
+          "cisco-sa-9800cl-openscep-SB4xtxzP",
+          "cisco-sa-aux-333WBz8f",
+          "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+          "cisco-sa-netconf-nacm-bypass-TGZV9pmQ",
+          "cisco-sa-sdwan-utd-dos-hDATqxs"
+        ]
+      },
+      {
+        "version": "17.12.3a",
+        "distinct_cve_count": 8,
+        "cve_ids": [
+          "CVE-2024-20434",
+          "CVE-2024-20510",
+          "CVE-2025-20188",
+          "CVE-2025-20189",
+          "CVE-2025-20202",
+          "CVE-2025-20316",
+          "CVE-2026-20084",
+          "CVE-2026-20104"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-c9800-cwa-acl-nPSbHSnA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-vlan-dos-27Pur5RT",
+          "cisco-sa-wlc-file-uplpd-rHZG9UfC",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.12.4",
+        "distinct_cve_count": 8,
+        "cve_ids": [
+          "CVE-2024-20414",
+          "CVE-2024-20433",
+          "CVE-2024-20434",
+          "CVE-2024-20480",
+          "CVE-2024-20510",
+          "CVE-2025-20140",
+          "CVE-2025-20188",
+          "CVE-2025-20192"
+        ],
+        "advisory_ids": [
+          "cisco-sa-c9800-cwa-acl-nPSbHSnA",
+          "cisco-sa-ios-webui-HfwnRgk",
+          "cisco-sa-ios-xe-sda-edge-dos-MBcbG9k",
+          "cisco-sa-iosxe-ikev1-dos-XHk3HzFC",
+          "cisco-sa-rsvp-dos-OypvgVZf",
+          "cisco-sa-vlan-dos-27Pur5RT",
+          "cisco-sa-wlc-file-uplpd-rHZG9UfC",
+          "cisco-sa-wlc-wncd-p6Gvt6HL"
+        ]
+      },
+      {
+        "version": "17.12.4a",
+        "distinct_cve_count": 6,
+        "cve_ids": [
+          "CVE-2025-20189",
+          "CVE-2025-20202",
+          "CVE-2025-20311",
+          "CVE-2025-20316",
+          "CVE-2026-20084",
+          "CVE-2026-20104"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-PtmD7bgy",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.12.5",
+        "distinct_cve_count": 21,
+        "cve_ids": [
+          "CVE-2025-20149",
+          "CVE-2025-20154",
+          "CVE-2025-20155",
+          "CVE-2025-20162",
+          "CVE-2025-20182",
+          "CVE-2025-20186",
+          "CVE-2025-20189",
+          "CVE-2025-20193",
+          "CVE-2025-20194",
+          "CVE-2025-20195",
+          "CVE-2025-20196",
+          "CVE-2025-20197",
+          "CVE-2025-20198",
+          "CVE-2025-20199",
+          "CVE-2025-20200",
+          "CVE-2025-20201",
+          "CVE-2025-20202",
+          "CVE-2025-20221",
+          "CVE-2025-20311",
+          "CVE-2025-20315",
+          "CVE-2026-20004"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-bootstrap-KfgxYgdh",
+          "cisco-sa-cat9k-PtmD7bgy",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-ios-cli-EB7cZ6yO",
+          "cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks",
+          "cisco-sa-iosxe-privesc-su7scvdp",
+          "cisco-sa-iosxe-tls-dos-TVgLDEZL",
+          "cisco-sa-iox-dos-95Fqnf7b",
+          "cisco-sa-multiprod-ikev2-dos-gPctUqv2",
+          "cisco-sa-nbar-dos-LAvwTmeT",
+          "cisco-sa-snmp-bypass-HHUVujdn",
+          "cisco-sa-twamp-kV4FHugn",
+          "cisco-sa-webui-cmdinj-gVn3OKNC",
+          "cisco-sa-webui-multi-ARNHM4v6"
+        ]
+      },
+      {
+        "version": "17.12.5a",
+        "distinct_cve_count": 3,
+        "cve_ids": ["CVE-2025-20316", "CVE-2026-20084", "CVE-2026-20104"],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.12.5b",
+        "distinct_cve_count": 1,
+        "cve_ids": ["CVE-2025-20363"],
+        "advisory_ids": ["cisco-sa-http-code-exec-WmfP3h3O"]
+      },
+      {
+        "version": "17.12.6",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2025-20316", "CVE-2025-20363", "CVE-2026-20084", "CVE-2026-20114"],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-http-code-exec-WmfP3h3O",
+          "cisco-sa-iosxe-lobby-privesc-KwxBqJy"
+        ]
+      },
+      {
+        "version": "17.12.6a",
+        "distinct_cve_count": 1,
+        "cve_ids": ["CVE-2026-20104"],
+        "advisory_ids": ["cisco-sa-xe-secureboot-bypass-B6uYxYSZ"]
+      },
+      {
+        "version": "17.12.7",
+        "distinct_cve_count": 7,
+        "cve_ids": [
+          "CVE-2026-20012",
+          "CVE-2026-20083",
+          "CVE-2026-20104",
+          "CVE-2026-20110",
+          "CVE-2026-20112",
+          "CVE-2026-20113",
+          "CVE-2026-20124"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asa-ftd-ios-dos-kPEpQGGK",
+          "cisco-sa-iosxe-mntc-dos-LZweQcyq",
+          "cisco-sa-iosxe-snmp-dos-ZAqNm4MD",
+          "cisco-sa-iox-crlf-NvgKTKJZ",
+          "cisco-sa-iox-xss-LpGkzwtJ",
+          "cisco-sa-scp-dos-duAdXtCg",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.12.8",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2026-20263", "CVE-2026-20301", "CVE-2026-20308", "CVE-2026-20311"],
+        "advisory_ids": [
+          "cisco-sa-ios-xmcp-thbAr34t",
+          "cisco-sa-iosxe-bing-MGHrFAkd",
+          "cisco-sa-webui-dos-qdc7qx3",
+          "cisco-sa-xe-webui-dos-PtAODAWW"
+        ]
+      },
+      {
+        "version": "17.15.1a",
+        "distinct_cve_count": 5,
+        "cve_ids": [
+          "CVE-2025-20190",
+          "CVE-2025-20202",
+          "CVE-2025-20316",
+          "CVE-2026-20084",
+          "CVE-2026-20086"
+        ],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-ewlc-user-del-hQxMpUDj",
+          "cisco-sa-wlc-dos-hnX5KGOm"
+        ]
+      },
+      {
+        "version": "17.15.1b",
+        "distinct_cve_count": 2,
+        "cve_ids": ["CVE-2025-20162", "CVE-2025-20221"],
+        "advisory_ids": ["cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks", "cisco-sa-snmp-bypass-HHUVujdn"]
+      },
+      {
+        "version": "17.15.2",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2025-20162", "CVE-2025-20190", "CVE-2025-20202", "CVE-2026-20004"],
+        "advisory_ids": [
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-ewlc-user-del-hQxMpUDj",
+          "cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks",
+          "cisco-sa-iosxe-tls-dos-TVgLDEZL"
+        ]
+      },
+      {
+        "version": "17.15.2c",
+        "distinct_cve_count": 3,
+        "cve_ids": ["CVE-2025-20316", "CVE-2026-20084", "CVE-2026-20086"],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-wlc-dos-hnX5KGOm"
+        ]
+      },
+      {
+        "version": "17.15.3",
+        "distinct_cve_count": 6,
+        "cve_ids": [
+          "CVE-2025-20149",
+          "CVE-2025-20151",
+          "CVE-2025-20221",
+          "CVE-2025-20311",
+          "CVE-2025-20315",
+          "CVE-2025-20334"
+        ],
+        "advisory_ids": [
+          "cisco-sa-cat9k-PtmD7bgy",
+          "cisco-sa-ios-cli-EB7cZ6yO",
+          "cisco-sa-ios-xe-cmd-inject-rPJM8BGL",
+          "cisco-sa-nbar-dos-LAvwTmeT",
+          "cisco-sa-snmp-bypass-HHUVujdn",
+          "cisco-sa-snmpv3-qKEYvzsy"
+        ]
+      },
+      {
+        "version": "17.15.3a",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2025-20316", "CVE-2025-20363", "CVE-2026-20084", "CVE-2026-20086"],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-http-code-exec-WmfP3h3O",
+          "cisco-sa-wlc-dos-hnX5KGOm"
+        ]
+      },
+      {
+        "version": "17.15.4",
+        "distinct_cve_count": 8,
+        "cve_ids": [
+          "CVE-2025-20160",
+          "CVE-2025-20240",
+          "CVE-2025-20312",
+          "CVE-2025-20313",
+          "CVE-2025-20314",
+          "CVE-2025-20316",
+          "CVE-2025-20338",
+          "CVE-2025-20363"
+        ],
+        "advisory_ids": [
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-http-code-exec-WmfP3h3O",
+          "cisco-sa-ios-tacacs-hdB7thJw",
+          "cisco-sa-iosxe-arg-inject-EyDDbh4e",
+          "cisco-sa-secboot-UqFD8AvC",
+          "cisco-sa-snmpwred-x3MJyf5M",
+          "cisco-sa-webui-xss-VWyDgjOU"
+        ]
+      },
+      {
+        "version": "17.15.5",
+        "distinct_cve_count": 10,
+        "cve_ids": [
+          "CVE-2026-20012",
+          "CVE-2026-20083",
+          "CVE-2026-20084",
+          "CVE-2026-20086",
+          "CVE-2026-20110",
+          "CVE-2026-20112",
+          "CVE-2026-20113",
+          "CVE-2026-20114",
+          "CVE-2026-20115",
+          "CVE-2026-20124"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asa-ftd-ios-dos-kPEpQGGK",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-iosxe-lobby-privesc-KwxBqJy",
+          "cisco-sa-iosxe-mntc-dos-LZweQcyq",
+          "cisco-sa-iosxe-snmp-dos-ZAqNm4MD",
+          "cisco-sa-iosxe_infodis-6J847uEB",
+          "cisco-sa-iox-crlf-NvgKTKJZ",
+          "cisco-sa-iox-xss-LpGkzwtJ",
+          "cisco-sa-scp-dos-duAdXtCg",
+          "cisco-sa-wlc-dos-hnX5KGOm"
+        ]
+      },
+      {
+        "version": "17.15.6",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2026-20263", "CVE-2026-20301", "CVE-2026-20308", "CVE-2026-20311"],
+        "advisory_ids": [
+          "cisco-sa-ios-xmcp-thbAr34t",
+          "cisco-sa-iosxe-bing-MGHrFAkd",
+          "cisco-sa-webui-dos-qdc7qx3",
+          "cisco-sa-xe-webui-dos-PtAODAWW"
+        ]
+      },
+      {
+        "version": "17.9.10",
+        "distinct_cve_count": 5,
+        "cve_ids": [
+          "CVE-2026-20124",
+          "CVE-2026-20263",
+          "CVE-2026-20301",
+          "CVE-2026-20308",
+          "CVE-2026-20311"
+        ],
+        "advisory_ids": [
+          "cisco-sa-ios-xmcp-thbAr34t",
+          "cisco-sa-iosxe-bing-MGHrFAkd",
+          "cisco-sa-iosxe-snmp-dos-ZAqNm4MD",
+          "cisco-sa-webui-dos-qdc7qx3",
+          "cisco-sa-xe-webui-dos-PtAODAWW"
+        ]
+      },
+      {
+        "version": "17.9.2a",
+        "distinct_cve_count": 6,
+        "cve_ids": [
+          "CVE-2024-20324",
+          "CVE-2024-20434",
+          "CVE-2025-20202",
+          "CVE-2025-20293",
+          "CVE-2025-20316",
+          "CVE-2026-20084"
+        ],
+        "advisory_ids": [
+          "cisco-sa-9800cl-openscep-SB4xtxzP",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+          "cisco-sa-vlan-dos-27Pur5RT"
+        ]
+      },
+      {
+        "version": "17.9.3",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2023-20065", "CVE-2023-20202", "CVE-2023-20226", "CVE-2023-20231"],
+        "advisory_ids": [
+          "cisco-sa-appqoe-utd-dos-p8O57p5y",
+          "cisco-sa-iox-priv-escalate-Xg8zkyPk",
+          "cisco-sa-webui-cmdij-FzZAeXAy",
+          "cisco-sa-wlc-wncd-HFGMsfSD"
+        ]
+      },
+      {
+        "version": "17.9.3a",
+        "distinct_cve_count": 7,
+        "cve_ids": [
+          "CVE-2024-20324",
+          "CVE-2024-20434",
+          "CVE-2025-20189",
+          "CVE-2025-20202",
+          "CVE-2025-20293",
+          "CVE-2025-20316",
+          "CVE-2026-20084"
+        ],
+        "advisory_ids": [
+          "cisco-sa-9800cl-openscep-SB4xtxzP",
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+          "cisco-sa-vlan-dos-27Pur5RT"
+        ]
+      },
+      {
+        "version": "17.9.4",
+        "distinct_cve_count": 8,
+        "cve_ids": [
+          "CVE-2023-20109",
+          "CVE-2023-20186",
+          "CVE-2023-20187",
+          "CVE-2024-20303",
+          "CVE-2024-20311",
+          "CVE-2024-20312",
+          "CVE-2024-20313",
+          "CVE-2024-20373"
+        ],
+        "advisory_ids": [
+          "cisco-sa-aaascp-Tyj4fEJm",
+          "cisco-sa-getvpn-rce-g8qR68sx",
+          "cisco-sa-iosxe-ospf-dos-dR9Sfrxp",
+          "cisco-sa-isis-sGjyOUHX",
+          "cisco-sa-lisp-3gYXs3qP",
+          "cisco-sa-mlre-H93FswRz",
+          "cisco-sa-snmp-uwBXfqww",
+          "cisco-sa-wlc-mdns-dos-4hv6pBGf"
+        ]
+      },
+      {
+        "version": "17.9.4a",
+        "distinct_cve_count": 2,
+        "cve_ids": ["CVE-2023-20198", "CVE-2023-20273"],
+        "advisory_ids": ["cisco-sa-iosxe-webui-privesc-j22SaA4z"]
+      },
+      {
+        "version": "17.9.5",
+        "distinct_cve_count": 14,
+        "cve_ids": [
+          "CVE-2023-20198",
+          "CVE-2023-20235",
+          "CVE-2023-20273",
+          "CVE-2024-20259",
+          "CVE-2024-20278",
+          "CVE-2024-20307",
+          "CVE-2024-20308",
+          "CVE-2024-20309",
+          "CVE-2024-20314",
+          "CVE-2024-20316",
+          "CVE-2024-20324",
+          "CVE-2024-20436",
+          "CVE-2024-20437",
+          "CVE-2025-20293"
+        ],
+        "advisory_ids": [
+          "cisco-sa-9800cl-openscep-SB4xtxzP",
+          "cisco-sa-aux-333WBz8f",
+          "cisco-sa-dhcp-dos-T3CXPO9z",
+          "cisco-sa-dmi-acl-bypass-Xv8FO8Vz",
+          "cisco-sa-httpsrvr-dos-yOZThut",
+          "cisco-sa-ikev1-NO2ccFWz",
+          "cisco-sa-ios-xe-sda-edge-dos-qZWuWXWG",
+          "cisco-sa-iosxe-priv-esc-seAx6NLX",
+          "cisco-sa-iosxe-webui-privesc-j22SaA4z",
+          "cisco-sa-iosxe-wlc-privesc-RjSMrmPK",
+          "cisco-sa-rdocker-uATbukKn",
+          "cisco-sa-webui-csrf-ycUYxkKO"
+        ]
+      },
+      {
+        "version": "17.9.5a",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2024-20434", "CVE-2025-20202", "CVE-2025-20316", "CVE-2026-20084"],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-vlan-dos-27Pur5RT"
+        ]
+      },
+      {
+        "version": "17.9.5b",
+        "distinct_cve_count": 1,
+        "cve_ids": ["CVE-2025-20189"],
+        "advisory_ids": ["cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ"]
+      },
+      {
+        "version": "17.9.6",
+        "distinct_cve_count": 11,
+        "cve_ids": [
+          "CVE-2024-20414",
+          "CVE-2024-20433",
+          "CVE-2024-20434",
+          "CVE-2024-20455",
+          "CVE-2024-20480",
+          "CVE-2024-20510",
+          "CVE-2025-20140",
+          "CVE-2025-20154",
+          "CVE-2025-20186",
+          "CVE-2025-20192",
+          "CVE-2025-20202"
+        ],
+        "advisory_ids": [
+          "cisco-sa-c9800-cwa-acl-nPSbHSnA",
+          "cisco-sa-ewlc-cdp-dos-fpeks9K",
+          "cisco-sa-ios-webui-HfwnRgk",
+          "cisco-sa-ios-xe-sda-edge-dos-MBcbG9k",
+          "cisco-sa-iosxe-ikev1-dos-XHk3HzFC",
+          "cisco-sa-rsvp-dos-OypvgVZf",
+          "cisco-sa-sdwan-utd-dos-hDATqxs",
+          "cisco-sa-twamp-kV4FHugn",
+          "cisco-sa-vlan-dos-27Pur5RT",
+          "cisco-sa-webui-cmdinj-gVn3OKNC",
+          "cisco-sa-wlc-wncd-p6Gvt6HL"
+        ]
+      },
+      {
+        "version": "17.9.6a",
+        "distinct_cve_count": 3,
+        "cve_ids": ["CVE-2025-20162", "CVE-2025-20189", "CVE-2025-20190"],
+        "advisory_ids": [
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-ewlc-user-del-hQxMpUDj",
+          "cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks"
+        ]
+      },
+      {
+        "version": "17.9.7",
+        "distinct_cve_count": 19,
+        "cve_ids": [
+          "CVE-2025-20149",
+          "CVE-2025-20155",
+          "CVE-2025-20162",
+          "CVE-2025-20182",
+          "CVE-2025-20189",
+          "CVE-2025-20190",
+          "CVE-2025-20193",
+          "CVE-2025-20194",
+          "CVE-2025-20195",
+          "CVE-2025-20196",
+          "CVE-2025-20197",
+          "CVE-2025-20198",
+          "CVE-2025-20199",
+          "CVE-2025-20200",
+          "CVE-2025-20201",
+          "CVE-2025-20221",
+          "CVE-2025-20311",
+          "CVE-2025-20315",
+          "CVE-2026-20004"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asr903-rsp3-arp-dos-WmfzdvJZ",
+          "cisco-sa-bootstrap-KfgxYgdh",
+          "cisco-sa-cat9k-PtmD7bgy",
+          "cisco-sa-ewlc-user-del-hQxMpUDj",
+          "cisco-sa-ios-cli-EB7cZ6yO",
+          "cisco-sa-iosxe-dhcpsn-dos-xBn8Mtks",
+          "cisco-sa-iosxe-privesc-su7scvdp",
+          "cisco-sa-iosxe-tls-dos-TVgLDEZL",
+          "cisco-sa-iox-dos-95Fqnf7b",
+          "cisco-sa-multiprod-ikev2-dos-gPctUqv2",
+          "cisco-sa-nbar-dos-LAvwTmeT",
+          "cisco-sa-snmp-bypass-HHUVujdn",
+          "cisco-sa-webui-multi-ARNHM4v6"
+        ]
+      },
+      {
+        "version": "17.9.7a",
+        "distinct_cve_count": 4,
+        "cve_ids": ["CVE-2025-20316", "CVE-2025-20363", "CVE-2026-20084", "CVE-2026-20104"],
+        "advisory_ids": [
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-http-code-exec-WmfP3h3O",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      },
+      {
+        "version": "17.9.8",
+        "distinct_cve_count": 10,
+        "cve_ids": [
+          "CVE-2025-20160",
+          "CVE-2025-20240",
+          "CVE-2025-20312",
+          "CVE-2025-20313",
+          "CVE-2025-20314",
+          "CVE-2025-20316",
+          "CVE-2025-20334",
+          "CVE-2025-20338",
+          "CVE-2025-20352",
+          "CVE-2025-20363"
+        ],
+        "advisory_ids": [
+          "cisco-sa-cat9k-acl-L4K7VXgD",
+          "cisco-sa-http-code-exec-WmfP3h3O",
+          "cisco-sa-ios-tacacs-hdB7thJw",
+          "cisco-sa-ios-xe-cmd-inject-rPJM8BGL",
+          "cisco-sa-iosxe-arg-inject-EyDDbh4e",
+          "cisco-sa-secboot-UqFD8AvC",
+          "cisco-sa-snmp-x4LPhte",
+          "cisco-sa-snmpwred-x3MJyf5M",
+          "cisco-sa-webui-xss-VWyDgjOU"
+        ]
+      },
+      {
+        "version": "17.9.9",
+        "distinct_cve_count": 8,
+        "cve_ids": [
+          "CVE-2026-20012",
+          "CVE-2026-20083",
+          "CVE-2026-20084",
+          "CVE-2026-20104",
+          "CVE-2026-20110",
+          "CVE-2026-20112",
+          "CVE-2026-20113",
+          "CVE-2026-20114"
+        ],
+        "advisory_ids": [
+          "cisco-sa-asa-ftd-ios-dos-kPEpQGGK",
+          "cisco-sa-bootp-WuBhNBxA",
+          "cisco-sa-iosxe-lobby-privesc-KwxBqJy",
+          "cisco-sa-iosxe-mntc-dos-LZweQcyq",
+          "cisco-sa-iox-crlf-NvgKTKJZ",
+          "cisco-sa-iox-xss-LpGkzwtJ",
+          "cisco-sa-scp-dos-duAdXtCg",
+          "cisco-sa-xe-secureboot-bypass-B6uYxYSZ"
+        ]
+      }
+    ]
   }
 }
