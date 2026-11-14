@@ -434,6 +434,15 @@ def backup_acquisitions(state, database, encryption_key, *, store, args, limit):
     workflow_effect("acquisition_ready")
 
 
+def analysis_options(args):
+    from infrastructure_impact.application.switching_analysis_profiles import hosted_profile
+
+    selected = hosted_profile(
+        getattr(args, "switching_analysis_profile", ""), publication_format=args.publication_format
+    )
+    return selected.build_options() if selected is not None else {}
+
+
 def apply_maintenance(args, selected, state, output, home, database, key, store, limit):
     from infrastructure_impact.application import maintenance
     from infrastructure_impact.application.publication import build
@@ -494,6 +503,7 @@ def apply_maintenance(args, selected, state, output, home, database, key, store,
                         with phase("publication.build"), redirect_stdout(io.StringIO()):
                             build(
                                 output=candidate,
+                                **(analysis_options(args)),
                                 **(
                                     {"publication_format": "v2"}
                                     if args.publication_format == "v2"
@@ -560,6 +570,7 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--base-path", default="/")
     parser.add_argument("--publication-format", choices=HOSTED_PUBLICATION_FORMATS, default="v1")
+    parser.add_argument("--switching-analysis-profile", default="")
     parser.add_argument("--encrypted-state", action="store_true")
     parser.add_argument("--acquisition-cache", action="store_true")
     parser.add_argument("--backup-compression", choices=("xz", "gzip"), default="xz")
@@ -581,6 +592,18 @@ def main():
         "--schedule-utc", default="08:37", help="Declared daily schedule, HH:MM UTC"
     )
     args = parser.parse_args()
+    from infrastructure_impact.application.switching_analysis_profiles import hosted_profile
+
+    try:
+        analysis = hosted_profile(
+            args.switching_analysis_profile, publication_format=args.publication_format
+        )
+        if analysis is not None and (
+            args.validate_encrypted_state or args.restore_only is not None
+        ):
+            parser.error("Switching analysis forbids recovery-only modes")
+    except ValueError as error:
+        parser.error(str(error))
     selected = None
     kind = None
     if args.maintenance_profile:
@@ -757,7 +780,12 @@ def main():
                         "Normalization maintenance could not acquire the writer lock"
                     )
             result = collect_once(
-                **({"publication_format": "v2"} if args.publication_format == "v2" else {})
+                **(
+                    {"switching_analysis_profile": args.switching_analysis_profile}
+                    if args.switching_analysis_profile
+                    else {}
+                ),
+                **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
             )
             if result["outcome"] not in ("ok", "partial"):
                 raise RuntimeError(

@@ -56,10 +56,7 @@
               "pattern": "^(?:[0-9a-f]{16}|[0-9a-f]{64})$"
             }
           },
-          "required": [
-            "aruba",
-            "cisco"
-          ],
+          "required": ["aruba", "cisco"],
           "additionalProperties": false
         },
         "baseline_fingerprint": {
@@ -111,10 +108,7 @@
               "pattern": "^(?:[0-9a-f]{16}|[0-9a-f]{64})$"
             }
           },
-          "required": [
-            "aruba",
-            "cisco"
-          ],
+          "required": ["aruba", "cisco"],
           "additionalProperties": false
         },
         "baseline_fingerprint": {
@@ -144,10 +138,7 @@
         "type": "object",
         "properties": {
           "vendor": {
-            "enum": [
-              "aruba",
-              "cisco"
-            ]
+            "enum": ["aruba", "cisco"]
           },
           "advisory_id": {
             "type": "string",
@@ -166,13 +157,7 @@
             "maxLength": 64
           },
           "status": {
-            "enum": [
-              "not_attempted",
-              "validated",
-              "imported",
-              "unchanged",
-              "failed"
-            ]
+            "enum": ["not_attempted", "validated", "imported", "unchanged", "failed"]
           },
           "failure_code": {
             "enum": [
@@ -434,12 +419,7 @@
               ]
             }
           },
-          "required": [
-            "",
-            "-wal",
-            "-shm",
-            "-journal"
-          ]
+          "required": ["", "-wal", "-shm", "-journal"]
         },
         "source_after": {
           "type": "object",
@@ -638,12 +618,7 @@
               ]
             }
           },
-          "required": [
-            "",
-            "-wal",
-            "-shm",
-            "-journal"
-          ]
+          "required": ["", "-wal", "-shm", "-journal"]
         },
         "existing_rows_unchanged": {
           "const": true
@@ -673,11 +648,7 @@
                 "pattern": "^[a-f0-9]{64}$"
               }
             },
-            "required": [
-              "max_rowid",
-              "count",
-              "sha256"
-            ]
+            "required": ["max_rowid", "count", "sha256"]
           }
         },
         "allowed_cache_urls": {
@@ -697,6 +668,23 @@
         "baseline_tables",
         "allowed_cache_urls"
       ]
+    },
+    "switching_analysis_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_id", "input_sha256", "api_frames"],
+      "properties": {
+        "profile_id": {
+          "const": "campus-switching-openvuln-2026-11-14-v1"
+        },
+        "input_sha256": {
+          "const": "e8cc5e131c3c2bd835185795357044f427ec9c796f708a98eb652f9831289356"
+        },
+        "api_frames": {
+          "type": "integer",
+          "const": 59
+        }
+      }
     }
   },
   "required": [
@@ -730,12 +718,7 @@
           "$ref": "target-import-manifest-v1.json"
         }
       },
-      "required": [
-        "format",
-        "schema_version",
-        "publication_format",
-        "profile"
-      ]
+      "required": ["format", "schema_version", "publication_format", "profile"]
     }
   },
   "$schema": "https://json-schema.org/draft/2020-12/schema"

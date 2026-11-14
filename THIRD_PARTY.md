@@ -53,3 +53,18 @@ when distributing images. This repository does not vendor their implementations.
 
 The compiled study-schema validator uses [`jsonschema-rs`](https://pypi.org/project/jsonschema-rs/0.60.3/),
 pinned to version 0.60.3, under its [MIT license](https://github.com/Stranger6667/jsonschema/blob/master/LICENSE).
+
+## Reviewed Cisco switching analysis profile
+
+`infrastructure_impact/resources/switching-analysis/campus-switching-openvuln-2026-11-14-v1.json`
+contains reviewed, derived public Cisco OpenVuln metadata and the public
+[Cisco risk-based disclosure policy](https://sec.cloudapps.cisco.com/security/center/resources/risk-based-disclosure)
+receipt. The 59 IOS XE release-query frames retain all 1,800 advisory contexts,
+including unresolved ownership, empty first-fixed values and ordering caveats.
+Each source URL, SHA-256, capture time and parser revision is preserved. Only
+workspace-local `source.evidence_id` references were removed before packaging.
+The profile does not include API response bodies, credentials or local datasets.
+Cisco's source terms and rights continue to apply; the project license does not
+grant rights in Cisco source material. This metadata is publication configuration,
+not evidence of product ownership, exposure or security quality. Human review
+remains pending, and a first-fixed API observation is not a CVE or patch count.

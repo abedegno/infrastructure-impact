@@ -70,6 +70,11 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
                 accepted_preview=accepted,
                 base_path=args.base_path,
                 **acquisition_options,
+                **(
+                    {"switching_analysis_profile": args.switching_analysis_profile}
+                    if getattr(args, "switching_analysis_profile", "")
+                    else {}
+                ),
                 **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
             )
             step = "receipt_validation"

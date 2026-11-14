@@ -329,8 +329,18 @@ def validate_result(value, *, publication_format="v1"):
     return value
 
 
-def verify(database: Path, public: Path, profile, *, publication_format="v1") -> dict:
+def verify(
+    database: Path,
+    public: Path,
+    profile,
+    *,
+    publication_format="v1",
+    switching_analysis_profile: str = "",
+) -> dict:
     """Dispatch only the trusted installed module, with stage settings before imports."""
+    from .switching_analysis_profiles import hosted_profile
+
+    analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
     failure = _empty(publication_format=publication_format)
     try:
         database, public, home = _paths(database, public)
@@ -343,6 +353,8 @@ def verify(database: Path, public: Path, profile, *, publication_format="v1") ->
         }
         if publication_format == "v2":
             request.update(schema_version=2, publication_format="v2")
+        if analysis is not None:
+            request["switching_analysis_profile"] = analysis.identity()
         raw = (json.dumps(request, allow_nan=False) + "\n").encode()
         if len(raw) > MAX_CONTEXT:
             raise CapacityFailure("request size")
@@ -365,6 +377,11 @@ def verify(database: Path, public: Path, profile, *, publication_format="v1") ->
                         str(database),
                         str(public),
                         *(["v2"] if publication_format == "v2" else []),
+                        *(
+                            ["--switching-analysis-profile", switching_analysis_profile]
+                            if analysis is not None
+                            else []
+                        ),
                     ],
                     cwd=home,
                     env=_environment(database, public, home, base_path=_base_path(home)),
@@ -816,14 +833,27 @@ def _monitors(public, home, facts, *, base_path="/"):
         thread.join()
 
 
-def _worker(database, public, *, publication_format="v1"):
+def _analysis_identity(identity):
+    from .switching_analysis_profiles import profile
+
+    if not isinstance(identity, dict):
+        raise ValueError("analysis identity")
+    selected = profile(identity.get("profile_id"))
+    if identity != selected.identity() or type(identity.get("api_frames")) is not int:
+        raise ValueError("analysis identity")
+    return identity["profile_id"]
+
+
+def _worker(database, public, *, publication_format="v1", switching_analysis_profile: str = ""):
     result = _empty("validation_failed", publication_format=publication_format)
     database, public, home = _paths(database, public)
     os.environ.clear()
     os.environ.update(_environment(database, public, home, base_path=_base_path(home)))
     try:
         from ..collection.target_import_profiles import from_manifest
+        from .switching_analysis_profiles import hosted_profile
 
+        analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
         request = _read_json(home / REQUEST, MAX_CONTEXT)
         if (
             set(request)
@@ -832,6 +862,7 @@ def _worker(database, public, *, publication_format="v1"):
                 "schema_version",
                 "profile",
                 *({"publication_format"} if publication_format == "v2" else set()),
+                *({"switching_analysis_profile"} if analysis is not None else set()),
             }
             or request["format"] != "impact-target-import-worker"
             or type(request["schema_version"]) is not int
@@ -839,6 +870,21 @@ def _worker(database, public, *, publication_format="v1"):
             or (publication_format == "v2" and request.get("publication_format") != "v2")
         ):
             raise ValueError("worker request")
+        context = _read_json(home / "target-import-context.json", MAX_CONTEXT)
+        if analysis is None:
+            if "switching_analysis_profile" in context:
+                raise ValueError("unexpected analysis context")
+        else:
+            for identity in (
+                request["switching_analysis_profile"],
+                context.get("switching_analysis_profile"),
+            ):
+                if (
+                    _analysis_identity(identity) != switching_analysis_profile
+                    or identity != analysis.identity()
+                ):
+                    raise ValueError("analysis expected selection mismatch")
+        analysis_id = switching_analysis_profile
         selected = from_manifest(request["profile"])
         _preserved(
             database,
@@ -866,7 +912,11 @@ def _worker(database, public, *, publication_format="v1"):
         source_audit.now = lambda: evaluated
         if publication_format != "v2":
             report()
-        build(public, **({"publication_format": "v2"} if publication_format == "v2" else {}))
+        build(
+            public,
+            **({"publication_format": "v2"} if publication_format == "v2" else {}),
+            **(analysis.build_options() if analysis is not None else {}),
+        )
         if publication_format == "v2":
             from .publication_v2 import inspect_bundle, native_parity
 
@@ -877,7 +927,13 @@ def _worker(database, public, *, publication_format="v1"):
         # comparison. Every gate remains mandatory for an accepted candidate.
         _monitors(public, home, result["candidate"], base_path=_base_path(home))
         if publication_format == "v2":
-            native_parity(database, public, home, reader)
+            native_parity(
+                database,
+                public,
+                home,
+                reader,
+                **({"switching_analysis_profile": analysis_id} if analysis_id else {}),
+            )
         else:
             _parity(database, public, home, snapshot)
         result["candidate"]["parity_passed"] = True
@@ -905,16 +961,28 @@ def _worker(database, public, *, publication_format="v1"):
 
 def main():
     if (
-        len(sys.argv) not in (4, 5)
+        len(sys.argv) not in (4, 5, 7)
         or sys.argv[1] != "--worker"
-        or (len(sys.argv) == 5 and sys.argv[4] != "v2")
+        or (len(sys.argv) >= 5 and sys.argv[4] != "v2")
+        or (
+            len(sys.argv) == 7
+            and (sys.argv[5] != "--switching-analysis-profile" or not sys.argv[6])
+        )
     ):
         raise SystemExit("internal candidate worker only")
     database, public, home = _paths(Path(sys.argv[2]), Path(sys.argv[3]))
-    publication_format = "v2" if len(sys.argv) == 5 else "v1"
+    publication_format = "v2" if len(sys.argv) >= 5 else "v1"
+    switching_analysis_profile = sys.argv[6] if len(sys.argv) == 7 else ""
     result = validate_result(
         _worker(
-            database, public, **({"publication_format": "v2"} if publication_format == "v2" else {})
+            database,
+            public,
+            **({"publication_format": "v2"} if publication_format == "v2" else {}),
+            **(
+                {"switching_analysis_profile": switching_analysis_profile}
+                if switching_analysis_profile
+                else {}
+            ),
         ),
         publication_format=publication_format,
     )

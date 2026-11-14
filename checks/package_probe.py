@@ -20,6 +20,29 @@ from infrastructure_impact.plugins import default_registry
 from infrastructure_impact.storage.repository import connect, ingest
 
 
+def check_switching_analysis_profile(package):
+    """Prove the installed selector loads reviewed bytes without checkout state."""
+    from infrastructure_impact.application.switching_analysis_profiles import (
+        build_options,
+        profile,
+    )
+
+    profile_id = "campus-switching-openvuln-2026-11-14-v1"
+    digest = "e8cc5e131c3c2bd835185795357044f427ec9c796f708a98eb652f9831289356"
+    raw = (package / "resources/switching-analysis" / (profile_id + ".json")).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == digest
+    selected = profile(profile_id)
+    assert selected.identity() == {
+        "profile_id": profile_id,
+        "input_sha256": digest,
+        "api_frames": 59,
+    }
+    assert build_options() == {}
+    frame = selected.build_options()["switching_analysis_input"]
+    assert frame == json.loads(raw)
+    assert sum(len(f["advisory_context"]) for f in frame["api_results"]) == 1800
+
+
 def main():
     if os.environ.get("IMPACT_EXPECTED_PACKAGE_VERSION"):
         assert version("infrastructure-impact") == os.environ["IMPACT_EXPECTED_PACKAGE_VERSION"]
@@ -48,6 +71,7 @@ def main():
     assert registry.get("aruba").parse_release_history is not None
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
+    check_switching_analysis_profile(package)
     for name, digest in json.loads(
         os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
     ).items():

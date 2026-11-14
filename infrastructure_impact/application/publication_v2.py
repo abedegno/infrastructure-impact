@@ -792,7 +792,7 @@ def inspect_bundle(directory, facts):
 
 
 @phase("publication.native_parity")
-def native_parity(database, directory, home, reader):
+def native_parity(database, directory, home, reader, *, switching_analysis_profile: str = ""):
     """Bind mandatory roots to independently queried sanitized native facts."""
     from contextlib import closing
 
@@ -801,17 +801,24 @@ def native_parity(database, directory, home, reader):
     from ..storage.repository import connect
     from .publication import public_projection
     from .query import state
+    from .switching_analysis_profiles import hosted_profile
     from .switching_comparison import VENDORS, _select_summaries, _selected_sources
     from .switching_row_sources import vendor_summary
 
+    analysis = hosted_profile(switching_analysis_profile, publication_format="v2")
     with closing(connect(database, read_only=True)) as db:
         native = state(db)
+    if analysis is not None:
+        native["research"]["switching_analysis_input"] = analysis.build_options()[
+            "switching_analysis_input"
+        ]
     native["publication"] = reader.identity["publication"]
     native["current_evidence"]["publication"] = reader.identity["publication"]
     projected = public_projection(
         native,
         [d["url"] for d in load_config().get("release_documents", [])],
         publication_format="v2",
+        **({"include_switching_analysis": True} if analysis is not None else {}),
     )
     verify_projection(reader, projected)
     if (Path(directory) / "impact.csv").read_bytes() != csv_export(projected).encode():
