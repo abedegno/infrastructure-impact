@@ -482,9 +482,25 @@ class _EvidenceClaimSemantics:
         _validate_claim_semantics(claims, self._study, _linkage=_linkage)
 
 
+def _reviewed_candidate_buckets(claims):
+    """Narrow complete native lists; preserve direct iterable/malformed behavior."""
+    if type(claims) is not list:
+        return None
+    buckets = {}
+    for claim in claims:
+        if type(claim) is not dict:
+            return None
+        key = tuple(claim.get(k) for k in ("vendor", "advisory_id", "cve_id"))
+        if any(type(value) not in (str, type(None)) for value in key):
+            return None
+        buckets.setdefault(key, []).append(claim)
+    return buckets
+
+
 def _validate_claim_semantics(claims, study, *, _linkage=None):
     """Complete per-claim semantics shared by full reports and authenticated streams."""
     seen = set()
+    candidate_buckets = _UNSET
     for claim in claims:
         identity = definition_sha256({k: v for k, v in claim.items() if k != "claim_id"})
         if claim["claim_id"] != identity or identity in seen:
@@ -592,7 +608,18 @@ def _validate_claim_semantics(claims, study, *, _linkage=None):
                         )
                 else:
                     if _linkage is None:
-                        _validate_reviewed_link(claim, remediation, binding, claims)
+                        from ..remediation_bindings import registered_source
+
+                        candidates = claims
+                        if registered_source(claim):
+                            if candidate_buckets is _UNSET:
+                                candidate_buckets = _reviewed_candidate_buckets(claims)
+                            if candidate_buckets is not None:
+                                # These exact primitive equalities are necessary in
+                                # fixed_siblings; keep every remaining predicate there.
+                                key = (vendor, claim.get("advisory_id"), claim.get("cve_id"))
+                                candidates = candidate_buckets[key]
+                        _validate_reviewed_link(claim, remediation, binding, candidates)
                     else:
                         _linkage.append((claim, remediation, binding))
             product_ids = remediation["product_ids"]
