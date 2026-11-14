@@ -21,21 +21,22 @@ accounting, not public CVE evidence or a content-authenticity certificate.
 
 ## Explicit bounded profiles
 
-| Profile | Maximum expanded SQLite vault | Default |
-| --- | --- | --- |
-| `standard` | 512 MiB | Yes |
-| `large` | 1 GiB | No; explicit operator choice |
+| Profile    | Maximum expanded SQLite vault | Default                      |
+| ---------- | ----------------------------- | ---------------------------- |
+| `standard` | 512 MiB                       | Yes                          |
+| `large`    | 1 GiB                         | No; explicit operator choice |
+| `extended` | 2 GiB                         | No; explicit operator choice |
 
-Both retain the existing 50 MiB encrypted archive limit, 64 MiB XZ decoder memory
+All profiles retain the existing 50 MiB encrypted archive limit, 64 MiB XZ decoder memory
 limit, bounded output blocks, authentication, SQLite integrity checks and atomic
 restore. Repository storage review remains at 512 MiB. Expanding a vault profile
 does not remove those separate warnings or reclaim legacy Git history.
 
-A trusted operator selects a profile with `--vault-profile standard|large` on
+A trusted operator selects a profile with `--vault-profile standard|large|extended` on
 `ops/hosted_job.py` and `checks/backup_storage.py`. The hosted workflows share the
 repository variable `IMPACT_VAULT_PROFILE`, defaulting to `standard`. The manifest
 records `vault_limit_bytes` for audit; it cannot enlarge the caller's selected
-restore bound. Unknown profiles and budgets above 1 GiB are rejected.
+restore bound. Unknown profiles and budgets above 2 GiB are rejected.
 
 For an approved recovery environment:
 
@@ -91,3 +92,9 @@ establish a reliable daily growth rate or exhaustion date.
 
 See [Draft recovery](DRAFT_RECOVERY.md), [Operations](OPERATIONS.md) and
 [Hosted service](HOSTED_SERVICE.md).
+
+Exact-target hosted imports check the selected recovery bound after ingestion and
+before expensive candidate validation. The final promotion and backup checks
+still enforce that bound after report generation. Selecting `extended` preserves
+all retained evidence and revisions; it does not increase archive or public-output
+limits or change collection schedules.

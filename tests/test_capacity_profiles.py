@@ -73,7 +73,7 @@ def test_storage_profile_is_read_only_aggregate_and_counts_unicode_bytes(tmp_pat
     assert hashlib.sha256(database.read_bytes()).hexdigest() == before
 
 
-@pytest.mark.parametrize("profile", ["standard", "large"])
+@pytest.mark.parametrize("profile", ["standard", "large", "extended"])
 def test_profile_flows_through_backup_and_recovery_without_manifest_selecting_limit(
     tmp_path, profile
 ):
@@ -98,7 +98,7 @@ def test_profile_flows_through_backup_and_recovery_without_manifest_selecting_li
     assert not (tmp_path / "too-small.sqlite3").exists()
 
 
-@pytest.mark.parametrize("value", [True, 0, -1, 1024 * 1024 * 1024 + 1, float("inf"), "large"])
+@pytest.mark.parametrize("value", [True, 0, -1, 2 * 1024 * 1024 * 1024 + 1, float("inf"), "large"])
 def test_internal_byte_budgets_cannot_be_unbounded(value):
     with pytest.raises(ValueError):
         checked_limit(value)
@@ -188,3 +188,20 @@ def test_hosted_workflow_profiles_and_declared_schedule_stay_aligned():
     assert '--vault-profile "$VAULT_PROFILE"' in operations
     assert "IMPACT_SCHEDULE_OBSERVATION_START" in operations
     assert "IMPACT_RELIABILITY_START" in operations
+
+
+def test_extended_profile_accepts_growth_without_changing_existing_limits():
+    assert vault_limit("extended") == checked_limit(2 * 1024**3) == 2 * 1024**3
+    assert vault_limit("standard") == 512 * 1024**2
+    assert vault_limit("large") == 1024**3
+    tree = [[dict(path="state/vault-test.xz.fernet", type="blob", size=100, sha="synthetic")]]
+    manifest = dict(
+        archive="vault-test.xz.fernet",
+        encryption="fernet-v1",
+        database_bytes=1100 * 1024**2,
+        vault_limit_bytes=vault_limit("extended"),
+    )
+    extended = summarize(tree, 1, manifest, vault_profile="extended")
+    assert not extended["storage_review_required"]
+    assert summarize(tree, 1, manifest, vault_profile="large")["storage_review_required"]
+    assert extended["per_archive_limit_bytes"] == 50 * 1024**2

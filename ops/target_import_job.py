@@ -69,6 +69,7 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
                 lock_home=home,
                 accepted_preview=accepted,
                 base_path=args.base_path,
+                vault_limit_bytes=limit,
                 **acquisition_options,
                 **(
                     {"switching_analysis_profile": args.switching_analysis_profile}
