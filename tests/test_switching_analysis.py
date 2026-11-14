@@ -43,7 +43,9 @@ def test_compact_selection_exact_native_projection(options):
     selected = comparison.select_report(study, **options, evaluated_at=AT)
     compact = api().compile_requirements(ev, ff, None, k, publication=None, generated_at=AT)
     native = upgrades.build_report(ev, ff, None, k, publication=None, generated_at=AT)
-    assert api().select_upgrades(compact, selected) == api().project_native(native, selected)
+    result = api().select_upgrades(compact, selected)
+    assert result == api().project_native(native, selected)
+    assert list(api().detailed_rows(result)) == upgrades.select_report(native, selected)["rows"]
     assert len(json.dumps(compact)) < len(json.dumps(native))
 
 
@@ -711,7 +713,14 @@ def test_indexed_row_evidence_exact_native_walk_and_tampering():
         "affected_claim_ids" not in row and "unresolved" not in row for row in result["rows"]
     )
     assert len(result["row_evidence"]["affected"]) < len(result["rows"])
-    for mutation in ("digest", "missing_ref", "bad_index", "duplicate_index", "unused_ref"):
+    for mutation in (
+        "digest",
+        "missing_ref",
+        "bad_index",
+        "duplicate_index",
+        "unused_ref",
+        "wrong_type",
+    ):
         bad = copy.deepcopy(result)
         table = bad["row_evidence"]
         if mutation == "digest":
@@ -720,6 +729,11 @@ def test_indexed_row_evidence_exact_native_walk_and_tampering():
             bad["rows"][0]["affected_ref"] = "0" * 64
         elif mutation == "unused_ref":
             table["affected"]["0" * 64] = []
+        elif mutation == "wrong_type":
+            values = [dict(member_index=0, issues=[])]
+            key = api()._hash(values)
+            table["affected"][key] = values
+            bad["rows"][0]["affected_ref"] = key
         else:
             row = next(r for r in bad["rows"] if table["affected"][r["affected_ref"]])
             values = table["affected"][row["affected_ref"]]
