@@ -58,10 +58,11 @@ finalization, and unchanged scope/fix fields. Different captures are reported as
 ## Manual hosted batch and reviewed SA178 source refresh
 
 The finite installed profile `arista-reviewed-sa0137-chronology-0165-0198-v1`
-uses maintenance preview/apply. Curation revision 2 keeps receipt schema version 1
-and the profile ID; its profile version is `2`. Revision 1 was previewed only.
-The revision and declarative `reviewed_owner_refreshes` metadata change the profile
-fingerprint, so the earlier accepted preview cannot authorize this apply. Obtain a
+uses maintenance preview/apply. Curation revision 3 keeps receipt schema version 1
+and the profile ID; its profile version is `3`. Earlier revisions did not complete
+an apply. The revision, HTML comparison pins and declarative
+`reviewed_owner_refreshes` metadata change the profile fingerprint, so an earlier
+accepted preview cannot authorize this apply. Obtain a
 fresh hosted preview and retain the existing publication v2 analysis profile
 `campus-switching-openvuln-2026-11-14-v1` and its pinned input hash.
 
@@ -103,3 +104,35 @@ still requires the existing full-source report/audit/build limits and authentica
 recovery readback. No workflow, schedule, permission, secret or budget changes are
 part of this transition. The actual old raw capture is verified on the hosted
 connection, never by exporting private recovery state.
+
+## Exact HTML binding with a rotating Joomla token
+
+Hosted apply 43641297108 stopped at the first HTML input, SA165. The reviewed
+capture and two independent official responses differ only in a 32-character
+lowercase hexadecimal `csrf.token` inside the document head's Joomla JSON options
+script. Every other original byte matches. Replacing the full-page raw pin on
+each request would not produce a stable input.
+
+Curation revision 3 adds `joomla_csrf_sha256` to each of the 34 HTML reference pins.
+Registration checks each reviewed reference's existing raw SHA and exact byte
+count first. The comparison projection requires one head, one Joomla options
+JSON script inside that head, unique JSON keys, and one valid top-level
+`csrf.token` with exactly 32 lowercase hexadecimal characters. It masks only
+those 32 original bytes with ASCII zeroes, then hashes all remaining original
+bytes. It does not reserialize HTML or JSON, accept a matching article inside an
+arbitrary changed page, or change advisory, link, whitespace or other page bytes.
+Missing, duplicate, malformed and non-head token contexts fail closed.
+
+The exact retained reference capture remains preferred. Otherwise the latest
+retained same-URL HTML capture must pass actual raw-SHA integrity, exact length
+and projected-digest checks; missing supporting HTML can use the same checks on
+a bounded official retrieval. Any existing HTML primary owner is checked using
+its actual evidence ID, source URL, raw hash and comparison pin. Preview also
+binds that evidence row when it is neither the reference nor the latest capture.
+
+Evidence always keeps the unmodified raw bytes, their actual SHA and original
+retrieval time. Chronology and selection proofs refer to that actual capture.
+Structured JSON, the reviewed SA178 source transition, and optional RSS retain
+their exact raw-SHA requirements. Capture counts, byte ceilings and hosted
+publication/recovery gates remain unchanged. Obtain a fresh revision-3 preview
+after review and CI.

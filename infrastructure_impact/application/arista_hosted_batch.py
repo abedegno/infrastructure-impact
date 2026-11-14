@@ -1,6 +1,7 @@
 """One installed, source-pinned Arista maintenance batch; no discovery or ambient storage."""
 
 import json
+import re
 from copy import deepcopy
 from hashlib import sha256
 
@@ -8,18 +9,116 @@ from ..adapters import arista_sa0137 as sa137
 from ..collection.maintenance_profiles import batch_metadata
 
 
+def joomla_csrf_digest(raw):
+    """Mask one validated head-options nonce span; hash every other original byte."""
+    from ..adapters.common import HTML
+
+    class OptionsHTML(HTML):
+        def handle_data(self, text):
+            if self.stack[-1].tag == "script":
+                self.stack[-1].children.append(text)
+            else:
+                super().handle_data(text)
+
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate_json_key")
+            result[key] = value
+        return result
+
+    try:
+        if type(raw) is not bytes or len(raw) > 2_000_000:
+            raise ValueError()
+        root = OptionsHTML(raw).root
+        heads = list(root.find({"head"}))
+        bodies = list(root.find({"body"}))
+        scripts = [
+            n
+            for n in root.find({"script"})
+            if "joomla-script-options" in n.attrs.get("class", "").split()
+        ]
+        if len(heads) != 1 or len(bodies) != 1 or len(scripts) != 1:
+            raise ValueError()
+        html = heads[0].parent
+        if (
+            html.tag != "html"
+            or html.parent is not root
+            or bodies[0].parent is not html
+            or html.children.index(heads[0]) > html.children.index(bodies[0])
+        ):
+            raise ValueError()
+        script = scripts[0]
+        ancestor = script.parent
+        while ancestor is not None and ancestor is not heads[0]:
+            ancestor = ancestor.parent
+        if ancestor is None or script.attrs.get("type") != "application/json":
+            raise ValueError()
+        if not script.children or any(type(c) is not str for c in script.children):
+            raise ValueError()
+        content = "".join(script.children).encode("utf-8")
+
+        def finite_constant(_value):
+            raise ValueError("invalid_json_constant")
+
+        options = json.loads(content, object_pairs_hook=unique, parse_constant=finite_constant)
+        matches = list(re.finditer(rb'"csrf\.token"\s*:\s*"([0-9a-f]{32})"', content))
+        if (
+            type(options) is not dict
+            or len(matches) != 1
+            or options.get("csrf.token") != matches[0][1].decode("ascii")
+            or len(re.findall(rb'"csrf\.token"\s*:', raw)) != 1
+            or raw.count(content) != 1
+        ):
+            raise ValueError()
+        start = raw.index(content) + matches[0].start(1)
+        end = start + 32
+        return sha256(raw[:start] + b"0" * 32 + raw[end:]).hexdigest()
+    except (ValueError, TypeError, AttributeError, UnicodeError):
+        raise ValueError("maintenance_html_projection_invalid") from None
+
+
+def _capture_matches(raw, pin):
+    if type(raw) is not bytes or len(raw) != pin["bytes"]:
+        return False
+    if sha256(raw).hexdigest() == pin["sha256"]:
+        return True
+    if pin["kind"] != "html" or not pin.get("joomla_csrf_sha256"):
+        return False
+    try:
+        return joomla_csrf_digest(raw) == pin["joomla_csrf_sha256"]
+    except ValueError:
+        return False
+
+
+def _retained_capture(row, pin):
+    raw = bytes(row["raw"])
+    if row["source_url"] != pin["url"] or sha256(raw).hexdigest() != row["sha256"]:
+        raise ValueError("maintenance_capture_changed")
+    if not _capture_matches(raw, pin):
+        return None
+    return raw, dict(url=row["source_url"], sha256=row["sha256"], retrieved_at=row["observed_at"])
+
+
 def exact_capture(db, pin):
-    """Return verified exact retained bytes and their actual runner receipt."""
+    """Prefer exact reference bytes; otherwise verify the latest HTML nonce variant."""
     row = db.execute(
         "SELECT * FROM evidence WHERE source_url=? AND sha256=?",
         (pin["url"], pin["sha256"]),
     ).fetchone()
-    if row is None:
-        return None
-    raw = bytes(row["raw"])
-    if len(raw) != pin["bytes"] or sha256(raw).hexdigest() != pin["sha256"]:
-        raise ValueError("maintenance_capture_changed")
-    return raw, dict(url=row["source_url"], sha256=row["sha256"], retrieved_at=row["observed_at"])
+    if row is not None:
+        capture = _retained_capture(row, pin)
+        if capture is None:
+            raise ValueError("maintenance_capture_changed")
+        return capture
+    if pin["kind"] == "html":
+        row = db.execute(
+            "SELECT * FROM evidence WHERE source_url=? ORDER BY id DESC LIMIT 1", (pin["url"],)
+        ).fetchone()
+        if row is not None:
+            return _retained_capture(row, pin)
+    return None
 
 
 def _reviewed_refresh(owner, pin, batch):
@@ -79,11 +178,13 @@ def _verified_refreshes(db, records):
     return {pin["url"]: refresh}
 
 
-def _blocking_owner_issues(records):
-    return [issue for issue in owner_issues(records) if issue["code"] != "reviewed_owner_refresh"]
+def _blocking_owner_issues(db, records):
+    return [
+        issue for issue in owner_issues(records, db=db) if issue["code"] != "reviewed_owner_refresh"
+    ]
 
 
-def owner_issues(records):
+def owner_issues(records, *, db):
     """CSAF owners are mandatory; an existing SA137 HTML owner must also match."""
     batch = batch_metadata()
     issues = []
@@ -104,10 +205,24 @@ def owner_issues(records):
         elif owners and (
             len(owners) != 1
             or owners[0]["source_url"] != pin["url"]
-            or owners[0]["sha256"] != pin["sha256"]
+            or (pin["kind"] != "html" and owners[0]["sha256"] != pin["sha256"])
             or owners[0]["cves"] != pin["cve_ids"]
         ):
             issues.append(dict(code="changed_required_owner", source_url=pin["url"]))
+        elif owners and pin["kind"] == "html":
+            row = db.execute(
+                "SELECT * FROM evidence WHERE id=?", (owners[0]["evidence_id"],)
+            ).fetchone()
+            try:
+                valid = (
+                    row is not None
+                    and row["sha256"] == owners[0]["sha256"]
+                    and _retained_capture(row, pin) is not None
+                )
+            except ValueError:
+                valid = False
+            if not valid:
+                issues.append(dict(code="changed_required_owner", source_url=pin["url"]))
     return issues
 
 
@@ -124,12 +239,19 @@ def capture_state(db):
         ]
         hashes = [pin["sha256"], *refresh_hashes]
         marks = ",".join("?" for _ in hashes)
+        owner_id = None
+        if pin["kind"] == "html" and pin["url"] == sa137.URL:
+            owner = db.execute(
+                "SELECT evidence_id FROM revisions WHERE vendor='arista' AND advisory_id=? ORDER BY id DESC LIMIT 1",
+                (sa137.ID,),
+            ).fetchone()
+            owner_id = owner["evidence_id"] if owner else None
         rows = db.execute(
-            "SELECT id,sha256,observed_at,length(raw) AS bytes,raw FROM evidence "
-            "WHERE source_url=? AND (sha256 IN ("
+            "SELECT id,source_url,sha256,observed_at,length(raw) AS bytes,raw FROM evidence "
+            "WHERE (source_url=? AND (sha256 IN ("
             + marks
-            + ") OR id=(SELECT MAX(id) FROM evidence WHERE source_url=?)) ORDER BY id",
-            (pin["url"], *hashes, pin["url"]),
+            + ") OR id=(SELECT MAX(id) FROM evidence WHERE source_url=?))) OR id=? ORDER BY id",
+            (pin["url"], *hashes, pin["url"], owner_id),
         ).fetchall()
         states.append(
             dict(
@@ -137,6 +259,7 @@ def capture_state(db):
                 captures=[
                     dict(
                         id=r["id"],
+                        source_url=r["source_url"],
                         sha256=r["sha256"],
                         observed_at=r["observed_at"],
                         bytes=r["bytes"],
@@ -231,16 +354,14 @@ def apply_batch(db, selected, before, *, fetcher=None):
             raw = retrieve(
                 db, url, "arista", max_bytes=selected.max_bytes, allowed_urls=selected.allowed_urls
             )
-            if (
-                type(raw) is not bytes
-                or len(raw) != pin["bytes"]
-                or sha256(raw).hexdigest() != pin["sha256"]
-            ):
+            if not _capture_matches(raw, pin):
                 raise ValueError("maintenance_capture_changed")
             # Preserve actual runner retrieval time. Reference pin timestamps are never used here.
             with db:
-                evidence(db, raw, url, "text/html" if pin["kind"] == "html" else "application/json")
-            capture = exact_capture(db, pin)
+                row = evidence(
+                    db, raw, url, "text/html" if pin["kind"] == "html" else "application/json"
+                )
+            capture = _retained_capture(row, pin)
         accepted_bytes += len(capture[0])
         if accepted_bytes > batch["reference_capture_bytes"]:
             raise ValueError("maintenance_capture_budget")
@@ -255,7 +376,7 @@ def apply_batch(db, selected, before, *, fetcher=None):
     try:
         # Verify the one exact old owner and every other structured capture before HTTP.
         records = latest(db)
-        if _blocking_owner_issues(records):
+        if _blocking_owner_issues(db, records):
             return finish("failed_primary_validation")
         active_refreshes = _verified_refreshes(db, records)
         pending_refresh = []
@@ -328,7 +449,7 @@ def apply_batch(db, selected, before, *, fetcher=None):
         if (
             len(prepared) != 34
             or len(chronologies) != 33
-            or _blocking_owner_issues(latest(db))
+            or _blocking_owner_issues(db, latest(db))
             or _verified_refreshes(db, latest(db)) != active_refreshes
         ):
             return finish("failed_primary_validation")

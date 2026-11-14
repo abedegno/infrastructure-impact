@@ -10,15 +10,20 @@ operator manifest or change permissions, secrets or capacity limits.
 
 The installed metadata in `resources/arista-hosted-batch.json` names 34 normalized
 primaries, 68 required captures and one optional pinned RSS capture. It contains
-source URLs, exact hashes and byte counts; no raw document bodies or local paths.
+source URLs, reference raw hashes, HTML comparison digests and byte counts; no
+raw document bodies or local paths.
 Reference capture timestamps do not become new hosted retrieval timestamps.
 
 Current CSAF owners must match the exact source and CVE identities. Required
 structured captures must already be retained, except for the single
 [reviewed SA178 source refresh](../arista-chronology-repair.md#manual-hosted-batch-and-reviewed-sa178-source-refresh)
-in curation revision 2. That transition verifies the old retained raw capture
+introduced in curation revision 2 and retained in revision 3. That transition verifies the old retained raw capture
 before permitting retrieval of the exact new source revision. Missing supporting HTML may be
-fetched only through the bounded vendor allowlist, with exact size/hash checks.
+fetched only through the bounded vendor allowlist, with exact size and the
+[revision-3 Joomla-token comparison](../arista-chronology-repair.md#exact-html-binding-with-a-rotating-joomla-token).
+That projection masks only one validated 32-byte head-options nonce; every other
+original byte remains pinned. JSON and RSS keep exact raw hashes. Actual HTML raw
+bytes, SHA and retrieval time are retained unchanged.
 RSS is retained-only: absence remains visible, and a refreshed rolling feed is
 not silently substituted. Changed source ownership requires a reviewed pin update.
 
@@ -32,7 +37,8 @@ pending. SA184 has no paired CSAF in this batch and is excluded.
 ## Activation
 
 After review and CI, pin `IMPACT_SOURCE_COMMIT` to the merged source containing
-this profile. Retain publication format `v2`, the explicitly selected `extended`
+curation revision 3 of this profile. Earlier preview fingerprints are invalid.
+Retain publication format `v2`, the explicitly selected `extended`
 recovery profile, and analysis profile `campus-switching-openvuln-2026-11-14-v1`.
 No additional credentials are needed.
 

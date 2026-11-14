@@ -91,7 +91,7 @@ def _preview(db, selected):
         from .arista_hosted_batch import capture_state, owner_issues
 
         issues.extend(capture_state(db)[1])
-        issues.extend(owner_issues(records))
+        issues.extend(owner_issues(records, db=db))
     elif not any(
         r["vendor"] == selected.vendor
         and r["advisory_id"] == CSAF103_ID
