@@ -861,6 +861,21 @@
     "fetch_missing_kinds": ["html"],
     "rss": "optional_retained_only",
     "max_document_bytes": 2000000,
-    "max_accepted_capture_bytes": 4061372
-  }
+    "max_accepted_capture_bytes": 4061372,
+    "reviewed_owner_refresh": "Only the exact registered SA178 old owner and verified retained old raw permit fetching its missing pinned new CSAF."
+  },
+  "curation_revision": 2,
+  "reviewed_owner_refreshes": [
+    {
+      "advisory_id": "Arista Networks Security Advisory 178",
+      "source_url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_178_CSAF.json",
+      "old_sha256": "192901b6a2f6352f5ff2dd2540e52bd4d732e0201a4c5881d626e38dcd34b8da",
+      "old_document_status": "interim",
+      "cve_ids": ["CVE-2026-73440"],
+      "document_title": "Security Advisory 178",
+      "new_sha256": "08041ea904a15e30fe60790e83c8061a833ff220b22826dfdab351069f9525bc",
+      "new_bytes": 7237,
+      "reason": "Reviewed vendor source revision changes EOS fixed releases, including 4.34.8 to 4.34.9; preserve old source history before chronology repair."
+    }
+  ]
 }

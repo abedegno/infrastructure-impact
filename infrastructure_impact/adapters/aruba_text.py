@@ -25,6 +25,18 @@ SECTIONS = (
     "Aruba SIRT Security Procedures",
 )
 
+# Reviewed affirmative CVE-local assertions, not a product-name heuristic. In
+# these two Details clauses the publisher explicitly describes vulnerabilities
+# in AOS-CX devices, including admin/storage or admin/ISP prerequisites. The
+# other two CVEs retain only the bulletin's common product/range association.
+# Digests cover each complete _read() CVE section, including its prerequisites.
+LOCAL_AFFECTED_URL = DIRECTORY + "hpe_aruba_networking_-_2021-013.txt"
+LOCAL_AFFECTED_SHA256 = "699f8efd5c4987bbf8e43b98464e59da6a38c1d975fc1bab39f5d6d742c67ac1"
+LOCAL_AFFECTED_SECTIONS = {
+    "CVE-2021-29143": "6918b31d313553ac823b7212d0ad30c34a9d97302fbb34ae54a50d05b1541e9d",
+    "CVE-2021-29149": "15cc21b0f12190fbee1515fd8dbea944c388dbe235849dea9fd8a3800bf70001",
+}
+
 
 def _flat(text):
     return " ".join(text.split())
@@ -238,10 +250,59 @@ def parse(raw: bytes, url: str, vendor: str) -> dict:
     return _interpret(raw, url, vendor)[0]
 
 
+def _local_affected_claims(parsed, fields, per_cve, url, digest, publisher):
+    """Supplement shared evidence with two source-proven family-only statements.
+
+    Common versions, models and remediations remain on the original shared
+    claims. The full local clause stays visible as conditions, so affirmative
+    affectedness never discards the publisher's exploitation prerequisites.
+    """
+    from .switching import _claim, _source
+
+    if (
+        url != LOCAL_AFFECTED_URL
+        or digest != LOCAL_AFFECTED_SHA256
+        or fields["Advisory ID"] != "ARUBA-PSA-2021-013"
+        or fields["Revision"] != "1"
+        or fields["Status"] != "Confirmed"
+        or fields.get("Publication Date") != "2021-July-13"
+        or parsed["updated_at"] is not None
+    ):
+        return []
+    claims = []
+    for cid, section_sha in LOCAL_AFFECTED_SECTIONS.items():
+        details = per_cve.get(cid)
+        if (
+            cid not in parsed["cves"]
+            or details is None
+            or sha256(details.encode()).hexdigest() != section_sha
+        ):
+            continue
+        claim = _claim(
+            "aruba",
+            parsed,
+            _source(url, digest, "text/Details/" + cid),
+            publisher.copy(),
+            parsed["published_at"],
+            parsed["updated_at"],
+        )
+        claim.update(
+            cve_id=cid,
+            product="AOS-CX",
+            family="aruba-aoscx",
+            status="affected",
+            scope="cve_specific",
+            conditions=[details],
+            conditional_affected=True,
+        )
+        claims.append(claim)
+    return claims
+
+
 def research_evidence(raw: bytes, url: str, vendor: str, document: dict) -> dict:
     from .switching import _claim, _source
 
-    parsed, fields, _, _ = _interpret(raw, url, vendor)
+    parsed, fields, _, per_cve = _interpret(raw, url, vendor)
     if parsed["advisory_id"] != document.get("advisory_id"):
         raise ValueError("Aruba research identity changed")
     digest = sha256(raw).hexdigest()
@@ -285,6 +346,7 @@ def research_evidence(raw: bytes, url: str, vendor: str, document: dict) -> dict
                 )
             )
         claims.append(claim)
+    claims.extend(_local_affected_claims(parsed, fields, per_cve, url, digest, publisher))
     return dict(schema_version=1, claims=claims, bundles=[], issues=[])
 
 

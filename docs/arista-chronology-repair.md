@@ -54,3 +54,52 @@ source-pinned cases (SA165, SA183, SA188). `validate_cases` checks the actual re
 HTML initial, CSAF initial, RSS observation or absence, claim dates before and after
 finalization, and unchanged scope/fix fields. Different captures are reported as
 `different_capture`, not as successful validation. Human review stays pending.
+
+## Manual hosted batch and reviewed SA178 source refresh
+
+The finite installed profile `arista-reviewed-sa0137-chronology-0165-0198-v1`
+uses maintenance preview/apply. Curation revision 2 keeps receipt schema version 1
+and the profile ID; its profile version is `2`. Revision 1 was previewed only.
+The revision and declarative `reviewed_owner_refreshes` metadata change the profile
+fingerprint, so the earlier accepted preview cannot authorize this apply. Obtain a
+fresh hosted preview and retain the existing publication v2 analysis profile
+`campus-switching-openvuln-2026-11-14-v1` and its pinned input hash.
+
+The scope remains 34 normalized primaries and 69 pinned captures (68 required and
+one optional retained-only RSS), with the same 4,061,372-byte accepted-capture
+ceiling and 2 MB document ceiling. All other required CSAF captures must already
+be retained. Missing HTML can use the existing bounded official transport.
+
+The additional prerequisite applies only when authorizing a fetch of the missing
+new SA178 structured capture. An exact current new owner remains accepted through
+the existing cache-only path. To authorize the transition, the latest old SA178
+owner must be on the exact existing CSAF URL, advisory identity `Arista Networks Security
+Advisory 178`, CVE `CVE-2026-73440`, document status `interim`, and old source SHA256
+`192901b6a2f6352f5ff2dd2540e52bd4d732e0201a4c5881d626e38dcd34b8da`.
+Preview reports `reviewed_owner_refresh` for that tuple and binds its actual old
+capture bytes and receipt even when newer captures exist. That diagnostic denotes
+a prerequisite; it does not bypass apply-time source verification.
+
+Apply verifies the old raw capture on the existing hosted connection: exact
+source URL/hash, bounded bytes, SHA256, document title, tracking ID/status and CVE
+membership. It then validates every other retained structured capture before any
+retrieval. Only that verified old owner may fetch the missing 7,237-byte new SA178
+capture with SHA256
+`08041ea904a15e30fe60790e83c8061a833ff220b22826dfdab351069f9525bc`.
+An exact retained new capture is preferred. Unknown owner hashes, URL/CVE/status
+changes, corrupt old evidence and changed new bytes fail closed.
+
+This is a vendor source revision: fixed releases change, including EOS 4.34.8 to
+4.34.9. It is not a cosmetic date repair. After every required pair has passed
+preflight, ingest retains a fresh SA178 vendor-source revision before the existing
+chronology repairs. The old raw capture and revision remain; only the chronology
+step preserves the fresh source's other facts. The receipt still counts the 34
+prepared normalized primaries. Repeating with the new exact current owner uses
+the unchanged cache-only path.
+
+Runner capture timestamps are preserved; new retrievals use their real retrieval
+time. Failed isolated applies can retain captures or revisions, while publication
+still requires the existing full-source report/audit/build limits and authenticated
+recovery readback. No workflow, schedule, permission, secret or budget changes are
+part of this transition. The actual old raw capture is verified on the hosted
+connection, never by exporting private recovery state.
