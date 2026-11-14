@@ -284,7 +284,7 @@ def test_owned_disclosure_metadata_and_kev_absent_vendor_parity():
 
     c, record = cisco_owned()
     ev, study = disclosure_inputs([c])
-    record["notes"][0]["text"] = "PRIVATE_NOTES_SENTINEL"
+    record["notes"] = [{"text": "PRIVATE_NOTES_SENTINEL"}]
     compiled = api().build_report([record], [], study)
     assert "PRIVATE_NOTES_SENTINEL" not in json.dumps(compiled)
     for options in ({}, {"vendor": "cisco", "window": "post"}, {"scope_level": "model_qualified"}):
