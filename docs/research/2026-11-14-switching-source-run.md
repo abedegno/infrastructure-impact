@@ -194,7 +194,8 @@ Vendor collection completeness remains `not_established`.
 | 2017                          | CVE-2017-12237, CVE-2017-12240, CVE-2017-12319, CVE-2017-3881, CVE-2017-6627, CVE-2017-6663, CVE-2017-6736, CVE-2017-6737, CVE-2017-6738, CVE-2017-6739, CVE-2017-6740, CVE-2017-6742, CVE-2017-6743 |
 | 2018                          | CVE-2018-0151, CVE-2018-0156, CVE-2018-0158, CVE-2018-0159, CVE-2018-0167, CVE-2018-0171, CVE-2018-0172, CVE-2018-0173, CVE-2018-0174, CVE-2018-0175                                                 |
 
-These older candidates predate the study window; source absence does not establish
+These are mapped OS-family collection leads, not proven Catalyst exposures or
+hidden fixes. These older candidates predate the study window; source absence does not establish
 unaffectedness, vendor non-disclosure or a collection error. Their discovery is
 independent of current-CVE enrichment. Future opt-in builds pass the complete
 retained details into reconciliation before ordinary public enrichment filtering;
