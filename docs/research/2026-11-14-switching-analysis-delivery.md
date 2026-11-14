@@ -95,8 +95,17 @@ cohort, independently of effective window CVEs. Same-day targets count once and
 unknown risk/targets remain partial. Native catalogue reconciliation retains
 mapped entries absent from vendor sources and marks explicit-filter exclusion.
 
-The selected upgrade DTO retains native rows plus the selected compact ownership
-and proof tables, rather than repeating detailed native constraints. Comparison
+The selected upgrade JSON uses compact rows plus selected ownership and proof
+tables. Each row's `affected_ref` and `unresolved_ref` resolves in its typed
+`row_evidence` table. Affected lists contain zero-based indices into lexically
+sorted `requirements.members` keys; unresolved lists retain the ordered
+`{member_index, issues}` entries. `member_order`, `member_count` and
+`member_order_sha256` bind that ordering explicitly. Every claim ID remains in the
+members table, and event claim IDs stay inline. Typed hashes, index bounds,
+affected-index order/uniqueness, issue order, exact reference closure and row
+ownership are validated. The native `detailed_rows` and browser `detailedRows`
+adapters reconstruct the exact original rows. CSV expands those same facts into
+the existing detailed columns, subject to its unchanged byte limit. Comparison
 against the offline oracle covers membership and source proofs, not merely totals.
 `tests/fixtures/switching-analysis-vectors.json` supplies exact JSON and CSV vectors
 for pre-window state, a previously redundant requirement becoming decisive under
@@ -179,7 +188,11 @@ PYTHONPATH="$PWD" IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.j
 
 This reads only the supplied normalized public inputs and writes computation time
 and SHA-256 receipts. Checks cover pinned hardening metadata/stated targets,
-SA137 family-versus-model/KEV semantics, and three pinned chronology cases.
+SA137 family-versus-model/KEV semantics, and three pinned chronology cases. The
+SA137 KEV case checks retained historical listing and documented family affectedness;
+it separately reports current catalogue availability and membership. Offline ingestion
+without collection-health receipts can retain historical entries while current
+membership remains unknown. The check does not manufacture collection health.
 Unavailable sources stay outside evaluated denominators; Aruba has no pinned
 supplementary case and is explicitly unavailable, not a zero-error success.
 No source acquisition or default database is opened by this command.
@@ -187,7 +200,10 @@ No source acquisition or default database is opened by this command.
 The local source frame does not configure credentials. If acknowledged official
 API acquisitions are available, supply their native receipt-bound frames through
 `api_results`; otherwise leave it empty. Keep any collection credentials in the
-collector's documented environment outside the exported JSON. This feature adds
+collector's existing `CISCO_OPENVULN_CLIENT_ID` and
+`CISCO_OPENVULN_CLIENT_SECRET` environment inputs outside the exported JSON; see
+[existing operator setup](../source-coverage.md#cisco-openvuln-readiness). No
+credential values belong in commands, receipts or reports. This feature adds
 no secret mapping, new API client, hosted activation, schedule or deployment.
 
 The optional claim-facet table contains every claim within the frozen study's
@@ -211,12 +227,12 @@ Source and severity references remain solely on each owning requirement member;
 requirements carry only proof/train-binding references. Selected upgrade repacking
 prunes unused claim-only sources and remains exactly native-oracle equivalent.
 
-The first full-source attempt failed the unchanged128MB aggregate bound. Size
-preflight measured82,311,614 bytes of requirements and46,729,260 bytes of exact
-study-family facets. Their129,040,874-byte sum already exceeded that bound before
-other child reports. Source pooling addresses15,131,048 bytes of inline receipt
-values: replacing36,482 values with64-character hashes has an estimated net saving
-of12,577,308 bytes, before any newly interned nonaffected receipts. Thus116,463,566
-bytes is only a partial two-component estimate, not proof of aggregate fit. Actual
-root/selected/working measurements and remaining children belong to the final
-source-run receipt. Limits are unchanged; unknowns are not dropped to fit.
+The first full-source attempt failed the unchanged 128 MB aggregate bound.
+Preflight measured 82,311,614 bytes of requirements and 46,729,260 bytes of exact
+study-family facets; their sum already exceeded the bound before other children.
+Source pooling preserved the same facts and brought the actual compiled root to
+122,303,798 bytes, accepted by native validation and the publication writer at
+backend commit `03720a3`. This establishes compiled-root fit only: the full-cohort
+selected output has a separate unchanged 128 MB gate, and its first actual replay
+exceeded that gate. A valid published compiled root must not be presented as proof
+that every selected export fits. Unknowns are not dropped to fit.

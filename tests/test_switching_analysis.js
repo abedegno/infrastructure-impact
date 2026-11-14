@@ -210,3 +210,31 @@ assert.strictEqual(
   beforeOwnership,
   'selected nested metadata/facets must not alias immutable compiled input',
 );
+
+for (const vector of vectors.cases) {
+  assert.deepStrictEqual(
+    JSON.parse(JSON.stringify([...A.detailedRows(vector.expected.upgrades)])),
+    vector.detailed_rows,
+    vector.name + ' exact detailed row inflation',
+  );
+}
+for (const mutation of ['digest', 'missing', 'index', 'duplicate', 'unused']) {
+  const report = JSON.parse(JSON.stringify(vectors.cases[0].expected.upgrades)),
+    e = report.row_evidence;
+  if (mutation === 'digest') e.member_order_sha256 = '0'.repeat(64);
+  else if (mutation === 'missing') report.rows[0].affected_ref = '0'.repeat(64);
+  else if (mutation === 'unused') e.affected['0'.repeat(64)] = [];
+  else {
+    const row = report.rows.find((r) => e.affected[r.affected_ref].length),
+      values = e.affected[row.affected_ref];
+    values.splice(
+      0,
+      values.length,
+      ...(mutation === 'index' ? [e.member_count] : [values[0], values[0]]),
+    );
+    const key = context.window.InfrastructureSwitchingContracts.fingerprint({ items: values });
+    e.affected[key] = values;
+    row.affected_ref = key;
+  }
+  assert.throws(() => [...A.detailedRows(report)], undefined, 'selected evidence ' + mutation);
+}

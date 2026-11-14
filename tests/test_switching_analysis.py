@@ -695,3 +695,41 @@ def test_claim_sources_are_pooled_with_typed_closure_and_no_redundant_requiremen
         {"unused-test-key": True}
     )
     api().validate_report(compiled)
+
+
+def test_indexed_row_evidence_exact_native_walk_and_tampering():
+    ev, ff, k, study = fixture()
+    selected = comparison.select_report(study, evaluated_at=AT)
+    compact = api().compile_requirements(ev, ff, None, k, publication=None, generated_at=AT)
+    native = upgrades.select_report(
+        upgrades.build_report(ev, ff, None, k, publication=None, generated_at=AT), selected
+    )
+    result = api().select_upgrades(compact, selected)
+    assert list(api().detailed_rows(result)) == native["rows"]
+    assert result["row_evidence"]["member_count"] == len(result["requirements"]["members"])
+    assert all(
+        "affected_claim_ids" not in row and "unresolved" not in row for row in result["rows"]
+    )
+    assert len(result["row_evidence"]["affected"]) < len(result["rows"])
+    for mutation in ("digest", "missing_ref", "bad_index", "duplicate_index", "unused_ref"):
+        bad = copy.deepcopy(result)
+        table = bad["row_evidence"]
+        if mutation == "digest":
+            table["member_order_sha256"] = "0" * 64
+        elif mutation == "missing_ref":
+            bad["rows"][0]["affected_ref"] = "0" * 64
+        elif mutation == "unused_ref":
+            table["affected"]["0" * 64] = []
+        else:
+            row = next(r for r in bad["rows"] if table["affected"][r["affected_ref"]])
+            values = table["affected"][row["affected_ref"]]
+            values[:] = (
+                [len(bad["requirements"]["members"])]
+                if mutation == "bad_index"
+                else [values[0], values[0]]
+            )
+            new = api()._hash(values)
+            table["affected"][new] = values
+            row["affected_ref"] = new
+        with pytest.raises(ValueError):
+            list(api().detailed_rows(bad))

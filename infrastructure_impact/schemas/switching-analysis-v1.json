@@ -490,37 +490,6 @@
           },
           "maxItems": 100000
         },
-        "unresolved": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "claim_id": {
-                "type": "string"
-              },
-              "issues": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                },
-                "maxItems": 100000
-              }
-            },
-            "required": [
-              "claim_id",
-              "issues"
-            ]
-          },
-          "maxItems": 100000
-        },
-        "affected_claim_ids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 100000
-        },
         "start_version": {
           "type": [
             "string",
@@ -545,6 +514,14 @@
         },
         "partial_year": {
           "type": "boolean"
+        },
+        "affected_ref": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "unresolved_ref": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       },
       "required": [
@@ -557,8 +534,8 @@
         "event_count",
         "supported_event_count",
         "events",
-        "unresolved",
-        "affected_claim_ids",
+        "unresolved_ref",
+        "affected_ref",
         "start_version",
         "end_version",
         "coverage",
@@ -3314,6 +3291,16 @@
           "items": {
             "$ref": "#/$defs/upgrade_row"
           }
+        },
+        "row_evidence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/row_evidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -3325,7 +3312,8 @@
         "selection",
         "availability",
         "requirements",
-        "rows"
+        "rows",
+        "row_evidence"
       ],
       "allOf": [
         {
@@ -3343,6 +3331,9 @@
               },
               "rows": {
                 "maxItems": 0
+              },
+              "row_evidence": {
+                "type": "null"
               }
             }
           },
@@ -3350,6 +3341,9 @@
             "properties": {
               "requirements": {
                 "$ref": "#/$defs/compact"
+              },
+              "row_evidence": {
+                "$ref": "#/$defs/row_evidence"
               }
             }
           }
@@ -7170,6 +7164,76 @@
         "method"
       ],
       "title": "Literal switching release history and current fix references v1"
+    },
+    "row_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "member_order": {
+          "const": "lexical-claim-id"
+        },
+        "member_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "member_order_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "affected": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "uniqueItems": true
+          }
+        },
+        "unresolved": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "member_index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "member_index",
+                "issues"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "member_order",
+        "member_count",
+        "member_order_sha256",
+        "affected",
+        "unresolved"
+      ]
     }
   }
 }

@@ -264,7 +264,7 @@ def select_upgrades(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
         selection=copy.deepcopy(selection),
     )
     if report is None:
-        return dict(base, availability="unavailable", requirements=None, rows=[])
+        return dict(base, availability="unavailable", requirements=None, rows=[], row_evidence=None)
     _identity(report, study_selection)
     validate_requirements(report)
     requested = selection["requested_cve_ids"]
@@ -314,10 +314,121 @@ def select_upgrades(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
         vendors=selection["effective_vendors"],
         window=selection["requested_window"],
     )
-    result = dict(base, availability="available", requirements=compact, rows=rows)
+    rows, row_evidence = _compact_rows(rows, compact["members"])
+    result = dict(
+        base, availability="available", requirements=compact, rows=rows, row_evidence=row_evidence
+    )
     codec.charge_value(result, budget)
     codec.charge_value(result, codec.Budget(max_bytes))
     return result
+
+
+def _compact_rows(rows, members):
+    ids = sorted(members)
+    indices = {cid: i for i, cid in enumerate(ids)}
+    evidence = dict(
+        member_order="lexical-claim-id",
+        member_count=len(ids),
+        member_order_sha256=_hash(ids),
+        affected={},
+        unresolved={},
+    )
+    out = []
+    for row in rows:
+        values = [indices[cid] for cid in row["affected_claim_ids"]]
+        unresolved = [
+            dict(member_index=indices[u["claim_id"]], issues=copy.deepcopy(u["issues"]))
+            for u in row["unresolved"]
+        ]
+        refs = {}
+        for kind, value in (("affected", values), ("unresolved", unresolved)):
+            key = _hash(value)
+            evidence[kind].setdefault(key, value)
+            refs[kind + "_ref"] = key
+        out.append(
+            {
+                (
+                    "affected_ref"
+                    if k == "affected_claim_ids"
+                    else "unresolved_ref"
+                    if k == "unresolved"
+                    else k
+                ): refs["affected_ref"]
+                if k == "affected_claim_ids"
+                else refs["unresolved_ref"]
+                if k == "unresolved"
+                else v
+                for k, v in row.items()
+            }
+        )
+    return out, evidence
+
+
+def detailed_rows(report):
+    """Validate and expand only selected row evidence; native detailed CSV semantics."""
+    _validate_shape(report, "selected_upgrades")
+    if report["availability"] == "unavailable":
+        return
+    validate_requirements(report["requirements"])
+    _identity(report["requirements"], report)
+    members = report["requirements"]["members"]
+    ids = sorted(members)
+    evidence = report["row_evidence"]
+    if evidence["member_count"] != len(ids) or evidence["member_order_sha256"] != _hash(ids):
+        raise ValueError("Selected row member order mismatch")
+    used = {"affected": set(), "unresolved": set()}
+    for kind in used:
+        for key, values in evidence[kind].items():
+            if key != _hash(values):
+                raise ValueError("Selected row evidence fingerprint mismatch")
+            indices = values if kind == "affected" else [v["member_index"] for v in values]
+            if any(type(i) is not int or not 0 <= i < len(ids) for i in indices):
+                raise ValueError("Selected row member index out of range")
+            if kind == "affected" and indices != sorted(set(indices)):
+                raise ValueError("Selected row affected index order/uniqueness mismatch")
+            if kind == "unresolved" and any(
+                v["issues"] != sorted(set(v["issues"])) for v in values
+            ):
+                raise ValueError("Selected row issue order/uniqueness mismatch")
+    for row in report["rows"]:
+        for kind in used:
+            ref = row[kind + "_ref"]
+            if ref not in evidence[kind]:
+                raise ValueError("Selected row evidence reference missing")
+            used[kind].add(ref)
+        indices = evidence["affected"][row["affected_ref"]]
+        affected = [ids[i] for i in indices]
+        index_set, affected_set = set(indices), set(affected)
+        unresolved = evidence["unresolved"][row["unresolved_ref"]]
+        if any(
+            (members[cid]["vendor"], members[cid]["family"]) != (row["vendor"], row["family"])
+            for cid in affected
+        ):
+            raise ValueError("Selected row member ownership mismatch")
+        if any(u["member_index"] not in index_set for u in unresolved) or any(
+            cid not in affected_set for event in row["events"] for cid in event["claim_ids"]
+        ):
+            raise ValueError("Selected row evidence outside affected ownership")
+    if any(used[kind] != set(evidence[kind]) for kind in used):
+        raise ValueError("Selected row unused evidence reference")
+    for row in report["rows"]:
+        yield {
+            (
+                "affected_claim_ids"
+                if k == "affected_ref"
+                else "unresolved"
+                if k == "unresolved_ref"
+                else k
+            ): [ids[i] for i in evidence["affected"][v]]
+            if k == "affected_ref"
+            else [
+                dict(claim_id=ids[u["member_index"]], issues=copy.deepcopy(u["issues"]))
+                for u in evidence["unresolved"][v]
+            ]
+            if k == "unresolved_ref"
+            else copy.deepcopy(v)
+            for k, v in row.items()
+        }
 
 
 def project_native(report, study_selection):
@@ -363,7 +474,7 @@ def csv_export(report, *, max_bytes=codec.MAX_SELECTED):
     fields = list(upgrades._SCHEMA["$defs"]["row"]["properties"])
 
     def rows():
-        for row in report["rows"]:
+        for row in detailed_rows(report):
             yield {k: _csv_json(v) if isinstance(v, (list, dict)) else v for k, v in row.items()}
 
     return csv_table(fields, rows, max_bytes=max_bytes)
@@ -943,7 +1054,7 @@ def analysis_csv_export(report, *, max_bytes=codec.MAX_SELECTED):
     fields = ["row_type", "vendor", "cve_id", "year", "event_count", "payload"]
 
     def rows():
-        sections = [("upgrade", report["upgrades"]["rows"])]
+        sections = [("upgrade", detailed_rows(report["upgrades"]))]
         if report["availability"] == "available":
             sections.extend(
                 [

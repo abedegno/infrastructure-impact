@@ -72,12 +72,17 @@ def produce():
         context = analysis.selection_context(compiled, options)
         result = analysis.select_report(compiled, context)
         assert result["upgrades"] == analysis.project_native(native, selected), name
+        assert (
+            list(analysis.detailed_rows(result["upgrades"]))
+            == upgrades.select_report(native, selected)["rows"]
+        ), name
         cases.append(
             dict(
                 name=name,
                 options=options,
                 context=context,
                 expected=result,
+                detailed_rows=list(analysis.detailed_rows(result["upgrades"])),
                 upgrades_csv=analysis.csv_export(result["upgrades"]),
                 analysis_csv=analysis.analysis_csv_export(result),
             )

@@ -431,7 +431,13 @@
         selection: clone(s),
       };
     if (report === null)
-      return { ...base, availability: 'unavailable', requirements: null, rows: [] };
+      return {
+        ...base,
+        availability: 'unavailable',
+        requirements: null,
+        rows: [],
+        row_evidence: null,
+      };
     const members = Object.fromEntries(
         Object.entries(report.members).filter(
           ([, m]) =>
@@ -484,10 +490,137 @@
       ...base,
       availability: 'available',
       requirements: compact,
-      rows: walk(constraints, report.observation_end, s.effective_vendors, s.requested_window),
+      ...compactRows(
+        walk(constraints, report.observation_end, s.effective_vendors, s.requested_window),
+        compact.members,
+      ),
     };
     measure(result);
     return result;
+  }
+  function compactRows(rows, members) {
+    const ids = Object.keys(members).sort(),
+      indices = new Map(ids.map((id, i) => [id, i]));
+    const evidence = {
+      member_order: 'lexical-claim-id',
+      member_count: ids.length,
+      member_order_sha256: hash(ids),
+      affected: {},
+      unresolved: {},
+    };
+    const compact = rows.map((row) => {
+      const affected = row.affected_claim_ids.map((id) => indices.get(id));
+      const unresolved = row.unresolved.map((u) => ({
+        member_index: indices.get(u.claim_id),
+        issues: clone(u.issues),
+      }));
+      const refs = {};
+      for (const [kind, value] of [
+        ['affected', affected],
+        ['unresolved', unresolved],
+      ]) {
+        const ref = hash(value);
+        evidence[kind][ref] ??= value;
+        refs[kind + '_ref'] = ref;
+      }
+      return Object.fromEntries(
+        Object.entries(row).map(([k, v]) =>
+          k === 'affected_claim_ids'
+            ? ['affected_ref', refs.affected_ref]
+            : k === 'unresolved'
+              ? ['unresolved_ref', refs.unresolved_ref]
+              : [k, v],
+        ),
+      );
+    });
+    return { rows: compact, row_evidence: evidence };
+  }
+  function* detailedRows(report) {
+    shape(report, 'selected_upgrades');
+    if (report.availability === 'unavailable') return;
+    const requirements = report.requirements;
+    C.identity(requirements, report);
+    if (
+      requirements.content_sha256 !== hash(omit(requirements, ['content_sha256'])) ||
+      requirements.membership_sha256 !== hash(requirements.members) ||
+      requirements.membership_count !== Object.keys(requirements.members).length
+    )
+      fail('selected requirement fingerprint differs');
+    for (const [key, value] of Object.entries(requirements.facts))
+      if (key !== hash(value)) fail('selected fact fingerprint differs');
+    for (const q of requirements.requirements) {
+      const m = requirements.members[q.claim_id];
+      if (!m) fail('selected requirement ownership missing');
+      shape(
+        {
+          ...omit(m, ['source_ref', 'severity_facets_ref']),
+          ...omit(q, ['proof_ref', 'train_binding_ref']),
+          source: requirements.facts[m.source_ref],
+          severity_facets: requirements.facts[m.severity_facets_ref],
+          proof: requirements.facts[q.proof_ref],
+          train_binding: requirements.facts[q.train_binding_ref],
+        },
+        'upgrade_constraint',
+      );
+    }
+    const members = report.requirements.members,
+      ids = Object.keys(members).sort(),
+      e = report.row_evidence;
+    if (e.member_count !== ids.length || e.member_order_sha256 !== hash(ids))
+      fail('selected row member order mismatch');
+    const used = { affected: new Set(), unresolved: new Set() };
+    for (const kind of Object.keys(used))
+      for (const [key, values] of Object.entries(e[kind])) {
+        if (key !== hash(values)) fail('selected row evidence fingerprint mismatch');
+        const indices = kind === 'affected' ? values : values.map((v) => v.member_index);
+        if (indices.some((i) => !Number.isInteger(i) || i < 0 || i >= ids.length))
+          fail('selected row member index out of range');
+        if (kind === 'affected' && indices.some((i, n) => n > 0 && i <= indices[n - 1]))
+          fail('selected row affected index order/uniqueness mismatch');
+        if (
+          kind === 'unresolved' &&
+          values.some((v) => JSON.stringify(v.issues) !== JSON.stringify(sorted(v.issues)))
+        )
+          fail('selected row issue order/uniqueness mismatch');
+      }
+    for (const row of report.rows) {
+      for (const kind of Object.keys(used)) {
+        const ref = row[kind + '_ref'];
+        if (!Object.hasOwn(e[kind], ref)) fail('selected row evidence reference missing');
+        used[kind].add(ref);
+      }
+      const indices = new Set(e.affected[row.affected_ref]),
+        affected = new Set([...indices].map((i) => ids[i]));
+      if (
+        [...affected].some(
+          (id) => members[id].vendor !== row.vendor || members[id].family !== row.family,
+        )
+      )
+        fail('selected row member ownership mismatch');
+      if (
+        e.unresolved[row.unresolved_ref].some((u) => !indices.has(u.member_index)) ||
+        row.events.some((event) => event.claim_ids.some((id) => !affected.has(id)))
+      )
+        fail('selected row evidence outside affected ownership');
+    }
+    if (Object.keys(used).some((kind) => used[kind].size !== Object.keys(e[kind]).length))
+      fail('selected row unused evidence reference');
+    for (const row of report.rows)
+      yield Object.fromEntries(
+        Object.entries(row).map(([k, v]) =>
+          k === 'affected_ref'
+            ? ['affected_claim_ids', e.affected[v].map((i) => ids[i])]
+            : k === 'unresolved_ref'
+              ? [
+                  'unresolved',
+                  e.unresolved[v].map((u) => ({
+                    claim_id: ids[u.member_index],
+                    issues: clone(u.issues),
+                  })),
+                ]
+              : [k, clone(v)],
+        ),
+      );
   }
   const countBy = (values) =>
     Object.fromEntries(sorted(values).map((v) => [v, values.filter((x) => x === v).length]));
@@ -913,7 +1046,7 @@
     const fields = upgradesOnly
       ? upgradeFields
       : ['row_type', 'vendor', 'cve_id', 'year', 'event_count', 'payload'];
-    const sections = [['upgrade', report.upgrades.rows]];
+    const sections = [['upgrade', [...detailedRows(report.upgrades)]]];
     if (!upgradesOnly && report.availability === 'available')
       sections.push(
         ['disclosure', report.disclosure.pairs],
@@ -937,6 +1070,7 @@
     select,
     upgrades,
     walk,
+    detailedRows,
     compare,
     csv,
   };
