@@ -145,6 +145,77 @@ def _aruba_fix_links(data, claims):
         claim["remediations"].append(bound)
 
 
+def _aruba_direct_targets(data, claims, url, digest):
+    """Project three literal upgrades from one already affected-owned section.
+
+    This is not a sibling linkage or first-fixed derivation. Preserve the original
+    remediation scope and leave the source's cross-train affected range unresolved.
+    """
+    source_url = "https://csaf.arubanetworking.hpe.com/2022/hpe_aruba_networking_-_2022-004.json"
+    source_sha = "6b6ebf1734613aa7dcaeef1946d917dd0686ce4d49183ba6bf0818e7ac182134"
+    details_sha = "ba19a6268bf16bda6b8f6eddfe914175a94d34b9fd56e772c6bdf23fa651d55b"
+    pairs = {
+        ">=10.09.0000|<=10.09.0002": ("10.09.0010", 4),
+        ">=10.08.0000|<=10.08.0130": ("10.08.1040", 5),
+        ">=10.07.0000|<=10.07.0050": ("10.07.0061", 6),
+    }
+    if url != source_url or digest != source_sha:
+        return
+    try:
+        vuln = data["vulnerabilities"][15]
+        original = vuln["remediations"][0]
+        parent = data["product_tree"]["branches"][0]["branches"][0]
+        if (
+            data["document"]["tracking"]["id"] != "ARUBA-PSA-2022-004"
+            or vuln["cve"] != "CVE-2021-41002"
+            or len(vuln["remediations"]) != 1
+            or parent["category"] != "product_name"
+            or parent["name"] != "AOS-CX"
+            or original["category"] != "vendor_fix"
+            or original["date"] != "2022-04-06T17:00:00.000Z"
+            or original["product_ids"] != [*pairs, ">=10.00.0000|<=10.06.0170"]
+            or hashlib.sha256(original["details"].encode("utf-8")).hexdigest() != details_sha
+        ):
+            return
+    except (KeyError, IndexError, TypeError, AttributeError):
+        return
+    for claim in claims:
+        rule = pairs.get(claim["product_id"])
+        if (
+            rule is None
+            or claim["vendor"] != "aruba"
+            or claim["advisory_id"] != "ARUBA-PSA-2022-004"
+            or claim["cve_id"] != "CVE-2021-41002"
+            or claim["family"] != "aruba-aoscx"
+            or claim["product"] != "AOS-CX"
+            or claim["status"] != "affected"
+            or claim["scope"] != "cve_specific"
+            or claim["version_expressions"] != ["vers:semver/" + claim["product_id"]]
+            or claim["source"]
+            != _source(
+                url,
+                digest,
+                "/vulnerabilities/15/product_status; "
+                f"/product_tree/branches/0/branches/0/branches/{rule[1]}/product",
+            )
+            or "evidence_text_truncated" in claim["issues"]
+            or len(claim["remediations"]) != 1
+        ):
+            continue
+        rem = claim["remediations"][0]
+        if (
+            rem["category"] == "vendor_fix"
+            and rem["availability"] == "vendor_reports_fixed"
+            and rem["product_ids"] == [claim["product_id"]]
+            and rem["version_expressions"] == []
+            and rem["details"] == original["details"]
+            and rem["availability_date"] == original["date"]
+            and rem["source"] == _source(url, digest, "/vulnerabilities/15/remediations/0")
+            and "scope_binding" not in rem
+        ):
+            rem["version_expressions"] = [rule[0]]
+
+
 def bindings_resource():
     return json.loads(
         files("infrastructure_impact")
@@ -549,6 +620,7 @@ def _csaf(raw, url, vendor, document, digest):
         digest,
         tracking.get("current_release_date") or tracking.get("initial_release_date"),
     )
+    _aruba_direct_targets(data, claims, url, digest)
     return dict(
         schema_version=1,
         claims=claims,
