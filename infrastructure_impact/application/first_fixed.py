@@ -494,7 +494,7 @@ def build_report(
         cover["records"] += 1
         facts = _bound(record.get("first_fixed", []))
         cover["with_stated_table" if facts else "without_stated_table"] += 1
-        cover["known_fixed_target_records"] += int(
+        cover["fix_statement_or_fixed_assessment_records"] += int(
             any(
                 a.get("status") == "fixed"
                 or any(r.get("category") == "vendor_fix" for r in a.get("remediations", []))

@@ -662,3 +662,15 @@ def test_unresolved_fragment_in_requested_train_cannot_disappear():
     )
     out = report([a, record("other", ["17.9.2", "17.9.10"])])
     assert out["units"][0]["candidate"] is None
+
+
+def test_generic_fix_statement_is_not_target_coverage():
+    generic = record("generic", ["17.9.8"])
+    generic["assessments"][0]["remediations"] = [
+        dict(category="vendor_fix", details="released software updates")
+    ]
+    out = report([generic])
+    assert out["coverage"]["cisco"]["fix_statement_or_fixed_assessment_records"] == 1
+    assert "known_fixed_target_records" not in out["coverage"]["cisco"]
+    assert out["units"] == []
+    assert out["candidates"] == report([record("generic", ["17.9.8"])])["candidates"]

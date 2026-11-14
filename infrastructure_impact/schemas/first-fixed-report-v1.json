@@ -816,7 +816,7 @@
           "type": "integer",
           "minimum": 0
         },
-        "known_fixed_target_records": {
+        "fix_statement_or_fixed_assessment_records": {
           "type": "integer",
           "minimum": 0
         },
@@ -843,7 +843,7 @@
       },
       "required": [
         "records",
-        "known_fixed_target_records"
+        "fix_statement_or_fixed_assessment_records"
       ],
       "additionalProperties": false
     }
