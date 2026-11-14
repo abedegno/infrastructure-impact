@@ -5,6 +5,11 @@ name: Collect and publish
 on:
   workflow_dispatch:
     inputs:
+      switching_analysis_profile:
+        description: 'Optional reviewed switching analysis profile; blank uses the repository variable'
+        required: false
+        type: string
+        default: ''
       maintenance_profile:
         description: 'Optional reviewed maintenance profile; requires explicit preview or apply mode'
         required: false
@@ -84,6 +89,7 @@ jobs:
           REPARSE_VENDOR: ${{ inputs.reparse_vendor || vars.IMPACT_REPARSE_VENDOR || '' }}
           VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
           PUBLICATION_FORMAT: ${{ vars.IMPACT_PUBLICATION_FORMAT || 'v1' }}
+          SWITCHING_ANALYSIS_PROFILE: ${{ inputs.switching_analysis_profile || vars.IMPACT_SWITCHING_ANALYSIS_PROFILE || '' }}
         run: |
           set -euo pipefail
           uv run --no-dev python - <<'PY'
@@ -154,6 +160,20 @@ jobs:
               formats = ("v1", "v2")
           if publication_format not in formats or (publication_format == "v2" and protocol != "effects-v1"):
               raise SystemExit("Pinned helper does not support the selected publication format")
+          analysis_profile = os.environ.get("SWITCHING_ANALYSIS_PROFILE", "")
+          if analysis_profile:
+              if analysis_profile != "campus-switching-openvuln-2026-11-14-v1":
+                  raise SystemExit("Unsupported switching analysis profile")
+              if protocol != "effects-v1" or publication_format != "v2":
+                  raise SystemExit("Switching analysis requires a capable v2 helper")
+              help_result = subprocess.run(
+                  [sys.executable, "ops/hosted_job.py", "--help"],
+                  check=True, capture_output=True, text=True,
+              )
+              if "--switching-analysis-profile" not in help_result.stdout.split():
+                  raise SystemExit("Pinned helper does not support switching analysis")
+              from infrastructure_impact.application.switching_analysis_profiles import hosted_profile
+              hosted_profile(analysis_profile, publication_format=publication_format)
           acquisition_cache = os.environ.get("ACQUISITION_CACHE", "false")
           if acquisition_cache not in ("true", "false"):
               raise SystemExit("Unsupported acquisition cache setting")
@@ -196,6 +216,7 @@ jobs:
           REPARSE_VENDOR: ${{ inputs.reparse_vendor || vars.IMPACT_REPARSE_VENDOR || '' }}
           VAULT_PROFILE: ${{ vars.IMPACT_VAULT_PROFILE || 'standard' }}
           PUBLICATION_FORMAT: ${{ vars.IMPACT_PUBLICATION_FORMAT || 'v1' }}
+          SWITCHING_ANALYSIS_PROFILE: ${{ inputs.switching_analysis_profile || vars.IMPACT_SWITCHING_ANALYSIS_PROFILE || '' }}
         run: |
           set -euo pipefail
           case "${ACQUISITION_CACHE:-false}" in
@@ -214,6 +235,10 @@ jobs:
               ;;
             *) echo 'Unsupported publication format'; exit 1 ;;
           esac
+          if test -n "${SWITCHING_ANALYSIS_PROFILE:-}"; then
+            [[ "$SWITCHING_ANALYSIS_PROFILE" = campus-switching-openvuln-2026-11-14-v1 && "$HOSTED_PROTOCOL" = effects-v1 && "${PUBLICATION_FORMAT:-v1}" = v2 ]]
+            recovery_args+=(--switching-analysis-profile "$SWITCHING_ANALYSIS_PROFILE")
+          fi
           case "$RECOVERY_STORAGE" in
             git) ;;
             github-draft) recovery_args+=(--recovery-storage github-draft --recovery-repository "$GITHUB_REPOSITORY") ;;

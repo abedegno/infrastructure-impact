@@ -180,6 +180,7 @@ def main(argv=None):
             command.add_argument("--home", type=Path, required=True)
             command.add_argument("--capture-cache", type=Path)
             command.add_argument("--base-path", default="/")
+            command.add_argument("--switching-analysis-profile", default="")
             command.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
     args = parser.parse_args(argv)
     if args.command == "publication-export":
@@ -589,6 +590,12 @@ def _target_import(args, parser):
 
     try:
         selected = profile(args.profile)
+        if args.target_import_mode == "stage":
+            from .application.switching_analysis_profiles import hosted_profile
+
+            hosted_profile(
+                args.switching_analysis_profile, publication_format=args.publication_format
+            )
         if (
             any(path.is_symlink() for path in (args.output, *args.output.parents))
             or args.output.exists()
@@ -611,6 +618,11 @@ def _target_import(args, parser):
                 lock_home=args.home,
                 **({"capture_cache": args.capture_cache} if args.capture_cache is not None else {}),
                 accepted_preview=accepted,
+                **(
+                    {"switching_analysis_profile": args.switching_analysis_profile}
+                    if args.switching_analysis_profile
+                    else {}
+                ),
                 base_path=args.base_path,
                 **({"publication_format": "v2"} if args.publication_format == "v2" else {}),
             )

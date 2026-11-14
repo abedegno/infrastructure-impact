@@ -25,7 +25,9 @@ class StageFailure(ValueError):
     """Only locally assigned, closed receipt codes cross this boundary."""
 
 
-def verify(database, public, profile, *, publication_format="v1"):
+def verify(
+    database, public, profile, *, publication_format="v1", switching_analysis_profile: str = ""
+):
     from .import_candidate import verify as verify_candidate
 
     return verify_candidate(
@@ -33,6 +35,11 @@ def verify(database, public, profile, *, publication_format="v1"):
         public,
         profile,
         **({"publication_format": "v2"} if publication_format == "v2" else {}),
+        **(
+            {"switching_analysis_profile": switching_analysis_profile}
+            if switching_analysis_profile
+            else {}
+        ),
     )
 
 
@@ -340,6 +347,7 @@ def stage(
     accepted_preview: dict,
     base_path: str = "/",
     publication_format: str = "v1",
+    switching_analysis_profile: str = "",
     capture_cache: Path | None = None,
     acquisition_checkpoint=None,
 ) -> dict:
@@ -354,6 +362,9 @@ def stage(
     from .target_import_contracts import validate_base_path
 
     validate_format(publication_format)
+    from .switching_analysis_profiles import hosted_profile
+
+    analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
     accepted = validate_preview(accepted_preview, profile)
     base_path = validate_base_path(base_path)
     result = _initial_result(profile, accepted)
@@ -458,6 +469,8 @@ def stage(
                     from .publication_v2 import validate
 
                     context.update(schema_version=2, publication_format="v2")
+                    if analysis is not None:
+                        context["switching_analysis_profile"] = analysis.identity()
                     validate(context, "target-import-context-v2.json")
                 (stage_home / "target-import-context.json").write_bytes(
                     canonical_json(context) + b"\n"
@@ -466,6 +479,11 @@ def stage(
                 staged,
                 output / "public",
                 profile,
+                **(
+                    {"switching_analysis_profile": switching_analysis_profile}
+                    if switching_analysis_profile
+                    else {}
+                ),
                 **({"publication_format": "v2"} if publication_format == "v2" else {}),
             )
             if "candidate" in checked or all(checked.get(k) is True for k in result["checks"]):

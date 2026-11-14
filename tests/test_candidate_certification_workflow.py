@@ -81,14 +81,22 @@ def test_template_is_manual_non_publishing_with_explicit_draft_read_credential()
     uploads = [
         b for b in re.split(r"^      - ", text, flags=re.M) if "uses: actions/upload-artifact" in b
     ]
-    assert len(uploads) == 2
+    assert len(uploads) == 4
     for block in uploads:
         assert "retention-days: 14" in block
         path = re.search(r"^          path: (.+)$", block, flags=re.M)[1]
         assert path in (
             "${{ runner.temp }}/certification-captures",
             "${{ runner.temp }}/certification-result/result.json",
+            "${{ runner.temp }}/private-stage/public",
+            "${{ runner.temp }}/public-analysis-proof",
         )
+        if path in (
+            "${{ runner.temp }}/private-stage/public",
+            "${{ runner.temp }}/public-analysis-proof",
+        ):
+            assert "success() && steps.analysis_public.outcome == 'success'" in block
+            assert "always()" not in block
 
 
 def test_installed_certification_matches_template_and_existing_vault_profile():

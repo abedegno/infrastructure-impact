@@ -329,8 +329,18 @@ def validate_result(value, *, publication_format="v1"):
     return value
 
 
-def verify(database: Path, public: Path, profile, *, publication_format="v1") -> dict:
+def verify(
+    database: Path,
+    public: Path,
+    profile,
+    *,
+    publication_format="v1",
+    switching_analysis_profile: str = "",
+) -> dict:
     """Dispatch only the trusted installed module, with stage settings before imports."""
+    from .switching_analysis_profiles import hosted_profile
+
+    analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
     failure = _empty(publication_format=publication_format)
     try:
         database, public, home = _paths(database, public)
@@ -343,6 +353,8 @@ def verify(database: Path, public: Path, profile, *, publication_format="v1") ->
         }
         if publication_format == "v2":
             request.update(schema_version=2, publication_format="v2")
+        if analysis is not None:
+            request["switching_analysis_profile"] = analysis.identity()
         raw = (json.dumps(request, allow_nan=False) + "\n").encode()
         if len(raw) > MAX_CONTEXT:
             raise CapacityFailure("request size")
@@ -816,6 +828,17 @@ def _monitors(public, home, facts, *, base_path="/"):
         thread.join()
 
 
+def _analysis_identity(identity):
+    from .switching_analysis_profiles import profile
+
+    if not isinstance(identity, dict):
+        raise ValueError("analysis identity")
+    selected = profile(identity.get("profile_id"))
+    if identity != selected.identity() or type(identity.get("api_frames")) is not int:
+        raise ValueError("analysis identity")
+    return identity["profile_id"]
+
+
 def _worker(database, public, *, publication_format="v1"):
     result = _empty("validation_failed", publication_format=publication_format)
     database, public, home = _paths(database, public)
@@ -832,6 +855,11 @@ def _worker(database, public, *, publication_format="v1"):
                 "schema_version",
                 "profile",
                 *({"publication_format"} if publication_format == "v2" else set()),
+                *(
+                    {"switching_analysis_profile"}
+                    if publication_format == "v2" and "switching_analysis_profile" in request
+                    else set()
+                ),
             }
             or request["format"] != "impact-target-import-worker"
             or type(request["schema_version"]) is not int
@@ -839,6 +867,18 @@ def _worker(database, public, *, publication_format="v1"):
             or (publication_format == "v2" and request.get("publication_format") != "v2")
         ):
             raise ValueError("worker request")
+        context = _read_json(home / "target-import-context.json", MAX_CONTEXT)
+        identity = request.get("switching_analysis_profile")
+        if ("switching_analysis_profile" in request) != (
+            "switching_analysis_profile" in context
+        ) or identity != context.get("switching_analysis_profile"):
+            raise ValueError("analysis context/request mismatch")
+        analysis_id = (
+            _analysis_identity(identity) if "switching_analysis_profile" in request else ""
+        )
+        from .switching_analysis_profiles import hosted_profile
+
+        analysis = hosted_profile(analysis_id, publication_format=publication_format)
         selected = from_manifest(request["profile"])
         _preserved(
             database,
@@ -866,7 +906,11 @@ def _worker(database, public, *, publication_format="v1"):
         source_audit.now = lambda: evaluated
         if publication_format != "v2":
             report()
-        build(public, **({"publication_format": "v2"} if publication_format == "v2" else {}))
+        build(
+            public,
+            **({"publication_format": "v2"} if publication_format == "v2" else {}),
+            **(analysis.build_options() if analysis is not None else {}),
+        )
         if publication_format == "v2":
             from .publication_v2 import inspect_bundle, native_parity
 
@@ -877,7 +921,13 @@ def _worker(database, public, *, publication_format="v1"):
         # comparison. Every gate remains mandatory for an accepted candidate.
         _monitors(public, home, result["candidate"], base_path=_base_path(home))
         if publication_format == "v2":
-            native_parity(database, public, home, reader)
+            native_parity(
+                database,
+                public,
+                home,
+                reader,
+                **({"switching_analysis_profile": analysis_id} if analysis_id else {}),
+            )
         else:
             _parity(database, public, home, snapshot)
         result["candidate"]["parity_passed"] = True

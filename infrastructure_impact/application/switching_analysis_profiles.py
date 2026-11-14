@@ -142,3 +142,13 @@ def build_options(profile_id: str = "") -> dict:
     if type(profile_id) is str and profile_id == "":
         return {}
     return profile(profile_id).build_options()
+
+
+def hosted_profile(profile_id: str = "", *, publication_format: str = "v1"):
+    """Resolve explicit hosted configuration before any state/recovery effects."""
+    if profile_id == "":
+        return None
+    selected = profile(profile_id)
+    if publication_format != "v2":
+        raise ValueError("switching analysis requires publication format v2")
+    return selected
