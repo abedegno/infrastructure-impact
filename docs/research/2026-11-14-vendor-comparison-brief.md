@@ -83,7 +83,7 @@ See [the study method](../switching-comparison.md) for scope and limitations.
 
 ## Pinned observations
 
-Publication `a3a7a1fcdc194599b2903d39484ba340`, generated `2026-11-14T17:42:54.283949+00:00`. Shared observation window: 2021-01-01 through 2026-11-14 (2026 is partial). Source commit `4e982748b2b45c9e2ffbeb522103645af4c39fa2`. Selected public analysis SHA-256 `530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a` verified locally; overview read through PublicationReader with descriptor byte/hash verification. Full provenance and exact field semantics are in baseline-findings.json.
+Publication `a3a7a1fcdc194599b2903d39484ba340`, generated `2026-11-14T17:42:54.283949+00:00`. Shared observation window: 2021-01-01 through 2026-11-14 (2026 is partial). Source commit `4e982748b2b45c9e2ffbeb522103645af4c39fa2`. Selected public analysis SHA-256 `530073c4348a9ee17a462dcf4e97d4d7bb09faa9693b4cd58788e92500efa95a` verified locally; overview read through PublicationReader with descriptor byte/hash verification. Full provenance and exact field semantics are in the [machine-readable evidence](2026-11-14-vendor-comparison-evidence.json).
 
 Counts describe observed disclosure and scrutiny, not security quality, underlying bug counts, prevalence, or a causal ranking. Coverage denominators, role equivalence, lifecycle and release-train completeness remain unresolved.
 
@@ -92,6 +92,12 @@ Counts describe observed disclosure and scrutiny, not security quality, underlyi
 | cisco  |                            170 / 199 |                      170 / 199 |                                        4 / 5 |                           4 / 199 |
 | aruba  |                             16 / 104 |                       21 / 119 |                                        0 / 0 |                           0 / 104 |
 | arista |                              55 / 70 |                       60 / 105 |                                        0 / 0 |                            0 / 70 |
+
+The zero Arista KEV count is particularly incomplete: the pinned reconciliation
+contains [CISA-listed CVE-2026-7473](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
+for Arista EOS, but the retained advisory is draft-only and therefore outside
+this affected cohort. It is an explicit unresolved source-selection case, not
+evidence that Arista has no known-exploited vulnerabilities.
 
 OS-family evidence includes any model-qualified claims. Aruba and Arista have zero explicit evidence for the selected named models; this does not establish unaffectedness. Cisco explicit model rows: 9200 2/2, 9300 3/4, 9300L 1/2, 9500 1/1 advisory/CVE counts; C9407R, C9410R and C9606R zero. These model rows overlap and must not be summed.
 
@@ -151,5 +157,15 @@ Source-specific CVSS facets (distinct CVEs per facet; rows can overlap):
 | cisco  |                  2 |                            1 |                     0 |
 | aruba  |                 70 |                           10 |                    57 |
 | arista |                 28 |                            0 |                     0 |
+
+The two Cisco release-history identities exclude the separately owned API
+first-fixed observations. Grouping that evidence by every literal fixed-release
+alternative yields **38 distinct versions**, **241 distinct version/CVE pairs**,
+and **84 unique CVEs across 75 advisories**. The machine-readable evidence lists
+these versions separately, without adding duplicate scenarios. This is OS-family
+fix context, includes IOS XE products beyond named switching models, and supplies
+no missing release dates or customer upgrade counts. It is not a complete release
+catalogue and must not be compared with the history table as though both measure
+the same thing.
 
 Across all 3,240 train/year/scenario/policy rows, only 24 have non-null event_count: 0 Cisco, 6 Aruba, 18 Arista. These include alternative scenarios and policies and must not be added as customer upgrades. Every Cisco total is unresolved despite extensive fix evidence.

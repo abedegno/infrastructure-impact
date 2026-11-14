@@ -480,16 +480,27 @@ def apply_maintenance(args, selected, state, output, home, database, key, store,
                         maintenance.receipt_bytes(receipt)
                         if receipt["outcome"] != "completed":
                             raise RuntimeError("Targeted maintenance failed validation")
-                        # A reviewed alternate scope conflict remains visible as partial.
+                        # Only a validated reviewed alternate conflict is a partial success.
+                        expected_conflict = any(
+                            alternate["outcome"] == "expected_scope_conflict"
+                            for alternate in receipt["alternate_outcomes"]
+                        )
+                        details = (
+                            "Targeted maintenance completed; expected alternate scope conflict; "
+                            "benchmark acquisition not run."
+                            if expected_conflict
+                            else "Targeted maintenance completed; benchmark acquisition not run."
+                        )
                         with db:
                             db.execute(
-                                "UPDATE pipeline_runs SET finished_at=?,outcome='partial',"
-                                "imported=?,failures=1,details=? WHERE id=?",
+                                "UPDATE pipeline_runs SET finished_at=?,outcome=?,"
+                                "imported=?,failures=?,details=? WHERE id=?",
                                 (
                                     now(),
+                                    "partial" if expected_conflict else "ok",
                                     receipt["imported"],
-                                    "Targeted maintenance completed; expected alternate scope conflict; "
-                                    "benchmark acquisition not run.",
+                                    int(expected_conflict),
+                                    details,
                                     run_id,
                                 ),
                             )
@@ -551,7 +562,7 @@ def apply_maintenance(args, selected, state, output, home, database, key, store,
             json.dumps(
                 {
                     "mode": "apply",
-                    "outcome": "partial",
+                    "outcome": "partial" if expected_conflict else "completed",
                     "maintenance": receipt,
                     "benchmark_acquisition": "not_run",
                     "private_backup": "saved",
