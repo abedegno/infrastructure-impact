@@ -79,13 +79,22 @@
           "format": "date"
         },
         "knownRansomwareCampaignUse": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "forensicTriage": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "notes": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "cwes": {
           "type": "array",
@@ -106,7 +115,11 @@
           "type": "string"
         },
         "vendor": {
-          "enum": ["cisco", "aruba", "arista"]
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
         },
         "family": {
           "type": "string"
@@ -143,16 +156,31 @@
               "pattern": "\\S"
             }
           },
-          "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+          "required": [
+            "source_url",
+            "source_sha256",
+            "retrieved_at",
+            "source_locator"
+          ]
         },
         "scope_level": {
-          "enum": ["os_family", "model_qualified"]
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
         },
         "date": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "scenario": {
-          "enum": ["publisher_first_fixed", "known_fixed_target", "inferred_inclusive"]
+          "enum": [
+            "publisher_first_fixed",
+            "known_fixed_target",
+            "inferred_inclusive"
+          ]
         },
         "alternatives": {
           "type": "array",
@@ -162,7 +190,10 @@
           "maxItems": 100000
         },
         "target": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "issues": {
           "type": "array",
@@ -211,7 +242,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               "locator": {
                 "type": "string"
@@ -220,7 +256,13 @@
                 "type": "string"
               }
             },
-            "required": ["method", "kind", "source", "locator", "fingerprint"]
+            "required": [
+              "method",
+              "kind",
+              "source",
+              "locator",
+              "fingerprint"
+            ]
           },
           "maxItems": 100000
         },
@@ -245,7 +287,12 @@
               "type": "boolean"
             }
           },
-          "required": ["basis", "expressions", "partial", "unsupported"]
+          "required": [
+            "basis",
+            "expressions",
+            "partial",
+            "unsupported"
+          ]
         },
         "inference": {
           "anyOf": [
@@ -263,12 +310,18 @@
                   "type": "string"
                 }
               },
-              "required": ["maximum_affected", "group_id"]
+              "required": [
+                "maximum_affected",
+                "group_id"
+              ]
             }
           ]
         },
         "high_risk": {
-          "type": ["boolean", "null"]
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "severity_facets": {
           "type": "array",
@@ -280,13 +333,22 @@
                 "type": "string"
               },
               "provider": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "version": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "value": {
-                "type": ["number", "null"]
+                "type": [
+                  "number",
+                  "null"
+                ]
               },
               "source": {
                 "type": "object",
@@ -311,15 +373,30 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               }
             },
-            "required": ["origin", "provider", "version", "value", "source"]
+            "required": [
+              "origin",
+              "provider",
+              "version",
+              "value",
+              "source"
+            ]
           },
           "maxItems": 100000
         },
         "kev_membership": {
-          "enum": ["listed", "not_listed", "unknown"]
+          "enum": [
+            "listed",
+            "not_listed",
+            "unknown"
+          ]
         }
       },
       "required": [
@@ -368,7 +445,10 @@
           "type": "string"
         },
         "event_count": {
-          "type": ["integer", "null"],
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 0
         },
         "supported_event_count": {
@@ -385,7 +465,10 @@
                 "type": "string"
               },
               "previous": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "target": {
                 "type": "string"
@@ -398,7 +481,12 @@
                 "maxItems": 100000
               }
             },
-            "required": ["date", "previous", "target", "claim_ids"]
+            "required": [
+              "date",
+              "previous",
+              "target",
+              "claim_ids"
+            ]
           },
           "maxItems": 100000
         },
@@ -419,7 +507,10 @@
                 "maxItems": 100000
               }
             },
-            "required": ["claim_id", "issues"]
+            "required": [
+              "claim_id",
+              "issues"
+            ]
           },
           "maxItems": 100000
         },
@@ -431,13 +522,23 @@
           "maxItems": 100000
         },
         "start_version": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "end_version": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "coverage": {
-          "enum": ["partial", "observed_constraints_only", "unknown"]
+          "enum": [
+            "partial",
+            "observed_constraints_only",
+            "unknown"
+          ]
         },
         "baseline": {
           "const": "assumed_below_first_target_actual_unknown"
@@ -488,7 +589,12 @@
           "pattern": "\\S"
         }
       },
-      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+      "required": [
+        "source_url",
+        "source_sha256",
+        "retrieved_at",
+        "source_locator"
+      ]
     },
     "evidence_platform_binding": {
       "type": "object",
@@ -512,7 +618,11 @@
           ]
         },
         "basis": {
-          "enum": ["publisher_explicit", "reviewed_alias", "unresolved"]
+          "enum": [
+            "publisher_explicit",
+            "reviewed_alias",
+            "unresolved"
+          ]
         },
         "source": {
           "anyOf": [
@@ -525,7 +635,12 @@
           ]
         }
       },
-      "required": ["platform", "model", "basis", "source"]
+      "required": [
+        "platform",
+        "model",
+        "basis",
+        "source"
+      ]
     },
     "evidence_remediation": {
       "type": "object",
@@ -620,7 +735,10 @@
           "additionalProperties": false,
           "properties": {
             "basis": {
-              "enum": ["same_source_row", "reviewed_source_sections"]
+              "enum": [
+                "same_source_row",
+                "reviewed_source_sections"
+              ]
             },
             "cve_id": {
               "type": "string",
@@ -630,7 +748,11 @@
               "$ref": "#/$defs/evidence_source"
             },
             "fixed_product": {
-              "enum": ["Arista EOS", "AOS-CX", "HPE Networking AOS-CX"]
+              "enum": [
+                "Arista EOS",
+                "AOS-CX",
+                "HPE Networking AOS-CX"
+              ]
             },
             "fixed_source": {
               "$ref": "#/$defs/evidence_source"
@@ -641,7 +763,11 @@
               "pattern": "\\S"
             }
           },
-          "required": ["basis", "cve_id", "source"],
+          "required": [
+            "basis",
+            "cve_id",
+            "source"
+          ],
           "description": "Explicit reviewed linkage: same source row, the reviewed Arista 0100, 0128, 0201 and 0075 EOS sections, the three pinned HPESBNW04669 AOS-CX product sections, or exact packaged reviewed source bindings. Never establishes a model or software release availability date.",
           "allOf": [
             {
@@ -653,19 +779,28 @@
                 }
               },
               "then": {
-                "required": ["fixed_product", "fixed_source"]
+                "required": [
+                  "fixed_product",
+                  "fixed_source"
+                ]
               },
               "else": {
                 "not": {
                   "anyOf": [
                     {
-                      "required": ["fixed_product"]
+                      "required": [
+                        "fixed_product"
+                      ]
                     },
                     {
-                      "required": ["fixed_source"]
+                      "required": [
+                        "fixed_source"
+                      ]
                     },
                     {
-                      "required": ["fixed_product_id"]
+                      "required": [
+                        "fixed_product_id"
+                      ]
                     }
                   ]
                 }
@@ -675,17 +810,26 @@
               "if": {
                 "properties": {
                   "fixed_product": {
-                    "enum": ["AOS-CX", "HPE Networking AOS-CX"]
+                    "enum": [
+                      "AOS-CX",
+                      "HPE Networking AOS-CX"
+                    ]
                   }
                 },
-                "required": ["fixed_product"]
+                "required": [
+                  "fixed_product"
+                ]
               },
               "then": {
-                "required": ["fixed_product_id"]
+                "required": [
+                  "fixed_product_id"
+                ]
               },
               "else": {
                 "not": {
-                  "required": ["fixed_product_id"]
+                  "required": [
+                    "fixed_product_id"
+                  ]
                 }
               }
             }
@@ -769,7 +913,13 @@
           "$ref": "#/$defs/evidence_source"
         }
       },
-      "required": ["publisher_id", "title", "member_advisory_ids", "published_at", "source"]
+      "required": [
+        "publisher_id",
+        "title",
+        "member_advisory_ids",
+        "published_at",
+        "source"
+      ]
     },
     "evidence_score": {
       "type": "object",
@@ -849,25 +999,45 @@
           "uniqueItems": true
         },
         "scope": {
-          "enum": ["cve_specific", "bulletin_shared", "unresolved"]
+          "enum": [
+            "cve_specific",
+            "bulletin_shared",
+            "unresolved"
+          ]
         },
         "source": {
           "$ref": "#/$defs/evidence_source"
         },
         "provider": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "origin": {
-          "enum": ["vendor_advisory", "cve_record", "nvd"]
+          "enum": [
+            "vendor_advisory",
+            "cve_record",
+            "nvd"
+          ]
         },
         "applicability": {
-          "enum": ["source_product", "cve_level"]
+          "enum": [
+            "source_product",
+            "cve_level"
+          ]
         },
         "revision": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "validation": {
-          "enum": ["valid", "incomplete"]
+          "enum": [
+            "valid",
+            "incomplete"
+          ]
         },
         "issues": {
           "type": "array",
@@ -896,7 +1066,10 @@
                 "type": "string"
               },
               "product": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "source_locator": {
                 "type": "string"
@@ -916,7 +1089,13 @@
                 "uniqueItems": true
               }
             },
-            "required": ["product_id", "product", "source_locator", "version_expressions", "issues"]
+            "required": [
+              "product_id",
+              "product",
+              "source_locator",
+              "version_expressions",
+              "issues"
+            ]
           }
         },
         "vector_group": {
@@ -950,7 +1129,11 @@
           "pattern": "^[a-f0-9]{64}$"
         },
         "vendor": {
-          "enum": ["cisco", "aruba", "arista"]
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
         },
         "advisory_id": {
           "type": "string",
@@ -1060,7 +1243,11 @@
               "$ref": "#/$defs/evidence_source"
             }
           },
-          "required": ["id", "sequence", "status"]
+          "required": [
+            "id",
+            "sequence",
+            "status"
+          ]
         },
         "initial_published_at": {
           "anyOf": [
@@ -1103,7 +1290,11 @@
         "family": {
           "anyOf": [
             {
-              "enum": ["cisco-iosxe", "aruba-aoscx", "arista-eos"]
+              "enum": [
+                "cisco-iosxe",
+                "aruba-aoscx",
+                "arista-eos"
+              ]
             },
             {
               "type": "null"
@@ -1139,10 +1330,17 @@
           ]
         },
         "scope": {
-          "enum": ["cve_specific", "bulletin_shared", "unresolved"]
+          "enum": [
+            "cve_specific",
+            "bulletin_shared",
+            "unresolved"
+          ]
         },
         "scope_level": {
-          "enum": ["os_family", "model_qualified"]
+          "enum": [
+            "os_family",
+            "model_qualified"
+          ]
         },
         "version_expressions": {
           "type": "array",
@@ -1201,7 +1399,10 @@
           }
         },
         "conditional_affected": {
-          "type": ["boolean", "null"],
+          "type": [
+            "boolean",
+            "null"
+          ],
           "description": "True only for an explicit reviewed prerequisite; false only for an explicit unrestricted publisher statement; null or absent is unclassified."
         },
         "initial_date_provenance": {
@@ -1239,7 +1440,11 @@
       "additionalProperties": false,
       "properties": {
         "vendor": {
-          "enum": ["cisco", "aruba", "arista"]
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
         },
         "source_url": {
           "type": "string",
@@ -1247,7 +1452,13 @@
           "pattern": "^https://"
         },
         "state": {
-          "enum": ["complete", "partial", "unavailable", "unstable", "unknown"]
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable",
+            "unstable",
+            "unknown"
+          ]
         },
         "observed_start": {
           "anyOf": [
@@ -1299,7 +1510,12 @@
               "pattern": "^[a-f0-9]{64}$"
             },
             "source_kind": {
-              "enum": ["openvuln", "index", "listing", null]
+              "enum": [
+                "openvuln",
+                "index",
+                "listing",
+                null
+              ]
             },
             "window": {
               "type": "object",
@@ -1314,10 +1530,19 @@
                   "format": "date"
                 }
               },
-              "required": ["start_date", "end_date"]
+              "required": [
+                "start_date",
+                "end_date"
+              ]
             },
             "coverage_state": {
-              "enum": ["not_configured", "unstable", "blocked", "enumerated", "partial"]
+              "enum": [
+                "not_configured",
+                "unstable",
+                "blocked",
+                "enumerated",
+                "partial"
+              ]
             },
             "portfolio_completeness": {
               "const": "not_established"
@@ -1331,55 +1556,94 @@
               "uniqueItems": true
             },
             "expected_total": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "discovered_unique_identities": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "duplicate_entries": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "withdrawn_entries": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "retrieved": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "parsed": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "parse_failed": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "retrieval_failed": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "classified": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "classification_pending": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "unknown_dates": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "unknown_models": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             },
             "exhausted_errors": {
-              "type": ["integer", "null"],
+              "type": [
+                "integer",
+                "null"
+              ],
               "minimum": 0
             }
           },
@@ -1422,7 +1686,11 @@
       "additionalProperties": false,
       "properties": {
         "vendor": {
-          "enum": ["cisco", "aruba", "arista"]
+          "enum": [
+            "cisco",
+            "aruba",
+            "arista"
+          ]
         },
         "advisory_id": {
           "type": "string",
@@ -1434,10 +1702,16 @@
           "maxLength": 4000
         },
         "scheme": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "namespace": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "scope": {
           "const": "advisory"
@@ -1453,7 +1727,10 @@
           "$ref": "#/$defs/evidence_source"
         },
         "revision": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "issues": {
           "type": "array",
@@ -1526,7 +1803,11 @@
         "html_source": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["url", "sha256", "retrieved_at"],
+          "required": [
+            "url",
+            "sha256",
+            "retrieved_at"
+          ],
           "properties": {
             "url": {
               "type": "string",
@@ -1537,7 +1818,10 @@
               "pattern": "^[a-f0-9]{64}$"
             },
             "retrieved_at": {
-              "type": ["string", "null"],
+              "type": [
+                "string",
+                "null"
+              ],
               "format": "date-time"
             }
           }
@@ -1545,7 +1829,11 @@
         "csaf_source": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["url", "sha256", "retrieved_at"],
+          "required": [
+            "url",
+            "sha256",
+            "retrieved_at"
+          ],
           "properties": {
             "url": {
               "type": "string",
@@ -1556,7 +1844,10 @@
               "pattern": "^[a-f0-9]{64}$"
             },
             "retrieved_at": {
-              "type": ["string", "null"],
+              "type": [
+                "string",
+                "null"
+              ],
               "format": "date-time"
             }
           }
@@ -1566,7 +1857,11 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["url", "sha256", "retrieved_at"],
+              "required": [
+                "url",
+                "sha256",
+                "retrieved_at"
+              ],
               "properties": {
                 "url": {
                   "type": "string",
@@ -1577,7 +1872,10 @@
                   "pattern": "^[a-f0-9]{64}$"
                 },
                 "retrieved_at": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date-time"
                 }
               }
@@ -1594,7 +1892,15 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["event", "literal", "value", "source", "locator", "revision", "summary"],
+            "required": [
+              "event",
+              "literal",
+              "value",
+              "source",
+              "locator",
+              "revision",
+              "summary"
+            ],
             "properties": {
               "event": {
                 "enum": [
@@ -1623,7 +1929,11 @@
                 ]
               },
               "source": {
-                "enum": ["html", "csaf", "rss"]
+                "enum": [
+                  "html",
+                  "csaf",
+                  "rss"
+                ]
               },
               "locator": {
                 "type": "string",
@@ -1631,11 +1941,17 @@
                 "maxLength": 2000
               },
               "revision": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "maxLength": 2000
               },
               "summary": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "maxLength": 2000
               }
             }
@@ -1645,7 +1961,11 @@
           "type": "array",
           "uniqueItems": true,
           "items": {
-            "enum": ["csaf_current_revision_conflict", "rss_item_not_observed", "rss_not_supplied"]
+            "enum": [
+              "csaf_current_revision_conflict",
+              "rss_item_not_observed",
+              "rss_not_supplied"
+            ]
           }
         }
       }
@@ -1675,7 +1995,12 @@
               "minimum": 0
             }
           },
-          "required": ["advisories", "cves", "owned_pairs", "umbrella_cves"]
+          "required": [
+            "advisories",
+            "cves",
+            "owned_pairs",
+            "umbrella_cves"
+          ]
         },
         "advisory_ids": {
           "type": "array",
@@ -1692,7 +2017,10 @@
                 "minLength": 1
               }
             },
-            "required": ["vendor", "advisory_id"]
+            "required": [
+              "vendor",
+              "advisory_id"
+            ]
           },
           "uniqueItems": true
         },
@@ -1715,7 +2043,12 @@
         "method_counts": {
           "type": "object",
           "propertyNames": {
-            "enum": ["unknown", "pre_risk_based", "risk_based", "outside_policy"]
+            "enum": [
+              "unknown",
+              "pre_risk_based",
+              "risk_based",
+              "outside_policy"
+            ]
           },
           "additionalProperties": {
             "type": "integer",
@@ -1729,19 +2062,38 @@
             "additionalProperties": false,
             "properties": {
               "version": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "provider": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "origin": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "preferred": {
-                "type": ["boolean", "null"]
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "band": {
-                "enum": ["None", "Low", "Medium", "High", "Critical", "Unknown"]
+                "enum": [
+                  "None",
+                  "Low",
+                  "Medium",
+                  "High",
+                  "Critical",
+                  "Unknown"
+                ]
               },
               "cve_ids": {
                 "type": "array",
@@ -1756,7 +2108,15 @@
                 "minimum": 0
               }
             },
-            "required": ["version", "provider", "origin", "preferred", "band", "cve_ids", "count"]
+            "required": [
+              "version",
+              "provider",
+              "origin",
+              "preferred",
+              "band",
+              "cve_ids",
+              "count"
+            ]
           },
           "uniqueItems": true
         }
@@ -1784,7 +2144,11 @@
           "$ref": "#/$defs/disclosure_summary"
         }
       },
-      "required": ["pre_july", "from_july", "unknown"]
+      "required": [
+        "pre_july",
+        "from_july",
+        "unknown"
+      ]
     },
     "kev_inventory": {
       "type": "object",
@@ -1802,7 +2166,10 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["id", "advisory_schema_version"],
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
               "properties": {
                 "id": {
                   "type": "string",
@@ -1844,7 +2211,11 @@
             ],
             "properties": {
               "vendor": {
-                "enum": ["cisco", "arista", "aruba"]
+                "enum": [
+                  "cisco",
+                  "arista",
+                  "aruba"
+                ]
               },
               "advisory_id": {
                 "type": "string",
@@ -1860,7 +2231,10 @@
                 "uniqueItems": true
               },
               "document_status": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "maxLength": 4000
               },
               "disposition": {
@@ -1890,14 +2264,25 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               "revision_id": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "minimum": 1
               },
               "evidence_id": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "minimum": 1
               }
             }
@@ -1919,7 +2304,11 @@
             ],
             "properties": {
               "vendor": {
-                "enum": ["cisco", "arista", "aruba"]
+                "enum": [
+                  "cisco",
+                  "arista",
+                  "aruba"
+                ]
               },
               "advisory_id": {
                 "type": "string",
@@ -1935,7 +2324,10 @@
                 "uniqueItems": true
               },
               "document_status": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "maxLength": 4000
               },
               "disposition": {
@@ -1965,14 +2357,25 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               "revision_id": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "minimum": 1
               },
               "evidence_id": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "minimum": 1
               }
             }
@@ -2002,7 +2405,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -2064,10 +2470,16 @@
                   "const": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
                 },
                 "configured": {
-                  "type": ["boolean", "null"]
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
                 },
                 "enabled": {
-                  "type": ["boolean", "null"]
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
                 },
                 "availability": {
                   "enum": [
@@ -2085,16 +2497,26 @@
                     {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["checked_at", "outcome", "error_code"],
+                      "required": [
+                        "checked_at",
+                        "outcome",
+                        "error_code"
+                      ],
                       "properties": {
                         "checked_at": {
                           "$ref": "#/$defs/upgrade_timestamp"
                         },
                         "outcome": {
-                          "enum": ["ok", "error"]
+                          "enum": [
+                            "ok",
+                            "error"
+                          ]
                         },
                         "error_code": {
-                          "type": ["string", "null"]
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         }
                       }
                     },
@@ -2199,7 +2621,12 @@
               }
             }
           },
-          "required": ["evaluated_at", "source", "catalogue", "policy"]
+          "required": [
+            "evaluated_at",
+            "source",
+            "catalogue",
+            "policy"
+          ]
         },
         "source_groups": {
           "type": "array",
@@ -2224,7 +2651,10 @@
                 "maxItems": 100000
               },
               "product": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "product_ids": {
                 "anyOf": [
@@ -2241,7 +2671,10 @@
                 ]
               },
               "train_expression": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "disposition": {
                 "type": "string"
@@ -2272,7 +2705,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               }
             },
             "required": [
@@ -2346,7 +2784,11 @@
                 "type": "string"
               },
               "vendor": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "family": {
                 "type": "string"
@@ -2358,16 +2800,29 @@
                 "type": "string"
               },
               "scope_level": {
-                "enum": ["os_family", "model_qualified"]
+                "enum": [
+                  "os_family",
+                  "model_qualified"
+                ]
               },
               "date": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "high_risk": {
-                "type": ["boolean", "null"]
+                "type": [
+                  "boolean",
+                  "null"
+                ]
               },
               "kev_membership": {
-                "enum": ["listed", "not_listed", "unknown"]
+                "enum": [
+                  "listed",
+                  "not_listed",
+                  "unknown"
+                ]
               },
               "source_ref": {
                 "type": "string",
@@ -2421,7 +2876,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               {
                 "type": "array",
@@ -2463,7 +2923,12 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     },
                     "locator": {
                       "type": "string"
@@ -2472,7 +2937,13 @@
                       "type": "string"
                     }
                   },
-                  "required": ["method", "kind", "source", "locator", "fingerprint"]
+                  "required": [
+                    "method",
+                    "kind",
+                    "source",
+                    "locator",
+                    "fingerprint"
+                  ]
                 },
                 "maxItems": 100000
               },
@@ -2486,13 +2957,22 @@
                       "type": "string"
                     },
                     "provider": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "version": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "value": {
-                      "type": ["number", "null"]
+                      "type": [
+                        "number",
+                        "null"
+                      ]
                     },
                     "source": {
                       "type": "object",
@@ -2517,10 +2997,21 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     }
                   },
-                  "required": ["origin", "provider", "version", "value", "source"]
+                  "required": [
+                    "origin",
+                    "provider",
+                    "version",
+                    "value",
+                    "source"
+                  ]
                 },
                 "maxItems": 100000
               },
@@ -2545,7 +3036,12 @@
                     "type": "boolean"
                   }
                 },
-                "required": ["basis", "expressions", "partial", "unsupported"]
+                "required": [
+                  "basis",
+                  "expressions",
+                  "partial",
+                  "unsupported"
+                ]
               }
             ]
           }
@@ -2560,7 +3056,11 @@
                 "type": "string"
               },
               "scenario": {
-                "enum": ["publisher_first_fixed", "known_fixed_target", "inferred_inclusive"]
+                "enum": [
+                  "publisher_first_fixed",
+                  "known_fixed_target",
+                  "inferred_inclusive"
+                ]
               },
               "alternatives": {
                 "type": "array",
@@ -2570,7 +3070,10 @@
                 "maxItems": 100000
               },
               "target": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "issues": {
                 "type": "array",
@@ -2595,7 +3098,10 @@
                         "type": "string"
                       }
                     },
-                    "required": ["maximum_affected", "group_id"]
+                    "required": [
+                      "maximum_affected",
+                      "group_id"
+                    ]
                   }
                 ]
               },
@@ -2682,7 +3188,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -2705,7 +3214,11 @@
             "requested_vendor": {
               "anyOf": [
                 {
-                  "enum": ["cisco", "aruba", "arista"]
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
                 },
                 {
                   "type": "null"
@@ -2715,12 +3228,19 @@
             "effective_vendors": {
               "type": "array",
               "items": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "uniqueItems": true
             },
             "scope_level": {
-              "enum": ["os_family", "model_qualified"]
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
             },
             "requested_window": {
               "type": "string",
@@ -2774,7 +3294,10 @@
           ]
         },
         "availability": {
-          "enum": ["available", "unavailable"]
+          "enum": [
+            "available",
+            "unavailable"
+          ]
         },
         "requirements": {
           "anyOf": [
@@ -2855,7 +3378,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -2878,7 +3404,11 @@
             "requested_vendor": {
               "anyOf": [
                 {
-                  "enum": ["cisco", "aruba", "arista"]
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
                 },
                 {
                   "type": "null"
@@ -2888,12 +3418,19 @@
             "effective_vendors": {
               "type": "array",
               "items": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "uniqueItems": true
             },
             "scope_level": {
-              "enum": ["os_family", "model_qualified"]
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
             },
             "requested_window": {
               "type": "string",
@@ -2977,7 +3514,13 @@
               "minimum": 0
             }
           },
-          "required": ["claims", "advisories", "cves", "bound_claims", "unresolved_claims"]
+          "required": [
+            "claims",
+            "advisories",
+            "cves",
+            "bound_claims",
+            "unresolved_claims"
+          ]
         },
         "models": {
           "type": "array",
@@ -2986,7 +3529,11 @@
             "additionalProperties": false,
             "properties": {
               "vendor": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "family": {
                 "type": "string"
@@ -3011,7 +3558,11 @@
                     "minimum": 0
                   }
                 },
-                "required": ["claims", "advisories", "cves"]
+                "required": [
+                  "claims",
+                  "advisories",
+                  "cves"
+                ]
               },
               "by_status": {
                 "type": "object",
@@ -3032,7 +3583,11 @@
                       "minimum": 0
                     }
                   },
-                  "required": ["claims", "advisories", "cves"]
+                  "required": [
+                    "claims",
+                    "advisories",
+                    "cves"
+                  ]
                 }
               },
               "by_source": {
@@ -3061,7 +3616,11 @@
                           "minimum": 0
                         }
                       },
-                      "required": ["claims", "advisories", "cves"]
+                      "required": [
+                        "claims",
+                        "advisories",
+                        "cves"
+                      ]
                     },
                     "by_status": {
                       "type": "object",
@@ -3082,7 +3641,11 @@
                             "minimum": 0
                           }
                         },
-                        "required": ["claims", "advisories", "cves"]
+                        "required": [
+                          "claims",
+                          "advisories",
+                          "cves"
+                        ]
                       }
                     },
                     "claim_ids": {
@@ -3092,7 +3655,12 @@
                       }
                     }
                   },
-                  "required": ["source", "counts", "by_status", "claim_ids"]
+                  "required": [
+                    "source",
+                    "counts",
+                    "by_status",
+                    "claim_ids"
+                  ]
                 }
               },
               "claim_ids": {
@@ -3160,7 +3728,11 @@
                     "minimum": 0
                   }
                 },
-                "required": ["claims", "advisories", "cves"]
+                "required": [
+                  "claims",
+                  "advisories",
+                  "cves"
+                ]
               },
               "claim_ids": {
                 "type": "array",
@@ -3175,7 +3747,12 @@
                 }
               }
             },
-            "required": ["reason", "counts", "claim_ids", "sources"]
+            "required": [
+              "reason",
+              "counts",
+              "claim_ids",
+              "sources"
+            ]
           }
         }
       },
@@ -3215,7 +3792,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -3248,12 +3828,20 @@
                 "pattern": "^[a-f0-9]{64}$"
               },
               "vendor": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "family": {
                 "anyOf": [
                   {
-                    "enum": ["cisco-iosxe", "aruba-aoscx", "arista-eos"]
+                    "enum": [
+                      "cisco-iosxe",
+                      "aruba-aoscx",
+                      "arista-eos"
+                    ]
                   },
                   {
                     "type": "null"
@@ -3289,10 +3877,17 @@
                 ]
               },
               "scope": {
-                "enum": ["cve_specific", "bulletin_shared", "unresolved"]
+                "enum": [
+                  "cve_specific",
+                  "bulletin_shared",
+                  "unresolved"
+                ]
               },
               "scope_level": {
-                "enum": ["os_family", "model_qualified"]
+                "enum": [
+                  "os_family",
+                  "model_qualified"
+                ]
               },
               "initial_published_at": {
                 "anyOf": [
@@ -3366,7 +3961,11 @@
                     "$ref": "#/$defs/evidence_source"
                   }
                 },
-                "required": ["id", "sequence", "status"]
+                "required": [
+                  "id",
+                  "sequence",
+                  "status"
+                ]
               },
               "product_id": {
                 "anyOf": [
@@ -3409,7 +4008,10 @@
                 "uniqueItems": true
               },
               "conditional_affected": {
-                "type": ["boolean", "null"],
+                "type": [
+                  "boolean",
+                  "null"
+                ],
                 "description": "True only for an explicit reviewed prerequisite; false only for an explicit unrestricted publisher statement; null or absent is unclassified."
               },
               "issues": {
@@ -3441,22 +4043,47 @@
                   "additionalProperties": false,
                   "properties": {
                     "version": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "provider": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "origin": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "preferred": {
-                      "type": ["boolean", "null"]
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
                     },
                     "band": {
-                      "enum": ["None", "Low", "Medium", "High", "Critical", "Unknown"]
+                      "enum": [
+                        "None",
+                        "Low",
+                        "Medium",
+                        "High",
+                        "Critical",
+                        "Unknown"
+                      ]
                     }
                   },
-                  "required": ["version", "provider", "origin", "preferred", "band"]
+                  "required": [
+                    "version",
+                    "provider",
+                    "origin",
+                    "preferred",
+                    "band"
+                  ]
                 },
                 "uniqueItems": true
               },
@@ -3547,7 +4174,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -3564,7 +4194,11 @@
             "requested_vendor": {
               "anyOf": [
                 {
-                  "enum": ["cisco", "aruba", "arista"]
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
                 },
                 {
                   "type": "null"
@@ -3574,12 +4208,19 @@
             "effective_vendors": {
               "type": "array",
               "items": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "uniqueItems": true
             },
             "scope_level": {
-              "enum": ["os_family", "model_qualified"]
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
             },
             "requested_window": {
               "type": "string",
@@ -3633,7 +4274,10 @@
           ]
         },
         "availability": {
-          "enum": ["available", "unavailable"]
+          "enum": [
+            "available",
+            "unavailable"
+          ]
         },
         "upgrades": {
           "$ref": "#/$defs/selected_upgrades"
@@ -3761,7 +4405,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -3783,7 +4430,11 @@
             "requested_vendor": {
               "anyOf": [
                 {
-                  "enum": ["cisco", "aruba", "arista"]
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
                 },
                 {
                   "type": "null"
@@ -3793,12 +4444,19 @@
             "effective_vendors": {
               "type": "array",
               "items": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "uniqueItems": true
             },
             "scope_level": {
-              "enum": ["os_family", "model_qualified"]
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
             },
             "requested_window": {
               "type": "string",
@@ -3876,7 +4534,11 @@
                   "format": "date-time"
                 }
               },
-              "required": ["url", "sha256", "retrieved_at"]
+              "required": [
+                "url",
+                "sha256",
+                "retrieved_at"
+              ]
             }
           ]
         },
@@ -3903,23 +4565,42 @@
                 "pattern": "^CVE-[0-9]{4}-[0-9]{4,}$"
               },
               "initial_published_at": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "original_published_at": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "date_period": {
-                "enum": ["pre_july", "from_july", "unknown"]
+                "enum": [
+                  "pre_july",
+                  "from_july",
+                  "unknown"
+                ]
               },
               "date_precision": {
-                "enum": ["day", "timestamp", "unknown"]
+                "enum": [
+                  "day",
+                  "timestamp",
+                  "unknown"
+                ]
               },
               "method": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                   "classification": {
-                    "enum": [null, "pre_risk_based", "risk_based", "outside_policy"]
+                    "enum": [
+                      null,
+                      "pre_risk_based",
+                      "risk_based",
+                      "outside_policy"
+                    ]
                   },
                   "basis": {
                     "enum": [
@@ -3931,10 +4612,17 @@
                     ]
                   },
                   "locator": {
-                    "type": ["string", "null"]
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
-                "required": ["classification", "basis", "locator"]
+                "required": [
+                  "classification",
+                  "basis",
+                  "locator"
+                ]
               },
               "umbrella": {
                 "anyOf": [
@@ -3963,7 +4651,12 @@
                         "minLength": 1
                       }
                     },
-                    "required": ["cve_id", "cwe_id", "highest_cvss", "locator"]
+                    "required": [
+                      "cve_id",
+                      "cwe_id",
+                      "highest_cvss",
+                      "locator"
+                    ]
                   }
                 ]
               },
@@ -4025,7 +4718,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               "severity": {
                 "type": "array",
@@ -4034,22 +4732,47 @@
                   "additionalProperties": false,
                   "properties": {
                     "version": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "provider": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "origin": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     },
                     "preferred": {
-                      "type": ["boolean", "null"]
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
                     },
                     "band": {
-                      "enum": ["None", "Low", "Medium", "High", "Critical", "Unknown"]
+                      "enum": [
+                        "None",
+                        "Low",
+                        "Medium",
+                        "High",
+                        "Critical",
+                        "Unknown"
+                      ]
                     }
                   },
-                  "required": ["version", "provider", "origin", "preferred", "band"]
+                  "required": [
+                    "version",
+                    "provider",
+                    "origin",
+                    "preferred",
+                    "band"
+                  ]
                 },
                 "uniqueItems": true
               },
@@ -4124,7 +4847,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               "metadata": {
                 "type": "object",
@@ -4138,20 +4866,35 @@
                     "minLength": 1
                   },
                   "advisory_type": {
-                    "enum": ["security_hardening", "unknown"]
+                    "enum": [
+                      "security_hardening",
+                      "unknown"
+                    ]
                   },
                   "initial_published_at": {
-                    "type": ["string", "null"]
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "date_precision": {
-                    "enum": ["day", "timestamp", "unknown"]
+                    "enum": [
+                      "day",
+                      "timestamp",
+                      "unknown"
+                    ]
                   },
                   "method": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
                       "classification": {
-                        "enum": [null, "pre_risk_based", "risk_based", "outside_policy"]
+                        "enum": [
+                          null,
+                          "pre_risk_based",
+                          "risk_based",
+                          "outside_policy"
+                        ]
                       },
                       "basis": {
                         "enum": [
@@ -4163,22 +4906,41 @@
                         ]
                       },
                       "locator": {
-                        "type": ["string", "null"]
+                        "type": [
+                          "string",
+                          "null"
+                        ]
                       }
                     },
-                    "required": ["classification", "basis", "locator"]
+                    "required": [
+                      "classification",
+                      "basis",
+                      "locator"
+                    ]
                   },
                   "grouping_wording": {
-                    "type": ["string", "null"]
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "grouping_locator": {
-                    "type": ["string", "null"]
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "highest_cvss_wording": {
-                    "type": ["string", "null"]
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "highest_cvss_locator": {
-                    "type": ["string", "null"]
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   },
                   "umbrella_cves": {
                     "type": "array",
@@ -4205,7 +4967,12 @@
                           "minLength": 1
                         }
                       },
-                      "required": ["cve_id", "cwe_id", "highest_cvss", "locator"]
+                      "required": [
+                        "cve_id",
+                        "cwe_id",
+                        "highest_cvss",
+                        "locator"
+                      ]
                     }
                   },
                   "bug_count": {
@@ -4231,7 +4998,10 @@
                             "const": "security_hardening"
                           },
                           "initial_published_at": {
-                            "type": ["string", "null"]
+                            "type": [
+                              "string",
+                              "null"
+                            ]
                           },
                           "date_locator": {
                             "type": "string",
@@ -4285,7 +5055,13 @@
                 ]
               }
             },
-            "required": ["id", "vendor", "advisory_id", "source", "metadata"]
+            "required": [
+              "id",
+              "vendor",
+              "advisory_id",
+              "source",
+              "metadata"
+            ]
           },
           "uniqueItems": true
         },
@@ -4296,17 +5072,27 @@
             "additionalProperties": false,
             "properties": {
               "kind": {
-                "enum": ["security_hardening", "explicit_publisher_bundle"]
+                "enum": [
+                  "security_hardening",
+                  "explicit_publisher_bundle"
+                ]
               },
               "publisher_id": {
                 "type": "string",
                 "minLength": 1
               },
               "initial_published_at": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "date_period": {
-                "enum": ["pre_july", "from_july", "unknown"]
+                "enum": [
+                  "pre_july",
+                  "from_july",
+                  "unknown"
+                ]
               },
               "member_advisory_ids": {
                 "type": "array",
@@ -4363,7 +5149,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               },
               "upstream": {
                 "anyOf": [
@@ -4389,7 +5180,10 @@
                                 "const": 2
                               }
                             },
-                            "required": ["id", "advisory_schema_version"]
+                            "required": [
+                              "id",
+                              "advisory_schema_version"
+                            ]
                           },
                           {
                             "type": "null"
@@ -4405,12 +5199,20 @@
                         "pattern": "^[a-f0-9]{64}$"
                       }
                     },
-                    "required": ["publication", "generated_at", "definition_sha256"]
+                    "required": [
+                      "publication",
+                      "generated_at",
+                      "definition_sha256"
+                    ]
                   }
                 ]
               },
               "vendor": {
-                "enum": ["cisco", "arista", "aruba"]
+                "enum": [
+                  "cisco",
+                  "arista",
+                  "aruba"
+                ]
               },
               "family": {
                 "type": "string",
@@ -4552,7 +5354,10 @@
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["id", "advisory_schema_version"],
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ],
               "properties": {
                 "id": {
                   "type": "string",
@@ -4592,7 +5397,11 @@
             "requested_vendor": {
               "anyOf": [
                 {
-                  "enum": ["cisco", "aruba", "arista"]
+                  "enum": [
+                    "cisco",
+                    "aruba",
+                    "arista"
+                  ]
                 },
                 {
                   "type": "null"
@@ -4602,12 +5411,19 @@
             "effective_vendors": {
               "type": "array",
               "items": {
-                "enum": ["cisco", "aruba", "arista"]
+                "enum": [
+                  "cisco",
+                  "aruba",
+                  "arista"
+                ]
               },
               "uniqueItems": true
             },
             "scope_level": {
-              "enum": ["os_family", "model_qualified"]
+              "enum": [
+                "os_family",
+                "model_qualified"
+              ]
             },
             "requested_window": {
               "type": "string",
@@ -4688,10 +5504,16 @@
               "const": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
             },
             "configured": {
-              "type": ["boolean", "null"]
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "enabled": {
-              "type": ["boolean", "null"]
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "availability": {
               "enum": [
@@ -4709,17 +5531,27 @@
                 {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["checked_at", "outcome", "error_code"],
+                  "required": [
+                    "checked_at",
+                    "outcome",
+                    "error_code"
+                  ],
                   "properties": {
                     "checked_at": {
                       "type": "string",
                       "format": "date-time"
                     },
                     "outcome": {
-                      "enum": ["ok", "error"]
+                      "enum": [
+                        "ok",
+                        "error"
+                      ]
                     },
                     "error_code": {
-                      "type": ["string", "null"]
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   }
                 },
@@ -4847,27 +5679,49 @@
               "mapping": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["status", "rule_id", "vendor", "family"],
+                "required": [
+                  "status",
+                  "rule_id",
+                  "vendor",
+                  "family"
+                ],
                 "properties": {
                   "status": {
-                    "enum": ["mapped", "unmapped", "ambiguous"]
+                    "enum": [
+                      "mapped",
+                      "unmapped",
+                      "ambiguous"
+                    ]
                   },
                   "rule_id": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "maxLength": 4000
                   },
                   "vendor": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "maxLength": 4000
                   },
                   "family": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "maxLength": 4000
                   }
                 }
               },
               "membership": {
-                "enum": ["listed", "not_listed", "unknown"]
+                "enum": [
+                  "listed",
+                  "not_listed",
+                  "unknown"
+                ]
               },
               "historically_listed": {
                 "const": true
@@ -4918,7 +5772,10 @@
                       "maxLength": 4000
                     },
                     "publisher_status": {
-                      "type": ["string", "null"],
+                      "type": [
+                        "string",
+                        "null"
+                      ],
                       "maxLength": 4000
                     },
                     "scope": {
@@ -4926,10 +5783,16 @@
                       "maxLength": 4000
                     },
                     "scope_level": {
-                      "enum": ["os_family", "model_qualified"]
+                      "enum": [
+                        "os_family",
+                        "model_qualified"
+                      ]
                     },
                     "initial_published_at": {
-                      "type": ["string", "null"],
+                      "type": [
+                        "string",
+                        "null"
+                      ],
                       "maxLength": 4000
                     },
                     "models": {
@@ -4941,7 +5804,10 @@
                       }
                     },
                     "conditional_affected": {
-                      "type": ["boolean", "null"]
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
                     },
                     "source": {
                       "type": "object",
@@ -4966,7 +5832,12 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     }
                   }
                 }
@@ -4987,7 +5858,11 @@
                   ],
                   "properties": {
                     "vendor": {
-                      "enum": ["cisco", "arista", "aruba"]
+                      "enum": [
+                        "cisco",
+                        "arista",
+                        "aruba"
+                      ]
                     },
                     "advisory_id": {
                       "type": "string",
@@ -5003,7 +5878,10 @@
                       "uniqueItems": true
                     },
                     "document_status": {
-                      "type": ["string", "null"],
+                      "type": [
+                        "string",
+                        "null"
+                      ],
                       "maxLength": 4000
                     },
                     "disposition": {
@@ -5033,14 +5911,25 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     },
                     "revision_id": {
-                      "type": ["integer", "null"],
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
                       "minimum": 1
                     },
                     "evidence_id": {
-                      "type": ["integer", "null"],
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
                       "minimum": 1
                     }
                   }
@@ -5062,7 +5951,11 @@
                   ],
                   "properties": {
                     "vendor": {
-                      "enum": ["cisco", "arista", "aruba"]
+                      "enum": [
+                        "cisco",
+                        "arista",
+                        "aruba"
+                      ]
                     },
                     "advisory_id": {
                       "type": "string",
@@ -5078,7 +5971,10 @@
                       "uniqueItems": true
                     },
                     "document_status": {
-                      "type": ["string", "null"],
+                      "type": [
+                        "string",
+                        "null"
+                      ],
                       "maxLength": 4000
                     },
                     "disposition": {
@@ -5108,14 +6004,25 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     },
                     "revision_id": {
-                      "type": ["integer", "null"],
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
                       "minimum": 1
                     },
                     "evidence_id": {
-                      "type": ["integer", "null"],
+                      "type": [
+                        "integer",
+                        "null"
+                      ],
                       "minimum": 1
                     }
                   }
@@ -5149,7 +6056,11 @@
         "family_observations": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["arista-eos", "cisco-iosxe", "aruba-aoscx"],
+          "required": [
+            "arista-eos",
+            "cisco-iosxe",
+            "aruba-aoscx"
+          ],
           "properties": {
             "arista-eos": {
               "enum": [
@@ -5286,7 +6197,10 @@
                   "const": 2
                 }
               },
-              "required": ["id", "advisory_schema_version"]
+              "required": [
+                "id",
+                "advisory_schema_version"
+              ]
             },
             {
               "type": "null"
@@ -5306,7 +6220,10 @@
           "format": "date"
         },
         "availability": {
-          "enum": ["available", "unavailable"]
+          "enum": [
+            "available",
+            "unavailable"
+          ]
         },
         "releases": {
           "type": "array",
@@ -5319,10 +6236,18 @@
                 "pattern": "^[a-f0-9]{64}$"
               },
               "vendor": {
-                "enum": ["aruba", "arista", "cisco"]
+                "enum": [
+                  "aruba",
+                  "arista",
+                  "cisco"
+                ]
               },
               "family": {
-                "enum": ["aruba-aoscx", "arista-eos", "cisco-iosxe"]
+                "enum": [
+                  "aruba-aoscx",
+                  "arista-eos",
+                  "cisco-iosxe"
+                ]
               },
               "version": {
                 "type": "string",
@@ -5366,10 +6291,16 @@
                       "description": "Literal software release date reported by this publisher release-history source, with platform context retained."
                     },
                     "publisher_reports_posted": {
-                      "type": ["boolean", "null"]
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
                     },
                     "date_basis": {
-                      "enum": ["publisher_release_history", "publisher_release_date"]
+                      "enum": [
+                        "publisher_release_history",
+                        "publisher_release_date"
+                      ]
                     },
                     "statement": {
                       "type": "string",
@@ -5399,7 +6330,12 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     }
                   },
                   "required": [
@@ -5421,7 +6357,10 @@
                   "additionalProperties": false,
                   "properties": {
                     "kind": {
-                      "enum": ["vendor_fixed", "affected_scope_fix"]
+                      "enum": [
+                        "vendor_fixed",
+                        "affected_scope_fix"
+                      ]
                     },
                     "claim_id": {
                       "type": "string",
@@ -5456,7 +6395,10 @@
                       ]
                     },
                     "scope_level": {
-                      "enum": ["os_family", "model_qualified"]
+                      "enum": [
+                        "os_family",
+                        "model_qualified"
+                      ]
                     },
                     "publisher_status": {
                       "anyOf": [
@@ -5526,7 +6468,12 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ]
                     },
                     "claim_source": {
                       "type": "object",
@@ -5551,7 +6498,12 @@
                           "pattern": "\\S"
                         }
                       },
-                      "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"],
+                      "required": [
+                        "source_url",
+                        "source_sha256",
+                        "retrieved_at",
+                        "source_locator"
+                      ],
                       "description": "Original current claim provenance, distinct from the remediation section provenance retained in source."
                     }
                   },
@@ -5596,7 +6548,10 @@
                 }
               },
               "vendor_reported_fixed_cve_count": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "minimum": 0
               },
               "affected_scope_cve_ids": {
@@ -5608,7 +6563,10 @@
                 }
               },
               "affected_scope_cve_count": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "minimum": 0
               }
             },
@@ -5635,10 +6593,18 @@
             "additionalProperties": false,
             "properties": {
               "vendor": {
-                "enum": ["aruba", "arista", "cisco"]
+                "enum": [
+                  "aruba",
+                  "arista",
+                  "cisco"
+                ]
               },
               "family": {
-                "enum": ["aruba-aoscx", "arista-eos", "cisco-iosxe"]
+                "enum": [
+                  "aruba-aoscx",
+                  "arista-eos",
+                  "cisco-iosxe"
+                ]
               },
               "source_id": {
                 "anyOf": [
@@ -5730,7 +6696,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               }
             },
             "required": [
@@ -5754,10 +6725,18 @@
             "additionalProperties": false,
             "properties": {
               "vendor": {
-                "enum": ["aruba", "arista", "cisco"]
+                "enum": [
+                  "aruba",
+                  "arista",
+                  "cisco"
+                ]
               },
               "family": {
-                "enum": ["aruba-aoscx", "arista-eos", "cisco-iosxe"]
+                "enum": [
+                  "aruba-aoscx",
+                  "arista-eos",
+                  "cisco-iosxe"
+                ]
               },
               "source_id": {
                 "type": "string",
@@ -5802,7 +6781,12 @@
                     "pattern": "\\S"
                   }
                 },
-                "required": ["source_url", "source_sha256", "retrieved_at", "source_locator"]
+                "required": [
+                  "source_url",
+                  "source_sha256",
+                  "retrieved_at",
+                  "source_locator"
+                ]
               }
             },
             "required": [
@@ -5867,7 +6851,12 @@
                         ]
                       },
                       "outcome": {
-                        "enum": ["ok", "error", "partial", "not_applicable"]
+                        "enum": [
+                          "ok",
+                          "error",
+                          "partial",
+                          "not_applicable"
+                        ]
                       },
                       "error_code": {
                         "anyOf": [
@@ -5891,7 +6880,11 @@
                         ]
                       }
                     },
-                    "required": ["checked_at", "outcome", "error_code"]
+                    "required": [
+                      "checked_at",
+                      "outcome",
+                      "error_code"
+                    ]
                   },
                   {
                     "type": "null"
@@ -5953,7 +6946,11 @@
                 ]
               },
               "availability": {
-                "enum": ["excluded", "retained", "uncollected"]
+                "enum": [
+                  "excluded",
+                  "retained",
+                  "uncollected"
+                ]
               },
               "issues": {
                 "type": "array",
@@ -6029,7 +7026,12 @@
                 ]
               }
             },
-            "required": ["code", "claim_id", "expression", "source_id"]
+            "required": [
+              "code",
+              "claim_id",
+              "expression",
+              "source_id"
+            ]
           }
         },
         "selection": {
@@ -6041,7 +7043,11 @@
                 "requested_vendor": {
                   "anyOf": [
                     {
-                      "enum": ["cisco", "aruba", "arista"]
+                      "enum": [
+                        "cisco",
+                        "aruba",
+                        "arista"
+                      ]
                     },
                     {
                       "type": "null"
@@ -6051,12 +7057,19 @@
                 "effective_vendors": {
                   "type": "array",
                   "items": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "uniqueItems": true
                 },
                 "scope_level": {
-                  "enum": ["os_family", "model_qualified"]
+                  "enum": [
+                    "os_family",
+                    "model_qualified"
+                  ]
                 },
                 "requested_window": {
                   "type": "string",
@@ -6128,7 +7141,11 @@
               "const": "not_established"
             }
           },
-          "required": ["expected_releases", "expected_advisories", "completeness"]
+          "required": [
+            "expected_releases",
+            "expected_advisories",
+            "completeness"
+          ]
         },
         "method": {
           "type": "string",

@@ -6,6 +6,7 @@ v1/v2 JSON. Full native upgrade matrices and first-fixed catalogues stay offline
 
 import copy
 import json
+from functools import lru_cache
 
 from jsonschema import Draft202012Validator, ValidationError
 
@@ -19,7 +20,22 @@ _SCHEMA = json.loads((PACKAGE / "schemas/switching-analysis-v1.json").read_text(
 _VALIDATOR = Draft202012Validator(_SCHEMA)
 
 
+@lru_cache(maxsize=len(_SCHEMA["$defs"]))
+def _compiled_shape(definition):
+    """Existing project engine/pattern semantics; formats were never enabled here."""
+    import jsonschema_rs
+
+    return jsonschema_rs.Draft202012Validator(
+        {"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]},
+        validate_formats=False,
+        keywords={"pattern": contracts._PythonPattern},
+        offline=True,
+    )
+
+
 def _validate_shape(value, definition):
+    if _compiled_shape(definition).is_valid(value):
+        return
     try:
         _VALIDATOR.evolve(
             schema={"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]}
