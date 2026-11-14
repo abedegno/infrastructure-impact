@@ -350,6 +350,7 @@ def stage(
     switching_analysis_profile: str = "",
     capture_cache: Path | None = None,
     acquisition_checkpoint=None,
+    vault_limit_bytes: int | None = None,
 ) -> dict:
     """Hold one collector lock, validate all targets, then ingest only a private copy.
 
@@ -362,6 +363,10 @@ def stage(
     from .target_import_contracts import validate_base_path
 
     validate_format(publication_format)
+    if vault_limit_bytes is not None:
+        from ..recovery_policy import checked_limit
+
+        checked_limit(vault_limit_bytes)
     from .switching_analysis_profiles import hosted_profile
 
     analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
@@ -475,6 +480,14 @@ def stage(
                 (stage_home / "target-import-context.json").write_bytes(
                     canonical_json(context) + b"\n"
                 )
+                if vault_limit_bytes is not None:
+                    # Logical pages include committed WAL content; file size also
+                    # catches an oversized physical file before the costly build.
+                    pages = db.execute("PRAGMA page_count").fetchone()[0]
+                    page_size = db.execute("PRAGMA page_size").fetchone()[0]
+                    if max(staged.stat().st_size, pages * page_size) > vault_limit_bytes:
+                        result["checks"]["capacity_passed"] = False
+                        raise StageFailure("candidate_capacity")
             checked = verify(
                 staged,
                 output / "public",

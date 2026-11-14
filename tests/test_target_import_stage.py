@@ -672,3 +672,51 @@ def test_invalid_render_prefix_refused_before_lock_or_source(setup, monkeypatch,
             base_path=base_path,
         )
     assert not output.exists()
+
+
+def test_recovery_capacity_is_checked_before_expensive_verifier(setup, monkeypatch):
+    database, selected, raws, output, home = setup
+    accepted = receipt(database, selected)
+    before = snapshot(database)
+    serve(monkeypatch, selected, raws)
+    calls = []
+
+    def unexpected(*args, **kwargs):
+        calls.append(True)
+        raise AssertionError("verifier must not run")
+
+    module = implementation()
+    monkeypatch.setattr(module, "verify", unexpected)
+    result = module.stage(
+        database,
+        selected,
+        accepted["fingerprint"],
+        output,
+        lock_home=home,
+        accepted_preview=accepted,
+        vault_limit_bytes=1,
+    )
+    assert result["failure_code"] == "candidate_capacity"
+    assert result["checks"]["capacity_passed"] is False
+    assert not calls
+    assert snapshot(database) == before
+    assert result["staged_database"] is None and result["public_directory"] is None
+
+
+@pytest.mark.parametrize("limit", [True, 0, -1, 2 * 1024**3 + 1])
+def test_invalid_recovery_bound_rejected_before_stage_state(setup, limit):
+    database, selected, _, output, home = setup
+    accepted = receipt(database, selected)
+    before = snapshot(database)
+    with pytest.raises(ValueError):
+        implementation().stage(
+            database,
+            selected,
+            accepted["fingerprint"],
+            output,
+            lock_home=home,
+            accepted_preview=accepted,
+            vault_limit_bytes=limit,
+        )
+    assert not output.exists()
+    assert snapshot(database) == before

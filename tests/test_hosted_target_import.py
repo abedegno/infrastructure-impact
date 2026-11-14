@@ -466,9 +466,10 @@ def test_promotion_capacity_and_envelope_gates_precede_backup(
     if failure == "vault":
         # The input fits but the fully ingested staged vault does not.
         monkeypatch.setattr(hosted, "vault_limit", lambda _: database.stat().st_size)
+        monkeypatch.setattr(target_import_stage, "verify", forbidden)
     else:
         monkeypatch.setattr(target_import_job, "MAX_RECEIPT_BYTES", 500)
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeError if failure == "vault" else ValueError):
         apply(recovery, monkeypatch, tmp_path / "public")
     assert state_bytes(state) == before
     assert effect_values(effects) == {"mode": "apply"}
@@ -477,6 +478,9 @@ def test_promotion_capacity_and_envelope_gates_precede_backup(
     if failure == "envelope":
         assert receipt["failure_code"] == "target_import_receipt_size"
         assert "maintenance" not in receipt
+    else:
+        assert receipt["maintenance"]["failure_code"] == "candidate_capacity"
+        assert receipt["maintenance"]["checks"]["capacity_passed"] is False
 
 
 @pytest.mark.parametrize("base_path", ["//external/", "/../", "https://external/", "/a?b/"])
