@@ -5600,6 +5600,69 @@
           "clause_sha256": "1d290d3c702649fb45cf2ea6c9c8f615ea836be4c72184d38d7933b88ee0c25c"
         }
       ]
+    },
+    {
+      "vendor": "arista",
+      "advisory_id": "Arista Networks Security Advisory 158",
+      "family": "arista-eos",
+      "source_url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_158_CSAF.json",
+      "source_sha256": "0dc70cae7fe0380e01d4872a157c7d97c665da33b9d1fb74996e24c1321a6349",
+      "kind": "csaf",
+      "product_parent": {
+        "category": "product_name",
+        "name": "EOS",
+        "locator": "/product_tree/branches/0/branches/0/branches/0"
+      },
+      "source_format": null,
+      "expected_cve_ids": [
+        "CVE-2026-73456",
+        "CVE-2026-73457"
+      ],
+      "resolution_sha256": null,
+      "bindings": [
+        {
+          "cve_id": "CVE-2026-73456",
+          "affected_product": "EOS version 4.34.2",
+          "affected_product_id": "CSAFPID-0",
+          "affected_versions": [
+            "EOS version 4.34.2"
+          ],
+          "affected_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/branches/3/product",
+          "fixed_product": "EOS version 4.34.8",
+          "fixed_product_id": "CSAFPID-2",
+          "fixed_versions": [
+            "EOS version 4.34.8"
+          ],
+          "fixed_locator": "/vulnerabilities/0/product_status; /product_tree/branches/0/branches/0/branches/0/branches/1/product",
+          "remediation_locator": "/vulnerabilities/0/remediations/0",
+          "remediation_details_sha256": "547d6bb015589bb3efe2556a75505f25a7d7bf8a63705dd64fe00f35f58cdb83",
+          "availability_date": null,
+          "availability_proof_literals": [
+            "Fixed in EOS version 4.34.8"
+          ]
+        },
+        {
+          "cve_id": "CVE-2026-73457",
+          "affected_product": "EOS version 4.34.2",
+          "affected_product_id": "CSAFPID-0",
+          "affected_versions": [
+            "EOS version 4.34.2"
+          ],
+          "affected_locator": "/vulnerabilities/1/product_status; /product_tree/branches/0/branches/0/branches/0/branches/3/product",
+          "fixed_product": "EOS version 4.34.8",
+          "fixed_product_id": "CSAFPID-2",
+          "fixed_versions": [
+            "EOS version 4.34.8"
+          ],
+          "fixed_locator": "/vulnerabilities/1/product_status; /product_tree/branches/0/branches/0/branches/0/branches/1/product",
+          "remediation_locator": "/vulnerabilities/1/remediations/0",
+          "remediation_details_sha256": "547d6bb015589bb3efe2556a75505f25a7d7bf8a63705dd64fe00f35f58cdb83",
+          "availability_date": null,
+          "availability_proof_literals": [
+            "Fixed in EOS version 4.34.8"
+          ]
+        }
+      ]
     }
   ]
 }
