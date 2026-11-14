@@ -5,6 +5,7 @@ import importlib
 import json
 
 import pytest
+from jsonschema import ValidationError
 from test_switching_upgrades import AT, inputs
 
 from infrastructure_impact.application import switching_comparison as comparison
@@ -798,6 +799,12 @@ def test_opt_in_publication_discovers_full_feed_candidates_absent_from_collectio
     public = publication.public_projection(
         data, include_switching_analysis=True, publication_format=publication_format
     )
+    alternate = publication.public_projection(
+        data,
+        include_switching_analysis=True,
+        publication_format="v2" if publication_format == "v1" else "v1",
+    )
+    assert contracts._json(public) == contracts._json(alternate)
     assert CID not in public["kev"]["entries"]
     assert CID not in public["switching_comparison"]["inputs"]["kev"]["entries"]
     gap = public["switching_analysis"]["kev_reconciliation"]
@@ -872,3 +879,550 @@ def test_complete_feed_selection_inflates_source_facets_once(monkeypatch):
     result = api()._kev_selected(compiled, selection)
     assert len(result["entries"]) == 2
     assert len(calls) == 1
+
+
+def composition_input():
+    from test_static_delivery import dataset
+    from test_switching_aruba_fix_links import projected
+
+    data = dataset()
+    data["publication"] = None
+    data["research"]["switching_input"] = projected()
+    return data
+
+
+def test_optional_v2_composes_one_fresh_full_evidence_validation(monkeypatch):
+    from infrastructure_impact.application import publication
+
+    inputs = [composition_input(), composition_input()]
+    counts = dict(shape=0, semantics=0, comparison=0, comparison_shape=0)
+    for module, name, key in (
+        (contracts, "validate_evidence", "shape"),
+        (contracts, "_validate_evidence_semantics", "semantics"),
+        (
+            comparison,
+            "_validate_semantics"
+            if hasattr(comparison, "_validate_semantics")
+            else "validate_semantics",
+            "comparison",
+        ),
+    ):
+        original = getattr(module, name)
+
+        def counted(*args, _original=original, _key=key, **kwargs):
+            counts[_key] += 1
+            return _original(*args, **kwargs)
+
+        monkeypatch.setattr(module, name, counted)
+    validate_shape = contracts._validate
+
+    def counted_shape(value, schema):
+        if schema == "switching-comparison-v1.json":
+            counts["comparison_shape"] += 1
+        return validate_shape(value, schema)
+
+    monkeypatch.setattr(contracts, "_validate", counted_shape)
+    for invocation in range(1, 3):
+        result = publication.public_projection(
+            inputs[invocation - 1], publication_format="v2", include_switching_analysis=True
+        )
+        assert counts == dict(
+            shape=invocation,
+            semantics=invocation,
+            comparison=3 * invocation,
+            comparison_shape=4 * invocation,
+        )
+        # Complete strict JSON serialization also rejects any leaked capability.
+        assert json.loads(contracts._json(result))["switching_analysis"]
+
+
+def test_writer_mints_independently_once_each_time(tmp_path, monkeypatch):
+    from infrastructure_impact.application import publication, publication_v2
+
+    data = publication.public_projection(
+        composition_input(), publication_format="v2", include_switching_analysis=True
+    )
+    calls = []
+    validate = contracts._validate_evidence_semantics
+
+    def counted(*args, **kwargs):
+        calls.append(1)
+        return validate(*args, **kwargs)
+
+    monkeypatch.setattr(contracts, "_validate_evidence_semantics", counted)
+    written = []
+    monkeypatch.setattr(publication_v2, "_write_bundle", lambda *args: written.append(args))
+    for invocation in range(1, 3):
+        publication.write_bundle(tmp_path, data, publication_format="v2")
+        assert len(calls) == invocation
+    assert len(written) == 2
+
+
+COMPOSED_CONSUMERS = (
+    "comparison",
+    "releases",
+    "prepare",
+    "compile",
+    "requirements",
+    "analysis",
+    "analysis_validation",
+    "disclosure",
+    "reconciliation",
+    "writer_relationship",
+)
+
+
+@pytest.fixture
+def composed_values():
+    from infrastructure_impact.application import switching_kev_reconciliation as reconciliation
+
+    ev, ff, kev, study = fixture()
+    compiled = api().build_report([], [], study)
+    return dict(
+        ev=ev,
+        ff=ff,
+        kev=kev,
+        study=study,
+        compiled=compiled,
+        inventory=reconciliation.build_inventory(
+            [], [], study_definition=study["definition"], publication=None, generated_at=AT
+        ),
+        proof=contracts._ValidatedEvidence(ev, publication=None, generated_at=AT),
+    )
+
+
+def consume_composed(which, values, proof=None, *, private=True, context=None):
+    from infrastructure_impact.application import switching_disclosure as disclosure
+    from infrastructure_impact.application import switching_kev_reconciliation as reconciliation
+    from infrastructure_impact.application import switching_releases as releases
+
+    ev, study = values["ev"], values["study"]
+    kwargs = dict(publication=None, generated_at=AT) if context is None else context
+    args = dict(evidence_proof=values["proof"] if proof is None else proof) if private else {}
+
+    def core(module, name):
+        return getattr(module, ("_" if private else "") + name)
+
+    if which == "comparison":
+        return core(contracts, "validate_comparison")(study, **args)
+    if which == "releases":
+        return core(releases, "build")(ev, [], observation_end=AT[:10], **kwargs, **args)
+    if which == "prepare":
+        header, constraints = core(upgrades, "prepare_report")(
+            ev, values["ff"], None, values["kev"], **kwargs, **args
+        )
+        return header, list(constraints)
+    if which == "compile":
+        return core(api(), "compile_requirements")(
+            ev, values["ff"], None, values["kev"], **kwargs, **args
+        )
+    if which == "requirements":
+        return core(api(), "validate_requirements")(
+            values["compiled"]["requirements"], evidence=ev, **args
+        )
+    if which == "analysis":
+        return core(api(), "build_report")([], [], study, **args)
+    if which == "analysis_validation":
+        return core(api(), "validate_report")(values["compiled"], evidence=ev, **args)
+    if which == "disclosure":
+        return core(disclosure, "build_report")([], study, evidence=ev, **kwargs, **args)
+    if which == "reconciliation":
+        return core(reconciliation, "build_report")(
+            values["kev"],
+            study["definition"],
+            ev,
+            values["inventory"],
+            evaluated_at=AT,
+            selection=study,
+            **kwargs,
+            **args,
+        )
+    return contracts._validate_comparison_evidence(study, ev, **kwargs, **args)
+
+
+@pytest.mark.parametrize("consumer", COMPOSED_CONSUMERS)
+def test_private_consumers_match_complete_public_bytes_and_allow_equal_copies(
+    composed_values, consumer
+):
+    values = composed_values
+    values["ev"] = copy.deepcopy(values["ev"])
+    values["study"] = copy.deepcopy(values["study"])
+    public = consume_composed(consumer, values, private=False)
+    private = consume_composed(consumer, values)
+    # prepare exposes its historical tuple; its private generator is consumed here.
+    assert contracts._json(list(public) if consumer == "prepare" else public) == contracts._json(
+        list(private) if consumer == "prepare" else private
+    )
+
+
+@pytest.mark.parametrize("consumer", COMPOSED_CONSUMERS)
+@pytest.mark.parametrize(
+    "mutation",
+    ["unused", "last", "middle_source", "coverage", "scores", "bool", "float", "python", "time"],
+)
+def test_private_consumers_reject_complete_value_drift(composed_values, consumer, mutation):
+    values = composed_values
+    # Mutate both actual frames so every consumer sees drift, regardless of aliasing.
+    for ev in (values["ev"], values["study"]["inputs"]["evidence"]):
+        if mutation == "unused":
+            ev["unused"] = "not selected"
+        elif mutation == "last":
+            ev["claims"][-1]["issues"].append("changed_after_mint")
+        elif mutation == "middle_source":
+            ev["claims"][len(ev["claims"]) // 2]["source"]["retrieved_at"] = "2025-01-01"
+        elif mutation == "coverage":
+            ev["coverage"].append({})
+        elif mutation == "scores":
+            ev["score_availability"] = {"unused": True}
+        elif mutation in ("bool", "float"):
+            ev["schema_version"] = True if mutation == "bool" else 1.0
+        elif mutation == "python":
+            ev["issues"] = tuple(ev["issues"])
+        else:
+            ev["generated_at"] = "2026-11-05T00:00:00Z"
+    with pytest.raises((ValueError, TypeError, ValidationError)):
+        consume_composed(consumer, values)
+
+
+@pytest.mark.parametrize("consumer", COMPOSED_CONSUMERS)
+@pytest.mark.parametrize("wrong", ["bool", "dict", "duck", "subclass"])
+def test_private_consumers_require_exact_capability_type(composed_values, consumer, wrong):
+    class Duck:
+        def require(self, *args, **kwargs):
+            pytest.fail("duck capability invoked")
+
+    class Subclass(contracts._ValidatedEvidence):
+        def require(self, *args, **kwargs):
+            pytest.fail("overridden capability invoked")
+
+    values = composed_values
+    proof = {"bool": True, "dict": {}, "duck": Duck(), "subclass": object.__new__(Subclass)}[wrong]
+    with pytest.raises(TypeError, match="fresh validated evidence capability"):
+        consume_composed(consumer, values, proof=proof)
+
+
+@pytest.mark.parametrize(
+    "consumer", ["comparison", "analysis", "disclosure", "reconciliation", "writer_relationship"]
+)
+@pytest.mark.parametrize("context", ["publication", "generated_at"])
+def test_private_consumers_check_actual_enclosing_context(composed_values, consumer, context):
+    values = composed_values
+    values["study"][context] = (
+        {"id": "b" * 32, "advisory_schema_version": 2}
+        if context == "publication"
+        else "2026-11-05T00:00:00Z"
+    )
+    with pytest.raises(ValueError):
+        consume_composed(consumer, values)
+
+
+@pytest.mark.parametrize("consumer", ["disclosure", "reconciliation", "writer_relationship"])
+@pytest.mark.parametrize("which", ["standalone", "embedded"])
+def test_private_consumers_guard_original_and_copied_evidence(composed_values, consumer, which):
+    values = composed_values
+    ev = values["ev"] if which == "standalone" else values["study"]["inputs"]["evidence"]
+    ev["schema_version"] = 1.0
+    with pytest.raises(ValueError, match="complete value/context"):
+        consume_composed(consumer, values)
+
+
+@pytest.mark.parametrize("mutation", ["rows", "sources", "selection", "definition", "kev"])
+def test_capability_does_not_authorize_comparison_output(composed_values, mutation):
+    values = composed_values
+    study = values["study"]
+    if mutation == "rows":
+        study["rows"][0]["counts"]["advisories"] += 1
+    elif mutation == "sources":
+        study["sources"] = []
+    elif mutation == "selection":
+        study["selection"]["effective_cve_ids"] = []
+    elif mutation == "definition":
+        study["definition"]["start_date"] = "2020-01-01"
+    else:
+        study["inputs"]["kev"]["generated_at"] = "2026-11-05T00:00:00Z"
+    with pytest.raises(ValueError):
+        consume_composed("comparison", values)
+
+
+def test_private_compile_detects_generator_mutation_without_per_yield_hash(
+    composed_values, monkeypatch
+):
+    values = composed_values
+    original = upgrades._constraints
+    calls = []
+    require = contracts._ValidatedEvidence.require
+
+    def counted(self, *args, **kwargs):
+        calls.append(1)
+        return require(self, *args, **kwargs)
+
+    monkeypatch.setattr(contracts._ValidatedEvidence, "require", counted)
+    consume_composed("compile", values)
+    assert len(calls) == 4  # prepare, before/after eager pack, requirements guard
+
+    def mutated(*args, **kwargs):
+        yield from original(*args, **kwargs)
+        values["ev"]["coverage"].append({})
+
+    monkeypatch.setattr(upgrades, "_constraints", mutated)
+    with pytest.raises(ValueError, match="complete value/context"):
+        consume_composed("compile", values)
+
+
+@pytest.mark.parametrize("release_present", [False, True])
+def test_complete_optional_projection_strict_bytes_equal_public_path(release_present):
+    from test_switching_release_history import frame
+
+    from infrastructure_impact.application import publication
+
+    data = composition_input()
+    if release_present:
+        data["research"]["release_input"] = [frame()]
+    expected = publication.public_projection(data, include_switching_analysis=True)
+    actual = publication.public_projection(
+        data, publication_format="v2", include_switching_analysis=True
+    )
+    assert contracts._json(actual) == contracts._json(expected)
+
+
+@pytest.mark.parametrize("consumer", COMPOSED_CONSUMERS)
+def test_default_consumers_repeat_full_semantics(composed_values, consumer, monkeypatch):
+    original = contracts._validate_evidence_semantics
+    calls = []
+
+    def counted(*args, **kwargs):
+        calls.append(1)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(contracts, "_validate_evidence_semantics", counted)
+    consume_composed(consumer, composed_values, private=False)
+    first = len(calls)
+    assert first >= 1
+    consume_composed(consumer, composed_values, private=False)
+    assert len(calls) == 2 * first
+
+
+@pytest.mark.parametrize("mutation", ["claim", "requirement", "disclosure"])
+def test_private_report_validator_rejects_rehashed_output_ownership(composed_values, mutation):
+    values = composed_values
+    bad = values["compiled"]
+    if mutation == "claim":
+        del bad["claims"][next(iter(bad["claims"]))]
+    elif mutation == "requirement":
+        bad["requirements"]["requirements"].pop()
+        child = bad["requirements"]
+        child["content_sha256"] = api()._hash(
+            {k: v for k, v in child.items() if k != "content_sha256"}
+        )
+    else:
+        bad["disclosure"]["pairs"][0]["source"]["source_locator"] = "foreign-owned-row"
+    bad["content_sha256"] = api()._hash({k: v for k, v in bad.items() if k != "content_sha256"})
+    with pytest.raises(ValueError):
+        consume_composed("analysis_validation", values)
+
+
+@pytest.mark.parametrize("which", ["standalone", "embedded"])
+def test_projection_final_guard_rejects_mutation_after_analysis(which, monkeypatch):
+    from infrastructure_impact.application import publication
+    from infrastructure_impact.application import switching_releases as releases
+
+    standalone = []
+    build_release = releases._build
+    build_analysis = api()._build_report
+
+    def remember(ev, *args, **kwargs):
+        standalone.append(ev)
+        return build_release(ev, *args, **kwargs)
+
+    def mutate(*args, **kwargs):
+        result = build_analysis(*args, **kwargs)
+        ev = standalone[0] if which == "standalone" else args[2]["inputs"]["evidence"]
+        ev["schema_version"] = 1.0
+        return result
+
+    monkeypatch.setattr(releases, "_build", remember)
+    monkeypatch.setattr(api(), "_build_report", mutate)
+    with pytest.raises(ValueError, match="complete value/context"):
+        publication.public_projection(
+            composition_input(), publication_format="v2", include_switching_analysis=True
+        )
+
+
+@pytest.mark.parametrize("which", ["standalone", "embedded"])
+def test_writer_final_guard_rejects_post_validation_mutation(tmp_path, which, monkeypatch):
+    from infrastructure_impact.application import publication, publication_v2
+
+    data = publication.public_projection(
+        composition_input(), publication_format="v2", include_switching_analysis=True
+    )
+    validate = api()._validate_report
+
+    def mutate(*args, **kwargs):
+        validate(*args, **kwargs)
+        ev = (
+            data["switching_evidence"]
+            if which == "standalone"
+            else data["switching_comparison"]["inputs"]["evidence"]
+        )
+        ev["schema_version"] = 1.0
+
+    monkeypatch.setattr(api(), "_validate_report", mutate)
+    monkeypatch.setattr(
+        publication_v2, "_write_bundle", lambda *args: pytest.fail("invalid data written")
+    )
+    with pytest.raises(ValueError, match="complete value/context"):
+        publication.write_bundle(tmp_path, data, publication_format="v2")
+
+
+@pytest.mark.parametrize("mutation", ["standalone", "embedded", "row", "child"])
+def test_writer_independent_boundary_rejects_input_and_output_tampering(
+    tmp_path, mutation, monkeypatch
+):
+    from infrastructure_impact.application import publication, publication_v2
+
+    data = publication.public_projection(
+        composition_input(), publication_format="v2", include_switching_analysis=True
+    )
+    if mutation == "standalone":
+        data["switching_evidence"]["schema_version"] = 1.0
+    elif mutation == "embedded":
+        data["switching_comparison"]["inputs"]["evidence"]["schema_version"] = 1.0
+    elif mutation == "row":
+        data["switching_comparison"]["rows"][0]["counts"]["advisories"] += 1
+    else:
+        bad = data["switching_analysis"]
+        del bad["claims"][next(iter(bad["claims"]))]
+        bad["content_sha256"] = api()._hash({k: v for k, v in bad.items() if k != "content_sha256"})
+    monkeypatch.setattr(
+        publication_v2, "_write_bundle", lambda *args: pytest.fail("invalid data written")
+    )
+    with pytest.raises(ValueError):
+        publication.write_bundle(tmp_path, data, publication_format="v2")
+
+
+@pytest.mark.parametrize("private", [False, True])
+def test_analysis_rejects_common_child_producer_corruption(composed_values, monkeypatch, private):
+    from infrastructure_impact.application import switching_disclosure as disclosure
+
+    original = disclosure._build_report
+
+    def corrupted(*args, **kwargs):
+        result = original(*args, **kwargs)
+        result["pairs"][0]["source"]["source_locator"] = "foreign-producer-source"
+        return result
+
+    # Inject into the actual shared producer, so both public and composed calls
+    # exercise final ownership validation after the child validated itself.
+    monkeypatch.setattr(disclosure, "_build_report", corrupted)
+    with pytest.raises(ValueError, match="ownership|source|membership"):
+        consume_composed("analysis", composed_values, private=private)
+
+
+def test_private_api_facts_compiler_keeps_all_scenarios_and_exact_bytes():
+    from test_first_fixed import api_frame, record
+
+    from infrastructure_impact.application import first_fixed
+
+    ev, _, kev = inputs([("2025-01-01", ["17.15.3"])])
+    raw = copy.deepcopy(ev)
+    raw["claims"][0]["version_expressions"] = ["17.15.1"]
+    ev = contracts.project(raw, publication=None, generated_at=AT)
+    claim = ev["claims"][0]
+    current = record(claim["advisory_id"], ["17.15.1"])
+    current["assessments"][0]["cve_id"] = claim["cve_id"]
+    ff = first_fixed.build_report(
+        [current],
+        api_results=[api_frame(claim["advisory_id"], "17.15.1", ["17.15.2"], [claim["cve_id"]])],
+        publication=None,
+        generated_at=AT,
+    )
+    assert ff["api_facts"]
+    public = api().compile_requirements(ev, ff, None, kev, publication=None, generated_at=AT)
+    private = api()._compile_requirements(
+        ev,
+        ff,
+        None,
+        kev,
+        publication=None,
+        generated_at=AT,
+        evidence_proof=contracts._ValidatedEvidence(ev, publication=None, generated_at=AT),
+    )
+    assert contracts._json(private) == contracts._json(public)
+    assert {r["scenario"] for r in private["requirements"]} == set(upgrades.SCENARIOS)
+    assert any(
+        p["kind"] == "publisher_api_first_fixed"
+        for r in private["requirements"]
+        for p in api()._expand(private, r)["proof"]
+    )
+
+
+def test_private_multivendor_reviewed_links_unknowns_and_model_unresolved_exact_bytes():
+    from test_switching_arista_fix_links import CASES
+    from test_switching_arista_fix_links import projected as arista
+    from test_switching_aruba_fix_links import projected as aruba
+
+    ev, _, kev, _ = fixture()
+    raw = dict(
+        claims=ev["claims"] + aruba()["claims"] + arista(CASES[0])["claims"], coverage=[], issues=[]
+    )
+    ev = contracts.project(raw, publication=None, generated_at=AT)
+    study = comparison.build_report(
+        ev,
+        kev,
+        definition=contracts.definition(),
+        publication=None,
+        generated_at=AT,
+        observation_end=AT[:10],
+    )
+    public = api().build_report([], [], study)
+    private = api()._build_report(
+        [],
+        [],
+        study,
+        evidence_proof=contracts._ValidatedEvidence(ev, publication=None, generated_at=AT),
+    )
+    assert contracts._json(private) == contracts._json(public)
+    assert {c["vendor"] for c in api().claim_facets(private)} == {"cisco", "aruba", "arista"}
+    assert any(c["initial_published_at"] is None for c in api().claim_facets(private))
+    assert any(c["scope_level"] == "os_family" for c in api().claim_facets(private))
+
+
+def test_private_capability_requires_actual_comparison_inputs(composed_values):
+    unavailable = comparison.select_report(None, evaluated_at=AT)
+    contracts.validate_comparison(unavailable)
+    with pytest.raises(ValueError, match="complete comparison inputs"):
+        contracts._validate_comparison_evidence(
+            unavailable,
+            composed_values["ev"],
+            publication=None,
+            generated_at=AT,
+            evidence_proof=composed_values["proof"],
+        )
+
+
+def test_private_reconciliation_rejects_different_complete_kev_catalogue():
+    from test_switching_kev_reconciliation import claim
+    from test_switching_kev_reconciliation import inputs as kev_inputs
+
+    from infrastructure_impact.application import kev
+    from infrastructure_impact.application import switching_kev_reconciliation as reconciliation
+
+    _, ev, inventory, study = kev_inputs([claim()])
+    at = study["generated_at"]
+    other = kev.build_report({}, [], publication=None, generated_at=at)
+    for proof_args in (
+        {},
+        dict(evidence_proof=contracts._ValidatedEvidence(ev, publication=None, generated_at=at)),
+    ):
+        with pytest.raises(ValueError, match="selection input identity"):
+            reconciliation._build_report(
+                other,
+                study["definition"],
+                ev,
+                inventory,
+                publication=None,
+                generated_at=at,
+                evaluated_at=at,
+                selection=study,
+                **proof_args,
+            )

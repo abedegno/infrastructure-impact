@@ -547,6 +547,20 @@ def build_report(
 
 
 def _project_comparison(inputs, kev, *, definition, publication, generated_at, observation_end):
+    evidence, report, _ = _project_comparison_with_proof(
+        inputs,
+        kev,
+        definition=definition,
+        publication=publication,
+        generated_at=generated_at,
+        observation_end=observation_end,
+    )
+    return evidence, report
+
+
+def _project_comparison_with_proof(
+    inputs, kev, *, definition, publication, generated_at, observation_end
+):
     """V2-only fresh projection/build composition; no proof crosses invocations."""
     evidence, proof = contracts._project_with_proof(
         inputs, publication=publication, generated_at=generated_at
@@ -561,7 +575,7 @@ def _project_comparison(inputs, kev, *, definition, publication, generated_at, o
         evidence_proof=proof,
     )
     proof.require(evidence, publication=publication, generated_at=generated_at)
-    return evidence, result
+    return evidence, result, proof
 
 
 def _build_report(
@@ -574,12 +588,12 @@ def _build_report(
     observation_end: str,
     evidence_proof=None,
 ) -> dict:
-    if evidence_proof is None:
-        contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
-    elif type(evidence_proof) is contracts._ValidatedEvidence:
-        evidence_proof.require(evidence, publication=publication, generated_at=generated_at)
-    else:
-        raise TypeError("Expected a fresh validated evidence capability")
+    contracts._require_evidence(
+        evidence,
+        publication=publication,
+        generated_at=generated_at,
+        evidence_proof=evidence_proof,
+    )
     contracts._validate_definition(definition)
     if evidence["definition_sha256"] != contracts.definition_sha256(definition):
         raise ValueError("Evidence and comparison definitions differ")
@@ -849,6 +863,13 @@ def _selected_sources(evidence, rows, *, build=None):
 
 def validate_semantics(report):
     """Detect tampered derived counts/identities without recursively selecting."""
+    return _validate_semantics(report)
+
+
+def _validate_semantics(report, *, evidence_proof=None):
+    """Detect tampered derived counts/identities without recursively selecting."""
+    if evidence_proof is not None and type(evidence_proof) is not contracts._ValidatedEvidence:
+        raise TypeError("Expected a fresh validated evidence capability")
     selection = report["selection"]
     if report["method"] != METHOD:
         raise ValueError("Comparison method does not match this reducer")
@@ -877,13 +898,25 @@ def validate_semantics(report):
             or selection["effective_cve_ids"]
         ):
             raise ValueError("Unavailable reports cannot synthesize observations")
+        if evidence_proof is not None:
+            raise ValueError("Evidence capability requires complete comparison inputs")
         return
     inputs = report["inputs"]
     if inputs is None:
         raise ValueError("Available comparison requires complete immutable inputs")
-    contracts._validate_evidence_semantics(
-        inputs["evidence"], publication=report["publication"], generated_at=report["generated_at"]
-    )
+    if evidence_proof is None:
+        contracts._validate_evidence_semantics(
+            inputs["evidence"],
+            publication=report["publication"],
+            generated_at=report["generated_at"],
+        )
+    else:
+        contracts._require_evidence(
+            inputs["evidence"],
+            publication=report["publication"],
+            generated_at=report["generated_at"],
+            evidence_proof=evidence_proof,
+        )
     if inputs["evidence"]["definition_sha256"] != selection["definition_sha256"]:
         raise ValueError("Evidence and selection definitions differ")
     kev_reports.validate_report(inputs["kev"])

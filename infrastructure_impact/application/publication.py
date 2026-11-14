@@ -170,6 +170,7 @@ def public_projection(
     from .switching_evidence import definition, project
 
     # Old publications predate this study; they remain readable without a study asset.
+    evidence_proof = None
     observation_end = day(data["generated_at"])
     if switching_input is not None and observation_end >= definition()["start_date"]:
         if has_score_input:
@@ -177,9 +178,14 @@ def public_projection(
                 score_input, switching_input, data["records"]
             )
         if publication_format == "v2":
-            from .switching_comparison import _project_comparison
+            from .switching_comparison import _project_comparison, _project_comparison_with_proof
 
-            data["switching_evidence"], data["switching_comparison"] = _project_comparison(
+            project_comparison = (
+                _project_comparison_with_proof
+                if include_switching_analysis
+                else _project_comparison
+            )
+            projected = project_comparison(
                 switching_input,
                 data["kev"],
                 definition=definition(),
@@ -187,6 +193,9 @@ def public_projection(
                 generated_at=data["generated_at"],
                 observation_end=observation_end,
             )
+            data["switching_evidence"], data["switching_comparison"] = projected[:2]
+            if include_switching_analysis:
+                evidence_proof = projected[2]
         else:
             data["switching_evidence"] = project(
                 switching_input,
@@ -202,18 +211,24 @@ def public_projection(
                 observation_end=observation_end,
             )
     if switching_input is not None and observation_end >= definition()["start_date"]:
-        from .switching_releases import build as build_releases
+        from .switching_releases import _build, build
 
+        build_releases = build if evidence_proof is None else _build
+        proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
         data["switching_release_history"] = build_releases(
             data["switching_evidence"],
             release_input,
             publication=data.get("publication"),
             generated_at=data["generated_at"],
             observation_end=observation_end,
+            **proof_args,
         )
     if include_switching_analysis and "switching_comparison" in data:
-        from .switching_analysis import build_report as build_analysis
+        from .switching_analysis import _build_report as build_analysis_private
+        from .switching_analysis import build_report as build_analysis_public
 
+        build_analysis = build_analysis_public if evidence_proof is None else build_analysis_private
+        proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
         analysis_study = data["switching_comparison"]
         if kev_input is not None and kev_input.get("retained") is not None:
             # Candidate discovery needs retained details outside current CVEs.
@@ -234,6 +249,20 @@ def public_projection(
             analysis_study,
             release_history=data.get("switching_release_history"),
             source_frame=analysis_input,
+            **proof_args,
+        )
+    if evidence_proof is not None:
+        # Reducers may consume independent copies; guard both actual frames.
+        evidence_proof.require(
+            data["switching_evidence"],
+            publication=data.get("publication"),
+            generated_at=data["generated_at"],
+        )
+        comparison = data["switching_comparison"]
+        evidence_proof.require(
+            comparison["inputs"]["evidence"],
+            publication=comparison["publication"],
+            generated_at=comparison["generated_at"],
         )
     data["research"].pop("browser_captures", None)
     data["research"]["fix_candidates"] = []
@@ -357,6 +386,16 @@ def write_bundle(destination, data, *, publication_format="v1"):
     from .switching_evidence import validate_comparison, validate_evidence
 
     row_sources = None
+    evidence_proof = None
+    if publication_format == "v2" and "switching_analysis" in data:
+        from .switching_evidence import _ValidatedEvidence
+
+        # Independent publication boundary: never borrow projection authority.
+        evidence_proof = _ValidatedEvidence(
+            data["switching_evidence"],
+            publication=data["publication"],
+            generated_at=data["generated_at"],
+        )
     if "switching_comparison" in data:
         if publication_format == "v2":
             from .switching_evidence import _validate_comparison_evidence
@@ -366,6 +405,7 @@ def write_bundle(destination, data, *, publication_format="v1"):
                 data["switching_evidence"],
                 publication=data["publication"],
                 generated_at=data["generated_at"],
+                evidence_proof=evidence_proof,
             )
             from .switching_row_sources import derive
 
@@ -408,8 +448,10 @@ def write_bundle(destination, data, *, publication_format="v1"):
             )
         validate_current_references(data["switching_release_history"], data["switching_evidence"])
     if "switching_analysis" in data:
-        from .switching_analysis import validate_report as validate_analysis
+        from .switching_analysis import _validate_report, validate_report
 
+        validate_analysis = validate_report if evidence_proof is None else _validate_report
+        proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
         validate_analysis(
             data["switching_analysis"],
             evidence=data["switching_evidence"],
@@ -417,8 +459,21 @@ def write_bundle(destination, data, *, publication_format="v1"):
             retained=[w["record"] for w in data.get("retained_advisories", [])],
             publication=data["publication"],
             generated_at=data["generated_at"],
+            **proof_args,
         )
     if publication_format == "v2":
+        if evidence_proof is not None:
+            evidence_proof.require(
+                data["switching_evidence"],
+                publication=data["publication"],
+                generated_at=data["generated_at"],
+            )
+            comparison = data["switching_comparison"]
+            evidence_proof.require(
+                comparison["inputs"]["evidence"],
+                publication=comparison["publication"],
+                generated_at=comparison["generated_at"],
+            )
         from .publication_v2 import _write_bundle as write_v2
 
         return write_v2(destination, data, row_sources)

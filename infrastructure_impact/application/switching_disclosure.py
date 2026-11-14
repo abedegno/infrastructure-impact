@@ -141,6 +141,28 @@ def build_report(
     policy_source=None,
     bundle_history=None,
 ):
+    return _build_report(
+        records,
+        study_selection,
+        evidence=evidence,
+        publication=publication,
+        generated_at=generated_at,
+        policy_source=policy_source,
+        bundle_history=bundle_history,
+    )
+
+
+def _build_report(
+    records,
+    study_selection,
+    *,
+    evidence,
+    publication,
+    generated_at,
+    policy_source=None,
+    bundle_history=None,
+    evidence_proof=None,
+):
     """Consume normalized *current* records plus full native selected comparison.
 
     ``evidence`` must equal the selection's retained same-generation envelope.
@@ -149,10 +171,14 @@ def build_report(
     generation or as freshly captured vendor bytes. It cannot add affectedness.
     ``policy_source`` is a caller-verified {url, sha256, retrieved_at} receipt.
     """
-    contracts.validate_evidence(evidence, publication=publication, generated_at=generated_at)
-    contracts.validate_comparison(
-        study_selection, publication=publication, generated_at=generated_at
+    contracts._require_evidence(
+        evidence, publication=publication, generated_at=generated_at, evidence_proof=evidence_proof
     )
+    validate = (
+        contracts.validate_comparison if evidence_proof is None else contracts._validate_comparison
+    )
+    proof_args = {} if evidence_proof is None else dict(evidence_proof=evidence_proof)
+    validate(study_selection, publication=publication, generated_at=generated_at, **proof_args)
     if (
         study_selection["inputs"] is None
         or study_selection["inputs"]["evidence"] != evidence

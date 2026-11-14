@@ -338,6 +338,15 @@ class _ValidatedEvidence:
             raise ValueError("Fresh evidence proof does not match complete value/context")
 
 
+def _require_evidence(report, *, publication, generated_at, evidence_proof=None):
+    if evidence_proof is None:
+        validate_evidence(report, publication=publication, generated_at=generated_at)
+    elif type(evidence_proof) is _ValidatedEvidence:
+        evidence_proof.require(report, publication=publication, generated_at=generated_at)
+    else:
+        raise TypeError("Expected a fresh validated evidence capability")
+
+
 def _validate_aruba_reviewed_link(claim, remediation, binding, claims):
     from ..adapters.switching import aruba_reviewed_fixed, aruba_reviewed_rule
 
@@ -708,12 +717,19 @@ def _validate_evidence_semantics(report, *, publication=_UNSET, generated_at=_UN
 
 def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET) -> None:
     """Validate strict descriptive rows and recompute derived identities/counts."""
+    return _validate_comparison(report, publication=publication, generated_at=generated_at)
+
+
+def _validate_comparison(report, *, publication=_UNSET, generated_at=_UNSET, evidence_proof=None):
     _validate(report, "switching-comparison-v1.json")
     _publication(report, publication, generated_at)
     _validate_definition(report["definition"])
-    from .switching_comparison import validate_semantics
+    from .switching_comparison import _validate_semantics, validate_semantics
 
-    validate_semantics(report)
+    if evidence_proof is None:
+        validate_semantics(report)
+    else:
+        _validate_semantics(report, evidence_proof=evidence_proof)
     for source in report["sources"]:
         # Comparison sources can contain any of the registered study vendors.
         if not any(allowed(source["source_url"], v) for v in ("cisco", "aruba", "arista")):
@@ -723,11 +739,28 @@ def validate_comparison(report: dict, *, publication=_UNSET, generated_at=_UNSET
                 _official(source["source_url"], reference=True)
 
 
-def _validate_comparison_evidence(report, standalone, *, publication, generated_at):
-    """Compose standalone evidence from this call's full comparison proof."""
-    validate_comparison(report, publication=publication, generated_at=generated_at)
-    if _fingerprint(standalone) != _fingerprint(report["inputs"]["evidence"]):
-        raise ValueError("Switching asset and comparison evidence disagree")
+def _validate_comparison_evidence(
+    report, standalone, *, publication, generated_at, evidence_proof=None
+):
+    """Validate comparison and complete strict standalone/embedded evidence identity."""
+    if evidence_proof is None:
+        validate_comparison(report, publication=publication, generated_at=generated_at)
+        if _fingerprint(standalone) != _fingerprint(report["inputs"]["evidence"]):
+            raise ValueError("Switching asset and comparison evidence disagree")
+    else:
+        _require_evidence(
+            standalone,
+            publication=publication,
+            generated_at=generated_at,
+            evidence_proof=evidence_proof,
+        )
+        # Both actual values must match the same complete strict capability.
+        _validate_comparison(
+            report,
+            publication=publication,
+            generated_at=generated_at,
+            evidence_proof=evidence_proof,
+        )
 
 
 def _latest_retained_source(db, vendor, url):
