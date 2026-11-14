@@ -231,44 +231,44 @@ only after those dependencies have been cached.
 
 ## Documentation
 
-| Guide                                                    | Contents                                                          |
-| -------------------------------------------------------- | ----------------------------------------------------------------- |
-| [Architecture](docs/ARCHITECTURE.md)                     | Modules, evidence flow, publication and trust boundaries          |
-| [Plugins](docs/PLUGINS.md)                               | Add a vendor and package an extension                             |
-| [Schema](docs/SCHEMA.md)                                 | Normalization semantics and invariants                            |
-| [Operations](docs/OPERATIONS.md)                         | Configuration, deployment, monitoring and recovery                |
-| [Exact target import](docs/target-import.md) | Preview, isolated staging, durable local captures and opt-in v2 root export |
-| [Customer comparison assessment](docs/research/2026-11-11-customer-comparison-assessment.md) | What observed CVE volume can establish, alternative explanations and patching limits |
-| [11 November evidence audit](docs/research/2026-11-11-comparison-evidence-audit.md) | Current source errors, partial archive inventories, scoped corrections and validation distinctions |
-| [10 November comparison brief](docs/research/2026-11-10-vendor-comparison-brief.md) | Earlier dated Cisco/Aruba/Arista observations and disclosure context |
-| [Coverage audit and review packet](docs/research/2026-11-10-comparison-evidence/README.md) | Source gaps, yearly observed inventory, provenance and blank human review submission |
-| [Published switching results](docs/research/2026-11-09-switching-activation-results.md) | Dated counts, yearly/cutoff views and evidence limits |
-| [Methodology](docs/METHODOLOGY.md)                       | Comparison bias, evidence standards and disclosure research       |
-| [Contributing](CONTRIBUTING.md)                          | Changes, regression tests and review expectations                 |
-| [Security](SECURITY.md)                                  | Reporting vulnerabilities in this project                         |
-| [SBOM observations](docs/SBOM_OBSERVATIONS.md) | Private SPDX/CycloneDX field normalization and provenance |
-| [Build inventory](docs/BUILD_INVENTORY.md) | Private evidence proposals, byte checks and review boundaries |
-| [Product cohorts](docs/PRODUCT_COHORTS.md) | Product/build scope and denominator gaps |
-| [Source access](docs/SOURCE_ACCESS.md) | Runner checks for reviewed source alternatives |
-| [Disclosure research](docs/DISCLOSURE_RESEARCH.md) | Evidence gates and investigation queue |
-| [CVE research dossiers](docs/RESEARCH_DOSSIERS.md) | Selected source-bound comparisons, chronology and JSON downloads |
-| [Releasing](docs/RELEASING.md)                           | Prepare a clean public source tree and release                    |
-| [Capacity](docs/CAPACITY.md) | Storage profiling and explicit bounded recovery profiles |
-| [Scheduled reliability](docs/SCHEDULE_RELIABILITY.md) | Actual scheduled-run observations and missing-trigger checks |
-| [Hosted service](docs/HOSTED_SERVICE.md)                 | Public deployment, monitoring and private backups                 |
-| [Source audit](docs/SOURCE_AUDIT.md)                     | Source scopes, fingerprints and unresolved collection limits      |
-| [Source choices](docs/SOURCE_SELECTION.md)               | Reviewed differences between HTML and structured representations  |
-| [Archive collection](docs/ARCHIVE_COLLECTION.md)         | Bounded queues, retry policy and retained-capture parser recovery |
-| [Retrieval history](docs/SOURCE_OBSERVATIONS.md)         | Unchanged checks, cache validation and content revisions          |
-| [Browser evidence](docs/BROWSER_CAPTURE.md)              | Private browser-assisted capture and completeness checks          |
-| [Static delivery](docs/STATIC_DELIVERY.md)               | Verified cohort parts and full public archive downloads           |
-| [Vendor gaps](docs/VENDOR_GAPS.md)                       | Collection, archive and source-review gaps                        |
-| [Scorecards](docs/SCORECARDS.md)                         | Evidence counts and dated revision timelines                      |
-| [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md) | Shared periods, exact product scopes and suppression rules        |
-| [Component studies](docs/COMPONENT_STUDIES.md)           | Frozen enrollment, reference drift and per-cell evidence          |
-| [Research foundations](docs/RESEARCH_FOUNDATIONS.md)     | Product families, readiness and alternative fix explanations      |
-| [Case files](docs/CASE_FILES.md)                         | Source-linked disclosure questions and counter-evidence           |
-| [Roadmap](docs/ROADMAP.md)                               | Current boundaries and planned capabilities                       |
+| Guide                                                                                        | Contents                                                                                           |
+| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [Architecture](docs/ARCHITECTURE.md)                                                         | Modules, evidence flow, publication and trust boundaries                                           |
+| [Plugins](docs/PLUGINS.md)                                                                   | Add a vendor and package an extension                                                              |
+| [Schema](docs/SCHEMA.md)                                                                     | Normalization semantics and invariants                                                             |
+| [Operations](docs/OPERATIONS.md)                                                             | Configuration, deployment, monitoring and recovery                                                 |
+| [Exact target import](docs/target-import.md)                                                 | Preview, isolated staging, durable local captures and opt-in v2 root export                        |
+| [Customer comparison assessment](docs/research/2026-11-11-customer-comparison-assessment.md) | What observed CVE volume can establish, alternative explanations and patching limits               |
+| [11 November evidence audit](docs/research/2026-11-11-comparison-evidence-audit.md)          | Current source errors, partial archive inventories, scoped corrections and validation distinctions |
+| [10 November comparison brief](docs/research/2026-11-10-vendor-comparison-brief.md)          | Earlier dated Cisco/Aruba/Arista observations and disclosure context                               |
+| [Coverage audit and review packet](docs/research/2026-11-10-comparison-evidence/README.md)   | Source gaps, yearly observed inventory, provenance and blank human review submission               |
+| [Published switching results](docs/research/2026-11-09-switching-activation-results.md)      | Dated counts, yearly/cutoff views and evidence limits                                              |
+| [Methodology](docs/METHODOLOGY.md)                                                           | Comparison bias, evidence standards and disclosure research                                        |
+| [Contributing](CONTRIBUTING.md)                                                              | Changes, regression tests and review expectations                                                  |
+| [Security](SECURITY.md)                                                                      | Reporting vulnerabilities in this project                                                          |
+| [SBOM observations](docs/SBOM_OBSERVATIONS.md)                                               | Private SPDX/CycloneDX field normalization and provenance                                          |
+| [Build inventory](docs/BUILD_INVENTORY.md)                                                   | Private evidence proposals, byte checks and review boundaries                                      |
+| [Product cohorts](docs/PRODUCT_COHORTS.md)                                                   | Product/build scope and denominator gaps                                                           |
+| [Source access](docs/SOURCE_ACCESS.md)                                                       | Runner checks for reviewed source alternatives                                                     |
+| [Disclosure research](docs/DISCLOSURE_RESEARCH.md)                                           | Evidence gates and investigation queue                                                             |
+| [CVE research dossiers](docs/RESEARCH_DOSSIERS.md)                                           | Selected source-bound comparisons, chronology and JSON downloads                                   |
+| [Releasing](docs/RELEASING.md)                                                               | Prepare a clean public source tree and release                                                     |
+| [Capacity](docs/CAPACITY.md)                                                                 | Storage profiling and explicit bounded recovery profiles                                           |
+| [Scheduled reliability](docs/SCHEDULE_RELIABILITY.md)                                        | Actual scheduled-run observations and missing-trigger checks                                       |
+| [Hosted service](docs/HOSTED_SERVICE.md)                                                     | Public deployment, monitoring and private backups                                                  |
+| [Source audit](docs/SOURCE_AUDIT.md)                                                         | Source scopes, fingerprints and unresolved collection limits                                       |
+| [Source choices](docs/SOURCE_SELECTION.md)                                                   | Reviewed differences between HTML and structured representations                                   |
+| [Archive collection](docs/ARCHIVE_COLLECTION.md)                                             | Bounded queues, retry policy and retained-capture parser recovery                                  |
+| [Retrieval history](docs/SOURCE_OBSERVATIONS.md)                                             | Unchanged checks, cache validation and content revisions                                           |
+| [Browser evidence](docs/BROWSER_CAPTURE.md)                                                  | Private browser-assisted capture and completeness checks                                           |
+| [Static delivery](docs/STATIC_DELIVERY.md)                                                   | Verified cohort parts and full public archive downloads                                            |
+| [Vendor gaps](docs/VENDOR_GAPS.md)                                                           | Collection, archive and source-review gaps                                                         |
+| [Scorecards](docs/SCORECARDS.md)                                                             | Evidence counts and dated revision timelines                                                       |
+| [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md)                                     | Shared periods, exact product scopes and suppression rules                                         |
+| [Component studies](docs/COMPONENT_STUDIES.md)                                               | Frozen enrollment, reference drift and per-cell evidence                                           |
+| [Research foundations](docs/RESEARCH_FOUNDATIONS.md)                                         | Product families, readiness and alternative fix explanations                                       |
+| [Case files](docs/CASE_FILES.md)                                                             | Source-linked disclosure questions and counter-evidence                                            |
+| [Roadmap](docs/ROADMAP.md)                                                                   | Current boundaries and planned capabilities                                                        |
 
 ## License and data
 
@@ -281,3 +281,11 @@ are excluded from the public source distribution.
 
 This is an independent project; the named vendors do not endorse it. Consult the
 linked primary advisory before taking operational action.
+
+Optional upgrade estimates and disclosure context are available through the
+Comparison view's **Load optional analysis** button after an explicit local
+`--include-switching-analysis` export. See [local commands, API/static semantics,
+methods and verification](docs/research/2026-11-14-switching-analysis-delivery.md). The default publication and hosted workflow stay
+unchanged. Annual unknowns remain unknown; supported partial steps are not reliable
+bounds, retrospective KEV is not historical exposure, and per-model counts overlap.
+Independent human review remains pending.

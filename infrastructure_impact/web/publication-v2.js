@@ -1586,6 +1586,33 @@
       }
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
+    let analysisPromise;
+    async function switchingAnalysis(study, options = {}) {
+      window.InfrastructureSwitchingContracts.identity(study, catalog);
+      if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
+      if (!analysisPromise)
+        analysisPromise = (async () => {
+          const name = 'switching-analysis.json';
+          if (!Object.hasOwn(catalog.roots, name)) return null;
+          const identity = {
+            publication: await field(name, ['publication'], options),
+            generated_at: await field(name, ['generated_at'], options),
+          };
+          window.InfrastructureSwitchingContracts.identity(identity, catalog);
+          const report = await materializeRoot(name, {
+            ...options,
+            max_bytes: Math.min(options.max_bytes ?? 128000000, 128000000),
+          });
+          return window.InfrastructureSwitchingAnalysis.validate(report, catalog);
+        })().catch((error) => {
+          analysisPromise = null;
+          throw error;
+        });
+      const report = await options.operation.run(analysisPromise);
+      const selected = window.InfrastructureSwitchingAnalysis.select(report, study);
+      json.measure(selected, null, '', Math.min(options.max_bytes ?? 128000000, 128000000));
+      return selected;
+    }
     let releaseHistoryPromise;
     async function switchingReleaseHistory(study, options = {}) {
       window.InfrastructureSwitchingContracts.identity(study, catalog);
@@ -1625,6 +1652,7 @@
       runtimeSnapshot,
       switchingOverview,
       switchingReleaseHistory,
+      switchingAnalysis,
       switchingSelection,
       switchingClaims,
       switchingDetails,

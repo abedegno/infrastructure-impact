@@ -126,13 +126,13 @@ Direct public captures were restricted to five successful Cisco samples and one
 failed Aruba lead. Local staging receipts retain retrieval times, byte sizes and
 SHA-256 values; these are source observations, not a full historical run.
 
-| Category | Official source and observation | Remaining limit |
-| --- | --- | --- |
-| Catalyst-specific | [DHCP/endpoint analytics advisory](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z), initial 2024-03-27, Final 1.0; explicitly names Catalyst 9000 with feature conditions | Does not identify every target chassis/model; fixed software uses a checker rather than a complete static fixed-version table |
-| Conditional family statement | [OpenSSH advisory](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024), initial 2024-07-02, updated 2024-09-13, HTML 1.16; conditional IOS XE/NETCONF row and release 17.15.1 | Family statement cannot automatically qualify named Catalyst models |
-| Scheduled bundle | [ERP-75056](https://sec.cloudapps.cisco.com/security/center/viewErp.x?alertId=ERP-75056), 2024-03-27, 1.0; explicit membership table and 13 advisories covering 14 vulnerabilities | Membership derives from this page, never same-day inference |
-| Version branches | [Advertised Catalyst CSAF](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z/csaf/cisco-sa-dhcp-dos-T3CXPO9z.json), matching identity/date, 1.0.0; 13 version branches | Version leaves require later product-ID-aware parsing; no automatic model/version matching |
-| Alternate representation | [Advertised OpenSSH CSAF](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json), matching identity/date, 1.16.0 | Contains three SD-WAN families and generic remediation, omitting the HTML's IOS XE row; representations cannot be assumed equivalent |
+| Category                     | Official source and observation                                                                                                                                                                                                     | Remaining limit                                                                                                                      |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Catalyst-specific            | [DHCP/endpoint analytics advisory](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z), initial 2024-03-27, Final 1.0; explicitly names Catalyst 9000 with feature conditions | Does not identify every target chassis/model; fixed software uses a checker rather than a complete static fixed-version table        |
+| Conditional family statement | [OpenSSH advisory](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024), initial 2024-07-02, updated 2024-09-13, HTML 1.16; conditional IOS XE/NETCONF row and release 17.15.1  | Family statement cannot automatically qualify named Catalyst models                                                                  |
+| Scheduled bundle             | [ERP-75056](https://sec.cloudapps.cisco.com/security/center/viewErp.x?alertId=ERP-75056), 2024-03-27, 1.0; explicit membership table and 13 advisories covering 14 vulnerabilities                                                  | Membership derives from this page, never same-day inference                                                                          |
+| Version branches             | [Advertised Catalyst CSAF](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-dhcp-dos-T3CXPO9z/csaf/cisco-sa-dhcp-dos-T3CXPO9z.json), matching identity/date, 1.0.0; 13 version branches       | Version leaves require later product-ID-aware parsing; no automatic model/version matching                                           |
+| Alternate representation     | [Advertised OpenSSH CSAF](https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024/csaf/cisco-sa-openssh-rce-2024.json), matching identity/date, 1.16.0                              | Contains three SD-WAN families and generic remediation, omitting the HTML's IOS XE row; representations cannot be assumed equivalent |
 
 The [known Aruba index](https://csaf.arubanetworking.hpe.com/index.txt) currently
 starts in 2022. Exhausting it leaves `pre_2022_history_not_enumerated` visible.
@@ -237,8 +237,7 @@ Native reader `GET /api/v1/switching-comparison` accepts optional single nonblan
 `vendor=cisco|aruba|arista`, `scope=os_family|model_qualified`,
 `window=all|pre|post|undated|YYYY`, canonical comma-separated `cves`, and
 `format=json|csv`. Defaults are the full study/all vendors/OS-family/JSON summary.
-Invalid, duplicate or unknown parameters return 400; unavailable old assets return
-503. The endpoint reads immutable publication files without collection or vault access.
+Invalid, duplicate or unknown parameters return 400; unavailable old assets return 503. The endpoint reads immutable publication files without collection or vault access.
 
 GitHub Pages is static hosting, not a native REST server. Its installed browser
 fetch adapter provides the same selection/summary/CSV semantics to the reader from
@@ -304,7 +303,6 @@ CVE count was zero in that stage: no supported model observations, not no exposu
 Partial coverage and unknown expected advisory totals leave the platform comparison
 open. Comparison periods use vendor initial publication day, separate from registry
 discovery windows and CVE identifier years; 2026 remains partial.
-
 
 ## Release and monitor checks
 
@@ -537,7 +535,6 @@ uses existing stored selections, and publication rebuilds context from current
 inputs rather than trusting supplied annotations. Omitted selections preserve the
 previous report shape. Blind review packets do not include this context.
 
-
 ### Reviewed fix-attribution expansion
 
 The [11 November coverage audit](research/2026-11-11-comparison-evidence-audit.md)
@@ -575,3 +572,11 @@ still prevents an affected-scope fix link or publication event; its complete fix
 list may supply fixed-only context. Evidence bounds and truncation guards are
 unchanged. The report includes exact receipts, exclusions and required retained-byte
 hosted preview/apply checks; this branch does not activate a changed normalizer.
+
+Optional upgrade estimates and disclosure context are available through the
+Comparison view's **Load optional analysis** button after an explicit local
+`--include-switching-analysis` export. See [local commands, API/static semantics,
+methods and verification](research/2026-11-14-switching-analysis-delivery.md). The default publication and hosted workflow stay
+unchanged. Annual unknowns remain unknown; supported partial steps are not reliable
+bounds, retrospective KEV is not historical exposure, and per-model counts overlap.
+Independent human review remains pending.

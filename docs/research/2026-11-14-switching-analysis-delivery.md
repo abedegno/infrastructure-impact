@@ -14,7 +14,8 @@ home. Existing hosted commands and defaults are unchanged.
 
 ```sh
 PYTHONPATH="$PWD" IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.json" \
-  IMPACT_HOME=/tmp/impact-analysis-local .venv/bin/python -m infrastructure_impact \
+  IMPACT_HOME=/tmp/impact-analysis-local IMPACT_DATABASE=/tmp/impact-analysis-local/public.sqlite \
+  .venv/bin/python -m infrastructure_impact.cli \
   snapshot --publication-format v2 --include-switching-analysis \
   --switching-analysis-input /tmp/switching-analysis-input.json --output /tmp/switching-public
 ```
@@ -133,7 +134,58 @@ section row as JSON. Upgrade CSV preserves the native row columns. Unknown
 scalar cells are blank; both use the shared spreadsheet-safe UTF-8 byte-bounded
 writer. OpenAPI points to the exact selected schema definitions.
 
-Portable JS selection, browser controls, the full known-source measurement and
-final human review belong to the subsequent delivery task. They must use these
-compact facets and parity vectors, without hydrating the full claim catalogue or
-performing vendor parsing/inference in JavaScript.
+The Comparison view offers an explicit **Load optional analysis** button. Neither
+bootstrap nor the default study loads this root. Accepted study vendor/family,
+model-qualified scope, CVEs and window select compiled ownership before the walk.
+The additional family/train/year/policy/scenario controls filter displayed matrix
+rows; exports retain the entire accepted study selection and all scenario axes.
+JSON, typed analysis CSV and upgrade CSV use the same accepted object. Async
+selection changes and publication changes cannot replace it with a stale result.
+Missing optional roots display unavailable; present malformed roots reject.
+
+Static Pages supplies this browser adapter and downloadable exports, not a
+persistent REST service. Native `/api/v1/switching-analysis` and
+`/api/v1/switching-upgrades` retain their strict vendor/scope/window/cves/format
+contract. No new endpoint train/scenario parameters are implied by display controls.
+
+Nested CSV JSON uses exact binary64 decimal tokens (including `9.0` as `9`)
+without changing numeric values. Fractional tokens may be longer than ordinary
+report JSON; both runtimes reuse the canonical numeric identity convention. Regenerate/check the authored native-oracle vectors with:
+
+```sh
+PYTHONPATH="$PWD:$PWD/tests" IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.json" \
+  IMPACT_HOME=/tmp/impact-analysis-check .venv/bin/python \
+  checks/generate_switching_analysis_vectors.py --check
+node tests/test_switching_analysis.js
+node tests/test_switching_analysis_delivery.js
+```
+
+The generator checks each selected upgrade DTO against the detailed offline
+native oracle before writing exact JSON and both CSV expectations. Numeric tests
+include integral/fractional CVSS, signed zero and a calibration rate. Browser code
+never parses vendor documents, infers fixes, or hydrates the full claim catalogue.
+
+Supplementary typed source checks have an explicit offline command. They augment
+claim extraction checks and keep independent human review pending:
+
+```sh
+PYTHONPATH="$PWD" IMPACT_SOURCES="$PWD/infrastructure_impact/resources/sources.json" \
+  IMPACT_HOME=/tmp/impact-analysis-check .venv/bin/python \
+  -m infrastructure_impact.application.switching_source_validation \
+  --records-input /tmp/public-current-evidence.json \
+  --analysis /tmp/compiled-analysis.json --chronology /tmp/chronology-repair.json \
+  --output /tmp/switching-source-validation.json
+```
+
+This reads only the supplied normalized public inputs and writes computation time
+and SHA-256 receipts. Checks cover pinned hardening metadata/stated targets,
+SA137 family-versus-model/KEV semantics, and three pinned chronology cases.
+Unavailable sources stay outside evaluated denominators; Aruba has no pinned
+supplementary case and is explicitly unavailable, not a zero-error success.
+No source acquisition or default database is opened by this command.
+
+The local source frame does not configure credentials. If acknowledged official
+API acquisitions are available, supply their native receipt-bound frames through
+`api_results`; otherwise leave it empty. Keep any collection credentials in the
+collector's documented environment outside the exported JSON. This feature adds
+no secret mapping, new API client, hosted activation, schedule or deployment.

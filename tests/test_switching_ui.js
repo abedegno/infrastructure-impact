@@ -121,6 +121,11 @@ console.log(
   'Synthetic switching reader rendering, safety, controls, missingness and stale KEV passed.',
 );
 
+vm.runInContext(
+  fs.readFileSync('infrastructure_impact/web/switching-analysis.js', 'utf8'),
+  context,
+);
+
 // Actual app request owner: delayed successes/failures cannot replace accepted controls/exports.
 (async () => {
   const nodes = new Map();
@@ -129,6 +134,9 @@ console.log(
       nodes.set(id, {
         value: id === '#cohort' ? 'benchmark' : '',
         innerHTML: '',
+        insertAdjacentHTML(position, html) {
+          this.innerHTML += html;
+        },
         textContent: '',
         addEventListener() {},
         setAttribute() {},
@@ -543,5 +551,6 @@ for (const phrase of [
   'publications without grouping evidence',
   'does not prove independent patch cycles',
   'Report-wide limitations',
-]) assert(html.includes(phrase), phrase);
+])
+  assert(html.includes(phrase), phrase);
 assert(!html.includes(' unbundled</small>'));

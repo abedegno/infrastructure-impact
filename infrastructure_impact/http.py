@@ -657,6 +657,7 @@ class Application:
             "/switching.js",
             "/switching-view.js",
             "/customer-comparison.js",
+            "/switching-analysis.js",
             "/switching-evidence.json",
             "/switching-comparison.json",
             "/switching-release-history.json",

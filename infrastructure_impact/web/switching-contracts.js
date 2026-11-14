@@ -34,15 +34,37 @@
     throw Error('Invalid switching contract: ' + message);
   };
   function sha256(text) {
-    // Synchronous SHA-256 keeps pure selection synchronous; URI encoding rejects lone surrogates.
-    const bytes = Array.from(encodeURIComponent(text).matchAll(/%([0-9A-F]{2})|([^%])/g), (m) =>
-      m[1] ? parseInt(m[1], 16) : m[2].charCodeAt(0),
-    );
-    const length = bytes.length,
-      words = [];
-    bytes.push(128);
-    while (bytes.length % 64 !== 56) bytes.push(0);
-    for (let i = 7; i >= 0; i--) bytes.push(Math.floor((length * 8) / 2 ** (i * 8)) & 255);
+    // Keep synchronous identity semantics without a per-byte Number array.
+    // A bounded UTF-8 byte buffer is important for optional large fact roots.
+    if (/[\uD800-\uDFFF]/u.test(text)) fail('invalid fingerprint Unicode');
+    let length = 0;
+    for (const ch of text) {
+      const n = ch.codePointAt(0);
+      length += n < 128 ? 1 : n < 2048 ? 2 : n < 65536 ? 3 : 4;
+    }
+    const bytes = new Uint8Array(Math.ceil((length + 9) / 64) * 64),
+      words = new Int32Array(64);
+    let at = 0;
+    for (const ch of text) {
+      const n = ch.codePointAt(0);
+      if (n < 128) bytes[at++] = n;
+      else if (n < 2048) {
+        bytes[at++] = 192 | (n >> 6);
+        bytes[at++] = 128 | (n & 63);
+      } else if (n < 65536) {
+        bytes[at++] = 224 | (n >> 12);
+        bytes[at++] = 128 | ((n >> 6) & 63);
+        bytes[at++] = 128 | (n & 63);
+      } else {
+        bytes[at++] = 240 | (n >> 18);
+        bytes[at++] = 128 | ((n >> 12) & 63);
+        bytes[at++] = 128 | ((n >> 6) & 63);
+        bytes[at++] = 128 | (n & 63);
+      }
+    }
+    bytes[length] = 128;
+    for (let i = 0; i < 8; i++)
+      bytes[bytes.length - 1 - i] = Math.floor((length * 8) / 2 ** (i * 8)) & 255;
     const constants = [
       0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
       0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
@@ -968,6 +990,7 @@
     official,
     envelope,
     fingerprint,
+    numberToken,
     full,
     summary,
     header,

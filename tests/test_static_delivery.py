@@ -617,6 +617,7 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
         "switching.js",
         "switching-view.js",
         "customer-comparison.js",
+        "switching-analysis.js",
         "snapshot.js",
         "app.js",
     ]

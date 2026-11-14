@@ -313,6 +313,33 @@ def project_native(report, study_selection):
     return select_upgrades(compiled, study_selection)
 
 
+def _csv_json(value):
+    """Exact binary64 JSON numbers match the existing browser identity tokens.
+
+    Only nested analysis CSV cells use this spelling; numeric values, source
+    receipts and ordinary report JSON remain untouched. Object order is retained.
+    """
+    from decimal import Decimal
+
+    if isinstance(value, dict):
+        return (
+            "{"
+            + ",".join(
+                json.dumps(k, ensure_ascii=False) + ":" + _csv_json(v) for k, v in value.items()
+            )
+            + "}"
+        )
+    if isinstance(value, list):
+        return "[" + ",".join(_csv_json(v) for v in value) + "]"
+    if type(value) is float:
+        return (
+            str(int(value))
+            if value.is_integer()
+            else format(Decimal.from_float(value), "f").rstrip("0")
+        )
+    return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+
+
 def csv_export(report, *, max_bytes=codec.MAX_SELECTED):
     from ..exports import csv_table
 
@@ -321,12 +348,7 @@ def csv_export(report, *, max_bytes=codec.MAX_SELECTED):
 
     def rows():
         for row in report["rows"]:
-            yield {
-                k: json.dumps(v, ensure_ascii=False, separators=(",", ":"))
-                if isinstance(v, (list, dict))
-                else v
-                for k, v in row.items()
-            }
+            yield {k: _csv_json(v) if isinstance(v, (list, dict)) else v for k, v in row.items()}
 
     return csv_table(fields, rows, max_bytes=max_bytes)
 
@@ -891,7 +913,7 @@ def analysis_csv_export(report, *, max_bytes=codec.MAX_SELECTED):
                 yield dict(
                     row_type=kind,
                     **{k: value.get(k) for k in fields[1:-1]},
-                    payload=json.dumps(value, ensure_ascii=False, separators=(",", ":")),
+                    payload=_csv_json(value),
                 )
 
     return csv_table(fields, rows, max_bytes=max_bytes)
