@@ -1,23 +1,23 @@
 {
-  "archive": "vault-20261114T185424800780Z.sqlite3.xz.fernet",
-  "sha256": "48d17ea0d9ae3c5394ded81a05c96422f0a321ce558aa73a9fd399bdbbf888c1",
-  "checked_at": "2026-11-14T18:56:53.182465+00:00",
-  "source_commit": "4e982748b2b45c9e2ffbeb522103645af4c39fa2",
+  "archive": "vault-20261114T211011362798Z.sqlite3.xz.fernet",
+  "sha256": "7384c1bf1ea4a489f96849d0de77c5ed44b43f06edd0ba41f1581e9b03a3849c",
+  "checked_at": "2026-11-14T21:11:39.896450+00:00",
+  "source_commit": "eb73e3abebd7d910c1d8d9f9f38b0a1150889e6c",
   "private": true,
-  "database_bytes": 1154068480,
+  "database_bytes": 1154183168,
   "vault_limit_bytes": 2147483648,
   "storage_profile": {
     "schema_version": 1,
-    "measured_at": "2026-11-14T18:54:29.869605+00:00",
-    "database_page_bytes": 1154068480,
+    "measured_at": "2026-11-14T21:10:18.174440+00:00",
+    "database_page_bytes": 1154183168,
     "free_page_bytes": 0,
     "tables": [
       {
         "table": "evidence",
-        "rows": 5996,
-        "tracked_payload_bytes": 584834629,
+        "rows": 5998,
+        "tracked_payload_bytes": 584950681,
         "columns": {
-          "raw": 584834629
+          "raw": 584950681
         }
       },
       {
@@ -62,10 +62,10 @@
       },
       {
         "table": "pipeline_runs",
-        "rows": 83,
-        "tracked_payload_bytes": 9475,
+        "rows": 84,
+        "tracked_payload_bytes": 9577,
         "columns": {
-          "details": 9475
+          "details": 9577
         }
       },
       {
@@ -79,8 +79,8 @@
     ],
     "method": "Read-only aggregate accounting of fixed application payload columns. Logical byte totals count retained repetitions and exclude indexes, row overhead and unlisted columns; they are not physical per-table sizes. Source bodies, URLs, notes and review values are not returned. No snapshots, revisions or recovery history are removed."
   },
-  "compressed_bytes": 33677292,
-  "archive_bytes": 44903140,
+  "compressed_bytes": 33680960,
+  "archive_bytes": 44908044,
   "retention": {
     "legacy_git_copies_preserved": true,
     "remote_assets": "append_only",
@@ -92,8 +92,8 @@
   "remote": {
     "repository": "abedegno/infrastructure-impact",
     "release_id": 445506983,
-    "asset_id": 748461001,
+    "asset_id": 748787998,
     "tag": "collector-recovery-2026-11-14"
   },
-  "remote_readback_verified_at": "2026-11-14T18:57:04.722004+00:00"
+  "remote_readback_verified_at": "2026-11-14T21:11:47.121368+00:00"
 }
