@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed_at": "2026-11-04",
+  "reviewed_at": "2026-11-14",
   "review_method": "Automated source-led byte and local-scope review; independent human review pending",
   "sample_strategy": "Purposive local boundaries; five or more cases per vendor, not five documents or a statistical accuracy estimate. Source-only Cisco bundle/HTML replay is a separate contract test. Unavailable categories remain incomplete.",
   "cases": [
@@ -26,10 +26,7 @@
       "expected_status": "affected",
       "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-238692",
       "rationale": "Explicit product identity in structured representation; not the missing HTML IOS XE NETCONF statement.",
-      "forbidden_statuses": [
-        "fixed",
-        "unaffected"
-      ]
+      "forbidden_statuses": ["fixed", "unaffected"]
     },
     {
       "id": "switching-cisco-3",
@@ -41,10 +38,7 @@
       "expected_status": "affected",
       "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-271450",
       "rationale": "Explicit product identity in structured representation; not the missing HTML IOS XE NETCONF statement.",
-      "forbidden_statuses": [
-        "fixed",
-        "unaffected"
-      ]
+      "forbidden_statuses": ["fixed", "unaffected"]
     },
     {
       "id": "switching-cisco-4",
@@ -56,10 +50,7 @@
       "expected_status": "affected",
       "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree: CSAFPID-292518",
       "rationale": "Explicit product identity in structured representation; not the missing HTML IOS XE NETCONF statement.",
-      "forbidden_statuses": [
-        "fixed",
-        "unaffected"
-      ]
+      "forbidden_statuses": ["fixed", "unaffected"]
     },
     {
       "id": "switching-cisco-5",
@@ -71,12 +62,7 @@
       "expected_status": "affected",
       "source_locator": "/product_tree/branches/0/branches/0/branches/0/branches/0; /vulnerabilities/0/product_status/known_affected",
       "rationale": "Nested service-pack leaf retains parent version 17.1 and IOS XE family; not an inferred Catalyst model.",
-      "claim_context": [
-        [
-          "product_version",
-          "17.1"
-        ]
-      ]
+      "claim_context": [["product_version", "17.1"]]
     },
     {
       "id": "switching-aruba-6",
@@ -88,16 +74,8 @@
       "expected_status": "unaffected",
       "source_locator": "/vulnerabilities/0/product_status/known_not_affected; /product_tree/branches/0/branches/5",
       "rationale": "Explicit all-versions AOS-CX exclusion independently stated for this CVE in a multi-CVE bulletin.",
-      "forbidden_statuses": [
-        "affected",
-        "fixed"
-      ],
-      "claim_context": [
-        [
-          "product_version_range",
-          "vers:all/*"
-        ]
-      ]
+      "forbidden_statuses": ["affected", "fixed"],
+      "claim_context": [["product_version_range", "vers:all/*"]]
     },
     {
       "id": "switching-aruba-7",
@@ -109,16 +87,8 @@
       "expected_status": "unaffected",
       "source_locator": "/vulnerabilities/1/product_status/known_not_affected; /product_tree/branches/0/branches/5",
       "rationale": "Explicit all-versions AOS-CX exclusion independently stated for this CVE in a multi-CVE bulletin.",
-      "forbidden_statuses": [
-        "affected",
-        "fixed"
-      ],
-      "claim_context": [
-        [
-          "product_version_range",
-          "vers:all/*"
-        ]
-      ]
+      "forbidden_statuses": ["affected", "fixed"],
+      "claim_context": [["product_version_range", "vers:all/*"]]
     },
     {
       "id": "switching-aruba-8",
@@ -130,12 +100,7 @@
       "expected_status": "affected",
       "source_locator": "/vulnerabilities/0/product_status/known_affected; /product_tree/branches/0/branches/0/branches/4",
       "rationale": "Explicit 10.13 affected interval; distinct fixed branch cannot be inherited as an affected-product fix.",
-      "claim_context": [
-        [
-          "product_version_range",
-          "vers:semver/>=10.13.0000|<=10.13.1030"
-        ]
-      ]
+      "claim_context": [["product_version_range", "vers:semver/>=10.13.0000|<=10.13.1030"]]
     },
     {
       "id": "switching-aruba-9",
@@ -148,12 +113,7 @@
       "source_locator": "/vulnerabilities/0/product_status/fixed; /product_tree/branches/0/branches/0/branches/1",
       "rationale": "Fixed-only 10.13.1031 branch; downloadable statement does not prove affectedness for that product identity.",
       "remediation_availability": "vendor_reports_fixed",
-      "claim_context": [
-        [
-          "product_version",
-          "10.13.1031"
-        ]
-      ]
+      "claim_context": [["product_version", "10.13.1031"]]
     },
     {
       "id": "switching-aruba-10",
@@ -165,12 +125,7 @@
       "expected_status": "unaffected",
       "source_locator": "/vulnerabilities/0/product_status/known_not_affected; /product_tree/branches/0/branches/0/branches/8",
       "rationale": "Legacy branch is explicitly excluded; never erase neighboring affected branches.",
-      "claim_context": [
-        [
-          "legacy",
-          "vers:semver/>=10.0.0000|<10.10.0000"
-        ]
-      ]
+      "claim_context": [["legacy", "vers:semver/>=10.0.0000|<10.10.0000"]]
     },
     {
       "id": "switching-arista-11",
@@ -248,10 +203,7 @@
       "expected_status": "unaffected",
       "source_locator": "Vulnerability Assessment / No Arista products are affected.",
       "rationale": "Publisher-wide xz exclusion; no absent model statement is converted to individual model qualification.",
-      "forbidden_statuses": [
-        "affected",
-        "fixed"
-      ],
+      "forbidden_statuses": ["affected", "fixed"],
       "reviewed_scope": {
         "scheme": "arista_advisory_body_v1",
         "sha256": "9d3d0c3e95342b31066c20fa9cb13032db99c2f42b581e2c9b28873c2218de13"
@@ -285,7 +237,11 @@
       "rationale": "Automated source case awaiting independent human review: nine literal EOS expressions are conditional on separately owned platforms and tunnel endpoint configuration; no software fix is inferred.",
       "version_contains": "All releases in trains newer than 4.36.x",
       "exposure_contains": "The device must be configured as a tunnel endpoint with a decapsulation IP",
-      "remediation_availability": "not_a_fix"
+      "remediation_availability": "not_a_fix",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "fa1e6d7ded50c38b64b4f59263496bdedd3a60bf014a67a94d9f60dc2250ee4f"
+      }
     },
     {
       "vendor": "arista",
@@ -298,7 +254,11 @@
       "expected_status": "affected",
       "source_locator": "Affected Platforms / affected / 7280R3 Series",
       "rationale": "Automated source case awaiting independent human review: embedded limited-exposure marker belongs to the final three R3 groups; no target model binding is inferred.",
-      "exposure_contains": "Limited exposure (IP-in-IPv6 and GUEv6) on:"
+      "exposure_contains": "Limited exposure (IP-in-IPv6 and GUEv6) on:",
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "fa1e6d7ded50c38b64b4f59263496bdedd3a60bf014a67a94d9f60dc2250ee4f"
+      }
     },
     {
       "vendor": "arista",
@@ -311,10 +271,41 @@
       "expected_status": "unaffected",
       "source_locator": "Affected Platforms / not affected / CloudVision eXchange, virtual or physical appliance",
       "rationale": "Automated source case awaiting independent human review: publisher placement inside the negative EOS-labelled list does not rename CloudVision eXchange to EOS software.",
-      "forbidden_statuses": [
-        "affected",
-        "fixed"
-      ]
+      "reviewed_scope": {
+        "scheme": "arista_advisory_body_v1",
+        "sha256": "fa1e6d7ded50c38b64b4f59263496bdedd3a60bf014a67a94d9f60dc2250ee4f"
+      },
+      "forbidden_statuses": ["affected", "fixed"]
+    },
+    {
+      "id": "switching-cisco-nexus7000-unaffected-boundary",
+      "vendor": "cisco",
+      "source_url": "https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-openssh-rce-2024",
+      "source_sha256": "efd1e8a9f975b68a6b5c002567b2279a27fd1feb61b5c5a6b8d9d2407b82e7d0",
+      "cve_id": "CVE-2024-6387",
+      "product_pattern": "^Nexus 7000 Series Switches$",
+      "expected_status": "unaffected",
+      "source_locator": "div#productsconfirmednotvulnerable / Routing and Switching - Enterprise and Service Provider / explicit product list / Nexus 7000 Series Switches",
+      "rationale": "Explicit literal Nexus product exclusion is an out-of-family boundary control. It does not establish IOS XE or campus model affectedness, unaffectedness, or a fixed release.",
+      "claim_context": [
+        ["product_name", "Nexus 7000 Series Switches"],
+        ["publisher_category", "Routing and Switching - Enterprise and Service Provider"]
+      ],
+      "forbidden_statuses": ["affected", "fixed"]
+    },
+    {
+      "id": "switching-arista-sa158-4348-fixed-only",
+      "vendor": "arista",
+      "source_url": "https://www.arista.com/assets/data/SecurityAdvisories/CSAF/arista_networks_security_advisory_158_CSAF.json",
+      "source_sha256": "0dc70cae7fe0380e01d4872a157c7d97c665da33b9d1fb74996e24c1321a6349",
+      "cve_id": "CVE-2026-73456",
+      "product_pattern": "^EOS version 4\\.34\\.8$",
+      "expected_status": "fixed",
+      "source_locator": "/product_tree/branches/0/branches/0/branches/0/branches/1/product; /vulnerabilities/0/product_status/fixed / CSAFPID-2; /vulnerabilities/0/remediations/0",
+      "rationale": "The publisher explicitly marks the 4.34.8 product identity fixed. This fixed-only control does not establish first-fixed status, an affected interval, or named model applicability.",
+      "claim_context": [["product_version", "EOS version 4.34.8"]],
+      "remediation_availability": "vendor_reports_fixed",
+      "forbidden_statuses": ["affected", "unaffected"]
     }
   ]
 }

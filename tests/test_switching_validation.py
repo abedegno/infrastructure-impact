@@ -308,11 +308,25 @@ def test_retained_alternate_context_is_metadata_only(monkeypatch):
     assert result["independent_human_review_completed"] is False
     assert "PRIVATE_SENTINEL" not in str(context)
     assert "source_context" not in str(validation.packet([record]))
-    for mismatch in ("hash", "url", "vendor", "unavailable", "anchor", "selected"):
+    changed = copy.deepcopy(choice)
+    changed["views"][1]["source_sha256"] = "b" * 64
+    revised = validation.report([record], [], source_selections=[changed])
+    assert revised["cases"][0].pop("source_context") == dict(
+        state="retained_unselected_different_revision",
+        source_url=choice["views"][1]["source_url"],
+        reviewed_source_sha256=choice["views"][1]["source_sha256"],
+        available_revisions=[
+            dict(
+                available_source_sha256="b" * 64,
+                selected_source_url=record["source_url"],
+                selected_source_sha256=record["sha256"],
+            )
+        ],
+    )
+    assert revised == baseline
+    for mismatch in ("url", "vendor", "unavailable", "anchor", "selected"):
         changed = copy.deepcopy(choice)
-        if mismatch == "hash":
-            changed["views"][1]["source_sha256"] = "b" * 64
-        elif mismatch == "url":
+        if mismatch == "url":
             changed["views"][1]["source_url"] += "/wrong"
         elif mismatch == "vendor":
             changed["vendor"] = "arista"
@@ -325,6 +339,46 @@ def test_retained_alternate_context_is_metadata_only(monkeypatch):
         else:
             changed["views"][1]["selected"] = True
         assert validation.report([record], [], source_selections=[changed]) == baseline, mismatch
+
+
+def test_different_revision_context_is_sorted_deduplicated_and_exact_match_wins(monkeypatch):
+    import copy
+
+    record, exact = alternate_inputs(monkeypatch)
+    choices = []
+    for digest in ("c" * 64, "b" * 64, "c" * 64):
+        choice = copy.deepcopy(exact)
+        choice["views"][1]["source_sha256"] = digest
+        choices.append(choice)
+    baseline = validation.report([record], [])
+    result = validation.report([record], [], source_selections=choices)
+    context = result["cases"][0].pop("source_context")
+    assert [r["available_source_sha256"] for r in context["available_revisions"]] == [
+        "b" * 64,
+        "c" * 64,
+    ]
+    assert "PRIVATE_SENTINEL" not in str(context)
+    assert result == baseline
+    assert (
+        validation.report([record], [], source_selections=list(reversed(choices)))["cases"][0][
+            "source_context"
+        ]
+        == context
+    )
+    for selections in (choices + [exact], [exact] + choices):
+        assert (
+            validation.report([record], [], source_selections=selections)["cases"][0][
+                "source_context"
+            ]["state"]
+            == "retained_unselected_representation"
+        )
+    data = dict(records=[record], source_audit=dict(source_selections=choices))
+    validation.rebuild(data)
+    assert data["switching_validation"]["cases"][0]["source_context"] == context
+    assert "source_context" not in str(data["switching_review_packet"])
+    data["source_audit"]["source_selections"] = []
+    validation.rebuild(data)
+    assert "source_context" not in str(data["switching_validation"])
 
 
 def test_malformed_optional_selection_fails_closed(monkeypatch):
