@@ -7,8 +7,10 @@ import io
 import json
 import re
 import sys
+import time
 from datetime import date, datetime, timezone
-from urllib.error import HTTPError
+from http.client import IncompleteRead
+from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 try:
@@ -770,17 +772,106 @@ def check(origin, expected=None, *, verify_archive=False):
     }
 
 
+def _retry_reason(error):
+    """Classify only expected delivery failures; never emit remote exception text."""
+    if isinstance(error, HTTPError):
+        return "http_transient" if error.code in (404, 408, 429, 500, 502, 503, 504) else None
+    if isinstance(error, (URLError, TimeoutError, ConnectionError, IncompleteRead)):
+        return "network"
+    if (
+        isinstance(error, AssertionError)
+        and len(error.args) == 1
+        and isinstance(error.args[0], str)
+    ):
+        # Exact messages keep semantic/schema/safety failures out of retry handling.
+        # Aggregate capacity is deliberately excluded even when a read also exceeds
+        # its descriptor: check() raises the aggregate failure first.
+        return {
+            "Publication part exceeds monitor budget": "part_size",
+            "Part size mismatch": "part_size",
+            "V2 part size": "part_size",
+            "Fingerprint mismatch": "fingerprint",
+            "Part hash mismatch": "fingerprint",
+            "Unbound v2 part": "fingerprint",
+            "Unbound v2 table transport": "fingerprint",
+            "Mixed publication index": "mixed_generation",
+            "Mixed evidence generations": "mixed_generation",
+            "Mixed publication identities": "mixed_generation",
+            "Mixed publication dates": "mixed_generation",
+            "Mixed publication manifest": "mixed_generation",
+            "Mixed v2 generation": "mixed_generation",
+            "Mixed current-evidence generations": "mixed_generation",
+            "Mixed current-evidence dates": "mixed_generation",
+            "Mixed KEV generations": "mixed_generation",
+            "Mixed KEV dates": "mixed_generation",
+            "Mixed switching generations": "mixed_generation",
+            "Mixed switching dates": "mixed_generation",
+            "Mixed report generations": "mixed_generation",
+            "Mixed report dates": "mixed_generation",
+            "Mixed eligibility summary generations": "mixed_generation",
+            "Mixed eligibility summary dates": "mixed_generation",
+            "Mixed summary manifest": "mixed_generation",
+            "Old deployment still served": "old_deployment",
+        }.get(error.args[0])
+    return None
+
+
+def check_with_retries(origin, expected=None, *, verify_archive=False, attempts=3):
+    """Retry a whole verification with fresh manifest, caches and byte accounting."""
+    if type(attempts) is not int or not 1 <= attempts <= 3:
+        raise ValueError("attempts must be between 1 and 3")
+    for attempt in range(1, attempts + 1):
+        try:
+            return check(origin, expected, verify_archive=verify_archive)
+        except (AssertionError, URLError, TimeoutError, ConnectionError, IncompleteRead) as error:
+            reason = _retry_reason(error)
+            if reason is None or attempt == attempts:
+                raise
+            delay = (2, 5)[attempt - 1]
+            print(
+                json.dumps(
+                    {
+                        "event": "monitor_retry",
+                        "attempt": attempt,
+                        "next_attempt": attempt + 1,
+                        "reason": reason,
+                        "delay_seconds": delay,
+                    },
+                    separators=(",", ":"),
+                ),
+                file=sys.stderr,
+                flush=True,
+            )
+            time.sleep(delay)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("origin")
     parser.add_argument("--generation")
+    parser.add_argument(
+        "--attempts",
+        type=int,
+        choices=(1, 2, 3),
+        default=3,
+        help="Whole-check attempts for transient delivery failures (default: 3)",
+    )
     parser.add_argument(
         "--verify-archive",
         action="store_true",
         help="Explicitly verify the separate compressed full archive",
     )
     args = parser.parse_args()
-    print(json.dumps(check(args.origin, args.generation, verify_archive=args.verify_archive)))
+    print(
+        json.dumps(
+            check_with_retries(
+                args.origin,
+                args.generation,
+                verify_archive=args.verify_archive,
+                attempts=args.attempts,
+            )
+        )
+    )
 
 
 if __name__ == "__main__":
