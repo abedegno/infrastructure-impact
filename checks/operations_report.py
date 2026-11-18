@@ -19,33 +19,74 @@ def schedule_observation(runs, start, now, hours, minute, grace_hours=2):
             if start <= day.replace(hour=hour, minute=minute) <= now
         ]
         day += timedelta(days=1)
-    successes = [
-        datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+    scheduled = [
+        (
+            datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")),
+            {
+                field: r.get(field)
+                for field in ("createdAt", "status", "conclusion", "event", "url")
+            },
+        )
         for r in runs
-        if r.get("event") == "schedule" and r.get("conclusion") == "success"
+        if r.get("event") == "schedule"
     ]
-    successes = [instant for instant in successes if start <= instant <= now]
-    latest = max(successes, default=None)
+    scheduled = sorted(
+        ((instant, r) for instant, r in scheduled if start <= instant <= now),
+        key=lambda item: item[0],
+    )
+    latest = max(
+        (instant for instant, r in scheduled if r.get("conclusion") == "success"),
+        default=None,
+    )
+    failed = [
+        r
+        for _, r in scheduled
+        if r.get("conclusion")
+        in ("failure", "timed_out", "cancelled", "action_required", "startup_failure", "stale")
+    ]
+    active = [
+        (instant, r)
+        for instant, r in scheduled
+        if r.get("status") in ("queued", "in_progress", "waiting", "pending", "requested")
+        and not r.get("conclusion")
+    ]
     expected = max(slots, default=None)
     overdue = bool(
         expected
         and now > expected + timedelta(hours=grace_hours)
         and (latest is None or latest < expected)
     )
-    return dict(
-        status="scheduled_success_not_observed"
+    status = (
+        "scheduled_success_not_observed"
         if overdue
         else "no_trigger_due_in_observation_window"
         if expected is None
         else "recent_scheduled_success_observed"
         if latest and latest >= expected
-        else "within_trigger_grace_period",
+        else "within_trigger_grace_period"
+    )
+    active_deadline = None
+    if expected and scheduled and scheduled[-1][0] >= expected:
+        instant, observed = scheduled[-1]
+        if observed in failed:
+            status = "scheduled_run_failed"
+            overdue = True
+        elif active and observed == active[-1][1]:
+            active_deadline = instant + timedelta(hours=grace_hours)
+            overdue = now > active_deadline
+            status = "scheduled_run_stalled" if overdue else "scheduled_run_in_progress"
+    return dict(
+        status=status,
         observation_start=start.isoformat(),
         last_expected_trigger_at=expected.isoformat() if expected else None,
         latest_successful_scheduled_run_created_at=latest.isoformat() if latest else None,
+        latest_scheduled_run=scheduled[-1][1] if scheduled else None,
+        active_scheduled_run=active[-1][1] if active else None,
+        latest_failed_scheduled_run=failed[-1] if failed else None,
+        active_run_deadline_at=active_deadline.isoformat() if active_deadline else None,
         grace_hours=grace_hours,
         overdue=overdue,
-        method="Checks actual successful schedule-event run creation times against the current declared cadence after its separate activation anchor. Manual runs never fill this condition. The grace period is an operator expectation, not a GitHub delivery guarantee. Delayed runs cannot be attributed to an exact original cron slot from these metadata alone; absence does not identify its cause.",
+        method="Checks actual schedule-event run creation times against the current declared cadence after its separate activation anchor. Manual runs never fill this condition. A latest active scheduled run created after the expected trigger receives at most the configured grace from its own creation time; it is not counted as a success. The grace period is an operator expectation, not a GitHub delivery guarantee. Delayed runs cannot be attributed to an exact original cron slot from these metadata alone; absence does not identify its cause. Public freshness is separate context and does not replace workflow success.",
     )
 
 
@@ -61,9 +102,27 @@ def operational_failures(report: dict) -> list[dict]:
         deadline = (
             datetime.fromisoformat(expected) + timedelta(hours=observation["grace_hours"])
         ).isoformat()
+        reason = observation["status"]
+        observed = observation.get("latest_scheduled_run")
+        if reason == "scheduled_run_failed":
+            detail = (
+                f"Observed scheduled run created at {observed['createdAt']} "
+                f"concluded {observed['conclusion']} ({observed.get('url')})."
+            )
+        elif reason == "scheduled_run_stalled":
+            detail = (
+                f"Observed scheduled run created at {observed['createdAt']} remains "
+                f"{observed['status']} beyond active-run deadline "
+                f"{observation['active_run_deadline_at']} ({observed.get('url')})."
+            )
+        else:
+            detail = "No successful scheduled run or current active run within its bounded grace observed."
         failures.append(
             dict(
-                code=f"{kind}_schedule_overdue",
+                code=f"{kind}_scheduled_run_failed"
+                if reason == "scheduled_run_failed"
+                else f"{kind}_schedule_overdue",
+                reason=reason,
                 workflow=workflow,
                 expected_trigger_at=expected,
                 latest_successful_scheduled_run_created_at=latest,
@@ -71,7 +130,7 @@ def operational_failures(report: dict) -> list[dict]:
                 message=(
                     f"{workflow}: expected trigger at {expected}; latest successful scheduled "
                     f"run created at {latest if latest else 'not observed'}; "
-                    f"grace deadline at {deadline}. Run creation times do not identify "
+                    f"grace deadline at {deadline}. {detail} Run creation times do not identify "
                     "an original cron slot."
                 ),
             )
@@ -160,11 +219,7 @@ def summarize(
     findings = []
     for kind, observation in cadence.items():
         if observation["overdue"]:
-            findings.append(
-                "No recent successful scheduled "
-                + kind
-                + " run observed after the cadence grace period"
-            )
+            findings.append(f"{kind} schedule requires review: {observation['status']}")
     if collection_counts["failed"] or monitor_counts["failed"]:
         findings.append("Failed, cancelled or timed-out workflows occurred in the window")
     if collection_counts["scheduled_successful"] < 7:

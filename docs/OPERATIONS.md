@@ -253,20 +253,31 @@ cannot establish successful health. An infrastructure or checkout failure can
 also prevent a verified result; inspect the steps and retained evidence.
 
 `Service operations` runs independently at `53 */6 * * *` UTC. A fresh website
-can pass health while operations fails for overdue successful scheduled collection
-or monitor observations, or exceeded storage budgets. Its own health receipt
+can pass health while operations fails for overdue scheduled observations,
+an unsuccessful latest scheduled attempt, or exceeded storage budgets. Its own health receipt
 helps the review; it is never a scheduled `monitor.yaml` success. Manual dispatches
 of either workflow verify behavior only. The operational report still observes
 `collect.yaml` and `monitor.yaml`, including their historical failed conclusions.
 
+A latest scheduled run created after the expected trigger is reported as
+`scheduled_run_in_progress` while queued or running, for at most two hours from
+its creation. It does not count as a successful collection. After that bound it
+is `scheduled_run_stalled` and remains actionable. An observed terminal failure
+is `scheduled_run_failed`, even if an earlier attempt succeeded or the current
+website is fresh. A missing successful run with no recent active attempt retains
+the original cadence deadline. Manual runs never satisfy these conditions, and
+run creation times do not identify which original cron slot GitHub delivered.
+
 The `operational_failures` array adds stable diagnostics without removing the
 existing report or stdout fields:
 
-| Code | Workflow | Meaning |
-| --- | --- | --- |
-| `collection_schedule_overdue` | `collect.yaml` | No successful scheduled collection observation meeting the declared slot after its two-hour grace. |
-| `monitor_schedule_overdue` | `monitor.yaml` | No successful scheduled health observation meeting the declared slot after its two-hour grace. |
-| `repository_storage_budget_exceeded` | null | Reported repository storage meets or exceeds 512 MiB. |
+| Code                                 | Workflow       | Meaning                                                                                                                                       |
+| ------------------------------------ | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collection_schedule_overdue`        | `collect.yaml` | No qualifying recent collection success/active attempt after the trigger grace, or the latest active attempt exceeded its own two-hour bound. |
+| `monitor_schedule_overdue`           | `monitor.yaml` | No qualifying recent monitor success/active attempt after the trigger grace, or the latest active attempt exceeded its own two-hour bound.    |
+| `collection_scheduled_run_failed`    | `collect.yaml` | The latest observed attempt after the expected collection trigger ended unsuccessfully.                                                       |
+| `monitor_scheduled_run_failed`       | `monitor.yaml` | The latest observed attempt after the expected monitor trigger ended unsuccessfully.                                                          |
+| `repository_storage_budget_exceeded` | null           | Reported repository storage meets or exceeds 512 MiB.                                                                                         |
 
 Cadence findings give `expected_trigger_at`, `latest_successful_scheduled_run_created_at`
 and `grace_deadline_at` as timezone-aware ISO timestamps; a missing latest success
@@ -279,8 +290,42 @@ limit and 80% warnings. No automatic deletion is enabled.
 For source boundaries, safe manual checks and unresolved scheduler delivery, see
 [scheduled-service observations](SCHEDULE_RELIABILITY.md). Neither workflow has
 a vault key or downloads private state; both use read-only contents/actions
-permissions. This change requires no collector upgrade, package-version change,
+permissions. The operational-report changes require no collector upgrade, package-version change,
 reparse or migration.
+
+The report also carries the latest scheduled, active and failed run metadata,
+plus an active-run deadline. Only the selected run metadata fields are retained;
+these observations do not establish continuous uptime or complete source coverage.
+
+## Bounded publication verification
+
+The public-health CLI allows up to three complete verification attempts, with
+two- and five-second waits between attempts. Each attempt starts again with the
+publication manifest and fresh reader/cache and transfer accounting. Only
+recognized transient network responses and publication consistency failures are
+retried; ordinary schema, safety and aggregate transfer-budget errors fail
+immediately. Persistent consistency errors still fail after the last attempt.
+All existing size, hash, schema and generation checks remain in force. Use
+`--attempts 1` for an explicit single-attempt diagnostic.
+
+Retry diagnostics are fixed-code JSON events on stderr; a successful command
+still emits one public-health receipt on stdout. A descriptor-size mismatch
+immediately after deployment can reflect inconsistent cached generations, but
+that symptom alone does not prove its cause or justify increasing download limits.
+
+`Service operations` reads its checker from the event source. The collection and
+independent monitor use the separately pinned runtime source. The retry code must
+be present in that reviewed runtime pin before those two workflows gain retries;
+merging a change into the default branch alone does not activate it there.
+
+The November 2026 investigation found five schedule-overdue failures on
+15–17 November, including an alert while the 17 November collection was still
+running. Separately, the [16 November publication](https://github.com/abedegno/infrastructure-impact/actions/runs/43970538150)
+deployed successfully before its immediate verifier exceeded an index-declared
+part size. The [following morning's monitor](https://github.com/abedegno/infrastructure-impact/actions/runs/44043858485)
+verified that generation as fresh. Those observations motivate bounded revalidation
+and more precise run-state diagnostics; they do not establish the CDN as the
+confirmed cause or imply complete upstream source collection.
 
 ## Current-evidence health and maintenance effects
 
@@ -324,7 +369,6 @@ arguments before keys; actual invocation authorizes legacy cleanup and successfu
 invocation authorizes publication. Missing modern effects never downgrade to
 legacy. This bridge preserves the existing source pin on merge; it does not
 activate maintenance or establish that older code is safe after policy rollout.
-
 
 ## Exact Cisco/Aruba target import
 
