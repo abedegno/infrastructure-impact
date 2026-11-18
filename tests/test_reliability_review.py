@@ -821,3 +821,132 @@ def test_monitor_pinned_checker_and_event_control_checkout_are_independent(tmp_p
     (control / "checks/public_health_receipt.py").unlink()
     missing = execute_workflow_step("monitor.yaml", "Summarize public health", env, cwd=pinned)
     assert missing.returncode != 0
+
+
+def observed_collection_run(created_at, *, status="in_progress", conclusion=None, event="schedule"):
+    return {
+        "createdAt": created_at,
+        "status": status,
+        "conclusion": conclusion,
+        "event": event,
+        "url": "https://example.invalid/actions/runs/17",
+    }
+
+
+def november_operations(collections, now="2026-11-17T21:24:00+00:00", health_status="fresh"):
+    current = datetime.fromisoformat(now)
+    return summarize(
+        collections,
+        [run(current - timedelta(minutes=1))],
+        current,
+        observation_start=START.isoformat(),
+        public_health={"status": health_status, "source_failures": 3},
+    )
+
+
+def test_late_active_collection_is_observed_without_guessing_its_cron_slot():
+    active = observed_collection_run("2026-11-17T21:17:00Z")
+    report = november_operations([active])
+    observation = report["schedule_cadence"]["collection"]
+    assert observation["status"] == "scheduled_run_in_progress"
+    assert observation["active_scheduled_run"] == active
+    assert observation["latest_scheduled_run"] == active
+    assert observation["latest_successful_scheduled_run_created_at"] is None
+    assert observation["last_expected_trigger_at"] == "2026-11-17T12:43:00+00:00"
+    assert observation["active_run_deadline_at"] == "2026-11-17T23:17:00+00:00"
+    assert not observation["overdue"]
+    assert report["operational_failures"] == []
+    assert report["public_health"]["source_failures"] == 3
+    assert any("source failures" in finding for finding in report["findings"])
+
+
+@pytest.mark.parametrize("status", ["queued", "in_progress"])
+@pytest.mark.parametrize(
+    "now,overdue",
+    [("2026-11-17T23:17:00+00:00", False), ("2026-11-17T23:17:01+00:00", True)],
+)
+def test_active_collection_grace_is_bounded_from_creation(status, now, overdue):
+    active = observed_collection_run("2026-11-17T21:17:00Z", status=status)
+    report = november_operations([active], now)
+    observation = report["schedule_cadence"]["collection"]
+    assert observation["overdue"] is overdue
+    assert observation["status"] == (
+        "scheduled_run_stalled" if overdue else "scheduled_run_in_progress"
+    )
+    failures = report["operational_failures"]
+    assert bool(failures) is overdue
+    if overdue:
+        assert failures[0]["reason"] == "scheduled_run_stalled"
+        assert "23:17:00" in failures[0]["message"]
+
+
+@pytest.mark.parametrize("conclusion", ["failure", "cancelled", "timed_out"])
+def test_failed_collection_is_distinct_from_late_trigger_even_with_fresh_publication(conclusion):
+    failed = observed_collection_run(
+        "2026-11-17T21:17:00Z", status="completed", conclusion=conclusion
+    )
+    report = november_operations([failed])
+    observation = report["schedule_cadence"]["collection"]
+    assert observation["status"] == "scheduled_run_failed"
+    assert observation["latest_failed_scheduled_run"] == failed
+    assert observation["active_scheduled_run"] is None
+    failure = report["operational_failures"][0]
+    assert failure["code"] == "collection_scheduled_run_failed"
+    assert failure["reason"] == "scheduled_run_failed"
+    assert conclusion in failure["message"] and failed["url"] in failure["message"]
+    assert report["public_health"]["status"] == "fresh"
+
+
+@pytest.mark.parametrize(
+    "attempt",
+    [
+        observed_collection_run("2026-11-17T21:17:00Z", event="workflow_dispatch"),
+        observed_collection_run("2026-11-17T21:25:00Z"),
+        observed_collection_run("2026-11-16T21:17:00Z"),
+    ],
+    ids=["manual-active", "future-active", "previous-cadence-active"],
+)
+def test_unrelated_active_run_cannot_hide_missing_current_scheduled_success(attempt):
+    report = november_operations([attempt])
+    observation = report["schedule_cadence"]["collection"]
+    assert observation["overdue"]
+    assert observation["status"] == "scheduled_success_not_observed"
+    assert report["operational_failures"][0]["reason"] == "scheduled_success_not_observed"
+
+
+def test_recovery_success_retains_previous_failure_as_context():
+    failed = observed_collection_run(
+        "2026-11-16T21:17:00Z", status="completed", conclusion="failure"
+    )
+    success = observed_collection_run(
+        "2026-11-17T21:17:00Z", status="completed", conclusion="success"
+    )
+    report = november_operations([success, failed])
+    observation = report["schedule_cadence"]["collection"]
+    assert observation["status"] == "recent_scheduled_success_observed"
+    assert observation["latest_failed_scheduled_run"] == failed
+    assert observation["latest_scheduled_run"] == success
+    assert report["operational_failures"] == []
+
+
+def test_later_failed_attempt_is_not_hidden_by_earlier_scheduled_success():
+    success = run(datetime(2026, 11, 17, 13, tzinfo=timezone.utc))
+    failed = observed_collection_run(
+        "2026-11-17T21:17:00Z", status="completed", conclusion="failure"
+    )
+    report = november_operations([success, failed])
+    assert report["operational_failures"][0]["reason"] == "scheduled_run_failed"
+
+
+def test_schedule_metadata_does_not_publish_unowned_run_fields():
+    active = dict(observed_collection_run("2026-11-17T21:17:00Z"), private_sentinel="private")
+    failed = dict(
+        observed_collection_run("2026-11-16T21:17:00Z", status="completed", conclusion="failure"),
+        private_sentinel="private",
+    )
+    report = november_operations([active, failed])
+    observation = report["schedule_cadence"]["collection"]
+    for field in ("latest_scheduled_run", "active_scheduled_run", "latest_failed_scheduled_run"):
+        assert "private_sentinel" not in observation[field]
+        assert set(observation[field]) == {"createdAt", "status", "conclusion", "event", "url"}
+    assert "private_sentinel" not in json.dumps(report)
