@@ -9,6 +9,7 @@
     <script defer src="/switching-contracts.js"></script>
     <script defer src="/current-evidence.js"></script>
     <script defer src="/research-dossiers.js"></script>
+    <script defer src="/vulncheck.js"></script>
     <script defer src="/app.js"></script>
   </head>
   <body>
@@ -83,6 +84,40 @@
         <span id="kev-status" role="status">CISA KEV status loading…</span>
         <a id="kev-export" href="/kev.json" download="kev.json" hidden>KEV report JSON ↗</a>
       </div>
+      <details class="private-kev-panel">
+        <summary>Exploitation sources · private VulnCheck research</summary>
+        <p>
+          Load a private <code>impact vulncheck-kev report</code> JSON file to compare VulnCheck KEV
+          with CISA. The file stays in browser memory: it is not uploaded, saved by this app, or
+          included in public exports. Never select a credential file.
+        </p>
+        <div class="matrix-filters">
+          <label for="vulncheck-file"
+            >Private report JSON
+            <input id="vulncheck-file" type="file" accept=".json,application/json"
+          /></label>
+          <label for="vulncheck-filter"
+            >Research panel filter
+            <select id="vulncheck-filter">
+              <option value="all">All selected CVEs</option>
+              <option value="cisa">CISA KEV listed</option>
+              <option value="vulncheck">VulnCheck KEV listed</option>
+              <option value="both">Listed by both</option>
+              <option value="unknown">Unknown in either source</option>
+            </select></label
+          >
+          <button id="vulncheck-refresh">Recheck freshness</button>
+          <button id="vulncheck-clear">Clear local evidence</button>
+        </div>
+        <p id="vulncheck-message" role="status" aria-live="polite">No private report loaded.</p>
+        <div id="vulncheck-results"></div>
+        <button id="vulncheck-more">Show more CVEs</button>
+        <p class="notice">
+          Counts describe catalogue coverage, not vendor security quality. Not listed does not mean
+          not exploited. Platform applicability still requires vendor evidence; independent human
+          review is pending.
+        </p>
+      </details>
       <div id="feedback" role="status" aria-live="polite">Loading evidence…</div>
       <section id="view" aria-label="Selected research view"></section>
       <footer>

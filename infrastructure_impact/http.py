@@ -653,6 +653,7 @@ class Application:
             "/lossless-json.js",
             "/research-dossiers.js",
             "/kev.js",
+            "/vulncheck.js",
             "/switching-contracts.js",
             "/switching.js",
             "/switching-view.js",

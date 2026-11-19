@@ -39,6 +39,7 @@ let data,
   matrixStatus = '',
   matrixQuery = '';
 let benchmark = [];
+let privateKev = null;
 let selectedCves = null,
   kevOnly = false,
   cohortMode = $('#cohort').value || 'benchmark',
@@ -272,7 +273,10 @@ function render(paint = draw) {
   }
 }
 function kevContext(cveId) {
-  return window.InfrastructureKev.renderContext(data.kev, cveId);
+  return (
+    window.InfrastructureKev.renderContext(data.kev, cveId) +
+    (privateKev?.renderContext(cveId) ?? '')
+  );
 }
 function draw() {
   document.querySelectorAll('[data-view]').forEach((b) => {
@@ -282,6 +286,7 @@ function draw() {
   $('#feedback').textContent =
     `${Date.now() - new Date(data.generated_at).getTime() > 36 * 3600000 ? 'STALE DATA · ' : ''}${data.comparison.cohort.length} selected CVEs · ${data.counts.advisories} imported advisories · ${window.snapshotMode ? 'snapshot collected' : 'last loaded'} ${date(data.generated_at)}`;
   const study = view === 'compare' && ['switching', 'customer'].includes(comparisonMode);
+  if (!study) privateKev?.update({ cves: data.comparison.cohort, cisa: data.kev });
   for (const selector of ['#cohort-controls', '#summary', '#kev-source'])
     $(selector).hidden = study;
   if (data.kev.selection.kev_only && !data.comparison.cohort.length && view !== 'compare') {
@@ -496,6 +501,7 @@ function renderComparison() {
     acceptedCustomer = customerReport;
   const accepted = customer ? customerStudy : switchingReport,
     delivery = customer ? customerAcceptedDelivery : switchingAcceptedDelivery;
+  privateKev?.update({ study: accepted, cisa: accepted?.inputs?.kev ?? data.kev ?? null });
   const renderStudy = customer
     ? window.InfrastructureCustomerComparison.render
     : window.InfrastructureSwitching.render;
@@ -1010,6 +1016,15 @@ window.addEventListener?.('hashchange', () => {
   }
   render();
 });
+privateKev =
+  window.InfrastructureVulncheck?.mount(document, {
+    kev: window.InfrastructureKev,
+    onChange: () => {
+      $('#detail-body').innerHTML = '';
+      $('#detail').close();
+      if (data) render();
+    },
+  }) ?? null;
 load();
 
 function renderCoverage() {

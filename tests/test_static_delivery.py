@@ -612,6 +612,7 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
         "switching-contracts.js",
         "current-evidence.js",
         "research-dossiers.js",
+        "vulncheck.js",
         "delivery.js",
         "kev.js",
         "switching.js",
@@ -639,6 +640,7 @@ def test_dossier_reader_assets_are_fingerprinted_ordered_and_served(tmp_path):
         "/switching-contracts.js",
         "/current-evidence.js",
         "/research-dossiers.js",
+        "/vulncheck.js",
         "/app.js",
     ]
 
