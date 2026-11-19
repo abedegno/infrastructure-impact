@@ -34,6 +34,10 @@ ZIP SHA-256, retrieval and verification times, backup timestamp, revision identi
 publisher labels, listing dates and reported-exploitation references. Treat redirected
 output as private research data. Labels identify what the provider says; they do
 not establish that a specific switch, release or configuration is affected.
+Missing labels remain explicit in `missing_labels` and do not discard exact-CVE
+membership. Citation URLs retain the publisher's literal text: HTTP and HTTPS
+references may include fragments; malformed references carry
+`url_status: publisher_url_unresolved`. No citation is fetched or silently repaired.
 
 ## Collection and evidence
 
@@ -57,7 +61,7 @@ HTTP 429 and service failures defer subsequent attempts; integer and HTTP-date
 schedule. Re-run the command after the returned `retry_at`. A collect command
 returns nonzero on failure or deferral.
 
-ZIP input is bounded to 32 MB compressed and one JSON member of at most 64 MB,
+ZIP input is bounded to 32 MB compressed and one JSON member of at most 128 MB,
 with at most 100,000 normalized CVEs. No archive member is extracted to disk.
 Duplicate CVEs, malformed identities/dates and ambiguous JSON are rejected as a
 whole, rather than creating a partially populated catalogue. The dedicated SQLite
@@ -80,8 +84,9 @@ the main vault as `--state`.
   are never downloaded or cloned.
 - Missing membership is not proof that exploitation has not occurred. Source
   overlap measures coverage, not detection quality or vendor security quality.
-- No real-feed coverage improvement is claimed until a token-backed collection and
-  cohort comparison have been performed. Tests use authored synthetic fixtures only.
+- Coverage improvement must be measured with a token-backed collection and an
+  explicitly identified cohort. A successful local run does not activate hosted
+  collection or change public counts. Tests use authored synthetic fixtures only.
   Independent human review remains pending.
 
 ## Publication boundary and licensing

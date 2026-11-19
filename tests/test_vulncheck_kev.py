@@ -116,6 +116,32 @@ def test_multicve_rows_and_exploitation_semantics():
 
 
 @pytest.mark.parametrize(
+    "url,status",
+    [
+        ("http://example.org/report", "valid_web_url"),
+        ("https://example.org/report#details", "valid_web_url"),
+        (" https://example.org/report", "publisher_url_unresolved"),
+        ("javascript:example", "publisher_url_unresolved"),
+    ],
+)
+def test_reference_urls_are_preserved_without_transport_interpretation(url, status):
+    value = row()
+    value["vulncheck_reported_exploitation"][0]["url"] = url
+    reference = vc.parse(archive([value]))["CVE-2026-10001"]["reported_exploitation"][0]
+    assert reference["url"] == url
+    assert reference["url_status"] == status
+
+
+def test_missing_publisher_labels_do_not_discard_cve_membership():
+    value = row()
+    value.pop("vendorProject")
+    value["product"] = ""
+    entry = vc.parse(archive([value]))["CVE-2026-10001"]
+    assert entry["vendor_label"] is None and entry["product_label"] == ""
+    assert entry["missing_labels"] == ["vendorProject", "product"]
+
+
+@pytest.mark.parametrize(
     "rows",
     [
         [],

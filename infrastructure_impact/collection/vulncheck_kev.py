@@ -27,7 +27,7 @@ ATTRIBUTION = {
     "url": "https://www.vulncheck.com/kev",
 }
 MAX_ZIP_BYTES = 32_000_000
-MAX_JSON_BYTES = 64_000_000
+MAX_JSON_BYTES = 128_000_000
 MAX_ENTRIES = 100_000
 CACHE_SECONDS = 86400
 FRESH_SECONDS = 129600
@@ -63,6 +63,25 @@ def _web_url(value):
     ):
         raise ValueError("Invalid source URL")
     return value
+
+
+def _reference_url_status(value):
+    # Publisher citations are literal evidence, never transport destinations.
+    # Preserve malformed text without silently repairing or following it.
+    if not isinstance(value, str) or not value:
+        raise ValueError("Missing publisher reference URL")
+    try:
+        parts = urlsplit(value)
+        valid = (
+            parts.scheme in ("http", "https")
+            and bool(parts.hostname)
+            and not parts.username
+            and not parts.password
+            and not any(ord(c) <= 32 for c in value)
+        )
+    except ValueError:
+        valid = False
+    return "valid_web_url" if valid else "publisher_url_unresolved"
 
 
 def parse(raw):
@@ -103,8 +122,8 @@ def parse(raw):
         ):
             raise ValueError("Invalid VulnCheck CVE identities")
         for key in ("vendorProject", "product"):
-            if not isinstance(row.get(key), str) or not row[key].strip():
-                raise ValueError("Missing publisher label")
+            if row.get(key) is not None and not isinstance(row[key], str):
+                raise ValueError("Invalid publisher label")
         _date(row.get("date_added"))
         reports = row.get("vulncheck_reported_exploitation", [])
         if not isinstance(reports, list):
@@ -115,14 +134,21 @@ def parse(raw):
                 raise ValueError("Invalid exploitation reference")
             _date(report.get("date_added"))
             normalized.append(
-                dict(url=_web_url(report.get("url")), date_added=report["date_added"])
+                dict(
+                    url=report.get("url"),
+                    date_added=report["date_added"],
+                    url_status=_reference_url_status(report.get("url")),
+                )
             )
         canaries = row.get("reported_exploited_by_vulncheck_canaries")
         if canaries is not None and type(canaries) is not bool:
             raise ValueError("Invalid canary indicator")
         entry = dict(
-            vendor_label=row["vendorProject"],
-            product_label=row["product"],
+            vendor_label=row.get("vendorProject"),
+            product_label=row.get("product"),
+            missing_labels=[
+                key for key in ("vendorProject", "product") if not (row.get(key) or "").strip()
+            ],
             listed_at=row["date_added"],
             reported_exploitation=normalized,
             canary_reported=canaries,
