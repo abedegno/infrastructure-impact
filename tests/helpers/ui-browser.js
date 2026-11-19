@@ -103,7 +103,7 @@ function browser(currentEvidence = false, options = {}) {
   };
   function parse(html, parent = null) {
     for (const m of html.matchAll(
-      /<(input|select|button|section|div|span|a|dialog|option)\b([^>]*)>/g,
+      /<(input|select|button|section|div|span|p|a|dialog|option)\b([^>]*)>/g,
     )) {
       const e = new Element(m[1], m[2]);
       e.parentElement = parent;
@@ -170,6 +170,7 @@ function browser(currentEvidence = false, options = {}) {
     'lossless-json.js',
     ...(currentEvidence ? ['switching-contracts.js', 'current-evidence.js'] : []),
     'kev.js',
+    'vulncheck.js',
     'research-dossiers.js',
     ...(options.static
       ? ['publication-v2.js', 'delivery.js', 'snapshot.js']

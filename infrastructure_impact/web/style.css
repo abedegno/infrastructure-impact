@@ -638,6 +638,14 @@ textarea {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.private-kev-panel {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line, #36404c);
+}
+.private-kev-panel input[type='file'] {
+  max-width: 100%;
+}
 #comparison-content .fingerprint {
   overflow-wrap: anywhere;
 }
