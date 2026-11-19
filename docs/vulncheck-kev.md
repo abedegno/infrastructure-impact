@@ -29,6 +29,37 @@ It is validated and its freshness re-evaluated at report time; a stale report
 does not count as a verified CISA negative. Supply a fresh public report for a
 current comparison. Without it, CISA membership and overlap counts remain unknown.
 
+## Use the website research panel
+
+Expand **Exploitation sources · private VulnCheck research** and choose the JSON
+produced by `impact vulncheck-kev report`. Generate it for all CVEs you want to
+investigate; CVEs outside that file's scope remain **unknown**, not “not listed”.
+The panel accepts at most 8 MB, validates the report, and keeps it in browser
+memory. It makes no upload or API request and does not use browser storage. Reload
+the page or choose **Clear local evidence** to remove it. Do not select an `.env`
+or credential file.
+
+The research panel offers independent CISA-listed, VulnCheck-listed, both-listed and
+unknown filters. They affect that panel only. Product-impact and assessment detail
+views also show attributed VulnCheck context when local evidence is loaded, with
+listing/reference dates and safe citation links. Malformed citation URLs remain
+inert text. Use **Recheck freshness** after leaving the page open; stale or failed
+collection turns membership into unknown while retaining historical evidence.
+
+In the customer/switching comparison, vendor counts are intersections with the
+accepted study's exact `affected_cve_ids`, deduplicated per vendor. They follow its
+vendor, period and model-scope controls. No vendor mapping is inferred from the
+VulnCheck product label. A partially covered scope has an unknown total with a
+separate unknown-CVE count; it is not displayed as a verified zero. CISA membership
+comes from the site's complete CISA report when available, otherwise from a fresh
+CISA source in the imported CLI report. If neither is available it remains unknown,
+even if another published view contains historical CISA counts.
+
+The local overlay is separate from the accepted publication. It does not alter
+cohort controls elsewhere, frozen studies, JSON/CSV downloads, public KEV counts or
+normalization schema v2. Source verification times and study publication identity
+remain visible so current catalogue membership is not confused with past exposure.
+
 Reports go to stdout and include prominent VulnCheck attribution, source URL,
 ZIP SHA-256, retrieval and verification times, backup timestamp, revision identity,
 publisher labels, listing dates and reported-exploitation references. Treat redirected
@@ -99,9 +130,10 @@ on making Service Data freely available and on AI use. Confirm the terms applica
 to this deployment before publishing derived fields, reports or raw feed records.
 Do not supply licensed feed contents to an AI agent for analysis.
 
-This integration is deliberately absent from the public source registry, default
-collector, website, snapshot/API/CSV exports and hosted workflows. Report output is
-labelled `private_research_only`. Hosted credentials, activation and public export
-require separate decisions; adding this code does not authorize them. After terms
-are confirmed, the next step is an attributed website signal and cohort-level
-coverage comparison, keeping CISA and VulnCheck distinct.
+The feed is deliberately absent from the public source registry, default collector,
+snapshot/API/CSV exports and hosted workflows. The website reader supports local
+imports only; it does not ship a VulnCheck dataset. Report output is labelled
+`private_research_only`. Hosted credentials, activation and public export require
+separate decisions; adding the reader does not authorize them. After terms are
+confirmed, hosted collection and an attributed published signal can use the same
+membership semantics, keeping CISA and VulnCheck distinct.
