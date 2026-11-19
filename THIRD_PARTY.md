@@ -44,6 +44,15 @@ application retains a complete membership index and only scoped detailed entries
 in public reports; raw captures remain private. See [KEV semantics](docs/cisa-kev.md)
 for freshness, history and non-inference limits.
 
+## VulnCheck Known Exploited Vulnerabilities
+
+The optional private integration attributes its outputs to
+[VulnCheck Known Exploited Vulnerabilities](https://www.vulncheck.com/kev).
+VulnCheck data is not covered by this repository's Apache-2.0 license.
+No real feed records are included in source or test fixtures. Public redistribution
+is disabled pending clarification of the applicable terms; see
+[integration and licensing boundaries](docs/vulncheck-kev.md).
+
 ## Dependencies
 
 Python and JavaScript dependencies are declared and locked in the project. Their

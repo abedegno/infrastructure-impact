@@ -182,7 +182,21 @@ def main(argv=None):
             command.add_argument("--base-path", default="/")
             command.add_argument("--switching-analysis-profile", default="")
             command.add_argument("--publication-format", choices=("v1", "v2"), default="v1")
+    vulncheck = sub.add_parser(
+        "vulncheck-kev", help="Opt-in private VulnCheck KEV collection and exact-CVE comparison"
+    )
+    vc_modes = vulncheck.add_subparsers(dest="vc_mode", required=True)
+    vc_collect = vc_modes.add_parser("collect", help="Cache a backup using VULNCHECK_API_TOKEN")
+    vc_collect.add_argument("--state", type=Path, required=True)
+    vc_collect.add_argument("--force", action="store_true")
+    vc_report = vc_modes.add_parser("report", help="Print a private attributed comparison")
+    vc_report.add_argument("--state", type=Path, required=True)
+    vc_report.add_argument("--cve", action="append", default=[])
+    vc_report.add_argument("--scope", type=Path, help="JSON array of exact CVE IDs")
+    vc_report.add_argument("--cisa-report", type=Path, help="Existing public kev-v1 report")
     args = parser.parse_args(argv)
+    if args.command == "vulncheck-kev":
+        return _vulncheck(args, parser)
     if args.command == "publication-export":
         from .application.publication_reader import export_root
 
@@ -762,6 +776,12 @@ def _reconcile(args, parser):
     except (ValueError, OSError) as error:
         parser.error(getattr(error, "code", "reconciliation_failed"))
     print(json.dumps(result, sort_keys=True))
+
+
+def _vulncheck(args, parser):
+    from .collection.vulncheck_cli import run
+
+    return run(args, parser)
 
 
 if __name__ == "__main__":
