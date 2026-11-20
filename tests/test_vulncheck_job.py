@@ -11,6 +11,12 @@ from infrastructure_impact.storage.remote_recovery import GitHubDraftStore
 from ops import vulncheck_job as job
 
 
+def test_hosted_helper_is_in_the_public_source_release():
+    from checks import release
+
+    assert "ops/vulncheck_job.py" in release.FILES
+
+
 def context(tmp_path):
     checkout = tmp_path / "service"
     checkout.mkdir()
