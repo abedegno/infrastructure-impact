@@ -76,6 +76,17 @@ jobs:
       - name: Install locked source
         working-directory: source
         run: uv sync --frozen --no-dev --group hosted
+      - name: Collect private VulnCheck evidence
+        id: vulncheck
+        if: ${{ success() && vars.IMPACT_VULNCHECK_COLLECTION == 'true' && github.ref == 'refs/heads/main' && (inputs.maintenance_profile || '') == '' && (inputs.maintenance_mode || '') == '' && (inputs.maintenance_preview_fingerprint || '') == '' }}
+        continue-on-error: true
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMPACT_SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
+          VULNCHECK_API_TOKEN: ${{ secrets.VULNCHECK_API_TOKEN }}
+        run: uv run python -m ops.vulncheck_job --checkout "$GITHUB_WORKSPACE/service" --receipt "$RUNNER_TEMP/vulncheck-status.json"
       - name: Check hosted helper protocol
         id: protocol
         working-directory: source
@@ -346,6 +357,14 @@ jobs:
           name: maintenance-preview
           path: ${{ runner.temp }}/maintenance-preview/maintenance-preview.json
           if-no-files-found: error
+      - name: Upload private VulnCheck status
+        if: ${{ always() && steps.vulncheck.outcome != 'skipped' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vulncheck-status
+          path: ${{ runner.temp }}/vulncheck-status.json
+          if-no-files-found: warn
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
         if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0

@@ -1,8 +1,8 @@
 # VulnCheck KEV: optional private comparison
 
 VulnCheck Known Exploited Vulnerabilities adds a second, independently attributed
-exploitation signal alongside CISA KEV. This first integration collects an official
-backup into an explicit private SQLite file and compares exact CVE IDs. It does not
+exploitation signal alongside CISA KEV. The integration collects an official
+backup into a dedicated private SQLite file and compares exact CVE IDs. It does not
 change advisory affectedness, product/model binding, frozen studies or public KEV counts.
 
 ## Collect and compare
@@ -28,6 +28,50 @@ of exact CVE IDs, such as a separately extracted study cohort. Add
 It is validated and its freshness re-evaluated at report time; a stale report
 does not count as a verified CISA negative. Supply a fresh public report for a
 current comparison. Without it, CISA membership and overlap counts remain unknown.
+
+## Automatic private collection
+
+Hosted collection is opt-in through the repository variable
+`IMPACT_VULNCHECK_COLLECTION=true`. Configure the repository secret
+`VULNCHECK_API_TOKEN` with the Community API token and retain the existing
+`IMPACT_STATE_KEY` secret. Set `IMPACT_SOURCE_COMMIT` to a reviewed, full 40-character
+source commit containing `ops/vulncheck_job.py` before enabling the switch. Secrets
+belong in GitHub Actions secrets, never repository variables, command arguments or
+source files. Changing the collection switch back to `false` disables subsequent
+hosted collection without deleting retained evidence.
+
+The existing **Collect and publish** workflow keeps its daily **12:43 UTC** schedule.
+When enabled on `main`, an ordinary run collects VulnCheck before the primary
+private collector. Maintenance preview/apply runs skip this optional step. The
+**Collect private VulnCheck evidence** workflow (`vulncheck-collect.yaml`) can be
+manually dispatched on `main` for a short collection and recovery check without
+running the main collector or deploying Pages. It has no independent schedule.
+Both workflows use the same `service-publication` concurrency lock and do not
+cancel an active publication.
+
+The hosted helper restores only its dedicated VulnCheck database from encrypted
+GitHub draft-release recovery, then collects and retains encrypted recovery there.
+It commits only `vulncheck-state/current.json` on `publication-state`. The main
+evidence vault, its recovery pointer and public publication remain separate.
+Neither workflow uploads a raw database, backup ZIP or feed report as an Actions
+artifact. The only VulnCheck artifact is `vulncheck-status`, containing the bounded,
+typed `vulncheck-status.json` receipt; it carries collection/recovery status rather
+than feed records or credentials. The API token is scoped to the helper step.
+
+A failed or deferred optional collection is visible in its status receipt and
+workflow warning; the regular daily collector and publication still proceed.
+The manual workflow reports collection failure as a failed run. Inspect the
+receipt and the collection outcome instead of treating a green daily publication
+as proof that VulnCheck is fresh. Scheduled and manual hosted runs verify backup
+metadata even when the previous check was less than 24 hours ago, preventing
+schedule jitter from creating a two-day verification gap. Matching hashes reuse
+the retained ZIP, and persisted retry backoff is always respected. A failed latest attempt or verification older than
+36 hours makes membership unknown even when older positive evidence is retained.
+Disabling the switch does not refresh evidence.
+
+Automatic collection does not activate public VulnCheck feed exports or inject a
+hosted report into the browser. The website research panel still requires an
+explicit local report import, described below.
 
 ## Use the website research panel
 
@@ -88,17 +132,19 @@ No automatic pruning removes evidence.
 
 HTTP 429 and service failures defer subsequent attempts; integer and HTTP-date
 `Retry-After` headers are honored between 60 seconds and one day. Otherwise backoff is 60 seconds.
-`--force` never bypasses persisted backoff. There is no retry loop or background
-schedule. Re-run the command after the returned `retry_at`. A collect command
+`--force` never bypasses persisted backoff. The CLI has no retry loop or background
+schedule; the optional hosted workflow supplies the daily trigger. Re-run the
+command after the returned `retry_at`. A collect command
 returns nonzero on failure or deferral.
 
 ZIP input is bounded to 32 MB compressed and one JSON member of at most 128 MB,
 with at most 100,000 normalized CVEs. No archive member is extracted to disk.
 Duplicate CVEs, malformed identities/dates and ambiguous JSON are rejected as a
 whole, rather than creating a partially populated catalogue. The dedicated SQLite
-file is mode 0600 and separate from the evidence vault and publication machinery.
-Keep it outside the repository, static site and artifact-upload paths. Do not use
-the main vault as `--state`.
+file is mode 0600 and separate from the main evidence vault. For local collection,
+keep it outside the repository, static site and artifact-upload paths. Hosted
+collection uses an isolated temporary database and encrypted recovery; only its
+recovery pointer is committed. Do not use the main vault as `--state`.
 
 ## Meaning and limitations
 
@@ -130,10 +176,10 @@ on making Service Data freely available and on AI use. Confirm the terms applica
 to this deployment before publishing derived fields, reports or raw feed records.
 Do not supply licensed feed contents to an AI agent for analysis.
 
-The feed is deliberately absent from the public source registry, default collector,
-snapshot/API/CSV exports and hosted workflows. The website reader supports local
-imports only; it does not ship a VulnCheck dataset. Report output is labelled
-`private_research_only`. Hosted credentials, activation and public export require
-separate decisions; adding the reader does not authorize them. After terms are
-confirmed, hosted collection and an attributed published signal can use the same
-membership semantics, keeping CISA and VulnCheck distinct.
+The feed is deliberately absent from the public source registry, default collector
+and snapshot/API/CSV exports. The optional hosted workflow performs private
+collection only. The website reader supports local imports only; it does not ship
+a VulnCheck dataset. Report output is labelled `private_research_only`. Enabling
+private hosted collection does not authorize public redistribution. Public export
+remains disabled and requires a separate terms and publication decision, keeping
+CISA and VulnCheck attribution and membership distinct.

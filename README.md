@@ -45,8 +45,8 @@ The screenshot shows a dated research snapshot, not a live or comprehensive vend
 - Adds [CISA KEV membership](docs/cisa-kev.md) with source freshness, retained history,
   and an optional listed-only CVE filter; it does not infer product exposure.
 - Supports [optional private VulnCheck KEV comparison](docs/vulncheck-kev.md), with
-  cached backups, a browser-local research panel and separate source attribution;
-  hosted feed collection and public data redistribution remain disabled.
+  cached backups, opt-in daily private hosted collection, a browser-local research
+  panel and separate source attribution; public data redistribution remains disabled.
 - Adds [family evidence, comparison readiness and dated fix leads](docs/RESEARCH_FOUNDATIONS.md) with explicit coverage gaps and alternative explanations.
 - Supports bounded historical collection, offline parser recovery and
   [archive layout triage](docs/ARCHIVE_TRIAGE.md) before ingestion.
