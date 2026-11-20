@@ -492,8 +492,13 @@ def test_workflow_effects_gate_cleanup_every_pages_step_and_preview(
     assert len(public) == 4
     assert all(gate(s, effects, success=success) is pages for s in public)
     artifacts = [s for s in steps if "actions/upload-artifact@" in s.get("uses", "")]
-    assert len(artifacts) == 1
-    assert gate(artifacts[0], effects, success=success) is preview
+    assert len(artifacts) == 2
+    assert {s["name"] for s in artifacts} == {
+        "Upload bounded maintenance preview",
+        "Upload private VulnCheck status",
+    }
+    maintenance = next(s for s in artifacts if s["name"] == "Upload bounded maintenance preview")
+    assert gate(maintenance, effects, success=success) is preview
 
 
 def test_empty_controls_keep_ordinary_collection(recovery, tmp_path, monkeypatch, capsys):
