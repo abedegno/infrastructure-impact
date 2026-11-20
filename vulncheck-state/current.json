@@ -1,0 +1,43 @@
+{
+  "archive": "vault-20261120T185811257224Z.sqlite3.gz.fernet",
+  "sha256": "ebf20a835d6967ac1669f879272ca4bbacda73d185207be2ae9575fd1ae68b23",
+  "checked_at": "2026-11-20T18:58:13.357841+00:00",
+  "source_commit": "8c3e777146910ea5df64915d991e484a0300de06",
+  "private": true,
+  "database_bytes": 107773952,
+  "vault_limit_bytes": 536870912,
+  "storage_profile": {
+    "schema_version": 1,
+    "measured_at": "2026-11-20T18:58:11.499587+00:00",
+    "database_page_bytes": 107773952,
+    "free_page_bytes": 0,
+    "tables": [
+      {
+        "table": "revisions",
+        "rows": 1,
+        "tracked_payload_bytes": 101567988,
+        "columns": {
+          "normalized": 101567988
+        }
+      }
+    ],
+    "method": "Read-only aggregate accounting of fixed application payload columns. Logical byte totals count retained repetitions and exclude indexes, row overhead and unlisted columns; they are not physical per-table sizes. Source bodies, URLs, notes and review values are not returned. No snapshots, revisions or recovery history are removed."
+  },
+  "compressed_bytes": 9731356,
+  "archive_bytes": 12975224,
+  "retention": {
+    "legacy_git_copies_preserved": true,
+    "remote_assets": "append_only",
+    "git_history_pruned": false
+  },
+  "encryption": "fernet-v1",
+  "compression": "gzip",
+  "storage_backend": "github-draft-release-v1",
+  "remote": {
+    "repository": "abedegno/infrastructure-impact",
+    "release_id": 453070596,
+    "asset_id": 772979790,
+    "tag": "collector-recovery-2026-11-20"
+  },
+  "remote_readback_verified_at": "2026-11-20T18:58:18.185185+00:00"
+}
