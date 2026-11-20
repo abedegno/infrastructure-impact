@@ -1,0 +1,53 @@
+# Private VulnCheck collection only; public feed exports remain disabled.
+name: Collect private VulnCheck evidence
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: service-publication
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: ${{ vars.IMPACT_VULNCHECK_COLLECTION == 'true' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: publication-state
+          path: service
+      - name: Check pinned source
+        env:
+          SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
+        run: |
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - run: python -m pip install uv==0.11.21
+      - name: Install locked source
+        working-directory: source
+        run: uv sync --frozen --no-dev --group hosted
+      - name: Collect private VulnCheck evidence
+        id: vulncheck
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMPACT_SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          IMPACT_STATE_KEY: ${{ secrets.IMPACT_STATE_KEY }}
+          VULNCHECK_API_TOKEN: ${{ secrets.VULNCHECK_API_TOKEN }}
+        run: uv run python -m ops.vulncheck_job --checkout "$GITHUB_WORKSPACE/service" --receipt "$RUNNER_TEMP/vulncheck-status.json"
+      - name: Upload private VulnCheck status
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vulncheck-status
+          path: ${{ runner.temp }}/vulncheck-status.json
+          if-no-files-found: warn
