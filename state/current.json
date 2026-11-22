@@ -1,71 +1,71 @@
 {
-  "archive": "vault-20261121T200730590576Z.sqlite3.xz.fernet",
-  "sha256": "273f41df6913e72d18d42ab9eefaddb97da9ae5fbbf2ac38e1b8e3102a54061c",
-  "checked_at": "2026-11-21T20:09:32.068780+00:00",
+  "archive": "vault-20261122T201902092785Z.sqlite3.xz.fernet",
+  "sha256": "3ea4aaa114e5597efa2e285ecc919cc831773f556b83f6992219eb4ec6021778",
+  "checked_at": "2026-11-22T20:21:00.562981+00:00",
   "source_commit": "8c3e777146910ea5df64915d991e484a0300de06",
   "private": true,
-  "database_bytes": 1261064192,
+  "database_bytes": 1271836672,
   "vault_limit_bytes": 2147483648,
   "storage_profile": {
     "schema_version": 1,
-    "measured_at": "2026-11-21T20:07:38.737417+00:00",
-    "database_page_bytes": 1261064192,
+    "measured_at": "2026-11-22T20:19:10.501842+00:00",
+    "database_page_bytes": 1271836672,
     "free_page_bytes": 0,
     "tables": [
       {
         "table": "evidence",
-        "rows": 6714,
-        "tracked_payload_bytes": 666776395,
+        "rows": 6784,
+        "tracked_payload_bytes": 675482876,
         "columns": {
-          "raw": 666776395
+          "raw": 675482876
         }
       },
       {
         "table": "revisions",
-        "rows": 9241,
-        "tracked_payload_bytes": 536295287,
+        "rows": 9282,
+        "tracked_payload_bytes": 537802721,
         "columns": {
-          "normalized": 536295287
+          "normalized": 537802721
         }
       },
       {
         "table": "reference_documents",
-        "rows": 111,
-        "tracked_payload_bytes": 20445432,
+        "rows": 114,
+        "tracked_payload_bytes": 20484783,
         "columns": {
-          "normalized": 20445432
+          "normalized": 20484783
         }
       },
       {
         "table": "changes",
-        "rows": 409,
-        "tracked_payload_bytes": 5326694,
+        "rows": 411,
+        "tracked_payload_bytes": 5512488,
         "columns": {
-          "details": 5326694
+          "details": 5512488
         }
       },
       {
         "table": "documents",
-        "rows": 79,
-        "tracked_payload_bytes": 2964892,
+        "rows": 80,
+        "tracked_payload_bytes": 3030162,
         "columns": {
-          "text": 2964892
+          "text": 3030162
         }
       },
       {
         "table": "collection_runs",
-        "rows": 13855,
-        "tracked_payload_bytes": 1352947,
+        "rows": 14039,
+        "tracked_payload_bytes": 1370073,
         "columns": {
-          "details": 1352947
+          "details": 1370073
         }
       },
       {
         "table": "pipeline_runs",
-        "rows": 93,
-        "tracked_payload_bytes": 10431,
+        "rows": 94,
+        "tracked_payload_bytes": 10530,
         "columns": {
-          "details": 10431
+          "details": 10530
         }
       },
       {
@@ -79,8 +79,8 @@
     ],
     "method": "Read-only aggregate accounting of fixed application payload columns. Logical byte totals count retained repetitions and exclude indexes, row overhead and unlisted columns; they are not physical per-table sizes. Source bodies, URLs, notes and review values are not returned. No snapshots, revisions or recovery history are removed."
   },
-  "compressed_bytes": 37871440,
-  "archive_bytes": 50495352,
+  "compressed_bytes": 38259540,
+  "archive_bytes": 51012812,
   "retention": {
     "legacy_git_copies_preserved": true,
     "remote_assets": "append_only",
@@ -91,9 +91,9 @@
   "storage_backend": "github-draft-release-v1",
   "remote": {
     "repository": "abedegno/infrastructure-impact",
-    "release_id": 453938589,
-    "asset_id": 776736146,
-    "tag": "collector-recovery-2026-11-21"
+    "release_id": 454724181,
+    "asset_id": 780341660,
+    "tag": "collector-recovery-2026-11-22"
   },
-  "remote_readback_verified_at": "2026-11-21T20:09:42.564859+00:00"
+  "remote_readback_verified_at": "2026-11-22T20:21:13.127728+00:00"
 }
