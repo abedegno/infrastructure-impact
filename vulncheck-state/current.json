@@ -1,30 +1,30 @@
 {
-  "archive": "vault-20261124T002028249181Z.sqlite3.gz.fernet",
-  "sha256": "91180ca462ceccd46e61eb78632ccad1d64d15713d347b47298760c5de5ae91e",
-  "checked_at": "2026-11-24T00:20:35.210510+00:00",
+  "archive": "vault-20261124T224456698239Z.sqlite3.gz.fernet",
+  "sha256": "9232dcb93ad12e0e4d3014262e16e08e0e55756987d9b489e1c76802e4cc0d23",
+  "checked_at": "2026-11-24T22:45:03.809636+00:00",
   "source_commit": "8c3e777146910ea5df64915d991e484a0300de06",
   "private": true,
-  "database_bytes": 331907072,
+  "database_bytes": 340267008,
   "vault_limit_bytes": 536870912,
   "storage_profile": {
     "schema_version": 1,
-    "measured_at": "2026-11-24T00:20:29.422770+00:00",
-    "database_page_bytes": 331907072,
+    "measured_at": "2026-11-24T22:44:57.863855+00:00",
+    "database_page_bytes": 340267008,
     "free_page_bytes": 0,
     "tables": [
       {
         "table": "revisions",
-        "rows": 4,
-        "tracked_payload_bytes": 310834226,
+        "rows": 5,
+        "tracked_payload_bytes": 316850856,
         "columns": {
-          "normalized": 310834226
+          "normalized": 316850856
         }
       }
     ],
     "method": "Read-only aggregate accounting of fixed application payload columns. Logical byte totals count retained repetitions and exclude indexes, row overhead and unlisted columns; they are not physical per-table sizes. Source bodies, URLs, notes and review values are not returned. No snapshots, revisions or recovery history are removed."
   },
-  "compressed_bytes": 32743650,
-  "archive_bytes": 43658296,
+  "compressed_bytes": 35840506,
+  "archive_bytes": 47787428,
   "retention": {
     "legacy_git_copies_preserved": true,
     "remote_assets": "append_only",
@@ -36,8 +36,8 @@
   "remote": {
     "repository": "abedegno/infrastructure-impact",
     "release_id": 456156088,
-    "asset_id": 785078267,
+    "asset_id": 789153879,
     "tag": "collector-recovery-2026-11-24"
   },
-  "remote_readback_verified_at": "2026-11-24T00:20:43.627918+00:00"
+  "remote_readback_verified_at": "2026-11-24T22:45:09.957123+00:00"
 }
