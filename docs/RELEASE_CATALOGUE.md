@@ -1,7 +1,9 @@
 # Release catalogue: first delivery
 
-This optional, offline dataset implements round 4 steps 1–4. The current site and
-hosted collection do not consume it. Independent human review is pending.
+This offline dataset implements round 4 steps 1–4. The approved
+[second-delivery report](RELEASE_RELIABILITY.md) packages the extracted facts for
+new publication generations; it does not activate vendor collection. Independent
+human review is pending.
 Counts describe disclosure and collection, not vendor quality. Missing evidence
 is unknown, never zero.
 
@@ -69,8 +71,9 @@ complete, original, dated release enumeration has not been established. A covera
 claim of complete also requires every configured model, original coverage receipts,
 closed enumeration and no unresolved release dates. Undated identities remain
 visible and cannot be assigned to a year. The 2026 period is year-to-date.
-No rates, cross-vendor ranking, upgrade markers or new hosted catalogue roots are
-published in this delivery; round 4 steps 5–8 require approval.
+The second-delivery report exposes these limits through optional publication
+roots, tables and source-linked upgrade context. Current rates remain unavailable;
+no cross-vendor ranking follows. See [release reliability](RELEASE_RELIABILITY.md).
 
 ## Targeted coverage follow-up
 

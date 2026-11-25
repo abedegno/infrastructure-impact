@@ -98,7 +98,7 @@ def public_projection(
     data = {
         k: v
         for k, v in data.items()
-        if k not in ("switching_release_history", "switching_analysis")
+        if k not in ("switching_release_history", "switching_analysis", "release_reliability")
     }
     context = data["research"].get("current_evidence_input", {"selections": [], "sources": []})
     union = data["records"] + [w["record"] for w in data.get("retained_advisories", [])]
@@ -321,6 +321,15 @@ def public_projection(
     from .switching_validation import rebuild as rebuild_switching_validation
 
     rebuild_switching_validation(data)
+    from .release_reliability import build_report as build_reliability
+    from .switching_validation import attach_release_reliability
+
+    data["release_reliability"] = build_reliability(
+        publication=data.get("publication"), generated_at=data["generated_at"]
+    )
+    data["switching_validation"] = attach_release_reliability(
+        data["switching_validation"], data["release_reliability"]
+    )
     data["vendor_gaps"] = vendor_gaps(data)
     data["review_packet"] = review_packet(
         data["records"] + [w["record"] for w in data["retained_advisories"]]
@@ -461,6 +470,14 @@ def write_bundle(destination, data, *, publication_format="v1"):
             generated_at=data["generated_at"],
             **proof_args,
         )
+    if "release_reliability" in data:
+        from .release_reliability import validate_report as validate_reliability
+
+        validate_reliability(
+            data["release_reliability"],
+            publication=data["publication"],
+            generated_at=data["generated_at"],
+        )
     if publication_format == "v2":
         if evidence_proof is not None:
             evidence_proof.require(
@@ -480,10 +497,17 @@ def write_bundle(destination, data, *, publication_format="v1"):
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "current-evidence.json").write_bytes(report_bytes(data["current_evidence"]))
+    write_reliability_assets(destination, data)
     compact = {
         k: v
         for k, v in data.items()
-        if k not in ("switching_evidence", "switching_release_history", "switching_analysis")
+        if k
+        not in (
+            "switching_evidence",
+            "switching_release_history",
+            "switching_analysis",
+            "release_reliability",
+        )
     }
     if "switching_release_history" in data:
         (destination / "switching-release-history.json").write_text(
@@ -581,6 +605,42 @@ def write_bundle(destination, data, *, publication_format="v1"):
     write_manifest(destination, data)
 
 
+def reliability_review(data):
+    report = data["release_reliability"]
+    return dict(
+        schema_version=1,
+        publication=data["publication"],
+        generated_at=data["generated_at"],
+        sources=(report.get("catalogue") or {}).get("sources", []),
+        items=report["review_packet"],
+        review_status="independent_human_review_pending",
+    )
+
+
+def write_reliability_assets(destination, data):
+    if "release_reliability" not in data:
+        return
+    if (
+        data["release_reliability"]["upgrade_selection"] is not None
+        or data["release_reliability"]["upgrade_annotations"]
+    ):
+        raise ValueError("Published reliability report contains selected analysis")
+    from .release_reliability import csv_export
+    from .static_delivery import encode
+
+    for name, value in (
+        ("release-reliability.json", data["release_reliability"]),
+        ("release-reliability-review.json", reliability_review(data)),
+    ):
+        raw = encode(value)
+        if len(raw) > 8_000_000:
+            raise ValueError("Release reliability report exceeds 8 MB")
+        (destination / name).write_bytes(raw)
+    (destination / "release-reliability.csv").write_text(
+        csv_export(data["release_reliability"], max_bytes=8_000_000)
+    )
+
+
 def write_manifest(destination, data):
     manifest = {
         str(p.relative_to(destination)): sha256(p.read_bytes()).hexdigest()
@@ -597,6 +657,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         *(("publication-v2.js",) if publication_format == "v2" else ()),
         "lossless-json.js",
         "current-evidence.js",
+        "release-reliability.js",
         "app.js",
         "style.css",
         "research-dossiers.js",
@@ -616,7 +677,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         .read_text()
         .replace(
             '<script defer src="/app.js">',
-            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/customer-comparison.js"></script><script defer src="/switching-analysis.js"></script><script defer src="/snapshot.js"></script><script defer src="/app.js">',
+            '<script defer src="/delivery.js"></script><script defer src="/kev.js"></script><script defer src="/switching.js"></script><script defer src="/switching-view.js"></script><script defer src="/customer-comparison.js"></script><script defer src="/switching-analysis.js"></script><script defer src="/snapshot.js"></script><script defer src="/release-reliability.js"></script><script defer src="/app.js">',
         )
     )
     if publication_format == "v2":
@@ -632,6 +693,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
         *(("publication-v2.js",) if publication_format == "v2" else ()),
         "lossless-json.js",
         "current-evidence.js",
+        "release-reliability.js",
         "app.js",
         "research-dossiers.js",
         "vulncheck.js",
@@ -689,6 +751,7 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
     )
     for name in (
         "current-evidence-v1.json",
+        "release-reliability-v1.json",
         "comparison-eligibility-summary-v1.json",
         "product-groups-v1.json",
         "publisher-history-v1.json",

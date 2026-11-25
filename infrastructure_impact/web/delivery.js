@@ -713,6 +713,38 @@ async function createStaticDelivery(fetchPart, siteBase) {
       });
     return switchingPromise;
   };
+  let reliabilityPromise;
+  load.releaseReliability = async () => {
+    if (!reliabilityPromise)
+      reliabilityPromise = (async () => {
+        const response = await fetchPart(siteBase + 'release-reliability.json', {
+          cache: 'no-cache',
+        });
+        if (response.status === 404) {
+          if (Object.hasOwn(common, 'release_reliability_version'))
+            throw Error('Declared release reliability unavailable');
+          return null;
+        }
+        if (
+          Object.hasOwn(common, 'release_reliability_version') &&
+          common.release_reliability_version !== 1
+        )
+          throw Error('Unknown release reliability capability');
+        if (!response.ok) throw Error('Release reliability unavailable');
+        const raw = await boundedBytes(response, 8000000);
+        const report = window.InfrastructureJSON.parseStrict(
+          new TextDecoder('utf-8', { fatal: true }).decode(raw),
+        );
+        window.InfrastructureReleaseReliability.validate(report, index);
+        if (report.upgrade_selection !== null || report.upgrade_annotations.length)
+          throw Error('Published reliability report contains selected analysis');
+        return report;
+      })().catch((error) => {
+        reliabilityPromise = null;
+        throw error;
+      });
+    return window.InfrastructureJSON.clone(await reliabilityPromise);
+  };
   let releaseHistoryPromise;
   load.switchingReleaseHistory = async (study) => {
     window.InfrastructureSwitchingContracts.identity(study, index);
@@ -740,6 +772,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
     );
   };
   if (publicationV2) {
+    load.releaseReliability = publicationV2.releaseReliability;
     load.switchingReleaseHistory = publicationV2.switchingReleaseHistory;
     load.switchingAnalysis = publicationV2.switchingAnalysis;
     load.switchingOverview = publicationV2.switchingOverview;

@@ -535,7 +535,13 @@ def logical_views(data):
     compact = {
         k: v
         for k, v in data.items()
-        if k not in ("switching_evidence", "switching_release_history", "switching_analysis")
+        if k
+        not in (
+            "switching_evidence",
+            "switching_release_history",
+            "switching_analysis",
+            "release_reliability",
+        )
     }
     compact["switching_comparison"] = summary(data["switching_comparison"])
     yield "snapshot.json", compact
@@ -545,6 +551,11 @@ def logical_views(data):
         yield "switching-release-history.json", data["switching_release_history"]
     if "switching_analysis" in data:
         yield "switching-analysis.json", data["switching_analysis"]
+    if "release_reliability" in data:
+        from .publication import reliability_review
+
+        yield "release-reliability.json", data["release_reliability"]
+        yield "release-reliability-review.json", reliability_review(data)
     yield "current-evidence.json", data["current_evidence"]
     yield "release-assets.json", data["research"].get("release_assets", [])
     yield "catalogue.json", data.get("catalogue", {})
@@ -608,7 +619,7 @@ def write_bundle(destination, data):
 def _write_bundle(destination, data, row_sources):
     from ..exports import csv_export
     from .eligibility import monitor_summary
-    from .publication import write_manifest, write_reader_assets
+    from .publication import write_manifest, write_reader_assets, write_reliability_assets
     from .static_delivery import write_static_delivery
     from .switching_comparison import summary
 
@@ -644,6 +655,7 @@ def _write_bundle(destination, data, row_sources):
             "switching_comparison",
             "switching_release_history",
             "switching_analysis",
+            "release_reliability",
         )
     }
     runtime["switching_overview"] = overview
@@ -701,6 +713,7 @@ def _write_bundle(destination, data, row_sources):
         vendors=data["vendors"],
     )
     (destination / "comparison-eligibility-summary.json").write_bytes(encode(summary_eligibility))
+    write_reliability_assets(destination, data)
     write_reader_assets(destination, data, publication_format="v2")
     write_static_delivery(destination, data, publication_v2=descriptor)
     write_manifest(destination, data)
@@ -873,6 +886,13 @@ def verify_projection(reader, projected):
     """Root membership comes from native views, never the untrusted catalog."""
     from .switching_comparison import summary
 
+    if (
+        "release-reliability.json" in reader.catalog["roots"]
+        and "release_reliability" not in projected
+    ):
+        from .release_reliability import build_report
+
+        projected = dict(projected, release_reliability=build_report(**reader.identity))
     views = dict(logical_views(projected))
     complete_summary = summary(projected["switching_comparison"])
     ranges = reader.ranges("snapshot.json")
@@ -908,6 +928,7 @@ def verify_projection(reader, projected):
                 "switching_comparison",
                 "switching_release_history",
                 "switching_analysis",
+                "release_reliability",
             )
         },
         "switching_overview": overview,

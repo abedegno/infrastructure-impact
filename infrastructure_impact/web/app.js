@@ -46,6 +46,7 @@ let selectedCves = null,
   customCves = '',
   committedSelection = null;
 window.InfrastructureSnapshot?.commit(null, null);
+const reliabilityRoots = new WeakMap();
 let comparisonSelection = {},
   comparisonScopeVendor = '';
 let comparisonMode = location.hash === '#customer-comparison' ? 'customer' : 'benchmark',
@@ -502,19 +503,32 @@ function renderComparison() {
   const accepted = customer ? customerStudy : switchingReport,
     delivery = customer ? customerAcceptedDelivery : switchingAcceptedDelivery;
   privateKev?.update({ study: accepted, cisa: accepted?.inputs?.kev ?? data.kev ?? null });
+  const reliabilityState = releaseReliabilityState(accepted, delivery),
+    acceptedAnalysis = analysisStudy === accepted ? analysisReport : null;
+  let reliabilityReport = reliabilityState.report;
+  try {
+    if (reliabilityReport && acceptedAnalysis)
+      reliabilityReport = window.InfrastructureReleaseReliability.withUpgrades(
+        reliabilityReport,
+        acceptedAnalysis.upgrades,
+      );
+  } catch (error) {
+    reliabilityReport = null;
+    reliabilityState.error = error.message;
+  }
   const renderStudy = customer
     ? window.InfrastructureCustomerComparison.render
     : window.InfrastructureSwitching.render;
   $('#comparison-content').innerHTML = renderStudy(customer ? customerReport : accepted, {
     loading: switchingLoading,
     error: switchingError,
+    releaseReliability: reliabilityReport,
     factCatalog: delivery?.factCatalog,
     validation: data.switching_validation,
     reviewPacket: data.switching_review_packet,
     validationPublication: data.publication,
     validationGeneratedAt: data.generated_at,
   });
-  const acceptedAnalysis = analysisStudy === accepted ? analysisReport : null;
   $('#comparison-content').insertAdjacentHTML(
     'beforeend',
     window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
@@ -522,7 +536,62 @@ function renderComparison() {
       error: analysisError,
     }),
   );
-  window.InfrastructureSwitchingAnalysis.mount($('#comparison-content'), acceptedAnalysis);
+  window.InfrastructureSwitchingAnalysis.mount(
+    $('#comparison-content'),
+    acceptedAnalysis,
+    reliabilityReport,
+  );
+  if (window.InfrastructureReleaseReliability) {
+    $('#comparison-content').insertAdjacentHTML(
+      'beforeend',
+      window.InfrastructureReleaseReliability.render(reliabilityReport, reliabilityState),
+    );
+    $('#reliability-retry')?.addEventListener('click', () => {
+      reliabilityRoots.delete(delivery);
+      renderComparison();
+    });
+    $('#reliability-jump')?.addEventListener('click', () =>
+      $('#release-reliability')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }),
+    );
+    for (const kind of ['json', 'csv', 'review'])
+      $('#reliability-' + kind)?.addEventListener('click', () => {
+        try {
+          window.InfrastructureReleaseReliability.validate(reliabilityReport, accepted);
+          const isJSON = kind !== 'csv',
+            value =
+              kind === 'review'
+                ? {
+                    schema_version: 1,
+                    publication: reliabilityReport.publication,
+                    generated_at: reliabilityReport.generated_at,
+                    sources: reliabilityReport.catalogue?.sources ?? [],
+                    items: reliabilityReport.review_packet,
+                    review_status: 'independent_human_review_pending',
+                  }
+                : reliabilityReport,
+            body = isJSON
+              ? appJSON.stringifyBounded(value, null, '', 128000000)
+              : window.InfrastructureReleaseReliability.csvExport(reliabilityReport),
+            url = URL.createObjectURL(
+              new Blob([body], { type: isJSON ? 'application/json' : 'text/csv' }),
+            ),
+            a = document.createElement('a');
+          a.href = url;
+          a.download =
+            'release-reliability-' +
+            (kind === 'review' ? 'review-' : '') +
+            reliabilityReport.publication?.id +
+            '.' +
+            (isJSON ? 'json' : 'csv');
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+          reliabilityState.error = 'Release export rejected: ' + error.message;
+          reliabilityState.report = null;
+          renderComparison();
+        }
+      });
+  }
   $('#analysis-load').addEventListener('click', () => loadAnalysis(accepted, delivery));
   for (const kind of ['json', 'csv', 'upgrades-csv'])
     $('#analysis-' + kind)?.addEventListener('click', () => {
@@ -622,6 +691,27 @@ function renderComparison() {
     (!switchingReport || (customer && (!customerReport || customerStudy !== switchingReport)))
   )
     loadSwitching(switchingReport ? studyOptions(switchingReport) : {});
+}
+function releaseReliabilityState(study, delivery) {
+  if (!study || !delivery || !window.InfrastructureReleaseReliability) return { report: null };
+  if (reliabilityRoots.has(delivery)) return reliabilityRoots.get(delivery);
+  const state = { report: null, loading: true, error: '' };
+  reliabilityRoots.set(delivery, state);
+  (async () => {
+    try {
+      const loader = await delivery.promise;
+      window.InfrastructureSwitchingContracts.identity(loader, study);
+      const report = loader.releaseReliability ? await loader.releaseReliability() : null;
+      if (report !== null) window.InfrastructureReleaseReliability.validate(report, study);
+      state.report = report;
+    } catch (error) {
+      state.error = 'Release evidence rejected: ' + error.message;
+    }
+    state.loading = false;
+    if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode))
+      renderComparison();
+  })();
+  return state;
 }
 async function loadAnalysis(study, delivery) {
   if (!study || !delivery) return;

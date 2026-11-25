@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / "infrastructure_impact"
 NAMES = (
+    "release-reliability-v1.json",
     "switching-study-v1.json",
     "switching-evidence-v1.json",
     "switching-comparison-v1.json",

@@ -50,9 +50,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -151,9 +149,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -269,9 +265,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ]
@@ -298,9 +292,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -388,9 +380,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -442,9 +432,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -532,9 +520,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ]
@@ -612,9 +598,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -690,9 +674,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ]
@@ -975,9 +957,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -1012,9 +992,7 @@
             "description": "Omit for unfiltered selection. Exactly one kev=listed restricts the requested CVEs to reliably verified KEV members before all cohort-derived views. Blank, other, or repeated values return 400. Unreliable membership returns 503 kev_unavailable.",
             "schema": {
               "type": "string",
-              "enum": [
-                "listed"
-              ]
+              "enum": ["listed"]
             }
           }
         ],
@@ -1079,11 +1057,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "cisco",
-                "aruba",
-                "arista"
-              ]
+              "enum": ["cisco", "aruba", "arista"]
             },
             "description": "Optional single vendor; omission selects all registered study vendors."
           },
@@ -1093,10 +1067,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "os_family",
-                "model_qualified"
-              ],
+              "enum": ["os_family", "model_qualified"],
               "default": "os_family"
             },
             "description": "OS-family context or explicitly qualified model subset."
@@ -1127,10 +1098,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "json",
-                "csv"
-              ],
+              "enum": ["json", "csv"],
               "default": "json"
             },
             "description": "JSON is explicit switching summary v1 with traceable claim IDs and sources; CSV repeats totals as nonadditive severity facets."
@@ -1361,10 +1329,7 @@
             "description": "Explicit excluded-latest assessment download; omission returns paginated retained wrappers.",
             "schema": {
               "type": "string",
-              "enum": [
-                "json",
-                "csv"
-              ]
+              "enum": ["json", "csv"]
             }
           }
         ],
@@ -1410,17 +1375,10 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": [
-                    "publication",
-                    "generated_at",
-                    "benchmark_cohort"
-                  ],
+                  "required": ["publication", "generated_at", "benchmark_cohort"],
                   "properties": {
                     "publication": {
-                      "type": [
-                        "object",
-                        "null"
-                      ]
+                      "type": ["object", "null"]
                     },
                     "generated_at": {
                       "type": "string",
@@ -1491,11 +1449,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "cisco",
-                "aruba",
-                "arista"
-              ]
+              "enum": ["cisco", "aruba", "arista"]
             },
             "description": "Optional single vendor; omission selects all registered study vendors."
           },
@@ -1505,10 +1459,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "os_family",
-                "model_qualified"
-              ],
+              "enum": ["os_family", "model_qualified"],
               "default": "os_family"
             },
             "description": "OS-family context or explicitly qualified model subset."
@@ -1539,10 +1490,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "json",
-                "csv"
-              ],
+              "enum": ["json", "csv"],
               "default": "json"
             },
             "description": "JSON is customer-comparison-v1 (study is genuine summary v1 or switching-overview v2): selected study, selected release history and limitations. CSV has study_summary, release_reference, bundle_context, platform_support and source_coverage rows. Repeated totals are nonadditive; unknown fix counts are blank. Software dates, remediation availability and bundle dates remain distinct."
@@ -1624,11 +1572,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "cisco",
-                "aruba",
-                "arista"
-              ]
+              "enum": ["cisco", "aruba", "arista"]
             },
             "description": "Optional single vendor; omission selects all registered study vendors."
           },
@@ -1638,10 +1582,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "os_family",
-                "model_qualified"
-              ],
+              "enum": ["os_family", "model_qualified"],
               "default": "os_family"
             },
             "description": "OS-family context or explicitly qualified model subset."
@@ -1672,10 +1613,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "json",
-                "csv"
-              ],
+              "enum": ["json", "csv"],
               "default": "json"
             },
             "description": "JSON contains selected upgrades, disclosure, KEV reconciliation, model coverage and release history. CSV columns row_type,vendor,cve_id,year,event_count,payload; payload is the exact typed section row as JSON."
@@ -1717,11 +1655,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "cisco",
-                "aruba",
-                "arista"
-              ]
+              "enum": ["cisco", "aruba", "arista"]
             },
             "description": "Optional single vendor; omission selects all registered study vendors."
           },
@@ -1731,10 +1665,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "os_family",
-                "model_qualified"
-              ],
+              "enum": ["os_family", "model_qualified"],
               "default": "os_family"
             },
             "description": "OS-family context or explicitly qualified model subset."
@@ -1765,10 +1696,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "json",
-                "csv"
-              ],
+              "enum": ["json", "csv"],
               "default": "json"
             },
             "description": "Typed native upgrade rows; nested facts use JSON cells and unknown scalar counts are blank."
@@ -1825,6 +1753,96 @@
           },
           "404": {
             "description": "Optional analysis not included"
+          }
+        }
+      }
+    },
+    "/api/v1/release-reliability": {
+      "get": {
+        "summary": "Generation-bound release catalogue metrics and optional selected upgrade context",
+        "description": "Catalogue metrics are independent of study filters. Missing legacy roots return unavailable evidence. Study controls require include_upgrades=1; selected analysis supplies annotations only. Unknown rates remain null. CSV includes typed payload rows for source receipts, coverage judgements, releases, notices, statements, respins, pending reviews and validation; source IDs and rate-support inputs remain resolvable within the export.",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["json", "csv"],
+              "default": "json"
+            }
+          },
+          {
+            "name": "include_upgrades",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["1"]
+            },
+            "description": "Include annotations from the existing selected upgrade analysis; enables vendor, scope, window and cves controls."
+          },
+          {
+            "name": "vendor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["cisco", "aruba", "arista"]
+            },
+            "description": "Optional single vendor; omission selects all registered study vendors."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["os_family", "model_qualified"],
+              "default": "os_family"
+            },
+            "description": "OS-family context or explicitly qualified model subset."
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "all"
+            },
+            "description": "all, pre, post, undated, or an observed year from 2021 through observation_end year. Cutoff 2026-04-07 is post."
+          },
+          {
+            "name": "cves",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^CVE-[0-9]{4}-[0-9]{4,19}(,CVE-[0-9]{4}-[0-9]{4,19})*$"
+            },
+            "description": "Canonical distinct comma-separated IDs. Omission selects full study independently of ordinary benchmark/KEV controls. Unmatched selection is empty."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Release reliability report or CSV; all human reviews remain pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "/schemas/release-reliability-v1.json"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, repeated or unsupported query parameter"
+          },
+          "503": {
+            "description": "Damaged or mixed-generation publication"
           }
         }
       }

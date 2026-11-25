@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — release reliability
+
+- Add generation-bound release-reliability and human-review reports, per-train/year observed counts and coverage, JSON/CSV exports, native API and browser tables. Keep incomplete rates unavailable and distinguish research excerpts from production-eligible evidence.
+- Add exact-target staircase context with distinct date/target grouping, source links, separate notice/action/release dates and explicit model/chronology unknowns. Preserve existing CVE, disclosure and upgrade counts.
+- Package the extracted first-delivery catalogue, separate release validation from advisory extraction pass rates, and retain independent human review pending. No new vendor collection, access permissions, secrets, schedule or workflow-permission changes.
+
 ## 0.13.0 research preview candidate — 2026-11-09
 
 - Add a customer switching comparison with selected affected CVEs, remediation-publication events, provider severity, KEV, coverage/model limits and separate literal fixed-release evidence. Share the native/static/browser selection and JSON/CSV contracts; retain unavailable old-publication history and accepted exports during failed or pending loads.

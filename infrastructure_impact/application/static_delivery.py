@@ -132,8 +132,11 @@ def write_static_delivery(destination, data, *, publication_v2=None):
         "switching_analysis",
         "retained_advisories",
         "current_evidence",
+        "release_reliability",
     }
     common = {k: v for k, v in data.items() if k not in omitted}
+    if "release_reliability" in data:
+        common["release_reliability_version"] = 1
     if "current_evidence" in data:
         common["current_evidence_version"] = 1
     common["retained_index"] = [

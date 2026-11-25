@@ -22,6 +22,7 @@ from ..source_policy import allowed
 from .eligibility import timestamp
 
 _SCHEMAS = (
+    "release-reliability-v1.json",
     "switching-study-v1.json",
     "switching-evidence-v1.json",
     "switching-comparison-v1.json",

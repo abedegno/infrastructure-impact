@@ -125,6 +125,25 @@ class PublicationReader(codec.CatalogReader):
             return result["data"]
         return result
 
+    def release_reliability(self):
+        """Verify identity before materializing the optional bounded report."""
+        from .release_reliability import validate_report
+
+        name = "release-reliability.json"
+        if name not in self.catalog["roots"]:
+            return None
+        self._identity(
+            dict(
+                publication=self.field(name, "publication"),
+                generated_at=self.field(name, "generated_at"),
+            )
+        )
+        report = self.materialize_range(self.ranges(name)[()], max_bytes=8_000_000)
+        validate_report(report, **self.identity)
+        if report["upgrade_selection"] is not None or report["upgrade_annotations"]:
+            raise ValueError("Published reliability report contains selected analysis")
+        return report
+
     def switching_overview(self, evaluated_at=None):
         from . import kev
 

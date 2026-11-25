@@ -331,7 +331,7 @@
       '</tbody></table></div><p>CVE counts use the original advisory-publication cohort; remediation-publication counts use event dates. Publications are not customer upgrades. Literal fixed versions are source evidence, not an upgrade count or path. Model applicability and historical completeness remain unknown; zero observations do not establish no exposure. Provider-specific severity and supporting evidence follow below.</p></section>'
     );
   }
-  function releaseEvidence() {
+  function releaseEvidence(current) {
     const research =
       'https://github.com/abedegno/infrastructure-impact/blob/15292f21f1e6d487757ed131426f2e70827cab4d/docs/research/2026-11-25-publisher-event-sample';
     const arista = view.link(
@@ -344,6 +344,8 @@
     );
     return `<section class="customer-release-evidence">
       <h3>Release reliability evidence</h3>
+      <p>Current accepted catalogue: ${esc(current?.availability ?? 'unavailable')}. Current generation metrics and selected upgrade annotations appear in the separate release reliability table below; the dated sample remains pinned research context.</p>
+      <p><button id="reliability-jump" type="button">View release reliability tables</button></p>
       <p>Pinned 14 November 2026 scenario snapshot, researched 25 November 2026. This evidence is independent of the current vendor, study window, scope and CVE filters and their exports. Independent human review pending.</p>
       <p>Withdrawal and corrective respin rates are unavailable for Cisco, Aruba and Arista. Historical coverage and release denominators are incomplete. Disclosure counts reflect publication and collection practices and cannot establish vendor security quality or upgrade burden.</p>
       <ul>
@@ -358,13 +360,17 @@
     const title =
       '<h2>Customer switching comparison</h2><p class="notice">Counts measure disclosure, not vendor security quality. Actual customer upgrades: unknown.</p><p>The advisory cohort uses the study publication window; release dates and publication events describe separate evidence.</p>';
     if (!envelope)
-      return title + view.render(null, { ...state, customer: true }) + releaseEvidence();
+      return (
+        title +
+        view.render(null, { ...state, customer: true }) +
+        releaseEvidence(state.releaseReliability)
+      );
     validate(envelope);
     const history = envelope.release_history;
     return (
       title +
       overview(envelope) +
-      releaseEvidence() +
+      releaseEvidence(state.releaseReliability) +
       view.render(envelope.study, { ...state, customer: true }) +
       '<section class="customer-history"><h3>Reported fixed releases and source history</h3><p>A release without linked CVEs is not evidence of a silent security fix or vendor concealment. Evidence gaps do not establish zero exposure or withholding. Model applicability and actual upgrades remain unknown.</p>' +
       `<p>History: ${esc(history.availability)}. Release coverage denominator: unknown. ${esc(history.method)}</p>` +

@@ -687,7 +687,13 @@ def _parity(database, public, home, snapshot):
     compact = {
         k: v
         for k, v in projected.items()
-        if k not in ("switching_evidence", "switching_release_history")
+        if k
+        not in (
+            "switching_evidence",
+            "switching_release_history",
+            "switching_analysis",
+            "release_reliability",
+        )
     }
     compact["switching_comparison"] = summary(projected["switching_comparison"])
     if compact != snapshot:

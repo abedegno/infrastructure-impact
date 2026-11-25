@@ -512,6 +512,40 @@
             },
             "maxItems": 20000,
             "uniqueItems": true
+          },
+          "signal_coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "releases_shipped": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "deferred_or_withdrawn": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "possible_respin_30": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "possible_respin_90": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "corrective_respin_30": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "corrective_respin_90": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "software_defect_notices": {
+                "enum": ["complete", "partial", "unknown"]
+              },
+              "deferral_notices": {
+                "enum": ["complete", "partial", "unknown"]
+              }
+            }
+          },
+          "prior_release_history_start": {
+            "type": "string",
+            "format": "date"
           }
         }
       },

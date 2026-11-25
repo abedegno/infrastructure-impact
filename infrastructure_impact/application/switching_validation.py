@@ -173,3 +173,33 @@ def rebuild(data):
         source_selections=data.get("source_audit", {}).get("source_selections", ()),
     )
     data["switching_review_packet"] = packet(union)
+
+
+def attach_release_reliability(report, reliability):
+    """Keep release-structure checks separate from advisory extraction pass rates.
+
+    Passing these automatic checks does not establish source completeness or
+    independent human approval of a publisher action or notice classification.
+    """
+    from copy import deepcopy
+
+    from .release_reliability import validate_report
+
+    validate_report(reliability)
+    for key in ("publication", "generated_at"):
+        if key in report and report[key] != reliability[key]:
+            raise ValueError("Release validation and extraction generation differ")
+    result = deepcopy(report)
+    result["release_reliability"] = {
+        **deepcopy(reliability["validation"]),
+        "publication": deepcopy(reliability["publication"]),
+        "generated_at": reliability["generated_at"],
+        "catalogue_sha256": reliability["catalogue_sha256"],
+        "dataset_observed_at": reliability["dataset_observed_at"],
+        "review_status": "independent_human_review_pending",
+        "interpretation": (
+            "Automatic release evidence checks are separate from extraction pass rates. "
+            "They do not approve source classifications, model applicability or completeness."
+        ),
+    }
+    return result

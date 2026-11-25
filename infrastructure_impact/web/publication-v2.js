@@ -1613,6 +1613,32 @@
       json.measure(selected, null, '', Math.min(options.max_bytes ?? 128000000, 128000000));
       return selected;
     }
+    let reliabilityPromise;
+    async function releaseReliability(options = {}) {
+      if (!options.operation) return scoped(options, (next) => releaseReliability(next));
+      if (!reliabilityPromise)
+        reliabilityPromise = (async () => {
+          const name = 'release-reliability.json';
+          if (!Object.hasOwn(catalog.roots, name)) return null;
+          const identity = {
+            publication: await field(name, ['publication'], options),
+            generated_at: await field(name, ['generated_at'], options),
+          };
+          window.InfrastructureSwitchingContracts.identity(identity, catalog);
+          const report = await materializeRoot(name, {
+            ...options,
+            max_bytes: Math.min(options.max_bytes ?? 8000000, 8000000),
+          });
+          window.InfrastructureReleaseReliability.validate(report, catalog);
+          if (report.upgrade_selection !== null || report.upgrade_annotations.length)
+            throw Error('Published reliability report contains selected analysis');
+          return report;
+        })().catch((error) => {
+          reliabilityPromise = null;
+          throw error;
+        });
+      return json.clone(await options.operation.run(reliabilityPromise));
+    }
     let releaseHistoryPromise;
     async function switchingReleaseHistory(study, options = {}) {
       window.InfrastructureSwitchingContracts.identity(study, catalog);
@@ -1652,6 +1678,7 @@
       runtimeSnapshot,
       switchingOverview,
       switchingReleaseHistory,
+      releaseReliability,
       switchingAnalysis,
       switchingSelection,
       switchingClaims,

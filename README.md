@@ -100,6 +100,12 @@ fixes linked to an affected scope. Missing release dates and incomplete archives
 stay visible. The compact overview reuses selected study counts, with provider
 severity and detailed audit evidence below. See the [method and API](docs/switching-comparison.md).
 
+New publications also expose [release reliability](docs/RELEASE_RELIABILITY.md)
+for IOS XE 17.12, AOS-CX 10.13 and EOS 4.33. Per-train tables retain observed
+counts, source eligibility and coverage; unsupported rates remain unavailable.
+Source-linked staircase context keeps notice, action and software dates separate
+and does not change upgrade counts or infer device applicability.
+
 Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
 and Fortinet. [Archive source reviews](docs/research/vendor-archives.md) document
 product filters, access gaps and why Cisco archive backfill remains disabled.
