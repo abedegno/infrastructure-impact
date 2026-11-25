@@ -1,0 +1,263 @@
+{
+  "format": "round4-targeted-coverage-delta",
+  "schema_version": 1,
+  "research_date": "2026-11-25",
+  "vendor": "aruba",
+  "train": "10.13",
+  "review_status": "review_pending",
+  "publication_status": "research_only_not_activated",
+  "base_packet": "docs/research/2026-11-25-round4-aruba.json",
+  "scope": {
+    "platforms": ["6200", "6300"],
+    "targets": [
+      "latest6200 10.13.1200 history",
+      "6300 10.13.1001 dated history",
+      "6300 10.13.1031 dated history",
+      "6300 10.13.1161 dated history"
+    ],
+    "bounded_pass": true
+  },
+  "sources": [
+    {
+      "id": "coverage-6200-index",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/index.html",
+      "retrieved_at": "2026-11-25T18:37:38.198Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "original_sha256": null,
+      "rendered_capture_sha256": "a9006b7dc3c109c109f29884d1ad6757778b0a4d5d029b38dd47d87e71e4a8e5",
+      "rendered_payload_sha256": "215f18116b06a908b24406390d0f34ea9ad042269c9474e503401c1e328275ef",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6200-index.json",
+      "hash_basis": "rendered_capture_sha256 hashes exact retained JSON receipt bytes; rendered_payload_sha256 hashes its result field as UTF-8"
+    },
+    {
+      "id": "coverage-6200-1200",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/10-13-1200.html",
+      "retrieved_at": "2026-11-25T18:37:39.993Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "original_sha256": null,
+      "rendered_capture_sha256": "ed9ee8a2668d7f509f8453bc44ab51d979bd9071abde531b9ad96f8152a08020",
+      "rendered_payload_sha256": "207ea37dd81dae83d018631f3ae579adb5eb35a11f9d74e6aac1138140564208",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6200-1200.json",
+      "hash_basis": "rendered_capture_sha256 hashes exact retained JSON receipt bytes; rendered_payload_sha256 hashes its result field as UTF-8"
+    },
+    {
+      "id": "coverage-6300-1001",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/10-13-1001.html",
+      "retrieved_at": "2026-11-25T18:37:41.781Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "original_sha256": null,
+      "rendered_capture_sha256": "9170cb1a94cb15260ce524d3dfd199a15aa55a1105e0915a399a6b9ffa4aff34",
+      "rendered_payload_sha256": "262378af4d94e4b39231dbf69d4a988bc1a7121fb970683f1fccee96278d4ba7",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6300-1001.json",
+      "hash_basis": "rendered_capture_sha256 hashes exact retained JSON receipt bytes; rendered_payload_sha256 hashes its result field as UTF-8"
+    },
+    {
+      "id": "coverage-6300-1161",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/10-13-1161.html",
+      "retrieved_at": "2026-11-25T18:37:43.700Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "original_sha256": null,
+      "rendered_capture_sha256": "19449b14e320a0af012fdb619ede366c51f52c4e2465420699cdf93b5ecf0647",
+      "rendered_payload_sha256": "0fd96145910b5c801524a6aba1f705cead0321b3737eeb497f462f7cdac5e64c",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6300-1161.json",
+      "hash_basis": "rendered_capture_sha256 hashes exact retained JSON receipt bytes; rendered_payload_sha256 hashes its result field as UTF-8"
+    },
+    {
+      "id": "6200-history-rendered",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-19.html",
+      "retrieved_at": "2026-11-25T16:46:28.251Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "original_sha256": null,
+      "rendered_capture_sha256": "577a328c76411d0d319dba4315d6201d104dc6c1a5595ca71e4017ac4d60bb39",
+      "rendered_payload_sha256": "07b2e8975ea556bed2effb8b56ae929c3169a468fe53f6ab27d441f5dc50fff7",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/6200-history-rendered.json",
+      "hash_basis": "rendered_capture_sha256 hashes exact retained JSON receipt bytes; rendered_payload_sha256 hashes its result field as UTF-8"
+    },
+    {
+      "id": "6300-history-rendered",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/version-history-16.html",
+      "retrieved_at": "2026-11-25T16:46:25.590Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "original_sha256": null,
+      "rendered_capture_sha256": "34f62ecededaba4c305d00359be67122bab3c5cfec0401862478419ffc1a7362",
+      "rendered_payload_sha256": "6b971c0323ed347d07910ab2e7793e3be7cc088e74217872d3d241c6d36af265",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/6300-history-rendered.json",
+      "hash_basis": "rendered_capture_sha256 hashes exact retained JSON receipt bytes; rendered_payload_sha256 hashes its result field as UTF-8"
+    }
+  ],
+  "observations": [
+    {
+      "id": "6200-official-index-train-link",
+      "kind": "navigation_only",
+      "target_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/aos-cx-10-13-xx.html",
+      "evidence": {
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/index.html",
+        "source_locator": "Official6200 index / AOS-CX10.13.xx link / rendered line6",
+        "quote": "AOS-CX 10.13.xx",
+        "retrieved_at": "2026-11-25T18:37:38.198Z",
+        "original_sha256": null,
+        "excerpt_sha256": "d29ffc41f99e751bce2c813c154fbfd6f72f08d846fdb333076a95d03038b940",
+        "rendered_capture_sha256": "a9006b7dc3c109c109f29884d1ad6757778b0a4d5d029b38dd47d87e71e4a8e5",
+        "rendered_payload_sha256": "215f18116b06a908b24406390d0f34ea9ad042269c9474e503401c1e328275ef",
+        "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6200-index.json"
+      },
+      "interpretation": "Official root index links to train. Train page contains LSR policy and upgrade matrix but no child history links in web renderer."
+    },
+    {
+      "id": "6200-current-release-toc-only",
+      "kind": "navigation_only",
+      "target_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/10-13-1200.html",
+      "evidence": {
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-19.html",
+        "source_locator": "Official6200 historical history page / TOC10.13.1200 / rendered line6",
+        "quote": "10.13.1200",
+        "retrieved_at": "2026-11-25T16:46:28.251Z",
+        "original_sha256": null,
+        "excerpt_sha256": "948ec6e38e6261e7e2f05ece230aafd51268c63c3a27c3e456f50a3726a055a7",
+        "rendered_capture_sha256": "577a328c76411d0d319dba4315d6201d104dc6c1a5595ca71e4017ac4d60bb39",
+        "rendered_payload_sha256": "07b2e8975ea556bed2effb8b56ae929c3169a468fe53f6ab27d441f5dc50fff7",
+        "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/6200-history-rendered.json"
+      },
+      "interpretation": "Existing official TOC links to1200. The resolved target has only copyright/search content in the web renderer; no current history link or date is exposed."
+    },
+    {
+      "id": "6200-old-table-control",
+      "kind": "historical_table_coverage_control",
+      "evidence": {
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-19.html",
+        "source_locator": "Version history / table / rendered line96",
+        "quote": "10.13.1005  | 22/03/2024",
+        "retrieved_at": "2026-11-25T16:46:28.251Z",
+        "original_sha256": null,
+        "excerpt_sha256": "b6ba4dbcb8c329ae001d8a87e137ea4c1e70066a8524fdf2e35b1fb4fadd1c19",
+        "rendered_capture_sha256": "577a328c76411d0d319dba4315d6201d104dc6c1a5595ca71e4017ac4d60bb39",
+        "rendered_payload_sha256": "07b2e8975ea556bed2effb8b56ae929c3169a468fe53f6ab27d441f5dc50fff7",
+        "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/6200-history-rendered.json"
+      },
+      "interpretation": "This is the cached historical1001 subsection, not a newly discovered latest1200 history; its four early2024 rows are already in the base packet."
+    },
+    {
+      "id": "6300-current-history-gap-control",
+      "kind": "existing_current_history_coverage_control",
+      "evidence": {
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/version-history-16.html",
+        "source_locator": "Version history / first table row / rendered line94",
+        "quote": "10.13.1200  | 10/09/2026",
+        "retrieved_at": "2026-11-25T16:46:25.590Z",
+        "original_sha256": null,
+        "excerpt_sha256": "c2b187a22830a078f4992e194de88f45d66969201e5c1b2f9803d8247f1477d0",
+        "rendered_capture_sha256": "34f62ecededaba4c305d00359be67122bab3c5cfec0401862478419ffc1a7362",
+        "rendered_payload_sha256": "6b971c0323ed347d07910ab2e7793e3be7cc088e74217872d3d241c6d36af265",
+        "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/6300-history-rendered.json"
+      },
+      "interpretation": "Cached current table already established1200 date but has no1001,1031,1161 dated rows. Literal TOC target access does not resolve those dates."
+    }
+  ],
+  "releases": [],
+  "notices": [],
+  "statements": [],
+  "access": [
+    {
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/index.html",
+      "retrieved_at": "2026-11-25T18:37:38.198Z",
+      "http_status": null,
+      "outcome": "rendered_official_index_navigation",
+      "original_sha256": null,
+      "response_sha256": null,
+      "rendered_capture_sha256": "a9006b7dc3c109c109f29884d1ad6757778b0a4d5d029b38dd47d87e71e4a8e5",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6200-index.json",
+      "quote": null,
+      "excerpt_sha256": null,
+      "source_locator": "Complete web-tool-rendered response"
+    },
+    {
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/10-13-1200.html",
+      "retrieved_at": "2026-11-25T18:37:39.993Z",
+      "http_status": null,
+      "outcome": "rendered_target_has_no_substantive_release_history",
+      "original_sha256": null,
+      "response_sha256": null,
+      "rendered_capture_sha256": "ed9ee8a2668d7f509f8453bc44ab51d979bd9071abde531b9ad96f8152a08020",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6200-1200.json",
+      "quote": null,
+      "excerpt_sha256": null,
+      "source_locator": "Complete web-tool-rendered response"
+    },
+    {
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/10-13-1001.html",
+      "retrieved_at": "2026-11-25T18:37:41.781Z",
+      "http_status": null,
+      "outcome": "rendered_target_has_no_substantive_release_history",
+      "original_sha256": null,
+      "response_sha256": null,
+      "rendered_capture_sha256": "9170cb1a94cb15260ce524d3dfd199a15aa55a1105e0915a399a6b9ffa4aff34",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6300-1001.json",
+      "quote": null,
+      "excerpt_sha256": null,
+      "source_locator": "Complete web-tool-rendered response"
+    },
+    {
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/10-13-1161.html",
+      "retrieved_at": "2026-11-25T18:37:43.700Z",
+      "http_status": null,
+      "outcome": "rendered_target_has_no_substantive_release_history",
+      "original_sha256": null,
+      "response_sha256": null,
+      "rendered_capture_sha256": "19449b14e320a0af012fdb619ede366c51f52c4e2465420699cdf93b5ecf0647",
+      "cache_file": "$RELEASE_RELIABILITY_CACHE/aruba/coverage-6300-1161.json",
+      "quote": null,
+      "excerpt_sha256": null,
+      "source_locator": "Complete web-tool-rendered response"
+    },
+    {
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/10-13-1031.html",
+      "http_status": null,
+      "outcome": "literal_official_toc_click_failed_web_tool_cache_miss",
+      "original_sha256": null,
+      "rendered_capture_sha256": null,
+      "quote": null,
+      "excerpt_sha256": null,
+      "source_locator": "Official6300 Overview page / TOC10.13.1031 / failed click response",
+      "retrieved_at": null,
+      "notes": "Observed in this targeted pass; exact timestamp and response receipt were not retained; not a date fact or evidence of withdrawal."
+    }
+  ],
+  "coverage": {
+    "new_dated_release_rows": 0,
+    "gaps_resolved": [],
+    "gaps_remaining": [
+      "Latest6200 10.13.1200 Version history URL not exposed by anonymously rendered official navigation; later6200 dates remain unresolved.",
+      "6300 10.13.1001,10.13.1031,10.13.1161 still lack primary dated rows in this pass."
+    ],
+    "scope_exclusions": [
+      "Search hits for6100 and10000 history do not establish6200/6300 dates. No dates imported from those sources."
+    ],
+    "date_conflicts_resolved": [],
+    "denominator": null,
+    "conclusion": "No new dated release facts established. Do not interpret missing dates or inaccessible navigation as absence, withdrawal or zero releases."
+  },
+  "policy": {
+    "cache_first": true,
+    "repeated_blocked_robots_or_origin_requests": false,
+    "origin_bytes_obtained": false,
+    "anonymous_primary_sources_only": true,
+    "bypass_attempted": false,
+    "browser_fallback": "In-app browser host unavailable; no browser session established.",
+    "automated_collection_permission": "Unchanged/unresolved; this targeted pass does not activate a collector."
+  },
+  "discovery": {
+    "method": "Official root index \u2192 literal10.13 train link; cached official6200 historyTOC \u2192 literal1200 target. Official6300 OverviewTOC \u21921001/1031/1161 targets. Web search for exact primary release-history/version combinations and PDF filenames; no broad advisory repeat.",
+    "search_queries": [
+      "site:arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200 Version history10.13.1200",
+      "Version history6200 10.13.1200 10/09/2026",
+      "6300 10.13.1161 Release date",
+      "10.13.1161 Version history",
+      "10.13.1031 Version history",
+      "10.13.1001 Version history",
+      "rn_6300-6400_10-13-1031.pdf",
+      "rn_6300-6400_10-13-1161.pdf",
+      "rn_6300-6400_10-13-1001.pdf"
+    ],
+    "negative_search_outcomes": "Exact PDF filename searches returned no results; broad missing-version hits chiefly otherplatforms; neither proves absence."
+  }
+}

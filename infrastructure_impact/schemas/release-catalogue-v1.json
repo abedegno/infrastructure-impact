@@ -1,0 +1,521 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "review_status",
+    "sources",
+    "releases",
+    "notices",
+    "statements",
+    "coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "format": "date-time"
+    },
+    "review_status": {
+      "const": "independent_human_review_pending"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "vendor",
+          "source_url",
+          "retrieved_at",
+          "capture_kind",
+          "original_sha256",
+          "excerpt_sha256"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "vendor": {
+            "enum": ["cisco", "aruba", "arista"]
+          },
+          "source_url": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048,
+            "format": "uri"
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              {
+                "type": "string",
+                "format": "date-time",
+                "maxLength": 40
+              }
+            ]
+          },
+          "capture_kind": {
+            "enum": ["original_document", "tool_excerpt"]
+          },
+          "original_sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "excerpt_sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      },
+      "maxItems": 20000
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "family",
+          "train",
+          "evidence",
+          "version",
+          "release_date",
+          "date_status",
+          "announcement_date",
+          "platforms_stated"
+        ],
+        "properties": {
+          "vendor": {
+            "enum": ["cisco", "aruba", "arista"]
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "train": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^\\d+\\.\\d+$"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_id", "locator", "quote"],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            },
+            "maxItems": 20000,
+            "minItems": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "release_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "date_status": {
+            "enum": ["stated", "unknown"]
+          },
+          "announcement_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "platforms_stated": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "maxItems": 20000,
+            "uniqueItems": true
+          },
+          "observation_basis": {
+            "enum": [
+              "release_history",
+              "version_table",
+              "availability_announcement",
+              "document_index_reference",
+              "advisory_version_reference",
+              "notice_version_reference"
+            ]
+          }
+        }
+      },
+      "maxItems": 20000
+    },
+    "notices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "family",
+          "train",
+          "evidence",
+          "notice_id",
+          "title",
+          "notice_date",
+          "action_date",
+          "affected_releases",
+          "platforms_stated",
+          "replacement_release",
+          "classification"
+        ],
+        "properties": {
+          "vendor": {
+            "enum": ["cisco", "aruba", "arista"]
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "train": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^\\d+\\.\\d+$"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_id", "locator", "quote"],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            },
+            "maxItems": 20000,
+            "minItems": 1
+          },
+          "notice_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "notice_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "action_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "affected_releases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "maxItems": 20000,
+            "uniqueItems": true
+          },
+          "platforms_stated": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "maxItems": 20000,
+            "uniqueItems": true
+          },
+          "replacement_release": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "classification": {
+            "enum": [
+              "software_defect",
+              "hardware",
+              "configuration_remediation",
+              "release_deferral",
+              "release_withdrawal",
+              "other"
+            ]
+          },
+          "fixed_releases": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["version", "platforms_stated", "conditions"],
+              "properties": {
+                "version": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "platforms_stated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "maxItems": 20000,
+                  "uniqueItems": true
+                },
+                "conditions": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            }
+          },
+          "revision_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "date_note": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      },
+      "maxItems": 20000
+    },
+    "statements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "family",
+          "train",
+          "evidence",
+          "version",
+          "status",
+          "notice_date",
+          "action_date",
+          "related_release",
+          "platforms_stated"
+        ],
+        "properties": {
+          "vendor": {
+            "enum": ["cisco", "aruba", "arista"]
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "train": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^\\d+\\.\\d+$"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["source_id", "locator", "quote"],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            },
+            "maxItems": 20000,
+            "minItems": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "status": {
+            "enum": [
+              "deferred",
+              "withdrawn",
+              "removed_from_download",
+              "no_longer_available",
+              "not_recommended",
+              "superseded",
+              "corrective_respin"
+            ]
+          },
+          "notice_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "action_date": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "related_release": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "platforms_stated": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "maxItems": 20000,
+            "uniqueItems": true
+          }
+        }
+      },
+      "maxItems": 20000
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor",
+          "train",
+          "year",
+          "status",
+          "platforms",
+          "enumeration_complete",
+          "date_coverage_complete",
+          "reason",
+          "source_ids"
+        ],
+        "properties": {
+          "vendor": {
+            "enum": ["cisco", "aruba", "arista"]
+          },
+          "train": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^\\d+\\.\\d+$"
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2100
+          },
+          "status": {
+            "enum": ["complete", "partial", "unknown"]
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "maxItems": 20000,
+            "uniqueItems": true
+          },
+          "enumeration_complete": {
+            "type": "boolean"
+          },
+          "date_coverage_complete": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "maxItems": 20000,
+            "uniqueItems": true
+          }
+        }
+      },
+      "maxItems": 20000
+    }
+  }
+}
