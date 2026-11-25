@@ -1,0 +1,559 @@
+{
+  "document_kind": "manual_feasibility_research_appendix",
+  "research_date": "2026-11-25",
+  "review_status": "independent_human_review_pending",
+  "production_schema_change": false,
+  "coverage": {
+    "start": "2024-01-01",
+    "end": "2026-11-25",
+    "complete": false,
+    "annual_counts": null
+  },
+  "provenance_note": "Capture SHA identifies retained response or excerpt envelope, not necessarily original vendor bytes. HTTP error and client-challenge bodies cannot substantiate content. Rendered excerpts require supported original capture before production promotion. Raw documents are outside Git.",
+  "anonymous_http_access_checks": [
+    {
+      "id": "cisco-179-caveats",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/caveats.html",
+      "retrieved_at": "2026-11-25T11:33:58.599463+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 403,
+      "final_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/caveats.html",
+      "content_type": "text/html",
+      "sha256": "89c8071c6ba1a3a6bad4453e80ec16e74f386dbdde332101d160a7f4514138c3",
+      "bytes": 544,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "access_denied"
+    },
+    {
+      "id": "cisco-1712-caveats",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/caveats.html",
+      "retrieved_at": "2026-11-25T11:33:58.599766+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 403,
+      "final_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/caveats.html",
+      "content_type": "text/html",
+      "sha256": "3e3c01ef6004f58fb82b10617cad4551110b7c8665f8d535b6768a1495466eed",
+      "bytes": 546,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "access_denied"
+    },
+    {
+      "id": "cisco-recommended",
+      "source_url": "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-9300-series-switches/214814-recommended-releases-for-catalyst-9200-9.html",
+      "retrieved_at": "2026-11-25T11:33:58.599885+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 403,
+      "final_url": "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-9300-series-switches/214814-recommended-releases-for-catalyst-9200-9.html",
+      "content_type": "text/html",
+      "sha256": "7c3fef7fed8bc03e1a6b8187539d23078cb5cfedd69458c6c1bce9f290890570",
+      "bytes": 545,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "access_denied"
+    },
+    {
+      "id": "cisco-field-index",
+      "source_url": "https://www.cisco.com/c/en/us/support/switches/catalyst-9300-series-switches/products-troubleshooting-guides-list.html",
+      "retrieved_at": "2026-11-25T11:33:58.599958+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 403,
+      "final_url": "https://www.cisco.com/c/en/us/support/switches/catalyst-9300-series-switches/products-troubleshooting-guides-list.html",
+      "content_type": "text/html",
+      "sha256": "853e4c330ae63dbcefffcb0fc7813f87cc97091452532856fd1a824a84449037",
+      "bytes": 513,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "access_denied"
+    },
+    {
+      "id": "aruba-10131040",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "retrieved_at": "2026-11-25T11:33:58.699936+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 403,
+      "final_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "content_type": "text/html",
+      "sha256": "ad6a146b136209626a84c09047846dbf9c9e418902beb3f5f1bf1ed4789b82c4",
+      "bytes": 477,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "access_denied"
+    },
+    {
+      "id": "aruba-current-index",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/index.html",
+      "retrieved_at": "2026-11-25T11:33:58.700187+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 403,
+      "final_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/index.html",
+      "content_type": "text/html",
+      "sha256": "56191f100ac201431a93e9c110969fb6b63e6ee7ff717fd4838fe1470867ad78",
+      "bytes": 488,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "access_denied"
+    },
+    {
+      "id": "arista-release-rss",
+      "source_url": "https://www.arista.com/en/support/release-notes",
+      "retrieved_at": "2026-11-25T11:33:58.700291+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 200,
+      "final_url": "https://www.arista.com/en/support/release-notes",
+      "content_type": "application/xml; charset=ISO-8859-1",
+      "sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "bytes": 10492,
+      "truncated": false,
+      "usable_vendor_document": true,
+      "fingerprint_scope": "http_response_body",
+      "observation": "usable_xml"
+    },
+    {
+      "id": "arista-field-index",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/fieldnotice",
+      "retrieved_at": "2026-11-25T11:33:58.700392+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 200,
+      "final_url": "https://www.arista.com/en/support/advisories-notices/fieldnotice",
+      "content_type": "text/html; charset=utf-8",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "bytes": 3038,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "client_challenge"
+    },
+    {
+      "id": "arista-field-rss",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/field-notice-rss",
+      "retrieved_at": "2026-11-25T11:33:58.778131+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 200,
+      "final_url": "https://www.arista.com/en/support/advisories-notices/field-notice-rss",
+      "content_type": "application/xml; charset=UTF-8; filename=rss_feed.xml",
+      "sha256": "f98f58fb3b60f865e70ffcb286cc978fde3471fb35e45661a503a5c5074b5696",
+      "bytes": 10298,
+      "truncated": false,
+      "usable_vendor_document": true,
+      "fingerprint_scope": "http_response_body",
+      "observation": "usable_xml"
+    },
+    {
+      "id": "arista-recommended",
+      "source_url": "https://www.arista.com/en/support/software-download/recommended-releases",
+      "retrieved_at": "2026-11-25T11:33:58.871663+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 200,
+      "final_url": "https://www.arista.com/en/support/software-download/recommended-releases",
+      "content_type": "text/html; charset=utf-8",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "bytes": 3038,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "client_challenge"
+    },
+    {
+      "id": "arista-download",
+      "source_url": "https://www.arista.com/en/support/software-download",
+      "retrieved_at": "2026-11-25T11:33:58.914293+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 200,
+      "final_url": "https://www.arista.com/en/support/software-download",
+      "content_type": "text/html; charset=utf-8",
+      "sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "bytes": 3038,
+      "truncated": false,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "http_response_body",
+      "observation": "client_challenge"
+    },
+    {
+      "id": "arista-support-guide",
+      "source_url": "https://www.arista.com/assets/data/pdf/Arista_Support_Community_Guide.pdf",
+      "retrieved_at": "2026-11-25T11:33:58.923357+00:00",
+      "capture_method": "anonymous_http_response",
+      "http_status": 200,
+      "final_url": "https://www.arista.com/assets/data/pdf/Arista_Support_Community_Guide.pdf",
+      "content_type": "application/pdf",
+      "sha256": "c38fe665faf3eba97a2e4b8618106e669ce1f1fb3bfe7050c47cb51622f8c65a",
+      "bytes": 8000000,
+      "truncated": true,
+      "usable_vendor_document": false,
+      "fingerprint_scope": "truncated_http_response",
+      "observation": "excluded_truncated"
+    }
+  ],
+  "rendered_excerpt_receipts": [
+    {
+      "id": "arista-access",
+      "capture_method": "web_tool_rendered_excerpt",
+      "retrieved_at": "2026-11-25T11:35:52.352Z",
+      "capture_sha256": "1616eb0440dcf77f2ec7ff0fa8ae9ed65a8309e5f0eec693608d6129529fb5b4",
+      "fingerprint_scope": "retained_web_tool_excerpt_envelope",
+      "origin_document_sha256": null
+    },
+    {
+      "id": "aruba-recommendation",
+      "capture_method": "web_tool_rendered_excerpt",
+      "retrieved_at": "2026-11-25T11:35:52.975Z",
+      "capture_sha256": "dcc2b7c00507c93f5905565173e011ca13f9f0bf12b8a17a0d1357503580896a",
+      "fingerprint_scope": "retained_web_tool_excerpt_envelope",
+      "origin_document_sha256": null
+    },
+    {
+      "id": "aruba-release-sample",
+      "capture_method": "web_tool_rendered_excerpt",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "fingerprint_scope": "retained_web_tool_excerpt_envelope",
+      "origin_document_sha256": null
+    },
+    {
+      "id": "cisco-caveats-1712",
+      "capture_method": "web_tool_rendered_excerpt",
+      "retrieved_at": "2026-11-25T11:35:50.481Z",
+      "capture_sha256": "c1f2447c773a54074a6a4561d09badf04b33adb74226b9dc90b597de12dc6540",
+      "fingerprint_scope": "retained_web_tool_excerpt_envelope",
+      "origin_document_sha256": null
+    },
+    {
+      "id": "cisco-caveats-179",
+      "capture_method": "web_tool_rendered_excerpt",
+      "retrieved_at": "2026-11-25T11:35:49.877Z",
+      "capture_sha256": "6723866fe6872e3babe16a3bba93281e75c2b3290817d52e4a59edd3ea84205b",
+      "fingerprint_scope": "retained_web_tool_excerpt_envelope",
+      "origin_document_sha256": null
+    },
+    {
+      "id": "cisco-recommendations",
+      "capture_method": "web_tool_rendered_excerpt",
+      "retrieved_at": "2026-11-25T11:35:51.119Z",
+      "capture_sha256": "00be478110d470a6740fd2bce5b4b25f19116b1076439d79d5b98b3fc972a3bc",
+      "fingerprint_scope": "retained_web_tool_excerpt_envelope",
+      "origin_document_sha256": null
+    }
+  ],
+  "observations": [
+    {
+      "id": "cisco-17124-bug",
+      "vendor": "cisco",
+      "train": "17.12",
+      "signal": "bugs_per_release",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/caveats.html",
+      "source_locator": "Resolved Caveats in Cisco IOS XE Dublin 17.12.4 / CSCwi70932",
+      "retrieved_at": "2026-11-25T11:35:50.481Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "c1f2447c773a54074a6a4561d09badf04b33adb74226b9dc90b597de12dc6540",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "17.12.4",
+        "bug_id": "CSCwi70932",
+        "stated_platform": "C9300",
+        "release_date": null
+      }
+    },
+    {
+      "id": "cisco-recommend-17.12.4",
+      "vendor": "cisco",
+      "train": "17.12",
+      "signal": "recommended_release",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-9300-series-switches/214814-recommended-releases-for-catalyst-9200-9.html",
+      "source_locator": "Revision History / 2025-02-26",
+      "retrieved_at": "2026-11-25T11:35:51.119Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "00be478110d470a6740fd2bce5b4b25f19116b1076439d79d5b98b3fc972a3bc",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "17.12.4",
+        "recommendation_revision_date": "2025-02-26",
+        "software_release_date": null
+      }
+    },
+    {
+      "id": "cisco-recommend-17.12.5",
+      "vendor": "cisco",
+      "train": "17.12",
+      "signal": "recommended_release",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-9300-series-switches/214814-recommended-releases-for-catalyst-9200-9.html",
+      "source_locator": "Revision History / 2025-05-06",
+      "retrieved_at": "2026-11-25T11:35:51.119Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "00be478110d470a6740fd2bce5b4b25f19116b1076439d79d5b98b3fc972a3bc",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "17.12.5",
+        "recommendation_revision_date": "2025-05-06",
+        "software_release_date": null
+      }
+    },
+    {
+      "id": "cisco-recommend-17.12.6",
+      "vendor": "cisco",
+      "train": "17.12",
+      "signal": "recommended_release",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-9300-series-switches/214814-recommended-releases-for-catalyst-9200-9.html",
+      "source_locator": "Revision History / 2025-11-26",
+      "retrieved_at": "2026-11-25T11:35:51.119Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "00be478110d470a6740fd2bce5b4b25f19116b1076439d79d5b98b3fc972a3bc",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "17.12.6",
+        "recommendation_revision_date": "2025-11-26",
+        "software_release_date": null
+      }
+    },
+    {
+      "id": "cisco-1796-control",
+      "vendor": "cisco",
+      "train": "17.9",
+      "signal": "respin_control",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/caveats.html",
+      "source_locator": "Resolved Caveats in Cisco IOS XE Cupertino 17.9.6a / CSCwm57734",
+      "retrieved_at": "2026-11-25T11:35:49.877Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "6723866fe6872e3babe16a3bba93281e75c2b3290817d52e4a59edd3ea84205b",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "17.9.6a",
+        "bug_id": "CSCwm57734",
+        "withdrawn_predecessor": null,
+        "withdrawal_date": null,
+        "first_affected_release": null,
+        "outside_study_train": true
+      }
+    },
+    {
+      "id": "aruba-history-10.13.1000",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "release_history",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "source_locator": "PDF page 8 / Version history / 10.13.1000",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "10.13.1000",
+        "publisher_release_date": "2024-01-31",
+        "platform_scope": ["6300 Switch Series", "6400 Switch Series"],
+        "current_withdrawal_status": null
+      }
+    },
+    {
+      "id": "aruba-history-10.13.1010",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "release_history",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "source_locator": "PDF page 8 / Version history / 10.13.1010",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "10.13.1010",
+        "publisher_release_date": "2024-04-09",
+        "platform_scope": ["6300 Switch Series", "6400 Switch Series"],
+        "current_withdrawal_status": null
+      }
+    },
+    {
+      "id": "aruba-history-10.13.1020",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "release_history",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "source_locator": "PDF page 8 / Version history / 10.13.1020",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "10.13.1020",
+        "publisher_release_date": "2024-05-20",
+        "platform_scope": ["6300 Switch Series", "6400 Switch Series"],
+        "current_withdrawal_status": null
+      }
+    },
+    {
+      "id": "aruba-history-10.13.1030",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "release_history",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "source_locator": "PDF page 8 / Version history / 10.13.1030",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "10.13.1030",
+        "publisher_release_date": "2024-06-27",
+        "platform_scope": ["6300 Switch Series", "6400 Switch Series"],
+        "current_withdrawal_status": null
+      }
+    },
+    {
+      "id": "aruba-history-10.13.1040",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "release_history",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "source_locator": "PDF page 8 / Version history / 10.13.1040",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "10.13.1040",
+        "publisher_release_date": "2024-08-01",
+        "platform_scope": ["6300 Switch Series", "6400 Switch Series"],
+        "current_withdrawal_status": null
+      }
+    },
+    {
+      "id": "aruba-bug-318883",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "bugs_per_release",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/10.13/RN/rn_6300-6400_10-13-1040.pdf",
+      "source_locator": "PDF page 10 / Resolved Issues / AAA / 318883",
+      "retrieved_at": "2026-11-25T11:35:51.772Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "db33ee63bd835bbb8f3e043f1a7b0bcac4239a0abb083c51fe25e691f2400ba6",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "release": "10.13.1040",
+        "bug_id": "318883"
+      }
+    },
+    {
+      "id": "aruba-central-minimum",
+      "vendor": "aruba",
+      "train": "10.13",
+      "signal": "recommended_release",
+      "method": "manual_public_source_sample",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/CNX-CNXOP-NewHelp/HPE%20Aruba%20Networking%20Central/GUID-B4CE0CB3-EFB5-4BB2-8D0B-DF373C10D129.html",
+      "source_locator": "Recommended Software Versions / 6300 and 6400 rows",
+      "retrieved_at": "2026-11-25T11:35:52.975Z",
+      "capture_method": "web_tool_rendered_excerpt",
+      "capture_sha256": "dcc2b7c00507c93f5905565173e011ca13f9f0bf12b8a17a0d1357503580896a",
+      "origin_document_sha256": null,
+      "production_evidence_eligible": false,
+      "facts": {
+        "minimum_release": "10.13.1110",
+        "recommendation_scope": "Central feature compatibility",
+        "historical_recommendation_date": null
+      }
+    },
+    {
+      "id": "arista-announcement-4.33.11M",
+      "vendor": "arista",
+      "train": "4.33",
+      "signal": "release_announcement",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.arista.com/en/support/release-notes",
+      "source_locator": "RSS channel/item / title contains 4.33.11M / pubDate",
+      "retrieved_at": "2026-11-25T11:33:58.700291+00:00",
+      "capture_method": "anonymous_http_response",
+      "capture_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "origin_document_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "production_evidence_eligible": true,
+      "facts": {
+        "release": "4.33.11M",
+        "announcement_date": "2026-10-15T00:27:28+00:00",
+        "platform_scope": null,
+        "corrective_respin_confirmed": false,
+        "withdrawal_status": null
+      }
+    },
+    {
+      "id": "arista-announcement-4.33.11.2M",
+      "vendor": "arista",
+      "train": "4.33",
+      "signal": "release_announcement",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.arista.com/en/support/release-notes",
+      "source_locator": "RSS channel/item / title contains 4.33.11.2M / pubDate",
+      "retrieved_at": "2026-11-25T11:33:58.700291+00:00",
+      "capture_method": "anonymous_http_response",
+      "capture_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "origin_document_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "production_evidence_eligible": true,
+      "facts": {
+        "release": "4.33.11.2M",
+        "announcement_date": "2026-11-03T02:28:26+00:00",
+        "platform_scope": null,
+        "corrective_respin_confirmed": false,
+        "withdrawal_status": null
+      }
+    },
+    {
+      "id": "arista-field-0144",
+      "vendor": "arista",
+      "train": "4.33",
+      "signal": "field_notice_index_only",
+      "method": "manual_public_source_sample",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/field-notice-rss",
+      "source_locator": "RSS channel/item / Field Notice 0144 / pubDate",
+      "retrieved_at": "2026-11-25T11:33:58.778131+00:00",
+      "capture_method": "anonymous_http_response",
+      "capture_sha256": "f98f58fb3b60f865e70ffcb286cc978fde3471fb35e45661a503a5c5074b5696",
+      "origin_document_sha256": "f98f58fb3b60f865e70ffcb286cc978fde3471fb35e45661a503a5c5074b5696",
+      "production_evidence_eligible": true,
+      "facts": {
+        "notice_id": "0144",
+        "announcement_date": "2026-11-02T17:21:42+00:00",
+        "train_applicability": null,
+        "detail_access": "login_redirect_observed_via_web_service"
+      }
+    }
+  ],
+  "candidate_pairs": [
+    {
+      "vendor": "arista",
+      "train": "4.33",
+      "earlier_release": "4.33.11M",
+      "later_release": "4.33.11.2M",
+      "calendar_days": 19,
+      "method": "difference_of_publisher_announcement_calendar_dates",
+      "corrective_respin_confirmed": false,
+      "withdrawal_confirmed": false,
+      "platform_scope": null,
+      "evidence_ids": ["arista-announcement-4.33.11M", "arista-announcement-4.33.11.2M"]
+    }
+  ]
+}
