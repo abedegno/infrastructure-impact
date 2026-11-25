@@ -28,3 +28,19 @@ expires. A different artifact requires a new reviewed receipt.
 for the earlier public artifact, alongside `contents: read`, `pages: write` and
 `id-token: write`. A different recovery input or hosted permission/publication change still requires
 explicit approval.
+
+## Separate accepted upload and deployment
+
+The normal and exact-artifact recovery workflows now put configure/deploy/health
+in a dependent protected job. The producer must succeed and expose a successful
+Pages upload with a nonempty artifact ID. Normal health checks use its captured
+source commit; recovery health uses the verifier's exact generation. Workflow-wide
+concurrency remains held through deployment, so accepted state cannot advance
+between jobs. Source and generation outputs are required, not fallback defaults.
+
+This follows the separate-job mitigation for the matching immediate-upload
+visibility issue documented in [deploy-pages issue451](https://github.com/actions/deploy-pages/issues/451).
+It retains the pinned official actions, upload acceptance conditions, manual
+receipt checks, permissions, schedule and recovery bounds. A new artifact still
+needs its own reviewed receipt. Live observation is required before calling a
+particular workflow run successfully deployed.
