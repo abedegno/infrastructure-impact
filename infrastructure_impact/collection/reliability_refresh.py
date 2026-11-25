@@ -50,7 +50,12 @@ _OUTCOMES = (
     }
 )
 _DIGEST = re.compile(r"[0-9a-f]{64}", re.ASCII)
-_VERSION = re.compile(r"Dublin (17\.12\.[0-9]{1,8}[a-z]?)", re.ASCII)
+_CISCO_RELEASE = re.compile(r"Dublin (17\.12\.[0-9]{1,8}[a-z]?)", re.ASCII)
+_CISCO_HISTORY = re.compile(
+    r"(?:Dublin 17\.(?:10|11)|Cupertino 17\.[789]|Bengaluru 17\.[456]|Amsterdam 17\.[123])"
+    r"\.[0-9]{1,8}[a-z]?",
+    re.ASCII,
+)
 _STAMP = re.compile(
     r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
     r"(?:\.[0-9]{1,6})?(?:Z|[+-][0-9]{2}:[0-9]{2})",
@@ -114,17 +119,25 @@ def _cisco_observations(source, raw):
         raise ValueError("Unsupported Cisco ROMMON table columns")
     observations = []
     for index, row in enumerate(rows[1:], 1):
-        match = _VERSION.fullmatch(row[0]) if len(row) == len(rows[0]) else None
-        if not match or not all(row[1:]):
+        if len(row) != len(rows[0]) or not all(row[1:]):
+            raise ValueError("Unsupported Cisco ROMMON release row")
+        release = row[0]
+        # Both chapters include history for earlier IOS XE trains in the same table.
+        if _CISCO_HISTORY.fullmatch(release):
+            continue
+        match = _CISCO_RELEASE.fullmatch(release)
+        if not match:
             raise ValueError("Unsupported Cisco ROMMON release row")
         observations.append(
             Observation(
                 version=match[1],
                 models=(f"Catalyst {model}",),
-                quote=row[0],
+                quote=release,
                 locator=f"{heading} / table body row {index} / Release",
             )
         )
+    if not observations:
+        raise ValueError("Cisco ROMMON table has no Dublin 17.12 release rows")
     return observations
 
 

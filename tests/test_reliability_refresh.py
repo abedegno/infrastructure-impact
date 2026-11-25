@@ -501,3 +501,46 @@ def test_cli_restores_previous_pair_if_second_replace_fails(
         assert report.read_bytes() == b"previous review"
     else:
         assert not candidate.exists() and not report.exists()
+
+
+@pytest.mark.parametrize(("source", "model", "columns"), [(C9200, "9200", 1), (C9300, "9300", 4)])
+def test_cisco_rommon_tables_include_out_of_scope_history(
+    refresh, tmp_path, source, model, columns
+):
+    _, _, collection = refresh
+    cache = collection.RefreshCache(tmp_path / "cache")
+    raw = cisco("17.12.7a", model=model)
+    historical_rows = b"".join(
+        b"<tr><td>" + release + b"</td>" + b"<td>17.8.1r</td>" * columns + b"</tr>"
+        for release in (
+            b"Dublin 17.11.1",
+            b"Cupertino 17.9.10",
+            b"Bengaluru 17.6.8",
+            b"Amsterdam 17.3.8a",
+        )
+    )
+    raw = raw.replace(b"</table>", historical_rows + b"</table>")
+    assert cache.import_capture(source, raw, CAPTURED) == "captured"
+    _, observations = cache.observations()[source]
+    [observation] = next(iter(observations.values()))
+    assert observation.version == "17.12.7a"
+    assert observation.models == (f"Catalyst {model}",)
+    assert observation.locator.endswith("table body row 1 / Release")
+
+
+@pytest.mark.parametrize(
+    ("release_cell", "other_versions"),
+    [
+        (b"Dublin 17.12.invalid", ("17.12.8",)),
+        (b"Cupertino 17.12.9", ("17.12.8",)),
+        (b"Dublin 17.11.1", ()),
+    ],
+)
+def test_cisco_rejects_malformed_rows_and_requires_a_target_train_release(
+    refresh, tmp_path, release_cell, other_versions
+):
+    _, _, collection = refresh
+    cache = collection.RefreshCache(tmp_path / "cache")
+    raw = cisco("17.12.9", *other_versions).replace(b"Dublin 17.12.9", release_cell)
+    assert cache.import_capture(C9200, raw, CAPTURED) == "unsupported_or_invalid_document"
+    assert cache.snapshot()[C9200]["latest_sha256"] is None
