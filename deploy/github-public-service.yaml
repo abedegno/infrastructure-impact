@@ -51,21 +51,26 @@ jobs:
     timeout-minutes: 60
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      source_commit: ${{ steps.source_pin.outputs.source_commit }}
+      upload_ready: ${{ steps.pages_upload.outcome == 'success' && steps.pages_upload.outputs.artifact_id != '' && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: service
           ref: publication-state
       - name: Check pinned source
+        id: source_pin
         env:
           SOURCE_COMMIT: ${{ vars.IMPACT_SOURCE_COMMIT }}
         run: |
-          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]]
+          set -euo pipefail
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          printf 'source_commit=%s\n' "$SOURCE_COMMIT" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ github.repository }}
-          ref: ${{ vars.IMPACT_SOURCE_COMMIT }}
+          ref: ${{ steps.source_pin.outputs.source_commit }}
           path: source
           persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
@@ -365,19 +370,34 @@ jobs:
           name: vulncheck-status
           path: ${{ runner.temp }}/vulncheck-status.json
           if-no-files-found: warn
-      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        id: pages_upload
         if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
         with:
           path: ${{ runner.temp }}/public-publication
           include-hidden-files: true
+  deploy:
+    needs: publish
+    if: ${{ needs.publish.result == 'success' && needs.publish.outputs.upload_ready == 'true' && needs.publish.outputs.source_commit != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.publish.outputs.source_commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Publish sanitized generation
-        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
       - name: Verify public availability and freshness
-        if: ${{ success() && ((steps.protocol.outputs.protocol == 'effects-v1' && steps.hosted.outputs.recovery_ready == 'true' && (steps.hosted.outputs.mode == 'ordinary' || steps.hosted.outputs.mode == 'apply') && steps.hosted.outputs.publish_ready == 'true') || (steps.protocol.outputs.protocol == 'legacy-ordinary-v0' && steps.hosted.outputs.legacy_started == 'true' && steps.hosted.outcome == 'success')) }}
         env:
           PUBLIC_URL: ${{ steps.deployment.outputs.page_url }}
         working-directory: source
