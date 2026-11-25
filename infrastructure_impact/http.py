@@ -183,6 +183,8 @@ class Application:
                 return self._route_v2(environ, generation, data)
         except FileNotFoundError:
             return 503, "application/json", b'{"error":"Awaiting first successful publication"}'
+        if path == "/api/v1/release-reliability":
+            return self._release_reliability(environ, generation, data)
         if path == "/api/v1/bootstrap":
             return respond(
                 {
@@ -650,6 +652,11 @@ class Application:
             "/app.js",
             "/current-evidence.json",
             "/current-evidence.js",
+            "/release-reliability.js",
+            "/release-reliability.json",
+            "/release-reliability-review.json",
+            "/release-reliability.csv",
+            "/schemas/release-reliability-v1.json",
             "/lossless-json.js",
             "/research-dossiers.js",
             "/kev.js",
@@ -755,6 +762,63 @@ class Application:
             target.read_bytes(),
         )
 
+    def _release_reliability(self, environ, generation, data):
+        from .application import release_reliability as reliability
+        from .application.publication_reader import PublicationReader
+        from .publication_codec import strict_loads
+
+        query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        include = query.pop("include_upgrades", None)
+        if include is not None and include != ["1"]:
+            raise BadRequest("Invalid upgrade selection")
+        if include is None and set(query) - {"format"}:
+            raise BadRequest("Study controls require include_upgrades=1")
+        formats = query.get("format", ["json"])
+        if formats not in (["json"], ["csv"]):
+            raise BadRequest("Invalid reliability format")
+        identity = (
+            data.identity
+            if isinstance(data, PublicationReader)
+            else {k: data[k] for k in ("publication", "generated_at")}
+        )
+        if isinstance(data, PublicationReader):
+            report = data.release_reliability()
+        else:
+            asset = generation / "release-reliability.json"
+            report = None
+            if not asset.exists():
+                manifest_path = generation / "manifest.json"
+                manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+                if "release-reliability.json" in manifest.get("sha256", {}):
+                    raise ValueError("Missing declared release reliability report")
+            if asset.exists():
+                with asset.open("rb") as stream:
+                    report = strict_loads(stream.read(8_000_001), max_bytes=8_000_000)
+                report = reliability.validate_report(report, **identity)
+                if report["upgrade_selection"] is not None or report["upgrade_annotations"]:
+                    raise ValueError("Published reliability report contains selected analysis")
+        if report is None:
+            report = reliability.unavailable_report(**identity)
+        if include is not None:
+            selected_query = {k: v for k, v in query.items() if k != "format"}
+            from urllib.parse import urlencode
+
+            selected_environ = dict(
+                environ,
+                PATH_INFO="/api/v1/switching-upgrades",
+                QUERY_STRING=urlencode(selected_query, doseq=True),
+            )
+            if isinstance(data, PublicationReader):
+                status, _, raw = self._route_v2(selected_environ, generation, data)
+            else:
+                status, _, raw = self.route(selected_environ, _opened=(generation, data))
+            if status != 200:
+                return status, "application/json", raw
+            report = reliability.with_upgrades(report, strict_loads(raw, max_bytes=128_000_000))
+        if formats == ["csv"]:
+            return 200, "text/csv", reliability.csv_export(report, max_bytes=8_000_000).encode()
+        return self.json(report, max_bytes=8_000_000)
+
     def _route_v2(self, environ, generation, reader):
         path = environ.get("PATH_INFO", "/")
         name = path.lstrip("/")
@@ -790,6 +854,8 @@ class Application:
 
                 return 200, mimetypes.guess_type(target)[0] or "application/octet-stream", chunks()
             return self.route(environ, _opened=(generation, reader.metadata()))
+        if path == "/api/v1/release-reliability":
+            return self._release_reliability(environ, generation, reader)
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
         if path in ("/api/v1/switching-analysis", "/api/v1/switching-upgrades"):
             from .application import switching_analysis as analysis

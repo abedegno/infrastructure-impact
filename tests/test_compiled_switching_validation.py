@@ -17,6 +17,7 @@ def reports(tmp_path_factory):
     from infrastructure_impact.application import (
         customer_comparison,
         publication,
+        release_reliability,
         switching_analysis,
         switching_releases,
     )
@@ -30,6 +31,9 @@ def reports(tmp_path_factory):
     )
     reader = PublicationReader(out)
     return {
+        "release-reliability-v1.json": release_reliability.unavailable_report(
+            publication=value["publication"], generated_at=value["generated_at"]
+        ),
         "switching-analysis-v1.json": switching_analysis.build_report([], [], value),
         "switching-study-v1.json": value["definition"],
         "switching-release-history-v1.json": releases,
