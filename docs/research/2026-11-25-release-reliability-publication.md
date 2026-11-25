@@ -16,8 +16,10 @@ Independent human review remains pending.
 
 Aruba's observed possible follow-ups within 90 days number 9, 7 and 4 in those
 years; two 2024 follow-ups are within 30 days. These are research observations,
-not publisher-confirmed corrective respins. The catalogue also retains candidate
-pairs outside the displayed release cohort. No supported corrective-respin count
+not publisher-confirmed corrective respins. The catalogue retains 21 candidate
+pairs covering 20 distinct follow-up versions: 10.13.1005 has different preceding
+versions in the stated 6200 and 6300 histories. Annual counts deduplicate the
+follow-up version rather than adding those model-specific pairs. No supported corrective-respin count
 or complete signal history is available. Every current rate remains unavailable.
 
 Arista FN0103 supplies one observed 2025 deferral notice. Its action date and
