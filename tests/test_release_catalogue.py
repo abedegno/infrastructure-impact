@@ -476,3 +476,35 @@ def test_fixed_release_requires_same_train_and_stated_model():
     ]
     with pytest.raises(ValueError, match="scope"):
         validate_catalogue(d)
+
+
+def test_multi_model_pairs_have_stable_order_across_hash_seeds():
+    import json
+    import os
+    import subprocess
+    import sys
+
+    d = specimen()
+    platforms = ["Catalyst 9300", "Catalyst 9200"]
+    d["releases"] = [
+        release("17.12.7", "2025-01-01", platforms=platforms),
+        release("17.12.7a", "2025-01-10", platforms=platforms),
+    ]
+    script = """
+import faulthandler, json, sys
+faulthandler.dump_traceback_later(15, exit=True)
+from infrastructure_impact.application.release_catalogue import find_respins
+value = json.load(sys.stdin)
+print(json.dumps([r['platforms_stated'] for r in find_respins(value['catalogue'], value['config'])]))
+"""
+    for seed in ("1", "2", "3"):
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            input=json.dumps({"catalogue": d, "config": config()}),
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=20,
+            env={**os.environ, "PYTHONHASHSEED": seed},
+        )
+        assert json.loads(result.stdout) == [["Catalyst 9200"], ["Catalyst 9300"]]

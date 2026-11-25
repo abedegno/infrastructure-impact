@@ -283,7 +283,7 @@ def find_respins(value, config):
             if not match or not row["release_date"]:
                 continue
             base = match.expand(train["base_replacement"])
-            for platform in _scope(row, train):
+            for platform in sorted(_scope(row, train)):
                 key = (base, platform)
                 # Duplicate source rows do not create extra releases.
                 existing = groups[key].get(row["version"])
