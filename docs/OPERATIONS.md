@@ -213,7 +213,8 @@ current files used 39,925,864 bytes; 16 unique historical backup blobs represent
 repository bytes. Its metric may lag and packed storage is not the logical sum.
 No storage-review threshold had been reached.
 
-The repository review budget is 512 MiB and the encrypted per-file limit is 50 MiB.
+The repository review budget is 512 MiB. The encrypted per-file limit is 50 MiB
+for Git archives and 512 MiB for managed draft assets.
 Reports flag 80% usage before the limit. A remaining-runs scenario assumes one
 new archive per run at the latest size, no compression savings and no other growth;
 it is not a prediction of days remaining or a reason to manufacture scheduled
@@ -284,8 +285,8 @@ and `grace_deadline_at` as timezone-aware ISO timestamps; a missing latest succe
 is null. Storage findings have null cadence fields. The CLI writes receipts and
 summaries before exiting nonzero with all operational findings. A successful
 public-health result does not clear them. Backup/storage findings remain visible
-in the separate metadata report, including the unchanged 50 MiB encrypted-file
-limit and 80% warnings. No automatic deletion is enabled.
+in the separate metadata report, including each backend’s encrypted-file limit
+and 80% warnings. No automatic deletion is enabled.
 
 For source boundaries, safe manual checks and unresolved scheduler delivery, see
 [scheduled-service observations](SCHEDULE_RELIABILITY.md). Neither workflow has
