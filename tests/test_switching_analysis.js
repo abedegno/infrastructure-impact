@@ -211,6 +211,110 @@ assert.strictEqual(
   'selected nested metadata/facets must not alias immutable compiled input',
 );
 
+{
+  const C = context.window.InfrastructureSwitchingContracts,
+    report = JSON.parse(JSON.stringify(vectors.compiled)),
+    identity = JSON.parse(JSON.stringify(vectors.cases[0].context)),
+    originalValidate = C.validate;
+  let validations = 0;
+  C.validate = (name, value, fragment) => {
+    if (name === 'switching-analysis-v1.json' && fragment === '/$defs/compiled') validations++;
+    return originalValidate(name, value, fragment);
+  };
+  try {
+    assert.strictEqual(typeof A.prepare, 'function', 'prepared selector API');
+    Object.freeze(report.requirements);
+    const select = A.prepare(report, identity);
+    assert(Object.isFrozen(report), 'compiled root is frozen');
+    assert(Object.isFrozen(report.requirements.kev_context), 'even pre-frozen branches are deep');
+    assert(Object.isFrozen(report.requirements.requirements[0].alternatives));
+    identity.publication = { id: 'changed-external-identity' };
+    identity.generated_at = '2000-01-01T00:00:00Z';
+
+    for (const v of vectors.cases) {
+      const selected = select(v.context);
+      assert.deepStrictEqual(JSON.parse(JSON.stringify(selected)), v.expected, v.name);
+      assert.strictEqual(A.csv(selected), v.analysis_csv, v.name + ' analysis CSV');
+    }
+    assert.throws(() => select(identity), /generation|identity|publication/i);
+    assert.throws(
+      () =>
+        select({
+          ...vectors.cases[0].context,
+          selection: { ...vectors.cases[0].context.selection, effective_cve_ids: [] },
+        }),
+      /accepted cohort differs/,
+    );
+    const study = vectors.cases[0].context,
+      selected = select(study);
+    selected.upgrades.requirements.kev_context.evaluated_at = 'changed-output-only';
+    selected.disclosure.pairs[0].source.source_locator = 'changed-output-only';
+    assert.strictEqual(
+      selected.upgrades.requirements.kev_context.evaluated_at,
+      'changed-output-only',
+    );
+    assert.strictEqual(selected.disclosure.pairs[0].source.source_locator, 'changed-output-only');
+    assert.deepStrictEqual(JSON.parse(JSON.stringify(select(study))), vectors.cases[0].expected);
+    assert.strictEqual(
+      validations,
+      1,
+      'one complete validation across accepted and rejected calls',
+    );
+    assert.throws(() => A.prepare(changed, study), /fingerprint/);
+    assert.throws(() => A.prepare(null, study), undefined, 'present null is malformed');
+    const accessor = JSON.parse(JSON.stringify(vectors.compiled));
+    const publication = accessor.publication;
+    Object.defineProperty(accessor, 'publication', { get: () => publication, enumerable: true });
+    assert.throws(() => A.prepare(accessor, study), /owned JSON data/);
+  } finally {
+    C.validate = originalValidate;
+  }
+}
+
+{
+  const report = JSON.parse(JSON.stringify(vectors.compiled.requirements)),
+    member = Object.values(report.members)[0],
+    { vendor, cve_id: cve } = member,
+    original = report.facts[member.source_ref];
+  member.advisory_id = 'advisory:partition';
+  function group(group_id, vendor, advisory_id, cve_ids) {
+    return {
+      group_id,
+      vendor,
+      advisory_id,
+      cve_ids,
+      product: null,
+      product_ids: null,
+      train_expression: null,
+      disposition: 'affected',
+      method: 'authored',
+      source: original,
+    };
+  }
+  report.source_groups = [
+    group('first', vendor, member.advisory_id, [cve]),
+    group('joined-key-collision', vendor, 'advisory', ['partition:' + cve]),
+    group('other-vendor', 'aruba', member.advisory_id, [cve]),
+    group('other-cve', vendor, member.advisory_id, ['CVE-2025-1234567']),
+    group('last', vendor, member.advisory_id, ['CVE-2025-1234567', cve]),
+  ];
+  report.inference_groups = ['kept-second', 'unused', 'kept-first'].map((group_id) => ({
+    group_id,
+  }));
+  const inferred = report.requirements.filter((r) => r.claim_id === member.claim_id);
+  inferred[0].inference = { group_id: 'kept-first' };
+  inferred[1].inference = { group_id: 'kept-second' };
+  const selected = A.upgrades(report, vectors.cases[0].context).requirements;
+  assert.strictEqual(
+    JSON.stringify(selected.source_groups.map((g) => g.group_id)),
+    '["first","last"]',
+  );
+  assert.strictEqual(
+    JSON.stringify(selected.inference_groups.map((g) => g.group_id)),
+    '["kept-second","kept-first"]',
+  );
+}
+
 for (const vector of vectors.cases) {
   assert.deepStrictEqual(
     JSON.parse(JSON.stringify([...A.detailedRows(vector.expected.upgrades)])),
