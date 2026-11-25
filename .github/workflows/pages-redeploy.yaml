@@ -41,11 +41,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir "$RETRY_TEMP"
-          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/15036416805 > "$RETRY_TEMP/artifact.json"
-          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/runs/45637918907 > "$RETRY_TEMP/run.json"
-          gh api --hostname github.com 'repos/abedegno/infrastructure-impact/actions/runs/45637918907/attempts/1/jobs?per_page=100' > "$RETRY_TEMP/jobs.json"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/15059264845 > "$RETRY_TEMP/artifact.json"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/runs/45691271417 > "$RETRY_TEMP/run.json"
+          gh api --hostname github.com 'repos/abedegno/infrastructure-impact/actions/runs/45691271417/attempts/1/jobs?per_page=100' > "$RETRY_TEMP/jobs.json"
           # Keep the original ZIP bytes: gh run download would unpack this layer.
-          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/15036416805/zip > "$RETRY_TEMP/artifact.zip"
+          gh api --hostname github.com repos/abedegno/infrastructure-impact/actions/artifacts/15059264845/zip > "$RETRY_TEMP/artifact.zip"
       - name: Verify exact accepted publication before extraction
         env:
           RETRY_TEMP: ${{ runner.temp }}/pages-redeploy
@@ -55,7 +55,7 @@ jobs:
         run: |
           set -euo pipefail
           python checks/pages_redeploy.py \
-            --receipt docs/operations/pages-redeploy-release-evidence-2026-11-25.json \
+            --receipt docs/operations/pages-redeploy-reliability-views-2026-11-25.json \
             --artifact-metadata "$RETRY_TEMP/artifact.json" \
             --run-metadata "$RETRY_TEMP/run.json" \
             --job-metadata "$RETRY_TEMP/jobs.json" \

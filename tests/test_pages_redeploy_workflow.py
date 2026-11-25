@@ -10,14 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_retry_workflow_uses_only_the_reviewed_reader_artifact():
-    receipt_path = "docs/operations/pages-redeploy-release-evidence-2026-11-25.json"
+    receipt_path = "docs/operations/pages-redeploy-reliability-views-2026-11-25.json"
     receipt = receipt_value(ROOT / receipt_path)
     assert receipt["repository"] == "abedegno/infrastructure-impact"
-    assert receipt["run_id"] == 45637918907
+    assert receipt["run_id"] == 45691271417
     assert receipt["run_attempt"] == 1
-    assert receipt["artifact_id"] == 15036416805
-    assert receipt["source_commit"] == "05e36fb3a711fbb937ae188ba71843320a513be3"
-    assert receipt["generation"] == "cbfee6e5f95f4a6ba06e5014a61992dc"
+    assert receipt["artifact_id"] == 15059264845
+    assert receipt["source_commit"] == "76d431db2a63abf6d826633f8c1224d0489a5abf"
+    assert receipt["generation"] == "141c2f9dc8f04c12a795ac819e7b4c8e"
 
     workflow = (ROOT / ".github/workflows/pages-redeploy.yaml").read_text()
     api_root = f"repos/{receipt['repository']}/actions"
@@ -47,4 +47,11 @@ def test_previous_cisco_retry_receipt_is_preserved():
     previous = ROOT / "docs/operations/pages-redeploy-cisco-2026-11-10.json"
     assert hashlib.sha256(previous.read_bytes()).hexdigest() == (
         "d79e3fd29ddad74174ca9395fd3551d48acfc01e4a0e39860e3b6493f84fcb6a"
+    )
+
+
+def test_previous_release_evidence_retry_receipt_is_preserved():
+    previous = ROOT / "docs/operations/pages-redeploy-release-evidence-2026-11-25.json"
+    assert hashlib.sha256(previous.read_bytes()).hexdigest() == (
+        "bd6ea5fbab7ede6de801ce318cf7ba53e5bdc0b71950e450d81aa875857233e2"
     )
