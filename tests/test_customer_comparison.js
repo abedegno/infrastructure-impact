@@ -260,6 +260,58 @@ const fixedOnlyOverview = api.render(fixtures.cases[4].envelope).split('</sectio
 assert(fixedOnlyOverview.includes('3 literal fixed versions'));
 assert(fixedOnlyOverview.includes('Affected-scope release links not established'));
 assert(!fixedOnlyOverview.includes('0 with affected-scope links'));
+
+// Catch evidence disappearing during loading or being tied to the current selection.
+const releaseEvidence = (html) =>
+  html.match(/<section class="customer-release-evidence">([\s\S]*?)<\/section>/)?.[1];
+const pinnedEvidence = releaseEvidence(api.render(null, { loading: true }));
+assert(pinnedEvidence, 'loading comparison shows Release reliability evidence');
+assert.strictEqual(releaseEvidence(api.render(null)), pinnedEvidence);
+for (const { envelope } of [fixtures.cases[0], ...fixtures.cisco_cases]) {
+  assert.strictEqual(releaseEvidence(api.render(envelope)), pinnedEvidence);
+}
+
+const research = JSON.parse(
+  fs.readFileSync('docs/research/2026-11-25-publisher-event-sample.json', 'utf8'),
+);
+const researchDate = (date) =>
+  new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(date));
+const aristaNotice = research.records.find((record) => record.id === 'arista-fn0103');
+const ciscoNotice = research.records.find((record) => record.id === 'cisco-fn74221');
+const matches = research.release_matches.filter((match) => match.event_id === ciscoNotice.id);
+const dateTargets = new Set(
+  matches.map(({ date, target }) => `${target} on ${researchDate(date)}`),
+);
+const pinnedResearch =
+  'https://github.com/abedegno/infrastructure-impact/blob/15292f21f1e6d487757ed131426f2e70827cab4d/docs/research/2026-11-25-publisher-event-sample';
+for (const fact of [
+  'Release reliability evidence',
+  'Withdrawal and corrective respin rates are unavailable for Cisco, Aruba and Arista',
+  'Independent human review pending',
+  `Pinned ${researchDate(research.staircase_input.generated_at)} scenario snapshot`,
+  `researched ${researchDate(research.research_date)}`,
+  'independent of the current vendor, study window, scope and CVE filters and their exports',
+  `notice dated ${researchDate(aristaNotice.notice_published_at)}`,
+  `EOS ${aristaNotice.release} deferral`,
+  'action date, replacement release and exact model applicability are unknown',
+  '4.33.4M and 4.33.5M',
+  `first published ${researchDate(ciscoNotice.notice_published_at)}`,
+  `${matches.length} scenario/policy annotations across ${dateTargets.size} distinct date/target pairs`,
+  ...dateTargets,
+  'device configuration and model applicability are unknown',
+  'Historical withdrawal and deferral status remains unknown',
+]) {
+  assert(pinnedEvidence.includes(fact), fact);
+}
+for (const url of [
+  aristaNotice.source.source_url,
+  ciscoNotice.source.source_url,
+  `${pinnedResearch}.md`,
+  `${pinnedResearch}.json`,
+]) {
+  assert(pinnedEvidence.includes(`href="${url}"`), url);
+}
+
 for (const test of fixtures.cases) {
   const envelope = api.build(test.envelope.study, test.envelope.release_history);
   assert.deepStrictEqual(clone(envelope), test.envelope);
@@ -268,6 +320,8 @@ for (const test of fixtures.cases) {
   assert.strictEqual(api.csvExport(envelope, { max_bytes: bytes }), test.csv);
   assert.throws(() => api.csvExport(envelope, { max_bytes: bytes - 1 }));
   const html = api.render(envelope);
+  assert.deepStrictEqual(clone(envelope), test.envelope, 'render leaves JSON export untouched');
+  assert.strictEqual(api.csvExport(envelope), test.csv, 'render leaves CSV export untouched');
   for (const text of [
     'Customer switching comparison',
     'Provider-reported CVSS',

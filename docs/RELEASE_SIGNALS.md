@@ -94,6 +94,24 @@ JSON. The page accepts reports up to 4 MiB and reads the selected file
 in memory. Vendor links in source receipts open on demand. The reader is
 standalone and intended for explicit local use.
 
+## Read the evidence in Customer Comparison
+
+Reader builds containing this change show **Release reliability evidence** at
+`#customer-comparison`, below the selected vendor
+overview and is also visible while the comparison loads or is unavailable.
+It summarizes primary-source research from 25 November 2026 against a pinned
+14 November 2026 switching scenario snapshot. Independent human review is
+pending, and vendor withdrawal and corrective respin rates are unavailable.
+The section links to the [pinned research report](https://github.com/abedegno/infrastructure-impact/blob/15292f21f1e6d487757ed131426f2e70827cab4d/docs/research/2026-11-25-publisher-event-sample.md)
+and [research packet](https://github.com/abedegno/infrastructure-impact/blob/15292f21f1e6d487757ed131426f2e70827cab4d/docs/research/2026-11-25-publisher-event-sample.json).
+
+The pinned report identifies the scenario snapshot used for the research examples.
+Updating the examples requires a reviewed code change. The examples sit
+outside the current vendor, study window, scope and CVE filters. The JSON and
+CSV exports describe the accepted comparison selection, so the independent
+research examples are outside their scope. Hosted activation remains a separate
+approved rollout; adding this section does not advance the hosted source pin.
+
 ## Interpret the observations
 
 - Annual rows show observed sample counts. Coverage outside retained source
