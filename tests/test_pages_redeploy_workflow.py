@@ -10,14 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_retry_workflow_uses_only_the_reviewed_reader_artifact():
-    receipt_path = "docs/operations/pages-redeploy-reader-2026-11-19.json"
+    receipt_path = "docs/operations/pages-redeploy-release-evidence-2026-11-25.json"
     receipt = receipt_value(ROOT / receipt_path)
     assert receipt["repository"] == "abedegno/infrastructure-impact"
-    assert receipt["run_id"] == 44616329992
+    assert receipt["run_id"] == 45637918907
     assert receipt["run_attempt"] == 1
-    assert receipt["artifact_id"] == 14575364963
-    assert receipt["source_commit"] == "cc84ad64fa7704020228f47ea7e433dde0acb0ee"
-    assert receipt["generation"] == "f227eadfa17340ac92135c55cf56d0ae"
+    assert receipt["artifact_id"] == 15036416805
+    assert receipt["source_commit"] == "05e36fb3a711fbb937ae188ba71843320a513be3"
+    assert receipt["generation"] == "cbfee6e5f95f4a6ba06e5014a61992dc"
 
     workflow = (ROOT / ".github/workflows/pages-redeploy.yaml").read_text()
     api_root = f"repos/{receipt['repository']}/actions"
