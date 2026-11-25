@@ -269,6 +269,7 @@ only after those dependencies have been cached.
 | [Browser evidence](docs/BROWSER_CAPTURE.md)                                                  | Private browser-assisted capture and completeness checks                                              |
 | [Static delivery](docs/STATIC_DELIVERY.md)                                                   | Verified cohort parts and full public archive downloads                                               |
 | [Vendor gaps](docs/VENDOR_GAPS.md)                                                           | Collection, archive and source-review gaps                                                            |
+| [Switching release signals](docs/RELEASE_SIGNALS.md)                                         | Local research report, source receipts and upgrade target context                                     |
 | [Scorecards](docs/SCORECARDS.md)                                                             | Evidence counts and dated revision timelines                                                          |
 | [Comparison eligibility](docs/COMPARISON_ELIGIBILITY.md)                                     | Shared periods, exact product scopes and suppression rules                                            |
 | [Component studies](docs/COMPONENT_STUDIES.md)                                               | Frozen enrollment, reference drift and per-cell evidence                                              |

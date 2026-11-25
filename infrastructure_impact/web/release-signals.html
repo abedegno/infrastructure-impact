@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Switching release signals</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .report-picker {
+        display: grid;
+        justify-items: start;
+        gap: 8px;
+      }
+
+      .report-picker label {
+        color: var(--text);
+        font-size: inherit;
+      }
+
+      .report-picker input {
+        max-width: 100%;
+      }
+
+      #report-output {
+        overflow-wrap: anywhere;
+      }
+
+      #report-output section {
+        margin-block: 24px;
+      }
+
+      #report-output details {
+        padding: 12px 15px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+      }
+
+      #report-output details + details {
+        margin-top: 8px;
+      }
+
+      #report-output dt {
+        margin-top: 8px;
+        font-weight: 600;
+      }
+
+      #report-output dd {
+        margin-inline-start: 0;
+      }
+
+      #report-output td {
+        min-width: 90px;
+      }
+
+      #report-output td:last-child {
+        min-width: 144px;
+      }
+    </style>
+    <script src="lossless-json.js" defer></script>
+    <script src="release-signals.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Switching release signals</h1>
+      <p>2024–2026 research scope for IOS XE 17.12, AOS-CX 10.13 and EOS 4.33.</p>
+      <div class="report-picker">
+        <label for="report-file">Release signals report</label>
+        <input
+          id="report-file"
+          type="file"
+          accept=".json,application/json"
+          aria-describedby="file-help"
+        />
+        <small id="file-help"
+          >Choose the generated JSON report, up to 4 MiB. The file stays in this tab.</small
+        >
+      </div>
+      <p id="report-status" role="status"></p>
+      <noscript><p>Enable JavaScript to read the report locally.</p></noscript>
+      <div id="report-output"></div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-25T00:00:00Z",
+  "documents": [],
+  "coverage": [
+    {
+      "vendor": "cisco",
+      "train": "17.12",
+      "start": "2024-01-01",
+      "end": "2026-12-31",
+      "status": "not_collected",
+      "expected_releases": null,
+      "reason": "No eligible origin documents are packaged. Historical release and withdrawal coverage is unestablished."
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "start": "2024-01-01",
+      "end": "2026-12-31",
+      "status": "not_collected",
+      "expected_releases": null,
+      "reason": "No eligible origin documents are packaged. Model-specific histories do not establish complete train coverage."
+    },
+    {
+      "vendor": "arista",
+      "train": "4.33",
+      "start": "2024-01-01",
+      "end": "2026-12-31",
+      "status": "not_collected",
+      "expected_releases": null,
+      "reason": "No eligible origin documents are packaged. A current announcement feed cannot establish historical coverage."
+    }
+  ]
+}
