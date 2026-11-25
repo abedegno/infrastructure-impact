@@ -1,30 +1,30 @@
 {
-  "archive": "vault-20261125T144805563224Z.sqlite3.gz.fernet",
-  "sha256": "b24da031ec5d77b2c730ff6c08bbdc782024046d776da329d6ee0248c6d71c63",
-  "checked_at": "2026-11-25T14:48:13.125542+00:00",
-  "source_commit": "05e36fb3a711fbb937ae188ba71843320a513be3",
+  "archive": "vault-20261125T200422574453Z.sqlite3.gz.fernet",
+  "sha256": "44750ae32342bdf4f60a5c838d78db6e4dcde9e6cce2095d7f115ac63e287bc9",
+  "checked_at": "2026-11-25T20:04:30.793742+00:00",
+  "source_commit": "76d431db2a63abf6d826633f8c1224d0489a5abf",
   "private": true,
-  "database_bytes": 348635136,
+  "database_bytes": 357015552,
   "vault_limit_bytes": 536870912,
   "storage_profile": {
     "schema_version": 1,
-    "measured_at": "2026-11-25T14:48:06.747058+00:00",
-    "database_page_bytes": 348635136,
+    "measured_at": "2026-11-25T20:04:24.979848+00:00",
+    "database_page_bytes": 357015552,
     "free_page_bytes": 0,
     "tables": [
       {
         "table": "revisions",
-        "rows": 6,
-        "tracked_payload_bytes": 322872995,
+        "rows": 7,
+        "tracked_payload_bytes": 328901821,
         "columns": {
-          "normalized": 322872995
+          "normalized": 328901821
         }
       }
     ],
     "method": "Read-only aggregate accounting of fixed application payload columns. Logical byte totals count retained repetitions and exclude indexes, row overhead and unlisted columns; they are not physical per-table sizes. Source bodies, URLs, notes and review values are not returned. No snapshots, revisions or recovery history are removed."
   },
-  "compressed_bytes": 38941654,
-  "archive_bytes": 51922296,
+  "compressed_bytes": 42052050,
+  "archive_bytes": 56069496,
   "retention": {
     "legacy_git_copies_preserved": true,
     "remote_assets": "append_only",
@@ -36,8 +36,8 @@
   "remote": {
     "repository": "abedegno/infrastructure-impact",
     "release_id": 458252843,
-    "asset_id": 791943878,
+    "asset_id": 792953281,
     "tag": "collector-recovery-2026-11-25"
   },
-  "remote_readback_verified_at": "2026-11-25T14:48:22.150084+00:00"
+  "remote_readback_verified_at": "2026-11-25T20:04:38.912692+00:00"
 }
