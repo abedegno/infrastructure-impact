@@ -3,7 +3,9 @@
 import argparse
 import sys
 from contextlib import ExitStack
+from itertools import combinations
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from .application.reliability_refresh import prepare
 from .collection.reliability_refresh import (
@@ -42,28 +44,58 @@ def _arguments(argv):
     return parser, parser.parse_args(argv)
 
 
-def _prepare(args, cache):
-    baseline = regular_path(args.catalogue)
-    output, report = map(regular_path, (args.output, args.report))
+def _entry_identity(path):
+    try:
+        info = path.stat()
+    except FileNotFoundError:
+        return None
+    return info.st_dev, info.st_ino
 
-    def comparison_path(path):
-        return Path(str(path).casefold()) if sys.platform == "darwin" else path
 
-    if len({comparison_path(path) for path in (baseline, output, report)}) != 3 or any(
-        comparison_path(path).is_relative_to(comparison_path(protected))
-        for path in (output, report)
-        for protected in (cache.directory, PACKAGE)
+def _same_entry(first, second):
+    if first == second:
+        return True
+    first_id, second_id = map(_entry_identity, (first, second))
+    if first_id is not None or second_id is not None:
+        return first_id == second_id
+    parent_id = _entry_identity(first.parent)
+    if parent_id is None or parent_id != _entry_identity(second.parent):
+        return False
+    # Ask the output filesystem how it compares two missing sibling names.
+    with TemporaryDirectory(prefix=".refresh-path-check-", dir=first.parent) as directory:
+        probe = Path(directory)
+        (probe / first.name).touch(exist_ok=False)
+        return (probe / second.name).exists()
+
+
+def _check_destinations(baseline, output, report, cache_dir):
+    protected = {_entry_identity(PACKAGE), _entry_identity(cache_dir)} - {None}
+    if any(
+        _entry_identity(parent) in protected for path in (output, report) for parent in path.parents
     ):
         raise ValueError("Candidate and report require separate paths outside cache and package")
+    if any(_same_entry(cache_dir, path) for path in (output, report)) or any(
+        _same_entry(first, second) for first, second in combinations((baseline, output, report), 2)
+    ):
+        raise ValueError("Candidate and report require separate paths outside cache and package")
+
+
+def _prepare(args, cache):
+    baseline, output, report = map(regular_path, (args.catalogue, args.output, args.report))
+    _check_destinations(baseline, output, report, cache.directory)
     candidate, review = prepare(cache, read_json(baseline))
     contents = [_json_bytes(value) for value in (candidate, review)]
     if any(len(data) > MAX_BYTES for data in contents):
         raise ValueError("Candidate or report exceeds JSON size limit")
+    directories = {_entry_identity(path.parent): path.parent for path in (output, report)}
+    if None in directories:
+        raise ValueError("Output parent directories must exist")
     with ExitStack() as stack:
-        for directory in sorted({output.parent, report.parent}):
-            stack.enter_context(_dataset_lock(directory / "refresh-output"))
-        for path in (output, report):
+        for identity in sorted(directories):
+            stack.enter_context(_dataset_lock(directories[identity] / "refresh-output"))
+        for path in (baseline, output, report):
             regular_path(path)
+        _check_destinations(baseline, output, report, cache.directory)
         staged_candidate = stack.enter_context(_staged_file(output, contents[0]))
         staged_review = stack.enter_context(_staged_file(report, contents[1]))
         previous_review = None

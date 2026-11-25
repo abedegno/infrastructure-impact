@@ -147,6 +147,10 @@ def _arista_observations(raw, retrieved):
     items = ElementTree.fromstring(raw).findall("channel/item")
     observations = []
     for event in events:
+        version = event["release"]
+        # The signal parser checks shape; the catalogue uses ASCII versions up to 128 characters.
+        if not version.isascii() or len(version) > 128:
+            raise ValueError("Unsupported Arista catalogue release identity")
         locator = event["source_locator"]
         index = int(locator.partition("[")[2].partition("]")[0]) - 1
         literal = items[index].findtext("pubDate")
@@ -154,7 +158,7 @@ def _arista_observations(raw, retrieved):
         if posted > retrieved:
             raise ValueError("Arista announcement postdates the original capture")
         observations.append(
-            Observation(event["release"], (), event["statement"], locator, event["date"], literal)
+            Observation(version, (), event["statement"], locator, event["date"], literal)
         )
     return observations
 
@@ -727,7 +731,15 @@ def collect(cache, source_id, policy, *, request=fetch, now=_utc_now, sleep=slee
                 cache._read(state, state["latest_sha256"])
             except ValueError:
                 return cache._record(state, "cache_body_invalid", checked)
-            state["validators"].update(_validator_values(response.headers))
+            sent_tag = headers.get("If-None-Match")
+            returned_tag = _validator_values(response.headers).get("ETag")
+            if (
+                sent_tag
+                and returned_tag
+                and sent_tag.removeprefix("W/") != returned_tag.removeprefix("W/")
+            ):
+                return cache._record(state, "unsupported_response", checked)
+            # A 304 verifies the saved revision without supplying bytes for new validators.
             return cache._record(state, "not_modified", checked)
         if response.status != 200:
             return cache._record(state, _route_error(response.status), checked)

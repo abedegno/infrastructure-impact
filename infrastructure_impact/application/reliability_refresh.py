@@ -144,13 +144,13 @@ def _merge_capture(candidate, review, sources, versions, receipt, observations):
             for previous in versions[identity]
             if not _independent_cisco_models(previous, fact, receipt["source_url"], sources)
         ]
-        if any(_already_stated(previous, fact) for previous in existing):
-            continue
         differences = [(previous, _differences(previous, fact)) for previous in existing]
         conflicts = [(previous, fields) for previous, fields in differences if fields]
         if conflicts:
             for previous, fields in conflicts:
                 _record_conflict(review, receipt, fact, previous, fields, sources)
+            continue
+        if any(_already_stated(previous, fact) for previous in existing):
             continue
         _remember_source(candidate, sources, receipt)
         candidate["releases"].append(fact)

@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -544,3 +545,192 @@ def test_cisco_rejects_malformed_rows_and_requires_a_target_train_release(
     raw = cisco("17.12.9", *other_versions).replace(b"Dublin 17.12.9", release_cell)
     assert cache.import_capture(C9200, raw, CAPTURED) == "unsupported_or_invalid_document"
     assert cache.snapshot()[C9200]["latest_sha256"] is None
+
+
+def _prepare_args(cache, output, report, baseline=BASELINE):
+    return [
+        "prepare",
+        "--cache-dir",
+        str(cache),
+        "--catalogue",
+        str(baseline),
+        "--output",
+        str(output),
+        "--report",
+        str(report),
+    ]
+
+
+def test_cli_refuses_an_existing_baseline_under_an_equivalent_unicode_name(refresh, tmp_path):
+    cli, _, _ = refresh
+    baseline = tmp_path / "café.json"
+    alias = tmp_path / "cafe\u0301.json"
+    baseline.write_bytes(BASELINE.read_bytes())
+    report = tmp_path / "review.json"
+    args = _prepare_args(tmp_path / "cache", alias, report, baseline)
+    if alias.exists():
+        with pytest.raises(SystemExit) as error:
+            cli.main(args)
+        assert error.value.code == 1
+        assert not report.exists()
+    else:
+        assert cli.main(args) == 0
+        assert alias.exists() and report.exists()
+    assert baseline.read_bytes() == BASELINE.read_bytes()
+
+
+def test_cli_refuses_existing_hardlink_alias_to_baseline(refresh, tmp_path):
+    cli, _, _ = refresh
+    baseline = tmp_path / "baseline.json"
+    alias = tmp_path / "candidate.json"
+    report = tmp_path / "review.json"
+    baseline.write_bytes(BASELINE.read_bytes())
+    alias.hardlink_to(baseline)
+    with pytest.raises(SystemExit) as error:
+        cli.main(_prepare_args(tmp_path / "cache", alias, report, baseline))
+    assert error.value.code == 1
+    assert baseline.read_bytes() == alias.read_bytes() == BASELINE.read_bytes()
+    assert not report.exists()
+
+
+def test_cli_compares_prospective_unicode_output_names_as_the_volume_does(refresh, tmp_path):
+    cli, _, _ = refresh
+    candidate = tmp_path / "café.json"
+    report = tmp_path / "cafe\u0301.json"
+    candidate.touch()
+    aliases = report.exists()
+    candidate.unlink()
+    args = _prepare_args(tmp_path / "cache", candidate, report)
+    if aliases:
+        with pytest.raises(SystemExit) as error:
+            cli.main(args)
+        assert error.value.code == 1
+        assert not candidate.exists() and not report.exists()
+    else:
+        assert cli.main(args) == 0
+        assert "releases" in read_json(candidate)
+        assert "conflicts" in read_json(report)
+
+
+def test_cli_locks_an_aliased_output_parent_once(refresh, tmp_path, monkeypatch):
+    cli, _, _ = refresh
+    directory = tmp_path / "Outputs"
+    alternate = tmp_path / "outputs"
+    directory.mkdir()
+    if not alternate.exists():
+        pytest.skip("output filesystem distinguishes the two directory spellings")
+    original_lock = cli._dataset_lock
+    acquired = []
+
+    @contextmanager
+    def track_lock(path):
+        info = path.parent.stat()
+        identity = (info.st_dev, info.st_ino)
+        assert identity not in acquired, "Second exclusive lock would block on the same directory"
+        acquired.append(identity)
+        with original_lock(path):
+            yield
+
+    monkeypatch.setattr(cli, "_dataset_lock", track_lock)
+    candidate, report = directory / "candidate.json", alternate / "review.json"
+    assert cli.main(_prepare_args(tmp_path / "cache", candidate, report)) == 0
+    assert len(acquired) == 1
+    assert "releases" in read_json(candidate)
+    assert "conflicts" in read_json(report)
+
+
+def test_conflicting_entity_tag_on_304_preserves_the_verified_body_and_validators(
+    refresh, tmp_path
+):
+    _, _, collection = refresh
+    cache = collection.RefreshCache(tmp_path / "cache")
+    receipt = policy(tmp_path / "policy.json")
+    robot = (200, "text/plain", ROBOT_ALLOW)
+    old_body = cisco("17.12.9")
+    old_date = "Wed, 25 Nov 2026 12:00:00 GMT"
+    args, calls = transport(
+        collection,
+        robot,
+        (200, "text/html", old_body, {"ETag": '"first"', "Last-Modified": old_date}),
+        robot,
+        (304, "", b"", {"ETag": '"second"', "Last-Modified": "Wed, 25 Nov 2026 13:00:00 GMT"}),
+        robot,
+        (304, "", b"", {"ETag": '"first"'}),
+    )
+    assert collection.collect(cache, C9200, receipt, **args) == "captured"
+    previous = cache.snapshot()[C9200]
+    assert collection.collect(cache, C9200, receipt, **args) == "unsupported_response"
+    current = cache.snapshot()[C9200]
+    assert current["last_check"]["status"] == "unsupported_response"
+    assert {k: v for k, v in current.items() if k != "last_check"} == {
+        k: v for k, v in previous.items() if k != "last_check"
+    }
+    assert (cache.directory / "bodies" / current["latest_sha256"]).read_bytes() == old_body
+    assert collection.collect(cache, C9200, receipt, **args) == "not_modified"
+    assert calls[5][1] == {"If-None-Match": '"first"', "If-Modified-Since": old_date}
+
+
+@pytest.mark.parametrize("version", ["4.33.\u0669M", "4.33." + "1" * 123 + "M"])
+def test_unsupported_arista_version_leaves_prior_revision_replayable(refresh, tmp_path, version):
+    _, app, collection = refresh
+    cache = collection.RefreshCache(tmp_path / "cache")
+    baseline = read_json(BASELINE)
+    date = "2026-11-24 12:00:00 +0000"
+    assert cache.import_capture(ARISTA, rss(("4.33.99M", date)), CAPTURED) == "captured"
+    before, _ = app.prepare(cache, baseline)
+    state = cache.snapshot()[ARISTA]
+    assert (
+        cache.import_capture(ARISTA, rss((version, date)), CAPTURED)
+        == "unsupported_or_invalid_document"
+    )
+    updated = cache.snapshot()[ARISTA]
+    assert updated["last_check"]["status"] == "unsupported_or_invalid_document"
+    assert updated["latest_sha256"] == state["latest_sha256"]
+    assert updated["revisions"] == state["revisions"]
+    assert updated["captures"] == state["captures"]
+    after, _ = app.prepare(cache, baseline)
+    assert before == after
+
+
+def test_matching_baseline_observation_does_not_hide_other_conflicting_receipts(refresh, tmp_path):
+    cli, app, collection = refresh
+    cache = collection.RefreshCache(tmp_path / "cache")
+    original = rss(("4.33.99M", "2026-11-24 12:00:00 +0000"))
+    assert cache.import_capture(ARISTA, original, CAPTURED) == "captured"
+    baseline, _ = app.prepare(cache, read_json(BASELINE))
+    matching_fact = baseline["releases"][-1]
+    for date, label in [("2026-11-22", "second"), ("2026-11-23", "third")]:
+        receipt = {
+            **baseline["sources"][-1],
+            "source_id": label,
+            "original_sha256": hashlib.sha256(label.encode()).hexdigest(),
+        }
+        baseline["sources"].append(receipt)
+        baseline["releases"].append(
+            {
+                **matching_fact,
+                "announcement_date": date,
+                "evidence": [{**matching_fact["evidence"][0], "source_id": label}],
+            }
+        )
+
+    baseline_path = tmp_path / "baseline.json"
+    baseline_path.write_text(json.dumps(baseline, indent=2, ensure_ascii=False) + "\n")
+    candidate, review = tmp_path / "candidate.json", tmp_path / "review.json"
+    assert cli.main(_prepare_args(cache.directory, candidate, review, baseline_path)) == 0
+    assert candidate.read_bytes() == baseline_path.read_bytes()
+    conflicts = read_json(review)["conflicts"]
+    assert [conflict["prior"]["announcement_date"] for conflict in conflicts] == [
+        "2026-11-22",
+        "2026-11-23",
+    ]
+    assert [conflict["prior_receipts"][0]["source_id"] for conflict in conflicts] == [
+        "second",
+        "third",
+    ]
+    for conflict in conflicts:
+        assert conflict["fields"] == ["announcement_date"]
+        assert conflict["proposed"]["announcement_date"] == "2026-11-24"
+        assert (
+            conflict["proposed_receipt"]["original_sha256"] == hashlib.sha256(original).hexdigest()
+        )
