@@ -41,3 +41,14 @@ unavailable, rather than invoking a browser/login or treating missing results as
 ## Completion record
 
 First delivery complete with partial coverage and unknown denominators. Thirty new focused tests and 106 including adjacent release-signal tests passed; 47 external cached public captures/excerpts independently rehashed. Core and whole-packet reviews approved after regression fixes. No hosted activation, metrics/rates, staircase/UI or publication changes. See `docs/research/2026-11-25-round4-first-delivery.md`.
+
+## Approved targeted coverage follow-up
+
+The user approved a bounded additional source pass before steps 5–8. It found
+eight official Cisco ISSU release-date references scoped outside Catalyst
+9200/9300 and one Arista train-level initial date. No target-model dated rows
+were promoted; Aruba navigation gaps remain. Three portable, fingerprinted
+research supplements and a consolidated report were added. The 107 relevant
+tests and public export checks (901 files) passed; 33 new/reused cached public
+captures and excerpts were independently rehashed. Rates, site, collection and
+publication remain unchanged. See `docs/research/2026-11-25-round4-coverage-pass.md`.

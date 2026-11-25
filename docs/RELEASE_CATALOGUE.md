@@ -71,3 +71,11 @@ closed enumeration and no unresolved release dates. Undated identities remain
 visible and cannot be assigned to a year. The 2026 period is year-to-date.
 No rates, cross-vendor ranking, upgrade markers or new hosted catalogue roots are
 published in this delivery; round 4 steps 5–8 require approval.
+
+## Targeted coverage follow-up
+
+The [coverage-pass report](research/2026-11-25-round4-coverage-pass.md) records
+eight Cisco dates scoped to other Catalyst platforms and Arista's 4.33 train
+start date. These supplements do not supply target-model release denominators
+and are not automatically imported into the frozen first-delivery catalogue.
+The source packets retain explicit scope, date meanings and access outcomes.
