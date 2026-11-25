@@ -1,0 +1,13 @@
+# Targeted Aruba coverage pass
+
+25 November 2026. **Review pending; research only.** This delta adds **no dated release rows** and resolves no date gap. It leaves the base packet unchanged. See the [machine-readable delta](2026-11-25-round4-coverage-aruba.json).
+
+The [official 6200 index](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/index.html) exposes a literal link to the [10.13 train](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/aos-cx-10-13-xx.html). The train page's web rendering contains LSR policy and an upgrade matrix, with no child release-history links. The cached [historical 6200 history](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-19.html) exposes a TOC link to [10.13.1200](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/10-13-1200.html), but that target renders only copyright/search content. This pass did **not** discover the latest 1200 history URL. The four early-2024 dated rows remain historical observations, not a current complete history.
+
+The [official 6300 Overview TOC](https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/overview.html) links to 10.13.1001, 10.13.1031 and 10.13.1161. The 1001 and 1161 targets rendered no substantive body. The 1031 click returned a web-tool cache miss. These outcomes supply no release dates. The existing current 6300 table still has no dated rows for those three versions.
+
+Targeted searches for exact missing-version history combinations and official release-note PDF filenames yielded no new usable cohort date evidence. Results for 6100 and 10000 were excluded: another platform's history cannot supply 6200/6300 dates. No broad advisory research was repeated.
+
+The web tool's empty bodies and cache miss are **not HTTP status observations**. No previously blocked robots or raw-origin requests were retried. The in-app browser host was unavailable, so no browser session was established. No authentication, challenge, alternative-origin bypass or private data was used. Unattended collection permission remains unresolved.
+
+Retained receipts use portable `$RELEASE_RELIABILITY_CACHE/aruba/...` references. `rendered_capture_sha256` hashes the exact retained JSON receipt bytes; `rendered_payload_sha256` hashes its UTF-8 `result` field; each selected literal quote has its own `excerpt_sha256`. All original-document hashes remain null. Six receipt-file hashes and portable references were verified. The unresolved gaps do not establish absence, withdrawal, or a release denominator.
