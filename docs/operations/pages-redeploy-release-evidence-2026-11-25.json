@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "repository": "abedegno/infrastructure-impact",
+  "run_id": 45637918907,
+  "run_attempt": 1,
+  "workflow_path": ".github/workflows/collect.yaml",
+  "head_sha": "05e36fb3a711fbb937ae188ba71843320a513be3",
+  "source_commit": "05e36fb3a711fbb937ae188ba71843320a513be3",
+  "artifact_id": 15036416805,
+  "artifact_name": "github-pages",
+  "artifact_zip_bytes": 99619316,
+  "artifact_zip_sha256": "4cc9f83970e27dc8a87403c661b1640ffe9f48160e6ff85580173b3b3b473f45",
+  "tar_bytes": 893091840,
+  "tar_sha256": "91b30b07238676eca39d3e66ed3b31bcf6146c817be1fe2bf39d67d5a2c57e68",
+  "generation": "cbfee6e5f95f4a6ba06e5014a61992dc",
+  "accepted_manifest_sha256": "ac0e2f5d41aa3391ab72b9081697d70a95c8ab7fe12aca361f89ce12f7700a70"
+}
