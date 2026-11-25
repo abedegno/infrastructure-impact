@@ -51,10 +51,12 @@ Coverage rows: `{vendor, train, start, end, status, expected_releases:null|int,
 reason}`; statuses partial, blocked, not_collected. No complete claim in this milestone.
 
 Report: `{schema_version:1, generated_at, window:{start,end}, dataset_sha256,
-events:[], metrics:[], candidate_pairs:[], upgrade_links:[], coverage:[], caveats:[],
+events:[], date_conflict_evidence:[], metrics:[], candidate_pairs:[], upgrade_links:[], coverage:[], caveats:[],
 review_status:'independent_human_review_pending'}`.
 Normalized report events add `event_id` and `source` (document receipt excluding
-raw events and adding locator). Metrics fields: vendor, train, year, partial_year,
+raw events and adding locator). Out-of-window records that conflict with dates
+from retained in-window observations appear in `date_conflict_evidence`.
+Metrics fields: vendor, train, year, partial_year,
 observed_releases, explicit_withdrawals, explicit_deferred, confirmed_corrective_respins,
 field_notices, recommendations, published_bug_ids, undated_events,
 withdrawal_rate:null, coverage:'not_established'. All are observed sample counts.
@@ -63,9 +65,10 @@ later_date, calendar_days, within_14_days, within_30_days, corrective_respin_con
 event_ids. Use dated chronological adjacent release announcements with identical
 platform scope; exclude F/M changes and unsupported version identities.
 Upgrade links: vendor, train, year, scenario, policy, date, target, claim_ids,
-event_id:null|string, signal, relation, reason. Exact target/train only;
-unknown model binding yields `model_unresolved`; dated strictly later events can
-be `later`; undated/earlier events never claim later. Candidate pairs use a
+event_id:null|string, signal, relation, chronology, model_applicability, reason. Exact target/train only;
+unknown model binding yields relation `model_unresolved` and model_applicability
+`unresolved`; chronology separately records `later`, `not_later` or `unknown`.
+Undated/earlier events never claim later. Candidate pairs use a
 separate `candidate_follow_up` signal. Parse existing upgrade `rows[].events[]`,
 without changing original counts, scenario, policy or claim evidence.
 
@@ -74,30 +77,33 @@ without changing original counts, scenario, policy or claim evidence.
 Files: create `application/release_signals.py`, two `schemas/release-signals-*-v1.json`,
 `tests/test_release_signals.py` and a packaged empty `resources/release-signals.json`.
 
-- [ ] Write failing tests for duplicate revision reuse, revision updates/reversion,
+- [x] Write failing tests for duplicate revision reuse, revision updates/reversion,
       invalid provenance, unknown scope, exact chronology, candidate thresholds and
       source-window gaps; run pytest and observe failure.
-- [ ] Implement strict bounded validation, revision chain, pure metrics, exact target
+- [x] Implement strict bounded validation, revision chain, pure metrics, exact target
       annotations and CSV with formula-safe cells. Existing schemas remain unchanged.
-- [ ] Run tests, lint and commit the focused evidence/analysis change.
+- [x] Run tests, lint and commit the focused evidence/analysis change.
 
 ### Task 2: optional public-source collectors and CLI
 
 Files: create `collection/release_signals.py`, `release_signals_cli.py`,
 `tests/test_release_signals_collection.py`.
 
-- [ ] Write failing tests for real-layout synthetic Arista XML, Cisco caveat HTML,
+- [x] Write failing tests for real-layout synthetic Arista XML, Cisco caveat HTML,
       Aruba version-history HTML, failure/challenge detection and offline CLI operation.
-- [ ] Implement `parse_arista_releases(raw)`, `parse_cisco_caveats(raw)`,
+- [x] Implement `parse_arista_releases(raw)`, `parse_cisco_caveats(raw)`,
       `parse_aruba_history(raw)` producing Shared-interface events. Keep parsers narrowly
-      scoped to reviewed layout; unsupported data fails visibly. Explicit withdrawals,
-      recommendations, notices and corrective respins use a reviewed fact proposal with
-      literal locator/statement verified against supplied source bytes.
-- [ ] Add `python -m infrastructure_impact.release_signals_cli` commands init,
+      scoped to reviewed layouts. These readers cover Arista announcements, Aruba
+      release history and Cisco bug disclosures. Collectors for formal withdrawals,
+      deferments, corrective respins, field notices and recommendations are deferred
+      pending verification of public source layouts. The schema supports those future
+      observations. Preserve announcements across rolling RSS snapshots, using the
+      newest retained observation for recurring items.
+- [x] Add `python -m infrastructure_impact.release_signals_cli` commands init,
       import-document (explicit parser/source/bytes/time), collect-arista (fixed public
       RSS URL, opt-in, bounded response, no redirects/auth, cache and failure receipt),
       report (explicit dataset/window/output paths, optional upgrades JSON).
-- [ ] Keep disabled sources/gaps explicit; never access application default vault.
+- [x] Keep disabled sources/gaps explicit; never access application default vault.
       Run tests and commit only owned files; no network use in tests.
 
 ### Task 3: optional research reader and documentation
@@ -105,26 +111,26 @@ Files: create `collection/release_signals.py`, `release_signals_cli.py`,
 Files: create `web/release-signals.html`, `web/release-signals.js`, packaged mirrors,
 `tests/test_release_signals_ui.js`, `docs/RELEASE_SIGNALS.md`; README short link.
 
-- [ ] Write failing Node tests for report shape, unknown scope/rates, HTML injection,
+- [x] Write failing Node tests for report shape, unknown scope/rates, HTML injection,
       unsafe source links, malformed reports and candidate versus confirmed rendering.
-- [ ] Build standalone local-import reader, no network or persistence. Validate all
+- [x] Build standalone local-import reader, no network or persistence. Validate all
       consumed fields; DOM text/safe links, bounded file input. Render metrics,
       candidates, upgrade links, source receipts and coverage warnings distinctly.
-- [ ] Document commands, interpretation, source-access restrictions, revision/cache
+- [x] Document commands, interpretation, source-access restrictions, revision/cache
       handling, candidate thresholds (14/30 sensitivities), and human-review status.
-- [ ] Keep hosted asset publication unchanged; reader may be served explicitly by
+- [x] Keep hosted asset publication unchanged; reader may be served explicitly by
       an operator, with integration/activation separately approved. Run Node tests,
       formatting, verify mirrors and commit owned files.
 
 ### Task 4: integration, sample run and review
 
-- [ ] Generate a report from retained usable public Arista RSS bytes outside Git;
+- [x] Generate a report from retained usable public Arista RSS bytes outside Git;
       do not promote rendered-only Phase 1 excerpts to origin documents. Seed packaged
       dataset remains empty with all three vendors' coverage gaps, not false history.
-- [ ] Run targeted Python/Node tests plus relevant existing release/upgrades tests;
+- [x] Run targeted Python/Node tests plus relevant existing release/upgrades tests;
       verify CLI end-to-end JSON/CSV and malformed input handling.
-- [ ] Fresh whole-branch review; fix substantive findings and rerun affected tests.
-- [ ] Record run summary and limitations; push feature branch and open/update PR.
+- [x] Fresh whole-branch review; fix substantive findings and rerun affected tests.
+- [x] Record run summary and limitations; push feature branch and open/update PR.
       Do not merge, activate sources or publish the site without approval.
 
 ## Execution ruling
@@ -133,3 +139,12 @@ Proceed under the user's existing autonomous execution and subagent-driven
 preferences. This approval authorizes implementation, not lifting source access
 restrictions or hosted activation. The reader is built as a separately served
 local-import page so publication behavior is unchanged.
+
+## Completion record
+
+Implemented the available-source milestone. Verified imports for formal publisher
+actions remain deferred as stated in Task 2; hosted activation remains gated.
+Final focused/adjacent checks: 341 Python tests, 129 loopback-enabled integration
+tests, and 16 selected Node results passed (including ten new reader tests).
+Fresh scoped re-review approved all fixes. See the initial run summary in
+`docs/research/2026-11-25-release-signals-run.md`.
