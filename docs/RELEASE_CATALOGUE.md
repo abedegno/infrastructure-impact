@@ -38,7 +38,9 @@ source. It excludes Cisco access-point and other-train controls and the HPE
 8325/9300 notice. The hardware Cisco notice remains hardware context, with its
 conflicting notice date unknown; both date statements remain in the research
 packet. Short quotes and exact fingerprints can be audited against captures cached
-outside Git. Do not commit those full captures.
+outside Git. Do not commit those full captures. Cache references use
+`$RELEASE_RELIABILITY_CACHE`, an operator-selected directory outside Git; they
+do not disclose a workstation path or local identity.
 
 The reusable CLI accepts any conforming catalogue and an optional `--config`.
 `infrastructure_impact/resources/release-catalogue-trains.json` selects the period,

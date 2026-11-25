@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from checks.build_release_catalogue import build_catalogue
 from infrastructure_impact.application.release_catalogue import catalogue_summary, find_respins
 
@@ -58,3 +60,14 @@ def test_real_provenance_keeps_original_and_excerpt_distinct():
     assert all(
         (s["capture_kind"] == "original_document") == bool(s["original_sha256"]) for s in sources
     )
+
+
+def test_research_packets_pass_public_release_identity_guard():
+    from checks.release import LEAKS
+
+    paths = list((ROOT / "docs/research").glob("2026-11-25-round4-*"))
+    paths.append(ROOT / "docs/RELEASE_CATALOGUE.md")
+    assert paths
+    for path in paths:
+        if LEAKS.search(path.read_text()):
+            pytest.fail("Public release identity guard rejected " + path.name)

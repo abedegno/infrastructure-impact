@@ -7,7 +7,7 @@ The 17.9.6 control is outside the cohort. Research only; no collector activation
 The [machine-readable packet](2026-11-25-round4-cisco.json) records 23 evidence
 observations with source URL, locator, short quotations, retrieval time, original
 and distinct excerpt fingerprints. Original captures remain outside Git at
-`/Users/jonw/cve/data/release-reliability-round4/cisco`.
+`$RELEASE_RELIABILITY_CACHE/cisco`.
 
 ## Release catalogue
 

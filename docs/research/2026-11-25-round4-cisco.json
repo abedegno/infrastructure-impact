@@ -20,7 +20,7 @@
       "response_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "bytes": 77499,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-rommon-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-rommon-origin.response",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "substantive_verified": true
     },
@@ -33,7 +33,7 @@
       "response_sha256": "3641fc408c9abed001a3a9e98097a5ce8243ea13bd667645f462a0c5d4843d2e",
       "bytes": 61915,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn74221-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn74221-origin.response",
       "original_sha256": "3641fc408c9abed001a3a9e98097a5ce8243ea13bd667645f462a0c5d4843d2e",
       "substantive_verified": true
     },
@@ -46,7 +46,7 @@
       "response_sha256": "c309273db9987fc2132df52eda436e920127a0f3349e576b671aa15e20cc87a3",
       "bytes": 150394,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn74383-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn74383-origin.response",
       "original_sha256": "c309273db9987fc2132df52eda436e920127a0f3349e576b671aa15e20cc87a3",
       "substantive_verified": true
     },
@@ -59,7 +59,7 @@
       "response_sha256": "0c90261d3f35a0b3de678702cf9e42fb923bbfe3ee4a87d3b43b621a8eafd725",
       "bytes": 253970,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn72510-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn72510-origin.response",
       "original_sha256": "0c90261d3f35a0b3de678702cf9e42fb923bbfe3ee4a87d3b43b621a8eafd725",
       "substantive_verified": true
     },
@@ -72,7 +72,7 @@
       "response_sha256": "e9287a2b7f81743e36020d7f88bbf635b4c55ed5103908f31849da397a3a37ef",
       "bytes": 68968,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn72416-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn72416-origin.response",
       "original_sha256": "e9287a2b7f81743e36020d7f88bbf635b4c55ed5103908f31849da397a3a37ef",
       "substantive_verified": true
     },
@@ -85,7 +85,7 @@
       "response_sha256": "29bf301c68bb91063021a52f6b6a5cc433dd9bb8aac5b9c2447bbfad65c352ff",
       "bytes": 73009,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn74135-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn74135-origin.response",
       "original_sha256": "29bf301c68bb91063021a52f6b6a5cc433dd9bb8aac5b9c2447bbfad65c352ff",
       "substantive_verified": true
     },
@@ -98,7 +98,7 @@
       "response_sha256": "a5ce5ab46cd2f84451af144a9b35740c2001918a11d038ad5fb15d42f3c19866",
       "bytes": 113649,
       "challenge": false,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/control179-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/control179-origin.response",
       "original_sha256": "a5ce5ab46cd2f84451af144a9b35740c2001918a11d038ad5fb15d42f3c19866",
       "substantive_verified": true
     },
@@ -110,7 +110,7 @@
       "response_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "preview": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<!DOCTYPE html>\n<html xmlns:fb=\"//www.facebook.com/2008/fbml\" xmlns:og=\"//opengraphprotocol.org/schema/\" lang=\"en\" xml:lang=\"en\"  clas",
       "id": "c9300-rommon",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-rommon-origin.response",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-rommon-origin.response",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "substantive_verified": true
     }
@@ -126,7 +126,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "172c93576c9dafd73afc3a339b96d98b4eb53d12e43aeed40155dcbb3a96fc4f",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-1.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-1.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -139,7 +139,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "6c24f77180fd0b17bdfcdf61ec3340709b801744d2f74bdebf4aecdf890e7e3c",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-2.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-2.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -152,7 +152,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "b4ffb807b95eb9251c8c3b20d9ec31f2576531d0aa92d7204aa852506bdc6eae",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-3.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-3.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -165,7 +165,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "ebb5ce12bd17d311763457a048558dbd10bb25d2c86c835a8ba3a94300eee92b",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-4.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-4.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -178,7 +178,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "56a989e43b9c538d32c06553739c5f1dd3c815bcf98a166da29bd8623a200706",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-5.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-5.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -191,7 +191,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "733cd412b1ea53f8006e372deb81e73b191d9208d84bccc86cb4b1993782917d",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-6.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-6.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -204,7 +204,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "c86595430ac411d94af959947fd4540da9bcb664318d32753157f2bc2e49c5f5",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-7a.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-7a.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -217,7 +217,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
       "excerpt_sha256": "196536f2e9812fee9a770b01961fcb1979fcb0b6f7abeaf9129c3a750420fd3e",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9200-17-12-8.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9200-17-12-8.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -230,7 +230,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "172c93576c9dafd73afc3a339b96d98b4eb53d12e43aeed40155dcbb3a96fc4f",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-1.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-1.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -243,7 +243,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "6c24f77180fd0b17bdfcdf61ec3340709b801744d2f74bdebf4aecdf890e7e3c",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-2.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-2.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -256,7 +256,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "b4ffb807b95eb9251c8c3b20d9ec31f2576531d0aa92d7204aa852506bdc6eae",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-3.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-3.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -269,7 +269,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "ebb5ce12bd17d311763457a048558dbd10bb25d2c86c835a8ba3a94300eee92b",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-4.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-4.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -282,7 +282,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "56a989e43b9c538d32c06553739c5f1dd3c815bcf98a166da29bd8623a200706",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-5.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-5.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -295,7 +295,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "733cd412b1ea53f8006e372deb81e73b191d9208d84bccc86cb4b1993782917d",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-6.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-6.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -308,7 +308,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "c86595430ac411d94af959947fd4540da9bcb664318d32753157f2bc2e49c5f5",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-7a.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-7a.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -321,7 +321,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
       "excerpt_sha256": "196536f2e9812fee9a770b01961fcb1979fcb0b6f7abeaf9129c3a750420fd3e",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-17-12-8.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-17-12-8.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -339,7 +339,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "3641fc408c9abed001a3a9e98097a5ce8243ea13bd667645f462a0c5d4843d2e",
       "excerpt_sha256": "610c9f8d465a8e23b1e883051589389f3f29b95fa55eae47e04e5977590a3c4e",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn74221-scope.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn74221-scope.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -356,7 +356,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "c309273db9987fc2132df52eda436e920127a0f3349e576b671aa15e20cc87a3",
       "excerpt_sha256": "e6c6976543904e3c85f1a454d2457eeb4338eabaa20af8cccd410b8681f2d311",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn74383-scope.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn74383-scope.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -376,7 +376,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "0c90261d3f35a0b3de678702cf9e42fb923bbfe3ee4a87d3b43b621a8eafd725",
       "excerpt_sha256": "172b4eab28c67f949f52920394626350f2c3a5268ca0845306d1206219a606e2",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn72510-scope.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn72510-scope.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -394,7 +394,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "e9287a2b7f81743e36020d7f88bbf635b4c55ed5103908f31849da397a3a37ef",
       "excerpt_sha256": "d7fc1ef4b9005173f06bf2ac9665e6e8535f7ca7e584b6e324e324909e0c6fde",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn72416-scope.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn72416-scope.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -411,7 +411,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "29bf301c68bb91063021a52f6b6a5cc433dd9bb8aac5b9c2447bbfad65c352ff",
       "excerpt_sha256": "688a443cf9c7b18b42f8eb94a241d257148884f79dc36d80e9b335e31aa38051",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/fn74135-scope.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/fn74135-scope.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -426,7 +426,7 @@
       "capture_method": "anonymous_origin_http_html",
       "original_sha256": "a5ce5ab46cd2f84451af144a9b35740c2001918a11d038ad5fb15d42f3c19866",
       "excerpt_sha256": "3102f64baa7aa2639f6f962c5b4e01105f4e8c86c7882b8d9ce89b46b9f61314",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/control-1796a-fix.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/control-1796a-fix.excerpt.txt",
       "review_status": "review_pending"
     },
     {
@@ -442,7 +442,7 @@
       "capture_method": "web_service_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "cb9cc641d7c3f47f95f2437e0a348716665ebc45bc04b34bf625d620146a264a",
-      "excerpt_path": "/Users/jonw/cve/data/release-reliability-round4/cisco/c9300-index-inventory.excerpt.txt",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/c9300-index-inventory.excerpt.txt",
       "review_status": "review_pending"
     }
   ],
@@ -786,5 +786,5 @@
       "Cisco test/development subdomains"
     ]
   },
-  "cache_root": "/Users/jonw/cve/data/release-reliability-round4/cisco"
+  "cache_root": "$RELEASE_RELIABILITY_CACHE/cisco"
 }

@@ -19,7 +19,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "d8fbad6cdc0fc04306c1a1325dc3ec082ff3b8634771476cc57d2f89246af63e",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx40.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/idx40.web-excerpt.json"
     },
     "fn103date": {
       "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=40",
@@ -30,7 +30,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "d8fbad6cdc0fc04306c1a1325dc3ec082ff3b8634771476cc57d2f89246af63e",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx40.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/idx40.web-excerpt.json"
     },
     "index0": {
       "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=0",
@@ -41,7 +41,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "1a2981e53cb07275d27da347d6ddff2d0d013a82721bad155e5deb7de729c7cb",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx0.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/idx0.web-excerpt.json"
     },
     "fn144": {
       "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=0",
@@ -52,7 +52,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "1a2981e53cb07275d27da347d6ddff2d0d013a82721bad155e5deb7de729c7cb",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx0.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/idx0.web-excerpt.json"
     },
     "library": {
       "url": "https://www.arista.com/en/support/product-documentation",
@@ -63,7 +63,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "7ea1998748c78c6e0e6e92bec144139ba0df936e1403181369e22877d33fe7ae",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/doclib.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/doclib.web-excerpt.json"
     },
     "models": {
       "url": "https://www.arista.com/en/support/product-documentation",
@@ -74,7 +74,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "7ea1998748c78c6e0e6e92bec144139ba0df936e1403181369e22877d33fe7ae",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/doclib.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/doclib.web-excerpt.json"
     },
     "fn103login": {
       "url": "https://www.arista.com/en/support/advisories-notices/field-notice/21651-field-notice-0103",
@@ -85,7 +85,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "098a0716de5f5afd03090fe95d0b33eddc0939a7ca59c6350e8955188180f6d4",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/fn103login.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/fn103login.web-excerpt.json"
     },
     "bulletinlogin": {
       "url": "https://www.arista.com/custom_data/downloads/?f=%2Fsupport%2Fdownload%2FProductBulletins%2FEOS%2FEOS-4.33.0F-Product-Bulletin.pdf",
@@ -96,7 +96,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "734154f61e4e5e14166e241cea37bb3185b1a29865a118fa3205742f47491c31",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/bulletin0.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/bulletin0.web-excerpt.json"
     },
     "robots": {
       "url": "https://www.arista.com/robots.txt",
@@ -107,7 +107,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "0c6f161200dfd527fc01f873a06a948724836b60d57e233863d533530c56209b",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/robots-policy-excerpt.txt"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/robots-policy-excerpt.txt"
     },
     "terms": {
       "url": "https://www.arista.com/en/terms-of-use",
@@ -118,7 +118,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "3450511c89e1b560a3fe20ffd2954f6cab2d53e25267b0d6f29c78a7fd5e6d1e",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/terms-policy-excerpt.txt"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/terms-policy-excerpt.txt"
     },
     "sa127": {
       "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/22869-security-advisory-0127",
@@ -129,7 +129,7 @@
       "capture_method": "web_tool_excerpt",
       "original_sha256": null,
       "excerpt_sha256": "8fe543e5fbffe38c104500561a05a070d999a05c0b29e3fd71c0ce845ad48240",
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/discovery-final.web-excerpt.json"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/discovery-final.web-excerpt.json"
     },
     "rss-4.33.11.2M": {
       "url": "https://www.arista.com/en/support/release-notes",
@@ -140,7 +140,7 @@
       "capture_method": "anonymous_origin_response",
       "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
       "excerpt_sha256": null,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/software-rss.body"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/software-rss.body"
     },
     "rss-4.33.11M": {
       "url": "https://www.arista.com/en/support/release-notes",
@@ -151,7 +151,7 @@
       "capture_method": "anonymous_origin_response",
       "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
       "excerpt_sha256": null,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/software-rss.body"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/software-rss.body"
     },
     "noticefeed": {
       "url": "https://www.arista.com/en/support/advisories-notices/field-notice-rss",
@@ -162,7 +162,7 @@
       "capture_method": "anonymous_origin_response",
       "original_sha256": "4e6496337b0f91998e499b51f785557a83e473fecd728624261dceddd175995a",
       "excerpt_sha256": null,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/field-rss.body"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/field-rss.body"
     },
     "softwarefeed": {
       "url": "https://www.arista.com/en/support/release-notes",
@@ -173,7 +173,7 @@
       "capture_method": "anonymous_origin_response",
       "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
       "excerpt_sha256": null,
-      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/software-rss.body"
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/software-rss.body"
     }
   },
   "releases": [

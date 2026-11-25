@@ -70,7 +70,7 @@ permission for a bulk unattended catalogue. That permission remains unresolved;
 no pagination crawler or production source was enabled.
 
 Original RSS bytes, challenge receipt and retained web-tool excerpts are cached
-outside Git under `/Users/jonw/cve/data/release-reliability-round4/arista`.
+outside Git under `$RELEASE_RELIABILITY_CACHE/arista`.
 The JSON distinguishes `original_sha256` from `excerpt_sha256`; web-tool facts
 retain a null original-document fingerprint. Web observations have day-precision
 retrieval dates; origin responses have exact UTC timestamps. Full vendor text is

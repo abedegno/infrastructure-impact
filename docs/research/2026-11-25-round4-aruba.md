@@ -18,7 +18,7 @@ The packet also retains [HPESB3P04641](https://support.hpe.com/hpesc/public/docD
 
 ## Access, policy and coverage
 
-All substantive facts came from anonymously readable, vendor-hosted pages rendered by the web tool. Original vendor bytes for those facts were **not obtained**; their `original_sha256` is null, while each selected excerpt has its own `excerpt_sha256`. Cached rendered captures and original access responses are outside Git under `/Users/jonw/cve/data/release-reliability-round4/aruba`.
+All substantive facts came from anonymously readable, vendor-hosted pages rendered by the web tool. Original vendor bytes for those facts were **not obtained**; their `original_sha256` is null, while each selected excerpt has its own `excerpt_sha256`. Cached rendered captures and original access responses are outside Git under `$RELEASE_RELIABILITY_CACHE/aruba`.
 
 Direct Python requests initially failed due to sandbox DNS restrictions. A permitted external-network attempt returned HTTP 403 Access Denied for Aruba robots.txt and a release-notes page. Direct Aruba requests stopped there. Web-tool failures on candidate history paths are recorded as tool inaccessibility, not assumed HTTP status codes. HPE robots.txt returned HTTP 200 and does not disallow the sampled public document-display path. HPE's direct advisory response was a HTTP 200 anonymous session-check shell, with no substantive advisory text; no session endpoint, login flow or challenge bypass was attempted. Search-rendered advisory text remains separate evidence from that shell.
 
