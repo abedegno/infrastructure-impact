@@ -33,13 +33,16 @@ explicit approval.
 
 The normal and exact-artifact recovery workflows now put configure/deploy/health
 in a dependent protected job. The producer must succeed and expose a successful
-Pages upload with a nonempty artifact ID. Normal health checks use its captured
-source commit; recovery health uses the verifier's exact generation. Workflow-wide
-concurrency remains held through deployment, so accepted state cannot advance
-between jobs. Source and generation outputs are required, not fallback defaults.
+Pages upload with a nonempty artifact ID in the current run attempt. A rerun
+of just the deploy job skips deployment because its producer accepted the
+artifact in an earlier attempt. For recovery, start the exact-artifact workflow
+again so its producer verifies the receipt against the current accepted state.
+Workflow-wide concurrency holds that state through deployment within the attempt.
+Normal health checks use the producer's captured source commit. Recovery health
+checks use the verifier's exact generation.
 
 This follows the separate-job mitigation for the matching immediate-upload
-visibility issue documented in [deploy-pages issue451](https://github.com/actions/deploy-pages/issues/451).
+visibility issue documented in [deploy-pages issue 451](https://github.com/actions/deploy-pages/issues/451).
 It retains the pinned official actions, upload acceptance conditions, manual
 receipt checks, permissions, schedule and recovery bounds. A new artifact still
 needs its own reviewed receipt. Live observation is required before calling a

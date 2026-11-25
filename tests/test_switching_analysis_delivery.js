@@ -104,6 +104,12 @@ print(publish(data,sys.argv[1],publication_format=sys.argv[2],include_switching_
           compiledValidations++;
         return validate(name, value, fragment);
       };
+      if (format === 'v2') {
+        await assert.rejects(
+          () => loader.switchingAnalysis(study, { max_bytes: 1 }),
+          /selected byte budget/,
+        );
+      }
       const selected = await loader.switchingAnalysis(study);
       assert.strictEqual(selected.availability, 'available');
       assert(

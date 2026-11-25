@@ -87,9 +87,9 @@ def policy(path, *, sources=(C9200,), reviewed="2026-11-25T00:00:00Z"):
     return path
 
 
-def transport(collection, *responses):
+def transport(collection, *responses, start=CURRENT):
     """Use real refresh logic with a deterministic substitute for the upstream HTTP server."""
-    clock = [CURRENT]
+    clock = [start]
     calls = []
     pending = iter(responses)
 
@@ -734,3 +734,81 @@ def test_matching_baseline_observation_does_not_hide_other_conflicting_receipts(
         assert (
             conflict["proposed_receipt"]["original_sha256"] == hashlib.sha256(original).hexdigest()
         )
+
+
+@pytest.mark.parametrize(
+    ("generated", "retained", "captured", "expected_instant"),
+    [
+        (
+            "2026-11-26T02:00:00+09:00",
+            "2026-11-26T01:55:00+09:00",
+            "2026-11-25T17:30:00+00:00",
+            "2026-11-25T17:30:00+00:00",
+        ),
+        (
+            "2026-11-25T17:00:00+00:00",
+            "2026-11-25T16:55:00+00:00",
+            "2026-11-26T06:55:00+14:00",
+            "2026-11-25T17:00:00+00:00",
+        ),
+    ],
+)
+def test_external_catalogue_receipt_calendar_cutoffs(
+    refresh, tmp_path, generated, retained, captured, expected_instant
+):
+    cli, _, collection = refresh
+    baseline = read_json(BASELINE)
+    baseline["generated_at"] = generated
+    baseline["sources"][0]["retrieved_at"] = retained
+    baseline_file = tmp_path / "external.json"
+    baseline_file.write_text(json.dumps(baseline))
+    cache = collection.RefreshCache(tmp_path / "cache")
+    args, _ = transport(
+        collection,
+        (200, "text/plain", ROBOT_ALLOW),
+        (200, "text/html", cisco("17.12.99")),
+        start=datetime.fromisoformat(captured) - timedelta(seconds=2),
+    )
+    receipt = policy(tmp_path / "policy.json")
+    assert collection.collect(cache, C9200, receipt, **args) == "captured"
+    output, report = tmp_path / "candidate.json", tmp_path / "report.json"
+    assert cli.main(_prepare_args(cache.directory, output, report, baseline_file)) == 0
+    candidate = read_json(output)
+    assert datetime.fromisoformat(candidate["generated_at"]) == datetime.fromisoformat(
+        expected_instant
+    )
+    assert candidate["generated_at"][:10] >= max(generated[:10], captured[:10])
+    assert candidate["sources"][:-1] == baseline["sources"]
+    assert candidate["sources"][-1]["retrieved_at"] == captured
+    assert candidate["releases"][:-1] == baseline["releases"]
+    assert candidate["releases"][-1]["version"] == "17.12.99"
+    replay = tmp_path / "replay.json"
+    assert cli.main(_prepare_args(cache.directory, replay, report, output)) == 0
+    assert replay.read_bytes() == output.read_bytes()
+
+
+def test_long_robots_cooldown_survives_reopening_the_cache(refresh, tmp_path):
+    _, _, collection = refresh
+    directory = tmp_path / "cache"
+    receipt = policy(tmp_path / "policy.json")
+    args, calls = transport(
+        collection,
+        (200, "text/plain", b"User-agent: *\nAllow: /\nCrawl-delay: 120"),
+        (200, "text/plain", ROBOT_ALLOW),
+        (200, "text/html", cisco("17.12.99")),
+    )
+
+    def run():
+        return collection.collect(collection.RefreshCache(directory), C9200, receipt, **args)
+
+    assert run() == "robots_unavailable"
+    assert run() == "robots_unavailable"
+    assert [(url, time) for url, _, time in calls] == [(ROBOTS, CURRENT)]
+    assert args["now"]() == CURRENT
+    args["sleep"](121)
+    assert run() == "captured"
+    assert [(url, (time - CURRENT).total_seconds()) for url, _, time in calls] == [
+        (ROBOTS, 0),
+        (ROBOTS, 121),
+        (CISCO_URL, 123),
+    ]

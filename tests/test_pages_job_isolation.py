@@ -22,8 +22,8 @@ def workflow_job(filename, name):
     return match[1]
 
 
-def expression(job, field):
-    match = re.search(rf"^ +{field}: \$\{{\{{ (.+) \}}\}}$", job, re.M)
+def expression(job, field, indent):
+    match = re.search(rf"^{' ' * indent}{field}: \$\{{\{{ (.+) \}}\}}$", job, re.M)
     assert match, f"missing {field} expression"
     return match[1]
 
@@ -42,25 +42,43 @@ class ArtifactOutputs(dict):
 
 
 def deployment_allowed(
-    filename, producer_name, *, outcome, artifact_outputs, producer_result, identity_available=True
+    filename,
+    producer_name,
+    *,
+    outcome,
+    artifact_outputs,
+    producer_result,
+    identity_available=True,
+    producer_attempt="1",
+    deploy_attempt="1",
 ):
     producer = workflow_job(filename, producer_name)
     deploy = workflow_job(filename, "deploy")
     step = SimpleNamespace(outcome=outcome, outputs=ArtifactOutputs(artifact_outputs))
-    ready = evaluate(expression(producer, "upload_ready"), steps=SimpleNamespace(pages_upload=step))
+    accepted_attempt = evaluate(
+        expression(producer, "accepted_attempt", 6),
+        steps=SimpleNamespace(pages_upload=step),
+        github=SimpleNamespace(run_attempt=producer_attempt),
+    )
     needs = SimpleNamespace(
         **{
             producer_name: SimpleNamespace(
                 result=producer_result,
                 outputs=SimpleNamespace(
-                    upload_ready=ready,
+                    accepted_attempt=accepted_attempt,
                     source_commit="2" * 40 if identity_available else "",
                     generation="1" * 32 if identity_available else "",
                 ),
             )
         }
     )
-    return bool(evaluate(expression(deploy, "if"), needs=needs))
+    return bool(
+        evaluate(
+            expression(deploy, "if", 4),
+            needs=needs,
+            github=SimpleNamespace(run_attempt=deploy_attempt),
+        )
+    )
 
 
 WORKFLOWS = [("collect.yaml", "publish"), ("pages-redeploy.yaml", "redeploy")]
@@ -105,6 +123,28 @@ def test_deploy_runs_only_after_an_accepted_upload(filename, producer_name):
 
 
 @pytest.mark.parametrize("filename,producer_name", WORKFLOWS)
+@pytest.mark.parametrize(
+    ("producer_attempt", "deploy_attempt", "expected"),
+    [("1", "1", True), ("1", "2", False), ("2", "2", True)],
+)
+def test_deploy_requires_acceptance_in_the_current_attempt(
+    filename, producer_name, producer_attempt, deploy_attempt, expected
+):
+    assert (
+        deployment_allowed(
+            filename,
+            producer_name,
+            outcome="success",
+            artifact_outputs={"artifact_id": "123"},
+            producer_result="success",
+            producer_attempt=producer_attempt,
+            deploy_attempt=deploy_attempt,
+        )
+        is expected
+    )
+
+
+@pytest.mark.parametrize("filename,producer_name", WORKFLOWS)
 def test_deploy_requires_the_health_identity(filename, producer_name):
     assert not deployment_allowed(
         filename,
@@ -137,9 +177,9 @@ def test_collection_health_checks_out_validated_source(source_commit, tmp_path):
         assert output.exists(), "validated source pin was not captured"
         assert output.read_text() == f"source_commit={source_commit}\n"
     assert "id: source_pin" in pin_step
-    assert expression(producer, "source_commit") == "steps.source_pin.outputs.source_commit"
-    assert expression(producer, "ref") == "steps.source_pin.outputs.source_commit"
-    assert expression(deploy, "ref") == "needs.publish.outputs.source_commit"
+    assert expression(producer, "source_commit", 6) == "steps.source_pin.outputs.source_commit"
+    assert expression(producer, "ref", 10) == "steps.source_pin.outputs.source_commit"
+    assert expression(deploy, "ref", 10) == "needs.publish.outputs.source_commit"
     assert "persist-credentials: false" in deploy
     assert 'python checks/public_health.py "$PUBLIC_URL"' in deploy
 
@@ -147,9 +187,9 @@ def test_collection_health_checks_out_validated_source(source_commit, tmp_path):
 def test_recovery_health_uses_the_verifier_generation_and_workflow_revision():
     producer = workflow_job("pages-redeploy.yaml", "redeploy")
     deploy = workflow_job("pages-redeploy.yaml", "deploy")
-    assert expression(producer, "generation") == "steps.verify.outputs.generation"
-    assert expression(deploy, "ref") == "github.sha"
-    assert expression(deploy, "GENERATION") == "needs.redeploy.outputs.generation"
+    assert expression(producer, "generation", 6) == "steps.verify.outputs.generation"
+    assert expression(deploy, "ref", 10) == "github.sha"
+    assert expression(deploy, "GENERATION", 10) == "needs.redeploy.outputs.generation"
     assert "persist-credentials: false" in deploy
     assert "accepted/state/current.json" not in deploy
     assert "checks/pages_redeploy.py" in producer

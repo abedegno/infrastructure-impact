@@ -52,7 +52,7 @@ rows, 120 distinct upgrade annotations and 3 source matches, with 192 reads and
 35,299,406 transport bytes. No evidence or traffic was dropped to obtain the gain.
 
 Memory did not improve: the optimized process recorded a higher transient peak
-(about10% in this pair). End-of-phase heap snapshots are not retained-heap
+(about 10% in this pair). End-of-phase heap snapshots are not retained-heap
 measurements after forced garbage collection. Deep preparation adds traversal and
 a temporary object set; this pair does not isolate that allocation's contribution.
 No additional root-sized hash buffer was introduced. Browser memory is unmeasured.

@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from copy import deepcopy
-from datetime import UTC, datetime
+from datetime import datetime
 
 from ..collection.reliability_refresh import SOURCES
 from ..release_catalogue_cli import read_json
@@ -95,8 +95,12 @@ def _remember_source(candidate, sources, receipt):
     candidate["sources"].append(receipt)
     retrieved = datetime.fromisoformat(receipt["retrieved_at"])
     generated = datetime.fromisoformat(candidate["generated_at"].upper())
-    if retrieved > generated or retrieved.date().isoformat() > candidate["generated_at"][:10]:
-        candidate["generated_at"] = max(retrieved, generated).astimezone(UTC).isoformat()
+    if retrieved > generated or retrieved.date() > generated.date():
+        # The catalogue checks both the instant and each receipt's local calendar date.
+        latest = max(retrieved, generated).astimezone(generated.tzinfo)
+        if latest.date() < retrieved.date():
+            latest = latest.astimezone(retrieved.tzinfo)
+        candidate["generated_at"] = latest.isoformat()
 
 
 def _record_conflict(review, receipt, proposed, previous, fields, sources):

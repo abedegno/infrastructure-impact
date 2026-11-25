@@ -18,7 +18,7 @@ jobs:
       name: github-pages
     outputs:
       generation: ${{ steps.verify.outputs.generation }}
-      upload_ready: ${{ steps.pages_upload.outcome == 'success' && steps.pages_upload.outputs.artifact_id != '' && 'true' || 'false' }}
+      accepted_attempt: ${{ steps.pages_upload.outcome == 'success' && steps.pages_upload.outputs.artifact_id != '' && github.run_attempt || '' }}
     steps:
       # Use the reviewed workflow revision containing the verifier and receipt.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -74,7 +74,7 @@ jobs:
           include-hidden-files: true
   deploy:
     needs: redeploy
-    if: ${{ needs.redeploy.result == 'success' && needs.redeploy.outputs.upload_ready == 'true' && needs.redeploy.outputs.generation != '' }}
+    if: ${{ needs.redeploy.result == 'success' && needs.redeploy.outputs.accepted_attempt == github.run_attempt && needs.redeploy.outputs.generation != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:

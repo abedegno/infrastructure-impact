@@ -73,7 +73,11 @@ A current, substantive Cisco robots response must allow the exact registered
 path. The CLI uses direct HTTPS GETs and refuses redirects, authorization and
 cookies. Use one shared cache for cooperating runs. It enforces at least one
 second between Cisco requests, including robots, and uses a larger recognized
-robots delay when present. The document body limit is 4 MiB. Access challenges,
+robots delay when present. A policy interval over 60 seconds is saved in the
+cache and collection ends before requesting the document. Later runs defer
+even the robots check while more than 60 seconds of that interval remain.
+Once the interval has elapsed, a fresh robots response sets the next interval.
+The document body limit is 4 MiB. Access challenges,
 denials, rate limits, policy failures and unsupported documents leave the
 latest good revision in place. Collection is explicit. Arista remains offline
 and this CLI has no schedule.

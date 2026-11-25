@@ -7,18 +7,18 @@ activation, frozen studies or packaged catalogue facts change.
 
 ## Verification before release
 
-- Pages:295 focused checks and12 subtests passed, plus the final 9-case isolation
+- Pages: 295 focused checks and 12 subtests passed, plus the final 9-case isolation
   suite. Independent review passed producer/preview/failure/legacy gates and
   captured source/generation propagation. Live dependent-job execution is a
   release check, not inferred from local tests.
-- Analysis:801 broader checks passed with one expected skip; three sandbox
+- Analysis: 801 broader checks passed with one expected skip; three sandbox
   loopback-restricted monitor checks passed when rerun with loopback available.
   Codec/selector/delivery Node suites and formatting passed. The [matched public
   benchmark](2026-11-25-analysis-loading-performance.md) retained both complete
   selected-output hashes: 94.48→63.60 seconds for cold timed phases and 33.46→12.76
   for a repeated selection. Traffic and counts remained identical. The optimized
   run's memory peak was higher; payload size and browser memory remain limitations.
-- Refresh:44focused tests passed after real-pilot and independent-review fixes.
+- Refresh: 44 focused tests passed after real-pilot and independent-review fixes.
   Scoped integration checks passed with the correct locked interpreter. Three
   independently hashed original public captures produced 8 Catalyst 9200,
   8 Catalyst 9300 and 2 Arista announcement observations. Candidate replay was

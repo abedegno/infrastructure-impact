@@ -53,7 +53,7 @@ jobs:
       name: github-pages
     outputs:
       source_commit: ${{ steps.source_pin.outputs.source_commit }}
-      upload_ready: ${{ steps.pages_upload.outcome == 'success' && steps.pages_upload.outputs.artifact_id != '' && 'true' || 'false' }}
+      accepted_attempt: ${{ steps.pages_upload.outcome == 'success' && steps.pages_upload.outputs.artifact_id != '' && github.run_attempt || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -378,7 +378,7 @@ jobs:
           include-hidden-files: true
   deploy:
     needs: publish
-    if: ${{ needs.publish.result == 'success' && needs.publish.outputs.upload_ready == 'true' && needs.publish.outputs.source_commit != '' }}
+    if: ${{ needs.publish.result == 'success' && needs.publish.outputs.accepted_attempt == github.run_attempt && needs.publish.outputs.source_commit != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:

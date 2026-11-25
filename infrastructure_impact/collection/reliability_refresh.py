@@ -63,7 +63,8 @@ _STAMP = re.compile(
 )
 _ETAG = re.compile(r'(?:W/)?"[\x21\x23-\x7e]*"')
 _VALIDATOR_NAMES = {"ETag": "If-None-Match", "Last-Modified": "If-Modified-Since"}
-_MAX_ROBOTS_DELAY = 60
+_MAX_INTERACTIVE_WAIT = 60
+_MAX_POLICY_INTERVAL = 9999  # Largest request-rate period accepted by the parser.
 _MAX_ROBOTS_BYTES = 512_000
 _HTTP_DEADLINE = 25
 
@@ -636,8 +637,6 @@ def _robots_policy(response, path):
                 delay = max(delay, seconds / count)
             else:
                 raise ValueError("Unsupported robots request spacing")
-    if delay > _MAX_ROBOTS_DELAY:
-        raise ValueError("Robots delay exceeds bounded collection budget")
     return max(matches, default=(0, True))[1], delay
 
 
@@ -671,7 +670,8 @@ class _RequestSpacing:
                 self.delay = state["delay_seconds"]
                 if (
                     set(state) != {"started_at", "delay_seconds"}
-                    or not 1 <= self.delay <= _MAX_ROBOTS_DELAY
+                    or type(self.delay) not in (int, float)
+                    or not 1 <= self.delay <= _MAX_POLICY_INTERVAL
                 ):
                     raise ValueError
             except (ValueError, KeyError, TypeError, OverflowError, RecursionError):
@@ -681,13 +681,13 @@ class _RequestSpacing:
         _write_json(self.path, {"started_at": self.last.isoformat(), "delay_seconds": self.delay})
 
     def pace_for(self, delay):
-        self.delay = max(delay, self.delay)
+        self.delay = delay
         self._save()
 
     def request(self, send, url, headers):
         if self.last is not None:
             remaining = self.delay - (self.clock() - self.last).total_seconds()
-            if remaining > _MAX_ROBOTS_DELAY:
+            if remaining > _MAX_INTERACTIVE_WAIT:
                 raise CiscoAccessError("network_error")
             if remaining > 0:
                 self.pause(remaining)
@@ -713,6 +713,8 @@ def collect(cache, source_id, policy, *, request=fetch, now=_utc_now, sleep=slee
         except (OSError, ValueError):
             return cache._record(state, "robots_unavailable", now())
         spacing.pace_for(delay)
+        if delay > _MAX_INTERACTIVE_WAIT:
+            return cache._record(state, "robots_unavailable", now())
         if not allowed:
             return cache._record(state, "robots_denied", now())
         # The 30-day receipt can expire while waiting for robots or request spacing.
