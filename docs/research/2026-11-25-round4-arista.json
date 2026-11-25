@@ -1,0 +1,483 @@
+{
+  "schema": "release-reliability-research-round4-v1",
+  "vendor": "arista",
+  "train": "EOS 4.33",
+  "scope": {
+    "years": [2024, 2025, 2026],
+    "models": ["720XP", "720DP"],
+    "as_of": "2026-11-25",
+    "review_status": "review_pending",
+    "production_eligible": false
+  },
+  "evidence": {
+    "fn103": {
+      "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=40",
+      "locator": "Field Notice 0103; rendered lines 102\u2013110",
+      "short_quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537.",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "d8fbad6cdc0fc04306c1a1325dc3ec082ff3b8634771476cc57d2f89246af63e",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx40.web-excerpt.json"
+    },
+    "fn103date": {
+      "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=40",
+      "locator": "Field Notice 0103; rendered lines 104\u2013108",
+      "short_quote": "July 01, 2025",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "d8fbad6cdc0fc04306c1a1325dc3ec082ff3b8634771476cc57d2f89246af63e",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx40.web-excerpt.json"
+    },
+    "index0": {
+      "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=0",
+      "locator": "headings lines 46\u2013152; pagination lines 153\u2013166",
+      "short_quote": "Field Notice 0148; Field Notice 0139",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "1a2981e53cb07275d27da347d6ddff2d0d013a82721bad155e5deb7de729c7cb",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx0.web-excerpt.json"
+    },
+    "fn144": {
+      "url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=0",
+      "locator": "Field Notice 0144; lines 92\u201397",
+      "short_quote": "November 2, 2026; November 3, 2026; 4.36.2F or earlier releases",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "1a2981e53cb07275d27da347d6ddff2d0d013a82721bad155e5deb7de729c7cb",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/idx0.web-excerpt.json"
+    },
+    "library": {
+      "url": "https://www.arista.com/en/support/product-documentation",
+      "locator": "Product Bulletins :: EOS; rendered lines 173\u2013175",
+      "short_quote": "EOS Release 4.33.2F; EOS Release 4.33.1F; EOS Release 4.33.0F",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "7ea1998748c78c6e0e6e92bec144139ba0df936e1403181369e22877d33fe7ae",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/doclib.web-excerpt.json"
+    },
+    "models": {
+      "url": "https://www.arista.com/en/support/product-documentation",
+      "locator": "Hardware Installation Documentation; rendered lines 340\u2013343",
+      "short_quote": "CCS-720XP-96ZC2; CCS-720DP-48S-2F",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "7ea1998748c78c6e0e6e92bec144139ba0df936e1403181369e22877d33fe7ae",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/doclib.web-excerpt.json"
+    },
+    "fn103login": {
+      "url": "https://www.arista.com/en/support/advisories-notices/field-notice/21651-field-notice-0103",
+      "locator": "redirected login; rendered line 6",
+      "short_quote": "Sign In",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "098a0716de5f5afd03090fe95d0b33eddc0939a7ca59c6350e8955188180f6d4",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/fn103login.web-excerpt.json"
+    },
+    "bulletinlogin": {
+      "url": "https://www.arista.com/custom_data/downloads/?f=%2Fsupport%2Fdownload%2FProductBulletins%2FEOS%2FEOS-4.33.0F-Product-Bulletin.pdf",
+      "locator": "Product Documentation link 138; redirected login rendered line 6",
+      "short_quote": "Sign In",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "734154f61e4e5e14166e241cea37bb3185b1a29865a118fa3205742f47491c31",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/bulletin0.web-excerpt.json"
+    },
+    "robots": {
+      "url": "https://www.arista.com/robots.txt",
+      "locator": "web rendered lines 0\u20131 and 28",
+      "short_quote": "Crawl-delay: 7; Disallow: /download/",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "0c6f161200dfd527fc01f873a06a948724836b60d57e233863d533530c56209b",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/robots-policy-excerpt.txt"
+    },
+    "terms": {
+      "url": "https://www.arista.com/en/terms-of-use",
+      "locator": "\u00a72 Ownership of Materials, rendered line 31; \u00a77 rendered line 55",
+      "short_quote": "No portion of the information on this Site may be copied",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "3450511c89e1b560a3fe20ffd2954f6cab2d53e25267b0d6f29c78a7fd5e6d1e",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/terms-policy-excerpt.txt"
+    },
+    "sa127": {
+      "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/22869-security-advisory-0127",
+      "locator": "Affected Software; Affected Platforms (not affected); Resolution",
+      "short_quote": "4.33.4M and below; 4.33.5M and later; 720D Series; 720XP/722XPM Series",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "8fe543e5fbffe38c104500561a05a070d999a05c0b29e3fd71c0ce845ad48240",
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/discovery-final.web-excerpt.json"
+    },
+    "rss-4.33.11.2M": {
+      "url": "https://www.arista.com/en/support/release-notes",
+      "locator": "RSS channel/item[5]/title and pubDate",
+      "short_quote": "EOS-4.33.11.2M is now available for download.",
+      "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "excerpt_sha256": null,
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/software-rss.body"
+    },
+    "rss-4.33.11M": {
+      "url": "https://www.arista.com/en/support/release-notes",
+      "locator": "RSS channel/item[12]/title and pubDate",
+      "short_quote": "EOS-4.33.11M is now available for download.",
+      "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "excerpt_sha256": null,
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/software-rss.body"
+    },
+    "noticefeed": {
+      "url": "https://www.arista.com/en/support/advisories-notices/field-notice-rss",
+      "locator": "RSS channel/item[1] and item[10] / title and pubDate",
+      "short_quote": "Field Notice 0148; Field Notice 0139",
+      "retrieved_at": "2026-11-25T16:44:25.596795+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "4e6496337b0f91998e499b51f785557a83e473fecd728624261dceddd175995a",
+      "excerpt_sha256": null,
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/field-rss.body"
+    },
+    "softwarefeed": {
+      "url": "https://www.arista.com/en/support/release-notes",
+      "locator": "RSS channel; 20 item elements; oldest/newest pubDate",
+      "short_quote": "2026-08-28 21:14:50 +0000; 2026-11-20 17:09:19 +0000",
+      "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "excerpt_sha256": null,
+      "cache_path": "/Users/jonw/cve/data/release-reliability-round4/arista/software-rss.body"
+    }
+  },
+  "releases": [
+    {
+      "release": "4.33.0F",
+      "announcement_date": null,
+      "binary_release_date": null,
+      "identity_evidence_ids": ["library"],
+      "date_status": "unknown",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "public_product_bulletin_link_identity",
+      "catalogue_eligible": false,
+      "shipped_release_status": "unknown",
+      "research_lead": true
+    },
+    {
+      "release": "4.33.1F",
+      "announcement_date": null,
+      "binary_release_date": null,
+      "identity_evidence_ids": ["library"],
+      "date_status": "unknown",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "public_product_bulletin_link_identity",
+      "catalogue_eligible": false,
+      "shipped_release_status": "unknown",
+      "research_lead": true
+    },
+    {
+      "release": "4.33.2F",
+      "announcement_date": null,
+      "binary_release_date": null,
+      "identity_evidence_ids": ["library"],
+      "date_status": "unknown",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "public_product_bulletin_link_identity",
+      "catalogue_eligible": false,
+      "shipped_release_status": "unknown",
+      "research_lead": true
+    },
+    {
+      "release": "4.33.3F",
+      "announcement_date": null,
+      "binary_release_date": null,
+      "identity_evidence_ids": ["fn103"],
+      "date_status": "unknown",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "explicit_deferral_summary_identity",
+      "catalogue_eligible": false,
+      "shipped_release_status": "not_established_by_this_reference",
+      "research_lead": false
+    },
+    {
+      "release": "4.33.4M",
+      "announcement_date": null,
+      "binary_release_date": null,
+      "identity_evidence_ids": ["sa127"],
+      "date_status": "unknown",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "affected_or_fixed_version_reference_only",
+      "catalogue_eligible": false,
+      "shipped_release_status": "not_established_by_this_reference",
+      "research_lead": true
+    },
+    {
+      "release": "4.33.5M",
+      "announcement_date": null,
+      "binary_release_date": null,
+      "identity_evidence_ids": ["sa127"],
+      "date_status": "unknown",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "affected_or_fixed_version_reference_only",
+      "catalogue_eligible": false,
+      "shipped_release_status": "not_established_by_this_reference",
+      "research_lead": true
+    },
+    {
+      "release": "4.33.11.2M",
+      "announcement_date": "2026-11-03",
+      "announcement_timestamp": "2026-11-03 02:28:26 +0000",
+      "binary_release_date": null,
+      "identity_evidence_ids": ["rss-4.33.11.2M"],
+      "date_status": "announcement_only",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "explicit_availability_announcement",
+      "availability_statement": "EOS-4.33.11.2M is now available for download.",
+      "catalogue_eligible": "announcement_catalogue_only",
+      "shipped_release_status": "publisher_announced_available",
+      "research_lead": false
+    },
+    {
+      "release": "4.33.11M",
+      "announcement_date": "2026-10-15",
+      "announcement_timestamp": "2026-10-15 00:27:28 +0000",
+      "binary_release_date": null,
+      "identity_evidence_ids": ["rss-4.33.11M"],
+      "date_status": "announcement_only",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_classification": "explicit_availability_announcement",
+      "availability_statement": "EOS-4.33.11M is now available for download.",
+      "catalogue_eligible": "announcement_catalogue_only",
+      "shipped_release_status": "publisher_announced_available",
+      "research_lead": false
+    }
+  ],
+  "notices": [
+    {
+      "id": "FN0103",
+      "notice_date": "2025-07-01",
+      "posted_date": "2025-07-01",
+      "updated_date": "2025-07-01",
+      "action_date": null,
+      "release_date": null,
+      "kind": "explicit_deferral",
+      "publisher_terminology": "deferred",
+      "release": "4.33.3F",
+      "bug_ids": ["1165537"],
+      "scope_text": "all supported platforms",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "replacement_release": null,
+      "evidence_ids": ["fn103", "fn103date"],
+      "detail_access": "login_only"
+    },
+    {
+      "id": "FN0144",
+      "notice_date": "2026-11-03",
+      "posted_date": "2026-11-02",
+      "updated_date": "2026-11-03",
+      "rss_announcement_timestamp": "Mon, 02 Nov 2026 17:21:42 +0000",
+      "action_date": null,
+      "kind": "timezone_context",
+      "release_scope": "EOS 4.36.2F or earlier",
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "evidence_ids": ["fn144", "noticefeed"],
+      "not_a_withdrawal": true
+    }
+  ],
+  "publisher_statements": [
+    {
+      "kind": "candidate_followup",
+      "from_release": "4.33.11M",
+      "to_release": "4.33.11.2M",
+      "calendar_day_gap": 19,
+      "evidence_ids": ["rss-4.33.11M", "rss-4.33.11.2M"],
+      "corrective_relationship": "unknown",
+      "withdrawal_relationship": "unknown"
+    },
+    {
+      "kind": "scope_control",
+      "id": "SA0127",
+      "evidence_ids": ["sa127"],
+      "observation": "Publisher names 4.33.4M/4.33.5M in a security fix relationship but lists 720D and 720XP/722XPM series as not affected; this is not a release withdrawal or a confirmed corrective respin.",
+      "exact_release_dates": null
+    }
+  ],
+  "access": [
+    {
+      "route": "robots.txt",
+      "status": 200,
+      "content": "client_challenge",
+      "response_sha256": "32ed63159c77e21ee19ca1b9aa3213ccf0218eb59539560b132a8e68ef0e18ea",
+      "original_document_sha256": null,
+      "retrieved_at": "2026-11-25T16:44:10.269300+00:00",
+      "note": "Web research service rendered robots separately; no challenge bypass attempted."
+    },
+    {
+      "route": "https://www.arista.com/en/support/release-notes",
+      "status": 200,
+      "content": "usable_xml",
+      "evidence_ids": ["softwarefeed"]
+    },
+    {
+      "route": "https://www.arista.com/en/support/advisories-notices/field-notice-rss",
+      "status": 200,
+      "content": "usable_xml",
+      "evidence_ids": ["noticefeed"]
+    },
+    {
+      "route": "FN0103 detail",
+      "content": "login_redirect",
+      "evidence_ids": ["fn103login"]
+    },
+    {
+      "route": "4.33.0F product bulletin",
+      "content": "login_redirect",
+      "evidence_ids": ["bulletinlogin"]
+    },
+    {
+      "route": "initial sandbox HTTP requests",
+      "content": "DNS network unavailable",
+      "note": "Three attempted routes failed without response; repeated only using permitted network escalation."
+    }
+  ],
+  "policy": {
+    "evidence_ids": ["robots", "terms"],
+    "minimum_direct_request_spacing_seconds": 7,
+    "automated_collection_permission": "unresolved",
+    "pagination_crawler_enabled": false,
+    "interpretation": "Robots is not a license. Terms restrict copying and redistribution; Forum Rule6 mentions crawling/bots/scripts. No permission for a bulk unattended catalogue was inferred. Only bounded targeted anonymous reads; no prohibited path fetched directly, login, cookies reused, challenge bypass, or mirrors. Product bulletin link was followed once by the web service and stopped at login.",
+    "raw_vendor_text_in_git": false
+  },
+  "coverage": {
+    "release_history_complete": false,
+    "notice_history_complete": false,
+    "index_offsets_read": [0, 40],
+    "index_notice_ids_read": [
+      "FN0139",
+      "FN0140",
+      "FN0141",
+      "FN0142",
+      "FN0143",
+      "FN0144",
+      "FN0145",
+      "FN0146",
+      "FN0147",
+      "FN0148",
+      "FN0099",
+      "FN0100",
+      "FN0101",
+      "FN0102",
+      "FN0103",
+      "FN0104",
+      "FN0105",
+      "FN0106",
+      "FN0107",
+      "FN0108"
+    ],
+    "index_unique_notice_summaries_read": 20,
+    "pagination_observed": true,
+    "pagination_evidence_ids": ["index0", "fn103"],
+    "unread_index_scope": "All offsets other than 0 and 40; no systematic archive traversal was undertaken while collection permission remains unresolved. 2024 and most 2025/2026 notice coverage unknown.",
+    "software_feed_items": 20,
+    "software_feed_all_product_announcement_range": {
+      "oldest": "2026-08-28",
+      "newest": "2026-11-20"
+    },
+    "software_feed_433_items": 2,
+    "notice_feed_items": 10,
+    "notice_feed_range": {
+      "oldest": "2026-10-08",
+      "newest": "2026-11-23"
+    },
+    "feeds_are_retained_windows": true,
+    "unsupported_inferences": [
+      "TOI post/update dates are not software release dates",
+      "Security advisory dates are not binary release dates",
+      "Supported platforms is not an enumerated model list",
+      "Adjacent version or F/M suffix is not proof of corrective respin",
+      "Current feed and sampled pages cannot establish historical absence"
+    ],
+    "annual_release_denominator": {
+      "2024": null,
+      "2025": null,
+      "2026": null
+    },
+    "annual_model_incident_counts": {
+      "2024": null,
+      "2025": null,
+      "2026": null
+    },
+    "identity_catalogue_caveat": "Eight identities comprise two availability announcements, three public bulletin-link identities, one deferral-summary identity and two SA0127 affected/fixed-version research leads. This is not eight enumerated shipped releases."
+  },
+  "counts": {
+    "observed_release_identities": 8,
+    "dated_433_announcements": 2,
+    "explicit_release_deferral_statements_observed": 1,
+    "model_specific_confirmed_deferrals": null,
+    "model_specific_confirmed_withdrawals": null,
+    "confirmed_corrective_respins": null,
+    "candidate_followup_pairs": 1,
+    "notice_summaries_inspected": 20,
+    "complete_years": [],
+    "warning": "Observed evidence counts, not complete incident totals or vendor-quality rates.",
+    "affected_or_fixed_context_identity_leads": 2,
+    "explicit_availability_announcements": 2,
+    "enumerated_shipped_release_count": null
+  }
+}
