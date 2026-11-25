@@ -331,15 +331,40 @@
       '</tbody></table></div><p>CVE counts use the original advisory-publication cohort; remediation-publication counts use event dates. Publications are not customer upgrades. Literal fixed versions are source evidence, not an upgrade count or path. Model applicability and historical completeness remain unknown; zero observations do not establish no exposure. Provider-specific severity and supporting evidence follow below.</p></section>'
     );
   }
+  function releaseEvidence() {
+    const research =
+      'https://github.com/abedegno/infrastructure-impact/blob/15292f21f1e6d487757ed131426f2e70827cab4d/docs/research/2026-11-25-publisher-event-sample';
+    const arista = view.link(
+      'https://www.arista.com/en/support/advisories-notices/fieldnotice?start=40',
+      'Arista FN0103 public summary',
+    );
+    const cisco = view.link(
+      'https://www.cisco.com/c/en/us/support/docs/field-notices/742/fn74221.html',
+      'Cisco FN74221',
+    );
+    return `<section class="customer-release-evidence">
+      <h3>Release reliability evidence</h3>
+      <p>Pinned 14 November 2026 scenario snapshot, researched 25 November 2026. This evidence is independent of the current vendor, study window, scope and CVE filters and their exports. Independent human review pending.</p>
+      <p>Withdrawal and corrective respin rates are unavailable for Cisco, Aruba and Arista. Historical coverage and release denominators are incomplete. Disclosure counts reflect publication and collection practices and cannot establish vendor security quality or upgrade burden.</p>
+      <ul>
+        <li><strong>Arista EOS 4.33.</strong> A notice dated 1 July 2025 announces the EOS 4.33.3F deferral. The action date, replacement release and exact model applicability are unknown. The pinned targets, 4.33.4M and 4.33.5M, do not match 4.33.3F. ${arista}</li>
+        <li><strong>Cisco IOS XE 17.12.</strong> FN74221, first published 17 January 2025, prescribes certificate replacement for a specific Umbrella API-key configuration. The pinned sample contains 9 scenario/policy annotations across 2 distinct date/target pairs. The scenario steps target 17.12.3 on 27 March 2024 and 17.12.4 on 25 September 2024. Both steps precede the notice. These matches supply configuration context only. They establish no additional upgrades, withdrawals or affected devices. Actual device configuration and model applicability are unknown. ${cisco}</li>
+        <li><strong>Aruba AOS-CX 10.13.</strong> Historical withdrawal and deferral status remains unknown because primary-source coverage is incomplete.</li>
+      </ul>
+      <p>Bug-fix listings are separate evidence. The sample leaves any Cisco IOS XE 17.9.6 withdrawal unverified. ${view.link(research + '.md', 'Pinned research report')} · ${view.link(research + '.json', 'Pinned research packet')}</p>
+    </section>`;
+  }
   function render(envelope, state = {}) {
     const title =
       '<h2>Customer switching comparison</h2><p class="notice">Counts measure disclosure, not vendor security quality. Actual customer upgrades: unknown.</p><p>The advisory cohort uses the study publication window; release dates and publication events describe separate evidence.</p>';
-    if (!envelope) return title + view.render(null, { ...state, customer: true });
+    if (!envelope)
+      return title + view.render(null, { ...state, customer: true }) + releaseEvidence();
     validate(envelope);
     const history = envelope.release_history;
     return (
       title +
       overview(envelope) +
+      releaseEvidence() +
       view.render(envelope.study, { ...state, customer: true }) +
       '<section class="customer-history"><h3>Reported fixed releases and source history</h3><p>A release without linked CVEs is not evidence of a silent security fix or vendor concealment. Evidence gaps do not establish zero exposure or withholding. Model applicability and actual upgrades remain unknown.</p>' +
       `<p>History: ${esc(history.availability)}. Release coverage denominator: unknown. ${esc(history.method)}</p>` +
