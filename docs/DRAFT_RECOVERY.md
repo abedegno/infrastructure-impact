@@ -7,9 +7,10 @@ untouched; no asset is overwritten, published or automatically deleted.
 
 GitHub documents [draft release visibility and API permissions](https://docs.github.com/en/rest/releases/releases)
 and [release asset limits](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
-A daily managed draft holds up to 1,000 assets. The application retains its stricter
-50 MiB encrypted-archive and 64 MiB XZ-decoder limits. The standard expanded-vault
-profile is 512 MiB; the explicit large profile is 1 GiB, as described in [Capacity](CAPACITY.md).
+A daily managed draft holds up to 1,000 assets. Managed draft ciphertext is
+bounded at 512 MiB per archive. Git-embedded archives have a 50 MiB limit.
+The XZ decoder memory limit is 64 MiB and the expanded-vault bound depends on
+the selected [capacity profile](CAPACITY.md).
 Drafts are not software releases and must remain unpublished. The recovery key is
 still required even for an operator who can access a draft asset.
 
@@ -77,10 +78,14 @@ independently attest draft access or decryptability. Successful writer readback 
 a checkpoint recovery test, not a continuous availability or off-provider
 disaster-recovery guarantee. GitHub is still a shared failure domain.
 
-To return to Git storage, keep a draft-capable source pin and set
-`IMPACT_RECOVERY_STORAGE=git`. The current helper can restore the remote checkpoint
-and create an authenticated local encrypted archive using the existing Git-mode
-retention behavior. Verify that checkpoint before rolling back to older code.
+Once the tracked pointer references a draft archive over 50 MiB, older helpers
+with a 50 MiB remote limit cannot restore it. Retain a helper that supports
+the 512 MiB draft budget and the selected vault profile when rolling back reader changes.
+
+To return to Git storage, first verify that a fresh encrypted archive fits
+the 50 MiB Git limit. Keep the draft-capable source pin and set
+`IMPACT_RECOVERY_STORAGE=git`. Verify the resulting Git checkpoint before
+rolling back to an older helper.
 For pre-XZ helpers, also select `--backup-compression gzip` in an approved recovery
 environment. Retain a protected copy of the key and required archives separately.
 Do not publish a managed draft, delete recovery assets or rewrite Git history as

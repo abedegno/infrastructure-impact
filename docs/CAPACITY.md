@@ -27,9 +27,9 @@ accounting, not public CVE evidence or a content-authenticity certificate.
 | `large`    | 1 GiB                         | No; explicit operator choice |
 | `extended` | 2 GiB                         | No; explicit operator choice |
 
-All profiles retain the existing 50 MiB encrypted archive limit, 64 MiB XZ decoder memory
-limit, bounded output blocks, authentication, SQLite integrity checks and atomic
-restore. Repository storage review remains at 512 MiB. Expanding a vault profile
+The encrypted archive limit is 50 MiB for Git state and 512 MiB for
+managed GitHub draft assets. All profiles use a 64 MiB XZ decoder memory limit,
+bounded output blocks, authentication, SQLite integrity checks and atomic restore. Repository storage review remains at 512 MiB. Expanding a vault profile
 does not remove those separate warnings or reclaim legacy Git history.
 
 A trusted operator selects a profile with `--vault-profile standard|large|extended` on
@@ -46,13 +46,13 @@ python ops/hosted_job.py --state-dir state --encrypted-state \
   --restore-only /private/recovery/new-vault.sqlite3
 ```
 
-Choose `large` only after checking ephemeral disk headroom for the live vault,
-backup staging and independent restore checks. Archive size must still fit the
-unchanged 50 MiB bound. This offers bounded headroom for the current single-writer
-service; it is not unlimited retention or a replacement for object storage.
+Before selecting a larger profile, check ephemeral disk headroom for the live
+vault, backup staging and independent restore checks. Check memory headroom for
+Fernet encryption and authentication when using larger draft assets.
 
-Once a checkpoint exceeds 512 MiB, an old/default-standard recovery helper will
-refuse it. Keep a profile-capable helper with the required profile during rollback.
+An expanded vault over 512 MiB requires a larger profile during rollback. A
+remote checkpoint over 50 MiB also requires a helper that supports the expanded
+draft-asset budget, even when rolling back only reader changes.
 The SQLite schema and gzip/XZ/Fernet formats are unchanged; no source bytes,
 revisions, capture times or recovery history are removed or re-encoded.
 

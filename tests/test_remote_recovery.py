@@ -131,6 +131,38 @@ def test_remote_checkpoint_preserves_legacy_files_and_recovers_all_rows(tmp_path
     assert not any(r.get_method() in {"PATCH", "DELETE"} for r in api.requests)
 
 
+def test_remote_checkpoint_round_trips_above_git_ciphertext_budget(tmp_path, monkeypatch):
+    database, key, _, store = setup(tmp_path)
+    git_state = tmp_path / "git-state"
+    baseline = hosted.backup(git_state, database, key)
+    git_limit = baseline["archive_bytes"] - 1
+    monkeypatch.setattr(hosted, "MAX_ARCHIVE_BYTES", git_limit)
+    monkeypatch.setattr(hosted, "REMOTE_ARCHIVE_LIMIT", git_limit * 2, raising=False)
+    with pytest.raises(ValueError, match="Encrypted backup exceeds"):
+        hosted.backup(tmp_path / "new-git-state", database, key)
+    with pytest.raises(ValueError, match="archive exceeds"):
+        hosted.validate_current(git_state, key)
+    with pytest.raises(ValueError, match="size or fingerprint"):
+        hosted.restore_current(git_state, tmp_path / "git-restore.sqlite3", key)
+
+    state = tmp_path / "remote-state"
+    manifest = hosted.backup_remote(state, database, key, store=store)
+    assert manifest["archive_bytes"] > git_limit
+    assert hosted.validate_current(state, key, store=store)
+    target = tmp_path / "remote-restore.sqlite3"
+    assert hosted.restore_current(state, target, key, store=store)
+    with sqlite3.connect(target) as db:
+        assert db.execute("SELECT value FROM evidence").fetchone() == (
+            "SYNTHETIC PRIVATE RECOVERY DATA",
+        )
+
+    # A remote pointer must not elevate the budget on tracked Git copies.
+    legacy = git_state / baseline["archive"]
+    (state / legacy.name).write_bytes(legacy.read_bytes())
+    with pytest.raises(ValueError, match="archive exceeds"):
+        hosted.validate_current(state, key, store=store)
+
+
 @pytest.mark.parametrize(
     "failure", ["fail_upload", "corrupt_download", "extra_download", "bad_digest"]
 )
@@ -212,7 +244,7 @@ def test_untrusted_pointer_cannot_choose_another_destination(tmp_path, mutation)
     if mutation == "archive":
         bad["archive"] = "../private.sqlite3"
     if mutation == "size":
-        bad["archive_bytes"] = 51 * 1024 * 1024
+        bad["archive_bytes"] = 512 * 1024 * 1024 + 1
     if mutation == "extra_url":
         bad["remote"]["url"] = "https://untrusted.example/download"
     count = len(api.requests)
@@ -307,7 +339,12 @@ def test_remote_monitor_reports_legacy_git_copies_and_writer_receipt(tmp_path):
         for p in state.glob("*.fernet")
     ]
     manifest = hosted.backup_remote(state, database, key, store=store)
+    from infrastructure_impact.storage.remote_recovery import validate_pointer
+
+    manifest["archive_bytes"] = 51 * 1024 * 1024
+    validate_pointer(manifest)
     report = summarize([legacy], 100, manifest, repository="example/recovery")
+    assert report["per_archive_limit_bytes"] == 512 * 1024 * 1024
     assert report["storage_backend"] == BACKEND
     assert report["latest_archive_bytes"] == manifest["archive_bytes"]
     assert report["remaining_runs_scenario"] is None
@@ -317,6 +354,7 @@ def test_remote_monitor_reports_legacy_git_copies_and_writer_receipt(tmp_path):
     for bad in [
         {**manifest, "remote_readback_verified_at": None},
         {**manifest, "archive_bytes": True},
+        {**manifest, "archive_bytes": 512 * 1024 * 1024 + 1},
     ]:
         with pytest.raises(ValueError):
             summarize([legacy], 100, bad)

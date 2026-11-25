@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from infrastructure_impact.recovery_policy import (  # noqa: E402
     ARCHIVE_LIMIT,
     DEFAULT_PROFILE,
+    REMOTE_ARCHIVE_LIMIT,
     VAULT_PROFILES,
     vault_limit,
 )
@@ -54,6 +55,7 @@ def summarize(
     latest = next((p for p in current if p["path"] == "state/" + manifest["archive"]), None)
     backend = manifest.get("storage_backend", "git")
     remote = backend == "github-draft-release-v1"
+    archive_limit = REMOTE_ARCHIVE_LIMIT if remote else ARCHIVE_LIMIT
     if remote:
         pointer = manifest.get("remote", {})
         if (
@@ -71,7 +73,7 @@ def summarize(
                 r"vault-\d{8}T\d{12}Z\.sqlite3\.(?:gz|xz)\.fernet", manifest["archive"]
             )
             or type(manifest.get("archive_bytes")) is not int
-            or manifest["archive_bytes"] < 1
+            or not 0 < manifest["archive_bytes"] <= archive_limit
         ):
             raise ValueError("Remote recovery metadata or writer readback receipt is invalid")
         verified_at = datetime.fromisoformat(
@@ -107,13 +109,13 @@ def summarize(
         findings.append(
             "Retained logical encrypted backup bytes have reached the review budget; packed storage is a separate measurement"
         )
-    if latest["size"] >= ARCHIVE_LIMIT * 0.8:
+    if latest["size"] >= archive_limit * 0.8:
         findings.append("Latest encrypted archive has reached 80 percent of its per-file limit")
     if database_bytes is not None and database_bytes >= configured_limit * 0.8:
         findings.append("Uncompressed vault has reached 80 percent of its supported size")
     required = (
         reported >= BUDGET
-        or latest["size"] >= ARCHIVE_LIMIT
+        or latest["size"] >= archive_limit
         or (database_bytes is not None and database_bytes >= configured_limit)
     )
     if required:
@@ -156,7 +158,7 @@ def summarize(
         manifest_vault_limit_bytes=declared_limit,
         reported_repository_bytes=reported,
         repository_review_budget_bytes=BUDGET,
-        per_archive_limit_bytes=ARCHIVE_LIMIT,
+        per_archive_limit_bytes=archive_limit,
         remaining_runs_scenario=None if remote else max(0, (BUDGET - reported) // latest["size"]),
         storage_review_required=required,
         findings=findings,

@@ -15,8 +15,9 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
+from infrastructure_impact.recovery_policy import REMOTE_ARCHIVE_LIMIT
+
 BACKEND = "github-draft-release-v1"
-LIMIT = 50 * 1024 * 1024
 ARCHIVE = re.compile(r"vault-\d{8}T\d{12}Z\.sqlite3\.(?:gz|xz)\.fernet")
 MARKER = "Infrastructure Impact encrypted collector recovery. Managed draft; do not publish."
 CDN_HOSTS = {"release-assets.githubusercontent.com", "objects.githubusercontent.com"}
@@ -32,7 +33,7 @@ def validate_pointer(manifest, repository=None):
         or not isinstance(manifest.get("sha256"), str)
         or not re.fullmatch(r"[a-f0-9]{64}", manifest["sha256"])
         or type(manifest.get("archive_bytes")) is not int
-        or not 0 < manifest["archive_bytes"] <= LIMIT
+        or not 0 < manifest["archive_bytes"] <= REMOTE_ARCHIVE_LIMIT
         or not isinstance(remote, dict)
         or set(remote) != {"repository", "release_id", "asset_id", "tag"}
         or not isinstance(remote.get("repository"), str)
@@ -198,7 +199,7 @@ class GitHubDraftStore:
             or not ARCHIVE.fullmatch(manifest.get("archive", ""))
             or archive.is_symlink()
             or not archive.is_file()
-            or archive.stat().st_size > LIMIT
+            or archive.stat().st_size > REMOTE_ARCHIVE_LIMIT
         ):
             raise ValueError("Remote recovery requires a bounded encrypted archive")
         raw = archive.read_bytes()
@@ -280,7 +281,7 @@ class GitHubDraftStore:
                 with self._request(url, binary=True) as response:
                     while block := response.read(1024 * 1024):
                         size += len(block)
-                        if size > manifest["archive_bytes"] or size > LIMIT:
+                        if size > manifest["archive_bytes"] or size > REMOTE_ARCHIVE_LIMIT:
                             raise ValueError("Recovery download exceeds its size budget")
                         digest.update(block)
                         target.write(block)

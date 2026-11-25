@@ -25,6 +25,7 @@ from infrastructure_impact.recovery_policy import (
     ARCHIVE_LIMIT,
     DECODER_MEMORY_LIMIT,
     DEFAULT_PROFILE,
+    REMOTE_ARCHIVE_LIMIT,
     VAULT_PROFILES,
     checked_limit,
     vault_limit,
@@ -69,10 +70,15 @@ def expanded_chunks(compressed, compression):
         raise ValueError("Private XZ backup is corrupt or exceeds decoder memory limit") from error
 
 
-def validate_encrypted_state(state, encryption_key, *, recovery_archive=None):
+def validate_encrypted_state(
+    state, encryption_key, *, recovery_archive=None, _archive_limit_bytes=None
+):
     """Authenticate every tracked recovery copy before the workflow commits it."""
     from cryptography.fernet import Fernet
 
+    archive_limit = MAX_ARCHIVE_BYTES if _archive_limit_bytes is None else _archive_limit_bytes
+    # A remote pointer still leaves legacy archives in the tracked Git directory.
+    tracked_limit = MAX_ARCHIVE_BYTES if recovery_archive is not None else archive_limit
     if not encryption_key:
         raise ValueError("Encrypted state validation requires the dedicated recovery key")
     if state.is_symlink() or (state / "current.json").is_symlink():
@@ -98,7 +104,7 @@ def validate_encrypted_state(state, encryption_key, *, recovery_archive=None):
             continue
         if not re.fullmatch(pattern, path.name):
             raise ValueError("Unexpected file in encrypted state directory")
-        if path.stat().st_size > MAX_ARCHIVE_BYTES:
+        if path.stat().st_size > tracked_limit:
             raise ValueError("Encrypted state archive exceeds supported size")
         raw = path.read_bytes()
         cipher.decrypt(raw)  # Authentication only; no decompression or plaintext file.
@@ -113,7 +119,7 @@ def validate_encrypted_state(state, encryption_key, *, recovery_archive=None):
             or not recovery_archive.is_file()
             or recovery_archive.name != manifest["archive"]
             or recovery_archive.resolve().is_relative_to(state.resolve())
-            or recovery_archive.stat().st_size > MAX_ARCHIVE_BYTES
+            or recovery_archive.stat().st_size > archive_limit
             or recovery_archive.stat().st_size != manifest["archive_bytes"]
         ):
             raise ValueError("Remote recovery validation needs a private downloaded archive")
@@ -127,7 +133,10 @@ def validate_encrypted_state(state, encryption_key, *, recovery_archive=None):
     return True
 
 
-def restore(state, database, encryption_key=None, *, vault_limit_bytes=None):
+def restore(
+    state, database, encryption_key=None, *, vault_limit_bytes=None, _archive_limit_bytes=None
+):
+    archive_limit = MAX_ARCHIVE_BYTES if _archive_limit_bytes is None else _archive_limit_bytes
     limit = checked_limit(MAX_VAULT_BYTES if vault_limit_bytes is None else vault_limit_bytes)
     receipt = state / "current.json"
     if not receipt.exists():
@@ -145,7 +154,7 @@ def restore(state, database, encryption_key=None, *, vault_limit_bytes=None):
         raise ValueError("Invalid backup filename")
     archive = state / name
     if (
-        archive.stat().st_size > MAX_ARCHIVE_BYTES
+        archive.stat().st_size > archive_limit
         or hashlib.sha256(archive.read_bytes()).hexdigest() != manifest["sha256"]
     ):
         raise ValueError("Private backup size or fingerprint check failed")
@@ -192,7 +201,16 @@ def restore(state, database, encryption_key=None, *, vault_limit_bytes=None):
 
 
 @phase("backup.local")
-def backup(state, database, encryption_key=None, *, compression="xz", vault_limit_bytes=None):
+def backup(
+    state,
+    database,
+    encryption_key=None,
+    *,
+    compression="xz",
+    vault_limit_bytes=None,
+    _archive_limit_bytes=None,
+):
+    archive_limit = MAX_ARCHIVE_BYTES if _archive_limit_bytes is None else _archive_limit_bytes
     limit = checked_limit(MAX_VAULT_BYTES if vault_limit_bytes is None else vault_limit_bytes)
     if compression not in ("gzip", "xz"):
         raise ValueError("Unsupported private backup compression")
@@ -226,7 +244,7 @@ def backup(state, database, encryption_key=None, *, compression="xz", vault_limi
             with copy.open("rb") as source, compressor as target:
                 shutil.copyfileobj(source, target)
             compressed_bytes = private_pending.stat().st_size
-            if compressed_bytes > MAX_ARCHIVE_BYTES:
+            if compressed_bytes > archive_limit:
                 raise ValueError("Compressed private vault exceeds repository storage budget")
             if encryption_key:
                 from cryptography.fernet import Fernet
@@ -234,7 +252,7 @@ def backup(state, database, encryption_key=None, *, compression="xz", vault_limi
                 private_pending.write_bytes(
                     Fernet(encryption_key).encrypt(private_pending.read_bytes())
                 )
-                if private_pending.stat().st_size > MAX_ARCHIVE_BYTES:
+                if private_pending.stat().st_size > archive_limit:
                     raise ValueError("Encrypted backup exceeds repository storage budget")
             shutil.copyfile(private_pending, pending)
             pending.replace(state / name)
@@ -291,7 +309,13 @@ def restore_current(state, database, encryption_key=None, *, store=None, vault_l
         private = Path(directory)
         store.download(manifest, private / manifest["archive"])
         (private / "current.json").write_text(json.dumps(manifest))
-        return restore(private, database, encryption_key, vault_limit_bytes=vault_limit_bytes)
+        return restore(
+            private,
+            database,
+            encryption_key,
+            vault_limit_bytes=vault_limit_bytes,
+            _archive_limit_bytes=REMOTE_ARCHIVE_LIMIT,
+        )
 
 
 @phase("backup.validation")
@@ -304,7 +328,12 @@ def validate_current(state, encryption_key, *, store=None):
     with tempfile.TemporaryDirectory(prefix="impact-remote-validate-") as directory:
         archive = Path(directory) / manifest["archive"]
         store.download(manifest, archive)
-        return validate_encrypted_state(state, encryption_key, recovery_archive=archive)
+        return validate_encrypted_state(
+            state,
+            encryption_key,
+            recovery_archive=archive,
+            _archive_limit_bytes=REMOTE_ARCHIVE_LIMIT,
+        )
 
 
 @phase("backup.remote")
@@ -323,13 +352,15 @@ def backup_remote(
             encryption_key,
             compression=compression,
             vault_limit_bytes=vault_limit_bytes,
+            _archive_limit_bytes=REMOTE_ARCHIVE_LIMIT,
         )
-        validate_encrypted_state(local, encryption_key)
+        validate_encrypted_state(local, encryption_key, _archive_limit_bytes=REMOTE_ARCHIVE_LIMIT)
         if not restore(
             local,
             private / "local-check.sqlite3",
             encryption_key,
             vault_limit_bytes=vault_limit_bytes,
+            _archive_limit_bytes=REMOTE_ARCHIVE_LIMIT,
         ):
             raise RuntimeError("New local backup was not available for recovery verification")
         uploaded = store.publish(local / manifest["archive"], manifest)
@@ -342,6 +373,7 @@ def backup_remote(
             private / "remote-check.sqlite3",
             encryption_key,
             vault_limit_bytes=vault_limit_bytes,
+            _archive_limit_bytes=REMOTE_ARCHIVE_LIMIT,
         ):
             raise RuntimeError("New remote backup was not available for recovery verification")
         uploaded["remote_readback_verified_at"] = datetime.now(timezone.utc).isoformat()

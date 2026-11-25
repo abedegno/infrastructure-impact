@@ -123,8 +123,9 @@ Never paste the key in an issue, shell argument, log or source file. The reposit
 state is not an off-provider disaster-recovery copy; retain an independent protected
 copy of the key and required archives using the operator's approved backup storage.
 
-The standard profile allows 512 MiB uncompressed; an explicit large profile allows
-1 GiB. Both keep the 50 MiB per-archive limit. Monitor branch/repo
+The standard profile allows 512 MiB uncompressed. The large and extended profiles
+allow 1 GiB and 2 GiB. The encrypted per-archive limit is 50 MiB for Git and
+512 MiB for managed draft assets. Monitor branch/repo
 size and use draft assets or a persistent-host/object-store deployment before
 continued Git snapshots approach the review budget. Removing old working-tree copies does not erase public Git history;
 previous ciphertext remains retrievable and key rotation must account for it.
