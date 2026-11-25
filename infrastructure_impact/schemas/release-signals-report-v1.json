@@ -1,0 +1,590 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "window",
+    "dataset_sha256",
+    "upgrades_sha256",
+    "events",
+    "date_conflict_evidence",
+    "metrics",
+    "candidate_pairs",
+    "upgrade_links",
+    "coverage",
+    "caveats",
+    "review_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "generated_at": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/date"
+        },
+        "end": {
+          "$ref": "#/$defs/date"
+        }
+      }
+    },
+    "dataset_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "upgrades_sha256": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      },
+      "maxItems": 20000
+    },
+    "date_conflict_evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      },
+      "maxItems": 20000
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/metrics"
+      },
+      "maxItems": 20000
+    },
+    "candidate_pairs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/candidate"
+      },
+      "maxItems": 20000
+    },
+    "upgrade_links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/upgrade"
+      },
+      "maxItems": 20000
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/coverage"
+      },
+      "maxItems": 1024
+    },
+    "caveats": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000,
+        "pattern": "\\S"
+      },
+      "maxItems": 32,
+      "minItems": 1
+    },
+    "review_status": {
+      "const": "independent_human_review_pending"
+    }
+  },
+  "$defs": {
+    "date": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10,
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{1,6})?(Z|\\+00:00)$"
+    },
+    "digest": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "kind": {
+      "enum": [
+        "release",
+        "withdrawn",
+        "deferred",
+        "corrective_respin",
+        "field_notice",
+        "recommended",
+        "bug_list"
+      ]
+    },
+    "vendor": {
+      "enum": ["cisco", "aruba", "arista"]
+    },
+    "train": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 24,
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "release": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vendor", "train", "start", "end", "status", "expected_releases", "reason"],
+      "properties": {
+        "vendor": {
+          "$ref": "#/$defs/vendor"
+        },
+        "train": {
+          "$ref": "#/$defs/train"
+        },
+        "start": {
+          "$ref": "#/$defs/date"
+        },
+        "end": {
+          "$ref": "#/$defs/date"
+        },
+        "status": {
+          "enum": ["partial", "blocked", "not_collected"]
+        },
+        "expected_releases": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision_id",
+        "previous_revision_id",
+        "source_url",
+        "source_sha256",
+        "retrieved_at",
+        "capture_method",
+        "source_locator"
+      ],
+      "properties": {
+        "revision_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "previous_revision_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "format": "uri"
+        },
+        "source_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "retrieved_at": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "capture_method": {
+          "enum": ["http_response", "rendered_capture"]
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "vendor",
+        "train",
+        "release",
+        "related_release",
+        "date",
+        "platforms",
+        "statement",
+        "bug_ids",
+        "source_locator",
+        "event_id",
+        "source"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/kind"
+        },
+        "vendor": {
+          "$ref": "#/$defs/vendor"
+        },
+        "train": {
+          "$ref": "#/$defs/train"
+        },
+        "release": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/release"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "related_release": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/release"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "date": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "\\S"
+          },
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "pattern": "\\S"
+        },
+        "bug_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "maxItems": 4096,
+          "uniqueItems": true
+        },
+        "source_locator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "\\S"
+        },
+        "event_id": {
+          "$ref": "#/$defs/digest"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vendor",
+        "train",
+        "year",
+        "partial_year",
+        "observed_releases",
+        "explicit_withdrawals",
+        "explicit_deferred",
+        "confirmed_corrective_respins",
+        "field_notices",
+        "recommendations",
+        "published_bug_ids",
+        "undated_events",
+        "withdrawal_rate",
+        "coverage"
+      ],
+      "properties": {
+        "vendor": {
+          "$ref": "#/$defs/vendor"
+        },
+        "train": {
+          "$ref": "#/$defs/train"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "partial_year": {
+          "type": "boolean"
+        },
+        "observed_releases": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "explicit_withdrawals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "explicit_deferred": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "confirmed_corrective_respins": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "field_notices": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "recommendations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "published_bug_ids": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "undated_events": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000000
+        },
+        "withdrawal_rate": {
+          "type": "null"
+        },
+        "coverage": {
+          "const": "not_established"
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vendor",
+        "train",
+        "earlier_release",
+        "later_release",
+        "earlier_date",
+        "later_date",
+        "calendar_days",
+        "within_14_days",
+        "within_30_days",
+        "corrective_respin_confirmed",
+        "event_ids"
+      ],
+      "properties": {
+        "vendor": {
+          "$ref": "#/$defs/vendor"
+        },
+        "train": {
+          "$ref": "#/$defs/train"
+        },
+        "earlier_release": {
+          "$ref": "#/$defs/release"
+        },
+        "later_release": {
+          "$ref": "#/$defs/release"
+        },
+        "earlier_date": {
+          "$ref": "#/$defs/date"
+        },
+        "later_date": {
+          "$ref": "#/$defs/date"
+        },
+        "calendar_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "within_14_days": {
+          "type": "boolean"
+        },
+        "within_30_days": {
+          "const": true
+        },
+        "corrective_respin_confirmed": {
+          "const": false
+        },
+        "event_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "uniqueItems": true
+        }
+      }
+    },
+    "upgrade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vendor",
+        "train",
+        "year",
+        "scenario",
+        "policy",
+        "date",
+        "target",
+        "claim_ids",
+        "event_id",
+        "signal",
+        "relation",
+        "chronology",
+        "model_applicability",
+        "reason"
+      ],
+      "properties": {
+        "vendor": {
+          "$ref": "#/$defs/vendor"
+        },
+        "train": {
+          "$ref": "#/$defs/train"
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "scenario": {
+          "enum": ["publisher_first_fixed", "known_fixed_target", "inferred_inclusive"]
+        },
+        "policy": {
+          "enum": ["all_affected", "high_risk"]
+        },
+        "date": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/release"
+        },
+        "claim_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "\\S"
+          },
+          "maxItems": 4096,
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signal": {
+          "enum": [
+            "release",
+            "withdrawn",
+            "deferred",
+            "corrective_respin",
+            "field_notice",
+            "recommended",
+            "bug_list",
+            "candidate_follow_up",
+            "unknown"
+          ]
+        },
+        "relation": {
+          "const": "model_unresolved"
+        },
+        "chronology": {
+          "enum": ["later", "not_later", "unknown"]
+        },
+        "model_applicability": {
+          "const": "unresolved"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "pattern": "\\S"
+        }
+      }
+    }
+  }
+}
