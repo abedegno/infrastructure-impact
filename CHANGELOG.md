@@ -2,6 +2,8 @@
 
 ## Unreleased — release reliability
 
+- Add a local release-reliability refresh CLI for original Cisco ROMMON and Arista software RSS captures, with immutable cache revisions, policy-gated Cisco checks and separate candidate and pending-review outputs.
+
 - Add generation-bound release-reliability and human-review reports, per-train/year observed counts and coverage, JSON/CSV exports, native API and browser tables. Keep incomplete rates unavailable and distinguish research excerpts from production-eligible evidence.
 - Add exact-target staircase context with distinct date/target grouping, source links, separate notice/action/release dates and explicit model/chronology unknowns. Preserve existing CVE, disclosure and upgrade counts.
 - Package the extracted first-delivery catalogue, separate release validation from advisory extraction pass rates, and retain independent human review pending. No new vendor collection, access permissions, secrets, schedule or workflow-permission changes.
