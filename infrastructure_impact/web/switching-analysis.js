@@ -1138,7 +1138,7 @@
         .join('')}</details></section>`
     );
   };
-  A.mount = (root, report) => {
+  A.mount = (root, report, reliability = null) => {
     if (!report || report.availability !== 'available') return;
     const draw = () => {
       const keys = ['family', 'train', 'year', 'policy', 'scenario'],
@@ -1149,28 +1149,32 @@
               String(r[k]) === root.querySelector('#analysis-' + k).value,
           ),
         );
-      root.querySelector('#analysis-rows').innerHTML = table(
-        [
-          'Family',
-          'Train',
-          'Year',
-          'Scenario',
-          'Policy',
-          'Annual total',
-          'Supported steps',
-          'Coverage',
-        ],
-        rows.map((r) => [
-          r.family,
-          r.train,
-          r.year,
-          r.scenario,
-          r.policy,
-          r.event_count,
-          r.supported_event_count,
-          r.coverage,
-        ]),
-      );
+      root.querySelector('#analysis-rows').innerHTML =
+        table(
+          [
+            'Family',
+            'Train',
+            'Year',
+            'Scenario',
+            'Policy',
+            'Annual total',
+            'Supported steps',
+            'Coverage',
+          ],
+          rows.map((r) => [
+            r.family,
+            r.train,
+            r.year,
+            r.scenario,
+            r.policy,
+            r.event_count,
+            r.supported_event_count,
+            r.coverage,
+          ]),
+        ) +
+        (window.InfrastructureReleaseReliability
+          ? window.InfrastructureReleaseReliability.renderSteps(reliability, rows, report.selection)
+          : '');
     };
     for (const k of ['family', 'train', 'year', 'policy', 'scenario'])
       root.querySelector('#analysis-' + k).addEventListener('change', draw);
