@@ -1,0 +1,351 @@
+{
+  "schema": "release-reliability-targeted-coverage-research-v1",
+  "vendor": "arista",
+  "train": "EOS 4.33",
+  "scope": {
+    "models": ["720XP", "720DP"],
+    "years": [2024, 2025, 2026],
+    "research_date": "2026-11-25",
+    "review_status": "review_pending",
+    "production_eligible": false
+  },
+  "cache_root_convention": "Resolve $RELEASE_RELIABILITY_CACHE to the outside-Git release-reliability-round4 cache directory; all packet references include arista/.",
+  "evidence": {
+    "library": {
+      "url": "https://www.arista.com/en/support/product-documentation",
+      "locator": "Product Bulletins :: EOS; rendered lines 173\u2013175",
+      "short_quote": "EOS Release 4.33.2F; EOS Release 4.33.1F; EOS Release 4.33.0F",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "7ea1998748c78c6e0e6e92bec144139ba0df936e1403181369e22877d33fe7ae",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/doclib.web-excerpt.json"
+    },
+    "bulletinlogin": {
+      "url": "https://www.arista.com/custom_data/downloads/?f=%2Fsupport%2Fdownload%2FProductBulletins%2FEOS%2FEOS-4.33.0F-Product-Bulletin.pdf",
+      "locator": "Product Documentation link 138; redirected login rendered line 6",
+      "short_quote": "Sign In",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "734154f61e4e5e14166e241cea37bb3185b1a29865a118fa3205742f47491c31",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/bulletin0.web-excerpt.json"
+    },
+    "fn103login": {
+      "url": "https://www.arista.com/en/support/advisories-notices/field-notice/21651-field-notice-0103",
+      "locator": "redirected login; rendered line 6",
+      "short_quote": "Sign In",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "098a0716de5f5afd03090fe95d0b33eddc0939a7ca59c6350e8955188180f6d4",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/fn103login.web-excerpt.json"
+    },
+    "rss-4.33.11M": {
+      "url": "https://www.arista.com/en/support/release-notes",
+      "locator": "RSS channel/item[12]/title and pubDate",
+      "short_quote": "EOS-4.33.11M is now available for download.",
+      "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "excerpt_sha256": null,
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/software-rss.body"
+    },
+    "rss-4.33.11.2M": {
+      "url": "https://www.arista.com/en/support/release-notes",
+      "locator": "RSS channel/item[5]/title and pubDate",
+      "short_quote": "EOS-4.33.11.2M is now available for download.",
+      "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "excerpt_sha256": null,
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/software-rss.body"
+    },
+    "softwarefeed": {
+      "url": "https://www.arista.com/en/support/release-notes",
+      "locator": "RSS channel; 20 item elements; oldest/newest pubDate",
+      "short_quote": "2026-08-28 21:14:50 +0000; 2026-11-20 17:09:19 +0000",
+      "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+      "retrieved_at_precision": "instant",
+      "capture_method": "anonymous_origin_response",
+      "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+      "excerpt_sha256": null,
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/software-rss.body"
+    },
+    "robots": {
+      "url": "https://www.arista.com/robots.txt",
+      "locator": "web rendered lines 0\u20131 and 28",
+      "short_quote": "Crawl-delay: 7; Disallow: /download/",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "0c6f161200dfd527fc01f873a06a948724836b60d57e233863d533530c56209b",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/robots-policy-excerpt.txt"
+    },
+    "terms": {
+      "url": "https://www.arista.com/en/terms-of-use",
+      "locator": "\u00a72 Ownership of Materials, rendered line 31; \u00a77 rendered line 55",
+      "short_quote": "No portion of the information on this Site may be copied",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "3450511c89e1b560a3fe20ffd2954f6cab2d53e25267b0d6f29c78a7fd5e6d1e",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/terms-policy-excerpt.txt"
+    },
+    "lifecycle-matrix": {
+      "url": "https://www.arista.com/assets/images/article/EOS-Life-Cycle-Policy.jpg",
+      "locator": "EOS release support matrix: row Arista EOS 4.33.x; column Initial Release Date; image1220x610, rowy212\u2013263; footer Last Updated",
+      "short_quote": "Arista EOS 4.33.x | 10-Oct-2024; Last Updated: Oct. 23, 2026",
+      "quote_type": "visual_transcription_of_table_cells_and_footer",
+      "retrieved_at": "2026-11-25T18:37:15.106817+00:00",
+      "retrieved_at_precision": "instant",
+      "retrieval_time_basis": "local file modification time at successful bounded anonymous fetch completion",
+      "capture_method": "anonymous_origin_image",
+      "original_sha256": "2f073645658b4caa092351ab8fee8a6141e9ec6acf6243a860fee57621e86f27",
+      "excerpt_sha256": null,
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-eos-lifecycle.jpg"
+    },
+    "lifecycle-page": {
+      "url": "https://www.arista.com/en/support/product-documentation/eos-life-cycle-policy",
+      "locator": "rendered line50 and image link8 at line52",
+      "short_quote": "timelines for each major Arista EOS software train",
+      "retrieved_at": "2026-11-25T18:36:52Z",
+      "retrieved_at_precision": "instant",
+      "capture_method": "web_tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "12fc075b19d4107b51e955f1520f4e1caa4bd8a6db7c97fccde0a5d374e39bf7",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-lifecycle.web-excerpt.json"
+    },
+    "toi-date-control": {
+      "url": "https://www.arista.com/en/support/toi/eos-4-33-0f",
+      "locator": "search batch3 result0; Configurable Transmit Queue7 heading and Posted/Updated metadata",
+      "short_quote": "Posted on October 18, 2024; Updated on October 18, 2024",
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "capture_method": "web_search_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "a3ccdd9780d4b3f6df8878b9b7a8573d87d01bc2dbb5dfaf0d135c656c04a467",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search3.web-excerpt.json",
+      "admission": "date_control_only_not_release_evidence"
+    }
+  },
+  "new_facts": [
+    {
+      "id": "eos433-train-initial-date",
+      "kind": "train_initial_release_date",
+      "train": "4.33.x",
+      "date": "2024-10-10",
+      "date_label": "Initial Release Date",
+      "evidence_ids": ["lifecycle-matrix", "lifecycle-page"],
+      "specific_release": null,
+      "binary_release_date": null,
+      "announcement_date": null,
+      "model_applicability": {
+        "720XP": "unknown",
+        "720DP": "unknown"
+      },
+      "limitations": [
+        "Train-level matrix row does not name4.33.0F",
+        "No per-release date series or release count follows",
+        "Support matrix phase is train-level and does not enumerate supported models",
+        "Image updated2026-10-23; later webpage/search metadata not substituted for matrix revision date"
+      ]
+    }
+  ],
+  "reused_announcement_facts": [
+    {
+      "release": "4.33.11M",
+      "announcement_timestamp": "2026-10-15 00:27:28 +0000",
+      "binary_release_date": null,
+      "evidence_ids": ["rss-4.33.11M"]
+    },
+    {
+      "release": "4.33.11.2M",
+      "announcement_timestamp": "2026-11-03 02:28:26 +0000",
+      "binary_release_date": null,
+      "evidence_ids": ["rss-4.33.11.2M"]
+    }
+  ],
+  "search_receipts": [
+    {
+      "id": "search-batch-1",
+      "tool": "web_search",
+      "queries": [
+        "site:arista.com \"4.33.0F\" \"release date\"",
+        "site:arista.com \"4.33\" \"720XP\" \"supported\"",
+        "site:arista.com \"4.33\" \"720DP\" \"supported\"",
+        "site:arista.com \"4.33\" \"October\" \"release\""
+      ],
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "original_sha256": null,
+      "excerpt_sha256": "d72e14fbb7426b2bd944fc863baccab008251774f4d9c73dafc057f9d2ac427d",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search1.web-excerpt.json",
+      "scope": "Official Arista domain discovery; search results only, not a complete archive enumeration",
+      "outcome": "Results primarily TOI article metadata, security affected/fixed-platform/version lists, or certification material; these were not admitted as release dates or train support statements."
+    },
+    {
+      "id": "search-batch-2",
+      "tool": "web_search",
+      "queries": [
+        "site:arista.com \"EOS 4.33\" \"release date\" -security -advisory",
+        "site:arista.com \"4.33.0F\" \"2024\" -security -advisory -toi -tag",
+        "site:arista.com \"720XP\" \"4.33\" -security -advisory -ComplianceCertifications",
+        "site:arista.com \"720DP\" \"EOS\" \"supported platforms\""
+      ],
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "original_sha256": null,
+      "excerpt_sha256": "47ef213f588e8ae8fa24b441054a2f351a84df2ff9407555668bf034810f9233",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search2.web-excerpt.json",
+      "scope": "Official Arista domain discovery; search results only, not a complete archive enumeration",
+      "outcome": "Results primarily TOI article metadata, security affected/fixed-platform/version lists, or certification material; these were not admitted as release dates or train support statements."
+    },
+    {
+      "id": "search-batch-3",
+      "tool": "web_search",
+      "queries": [
+        "site:arista.com/en/support \"4.33.0F\" \"release\" \"2024\" -security-advisory -toi",
+        "site:arista.com \"4.33\" \"Life Cycle\"",
+        "site:arista.com \"EOS-4.33\" \"Product-Bulletin\" -security-advisory",
+        "site:arista.com \"4.33\" \"Release Date\""
+      ],
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "original_sha256": null,
+      "excerpt_sha256": "a3ccdd9780d4b3f6df8878b9b7a8573d87d01bc2dbb5dfaf0d135c656c04a467",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search3.web-excerpt.json",
+      "scope": "Official Arista domain discovery; search results only, not a complete archive enumeration",
+      "outcome": "Results primarily TOI article metadata, security affected/fixed-platform/version lists, or certification material; these were not admitted as release dates or train support statements."
+    },
+    {
+      "id": "search-batch-4",
+      "tool": "web_search",
+      "queries": [
+        "site:arista.com \"EOS Software Lifecycle\"",
+        "site:arista.com \"EOS\" \"4.33\" \"October 2024\"",
+        "site:arista.com \"720XP\" \"Supported EOS\"",
+        "site:arista.com \"720DP\" \"minimum EOS\""
+      ],
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "original_sha256": null,
+      "excerpt_sha256": "57133f81aa1f4a84a47580ac815d68fd217c01e2d668e24645959f43c3ac4ee2",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search4.web-excerpt.json",
+      "scope": "Official Arista domain discovery; search results only, not a complete archive enumeration",
+      "outcome": "Results primarily TOI article metadata, security affected/fixed-platform/version lists, or certification material; these were not admitted as release dates or train support statements."
+    },
+    {
+      "id": "search-batch-5",
+      "tool": "web_search",
+      "queries": [
+        "site:arista.com \"EOS Software Life Cycle\"",
+        "site:arista.com \"EOS 4.33\" \"720DP\" -advisory -certifications -security",
+        "site:arista.com \"EOS 4.33\" \"720XP\" -advisory -certifications -security",
+        "site:arista.com \"4.33.0F\" \"October 24\""
+      ],
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "original_sha256": null,
+      "excerpt_sha256": "442eca767b4bbfbcea3b5ecb7eb069a785b12c6d176994a9186b7c7bbf1a68cd",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search5.web-excerpt.json",
+      "scope": "Official Arista domain discovery; search results only, not a complete archive enumeration",
+      "outcome": "Results primarily TOI article metadata, security affected/fixed-platform/version lists, or certification material; these were not admitted as release dates or train support statements."
+    },
+    {
+      "id": "search-batch-6",
+      "tool": "web_search",
+      "queries": [
+        "site:arista.com/en/support/product-documentation \"Life Cycle\"",
+        "site:arista.com \"EOS-4.33.0F\" \"available for download\"",
+        "site:arista.com \"4.33.1F\" \"Release Date\"",
+        "site:arista.com \"4.33.4M\" \"Released\" -security"
+      ],
+      "retrieved_at": "2026-11-25",
+      "retrieved_at_precision": "day",
+      "original_sha256": null,
+      "excerpt_sha256": "42e57d0f2024b0a7425cca1d95b6313c8e9b733ea32c4661fe22699dcaaf569d",
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-search6.web-excerpt.json",
+      "scope": "Official Arista domain discovery; search results only, not a complete archive enumeration",
+      "outcome": "No additional admissible exact binary release dates or explicit720XP/720DP EOS4.33supported-platform statement found in this batch; lifecycle policy discovered in batch6."
+    }
+  ],
+  "access_receipts": [
+    {
+      "url": "https://www.arista.com/assets/images/article/EOS-Life-Cycle-Policy.jpg",
+      "result": "public_origin_jpeg_readable",
+      "request_count": 1,
+      "content_validation": "JPEG1220x610viewed visually",
+      "evidence_ids": ["lifecycle-matrix"]
+    },
+    {
+      "url": "https://www.arista.com/en/support/product-documentation/eos-life-cycle-policy",
+      "result": "public_web_render_readable",
+      "evidence_ids": ["lifecycle-page"]
+    },
+    {
+      "url": "https://www.arista.com/custom_data/downloads/?f=%2Fsupport%2Fdownload%2FProductBulletins%2FEOS%2FEOS-4.33.0F-Product-Bulletin.pdf",
+      "result": "prior_cached_login_redirect_not_retried",
+      "evidence_ids": ["bulletinlogin"]
+    },
+    {
+      "url": "https://www.arista.com/en/support/advisories-notices/field-notice/21651-field-notice-0103",
+      "result": "prior_cached_login_redirect_not_retried",
+      "evidence_ids": ["fn103login"]
+    }
+  ],
+  "coverage_decision": {
+    "public_historical_per_release_catalogue": "not_established_in_bounded_search",
+    "not_a_claim_no_public_history_exists": true,
+    "train_initial_release_date_found": true,
+    "additional_exact_binary_release_dates_found": false,
+    "explicit_720XP_EOS433_train_support_statement": "not_found_in_bounded_search",
+    "explicit_720DP_EOS433_train_support_statement": "not_found_in_bounded_search",
+    "platform_inference_rejected": [
+      "Hardware index existence",
+      "Security affected/fixed version lists combined with model lists",
+      "TOI feature tags and per-feature support",
+      "Vendor-hosted certification dates as binary release dates",
+      "Absence of720XP/720DPfrom lifecycle matrixexceptions"
+    ],
+    "known_remaining_gate": "The public documentation library points other EOS release documentation to Software Download; previously sampled bulletin/detail routes require sign-in. Those gated routes were not retried.",
+    "historical_annual_denominators": {
+      "2024": null,
+      "2025": null,
+      "2026": null
+    },
+    "model_specific_annual_rates": {
+      "2024": null,
+      "2025": null,
+      "2026": null
+    },
+    "next_evidence_needed": "Publisher-authorized historical release export or anonymously readable release-note supported-platform table that explicitly names train/release and model; no permission or access bypass inferred."
+  },
+  "counts": {
+    "targeted_search_queries": 24,
+    "search_batches": 6,
+    "new_train_initial_dates": 1,
+    "new_exact_binary_release_dates": 0,
+    "new_explicit_study_model_train_support_statements_found": 0,
+    "found_counts_are_search_observations_not_historical_totals": true
+  },
+  "policy": {
+    "bounded_search_stopped": true,
+    "bulk_crawler_used": false,
+    "blocked_routes_retried": false,
+    "authentication_used": false,
+    "mirrors_used": false,
+    "new_origin_requests": 1,
+    "origin_path": "/assets/images/article/EOS-Life-Cycle-Policy.jpg",
+    "robots_terms_evidence_ids": ["robots", "terms"],
+    "production_collection_permission": "unresolved",
+    "raw_vendor_content_in_git": false
+  }
+}
