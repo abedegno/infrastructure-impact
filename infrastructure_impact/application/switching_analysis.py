@@ -1053,13 +1053,7 @@ def _disclosure_selected(report, selection, selected):
         owned_source_pairs=len(pairs),
         metadata_advisories=len(out["advisory_facts"]),
         missing_counts=dict(sorted(Counter(m for p in pairs for m in p["missing"]).items())),
-        unsupported_advisory_types=sorted(
-            {
-                f["metadata"]["advisory_type"]
-                for f in out["advisory_facts"]
-                if f["metadata"]["advisory_type"] == "unknown"
-            }
-        ),
+        unsupported_advisory_types=disclosure._unsupported_advisory_types(out["advisory_facts"]),
     )
     disclosure.validate_report(out)
     return out

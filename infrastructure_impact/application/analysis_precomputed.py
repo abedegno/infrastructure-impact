@@ -363,7 +363,7 @@ def _check_children(selected, study):
         raise ValueError("Selected upgrade row outside study")
 
     disclosures = selected["disclosure"]
-    disclosure._check_report(disclosures)
+    disclosure._check_report(disclosures, selected=True)
     affected = {vendor: set() for vendor in vendors}
     used = set()
     for pair in disclosures["pairs"]:
@@ -445,7 +445,7 @@ def _read_view(view, study, load, max_bytes):
     if any(selected[k] != study[k] for k in ("publication", "generated_at")):
         raise ValueError("Selected analysis report identity differs")
     _check_children(selected, study)
-    codec.charge_value(selected, codec.Budget(limit), ascii=False)
+    codec.charge_value(selected, codec.Budget(limit))
     return selected
 
 

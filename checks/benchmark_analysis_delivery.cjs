@@ -18,6 +18,26 @@ if (
 const fallbackDir = fallback ? fs.realpathSync(fallback) : null;
 if (fallbackDir && (output === fallbackDir || output.startsWith(fallbackDir + path.sep)))
   throw Error('Output inside fallback input');
+function readContexts(file) {
+  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+  try {
+    const stat = fs.fstatSync(fd);
+    if (!stat.isFile() || stat.size > 2000000) throw Error('Study contexts byte bound');
+    // Probe one byte beyond the stat size to reject growth without an unbounded read.
+    const raw = Buffer.alloc(stat.size + 1);
+    let offset = 0;
+    while (offset < raw.length) {
+      const count = fs.readSync(fd, raw, offset, raw.length - offset, null);
+      if (!count) break;
+      offset += count;
+    }
+    if (offset !== stat.size) throw Error('Study contexts size changed while reading');
+    return raw.subarray(0, offset);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+const contextBytes = readContexts(contexts);
 const read = (n) => {
   const base = fs.existsSync(path.resolve(inputDir, n)) || !fallbackDir ? inputDir : fallbackDir;
   const target = fs.realpathSync(path.resolve(base, n));
@@ -51,7 +71,7 @@ const result = {
   kind: 'matched_sequential_fresh_node_process_cached_public_parts',
   publication: null,
   asset_sha256: assetHashes,
-  contexts_sha256: crypto.createHash('sha256').update(fs.readFileSync(contexts)).digest('hex'),
+  contexts_sha256: crypto.createHash('sha256').update(contextBytes).digest('hex'),
   node: process.version,
   platform: process.platform,
   requests: 0,
@@ -108,8 +128,7 @@ const timed = async (name, f) => {
     .filter((name) => name === 'switching-analysis.json' || name.startsWith('switching-analysis-'))
     .sort();
   const reader = await timed('open', () => InfrastructurePublicationV2.open(fetch, catalog, index));
-  if (fs.statSync(contexts).size > 2000000) throw Error('Study contexts byte bound');
-  const studies = J.parseStrict(fs.readFileSync(contexts, 'utf8'));
+  const studies = J.parseStrict(contextBytes.toString('utf8'));
   for (const [name, study] of Object.entries(studies)) {
     const selected = await timed(name, () => reader.switchingAnalysis(study));
     // Identical serializers, intentionally outside timed selection.

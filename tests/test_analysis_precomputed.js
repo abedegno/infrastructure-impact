@@ -201,6 +201,30 @@ async function checkStandaloneValidation() {
     selected = P.copySelected(await P.decodeSelected(view, study, load));
   const corrupt = [
     [(r) => r.disclosure.coverage.selected_affected_claims++, /disclosure/i],
+    [
+      (r) => (r.disclosure.coverage.unsupported_advisory_types = ['unknown']),
+      /disclosure coverage/i,
+    ],
+    [
+      ({ disclosure }) => {
+        const { vendor, family, source } = disclosure.pairs[0];
+        disclosure.bundles.push({
+          kind: 'explicit_publisher_bundle',
+          vendor,
+          family,
+          publisher_id: 'authored-bundle',
+          initial_published_at: null,
+          date_period: 'unknown',
+          member_advisory_ids: ['authored-unselected'],
+          member_cve_ids: [],
+          selected_advisory_ids: [],
+          selected_cve_ids: [],
+          source,
+          upstream: null,
+        });
+      },
+      /disclosure bundle/i,
+    ],
     [(r) => (r.disclosure.pairs[0].date_period = 'unknown'), /disclosure/i],
     [(r) => r.model_coverage.models[0].counts.claims++, /model/i],
     [(r) => (r.kev_reconciliation.summary.state_counts.unknown = 999), /KEV/i],
@@ -212,6 +236,22 @@ async function checkStandaloneValidation() {
     change(wrong);
     assert.throws(() => P.prepareSelected(wrong, study), error);
   }
+  for (const [field, value] of Object.entries({
+    source_url: 'https://example.org/authored-unowned',
+    source_sha256: '1'.repeat(64),
+    retrieved_at: '2024-01-01T00:00:00Z',
+    source_locator: 'authored-unowned',
+    duplicate: null,
+  })) {
+    const wrong = structuredClone(selected),
+      row = wrong.model_coverage.models.find((m) => m.by_source.length);
+    if (field === 'duplicate') row.by_source.push(structuredClone(row.by_source[0]));
+    else row.by_source[0].source[field] = value;
+    assert.throws(() => P.prepareSelected(wrong, study), /model coverage source ownership/i, field);
+  }
+  const noBindingSource = structuredClone(selected);
+  noBindingSource.model_coverage.models.find((m) => m.by_source.length).by_source = [];
+  assert.doesNotThrow(() => P.prepareSelected(noBindingSource, study));
   for (const kind of ['facts', 'inference', 'source']) {
     const invalid = structuredClone(selected),
       r = invalid.upgrades.requirements;

@@ -17,6 +17,10 @@ def _counts(claims):
     )
 
 
+def _source_key(source):
+    return tuple(source[k] for k in contracts._SOURCE_FIELDS)
+
+
 def _sources(claims, model=None):
     values = {}
     for c in claims:
@@ -25,7 +29,7 @@ def _sources(claims, model=None):
             for b in c["platform_bindings"]
             if b["source"] is not None and (model is None or b["model"] == model)
         ]:
-            values[tuple(source[k] for k in contracts._SOURCE_FIELDS)] = source
+            values[_source_key(source)] = source
     return [deepcopy(v) for _, v in sorted(values.items())]
 
 
@@ -42,7 +46,7 @@ def _by_source(claims, model):
         for b in c["platform_bindings"]:
             if b["model"] != model or b["basis"] == "unresolved" or b["source"] is None:
                 continue
-            key = tuple(b["source"][k] for k in contracts._SOURCE_FIELDS)
+            key = _source_key(b["source"])
             source, owned = groups.setdefault(key, (b["source"], {}))
             owned[c["claim_id"]] = c
     return [
@@ -191,13 +195,21 @@ def _check_selected(report, definition):
             or not cves.issuperset(row["cve_ids"])
         ):
             raise ValueError("Model coverage row ownership differs")
+        remaining_sources = {_source_key(source) for source in row["sources"]}
         for source in row["by_source"]:
+            key = _source_key(source["source"])
             owned = set(source["claim_ids"])
             counts(source, owned)
-            if not claims.issuperset(owned) or any(
-                source["counts"][key] > row["counts"][key] for key in ("advisories", "cves")
+            if (
+                key not in remaining_sources
+                or not claims.issuperset(owned)
+                or any(
+                    source["counts"][field] > row["counts"][field]
+                    for field in ("advisories", "cves")
+                )
             ):
                 raise ValueError("Model coverage source ownership differs")
+            remaining_sources.remove(key)
         bound.update(claims)
         advisories.update((row["vendor"], identifier) for identifier in row["advisory_ids"])
     for row in report["unresolved"]:

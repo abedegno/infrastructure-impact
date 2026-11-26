@@ -99,6 +99,18 @@ and an optional local fallback directory for the clearly nonactivatable candidat
 The complete preview needs no fallback directory. It refuses writes into input
 trees and checks catalog identity before measuring.
 
+The [public study contexts](2026-11-26-precomputed-analysis-contexts.json) are
+the exact 65,895-byte benchmark input. Verify their SHA-256 against the receipt
+before replaying the pair. Keep the Cisco warm entry in its original position
+immediately after the first Cisco request.
+
+```sh
+CONTEXTS=docs/research/2026-11-26-precomputed-analysis-contexts.json
+shasum -a 256 "$CONTEXTS"
+# Expected: 9e1e5eb5b4e0b18b6164dfa51da3fb2a2cc49d9ee386aa2b6414ea1bcb40286f
+node checks/benchmark_analysis_delivery.cjs "$WEB_DIR" "$V2_DIR" "$VARIANT" "$RECEIPT" "$CONTEXTS"
+```
+
 The [receipt](2026-11-26-precomputed-analysis-preview.json) retains exact outputs
 and measurements. Independent human evidence review remains pending. The existing
 caveat remains: counts describe disclosure and collection, not vendor quality;

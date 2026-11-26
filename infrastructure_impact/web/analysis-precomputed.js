@@ -654,7 +654,9 @@
       return ids;
     }
 
-    const bound = new Set(),
+    const sourceKey = (s) =>
+        JSON.stringify([s.source_url, s.source_sha256, s.retrieved_at, s.source_locator]),
+      bound = new Set(),
       unresolved = new Set(),
       advisories = new Set();
     for (const row of report.models) {
@@ -667,8 +669,10 @@
         row.cve_ids.some((id) => !effective.has(id))
       )
         fail('model coverage row ownership differs');
+      const remainingSources = new Set(row.sources.map(sourceKey));
       for (const source of row.by_source) {
         if (
+          !remainingSources.delete(sourceKey(source.source)) ||
           [...claimsIn(source)].some((id) => !ids.has(id)) ||
           source.counts.advisories > row.counts.advisories ||
           source.counts.cves > row.counts.cves

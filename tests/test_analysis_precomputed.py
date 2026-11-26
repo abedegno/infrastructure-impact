@@ -63,6 +63,99 @@ def test_view_candidate_native_export_order(tmp_path):
     assert analysis.csv_export(actual["upgrades"]) == analysis.csv_export(expected["upgrades"])
 
 
+def write_candidate(directory, compiled, option, report):
+    from infrastructure_impact.application import analysis_precomputed as precomputed
+
+    def write(path, raw):
+        target = directory / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+
+    view = precomputed.encode_view(report, option, write)
+    return precomputed.build_manifest(compiled, [view])
+
+
+def test_selected_native_enforces_ascii_output_cap_at_exact_boundary(tmp_path):
+    from infrastructure_impact import publication_codec as codec
+    from infrastructure_impact.application import analysis_precomputed as precomputed
+
+    compiled = numeric_source()
+    option = precomputed.DEFAULT_OPTION | {"vendor": "arista"}
+    study = analysis.selection_context(compiled, option)
+    report = analysis.select_report(compiled, study)
+    report["model_coverage"]["interpretation"] = "Authored ☃ and 🛰 text"
+    manifest = write_candidate(tmp_path, compiled, option, report)
+    wire_size = manifest["views"][0]["decoded"]["bytes"]
+    output_size = len(json.dumps(report, ensure_ascii=True, separators=(",", ":")))
+    assert wire_size < output_size - 1
+    assert precomputed.read_selected(tmp_path, manifest, study, output_size) == report
+    with pytest.raises(ValueError, match="decoded byte budget"):
+        codec.charge_value(report, codec.Budget(output_size - 1))
+    with pytest.raises(ValueError, match="decoded byte budget"):
+        precomputed.read_selected(tmp_path, manifest, study, output_size - 1)
+    with pytest.raises(ValueError, match="Selected analysis decoded byte budget"):
+        precomputed.read_selected(tmp_path, manifest, study, wire_size - 1)
+
+
+def test_benchmark_rejects_oversized_contexts_before_reading(tmp_path):
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is unavailable")
+    directory = tmp_path / "publication"
+    directory.mkdir()
+    contexts = tmp_path / "oversized.json"
+    with contexts.open("wb") as stream:
+        stream.truncate(2_000_001)
+    destination = tmp_path / "receipt.json"
+    # Fail if the harness attempts to read this file before checking its size.
+    guard = tmp_path / "guard.cjs"
+    guard.write_text(
+        """
+const fs = require('node:fs');
+const input = process.argv[6];
+const readFile = fs.readFileSync;
+const open = fs.openSync;
+const read = fs.readSync;
+let descriptor;
+fs.openSync = (path, ...options) => {
+  const handle = open(path, ...options);
+  if (path === input) descriptor = handle;
+  return handle;
+};
+fs.readFileSync = (path, ...options) => {
+  if (path === input || path === descriptor) throw Error('Unexpected context read');
+  return readFile(path, ...options);
+};
+fs.readSync = (handle, ...options) => {
+  if (handle === descriptor) throw Error('Unexpected context read');
+  return read(handle, ...options);
+};
+"""
+    )
+    result = subprocess.run(
+        [
+            node,
+            "--require",
+            guard,
+            "checks/benchmark_analysis_delivery.cjs",
+            "infrastructure_impact/web",
+            directory,
+            "baseline",
+            destination,
+            contexts,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 1
+    assert "Study contexts byte bound" in result.stderr, result.stderr
+    assert not destination.exists()
+
+
 def test_browser_precomputed_delivery(tmp_path):
     import shutil
     import subprocess
@@ -306,11 +399,79 @@ def add_unused_compact_reference(upgrades, kind):
     )
 
 
+def add_empty_disclosure_bundle(report):
+    pair = report["pairs"][0]
+    report["bundles"].append(
+        dict(
+            kind="explicit_publisher_bundle",
+            vendor=pair["vendor"],
+            family=pair["family"],
+            publisher_id="authored-bundle",
+            initial_published_at=None,
+            date_period="unknown",
+            member_advisory_ids=["authored-unselected"],
+            member_cve_ids=[],
+            selected_advisory_ids=[],
+            selected_cve_ids=[],
+            source=pair["source"],
+            upstream=None,
+        )
+    )
+
+
+def change_model_group(report, field):
+    row = next(m for m in report["models"] if m["by_source"])
+    group = row["by_source"][0]
+    if field == "duplicate":
+        row["by_source"].append(group)
+    else:
+        old = group["source"]
+        changed = {
+            "source_url": "https://example.org/authored-unowned",
+            "source_sha256": "1" * 64,
+            "retrieved_at": "2024-01-01T00:00:00Z",
+            "source_locator": "authored-unowned",
+        }
+        group["source"] = old | {field: changed[field]}
+
+
+def test_selected_native_allows_bound_model_without_source_group(tmp_path):
+    from test_analysis_delivery import rich_source
+
+    from infrastructure_impact.application import analysis_precomputed as precomputed
+
+    compiled = rich_source()
+    option = precomputed.DEFAULT_OPTION
+    study = analysis.selection_context(compiled, option)
+    report = analysis.select_report(compiled, study)
+    row = next(m for m in report["model_coverage"]["models"] if m["by_source"])
+    assert row["claim_ids"]
+    row["by_source"] = []
+    manifest = write_candidate(tmp_path, compiled, option, report)
+    assert precomputed.read_selected(tmp_path, manifest, study) == report
+
+
 @pytest.mark.parametrize(
     ("child", "mutate", "failure"),
     [
         ("disclosure", lambda d: d["coverage"].update(selected_affected_claims=999), "Disclosure"),
+        (
+            "disclosure",
+            lambda d: d["coverage"].update(unsupported_advisory_types=["unknown"]),
+            "Disclosure coverage",
+        ),
+        ("disclosure", add_empty_disclosure_bundle, "Disclosure.*bundle"),
         ("model_coverage", lambda d: d["models"][0]["counts"].update(claims=999), "Model"),
+        *(
+            ("model_coverage", lambda d, field=field: change_model_group(d, field), "Model.*source")
+            for field in (
+                "source_url",
+                "source_sha256",
+                "retrieved_at",
+                "source_locator",
+                "duplicate",
+            )
+        ),
         (
             "kev_reconciliation",
             lambda d: d["summary"].update(state_counts={"unknown": 999}),
@@ -345,12 +506,10 @@ def test_selected_native_rechecks_child_report_semantics(tmp_path, child, mutate
     report = analysis.select_report(compiled, study)
     mutate(report[child])
 
-    def write(path, raw):
-        target = tmp_path / path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(raw)
+    if failure in ("Disclosure coverage", "Disclosure.*bundle"):
+        from infrastructure_impact.application import switching_disclosure
 
-    view = precomputed.encode_view(report, option, write)
-    manifest = precomputed.build_manifest(compiled, [view])
+        switching_disclosure.validate_report(report[child])
+    manifest = write_candidate(tmp_path, compiled, option, report)
     with pytest.raises(ValueError, match=failure):
         precomputed.read_selected(tmp_path, manifest, study)
