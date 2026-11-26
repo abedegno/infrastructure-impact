@@ -1,5 +1,7 @@
 # Precomputed analysis preview
 
+The [four-view public-data replay](research/2026-11-26-precomputed-analysis-preview.md) found a useful loading improvement with exact exports. This remains a disabled local prototype. Whole-process memory including exports, real-browser behavior, default-view capacity and hosted historical inventory are separate activation gates.
+
 The v2 publication writers accept `analysis_precomputed_delivery=True` to build
 a local preview from a complete public switching-analysis projection. Both
 writers default to disabled. This preview is an alternative to the existing

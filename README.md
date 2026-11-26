@@ -310,6 +310,13 @@ See the [retained-source switching analysis run](docs/research/2026-11-14-switch
 for measured target coverage, unknown annual estimates, the separate complete-feed
 KEV audit and native/browser export parity.
 
+An opt-in [precomputed analysis preview](docs/ANALYSIS_PRECOMPUTED.md) prepares
+common vendor/year selections during publication. Eligible selections load their
+own bounded gzip parts; custom filters retain the compiled analysis path. The
+prototype preserves native and browser JSON and both CSV exports. It is disabled
+by default, with hosted activation and full default-view capacity separately gated.
+The [pinned public-data measurement](docs/research/2026-11-26-precomputed-analysis-preview.md) records the loading improvement and the remaining memory limitations.
+
 ### Release reliability coverage
 
 The switching comparison exposes [coverage gaps by model](docs/RELIABILITY_COVERAGE.md), with generation-bound JSON/CSV exports and an offline export command. Observed inventories distinguish original dates, research-only dates, unknown dates and unbound model scope; they do not establish complete release denominators or vendor quality. See the [dated coverage result](docs/research/2026-11-26-reliability-coverage-summary.md).

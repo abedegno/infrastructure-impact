@@ -2,6 +2,9 @@
 
 ## Unreleased — release reliability
 
+- Add a disabled precomputed-analysis prototype for common vendor/year selections, with independent bounded gzip parts, exact native/browser export parity and custom-selection fallback. Keep the original compiled root, native source-authority checks and existing budgets.
+- Preserve exact large integer tokens in browser analysis fingerprints and CSV cells; ordinary integer and fractional representations are unchanged.
+
 - Add a generation-bound release-reliability coverage view and offline JSON/CSV export, with per-model date/provenance gaps and bounded official-source follow-up. No hosted source activation or inferred release dates.
 
 - Add a local release-reliability refresh CLI for original Cisco ROMMON and Arista software RSS captures, with immutable cache revisions, policy-gated Cisco checks and separate candidate and pending-review outputs.
