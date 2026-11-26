@@ -296,9 +296,9 @@
     "legacy_root_descriptors_equal": true,
     "legacy_root_count": 1593,
     "file_count": 12620,
-    "regular_file_bytes": 913449110,
+    "regular_file_bytes": 913449606,
     "site_guard_bytes": 1000000000,
-    "site_headroom_bytes": 86550890,
+    "site_headroom_bytes": 86550394,
     "current_archive": {
       "unique_paths": 236,
       "unique_bytes_within_site": 132491725,
@@ -325,29 +325,29 @@
       "cisco-2025": {
         "bytes": 94924707,
         "sha256": "7a96491526096c620dae5030daea0cc51eca5e86ffd5bb52c534b34ff0912a1f",
-        "seconds": 8.698076499858871
+        "seconds": 7.885226416168734
       },
       "aruba-all": {
         "bytes": 3571916,
         "sha256": "edfc5f63e3d911217c8aa7b62a3e5028e383cbe895857262a992c576f5088a0a",
-        "seconds": 0.2528230419848114
+        "seconds": 0.23625750001519918
       },
       "arista-all": {
         "bytes": 2028217,
         "sha256": "0d6be334d3371af908d56ee19de8a3773a2a9305ea4baced911e60ca23c3ae6a",
-        "seconds": 0.13678937498480082
+        "seconds": 0.11583583289757371
       },
       "all-all": {
         "bytes": 119678881,
         "sha256": "7187ae7dba793fa8561ed781563443ab1a8a076ab4580c80afd420c95abcc61b",
-        "seconds": 11.430803749943152
+        "seconds": 9.561886708950624
       }
     },
     "manifest_verified": true,
     "source_dictionary_not_loaded": true,
-    "obsolete_assets_removed": 4,
-    "site_bytes": 913449110,
-    "headroom": 86550890
+    "obsolete_assets_removed": 1,
+    "site_bytes": 913449606,
+    "headroom": 86550394
   },
   "earlier_feasibility": {
     "baseline": {
@@ -592,5 +592,7 @@
     "Hosted historical extra-file inventory unverified.",
     "Peak memory includes export work, varies with GC; real-browser memory profiling remains required."
   ],
-  "evidence_human_review": "pending"
+  "evidence_human_review": "pending",
+  "final_validation_commit": "53fe0637602fe4a70a27b10588bbbe4e669e1075",
+  "final_validation_note": "Acceptance tightened after recorded timing run; final refreshed asset manifest and all four native JSON reads verified. Timing receipts remain the original measured code, 4ff6327."
 }

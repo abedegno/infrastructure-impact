@@ -12,7 +12,9 @@ The pinned public generation is `e05fc9e8e5ce404190173f4c3c037498`, generated
 `2026-11-26T08:22:06.194317+00:00`. Existing retained public projection parts were verified
 against their descriptor lengths and SHA-256 values. No new vendor collection or
 private evidence was used. Baseline web assets were pinned to main `26ccaef`;
-final reader code was `4ff6327`. The full record/evidence writer gate and native
+measured reader code was `4ff6327`. Final acceptance checks were tightened in
+`53fe063`; the refreshed asset manifest and all four native JSON reads passed
+again without changing the selected bytes. The timing run was not repeated. The full record/evidence writer gate and native
 verification ran on the unchanged wire format; final reader assets were refreshed.
 
 Two fresh Node `v22.23.1` processes on `darwin` ran sequentially with
@@ -68,7 +70,7 @@ Independent native projection verification passed in
 validation and the asset manifest were replayed after the review fixes.
 
 The current generated preview contains 12,620 files totaling
-913,449,110 bytes, leaving 86,550,890 bytes under
+913,449,606 bytes, leaving 86,550,394 bytes under
 the unchanged 1,000,000,000-byte site guard. Its current archive has
 236 unique referenced paths totaling
 132,491,725 bytes **within**, not in
