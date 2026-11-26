@@ -47,4 +47,19 @@ Focused tests cover exact selected JSON and both CSV exports against complete na
 
 No new dependencies or byte limits are introduced. Vendor splitting duplicates some metadata/history in the offline artifact and leaves the full legacy root in place. Each envelope and each selected export must still fit the existing 128 MB limit; the complete publication must fit its existing site budget. A vendor that exceeds the bound causes preview generation to fail. This change therefore does not remove the legacy All-vendor ceiling.
 
-The retained public-generation benchmark has not been rerun for this preview. Fixture parity and request-path tests establish correctness, not production speed or memory savings. A public-artifact benchmark and hosted-format review are required before activation.
+The accepted public generation `141c2f9dc8f04c12a795ac819e7b4c8e` passed a local native projection/export proof for all three vendors. The [sanitized receipt](research/2026-11-26-analysis-vendor-delivery-proof.json) records fingerprints, counts and measured logical sizes; no source records were copied into the receipt.
+
+| Delivery object | Logical bytes | Representative exact export comparison |
+| --- | ---: | --- |
+| Complete legacy report | 126,633,200 | Source authority for each comparison |
+| Cisco envelope | 122,781,333 | Cisco, 2025 |
+| Aruba envelope | 3,839,930 | Aruba, window `all` |
+| Arista envelope | 3,390,303 | Arista, window `all` |
+
+Logical sizes exclude the decoded file's trailing newline (the complete file is 126,633,201 bytes). Each vendor proof called `project_vendor`, validated the envelope against a freshly validated complete source with regenerated closure, and compared selected JSON structures and both CSV export bytes exactly. All three comparisons passed. Selected JSON fingerprints use the native canonical fingerprint; CSV hashes cover UTF-8 export bytes.
+
+Cisco is only about **3.04% smaller** than the complete report and remains the dominant delivery cost. All-vendor selection still loads the complete legacy root. This split therefore provides substantially smaller vendor objects for Aruba and Arista while leaving the main Cisco scaling problem unresolved.
+
+The recorded native proof elapsed times (Cisco 227.50 seconds, Aruba 44.99 seconds, Arista 42.85 seconds) include repeated full-source validation, projection/regeneration, both selections, export comparison and size measurement. They are neither browser latency measurements nor CPU-time measurements. No browser speed or memory guarantee follows from these results, and no additional speed benchmark was run.
+
+The complete retained-generation preview bundle, aggregate hosted/site budget, browser network/latency behavior and hosted-format activation review remain pending. The small fixture publication tests do not establish those gates. No hosted activation is authorized or performed by this proof.
