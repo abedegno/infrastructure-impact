@@ -1625,12 +1625,10 @@
       }
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
-    async function switchingAnalysis(study, options = {}) {
-      if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
-      const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
-        deliveryName = 'switching-analysis-delivery.json',
-        analysis = window.InfrastructureSwitchingAnalysis,
-        selectedRoot = 'switching-analysis-selected.json',
+    let analysisWorker,
+      analysisDisposed = false;
+    async function selectedAnalysis(study, format, options, max) {
+      const selectedRoot = 'switching-analysis-selected.json',
         precomputed = window.InfrastructureAnalysisPrecomputed;
       if (Object.hasOwn(catalog.roots, selectedRoot)) {
         if (!precomputed && study.selection.requested_cve_ids === null)
@@ -1657,6 +1655,19 @@
           const view = precomputed.matchView(manifest, accepted);
           if (view !== null) {
             if (view.decoded.bytes > max) fail('selected byte budget');
+            if (analysisDisposed) fail('analysis worker disposed');
+            if (typeof Worker === 'function') {
+              if (!window.InfrastructureAnalysisWorker)
+                fail('missing selected analysis worker client');
+              analysisWorker ??= window.InfrastructureAnalysisWorker.create(
+                identity,
+                (part, owner) => raw(part, { operation: owner }, true),
+                operation,
+                selectedMax,
+              );
+              return analysisWorker.request(view, accepted, format, max, options.operation);
+            }
+            if (format !== 'report') return null;
             const prepared = await sharedValue(
               'analysis:selected:' + manifest.views.indexOf(view),
               options,
@@ -1672,6 +1683,22 @@
           }
         }
       }
+      return null;
+    }
+    async function switchingAnalysisExport(study, format, options = {}) {
+      if (!['json', 'csv', 'upgrades-csv'].includes(format)) return null;
+      if (!options.operation)
+        return scoped(options, (next) => switchingAnalysisExport(study, format, next));
+      const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1));
+      return selectedAnalysis(study, format, options, max);
+    }
+    async function switchingAnalysis(study, options = {}) {
+      if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
+      const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
+        deliveryName = 'switching-analysis-delivery.json',
+        analysis = window.InfrastructureSwitchingAnalysis;
+      const preparedResult = await selectedAnalysis(study, 'report', options, max);
+      if (preparedResult !== null) return preparedResult;
       window.InfrastructureSwitchingContracts.identity(study, catalog);
       const requestedVendor = study.selection.requested_vendor;
       async function bounded(name, limit) {
@@ -1785,6 +1812,12 @@
       switchingReleaseHistory,
       releaseReliability,
       switchingAnalysis,
+      switchingAnalysisExport,
+      dispose() {
+        analysisDisposed = true;
+        analysisWorker?.dispose();
+        preparedSelected.clear();
+      },
       switchingSelection,
       switchingClaims,
       switchingDetails,

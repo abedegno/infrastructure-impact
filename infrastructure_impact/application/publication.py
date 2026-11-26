@@ -700,7 +700,7 @@ def write_reader_assets(
 ):
     v2_assets = ("publication-v2.js",) if publication_format == "v2" else ()
     if analysis_precomputed_delivery:
-        v2_assets += ("analysis-precomputed.js",)
+        v2_assets += ("analysis-precomputed.js", "analysis-worker-client.js")
     for name in (
         *v2_assets,
         "lossless-json.js",
@@ -734,14 +734,31 @@ def write_reader_assets(
             '<script defer src="/publication-v2.js"></script><script defer src="/delivery.js">',
         )
         html = html.replace("/snapshot.json.gz", "/snapshot-v2.json.gz")
+    # Immutable script/style paths avoid mixing cached readers across publications.
+    (destination / "assets").mkdir(exist_ok=True)
     if analysis_precomputed_delivery:
+        modules = (
+            "lossless-json",
+            "kev",
+            "switching-contracts",
+            "switching",
+            "customer-comparison",
+            "switching-analysis",
+            "publication-v2",
+            "analysis-precomputed",
+            "analysis-worker",
+        )
+        worker = b"const window = self;\n" + b"\n".join(
+            (PACKAGE / "web" / f"{name}.js").read_bytes() for name in modules
+        )
+        worker_name = sha256(worker).hexdigest() + ".js"
+        (destination / "assets" / worker_name).write_bytes(worker)
         html = html.replace(
             '<script defer src="/switching-analysis.js"></script>',
-            '<script defer src="/switching-analysis.js"></script><script defer src="/analysis-precomputed.js"></script>',
+            '<script defer src="/switching-analysis.js"></script>'
+            '<script defer src="/analysis-precomputed.js"></script>'
+            f'<script defer src="/analysis-worker-client.js" data-analysis-worker="{worker_name}"></script>',
         )
-    # Immutable script/style paths avoid mixing old cached readers with a new
-    # delivery contract. Root names remain available for existing integrations.
-    (destination / "assets").mkdir(exist_ok=True)
     for name in (
         *v2_assets,
         "lossless-json.js",

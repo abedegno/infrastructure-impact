@@ -1238,22 +1238,22 @@
     const fields = upgradesOnly
       ? upgradeFields
       : ['row_type', 'vendor', 'cve_id', 'year', 'event_count', 'payload'];
-    const sections = [['upgrade', [...detailedRows(report.upgrades)]]];
-    if (!upgradesOnly && report.availability === 'available')
-      sections.push(
-        ['disclosure', report.disclosure.pairs],
-        ['kev_reconciliation', report.kev_reconciliation.entries],
-        ['model_coverage', report.model_coverage.models],
-        ['release_history', report.release_history.releases],
-      );
-    const rows = sections.flatMap(([kind, values]) =>
-      values.map((v) =>
-        upgradesOnly
-          ? fields.map((k) => (v[k] !== null && typeof v[k] === 'object' ? csvJSON(v[k]) : v[k]))
-          : [kind, ...fields.slice(1, -1).map((k) => v[k]), csvJSON(v)],
-      ),
-    );
-    return S.csvTable(fields, rows, { max_bytes });
+    function* rows() {
+      const sections = [['upgrade', detailedRows(report.upgrades)]];
+      if (!upgradesOnly && report.availability === 'available')
+        sections.push(
+          ['disclosure', report.disclosure.pairs],
+          ['kev_reconciliation', report.kev_reconciliation.entries],
+          ['model_coverage', report.model_coverage.models],
+          ['release_history', report.release_history.releases],
+        );
+      for (const [kind, values] of sections)
+        for (const v of values)
+          yield upgradesOnly
+            ? fields.map((k) => (v[k] !== null && typeof v[k] === 'object' ? csvJSON(v[k]) : v[k]))
+            : [kind, ...fields.slice(1, -1).map((k) => v[k]), csvJSON(v)];
+    }
+    return S.csvTable(fields, rows(), { max_bytes });
   }
   window.InfrastructureSwitchingAnalysis = {
     validate,

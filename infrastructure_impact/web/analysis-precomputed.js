@@ -872,6 +872,19 @@
     limit(prepared.bytes, limit(max_bytes, MAX));
     return copy(prepared.value);
   }
+  function selectedValue(prepared, study, max_bytes) {
+    if (!verified.has(prepared)) fail('expected prepared report');
+    limit(prepared.bytes, limit(max_bytes, MAX));
+    study = captureStudy(study);
+    checkStudy(study);
+    C.identity(prepared.value, study);
+    if (
+      prepared.value.upgrades.observation_end !== study.observation_end ||
+      !eq(prepared.value.selection, study.selection)
+    )
+      fail('accepted cohort or cutoff differs');
+    return prepared.value;
+  }
   async function decodeSelected(
     view,
     study,
@@ -914,5 +927,6 @@
     prepareSelected,
     decodeSelected,
     copySelected,
+    selectedValue,
   };
 })();
