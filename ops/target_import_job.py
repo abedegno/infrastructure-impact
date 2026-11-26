@@ -72,6 +72,11 @@ def apply(args, selected, state, output, home, database, key, store, limit) -> N
                 vault_limit_bytes=limit,
                 **acquisition_options,
                 **(
+                    {"analysis_delivery_profile": args.analysis_delivery_profile}
+                    if getattr(args, "analysis_delivery_profile", "")
+                    else {}
+                ),
+                **(
                     {"switching_analysis_profile": args.switching_analysis_profile}
                     if getattr(args, "switching_analysis_profile", "")
                     else {}

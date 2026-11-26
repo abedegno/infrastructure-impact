@@ -336,11 +336,14 @@ def verify(
     *,
     publication_format="v1",
     switching_analysis_profile: str = "",
+    analysis_delivery_profile: str = "",
 ) -> dict:
     """Dispatch only the trusted installed module, with stage settings before imports."""
-    from .switching_analysis_profiles import hosted_profile
+    from .analysis_delivery_profiles import hosted_profiles
 
-    analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
+    analysis, delivery = hosted_profiles(
+        switching_analysis_profile, analysis_delivery_profile, publication_format=publication_format
+    )
     failure = _empty(publication_format=publication_format)
     try:
         database, public, home = _paths(database, public)
@@ -355,6 +358,8 @@ def verify(
             request.update(schema_version=2, publication_format="v2")
         if analysis is not None:
             request["switching_analysis_profile"] = analysis.identity()
+        if delivery is not None:
+            request["analysis_delivery_profile"] = delivery.identity()
         raw = (json.dumps(request, allow_nan=False) + "\n").encode()
         if len(raw) > MAX_CONTEXT:
             raise CapacityFailure("request size")
@@ -380,6 +385,11 @@ def verify(
                         *(
                             ["--switching-analysis-profile", switching_analysis_profile]
                             if analysis is not None
+                            else []
+                        ),
+                        *(
+                            ["--analysis-delivery-profile", analysis_delivery_profile]
+                            if delivery is not None
                             else []
                         ),
                     ],
@@ -852,16 +862,26 @@ def _analysis_identity(identity):
     return identity["profile_id"]
 
 
-def _worker(database, public, *, publication_format="v1", switching_analysis_profile: str = ""):
+def _worker(
+    database,
+    public,
+    *,
+    publication_format="v1",
+    switching_analysis_profile: str = "",
+    analysis_delivery_profile: str = "",
+):
+    from .analysis_delivery_profiles import hosted_profiles
+
+    analysis, delivery = hosted_profiles(
+        switching_analysis_profile, analysis_delivery_profile, publication_format=publication_format
+    )
     result = _empty("validation_failed", publication_format=publication_format)
     database, public, home = _paths(database, public)
     os.environ.clear()
     os.environ.update(_environment(database, public, home, base_path=_base_path(home)))
     try:
         from ..collection.target_import_profiles import from_manifest
-        from .switching_analysis_profiles import hosted_profile
 
-        analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
         request = _read_json(home / REQUEST, MAX_CONTEXT)
         if (
             set(request)
@@ -871,6 +891,7 @@ def _worker(database, public, *, publication_format="v1", switching_analysis_pro
                 "profile",
                 *({"publication_format"} if publication_format == "v2" else set()),
                 *({"switching_analysis_profile"} if analysis is not None else set()),
+                *({"analysis_delivery_profile"} if delivery is not None else set()),
             }
             or request["format"] != "impact-target-import-worker"
             or type(request["schema_version"]) is not int
@@ -892,6 +913,17 @@ def _worker(database, public, *, publication_format="v1", switching_analysis_pro
                     or identity != analysis.identity()
                 ):
                     raise ValueError("analysis expected selection mismatch")
+        if delivery is None:
+            if "analysis_delivery_profile" in context:
+                raise ValueError("unexpected delivery context")
+        elif any(
+            record.get("analysis_delivery_profile") != delivery.identity()
+            for record in (request, context)
+        ):
+            raise ValueError("analysis delivery expected selection mismatch")
+        delivery_options = (
+            {"analysis_delivery_profile": analysis_delivery_profile} if delivery is not None else {}
+        )
         analysis_id = switching_analysis_profile
         selected = from_manifest(request["profile"])
         _preserved(
@@ -924,6 +956,7 @@ def _worker(database, public, *, publication_format="v1", switching_analysis_pro
             public,
             **({"publication_format": "v2"} if publication_format == "v2" else {}),
             **(analysis.build_options() if analysis is not None else {}),
+            **delivery_options,
         )
         if publication_format == "v2":
             from .publication_v2 import inspect_bundle, native_parity
@@ -941,6 +974,7 @@ def _worker(database, public, *, publication_format="v1", switching_analysis_pro
                 home,
                 reader,
                 **({"switching_analysis_profile": analysis_id} if analysis_id else {}),
+                **delivery_options,
             )
         else:
             _parity(database, public, home, snapshot)
@@ -969,22 +1003,26 @@ def _worker(database, public, *, publication_format="v1", switching_analysis_pro
 
 def main():
     if (
-        len(sys.argv) not in (4, 5, 7)
+        len(sys.argv) not in (4, 5, 7, 9)
         or sys.argv[1] != "--worker"
         or (len(sys.argv) >= 5 and sys.argv[4] != "v2")
         or (
-            len(sys.argv) == 7
+            len(sys.argv) >= 7
             and (sys.argv[5] != "--switching-analysis-profile" or not sys.argv[6])
+        )
+        or (
+            len(sys.argv) == 9 and (sys.argv[7] != "--analysis-delivery-profile" or not sys.argv[8])
         )
     ):
         raise SystemExit("internal candidate worker only")
-    database, public, home = _paths(Path(sys.argv[2]), Path(sys.argv[3]))
+    database, public = Path(sys.argv[2]), Path(sys.argv[3])
     publication_format = "v2" if len(sys.argv) >= 5 else "v1"
-    switching_analysis_profile = sys.argv[6] if len(sys.argv) == 7 else ""
+    switching_analysis_profile = sys.argv[6] if len(sys.argv) >= 7 else ""
     result = validate_result(
         _worker(
             database,
             public,
+            **({"analysis_delivery_profile": sys.argv[8]} if len(sys.argv) == 9 else {}),
             **({"publication_format": "v2"} if publication_format == "v2" else {}),
             **(
                 {"switching_analysis_profile": switching_analysis_profile}
@@ -994,6 +1032,7 @@ def main():
         ),
         publication_format=publication_format,
     )
+    _, _, home = _paths(database, public)
     raw = (json.dumps(result, allow_nan=False) + "\n").encode()
     if len(raw) > MAX_RESULT:
         raise ValueError("worker result size")

@@ -472,7 +472,10 @@ def analysis_options(args):
     selected = hosted_profile(
         getattr(args, "switching_analysis_profile", ""), publication_format=args.publication_format
     )
-    return selected.build_options() if selected is not None else {}
+    options = selected.build_options() if selected is not None else {}
+    if getattr(args, "analysis_delivery_profile", ""):
+        options["analysis_delivery_profile"] = args.analysis_delivery_profile
+    return options
 
 
 def apply_maintenance(args, selected, state, output, home, database, key, store, limit):
@@ -614,6 +617,7 @@ def main():
     parser.add_argument("--base-path", default="/")
     parser.add_argument("--publication-format", choices=HOSTED_PUBLICATION_FORMATS, default="v1")
     parser.add_argument("--switching-analysis-profile", default="")
+    parser.add_argument("--analysis-delivery-profile", default="")
     parser.add_argument("--encrypted-state", action="store_true")
     parser.add_argument("--acquisition-cache", action="store_true")
     parser.add_argument("--backup-compression", choices=("xz", "gzip"), default="xz")
@@ -635,11 +639,13 @@ def main():
         "--schedule-utc", default="08:37", help="Declared daily schedule, HH:MM UTC"
     )
     args = parser.parse_args()
-    from infrastructure_impact.application.switching_analysis_profiles import hosted_profile
+    from infrastructure_impact.application.analysis_delivery_profiles import hosted_profiles
 
     try:
-        analysis = hosted_profile(
-            args.switching_analysis_profile, publication_format=args.publication_format
+        analysis, delivery = hosted_profiles(
+            args.switching_analysis_profile,
+            args.analysis_delivery_profile,
+            publication_format=args.publication_format,
         )
         if analysis is not None and (
             args.validate_encrypted_state or args.restore_only is not None
@@ -823,6 +829,11 @@ def main():
                         "Normalization maintenance could not acquire the writer lock"
                     )
             result = collect_once(
+                **(
+                    {"analysis_delivery_profile": args.analysis_delivery_profile}
+                    if delivery is not None
+                    else {}
+                ),
                 **(
                     {"switching_analysis_profile": args.switching_analysis_profile}
                     if args.switching_analysis_profile

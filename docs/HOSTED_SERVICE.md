@@ -52,6 +52,28 @@ the [rollout record](rollouts/2026-11-08-hosted-publication-v2.md) tracks the re
 and hosted acceptance separately. A successful local sample does not certify
 the complete hosted inventory.
 
+### Precomputed switching analysis views
+
+The collect workflow accepts `analysis_delivery_profile` on manual runs. A blank
+input uses `IMPACT_ANALYSIS_DELIVERY_PROFILE`. Leave both blank to omit precomputed
+views. The supported value, `campus-switching-common-views-v1`, publishes eight
+OS-family views covering all vendors, Cisco, Aruba and Arista. Each selection has
+an all-time window and a fixed calendar-year 2025 window with no CVE filter.
+
+Hosted use requires publication format v2 and the scientific profile
+`campus-switching-openvuln-2026-11-14-v1`. The workflow checks the pinned
+helper's capabilities and its installed profiles before private collection.
+Ordinary collection and maintenance apply build the selected views. Target-import
+apply also regenerates them independently from its staged database. Preview
+validates the selectors and produces its usual preview receipt.
+
+The hosted helper and `impact target-import stage` accept
+`--analysis-delivery-profile campus-switching-common-views-v1` alongside the
+format and scientific profile flags. Local `impact snapshot` accepts the same
+delivery flag with `--publication-format v2 --include-switching-analysis`.
+Clearing the repository delivery setting and leaving the manual input blank
+omits the views from the next publication.
+
 ## Encrypted backups and recovery
 
 The `publication-state` branch stores a recovery manifest and legacy encrypted

@@ -872,10 +872,17 @@ def publish(
     *,
     publication_format="v1",
     include_switching_analysis=False,
+    analysis_delivery_profile: str = "",
 ):
+    from .analysis_delivery_profiles import build_profile
     from .publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
+    delivery = build_profile(
+        analysis_delivery_profile,
+        publication_format=publication_format,
+        include_switching_analysis=include_switching_analysis,
+    )
     root = Path(root or Paths.from_env().publications)
     generations = root / "generations"
     generations.mkdir(parents=True, exist_ok=True)
@@ -899,7 +906,12 @@ def publish(
     )
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:
-        write_bundle(stage, data, publication_format=publication_format)
+        write_bundle(
+            stage,
+            data,
+            publication_format=publication_format,
+            **(delivery.build_options() if delivery is not None else {}),
+        )
         stage.chmod(0o755)  # The separate reader container mounts only this public directory.
         final = generations / generation
         stage.rename(final)
@@ -918,10 +930,17 @@ def build(
     publication_format="v1",
     include_switching_analysis=False,
     switching_analysis_input=None,
+    analysis_delivery_profile: str = "",
 ):
     """Publish from the evidence vault and export a static reader bundle."""
     from ..collection.config import load_config
+    from .analysis_delivery_profiles import build_profile
 
+    delivery = build_profile(
+        analysis_delivery_profile,
+        publication_format=publication_format,
+        include_switching_analysis=include_switching_analysis,
+    )
     if switching_analysis_input is not None and not include_switching_analysis:
         raise ValueError("Analysis source input requires explicit opt-in")
     paths = Paths.from_env()
@@ -942,6 +961,9 @@ def build(
         public_release_urls=public_urls,
         publication_format=publication_format,
         include_switching_analysis=include_switching_analysis,
+        **(
+            {"analysis_delivery_profile": analysis_delivery_profile} if delivery is not None else {}
+        ),
     )
     destination = Path(output or paths.snapshot)
     # Deployment archives need regular assets, not an external current symlink.

@@ -875,6 +875,11 @@ def inspect_bundle(directory, facts):
     return reader
 
 
+# Raw prototype callers can explicitly ask for observation-relative default views
+# with None. Hosted verification omits the raw option entirely.
+_NO_RAW_OPTIONS = object()
+
+
 @phase("publication.native_parity")
 def native_parity(
     database,
@@ -883,7 +888,8 @@ def native_parity(
     reader,
     *,
     switching_analysis_profile: str = "",
-    analysis_precomputed_options=None,
+    analysis_delivery_profile: str = "",
+    analysis_precomputed_options=_NO_RAW_OPTIONS,
 ):
     """Bind mandatory roots to independently queried sanitized native facts."""
     from contextlib import closing
@@ -891,13 +897,24 @@ def native_parity(
     from ..collection.config import load_config
     from ..exports import csv_export, switching_csv
     from ..storage.repository import connect
+    from .analysis_delivery_profiles import hosted_profiles
+    from .analysis_precomputed import ROOT as PRECOMPUTED_ROOT
     from .publication import public_projection
     from .query import state
-    from .switching_analysis_profiles import hosted_profile
     from .switching_comparison import VENDORS, _select_summaries, _selected_sources
     from .switching_row_sources import vendor_summary
 
-    analysis = hosted_profile(switching_analysis_profile, publication_format="v2")
+    analysis, delivery = hosted_profiles(
+        switching_analysis_profile, analysis_delivery_profile, publication_format="v2"
+    )
+    if delivery is not None:
+        if analysis_precomputed_options is not _NO_RAW_OPTIONS:
+            raise ValueError("Named analysis delivery conflicts with raw precomputed options")
+        analysis_precomputed_options = delivery.options()
+    elif analysis_precomputed_options is _NO_RAW_OPTIONS:
+        if PRECOMPUTED_ROOT in reader.catalog["roots"]:
+            raise ValueError("Unexpected selected analysis root for configured operator mode")
+        analysis_precomputed_options = None
     with closing(connect(database, read_only=True)) as db:
         native = state(db)
     if analysis is not None:

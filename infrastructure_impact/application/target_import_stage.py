@@ -26,7 +26,13 @@ class StageFailure(ValueError):
 
 
 def verify(
-    database, public, profile, *, publication_format="v1", switching_analysis_profile: str = ""
+    database,
+    public,
+    profile,
+    *,
+    publication_format="v1",
+    switching_analysis_profile: str = "",
+    analysis_delivery_profile: str = "",
 ):
     from .import_candidate import verify as verify_candidate
 
@@ -34,6 +40,11 @@ def verify(
         database,
         public,
         profile,
+        **(
+            {"analysis_delivery_profile": analysis_delivery_profile}
+            if analysis_delivery_profile != ""
+            else {}
+        ),
         **({"publication_format": "v2"} if publication_format == "v2" else {}),
         **(
             {"switching_analysis_profile": switching_analysis_profile}
@@ -348,6 +359,7 @@ def stage(
     base_path: str = "/",
     publication_format: str = "v1",
     switching_analysis_profile: str = "",
+    analysis_delivery_profile: str = "",
     capture_cache: Path | None = None,
     acquisition_checkpoint=None,
     vault_limit_bytes: int | None = None,
@@ -367,9 +379,11 @@ def stage(
         from ..recovery_policy import checked_limit
 
         checked_limit(vault_limit_bytes)
-    from .switching_analysis_profiles import hosted_profile
+    from .analysis_delivery_profiles import hosted_profiles
 
-    analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
+    analysis, delivery = hosted_profiles(
+        switching_analysis_profile, analysis_delivery_profile, publication_format=publication_format
+    )
     accepted = validate_preview(accepted_preview, profile)
     base_path = validate_base_path(base_path)
     result = _initial_result(profile, accepted)
@@ -476,6 +490,8 @@ def stage(
                     context.update(schema_version=2, publication_format="v2")
                     if analysis is not None:
                         context["switching_analysis_profile"] = analysis.identity()
+                    if delivery is not None:
+                        context["analysis_delivery_profile"] = delivery.identity()
                     validate(context, "target-import-context-v2.json")
                 (stage_home / "target-import-context.json").write_bytes(
                     canonical_json(context) + b"\n"
@@ -492,6 +508,11 @@ def stage(
                 staged,
                 output / "public",
                 profile,
+                **(
+                    {"analysis_delivery_profile": analysis_delivery_profile}
+                    if delivery is not None
+                    else {}
+                ),
                 **(
                     {"switching_analysis_profile": switching_analysis_profile}
                     if switching_analysis_profile
