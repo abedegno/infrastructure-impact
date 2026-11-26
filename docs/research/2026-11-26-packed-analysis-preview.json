@@ -113,7 +113,9 @@
         }
       },
       "generated_at": "2026-11-26T08:22:06.194317+00:00",
-      "peak_resident_bytes": 2353577984
+      "peak_resident_bytes": 2353577984,
+      "catalog_sha256": "c4079f97530d479fb365cc08694ce2c231878838ac29d9846d4dea60b87e2a59",
+      "catalog_analysis_roots": ["switching-analysis.json"]
     },
     "packed": {
       "mode": "packed",
@@ -190,7 +192,9 @@
         }
       },
       "generated_at": "2026-11-26T08:22:06.194317+00:00",
-      "peak_resident_bytes": 2463940608
+      "peak_resident_bytes": 2463940608,
+      "catalog_sha256": "56c2da61a978aa71cb009178b347008d5bcb360ab033f4a5f80a4aa2726b4fd9",
+      "catalog_analysis_roots": ["switching-analysis-packed.json", "switching-analysis.json"]
     },
     "exact_selected_json_and_both_csv_all_four_contexts": true
   },
@@ -216,13 +220,78 @@
     "peak_resident_bytes": 7168491520,
     "limitations": [
       "Reconstructed exclusively from authenticated public projection; no private DB or vault read.",
-      "A fresh complete writer output passed the site budget; no current accepted artifact ZIP was downloaded.",
+      "The site budget and headroom cover the fresh single-generation preview including its current archive. The accepted artifact ZIP inventory was unavailable. Aggregate hosted and retained publication history capacity remain unverified.",
       "Hosted format activation not authorized."
     ],
     "site_budget_bytes": 1000000000,
     "site_headroom_bytes": 28821101,
     "final_assets_refreshed": true,
-    "asset_manifest_verified": true
+    "asset_manifest_verified": true,
+    "current_archive": {
+      "included_in_site_total": true,
+      "scope": "snapshot-v1",
+      "dedicated_files": [
+        {
+          "path": "snapshot-v2.json",
+          "bytes": 62811420,
+          "sha256": "fa62e398806b46e714762348751100d640f142389f058a143c84ee154ce839e4"
+        },
+        {
+          "path": "snapshot-v2.json.gz",
+          "bytes": 6912824,
+          "sha256": "9c7255d117cec3736f7edee5171808630f8c4ec4b024acf62cdedce8346490cd"
+        },
+        {
+          "path": "data/v2/d342f1625f6d59fbdbe77b474108ce050dd93a75d919782c7eeb1cb5d201d758.json",
+          "sha256": "d342f1625f6d59fbdbe77b474108ce050dd93a75d919782c7eeb1cb5d201d758",
+          "bytes": 50011
+        }
+      ],
+      "dedicated_file_count": 3,
+      "dedicated_file_bytes": 69774255,
+      "shared_member_file_count": 233,
+      "shared_member_file_bytes": 62717470,
+      "shared_member_groups": {
+        "snapshot_root_descriptor": {
+          "file_count": 1,
+          "bytes": 50257
+        },
+        "snapshot_token_pages": {
+          "file_count": 196,
+          "bytes": 45620811
+        },
+        "snapshot_range_parts": {
+          "file_count": 1,
+          "bytes": 311217
+        },
+        "string_table_parts": {
+          "file_count": 33,
+          "bytes": 16498128
+        },
+        "shape_table_parts": {
+          "file_count": 1,
+          "bytes": 122159
+        },
+        "record_route_parts": {
+          "file_count": 1,
+          "bytes": 114898
+        }
+      },
+      "unique_archive_path_count": 236,
+      "unique_archive_path_bytes": 132491725,
+      "compressed_shared_dictionary_transports_outside_archive_membership": {
+        "included_in_site_total": true,
+        "file_count": 34,
+        "file_bytes": 2564552
+      }
+    },
+    "historical_archive_scope": {
+      "prior_generation_directories_copied": 0,
+      "prior_generation_extra_archive_files_copied": 0,
+      "accepted_artifact_zip_inventory_available": false,
+      "aggregate_hosted_capacity_verified": false,
+      "retained_publication_history_capacity_verified": false
+    }
   },
   "decision": "Keep packed delivery disabled. No meaningful cold latency benefit, higher traffic, slower warm selections and higher whole-process peak RSS. Cold preparation peak RSS is lower. Logical-size reduction is not a transfer or loading improvement.",
   "human_evidence_review": "pending"

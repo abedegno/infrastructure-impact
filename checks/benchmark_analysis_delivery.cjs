@@ -72,9 +72,21 @@ const timed = async (name, f) => {
 };
 (async () => {
   const index = parse('data/index.json'),
-    catalog = parse(index.publication_v2.path);
+    descriptor = index.publication_v2,
+    catalogBytes = read(descriptor.path),
+    catalogSha = sha(catalogBytes);
+  if (catalogBytes.length !== descriptor.bytes || catalogSha !== descriptor.sha256)
+    throw Error('Catalog descriptor fingerprint or size mismatch');
+  const catalog = J.parseStrict(catalogBytes.toString('utf8')),
+    packed = Object.hasOwn(catalog.roots, 'switching-analysis-packed.json');
+  if ((mode === 'baseline' && packed) || (mode === 'packed' && !packed))
+    throw Error('Catalog analysis roots do not match the requested ' + mode + ' variant');
   result.publication = index.publication;
   result.generated_at = index.generated_at;
+  result.catalog_sha256 = catalogSha;
+  result.catalog_analysis_roots = Object.keys(catalog.roots)
+    .filter((name) => name === 'switching-analysis.json' || name.startsWith('switching-analysis-'))
+    .sort();
   const reader = await timed('open', () => InfrastructurePublicationV2.open(fetch, catalog, index));
   if (fs.statSync(contexts).size > 2000000) throw Error('Study contexts byte bound');
   const studies = J.parseStrict(fs.readFileSync(contexts, 'utf8'));

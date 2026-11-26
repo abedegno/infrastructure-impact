@@ -59,12 +59,35 @@ logical value therefore did not yield a useful loading improvement.
   251.41 seconds. All 1,593 legacy root descriptors stayed identical.
 - After refreshing the reviewed browser assets, all asset-manifest fingerprints
   matched. The preview contains 12,817 files totaling
-  971,178,899 bytes. Headroom is
-  28,821,101 bytes under the unchanged 1,000,000,000-byte
+  971,178,899 bytes, including the generated archive for this publication.
+  Headroom is 28,821,101 bytes under the unchanged 1,000,000,000-byte
   site guard. Retaining both roots increases site storage.
 - Source identity, limits, lexical validation, independent cancellation and retry
   regressions passed scoped review after one consolidated fix round. No hosted
   activation, permissions, schedule, secrets or collection settings changed.
+
+## Archive and capacity scope
+
+| Current-generation archive component   | Physical files |           Bytes |
+| -------------------------------------- | -------------: | --------------: |
+| Expanded `snapshot-v2.json`            |              1 |      62,811,420 |
+| Compressed `snapshot-v2.json.gz`       |              1 |       6,912,824 |
+| Archive manifest                       |              1 |          50,011 |
+| Shared v2 member paths                 |            233 |      62,717,470 |
+| **Unique paths within the site total** |        **236** | **132,491,725** |
+
+The archive manifest shares the snapshot root, 196 token pages, one range
+part, 33 string table parts, one shape table part and one record route part
+with the site. The expanded and compressed download files are separate
+physical files. Each shared member path is counted once in the site total.
+The site's 34 compressed transports for these dictionary parts account for
+another 2,564,552 bytes outside the archive manifest's membership.
+
+The preview copied zero historical publication-generation directories or
+extra archive files. The accepted artifact ZIP inventory was unavailable,
+so the measured headroom applies to the fresh single-generation preview.
+Capacity for the aggregate hosted artifact and retained publication history
+remains unverified.
 
 ## Reproduction and next work
 
@@ -72,7 +95,10 @@ The [measurement harness](../../checks/benchmark_analysis_delivery.cjs) takes a
 web asset directory, a verified public v2 directory, a label, a new receipt path,
 and a JSON map of accepted study contexts. Run each variant in a fresh process
 with the same source generation and contexts. Its output is metadata and export
-fingerprints. It refuses to overwrite a file or write into an input directory.
+fingerprints. Use `baseline` for a catalog without the packed root and
+`packed` for a catalog with it. The helper verifies the catalog descriptor,
+records its SHA-256 and advertised analysis roots, and rejects a mismatched
+variant. It refuses to overwrite a file or write into an input directory.
 
 ```sh
 TZ=UTC node checks/benchmark_analysis_delivery.cjs WEB PUBLICATION LABEL NEW_RECEIPT CONTEXTS
