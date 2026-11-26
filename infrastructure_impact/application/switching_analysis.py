@@ -25,7 +25,7 @@ def _component_formats():
 
 
 @lru_cache(maxsize=len(_SCHEMA["$defs"]) + 1)
-def _compiled_shape(definition, check_formats):
+def _compiled_shape(definition, check_formats=False):
     """Use the component validators' format semantics at selected delivery acceptance."""
     import jsonschema_rs
 
