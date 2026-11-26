@@ -34,14 +34,25 @@ performance claims. No vendor requests, private evidence or live collection were
 A separate real CLI run then cleared the selector while reusing the selected
 output directory. It removed 171 obsolete files, left 266 current files, and
 passed exact physical inventory, capacity and fresh native verification. Managed
-exports are staged and replaced; modified or unmanaged destinations are rejected
-safely rather than overlaid. The covering snapshot/hosted/architecture regression
-run passed 137 tests and 12 subtests after this fix. The earlier 14-module
+contents are staged and refreshed without replacing the destination directory,
+preserving held working directories and mounted outputs. Modified or unmanaged
+destinations are rejected safely rather than overlaid. The covering
+snapshot/hosted/architecture regression run passed 139 tests and 12 subtests
+after the directory-identity fix. The earlier 14-module
 profile/operator regression run passed 536 tests.
 
 The profile never establishes release-denominator completeness or vendor quality.
 Existing unknowns and independent human review pending remain unchanged. The
 previous cold-time regression and low-memory/browser limitations still apply.
+
+Existing nonempty exports must match a retained local generation. Use a fresh
+output directory if that prior generation is unavailable or the export was
+modified. Refresh needs temporary space on the output filesystem; forced
+termination can leave scratch data for recovery. Readers of the export directory
+may observe a transition between manifests. The separately served generation
+and its atomic `current` pointer retain their existing behavior. Mounted-output
+coverage uses a simulated mount plus real held-directory and `--output .` checks;
+no privileged mount or live deployment was performed.
 
 ## Proposed activation, not applied
 

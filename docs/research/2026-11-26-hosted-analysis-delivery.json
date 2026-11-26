@@ -73,6 +73,7 @@
     "inspection": "passed exact physical manifest inventory and capacity",
     "fresh_native_verification": "passed",
     "delivery_root": "absent",
+    "directory_identity_preserved": true,
     "previous_only_files_removed": 171,
     "current_files": 266,
     "private_inputs": false,
