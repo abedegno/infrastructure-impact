@@ -287,3 +287,136 @@ def test_isolated_cli_rejects_delivery_before_opening_candidate(monkeypatch, suf
     monkeypatch.setattr(import_candidate, "_paths", forbidden)
     with pytest.raises((SystemExit, ValueError)):
         import_candidate.main()
+
+
+def test_snapshot_refresh_removes_previous_selected_assets(recovery, tmp_path, monkeypatch):
+    from infrastructure_impact.application.publication_v2 import inspect_bundle
+    from infrastructure_impact.cli import main
+
+    _, database, _, _ = recovery
+    monkeypatch.setenv("IMPACT_DATABASE", str(database))
+    monkeypatch.setenv("IMPACT_BASE_PATH", "/")
+    output = tmp_path / "reused"
+    args = [
+        "snapshot",
+        "--output",
+        str(output),
+        "--publication-format",
+        "v2",
+        "--include-switching-analysis",
+    ]
+    main([*args, "--analysis-delivery-profile", DELIVERY])
+    initial = inspect_bundle(output, {})
+    selected_gzip = {
+        part["part"]["path"]
+        for view in initial._precomputed_manifest()["views"]
+        for part in view["chunks"]
+    }
+    assert len(selected_gzip) >= 1
+    main(args)
+    facts = {}
+    final = inspect_bundle(output, facts)
+    assert analysis_precomputed.ROOT not in final.catalog["roots"]
+    assert all(not (output / path).exists() for path in selected_gzip)
+    assert facts["public_bytes"] == sum(p.stat().st_size for p in output.rglob("*") if p.is_file())
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        "unmanaged",
+        "edited",
+        "forged",
+        "extra_directory",
+        "symlink",
+        "destination_link",
+        "parent_link",
+    ],
+)
+def test_snapshot_refresh_preserves_unmanaged_entries(recovery, tmp_path, monkeypatch, extra):
+    from infrastructure_impact.cli import main
+
+    _, database, _, _ = recovery
+    monkeypatch.setenv("IMPACT_DATABASE", str(database))
+    monkeypatch.setenv("IMPACT_BASE_PATH", "/")
+    output = tmp_path / "exports/public"
+
+    def build(target):
+        main(["snapshot", "--output", str(target), "--publication-format", "v2"])
+
+    build(output)
+    sentinel = tmp_path / "keep"
+    sentinel.write_text("keep")
+    target = output
+    if extra == "unmanaged":
+        (output / "owner.txt").write_text("keep")
+    elif extra == "forged":
+        from hashlib import sha256
+
+        (output / "owner.txt").write_text("keep")
+        manifest = json.loads((output / "manifest.json").read_bytes())
+        manifest["sha256"]["owner.txt"] = sha256(b"keep").hexdigest()
+        (output / "manifest.json").write_text(json.dumps(manifest))
+    elif extra == "edited":
+        (output / "index.html").write_text("keep")
+    elif extra == "extra_directory":
+        (output / "owner").mkdir()
+    elif extra == "symlink":
+        (output / "index.html").unlink()
+        (output / "index.html").symlink_to(sentinel)
+    elif extra == "destination_link":
+        target = tmp_path / "output-link"
+        target.symlink_to(output, target_is_directory=True)
+    else:
+        link = tmp_path / "parent-link"
+        link.symlink_to(output.parent, target_is_directory=True)
+        target = link / output.name
+    original = (output / "manifest.json").read_bytes()
+    with pytest.raises(ValueError, match="snapshot"):
+        build(target)
+    assert (output / "manifest.json").read_bytes() == original
+    assert sentinel.read_text() == "keep"
+    if extra in ("unmanaged", "forged"):
+        assert (output / "owner.txt").read_text() == "keep"
+    elif extra == "extra_directory":
+        assert (output / "owner").is_dir()
+    elif extra == "edited":
+        assert (output / "index.html").read_text() == "keep"
+    elif extra == "symlink":
+        assert (output / "index.html").is_symlink()
+
+
+@pytest.mark.parametrize("failure", ["replace", "concurrent_edit"])
+def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatch, failure):
+    from hashlib import sha256
+
+    old, new = (tmp_path / "generations" / (char * 32) for char in "ab")
+    for path in (old, new):
+        path.mkdir(parents=True)
+        (path / "index.html").write_text(path.name)
+        (path / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "generation": path.name,
+                    "sha256": {"index.html": sha256(path.name.encode()).hexdigest()},
+                }
+            )
+        )
+    destination = tmp_path / "snapshot"
+    publication._export_generation(old, destination)
+    rename = Path.rename
+
+    def interrupted(source, target):
+        if failure == "replace" and source.name == "new" and target == destination:
+            raise OSError("simulated failed rename")
+        if failure == "concurrent_edit" and source == destination:
+            (source / "owner.txt").write_text("keep")
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", interrupted)
+    with pytest.raises((ValueError, OSError), match="changed|simulated"):
+        publication._export_generation(new, destination)
+    assert (destination / "index.html").read_text() == old.name
+    assert not list(tmp_path.glob(".previous-snapshot-*"))
+    if failure == "concurrent_edit":
+        assert (destination / "owner.txt").read_text() == "keep"

@@ -1,14 +1,16 @@
 """Validated, immutable public generations with an atomic current pointer."""
 
+import fcntl
 import gzip
 import io
 import json
 import os
 import re
 import shutil
+import stat
 import tempfile
 from contextlib import closing
-from hashlib import sha256
+from hashlib import file_digest, sha256
 from pathlib import Path
 from uuid import uuid4
 
@@ -924,6 +926,95 @@ def publish(
     return final
 
 
+def _snapshot_entries(directory):
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("Unsafe snapshot destination")
+    entries = {}
+    pending = [directory]
+    while pending:
+        for path in pending.pop().iterdir():
+            info = path.lstat()
+            if stat.S_ISDIR(info.st_mode):
+                pending.append(path)
+            elif not stat.S_ISREG(info.st_mode):
+                raise ValueError("Unsafe entry in snapshot destination")
+            entries[path.relative_to(directory)] = (info.st_dev, info.st_ino, info.st_ctime_ns)
+    return entries
+
+
+def _validate_previous_export(directory, generations):
+    """Only retire an unmodified export of a generation retained by this publisher."""
+    from ..publication_codec import strict_loads
+    from .publication_v2 import INDEX
+
+    entries = _snapshot_entries(directory)
+    if not entries:
+        return entries
+    manifest = directory / "manifest.json"
+    if manifest.is_symlink() or not manifest.is_file():
+        raise ValueError("Unmanaged snapshot destination")
+    with os.fdopen(os.open(manifest, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+        raw = stream.read(INDEX + 1)
+    receipt = strict_loads(raw, max_bytes=INDEX)
+    identifier = receipt.get("generation") if isinstance(receipt, dict) else None
+    if not isinstance(identifier, str) or not re.fullmatch(r"[0-9a-f]{32}", identifier):
+        raise ValueError("Unknown snapshot generation")
+    original = generations / identifier / "manifest.json"
+    if (
+        original.parent.is_symlink()
+        or original.is_symlink()
+        or not original.is_file()
+        or original.read_bytes() != raw
+    ):
+        raise ValueError("Unknown snapshot manifest")
+
+    expected = {**receipt["sha256"], "manifest.json": sha256(raw).hexdigest()}
+    directories = {parent for name in expected for parent in Path(name).parents}
+    for relative in entries:
+        path = directory / relative
+        if path.is_dir() and relative in directories:
+            continue
+        digest = expected.pop(str(relative), None)
+        if digest is None or not path.is_file():
+            raise ValueError("Unmanaged entry in snapshot destination")
+        with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+            if file_digest(stream, "sha256").hexdigest() != digest:
+                raise ValueError("Modified file in snapshot destination")
+    if expected:
+        raise ValueError("Incomplete snapshot destination")
+    return entries
+
+
+def _export_generation(generation, destination):
+    """Stage a regular directory and replace the entire previous managed export."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".snapshot-", dir=destination.parent) as directory:
+        staged = Path(directory) / "new"
+        shutil.copytree(generation, staged)
+        # Use the containing directory as a lock without adding a public lock file.
+        parent_fd = os.open(destination.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            fcntl.flock(parent_fd, fcntl.LOCK_EX)
+            if not destination.exists() and not destination.is_symlink():
+                staged.rename(destination)
+                return
+            entries = _validate_previous_export(destination, generation.parent)
+            # Keep the old tree outside temporary cleanup in case rollback fails.
+            previous = destination.parent / (".previous-snapshot-" + uuid4().hex)
+            destination.rename(previous)
+            try:
+                if _snapshot_entries(previous) != entries:
+                    raise ValueError("Snapshot destination changed during export")
+                staged.rename(destination)
+            except BaseException:
+                if not destination.exists() and not destination.is_symlink():
+                    previous.rename(destination)
+                raise
+            shutil.rmtree(previous)
+        finally:
+            os.close(parent_fd)
+
+
 def build(
     output=None,
     *,
@@ -944,6 +1035,14 @@ def build(
     if switching_analysis_input is not None and not include_switching_analysis:
         raise ValueError("Analysis source input requires explicit opt-in")
     paths = Paths.from_env()
+    destination = Path(output or paths.snapshot)
+    absolute = destination.absolute()
+    if any(p.is_symlink() for p in (absolute, *absolute.parents)):
+        raise ValueError("Unsafe snapshot destination")
+    resolved = destination.resolve()
+    publications = paths.publications.resolve()
+    if resolved.is_relative_to(publications) or publications.is_relative_to(resolved):
+        raise ValueError("Snapshot destination overlaps publication storage")
     with closing(connect(read_only=True)) as db:
         data = state(db)
         data["coverage"] = coverage(
@@ -965,10 +1064,7 @@ def build(
             {"analysis_delivery_profile": analysis_delivery_profile} if delivery is not None else {}
         ),
     )
-    destination = Path(output or paths.snapshot)
-    # Deployment archives need regular assets, not an external current symlink.
-    destination.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(generation, destination, dirs_exist_ok=True)
+    _export_generation(generation, resolved)
     print(
         json.dumps(
             {
