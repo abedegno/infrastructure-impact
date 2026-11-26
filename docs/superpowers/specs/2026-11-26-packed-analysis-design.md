@@ -14,11 +14,11 @@ a separate approval.
 Add one opt-in `switching-analysis-packed.json` root containing the complete
 analysis. Store the three repeated tables (claims, requirement members and
 requirement rows) as layout IDs and pooled value IDs. Pool values are compact JSON
-literal strings: this preserves number types/spelling and nested object key order
+literal text, stored as bounded chunk arrays per pooled value: this preserves number types/spelling and nested object key order
 for native roundtrips. Preserve every row, key, optional field and ordering. A
-small `skeleton_json` string preserves the remaining source exactly, with null
+`skeleton_json` array of bounded text chunks preserves the remaining source exactly, with null
 placeholders at the three fixed table paths. This is lossless encoding, not
-removing years/trains or changing eligibility.
+removing years/trains or changing eligibility. Chunks stay within the existing 8 MB v2 atom limit; aggregate encoded and expanded sizes are checked before joining or allocating rows. No new arbitrary row-count ceiling is introduced.
 
 Envelope fields: schema_version=1, representation='packed-analysis', publication,
 generated_at, definition_sha256, observation_end, source_content_sha256,
@@ -32,7 +32,7 @@ uses the existing canonical fingerprint convention, excluding content_sha256.
 The decoder checks closed shape, integrity, identity, fixed placeholder paths,
 row counts, layouts/IDs, duplicate keys and bounded expansion before allocating
 row objects. Preserve native/JS requested-byte ceilings as well as declared source
-size; cap cardinalities by existing compiled-schema limits. Reject malformed JSON,
+size; use existing compiled-schema cardinality limits where present and byte-derived bounds elsewhere. Reject malformed JSON,
 nonfinite/unsafe IDs, accessors, expansion bombs and mixed cutoffs. Then run the
 existing complete compiled-analysis schema and semantic validator, including the
 original source fingerprint. Native inspection returns independently owned data;

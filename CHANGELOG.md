@@ -2,6 +2,9 @@
 
 ## Unreleased — release reliability
 
+- Add an opt-in lossless packed-analysis preview and native/browser round-trip, export-parity and lifecycle checks. Retain the original analysis root, public validation boundaries and existing byte limits; hosted activation remains separate.
+- Prepare a public vendor evidence-request packet and empty export templates for release-date, platform-support and notice-archive coverage gaps. No vendor contact or new evidence promotion.
+
 - Add a generation-bound release-reliability coverage view and offline JSON/CSV export, with per-model date/provenance gaps and bounded official-source follow-up. No hosted source activation or inferred release dates.
 
 - Add a local release-reliability refresh CLI for original Cisco ROMMON and Arista software RSS captures, with immutable cache revisions, policy-gated Cisco checks and separate candidate and pending-review outputs.
