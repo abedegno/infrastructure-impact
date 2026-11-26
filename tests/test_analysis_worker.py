@@ -29,7 +29,8 @@ def test_worker_asset_binding(tmp_path, monkeypatch, base):
     name = re.search(r'data-analysis-worker="([a-f0-9]{64}\.js)"', tag[0])[1]
     bundle = tmp_path / "assets" / name
     assert sha256(bundle.read_bytes()).hexdigest() + ".js" == name
-    subprocess.run(["node", "--check", bundle], check=True)
+    if node := shutil.which("node"):
+        subprocess.run([node, "--check", bundle], check=True)
 
 
 def test_worker_reader_and_exports(tmp_path):

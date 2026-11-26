@@ -843,6 +843,7 @@ async function loadSwitching(options = {}) {
       )
         throw Error('Mixed publication generations');
     }
+    const previousDeliveries = new Set([switchingAcceptedDelivery, customerAcceptedDelivery]);
     switchingReport = accepted;
     if (customer) {
       customerReport = envelope;
@@ -851,6 +852,12 @@ async function loadSwitching(options = {}) {
     }
     delivery.factCatalog = loader.factCatalog;
     switchingAcceptedDelivery = delivery;
+    for (const prior of previousDeliveries)
+      if (prior && prior !== delivery && prior !== customerAcceptedDelivery)
+        prior.promise.then(
+          (reader) => reader.retireAnalysisWorker?.(),
+          () => {},
+        );
     switchingLoading = false;
   } catch (error) {
     if (sequence !== switchingSequence) return;

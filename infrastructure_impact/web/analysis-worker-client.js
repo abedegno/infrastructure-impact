@@ -13,6 +13,7 @@
       retained,
       draining = false,
       disposed = false,
+      retired = false,
       idleTimer,
       sequence = 0;
 
@@ -49,7 +50,8 @@
             const part = rpc.view.chunks[rpc.next++].part,
               bytes = await load(part, rpc.owner);
             if (instance !== worker || pending !== rpc) return;
-            const owned = bytes.slice();
+            // A transferred copy leaves the authenticated raw LRU entry intact.
+            const owned = new Uint8Array(bytes);
             rpc.loading = false;
             instance.postMessage(
               {
@@ -75,6 +77,21 @@
             (rpc.view && rpc.next !== rpc.view.chunks.length)
           )
             throw Error('Invalid analysis worker reply');
+          if (rpc.expect === 'result') {
+            if (rpc.format === 'report') {
+              if (
+                !data.value?.selection ||
+                data.value.publication?.id !== identity.publication?.id ||
+                data.value.generated_at !== identity.generated_at
+              )
+                throw Error('Analysis worker returned an invalid selected result');
+            } else if (
+              Object.prototype.toString.call(data.value) !== '[object Uint8Array]' ||
+              !data.value.byteLength ||
+              data.value.byteLength > rpc.max
+            )
+              throw Error('Analysis worker returned invalid export bytes');
+          }
           pending = null;
           rpc.resolve(data.value);
         } catch (error) {
@@ -93,6 +110,8 @@
             key,
             owner: group.owner,
             view: fields.view,
+            format: fields.format,
+            max: fields.max,
             next: 0,
             expect: type === 'prepare' ? 'ready' : 'result',
             resolve,
@@ -146,7 +165,8 @@
         }
       } finally {
         draining = false;
-        if (worker) idleTimer = setTimeout(() => stop(), 60000);
+        if (retired) stop();
+        else if (worker) idleTimer = setTimeout(() => stop(), 60000);
       }
     }
     async function request(view, study, format, max, op) {
@@ -185,7 +205,11 @@
         group.callers.clear();
       }
     }
-    return { request, dispose };
+    function retire() {
+      retired = true;
+      if (!draining) stop();
+    }
+    return { request, dispose, retire };
   }
   window.InfrastructureAnalysisWorker = { create };
 })();

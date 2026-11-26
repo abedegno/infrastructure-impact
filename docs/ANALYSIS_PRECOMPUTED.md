@@ -71,3 +71,34 @@ unavailable. An advertised eligible view with corrupt content raises an error.
 The browser retains one prepared view and returns a mutable copy per caller.
 Native JSON retains native key order. The browser uses the compiled reader's
 facts-map order for exact JSON downloads and preserves both CSV exports.
+
+## Browser worker and downloads
+
+The preview writer builds a standalone classic worker from the packaged browser
+reader and validators. The preview page pins its SHA-256 filename on the client
+script. The worker loads from the same immutable assets directory under the
+publication's base path. Serve these files with the publication.
+
+`await reader.switchingAnalysis(study, options)` returns a complete mutable
+selected report. For an advertised view, the worker authenticates, decodes and
+validates the report, and the browser delivers an independent structured clone.
+`await reader.switchingAnalysisExport(study, format, options)` returns a fresh
+UTF-8 `Uint8Array` for `json`, `csv` or `upgrades-csv`. It returns `null` for
+an unsupported format or route. A configured worker failure or corrupt view
+rejects the operation. A subsequent call can retry. The controls use the
+accepted study and publication from the clicked panel.
+
+Both methods accept `max_bytes`, `signal` and `deadline` (milliseconds since
+the Unix epoch). The selected report and each encoded download must fit the
+applicable byte cap. Physical requests use the reader's existing cache and
+six-request pool. Consecutive callers for the same view share preparation.
+Cancelling one caller leaves interested callers running. Different views
+queue, and the worker keeps one prepared report. Each delivered report and any
+download held by a caller contribute additional browser memory.
+
+Without Web Worker support an eligible read uses the original in-page selected
+reader, and the UI encodes its accepted report for download. The worker releases
+its prepared report after 60 seconds idle. The application retires the old
+reader when an accepted publication is replaced, allowing outstanding exports
+to finish. A caller closing a reader can use `reader.dispose()` to terminate
+its analysis worker and cancel outstanding worker requests immediately.

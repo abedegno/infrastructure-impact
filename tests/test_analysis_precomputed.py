@@ -222,7 +222,10 @@ def test_public_writer_preview_keeps_legacy_descriptors_and_checks_native_member
     publication.write_bundle(tmp_path / "ordinary", public, publication_format="v2")
     ordinary = PublicationReader(tmp_path / "ordinary")
     assert precomputed.ROOT not in ordinary.catalog["roots"]
-    assert not (tmp_path / "ordinary" / "analysis-precomputed.js").exists()
+    ordinary_out = tmp_path / "ordinary"
+    assert not (ordinary_out / "analysis-precomputed.js").exists()
+    assert not (ordinary_out / "analysis-worker-client.js").exists()
+    assert "data-analysis-worker" not in (ordinary_out / "index.html").read_text()
     options = [{"vendor": "cisco"}, {"vendor": "aruba", "window": "2025"}]
     out = tmp_path / "preview"
     publication_v2.write_bundle(

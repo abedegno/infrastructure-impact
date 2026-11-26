@@ -72,6 +72,8 @@ def main():
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
     check_switching_analysis_profile(package)
+    for worker_source in ("analysis-worker.js", "analysis-worker-client.js"):
+        assert (package / "web" / worker_source).is_file(), worker_source
     for name, digest in json.loads(
         os.environ.get("IMPACT_EXPECTED_PUBLIC_RESOURCES", "{}")
     ).items():

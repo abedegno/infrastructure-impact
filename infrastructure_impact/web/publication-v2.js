@@ -1626,7 +1626,8 @@
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
     let analysisWorker,
-      analysisDisposed = false;
+      analysisDisposed = false,
+      analysisRetired = false;
     async function selectedAnalysis(study, format, options, max) {
       const selectedRoot = 'switching-analysis-selected.json',
         precomputed = window.InfrastructureAnalysisPrecomputed;
@@ -1665,6 +1666,7 @@
                 operation,
                 selectedMax,
               );
+              if (analysisRetired) analysisWorker.retire();
               return analysisWorker.request(view, accepted, format, max, options.operation);
             }
             if (format !== 'report') return null;
@@ -1813,6 +1815,10 @@
       releaseReliability,
       switchingAnalysis,
       switchingAnalysisExport,
+      retireAnalysisWorker() {
+        analysisRetired = true;
+        analysisWorker?.retire();
+      },
       dispose() {
         analysisDisposed = true;
         analysisWorker?.dispose();

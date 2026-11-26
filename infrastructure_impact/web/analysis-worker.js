@@ -17,7 +17,11 @@
         resolve(data.bytes);
         return;
       }
+      if (generation !== JSON.stringify([data.study.publication?.id, data.study.generated_at]))
+        throw Error('Analysis worker study generation differs');
       if (type === 'prepare') {
+        if (key !== data.view.decoded.sha256)
+          throw Error('Analysis worker view fingerprint differs');
         prepared = null;
         selectedKey = null;
         let index = 0;

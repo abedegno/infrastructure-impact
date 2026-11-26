@@ -23,6 +23,7 @@ parentPort.on('message', data => self.onmessage({data}));\n`;
 let fault,
   terminated = 0,
   deliveries = 0,
+  preparations = 0,
   lastWorker;
 class BrowserWorker {
   constructor(url) {
@@ -33,12 +34,15 @@ class BrowserWorker {
     thread.on('message', (data) => {
       if (fault === 'crash') return this.onerror({ message: 'fixture runtime fault' });
       if (fault === 'foreign') data.generation = 'different generation';
+      if (fault === 'missing' && data.type === 'result') data.value = null;
+      if (fault === 'silent') return;
       this.onmessage?.({ data });
     });
     thread.on('error', (error) => this.onerror?.(error));
   }
   postMessage(data, list) {
     if (data.type === 'deliver') deliveries++;
+    if (data.type === 'prepare') preparations++;
     this.thread.postMessage(data, list);
   }
   terminate() {
@@ -116,7 +120,12 @@ async function main() {
       reader.switchingAnalysis(other),
       reader.switchingAnalysisExport(study, 'json'),
     ]);
-    assert(deliveries >= 4, 'worker owns reads and exports');
+    assert.equal(deliveries, 4, 'worker owns reads and exports');
+    assert.equal(
+      preparations,
+      3,
+      'a FIFO view replacement shares consecutive reads and evicts its predecessor',
+    );
     equal(first, expected);
     equal(otherReport, otherExpected);
     first.upgrades.rows.length = 0;
@@ -159,7 +168,7 @@ async function main() {
   } finally {
     reader.dispose();
   }
-  for (const mode of ['startup', 'crash', 'foreign']) {
+  for (const mode of ['startup', 'crash', 'foreign', 'missing']) {
     const fresh = await open();
     fault = mode;
     try {
@@ -206,11 +215,145 @@ async function main() {
   );
   await assert.rejects(broken.switchingAnalysisExport(study, 'json'), /fingerprint|size/i);
   broken.dispose();
+  const mixed = await open(),
+    callsBefore = preparations;
+  const outcomes = await Promise.allSettled([
+    mixed.switchingAnalysis(study, { max_bytes: 1 }),
+    mixed.switchingAnalysis(study),
+    mixed.switchingAnalysisExport(study, 'json'),
+  ]);
+  assert.equal(outcomes[0].status, 'rejected');
+  assert.match(outcomes[0].reason.message, /budget/i);
+  equal(outcomes[1].value, expected);
+  assert.deepEqual(Buffer.from(outcomes[2].value), Buffer.from(J.stringify(expected)));
+  assert.equal(preparations, callsBefore + 1);
+  mixed.dispose();
+  const tight = await V.open(fetchFile, catalog, index, { selected_bytes: 1 });
+  await assert.rejects(
+    tight.switchingAnalysisExport(study, 'csv', { max_bytes: 128000000 }),
+    /budget/i,
+  );
+  tight.dispose();
+  const idle = await open();
+  const onIdle = deferred();
+  context.setTimeout = (fn, ms) =>
+    ms === 60000
+      ? setTimeout(() => {
+          fn();
+          onIdle.resolve();
+        }, 1)
+      : setTimeout(fn, ms);
+  const beforeIdle = terminated;
+  await idle.switchingAnalysis(study);
+  await onIdle.promise;
+  assert(terminated > beforeIdle);
+  context.setTimeout = setTimeout;
+  equal(await idle.switchingAnalysis(study), expected);
+  idle.dispose();
+  const stalled = await open();
+  fault = 'silent';
+  await assert.rejects(
+    stalled.switchingAnalysis(study, { deadline: Date.now() + 200 }),
+    /deadline/i,
+  );
+  fault = null;
+  equal(await stalled.switchingAnalysis(study), expected);
+  stalled.dispose();
+  const held = deferred(),
+    release = deferred();
+  const active = await open(async (name) => {
+    if (name === part) {
+      held.resolve();
+      await release.promise;
+    }
+    return fetchFile(name);
+  });
+  const exportInProgress = active.switchingAnalysisExport(study, 'json');
+  await held.promise;
+  const beforeRetire = terminated;
+  active.retireAnalysisWorker();
+  assert.equal(terminated, beforeRetire, 'retirement preserves clicked exports');
+  release.resolve();
+  assert.deepEqual(Buffer.from(await exportInProgress), Buffer.from(J.stringify(expected)));
+  assert(terminated > beforeRetire, 'retired sessions release promptly after their last result');
+  const blocked = deferred();
+  const abandoned = await open(async (name) => {
+    if (name === part) {
+      blocked.resolve();
+      return new Promise(() => {});
+    }
+    return fetchFile(name);
+  });
+  const pending = abandoned.switchingAnalysis(study);
+  await blocked.promise;
+  abandoned.dispose();
+  await assert.rejects(pending, /disposed|cancel/i);
+  await assert.rejects(abandoned.switchingAnalysis(study), /disposed/i);
+  await numericProtocol();
   const legacy = await open();
   context.Worker = undefined;
   assert.equal(await legacy.switchingAnalysisExport(study, 'json'), null);
   equal(await legacy.switchingAnalysis(study), expected);
   legacy.dispose();
+}
+// Exercise the worker boundary directly so a main-thread cohort or cap check
+// cannot conceal a missing per-delivery check inside the retained worker.
+async function numericProtocol() {
+  const compiled = parse('numeric.json'),
+    view = parse('numeric-manifest.json').views[0],
+    study = A.context(compiled, view.options),
+    expected = A.select(compiled, study),
+    thread = new Thread(prefix + bundle, { eval: true }),
+    generation = JSON.stringify([study.publication?.id, study.generated_at]),
+    key = view.decoded.sha256;
+  let sequence = 0;
+  function call(type, fields) {
+    const id = ++sequence;
+    return new Promise((resolve, reject) => {
+      function receive(data) {
+        if (data.type === 'load') {
+          const bytes = new Uint8Array(read(view.chunks[data.index].part.path));
+          thread.postMessage({ type: 'chunk', id, key, generation, index: data.index, bytes }, [
+            bytes.buffer,
+          ]);
+          return;
+        }
+        thread.off('message', receive);
+        if (data.type === 'error') reject(Error(data.message));
+        else resolve(data.value);
+      }
+      thread.on('message', receive);
+      thread.postMessage({ type, id, generation, key, study, max: 128000000, ...fields });
+    });
+  }
+  try {
+    await call('prepare', { view });
+    const actual = await call('deliver', { format: 'report' });
+    equal(actual, expected);
+    assert.match(J.stringify(actual), /"revision_id":9007199254740997/);
+    assert.match(J.stringify(actual), /"evidence_id":9007199254740999/);
+    assert.match(J.stringify(actual), /"value":7\.5/);
+    for (const [format, body] of [
+      ['json', J.stringify(expected)],
+      ['csv', A.csv(expected)],
+      ['upgrades-csv', A.csv(expected, { upgradesOnly: true })],
+    ]) {
+      const bytes = await call('deliver', { format });
+      assert.deepEqual(Buffer.from(bytes), Buffer.from(body));
+    }
+    const forged = structuredClone(study);
+    forged.definition.start_date = '2022-01-01';
+    await assert.rejects(call('deliver', { format: 'report', study: forged }), /definition/i);
+    await assert.rejects(call('deliver', { format: 'json', max: 1 }), /budget/i);
+    await assert.rejects(call('deliver', { format: 'json', generation: 'other' }), /generation/i);
+    const bad = structuredClone(view);
+    bad.decoded.sha256 = '1'.repeat(64);
+    await assert.rejects(call('prepare', { view: bad }), /fingerprint|view/i);
+    await call('prepare', { view });
+    equal(await call('deliver', { format: 'report' }), expected);
+  } finally {
+    await thread.terminate();
+  }
 }
 main().catch((err) => {
   console.error(err);
