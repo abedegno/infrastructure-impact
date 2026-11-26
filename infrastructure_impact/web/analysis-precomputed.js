@@ -263,6 +263,7 @@
     const id = key(selection.requested_vendor, selection.scope_level, selection.requested_window),
       view = manifest.views.find(({ options: o }) => key(o.vendor, o.scope_level, o.window) === id);
     if (view) {
+      checkStudy(study);
       C.identity(manifest, study);
       if (manifest.observation_end !== study.observation_end || !eq(view.selection, selection))
         fail('accepted cohort or cutoff differs');

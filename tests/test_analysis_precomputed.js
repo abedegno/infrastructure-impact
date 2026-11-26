@@ -388,6 +388,21 @@ async function readerLifecycle() {
   const smallReader = await open(fileFetch, { selected_bytes: 1 });
   await assert.rejects(smallReader.switchingAnalysis(study, { max_bytes: 128000000 }), /budget/i);
 
+  const invalidDefinition = structuredClone(study);
+  invalidDefinition.definition.start_date = '2022-01-01';
+  const coldInvalid = await open();
+  await assert.rejects(coldInvalid.switchingAnalysis(invalidDefinition), /definition/i);
+  await assert.rejects(loader.switchingAnalysis(invalidDefinition), /definition/i);
+  for (const invalidFirst of [true, false]) {
+    const fresh = await open(),
+      inputs = invalidFirst ? [invalidDefinition, study] : [study, invalidDefinition],
+      results = await Promise.allSettled(inputs.map((s) => fresh.switchingAnalysis(s))),
+      invalid = results[invalidFirst ? 0 : 1];
+    assert.equal(invalid.status, 'rejected');
+    assert.match(invalid.reason.message, /definition/i);
+    assertReport(results[invalidFirst ? 1 : 0].value);
+  }
+
   const decode = P.decodeSelected;
   let preparations = 0;
   P.decodeSelected = (...args) => {
@@ -511,6 +526,7 @@ async function readerLifecycle() {
   assert(!reads.slice(beforeFailure).includes(full), 'corrupt advertised view fails closed');
   for (const selection of [{ cve_ids: [] }, { window: '2025' }]) {
     const fallbackStudy = AContext('cisco', selection);
+    fallbackStudy.definition.start_date = '2022-01-01';
     assert.equal(
       J.stringify(await loader.switchingAnalysis(fallbackStudy)),
       J.stringify(A.select(source, fallbackStudy)),

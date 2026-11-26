@@ -20,25 +20,37 @@ _SCHEMA = json.loads((PACKAGE / "schemas/switching-analysis-v1.json").read_text(
 _VALIDATOR = Draft202012Validator(_SCHEMA)
 
 
-@lru_cache(maxsize=len(_SCHEMA["$defs"]))
-def _compiled_shape(definition):
-    """Existing project engine/pattern semantics; formats were never enabled here."""
+def _component_formats():
+    return contracts._validators()["switching-release-history-v1.json"].format_checker
+
+
+@lru_cache(maxsize=len(_SCHEMA["$defs"]) + 1)
+def _compiled_shape(definition, check_formats):
+    """Use the component validators' format semantics at selected delivery acceptance."""
     import jsonschema_rs
 
+    checker = _component_formats() if check_formats else None
     return jsonschema_rs.Draft202012Validator(
         {"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]},
-        validate_formats=False,
+        formats={
+            name: (lambda value, fmt=name: checker.conforms(value, fmt))
+            for name in checker.checkers
+        }
+        if checker is not None
+        else {},
+        validate_formats=check_formats,
         keywords={"pattern": contracts._PythonPattern},
         offline=True,
     )
 
 
-def _validate_shape(value, definition):
-    if _compiled_shape(definition).is_valid(value):
+def _validate_shape(value, definition, *, check_formats=False):
+    if _compiled_shape(definition, check_formats).is_valid(value):
         return
     try:
         _VALIDATOR.evolve(
-            schema={"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]}
+            schema={"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]},
+            format_checker=_component_formats() if check_formats else None,
         ).validate(value)
     except ValidationError as error:
         raise ValueError("Invalid analysis DTO: " + error.message) from None

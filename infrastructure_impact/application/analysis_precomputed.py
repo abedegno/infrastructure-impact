@@ -292,6 +292,11 @@ def match_view(manifest, study):
     view = next((v for v in manifest["views"] if _key(v["options"]) == key), None)
     if view is not None:
         analysis._identity(manifest, study)
+        if (
+            "definition" in study
+            and analysis._hash(study["definition"]) != manifest["definition_sha256"]
+        ):
+            raise ValueError("Selected analysis study definition differs")
         if view["selection"] != selection:
             raise ValueError("Selected analysis cohort differs")
     return view
@@ -423,7 +428,7 @@ def _read_view(view, study, load, max_bytes):
     if sha256(raw).hexdigest() != decoded["sha256"]:
         raise ValueError("Selected analysis aggregate fingerprint differs")
     selected = codec.strict_loads(raw, max_bytes=limit)
-    analysis._validate_shape(selected, "selected")
+    analysis._validate_shape(selected, "selected", check_formats=True)
     if selected["availability"] != "available" or selected["selection"] != study["selection"]:
         raise ValueError("Selected analysis report cohort differs")
     for key in (

@@ -50,6 +50,9 @@ def test_view_candidate_native_export_order(tmp_path):
     manifest = precomputed.write_views(tmp_path, compiled, [options])
     assert manifest["source_content_sha256"] == compiled["content_sha256"]
     assert precomputed.validate_manifest(manifest, study) == manifest
+    bad_study = dict(study, definition=dict(study["definition"], start_date="2022-01-01"))
+    with pytest.raises(ValueError, match="definition"):
+        precomputed.read_selected(tmp_path, manifest, bad_study)
     actual = precomputed.read_selected(tmp_path, manifest, study)
 
     def encode(report):
@@ -275,6 +278,14 @@ def numeric_source():
     return analysis.build_report([], [retained], study)
 
 
+def change_release_date(history):
+    release = next(node for node in history["releases"] if node["history"])
+    release["history"][0]["reported_release_date"] = "2024-02-31"
+    release["reported_release_dates"] = sorted(
+        {row["reported_release_date"] for row in release["history"] if row["reported_release_date"]}
+    )
+
+
 def add_unused_compact_reference(upgrades, kind):
     compact = upgrades["requirements"]
     if kind == "facts":
@@ -306,6 +317,17 @@ def add_unused_compact_reference(upgrades, kind):
             "Reconciliation",
         ),
         ("release_history", lambda d: d.update(method="forged"), "Release"),
+        ("release_history", change_release_date, "Invalid analysis DTO"),
+        (
+            "kev_reconciliation",
+            lambda d: d["catalogue"].update(released_at="2026-02-31T12:00:00Z"),
+            "Invalid analysis DTO",
+        ),
+        (
+            "disclosure",
+            lambda d: d["pairs"][0]["source"].update(source_url="https://example.org/%GG"),
+            "Invalid analysis DTO",
+        ),
         ("upgrades", lambda d: d["rows"][0].update(supported_event_count=999), "event count"),
         ("upgrades", lambda d: add_unused_compact_reference(d, "facts"), "reference closure"),
         ("upgrades", lambda d: add_unused_compact_reference(d, "inference"), "reference closure"),
