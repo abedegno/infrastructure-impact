@@ -308,14 +308,14 @@ async function numericProtocol() {
     key = view.decoded.sha256;
   expected.upgrades.rows[0].start_version = '=SYNTHETIC("雪")';
   let sequence = 0;
-  function call(type, fields) {
+  function call(type, fields, chunkKey) {
     const id = ++sequence;
     return new Promise((resolve, reject) => {
       function receive(data) {
         if (data.type === 'load') {
           const bytes = new Uint8Array(read(view.chunks[data.index].part.path));
           thread.postMessage(
-            { type: 'chunk', id, key: data.key, generation, index: data.index, bytes },
+            { type: 'chunk', id, key: chunkKey ?? data.key, generation, index: data.index, bytes },
             [bytes.buffer],
           );
           return;
@@ -366,6 +366,7 @@ async function numericProtocol() {
     await assert.rejects(call('prepare', { view: bad, key: bad.decoded.sha256 }), /fingerprint/i);
     await call('prepare', { view });
     equal(await call('deliver', { format: 'report' }), expected);
+    await assert.rejects(call('prepare', { view }, '0'.repeat(64)), /unexpected.*chunk/i);
   } finally {
     await thread.terminate();
   }

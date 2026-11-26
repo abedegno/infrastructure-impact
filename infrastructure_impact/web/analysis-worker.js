@@ -10,7 +10,12 @@
       generation ??= data.generation;
       if (generation !== data.generation) throw Error('Analysis worker generation differs');
       if (type === 'chunk') {
-        if (!chunkReply || chunkReply.id !== id || chunkReply.index !== data.index)
+        if (
+          !chunkReply ||
+          chunkReply.id !== id ||
+          chunkReply.key !== key ||
+          chunkReply.index !== data.index
+        )
           throw Error('Unexpected analysis worker chunk');
         const { resolve } = chunkReply;
         chunkReply = null;
@@ -27,7 +32,7 @@
         let index = 0;
         const load = () =>
           new Promise((resolve) => {
-            chunkReply = { id, resolve, index };
+            chunkReply = { id, key, resolve, index };
             reply('load', { index: index++ });
           });
         prepared = await P.decodeSelected(data.view, data.study, load, { max_bytes: data.max });

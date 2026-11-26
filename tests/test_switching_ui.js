@@ -346,10 +346,59 @@ vm.runInContext(
     loader.switchingAnalysisExport = () => {
       throw Error('fixture export fault');
     };
+    vm.runInContext('switchingLoading=true;', context);
     downloadedBlob = null;
     await node('#analysis-json').handlers.get('click')();
     assert.equal(downloadedBlob, null);
-    assert.match(vm.runInContext('analysisError', context), /fixture export fault/);
+    assert.match(node('#analysis-panel').innerHTML, /fixture export fault/);
+    vm.runInContext('switchingLoading=false;', context);
+    context.exportStudy = expectedStudy;
+    context.exportDelivery = owner;
+    for (const change of ['study', 'delivery']) {
+      vm.runInContext(
+        'switchingReport=exportStudy; switchingAcceptedDelivery=exportDelivery; analysisStudy=exportStudy; analysisReport=analysisFixture; analysisError="";',
+        context,
+      );
+      paintAccepted();
+      const pendingExports = [];
+      loader.switchingAnalysisExport = () =>
+        new Promise((resolve, reject) => pendingExports.push({ resolve, reject }));
+      const exportClick = node('#analysis-json').handlers.get('click'),
+        lateFailure = exportClick(),
+        lateSuccess = exportClick();
+      await tick();
+      vm.runInContext(
+        change === 'study'
+          ? 'switchingReport={...exportStudy}; analysisStudy=switchingReport;'
+          : 'switchingAcceptedDelivery={...exportDelivery};',
+        context,
+      );
+      paintAccepted();
+      const panel = node('#analysis-panel'),
+        otherMarkup = panel.innerHTML;
+      assert.doesNotMatch(
+        otherMarkup,
+        /fixture export fault/,
+        'export errors belong to their panel',
+      );
+      let refreshes = 0;
+      context.countRefresh = () => refreshes++;
+      vm.runInContext('refreshAnalysisPanel=countRefresh;', context);
+      downloadedBlob = null;
+      pendingExports[0].reject(Error('late failure from old owner'));
+      await lateFailure;
+      assert.equal(refreshes, 0, 'stale rejection cannot repaint the new ' + change);
+      assert.equal(vm.runInContext('analysisError', context), '');
+      assert.equal(panel.innerHTML, otherMarkup);
+      assert.equal(downloadedBlob, null);
+      pendingExports[1].resolve(new TextEncoder().encode('old owner download'));
+      await lateSuccess;
+      assert.equal(await downloadedBlob.text(), 'old owner download');
+    }
+    vm.runInContext(
+      'switchingReport=exportStudy; switchingAcceptedDelivery=exportDelivery;',
+      context,
+    );
   } finally {
     serializer.stringifyBounded = bounded;
     context.URL = originalURL;

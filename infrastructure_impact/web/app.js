@@ -487,7 +487,7 @@ function comparisonCoverage(v) {
   const s = v.source_coverage;
   return `<details><summary>Product scope and evidence gaps</summary><p>Scope: ${esc(v.product_scope.mode.replaceAll('_', ' '))}. ${esc(v.product_scope.labels.join('; ') || 'No products selected')}.</p><p>Declared families are context, not a verified inventory: ${esc(v.product_scope.declared_families.join('; ') || 'Not declared')}.</p><p>${esc(s.history_scope)}</p>${s.archives.map((a) => `<p>${link(a.source_url, 'Archive source')} · ${a.documents.done} processed documents; ${a.documents.pending} pending; ${a.documents.error} failed. ${esc((a.observed_scopes || []).join('; '))}</p>`).join('')}${s.errors.map((e) => `<p>${link(e.source_url, 'Source gap')} · ${esc(e.error_code || 'collection error')} · checked ${date(e.checked_at)}</p>`).join('')}<ul>${s.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><p>Rate and timing blockers: ${esc(v.eligibility.reason_codes.map((r) => r.replaceAll('_', ' ')).join('; '))}.</p></details>`;
 }
-let refreshAnalysisPanel;
+let refreshAnalysisPanel, mountedAnalysis;
 function renderComparison() {
   refreshAnalysisPanel = null;
   $('#view').innerHTML =
@@ -683,13 +683,23 @@ function renderComparison() {
     loadSwitching(switchingReport ? studyOptions(switchingReport) : {});
 }
 function mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport) {
+  if (
+    !mountedAnalysis ||
+    mountedAnalysis.study !== accepted ||
+    mountedAnalysis.delivery !== delivery
+  )
+    mountedAnalysis = { study: accepted, delivery, exportError: '' };
+  const owner = mountedAnalysis;
   const panel = $('#analysis-panel');
   panel.innerHTML = window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
     loading: analysisLoading,
-    error: analysisError,
+    error: owner.exportError || analysisError,
   });
   window.InfrastructureSwitchingAnalysis.mount(panel, acceptedAnalysis, reliabilityReport);
-  $('#analysis-load').addEventListener('click', () => loadAnalysis(accepted, delivery));
+  $('#analysis-load').addEventListener('click', () => {
+    owner.exportError = '';
+    return loadAnalysis(accepted, delivery);
+  });
   for (const kind of ['json', 'csv', 'upgrades-csv'])
     $('#analysis-' + kind)?.addEventListener('click', async () => {
       try {
@@ -720,9 +730,14 @@ function mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport) 
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch (error) {
-        analysisError = 'Analysis export rejected: ' + error.message;
-        if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode))
-          refreshAnalysisPanel?.();
+        if (
+          owner !== mountedAnalysis ||
+          view !== 'compare' ||
+          !['switching', 'customer'].includes(comparisonMode)
+        )
+          return;
+        owner.exportError = 'Analysis export rejected: ' + error.message;
+        refreshAnalysisPanel?.();
       }
     });
 }
