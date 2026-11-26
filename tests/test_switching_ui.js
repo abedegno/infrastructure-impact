@@ -399,6 +399,40 @@ vm.runInContext(
       'switchingReport=exportStudy; switchingAcceptedDelivery=exportDelivery;',
       context,
     );
+    vm.runInContext('analysisStudy=exportStudy; analysisReport=analysisFixture;', context);
+    paintAccepted();
+    for (const order of [
+      ['export', 'refresh'],
+      ['refresh', 'export'],
+    ]) {
+      const failures = {};
+      loader.switchingAnalysisExport = () =>
+        new Promise((_, reject) => {
+          failures.export = reject;
+        });
+      loader.switchingAnalysis = () =>
+        new Promise((_, reject) => {
+          failures.refresh = reject;
+        });
+      const actions = {
+        export: node('#analysis-json').handlers.get('click')(),
+        refresh: node('#analysis-load').handlers.get('click')(),
+      };
+      await tick();
+      for (const action of order) {
+        failures[action](Error('overlapping ' + action + ' fault'));
+        await actions[action];
+      }
+      const markup = node('#analysis-panel').innerHTML;
+      assert(
+        markup.includes('Analysis export rejected: overlapping export fault'),
+        'same-owner export failure visible',
+      );
+      assert(
+        markup.includes('Analysis selection rejected: overlapping refresh fault'),
+        'same-owner refresh failure visible',
+      );
+    }
   } finally {
     serializer.stringifyBounded = bounded;
     context.URL = originalURL;

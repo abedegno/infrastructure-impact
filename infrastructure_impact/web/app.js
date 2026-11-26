@@ -693,7 +693,7 @@ function mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport) 
   const panel = $('#analysis-panel');
   panel.innerHTML = window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
     loading: analysisLoading,
-    error: owner.exportError || analysisError,
+    error: [analysisError, owner.exportError].filter(Boolean).join(' · '),
   });
   window.InfrastructureSwitchingAnalysis.mount(panel, acceptedAnalysis, reliabilityReport);
   $('#analysis-load').addEventListener('click', () => {
