@@ -938,7 +938,14 @@ def _snapshot_entries(directory):
                 pending.append(path)
             elif not stat.S_ISREG(info.st_mode):
                 raise ValueError("Unsafe entry in snapshot destination")
-            entries[path.relative_to(directory)] = (info.st_dev, info.st_ino, info.st_ctime_ns)
+            entries[path.relative_to(directory)] = (
+                info.st_dev,
+                info.st_ino,
+                info.st_mode,
+                info.st_size,
+                info.st_mtime_ns,
+                info.st_ctime_ns,
+            )
     return entries
 
 
@@ -985,34 +992,63 @@ def _validate_previous_export(directory, generations):
     return entries
 
 
-def _export_generation(generation, destination):
-    """Stage a regular directory and replace the entire previous managed export."""
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix=".snapshot-", dir=destination.parent) as directory:
-        staged = Path(directory) / "new"
+def _refresh_export(generation, destination):
+    entries = _validate_previous_export(destination, generation.parent)
+    # The output may be a bind mount. Stage on that filesystem and keep its root inode.
+    workspace = Path(tempfile.mkdtemp(prefix=".snapshot-", dir=destination))
+    staged, previous = workspace / "new", workspace / "previous"
+    keep_backup = False
+    installed = []
+    try:
         shutil.copytree(generation, staged)
-        # Use the containing directory as a lock without adding a public lock file.
-        parent_fd = os.open(destination.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        previous.mkdir()
         try:
-            fcntl.flock(parent_fd, fcntl.LOCK_EX)
-            if not destination.exists() and not destination.is_symlink():
-                staged.rename(destination)
-                return
-            entries = _validate_previous_export(destination, generation.parent)
-            # Keep the old tree outside temporary cleanup in case rollback fails.
-            previous = destination.parent / (".previous-snapshot-" + uuid4().hex)
-            destination.rename(previous)
-            try:
-                if _snapshot_entries(previous) != entries:
+            roots = [key for key in entries if len(key.parts) == 1]
+            for key in sorted(roots, key=lambda key: key.name != "manifest.json"):
+                backup = previous / key
+                (destination / key).rename(backup)
+                # Renaming updates ctime on the moved entry, but not its descendants.
+                entries[key] = (*entries[key][:-1], backup.lstat().st_ctime_ns)
+            if set(destination.iterdir()) != {workspace} or _snapshot_entries(previous) != entries:
+                raise ValueError("Snapshot destination changed during export")
+
+            # Expose the new manifest only once its files are in place.
+            for entry in sorted(staged.iterdir(), key=lambda path: path.name == "manifest.json"):
+                target = destination / entry.name
+                if os.path.lexists(target):
                     raise ValueError("Snapshot destination changed during export")
-                staged.rename(destination)
-            except BaseException:
-                if not destination.exists() and not destination.is_symlink():
-                    previous.rename(destination)
-                raise
-            shutil.rmtree(previous)
-        finally:
-            os.close(parent_fd)
+                entry.rename(target)
+                installed.append(target)
+            if set(destination.iterdir()) != {workspace, *installed}:
+                raise ValueError("Snapshot destination changed during export")
+        except BaseException:
+            # If restoration itself fails, preserve the backup for recovery.
+            keep_backup = True
+            for target in reversed(installed):
+                target.rename(staged / target.name)
+            for backup in sorted(previous.iterdir(), key=lambda path: path.name == "manifest.json"):
+                target = destination / backup.name
+                if os.path.lexists(target):
+                    raise ValueError(
+                        "Conflicting snapshot entry; prior files retained in " + str(previous)
+                    )
+                backup.rename(target)
+            keep_backup = False
+            raise
+    finally:
+        if not keep_backup:
+            shutil.rmtree(workspace)
+
+
+def _export_generation(generation, destination):
+    """Reconcile a complete generation inside the operator's regular output directory."""
+    destination.mkdir(parents=True, exist_ok=True)
+    directory_fd = os.open(destination, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        fcntl.flock(directory_fd, fcntl.LOCK_EX)
+        _refresh_export(generation, destination)
+    finally:
+        os.close(directory_fd)
 
 
 def build(

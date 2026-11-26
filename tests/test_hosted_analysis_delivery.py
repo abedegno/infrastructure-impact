@@ -299,13 +299,11 @@ def test_snapshot_refresh_removes_previous_selected_assets(recovery, tmp_path, m
     output = tmp_path / "reused"
     args = [
         "snapshot",
-        "--output",
-        str(output),
         "--publication-format",
         "v2",
         "--include-switching-analysis",
     ]
-    main([*args, "--analysis-delivery-profile", DELIVERY])
+    main([*args, "--output", str(output), "--analysis-delivery-profile", DELIVERY])
     initial = inspect_bundle(output, {})
     selected_gzip = {
         part["part"]["path"]
@@ -313,7 +311,10 @@ def test_snapshot_refresh_removes_previous_selected_assets(recovery, tmp_path, m
         for part in view["chunks"]
     }
     assert len(selected_gzip) >= 1
-    main(args)
+    with monkeypatch.context() as local:
+        local.chdir(output)
+        main([*args, "--output", "."])
+        assert Path("manifest.json").read_bytes() == (output / "manifest.json").read_bytes()
     facts = {}
     final = inspect_bundle(output, facts)
     assert analysis_precomputed.ROOT not in final.catalog["roots"]
@@ -386,11 +387,10 @@ def test_snapshot_refresh_preserves_unmanaged_entries(recovery, tmp_path, monkey
         assert (output / "index.html").is_symlink()
 
 
-@pytest.mark.parametrize("failure", ["replace", "concurrent_edit"])
-def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatch, failure):
+def _fixture_generations(directory):
     from hashlib import sha256
 
-    old, new = (tmp_path / "generations" / (char * 32) for char in "ab")
+    old, new = (directory / "generations" / (char * 32) for char in "ab")
     for path in (old, new):
         path.mkdir(parents=True)
         (path / "index.html").write_text(path.name)
@@ -402,21 +402,65 @@ def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatc
                 }
             )
         )
+    return old, new
+
+
+@pytest.mark.parametrize("boundary", ["held_directory", "mount"])
+def test_snapshot_refresh_keeps_existing_directory_identity(tmp_path, monkeypatch, boundary):
+    import errno
+    import os
+
+    old, new = _fixture_generations(tmp_path)
+    destination = tmp_path / "snapshot"
+    destination.mkdir()
+    if boundary == "mount":
+        rename = Path.rename
+
+        def mounted(source, target):
+            if destination in (source, target):
+                raise OSError(errno.EBUSY, "mount root is busy")
+            if source.is_relative_to(destination) != target.is_relative_to(destination):
+                raise OSError(errno.EXDEV, "cross-device rename")
+            return rename(source, target)
+
+        monkeypatch.setattr(Path, "rename", mounted)
+    fd = os.open(destination, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for generation in (old, new):
+            publication._export_generation(generation, destination)
+            with os.fdopen(os.open("manifest.json", os.O_RDONLY, dir_fd=fd), "rb") as stream:
+                assert json.load(stream)["generation"] == generation.name
+            assert os.path.samestat(os.fstat(fd), destination.stat())
+    finally:
+        os.close(fd)
+
+
+@pytest.mark.parametrize("failure", ["replace", "concurrent_edit"])
+def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatch, failure):
+    old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
     publication._export_generation(old, destination)
     rename = Path.rename
 
     def interrupted(source, target):
-        if failure == "replace" and source.name == "new" and target == destination:
+        if (
+            failure == "replace"
+            and source.parent.name == "new"
+            and target == destination / "manifest.json"
+        ):
             raise OSError("simulated failed rename")
-        if failure == "concurrent_edit" and source == destination:
-            (source / "owner.txt").write_text("keep")
+        if (
+            failure == "concurrent_edit"
+            and source == destination / "index.html"
+            and target.parent.name == "previous"
+        ):
+            (destination / "owner.txt").write_text("keep")
         return rename(source, target)
 
     monkeypatch.setattr(Path, "rename", interrupted)
     with pytest.raises((ValueError, OSError), match="changed|simulated"):
         publication._export_generation(new, destination)
     assert (destination / "index.html").read_text() == old.name
-    assert not list(tmp_path.glob(".previous-snapshot-*"))
+    assert not list(destination.glob(".snapshot-*"))
     if failure == "concurrent_edit":
         assert (destination / "owner.txt").read_text() == "keep"
