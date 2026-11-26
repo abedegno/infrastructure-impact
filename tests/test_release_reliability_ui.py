@@ -259,3 +259,50 @@ def test_browser_unknown_action_scope_blocks_complete_zero(tmp_path):
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
+
+
+@pytest.mark.parametrize("escape_model", [False, True])
+def test_browser_coverage_fractional_rate(tmp_path, escape_model):
+    from test_release_catalogue import config, release, specimen
+    from test_release_reliability import action, complete_coverage, selected
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is unavailable")
+    catalogue = specimen()
+    catalogue["releases"] = [
+        release("17.12.7", "2025-01-01"),
+        release("17.12.7a", "2025-01-02"),
+        release("17.12.8", "2025-01-03"),
+    ]
+    catalogue["statements"] = [action(action_date="2025-01-05")]
+    catalogue["coverage"] = [complete_coverage()]
+    configuration = config()
+    if escape_model:
+        configuration["trains"][0]["platforms"].append("<img src=x onerror=alert(1)>")
+        catalogue["coverage"][0]["platforms"].append("<img src=x onerror=alert(1)>")
+    upgrades = selected()
+    report = rr.build_report(
+        catalogue,
+        configuration,
+        publication=upgrades["publication"],
+        generated_at=upgrades["generated_at"],
+    )
+    enriched = rr.with_upgrades(report, upgrades)
+    value = coverage.build_coverage(report)
+    rate = value["trains"][0]["periods"][1]["metrics"]["deferred_or_withdrawn"]["rate"]
+    assert rate == 1 / 3
+    path = tmp_path / "vectors.json"
+    path.write_text(
+        json.dumps(
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=enriched,
+                csv=rr.csv_export(enriched),
+                coverage=value,
+                coverage_csv=coverage.csv_export(value),
+            )
+        )
+    )
+    subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)

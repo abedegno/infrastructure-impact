@@ -49,7 +49,7 @@ coverageReport(report) / coverageCSV(report) return identical data/CSV.
 
 ### Task 3: Smaller analysis delivery
 
-- [ ] Read selection/cohort dependencies and specify an opt-in slice design with
+- [x] Read selection/cohort dependencies and specify an opt-in slice design with
   exact legacy output parity. Implement/test separately once feasibility is clear.
-- [ ] Keep hosted activation off; prepare a concrete preview for approval if a
+- [x] Keep hosted activation off; prepare a concrete preview for approval if a
   new publication root is required. Do not change reader capacity limits.

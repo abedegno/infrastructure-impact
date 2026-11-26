@@ -32,6 +32,7 @@ if (process.argv[2]) {
   assert.strictEqual(R.coverageCSV(vectors.report), vectors.coverage_csv, 'coverage CSV parity');
   assert(R.render(vectors.report).includes('Coverage gaps by model'));
   assert(R.render(vectors.report).includes('reliability-coverage-json'));
+  assert(!R.render(vectors.report).includes('<img src=x'), 'coverage model text is escaped');
   if (vectors.report.availability === 'available')
     assert(
       R.render(vectors.report).includes('reliability-review'),
