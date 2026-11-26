@@ -363,10 +363,16 @@ def public_projection(
 
 
 @phase("publication.writing")
-def write_bundle(destination, data, *, publication_format="v1"):
+def write_bundle(destination, data, *, publication_format="v1", analysis_vendor_delivery=False):
     from .publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
+    if type(analysis_vendor_delivery) is not bool or (
+        analysis_vendor_delivery and publication_format != "v2"
+    ):
+        raise ValueError("Vendor analysis delivery requires explicit v2 preview")
+    if analysis_vendor_delivery and "switching_analysis" not in data:
+        raise ValueError("Vendor analysis delivery requires complete analysis")
     if publication_format == "v2" and "switching_row_sources" in data:
         raise ValueError("Published Source membership is writer-owned")
     from .current_evidence import report_bytes
@@ -493,7 +499,12 @@ def write_bundle(destination, data, *, publication_format="v1"):
             )
         from .publication_v2 import _write_bundle as write_v2
 
-        return write_v2(destination, data, row_sources)
+        return write_v2(
+            destination,
+            data,
+            row_sources,
+            **({"analysis_vendor_delivery": True} if analysis_vendor_delivery else {}),
+        )
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "current-evidence.json").write_bytes(report_bytes(data["current_evidence"]))

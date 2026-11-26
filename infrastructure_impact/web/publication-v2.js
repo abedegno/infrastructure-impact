@@ -1581,10 +1581,50 @@
       }
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
-    let analysisPromise;
+    let analysisPromise, analysisDeliveryPromise;
+    const vendorAnalysisPromises = new Map();
     async function switchingAnalysis(study, options = {}) {
       window.InfrastructureSwitchingContracts.identity(study, catalog);
       if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
+      const deliveryName = 'switching-analysis-delivery.json',
+        requestedVendor = study.selection.requested_vendor;
+      if (requestedVendor !== null && Object.hasOwn(catalog.roots, deliveryName)) {
+        const analysis = window.InfrastructureSwitchingAnalysis;
+        if (!analysisDeliveryPromise)
+          analysisDeliveryPromise = (async () =>
+            analysis.validateDeliveryManifest(
+              await materializeRoot(deliveryName, { ...options, max_bytes: 2000000 }),
+              catalog,
+            ))().catch((error) => {
+            analysisDeliveryPromise = null;
+            throw error;
+          });
+        const manifest = await options.operation.run(analysisDeliveryPromise),
+          entry = manifest.vendors[requestedVendor];
+        if (!entry || !Object.hasOwn(catalog.roots, entry.root))
+          throw Error('Missing advertised analysis delivery vendor root');
+        if (!vendorAnalysisPromises.has(requestedVendor))
+          vendorAnalysisPromises.set(
+            requestedVendor,
+            (async () => {
+              const envelope = await materializeRoot(entry.root, {
+                ...options,
+                max_bytes: Math.min(options.max_bytes ?? 128000000, 128000000),
+              });
+              return analysis.prepareVendor(envelope, catalog, {
+                ...entry,
+                source_content_sha256: manifest.source_content_sha256,
+              });
+            })().catch((error) => {
+              vendorAnalysisPromises.delete(requestedVendor);
+              throw error;
+            }),
+          );
+        const select = await options.operation.run(vendorAnalysisPromises.get(requestedVendor)),
+          selected = select(study);
+        json.measure(selected, null, '', Math.min(options.max_bytes ?? 128000000, 128000000));
+        return selected;
+      }
       if (!analysisPromise)
         analysisPromise = (async () => {
           const name = 'switching-analysis.json',

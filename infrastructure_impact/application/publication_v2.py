@@ -609,14 +609,19 @@ def logical_views(data):
         yield "changes/" + str(change["id"]) + ".json", change
 
 
-def write_bundle(destination, data):
+def write_bundle(destination, data, *, analysis_vendor_delivery=False):
     """Preserve fresh public writer validation for direct v2 callers, too."""
     from .publication import write_bundle as validated_write
 
-    return validated_write(destination, data, publication_format="v2")
+    return validated_write(
+        destination,
+        data,
+        publication_format="v2",
+        analysis_vendor_delivery=analysis_vendor_delivery,
+    )
 
 
-def _write_bundle(destination, data, row_sources):
+def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=False):
     from ..exports import csv_export
     from .eligibility import monitor_summary
     from .publication import write_manifest, write_reader_assets, write_reliability_assets
@@ -645,6 +650,11 @@ def _write_bundle(destination, data, row_sources):
             value,
             alias="switching-evidence.json" if name == "switching-comparison.json" else None,
         )
+    if analysis_vendor_delivery:
+        from .analysis_delivery import delivery_views
+
+        for name, value in delivery_views(data["switching_analysis"]).items():
+            writer.root(name, value)
     overview = writer.overview(summary(data["switching_comparison"]))
     runtime = {
         k: v
@@ -944,6 +954,13 @@ def verify_projection(reader, projected):
         if expected_index is None:
             raise ValueError("Source index without published native rows")
         views[ROOT] = expected_index
+    from .analysis_delivery import MANIFEST as ANALYSIS_MANIFEST
+    from .analysis_delivery import delivery_views
+
+    if ANALYSIS_MANIFEST in reader.catalog["roots"]:
+        if "switching_analysis" not in projected:
+            raise ValueError("Analysis delivery without complete native analysis")
+        views.update(delivery_views(projected["switching_analysis"]))
     if set(views) != set(reader.catalog["roots"]):
         raise ValueError("missing or extra mandatory logical root")
     if "detail_indexes" in reader.catalog["switching"]:

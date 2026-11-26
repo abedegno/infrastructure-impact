@@ -1040,6 +1040,108 @@
       return selectValidated(report, study);
     };
   }
+  function validateDeliveryManifest(manifest, identity = manifest) {
+    freezeOwned(manifest, new WeakSet());
+    J.measure(manifest, null, '', 2000000);
+    const fields = [
+      'schema_version',
+      'representation',
+      'publication',
+      'generated_at',
+      'definition_sha256',
+      'observation_end',
+      'source_content_sha256',
+      'vendors',
+      'content_sha256',
+    ];
+    if (
+      !eq(Object.keys(manifest).sort(), fields.sort()) ||
+      manifest.schema_version !== 1 ||
+      manifest.representation !== 'analysis-vendor-delivery' ||
+      manifest.definition_sha256 !== C.policy.definition_sha256 ||
+      manifest.observation_end !== S.day(manifest.generated_at) ||
+      typeof manifest.source_content_sha256 !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(manifest.source_content_sha256) ||
+      !eq(Object.keys(manifest.vendors).sort(), Object.keys(families).sort()) ||
+      manifest.content_sha256 !== hash(omit(manifest, ['content_sha256']))
+    )
+      fail('invalid delivery manifest');
+    C.identity(manifest, identity);
+    for (const [vendor, entry] of Object.entries(manifest.vendors)) {
+      if (
+        !eq(Object.keys(entry).sort(), ['content_sha256', 'counts', 'root']) ||
+        entry.root !== `switching-analysis-vendor-${vendor}.json` ||
+        typeof entry.content_sha256 !== 'string' ||
+        !/^[0-9a-f]{64}$/.test(entry.content_sha256) ||
+        !eq(Object.keys(entry.counts).sort(), ['claims', 'members', 'requirements']) ||
+        Object.values(entry.counts).some((n) => !Number.isSafeInteger(n) || n < 0)
+      )
+        fail('invalid delivery vendor descriptor');
+    }
+    return manifest;
+  }
+  function prepareVendor(envelope, identity = envelope, expected = null) {
+    freezeOwned(envelope, new WeakSet());
+    measure(envelope);
+    const fields = [
+      'schema_version',
+      'representation',
+      'publication',
+      'generated_at',
+      'definition_sha256',
+      'observation_end',
+      'source_content_sha256',
+      'vendor',
+      'payload',
+      'counts',
+      'content_sha256',
+    ];
+    if (
+      !eq(Object.keys(envelope).sort(), fields.sort()) ||
+      envelope.schema_version !== 1 ||
+      envelope.representation !== 'compiled-analysis-vendor' ||
+      !Object.hasOwn(families, envelope.vendor) ||
+      typeof envelope.source_content_sha256 !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(envelope.source_content_sha256)
+    )
+      fail('invalid vendor envelope');
+    C.identity(envelope, identity);
+    const report = envelope.payload,
+      counts = {
+        claims: Object.keys(report.claims).length,
+        members: Object.keys(report.requirements.members).length,
+        requirements: report.requirements.requirements.length,
+      };
+    if (
+      envelope.content_sha256 !== hash(omit(envelope, ['content_sha256'])) ||
+      !eq(envelope.counts, counts)
+    )
+      fail('vendor fingerprint/counts differ');
+    for (const key of ['publication', 'generated_at', 'definition_sha256', 'observation_end'])
+      if (!eq({ value: report[key] }, { value: envelope[key] }))
+        fail('vendor payload identity differs');
+    if (
+      expected &&
+      (expected.content_sha256 !== envelope.content_sha256 ||
+        expected.source_content_sha256 !== envelope.source_content_sha256 ||
+        !eq(expected.counts, counts))
+    )
+      fail('advertised vendor fingerprint/counts differ');
+    validate(report, identity);
+    if (
+      Object.values(report.claims).some((c) => c.vendor !== envelope.vendor) ||
+      Object.values(report.requirements.members).some((m) => m.vendor !== envelope.vendor) ||
+      report.kev_reconciliation.entries.some(
+        (e) => e.mapping.vendor !== null && e.mapping.vendor !== envelope.vendor,
+      )
+    )
+      fail('vendor payload domain differs');
+    return (study) => {
+      C.identity(envelope, study);
+      if (study.selection.requested_vendor !== envelope.vendor) fail('selected vendor differs');
+      return selectValidated(report, study);
+    };
+  }
   function csvJSON(value) {
     if (typeof value === 'number') return C.numberToken(value);
     if (Array.isArray(value)) return '[' + value.map(csvJSON).join(',') + ']';
@@ -1098,6 +1200,8 @@
     context,
     select,
     prepare,
+    prepareVendor,
+    validateDeliveryManifest,
     upgrades,
     walk,
     detailedRows,
