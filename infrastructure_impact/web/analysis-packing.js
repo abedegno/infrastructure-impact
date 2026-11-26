@@ -112,6 +112,17 @@
     seen.add(value);
     ancestors.delete(value);
   }
+  function nativeFloat(value) {
+    if (Object.is(value, -0)) return '-0.0';
+    const magnitude = Math.abs(value);
+    // Both runtimes pick the shortest binary64 round trip. Native JSON
+    // retains integral-float spelling and uses Python's exponent thresholds.
+    if (magnitude === 0 || (magnitude >= 0.0001 && magnitude < 1e16))
+      return Number.isInteger(value) ? String(value) + '.0' : String(value);
+    const [mantissa, exponent] = value.toExponential().split('e'),
+      power = Number(exponent);
+    return mantissa + 'e' + (power < 0 ? '-' : '+') + String(Math.abs(power)).padStart(2, '0');
+  }
   function parseLiteral(chunks, max) {
     if (!Array.isArray(chunks) || !chunks.length) fail('invalid literal chunks');
     const quota = J.budget(max);
@@ -127,10 +138,10 @@
       quota.charge(nonASCII.test(text) ? encoder.encode(text).length : text.length);
     }
     const text = chunks.length === 1 ? chunks[0] : chunks.join(''),
-      value = J.parseStrict(text, { compact: true });
+      value = J.parseStrict(text, { compact: true, formatFloat: nativeFloat });
     return { text, value, rawBytes: quota.used, requestedBytes: J.measure(value, null, '', max) };
   }
-  function preflight(packed, base, pool, rawCosts, requestedCosts, max) {
+  function tableSourceBytes(packed, base, pool, rawCosts, requestedCosts, max) {
     const { layouts, tables, counts, source_logical_bytes } = packed;
     if (!Array.isArray(layouts) || !closed(tables, tableNames) || !closed(counts, tableNames))
       fail('invalid layout or table counts');
@@ -221,7 +232,31 @@
       owner[name] = target;
     }
   }
-  function prepare(packed, identity = packed, { max_bytes = MAX } = {}) {
+  function deferPreparation(input, sourceBytes, max) {
+    let select;
+    return Object.freeze({
+      sourceBytes,
+      prepare() {
+        if (select) return select;
+        const { skeleton, pool, identity } = input,
+          report = { ...skeleton, requirements: { ...skeleton.requirements } };
+        expand(input, report, pool);
+        // Existing preparation freezes the original report before full
+        // fingerprint, shape and semantic validation.
+        const choose = A.prepare(report, identity);
+        select = (study, { max_bytes = max } = {}) => {
+          const limit = Math.min(integer(max_bytes, 1), max);
+          if (sourceBytes > limit) fail('source byte budget');
+          const result = choose(study);
+          J.measure(result, null, '', limit);
+          return result;
+        };
+        input = null;
+        return select;
+      },
+    });
+  }
+  function preflight(packed, identity = packed, { max_bytes = MAX } = {}) {
     const max = Math.min(integer(max_bytes, 1), MAX);
     freezeOwned(packed);
     if (
@@ -276,16 +311,16 @@
       rawCosts.push(rawBytes);
       requestedCosts.push(requestedBytes);
     }
-    const requested = preflight(packed, base, pool, rawCosts, requestedCosts, max),
+    const requested = tableSourceBytes(packed, base, pool, rawCosts, requestedCosts, max),
       sourceBytes = Math.max(packed.source_logical_bytes, requested);
-    expand(packed, skeleton, pool);
-    // The unchanged prepared selector freezes the entire private graph before
-    // validating the original source fingerprint, shape and semantic ownership.
-    const select = A.prepare(skeleton, identity);
-    return (study, { max_bytes = max } = {}) => {
-      if (sourceBytes > Math.min(integer(max_bytes, 1), max)) fail('source byte budget');
-      return select(study);
-    };
+    return deferPreparation(
+      { layouts: packed.layouts, tables: packed.tables, skeleton, pool, identity },
+      sourceBytes,
+      max,
+    );
   }
-  window.InfrastructureAnalysisPacking = { ROOT, prepare };
+  function prepare(packed, identity, options) {
+    return preflight(packed, identity, options).prepare();
+  }
+  window.InfrastructureAnalysisPacking = { ROOT, prepare, preflight };
 })();

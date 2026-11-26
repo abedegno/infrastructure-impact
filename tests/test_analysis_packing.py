@@ -208,6 +208,26 @@ def test_v2_opt_in_preserves_legacy_descriptors_and_regenerates(tmp_path):
     assert reader.catalog["routes"] == old.catalog["routes"]
 
 
+def _alternate_catalog(directory, baseline, packed):
+    # Encode against the existing dictionary prefix to construct a test
+    # publication at the genuine part and token boundaries.
+    strings, shapes = baseline._tables()
+    writer = publication_v2.Writer(directory, baseline.identity)
+    writer.encoder.strings = list(strings)
+    writer.encoder.shapes = list(shapes)
+    writer.encoder._strings = {literal: i for i, literal in enumerate(strings)}
+    writer.encoder._shapes = {tuple(keys): i for i, keys in enumerate(shapes)}
+    boundary = writer.snapshot_tables = (len(strings), len(shapes))
+    catalog = copy.deepcopy(baseline.catalog)
+    catalog["roots"][ROOT] = writer.root(ROOT, packed)
+    writer.tables(boundary)
+    for name, parts, first in zip(
+        ("strings", "shapes"), (writer.string_parts, writer.shape_parts), boundary, strict=True
+    ):
+        catalog[name].extend(part for part in parts if part["first"] >= first)
+    return catalog
+
+
 def test_rehashed_locally_valid_alternate_is_rejected_by_native_regeneration(tmp_path):
     public = make_preview(tmp_path)
     baseline = PublicationReader(tmp_path)
@@ -216,24 +236,8 @@ def test_rehashed_locally_valid_alternate_is_rejected_by_native_regeneration(tmp
     rehash(framed)
     alternate = packed_api().pack_report(framed)
 
-    # Build independently hashed token and table parts with the same prefix
-    # dictionary. The reader locally accepts the alternate's compiled report.
-    strings, shapes = baseline._tables()
-    writer = publication_v2.Writer(tmp_path, baseline.identity)
-    writer.encoder.strings = list(strings)
-    writer.encoder.shapes = list(shapes)
-    writer.encoder._strings = {literal: i for i, literal in enumerate(strings)}
-    writer.encoder._shapes = {tuple(keys): i for i, keys in enumerate(shapes)}
-    boundary = writer.snapshot_tables = (len(strings), len(shapes))
-    descriptor = writer.root(ROOT, alternate)
-    writer.tables(boundary)
-
     reader = PublicationReader(tmp_path)
-    reader.catalog["roots"][ROOT] = descriptor
-    for name, parts, first in zip(
-        ("strings", "shapes"), (writer.string_parts, writer.shape_parts), boundary, strict=True
-    ):
-        reader.catalog[name].extend(part for part in parts if part["first"] >= first)
+    reader.catalog = _alternate_catalog(tmp_path, baseline, alternate)
     decoded = reader.materialize_range(reader.ranges(ROOT)[()])
     assert compact(packed_api().unpack_report(decoded)) == compact(framed)
     with pytest.raises(ValueError, match="native logical root mismatch: " + ROOT):
@@ -272,6 +276,43 @@ def test_v2_flags_require_bool_complete_report_and_single_codec(tmp_path):
             publication.write_bundle(tmp_path, {}, **options)
 
 
+def _with_native_float_spellings(compiled):
+    source = copy.deepcopy(compiled)
+    template = next(v for v in source["requirements"]["facts"].values() if isinstance(v, dict))
+    for score in (0.00001, 0.00002, 0.00003, 0.00004, 8.0, -0.0):
+        fact = [
+            dict(
+                origin="vendor_advisory",
+                provider="Authored café 😀",
+                version="3.1",
+                value=score,
+                source=template,
+            )
+        ]
+        source["requirements"]["facts"][analysis._hash(fact)] = fact
+    rehash(source["requirements"])
+    rehash(source)
+    return source
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [("publication", r"\u0070ublication"), ("1e-05", "0.00001"), ("café", r"caf\u00e9")],
+)
+def test_native_rejects_rehashed_alternative_literal_spellings(rich, old, new):
+    source = _with_native_float_spellings(rich)
+    packed = packed_api().pack_report(source)
+    assert compact(packed_api().unpack_report(packed)) == compact(source)
+    text = "".join(packed["skeleton_json"])
+    assert old in text
+    altered = text.replace(old, new, 1)
+    packed["skeleton_json"] = packed_api()._chunks(altered)
+    packed["source_logical_bytes"] += len(altered.encode()) - len(text.encode())
+    rehash(packed)
+    with pytest.raises(ValueError, match="compact JSON literal"):
+        packed_api().unpack_report(packed)
+
+
 def test_browser_packed_delivery_in_ordinary_ci(tmp_path, monkeypatch, rich, packed):
     node = shutil.which("node")
     if node is None:
@@ -280,6 +321,12 @@ def test_browser_packed_delivery_in_ordinary_ci(tmp_path, monkeypatch, rich, pac
     # Exercise distinct source metadata and later token pages on a small real bundle.
     monkeypatch.setattr(publication_v2, "PAGE_LOGICAL", 4000)
     public = make_preview(bundle)
+    float_source = _with_native_float_spellings(public["switching_analysis"])
+    float_packed = packed_api().pack_report(float_source)
+    float_catalog = _alternate_catalog(bundle, PublicationReader(bundle), float_packed)
+    vector = json.loads(Path("tests/fixtures/switching-analysis-vectors.json").read_text())[
+        "compiled"
+    ]
     exact = copy.deepcopy(rich)
     exact["release_history"]["sources"][0]["retained"]["revision_id"] = 9007199254740993
     rehash(exact)
@@ -292,6 +339,11 @@ def test_browser_packed_delivery_in_ordinary_ci(tmp_path, monkeypatch, rich, pac
                 "exact": exact,
                 "exact_packed": packed_api().pack_report(exact),
                 "compiled": public["switching_analysis"],
+                "vector": vector,
+                "vector_packed": packed_api().pack_report(vector),
+                "float_source": float_source,
+                "float_packed": float_packed,
+                "float_catalog": float_catalog,
             }
         ),
         encoding="utf-8",

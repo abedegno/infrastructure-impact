@@ -1628,6 +1628,7 @@
       if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
       const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
         packedName = 'switching-analysis-packed.json',
+        usePacked = Object.hasOwn(catalog.roots, packedName),
         deliveryName = 'switching-analysis-delivery.json',
         requestedVendor = study.selection.requested_vendor,
         analysis = window.InfrastructureSwitchingAnalysis;
@@ -1635,23 +1636,25 @@
         if ((await root(name, options)).logical.bytes > limit) fail('selected byte budget');
       }
       let select;
-      if (Object.hasOwn(catalog.roots, packedName)) {
+      if (usePacked) {
         await bounded(packedName, max);
         const sourceBytes = await sharedValue('analysis:packed-source-bytes', options, (owned) =>
           packedSourceBytes(packedName, owned),
         );
         if (sourceBytes > max) fail('selected source byte budget');
-        select = await sharedValue('analysis:packed', options, async (owned) => {
+        const plan = await sharedValue('analysis:packed-preflight', options, async (owned) => {
           const envelope = await materializeRoot(packedName, {
             ...owned,
             max_bytes: selectedMax,
             integer_metadata: true,
           });
           if (envelope.source_logical_bytes !== sourceBytes) fail('packed source byte metadata');
-          return window.InfrastructureAnalysisPacking.prepare(envelope, catalog, {
+          return window.InfrastructureAnalysisPacking.preflight(envelope, catalog, {
             max_bytes: selectedMax,
           });
         });
+        if (plan.sourceBytes > max) fail('selected source byte budget');
+        select = await sharedValue('analysis:packed', options, () => plan.prepare());
       } else if (requestedVendor !== null && Object.hasOwn(catalog.roots, deliveryName)) {
         await bounded(deliveryName, Math.min(max, 2000000));
         const manifest = await sharedValue('analysis:manifest', options, async (owned) =>
@@ -1689,7 +1692,7 @@
         }
       }
       const selected = select(study, { max_bytes: max });
-      json.measure(selected, null, '', max);
+      if (!usePacked) json.measure(selected, null, '', max);
       return options.operation.run(Promise.resolve(selected));
     }
     let reliabilityPromise;

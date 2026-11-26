@@ -41,7 +41,7 @@ assert.strictEqual(typeof P?.prepare, 'function', 'packed preparation must be re
 
 const dir = process.argv[2],
   fixture = J.parseStrict(fs.readFileSync(process.argv[3], 'utf8')),
-  { rich, packed, exact, exact_packed, compiled } = fixture;
+  { rich, packed, exact, exact_packed, compiled, vector, vector_packed } = fixture;
 function sameSelection(actual, expected) {
   assert.strictEqual(J.stringify(actual), J.stringify(expected));
   assert.strictEqual(A.csv(actual), A.csv(expected));
@@ -58,6 +58,49 @@ function rehash(envelope) {
   envelope.content_sha256 = C.fingerprint(rest);
   return envelope;
 }
+const vectorStudy = A.context(vector, {}),
+  vectorResult = A.select(vector, vectorStudy),
+  vectorBudget = Math.max(
+    vector_packed.source_logical_bytes,
+    J.measure(vector),
+    J.measure(vector_packed),
+  );
+assert(J.measure(vectorResult) > vectorBudget);
+assert.throws(
+  () => P.prepare(clone(vector_packed), vector, { max_bytes: vectorBudget })(vectorStudy),
+  /byte budget/i,
+  'standalone selection must charge its default output limit',
+);
+assert.throws(
+  () => P.prepare(clone(vector_packed), vector)(vectorStudy, { max_bytes: vectorBudget }),
+  /byte budget/i,
+  'standalone selection must charge a narrowed output limit',
+);
+
+const {
+    float_source: floatSource,
+    float_packed: floatPacked,
+    float_catalog: floatCatalog,
+  } = fixture,
+  floatStudy = A.context(floatSource, { vendor: 'cisco', cve_ids: [] });
+sameSelection(
+  P.prepare(clone(floatPacked), floatSource)(floatStudy),
+  A.select(floatSource, floatStudy),
+);
+for (const [old, alternate] of [
+  ['publication', String.raw`\u0070ublication`],
+  ['1e-05', '0.00001'],
+  ['café', String.raw`caf\u00e9`],
+]) {
+  const bad = clone(floatPacked),
+    text = bad.skeleton_json.join(''),
+    modified = text.replace(old, alternate);
+  assert.notStrictEqual(modified, text);
+  bad.skeleton_json = [modified];
+  bad.source_logical_bytes += Buffer.byteLength(modified) - Buffer.byteLength(text);
+  assert.throws(() => P.prepare(rehash(bad), floatSource), /JSON/i);
+}
+
 const richSelect = A.prepare(rich),
   select = P.prepare(clone(packed), rich);
 for (const vendor of [null, 'cisco', 'aruba', 'arista'])
@@ -260,6 +303,38 @@ function pausedAt(target) {
       results = await Promise.allSettled(smallFirst ? [small(), large()] : [large(), small()]);
     assert.match(results[smallFirst ? 0 : 1].reason.message, /byte budget/i);
     sameSelection(results[smallFirst ? 1 : 0].value, expected);
+  }
+
+  const floatCap = floatPacked.source_logical_bytes,
+    requestedFloatBytes = J.measure(floatSource);
+  assert(J.measure(floatPacked) <= floatCap);
+  assert(requestedFloatBytes > floatCap);
+  const prepare = A.prepare;
+  let preparations = 0;
+  A.prepare = (...args) => {
+    preparations++;
+    return prepare(...args);
+  };
+  try {
+    const narrow = await open(fetch, floatCatalog);
+    await assert.rejects(
+      () => narrow.switchingAnalysis(floatStudy, { max_bytes: floatCap }),
+      /budget/i,
+    );
+    assert.strictEqual(preparations, 0, 'an unadmitted lone caller cannot prepare compiled rows');
+    const floatExpected = A.select(floatSource, floatStudy);
+    for (const smallFirst of [true, false]) {
+      const fresh = await open(fetch, floatCatalog),
+        small = () => fresh.switchingAnalysis(floatStudy, { max_bytes: floatCap }),
+        large = () => fresh.switchingAnalysis(floatStudy),
+        before = preparations,
+        results = await Promise.allSettled(smallFirst ? [small(), large()] : [large(), small()]);
+      assert.match(results[smallFirst ? 0 : 1].reason.message, /byte budget/i);
+      sameSelection(results[smallFirst ? 1 : 0].value, floatExpected);
+      assert.strictEqual(preparations, before + 1, 'only admitted requests prepare compiled rows');
+    }
+  } finally {
+    A.prepare = prepare;
   }
 
   // Exercise the lower metadata range and shared prepared root work. Both

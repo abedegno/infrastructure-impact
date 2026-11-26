@@ -1,6 +1,6 @@
 /* Exact JSON integers without reviver context, rawJSON, dependencies or global patches. */
 (() => {
-  function parse(text, strict = false, transport = false, compact = false) {
+  function parse(text, strict = false, transport = false, compact = false, formatFloat = null) {
     let i = 0;
     const fail = () => {
       throw Error('Invalid lossless JSON');
@@ -20,8 +20,10 @@
         i++;
         while (i < text.length) {
           if (text[i++] === '"') {
-            const result = JSON.parse(text.slice(start, i));
+            const raw = text.slice(start, i),
+              result = JSON.parse(raw);
             if (strict && /[\uD800-\uDFFF]/u.test(result)) fail();
+            if (compact && raw.includes('\\') && JSON.stringify(result) !== raw) fail();
             return result;
           }
           if (text[i - 1] === '\\') i++;
@@ -78,14 +80,12 @@
         }
       const match = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/.exec(text.slice(i));
       if (!match || match.index !== 0) fail();
-      const token = match[0];
+      const token = match[0],
+        floating = /[.eE]/.test(token);
       i += token.length;
-      if (
-        (transport === true || (typeof transport === 'function' && transport(path))) &&
-        /[.eE]/.test(token)
-      )
+      if (floating && (transport === true || (typeof transport === 'function' && transport(path))))
         throw Error('Non-integer transport number lexeme');
-      if (['revision_id', 'evidence_id'].includes(key) && /[.eE]/.test(token))
+      if (floating && ['revision_id', 'evidence_id'].includes(key))
         throw Error('Non-integer identity token');
       const n = Number(token);
       if (
@@ -93,11 +93,12 @@
         !Number.isSafeInteger(n)
       )
         throw Error('Unsafe transport integer lexeme');
-      if (!/[.eE]/.test(token) && !Number.isSafeInteger(n)) {
+      if (compact && token === '-0') fail();
+      if (!floating && !Number.isSafeInteger(n)) {
         if (typeof BigInt !== 'function') throw Error('Exact integer identity unsupported');
         return BigInt(token);
       }
-      if (!Number.isFinite(n)) fail();
+      if (!Number.isFinite(n) || (floating && formatFloat && formatFloat(n) !== token)) fail();
       return n;
     }
     const result = value();
@@ -267,7 +268,8 @@
     stringBytes,
     stringifyBounded,
     requestPool,
-    parseStrict: (text, options = {}) => parse(text, true, options.transport, options.compact),
+    parseStrict: (text, options = {}) =>
+      parse(text, true, options.transport, options.compact, options.formatFloat),
     stringify,
     clone: (value) => parse(stringify(value)),
   };
