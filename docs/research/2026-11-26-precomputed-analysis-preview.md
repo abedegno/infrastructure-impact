@@ -117,3 +117,8 @@ The [receipt](2026-11-26-precomputed-analysis-preview.json) retains exact output
 and measurements. Independent human evidence review remains pending. The existing
 caveat remains: counts describe disclosure and collection, not vendor quality;
 missing reliability denominators remain unknown.
+
+The subsequent [real-browser activation check](2026-11-26-precomputed-browser-check.md)
+confirmed the four export sets and measured the eight-view standalone parts. It
+found long main-thread tasks, so hosted activation remains blocked pending a
+responsiveness and memory improvement.

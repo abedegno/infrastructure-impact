@@ -42,6 +42,12 @@ configuration when verifying a pilot. Verification derives selection membership,
 decoded bytes and gzip parts again from the native public facts, checks the
 on-disk manifest sidecar and parts, and streams the ordinary logical roots.
 
+The [real-browser activation check](research/2026-11-26-precomputed-browser-check.md)
+confirmed exact exports but found a 9.3-second main-thread task on cold Cisco
+loading. Keep hosted activation disabled until responsiveness and memory are
+addressed. Default eight-view standalone parts were measured, but complete
+publication and hosted-history capacity remain uncertified.
+
 ## Format and reader behavior
 
 `switching-analysis-selected.json` is an ordinary v2 logical root. Its compact
