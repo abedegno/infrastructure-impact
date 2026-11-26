@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from cryptography.fernet import Fernet
 from test_arista_hosted_batch import authored_batch  # noqa: F401 -- shared authored pytest fixture
+from test_pages_job_isolation import deployment_allowed, workflow_job
 from test_targeted_maintenance import PROFILE, sources
 
 from infrastructure_impact.adapters.arista_reconciliation import CSAF103, URL103
@@ -401,15 +402,19 @@ def test_apply_failure_never_publishes_or_emits_success(
 
 
 def workflow_steps():
-    """Read just step-level scalars; evaluate the actual dispatch gates below."""
+    """Read producer step scalars for the dispatch gate tests."""
     import re
 
-    text = (Path(__file__).resolve().parents[1] / ".github/workflows/collect.yaml").read_text()
+    text = workflow_job("collect.yaml", "publish")
     result = []
     for block in re.split(r"^      - ", text, flags=re.M)[1:]:
         values = dict(re.findall(r"^(?:        )?(name|uses|if|id): (.+)$", block, re.M))
         result.append(values)
     return result
+
+
+def publication_upload():
+    return next(s for s in workflow_steps() if "upload-pages-artifact@" in s.get("uses", ""))
 
 
 def gate(step, effects, *, success=True, protocol="effects-v1", hosted_outcome=None):
@@ -474,23 +479,24 @@ def gate(step, effects, *, success=True, protocol="effects-v1", hosted_outcome=N
         ),
     ],
 )
-def test_workflow_effects_gate_cleanup_every_pages_step_and_preview(
+def test_workflow_effects_gate_cleanup_pages_upload_deployment_and_preview(
     effects, success, retain, pages, preview
 ):
     steps = workflow_steps()
     cleanup = next(s for s in steps if s.get("name") == "Retain only encrypted recovery copies")
     assert gate(cleanup, effects, success=success) is retain
-    public = [
-        s
-        for s in steps
-        if any(
-            n in s.get("uses", "")
-            for n in ("configure-pages@", "upload-pages-artifact@", "deploy-pages@")
+    uploaded = gate(publication_upload(), effects, success=success)
+    assert uploaded is pages
+    assert (
+        deployment_allowed(
+            "collect.yaml",
+            "publish",
+            outcome="success" if uploaded else "skipped",
+            artifact_outputs={"artifact_id": "123"} if uploaded else {},
+            producer_result="success" if success else "failure",
         )
-        or s.get("name") == "Verify public availability and freshness"
-    ]
-    assert len(public) == 4
-    assert all(gate(s, effects, success=success) is pages for s in public)
+        is pages
+    )
     artifacts = [s for s in steps if "actions/upload-artifact@" in s.get("uses", "")]
     assert len(artifacts) == 2
     assert {s["name"] for s in artifacts} == {

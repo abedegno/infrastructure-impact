@@ -51,15 +51,6 @@
     }
     return total;
   }
-  function quote(s, ascii) {
-    const raw = JSON.stringify(literal(s));
-    return ascii
-      ? raw.replace(
-          /[\u007f-\uffff]/g,
-          (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'),
-        )
-      : raw;
-  }
   let operationId = 0;
   function operation(options = {}) {
     if (options.operation) return options.operation;
@@ -171,18 +162,23 @@
         state.canonicalUsed = (state.canonicalUsed ?? 0) + canonical;
         if (options.valueState) options.valueState.used += size;
       }
-      function emit(raw, canonical = raw) {
-        if (options.signal?.aborted) fail('cancelled');
-        if (Date.now() > state.deadline) fail('stream deadline');
-        const size = Math.max(encoder.encode(raw).length, encoder.encode(canonical).length);
-        charge(size);
-        options.observer?.(canonical);
+      // All callers pass only structural punctuation or the null/boolean literals.
+      function emitAscii(raw) {
+        charge(raw.length);
+        options.observer?.(raw);
         return raw;
       }
       function quoted(s) {
-        charge(Math.max(stringCost(s), stringCost(s, ascii)), stringCost(s));
-        const raw = quote(s, ascii);
-        options.observer?.(quote(s, false));
+        const canonicalBytes = stringCost(s);
+        charge(ascii ? stringCost(s, true) : canonicalBytes, canonicalBytes);
+        const canonical = JSON.stringify(s),
+          raw = ascii
+            ? canonical.replace(
+                /[\u007f-\uffff]/g,
+                (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'),
+              )
+            : canonical;
+        options.observer?.(canonical);
         return raw;
       }
       async function nextToken() {
@@ -193,7 +189,7 @@
         const entry = await nextToken();
         if (entry.done) fail('truncated node');
         const t = entry.value;
-        if (t === null || typeof t === 'boolean') yield emit(String(t));
+        if (t === null || typeof t === 'boolean') yield emitAscii(String(t));
         else if (typeof t === 'number') {
           integer(-t - 2);
           if (t < -Number.MAX_SAFE_INTEGER || -t - 2 >= strings.length) fail('string reference');
@@ -204,23 +200,23 @@
           if (i >= shapes.length) fail('shape reference');
           const keys = shapes[i];
           if (keys.length * 5 + 2 > state.max - state.used) fail('object minimum budget');
-          yield emit('{');
+          yield emitAscii('{');
           for (let k = 0; k < keys.length; k++) {
-            if (k) yield emit(',');
+            if (k) yield emitAscii(',');
             yield quoted(keys[k]);
-            yield emit(':');
+            yield emitAscii(':');
             yield* node(depth + 1, [...path, keys[k]]);
           }
-          yield emit('}');
+          yield emitAscii('}');
         } else if (Array.isArray(t) && t.length === 2 && t[0] === -1) {
           const n = integer(t[1]);
           if ((n ? n * 2 + 1 : 2) > state.max - state.used) fail('array minimum budget');
-          yield emit('[');
+          yield emitAscii('[');
           for (let i = 0; i < n; i++) {
-            if (i) yield emit(',');
+            if (i) yield emitAscii(',');
             yield* node(depth + 1, [...path, i]);
           }
-          yield emit(']');
+          yield emitAscii(']');
         } else if (Array.isArray(t) && t.length === 3 && t[0] === -2) {
           const [_, kind, lexeme] = t;
           if (typeof lexeme !== 'string') fail('numeric lexeme');
@@ -413,6 +409,7 @@
         const raw = encoder.encode(text);
         length += raw.length;
         feed(raw);
+        return raw.length;
       },
       digest() {
         const bits = BigInt(length) * 8n;
@@ -702,8 +699,7 @@
         yield* streamTokens(tokens(name, 0, null, options), strings, shapes, {
           ...options,
           observer: (chunk) => {
-            hash.update(chunk);
-            size += encoder.encode(chunk).length;
+            size += hash.update(chunk);
             options.observer?.(chunk);
           },
           root: name,
@@ -735,8 +731,7 @@
             root: r.root,
             path: options.path,
             observer: (chunk) => {
-              hash.update(chunk);
-              canonicalBytes += encoder.encode(chunk).length;
+              canonicalBytes += hash.update(chunk);
             },
             aliases: (n) => tokens(n, 0, null, options),
           },
@@ -1592,8 +1587,9 @@
       if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
       if (!analysisPromise)
         analysisPromise = (async () => {
-          const name = 'switching-analysis.json';
-          if (!Object.hasOwn(catalog.roots, name)) return null;
+          const name = 'switching-analysis.json',
+            analysis = window.InfrastructureSwitchingAnalysis;
+          if (!Object.hasOwn(catalog.roots, name)) return (study) => analysis.select(null, study);
           const identity = {
             publication: await field(name, ['publication'], options),
             generated_at: await field(name, ['generated_at'], options),
@@ -1603,13 +1599,13 @@
             ...options,
             max_bytes: Math.min(options.max_bytes ?? 128000000, 128000000),
           });
-          return window.InfrastructureSwitchingAnalysis.validate(report, catalog);
+          return analysis.prepare(report, catalog);
         })().catch((error) => {
           analysisPromise = null;
           throw error;
         });
-      const report = await options.operation.run(analysisPromise);
-      const selected = window.InfrastructureSwitchingAnalysis.select(report, study);
+      const select = await options.operation.run(analysisPromise);
+      const selected = select(study);
       json.measure(selected, null, '', Math.min(options.max_bytes ?? 128000000, 128000000));
       return selected;
     }

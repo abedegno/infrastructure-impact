@@ -9,8 +9,9 @@ import tarfile
 from pathlib import Path
 
 import pytest
-from test_hosted_maintenance import PROFILE, effect_values, gate, workflow_steps
+from test_hosted_maintenance import PROFILE, effect_values, gate, publication_upload, workflow_steps
 from test_hosted_maintenance import recovery as recovery
+from test_pages_job_isolation import deployment_allowed
 
 ROOT = Path(__file__).resolve().parents[1]
 LEGACY = "57b76f7db3486588538dc93b3752327730643cce"
@@ -108,18 +109,6 @@ def preflight(source, env):
     )
 
 
-def publication_steps():
-    return [
-        s
-        for s in workflow_steps()
-        if any(
-            action in s.get("uses", "")
-            for action in ("configure-pages@", "upload-pages-artifact@", "deploy-pages@")
-        )
-        or s.get("name") == "Verify public availability and freshness"
-    ]
-
-
 def exercise_legacy_ordinary(legacy_workflow, failure):
     source, env, key, effects = legacy_workflow
     result = preflight(source, env)
@@ -164,14 +153,22 @@ def exercise_legacy_ordinary(legacy_workflow, failure):
         text=True,
     )
     assert checked.returncode == 0, checked.stderr
-    assert all(
-        gate(s, outputs, protocol="legacy-ordinary-v0", success=not failure) is not failure
-        for s in publication_steps()
+    upload = publication_upload()
+    uploaded = gate(upload, outputs, protocol="legacy-ordinary-v0", success=not failure)
+    assert uploaded is not failure
+    assert (
+        deployment_allowed(
+            "collect.yaml",
+            "publish",
+            outcome="success" if uploaded else "skipped",
+            artifact_outputs={"artifact_id": "123"} if uploaded else {},
+            producer_result="failure" if failure else "success",
+        )
+        is not failure
     )
-    # A later cleanup validation/commit failure also prevents all Pages actions.
-    assert all(
-        not gate(s, outputs, protocol="legacy-ordinary-v0", success=False, hosted_outcome="success")
-        for s in publication_steps()
+    # A later cleanup validation/commit failure prevents upload even when the helper succeeds.
+    assert not gate(
+        upload, outputs, protocol="legacy-ordinary-v0", success=False, hosted_outcome="success"
     )
 
 
@@ -295,7 +292,7 @@ def test_effects_protocol_never_falls_back_on_missing_helper_outputs(legacy_work
         s for s in workflow_steps() if s.get("name") == "Retain only encrypted recovery copies"
     )
     assert not gate(cleanup, {}, success=True)
-    assert all(not gate(s, {}, success=True) for s in publication_steps())
+    assert not gate(publication_upload(), {}, success=True)
 
 
 def test_workflow_legacy_authorization_is_not_inferred_from_helper_start_or_raw_mode():
@@ -390,8 +387,8 @@ def test_legacy_preflight_accepts_supported_replay_backend_and_capacity_controls
 
 @pytest.mark.parametrize("downstream", ["push", "deploy"])
 def test_completed_target_import_does_not_claim_cross_system_rollback(downstream):
-    # Both rejection points follow local recovery promotion. Existing workflow
-    # gates retain that verified recovery while withholding a failed deployment.
+    # Both rejection points follow local recovery promotion. A push failure
+    # stops upload, and deployment starts after the accepted artifact is uploaded.
     effects = {"mode": "apply", "recovery_ready": "true", "publish_ready": "true"}
     cleanup = next(
         s for s in workflow_steps() if s.get("name") == "Retain only encrypted recovery copies"
@@ -403,11 +400,27 @@ def test_completed_target_import_does_not_claim_cross_system_rollback(downstream
         capture_output=True,
     )
     assert rejected.returncode == 1
-    assert gate(cleanup, effects, success=False, hosted_outcome="success")
-    assert all(
-        not gate(s, effects, success=rejected.returncode == 0, hosted_outcome="success")
-        for s in publication_steps()
-    )
+    assert gate(cleanup, effects, success=downstream == "deploy", hosted_outcome="success")
+    upload = publication_upload()
+    if downstream == "push":
+        assert not gate(upload, effects, success=False, hosted_outcome="success")
+        assert not deployment_allowed(
+            "collect.yaml",
+            "publish",
+            outcome="skipped",
+            artifact_outputs={},
+            producer_result="failure",
+        )
+    else:
+        # A deployment failure happens after the accepted upload.
+        assert gate(upload, effects, success=True, hosted_outcome="success")
+        assert deployment_allowed(
+            "collect.yaml",
+            "publish",
+            outcome="success",
+            artifact_outputs={"artifact_id": "123"},
+            producer_result="success",
+        )
 
 
 TARGET_IMPORT = "campus-switching-public-gap-2026-11-07-v1"
@@ -472,8 +485,8 @@ def test_acquisition_effect_only_retains_failed_apply_and_never_publishes(value)
     for mode in ("apply", "ordinary", "preview", ""):
         effects = {"mode": mode, "acquisition_ready": value}
         assert gate(cleanup, effects, success=False) is (mode == "apply" and value == "true")
-        assert all(not gate(s, effects, success=False) for s in publication_steps())
-        assert all(not gate(s, effects, success=True) for s in publication_steps())
+        assert not gate(publication_upload(), effects, success=False)
+        assert not gate(publication_upload(), effects, success=True)
         artifact = next(
             s for s in workflow_steps() if "actions/upload-artifact@" in s.get("uses", "")
         )

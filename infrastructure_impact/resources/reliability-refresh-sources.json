@@ -1,0 +1,29 @@
+{
+  "cisco-c9200-rommon": {
+    "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+    "vendor": "cisco",
+    "media_type": "text/html",
+    "model": "9200",
+    "heading": "Boot Loader Versions",
+    "columns": ["Release", "ROMMON Version"]
+  },
+  "cisco-c9300-rommon": {
+    "url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+    "vendor": "cisco",
+    "media_type": "text/html",
+    "model": "9300",
+    "heading": "ROMMON Versions",
+    "columns": [
+      "Release",
+      "ROMMON Version (C9300 Models)",
+      "ROMMON Version (C9300L Models)",
+      "ROMMON Version (C9300X Models)",
+      "ROMMON Version (C9300LM Models)"
+    ]
+  },
+  "arista-eos-rss": {
+    "url": "https://www.arista.com/en/support/release-notes",
+    "vendor": "arista",
+    "media_type": "application/rss+xml"
+  }
+}

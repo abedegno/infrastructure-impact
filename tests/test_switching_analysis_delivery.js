@@ -73,14 +73,13 @@ print(publish(data,sys.argv[1],publication_format=sys.argv[2],include_switching_
         };
       const loader = await context.createStaticDelivery(fetch, ''),
         index = JSON.parse(fs.readFileSync(path.join(dir, 'data/index.json')));
-      const analysisPaths =
-        format === 'v1'
-          ? [index.switching_analysis.summary.path]
-          : [
-              JSON.parse(fs.readFileSync(path.join(dir, 'publication-v2.json'))).roots[
-                'switching-analysis.json'
-              ].path,
-            ];
+      const v2Catalog =
+        format === 'v2' ? JSON.parse(fs.readFileSync(path.join(dir, 'publication-v2.json'))) : null;
+      const analysisPaths = [
+        v2Catalog
+          ? v2Catalog.roots['switching-analysis.json'].path
+          : index.switching_analysis.summary.path,
+      ];
       assert(
         analysisPaths.every((p) => !reads.includes(p)),
         'bootstrap must not load analysis',
@@ -97,6 +96,20 @@ print(publish(data,sys.argv[1],publication_format=sys.argv[2],include_switching_
       loader.switchingReport = () => {
         throw Error('forbidden full report load');
       };
+      const contracts = context.window.InfrastructureSwitchingContracts,
+        validate = contracts.validate;
+      let compiledValidations = 0;
+      contracts.validate = (name, value, fragment) => {
+        if (name === 'switching-analysis-v1.json' && fragment === '/$defs/compiled')
+          compiledValidations++;
+        return validate(name, value, fragment);
+      };
+      if (format === 'v2') {
+        await assert.rejects(
+          () => loader.switchingAnalysis(study, { max_bytes: 1 }),
+          /selected byte budget/,
+        );
+      }
       const selected = await loader.switchingAnalysis(study);
       assert.strictEqual(selected.availability, 'available');
       assert(
@@ -107,6 +120,30 @@ print(publish(data,sys.argv[1],publication_format=sys.argv[2],include_switching_
         () => loader.switchingAnalysis({ ...study, generated_at: '2000-01-01T00:00:00Z' }),
         /generation|identity|publication/i,
       );
+      if (format === 'v2') {
+        const coldReads = reads.length;
+        const expected = JSON.stringify(selected);
+        selected.upgrades.requirements.kev_context.evaluated_at = 'changed-output-only';
+        const repeated = await loader.switchingAnalysis(study);
+        assert.strictEqual(JSON.stringify(repeated), expected);
+        await assert.rejects(
+          () =>
+            loader.switchingAnalysis({
+              ...study,
+              selection: { ...study.selection, effective_cve_ids: [] },
+            }),
+          /accepted cohort differs/,
+        );
+        assert.strictEqual(reads.length, coldReads, 'repeat selections make no transport reads');
+        assert.strictEqual(compiledValidations, 1, 'v2 validates a compiled root once');
+        delete v2Catalog.roots['switching-analysis.json'];
+        const absent = await context.window.InfrastructurePublicationV2.open(
+          fetch,
+          v2Catalog,
+          index,
+        );
+        assert.strictEqual((await absent.switchingAnalysis(study)).availability, 'unavailable');
+      }
       // A missing optional descriptor/root remains unavailable; a present invalid one fails.
       if (format === 'v1') {
         const rawIndex = fs.readFileSync(path.join(dir, 'data/index.json'));

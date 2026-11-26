@@ -453,32 +453,35 @@
       for (const k of ['source_ref', 'severity_facets_ref']) facts[m[k]] = report.facts[m[k]];
     for (const r of requirements)
       for (const k of ['proof_ref', 'train_binding_ref']) facts[r[k]] = report.facts[r[k]];
+    const memberCVEs = new Map(),
+      advisoryKey = ({ vendor, advisory_id }) => JSON.stringify([vendor, advisory_id]),
+      inferenceIds = new Set(requirements.map((r) => r.inference?.group_id)),
+      metadata = omit(report, [
+        'representation',
+        'members',
+        'facts',
+        'requirements',
+        'membership_sha256',
+        'membership_count',
+        'content_sha256',
+      ]);
+    for (const m of Object.values(members)) {
+      const key = advisoryKey(m);
+      if (!memberCVEs.has(key)) memberCVEs.set(key, new Set());
+      memberCVEs.get(key).add(m.cve_id);
+    }
+    metadata.source_groups = report.source_groups.filter((g) => {
+      const selected = memberCVEs.get(advisoryKey(g));
+      return selected && g.cve_ids.some((id) => selected.has(id));
+    });
+    metadata.inference_groups = report.inference_groups.filter((g) => inferenceIds.has(g.group_id));
     const compact = {
-      ...clone(
-        omit(report, [
-          'representation',
-          'members',
-          'facts',
-          'requirements',
-          'membership_sha256',
-          'membership_count',
-          'content_sha256',
-        ]),
-      ),
+      ...clone(metadata),
       representation: 'compact-requirements',
       members: clone(members),
       facts: clone(facts),
       requirements: clone(requirements),
     };
-    compact.source_groups = compact.source_groups.filter((g) =>
-      Object.values(members).some(
-        (m) =>
-          m.vendor === g.vendor && m.advisory_id === g.advisory_id && g.cve_ids.includes(m.cve_id),
-      ),
-    );
-    compact.inference_groups = compact.inference_groups.filter((g) =>
-      requirements.some((r) => r.inference?.group_id === g.group_id),
-    );
     compact.membership_sha256 = hash(compact.members);
     compact.membership_count = Object.keys(members).length;
     compact.content_sha256 = hash(compact);
@@ -971,8 +974,17 @@
     };
     return out;
   }
-  function select(report, study) {
-    if (report !== null) validate(report, study);
+  function selectValidated(report, study) {
+    const expected =
+      report === null
+        ? null
+        : context(report, {
+            vendor: study.selection.requested_vendor,
+            scope_level: study.selection.scope_level,
+            window: study.selection.requested_window,
+            cve_ids: study.selection.requested_cve_ids,
+          });
+    if (expected && !eq(expected.selection, study.selection)) fail('accepted cohort differs');
     let out = {
       schema_version: 1,
       publication: clone(study.publication),
@@ -989,13 +1001,6 @@
       }),
     };
     if (report !== null) {
-      const expected = context(report, {
-        vendor: study.selection.requested_vendor,
-        scope_level: study.selection.scope_level,
-        window: study.selection.requested_window,
-        cve_ids: study.selection.requested_cve_ids,
-      });
-      if (!eq(expected.selection, study.selection)) fail('accepted cohort differs');
       const selected = selectedClaims(report, study.selection);
       out = {
         ...out,
@@ -1010,6 +1015,30 @@
     }
     measure(out);
     return out;
+  }
+  function select(report, study) {
+    if (report !== null) validate(report, study);
+    return selectValidated(report, study);
+  }
+  function freezeOwned(value, seen) {
+    if (!value || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    for (const key of Reflect.ownKeys(value)) {
+      const property = Object.getOwnPropertyDescriptor(value, key);
+      if (!Object.hasOwn(property, 'value')) fail('expected owned JSON data');
+      freezeOwned(property.value, seen);
+    }
+    Object.freeze(value);
+  }
+  // The caller transfers ownership of decoded JSON. Freeze it in place so the
+  // graph used after preparation is exactly the one that passed validation.
+  function prepare(report, identity = report) {
+    freezeOwned(report, new WeakSet());
+    validate(report, identity);
+    return (study) => {
+      C.identity(report, study);
+      return selectValidated(report, study);
+    };
   }
   function csvJSON(value) {
     if (typeof value === 'number') return C.numberToken(value);
@@ -1068,6 +1097,7 @@
     claimFacets,
     context,
     select,
+    prepare,
     upgrades,
     walk,
     detailedRows,

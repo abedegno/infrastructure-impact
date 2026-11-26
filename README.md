@@ -106,6 +106,9 @@ counts, source eligibility and coverage; unsupported rates remain unavailable.
 Source-linked staircase context keeps notice, action and software dates separate
 and does not change upgrade counts or infer device applicability.
 
+Use the [local reliability refresh](docs/RELIABILITY_REFRESH.md) to prepare a
+separate candidate and pending-review report from original source captures.
+
 Historical collection resumes in bounded batches for Aruba, Arista, Palo Alto
 and Fortinet. [Archive source reviews](docs/research/vendor-archives.md) document
 product filters, access gaps and why Cisco archive backfill remains disabled.

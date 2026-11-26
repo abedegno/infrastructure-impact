@@ -26,12 +26,20 @@ const api = context.window.InfrastructurePublicationV2,
   vectors = JSON.parse(fs.readFileSync('tests/fixtures/publication-v2-codec-vectors.json'));
 (async () => {
   for (const v of vectors.valid) {
-    for (const encoding of ['logical', 'ascii'])
+    for (const encoding of ['logical', 'ascii']) {
+      const observed = [];
       assert.strictEqual(
-        await api.decodeTokens(v.tokens, v.strings, v.shapes, { serialization: encoding }),
+        await api.decodeTokens(v.tokens, v.strings, v.shapes, {
+          serialization: encoding,
+          max_bytes: Buffer.byteLength(v[encoding]),
+          canonical_bytes: Buffer.byteLength(v.logical),
+          observer: (chunk) => observed.push(chunk),
+        }),
         v[encoding],
         v.name,
       );
+      assert.strictEqual(observed.join(''), v.logical, v.name + ' canonical observer');
+    }
   }
   for (const v of vectors.invalid)
     await assert.rejects(() => api.decodeTokens(v.tokens, v.strings, v.shapes), undefined, v.name);
@@ -41,6 +49,40 @@ const api = context.window.InfrastructurePublicationV2,
   );
   await assert.rejects(() => api.decodeTokens([null], [], [], { deadline: 0 }));
   console.log('Publication v2 shared codec vectors and bounds passed');
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});
+(async () => {
+  let encodes = 0;
+  const isolated = {
+    ...context,
+    window: { InfrastructureJSON: context.window.InfrastructureJSON },
+    TextEncoder: class extends TextEncoder {
+      encode(text) {
+        encodes++;
+        return super.encode(text);
+      }
+    },
+  };
+  vm.runInNewContext(
+    fs.readFileSync('infrastructure_impact/web/publication-v2.js', 'utf8'),
+    isolated,
+  );
+  const observed = [];
+  const decoded = await isolated.window.InfrastructurePublicationV2.decodeTokens(
+    [[-1, 3], true, null, false],
+    [],
+    [],
+    {
+      max_bytes: 17,
+      canonical_bytes: 17,
+      observer: (chunk) => observed.push(chunk),
+    },
+  );
+  assert.strictEqual(decoded, '[true,null,false]');
+  assert.strictEqual(observed.join(''), decoded);
+  assert.strictEqual(encodes, 0, 'literal ASCII emission needs no UTF-8 allocations');
 })().catch((e) => {
   console.error(e);
   process.exitCode = 1;
@@ -387,6 +429,52 @@ print(publish(data,sys.argv[1],publication_format='v2'))`,
         logical_sha256: createHash('sha256').update(text).digest('hex'),
       };
     }
+    const unicodeRoot = 'snapshot.json',
+      unicodeCatalog = JSON.parse(JSON.stringify(catalog)),
+      unicodeTokens = [[0], [-1, 3], -2, [-2, 'i', '9007199254740993'], true],
+      unicodeLogical = '{"雪":["é🚀\\n",9007199254740993,true]}',
+      unicodeASCII = '{"\\u96ea":["\\u00e9\\ud83d\\ude80\\n",9007199254740993,true]}',
+      unicodeDescriptor = wireRoot(
+        unicodeRoot,
+        unicodeTokens,
+        unicodeLogical,
+        Buffer.byteLength(unicodeLogical),
+      );
+    unicodeCatalog.strings = [{ first: 0, count: 1, part: part('strings', ['é🚀\n']) }];
+    unicodeCatalog.shapes = [{ first: 0, count: 1, part: part('shapes', [['雪']]) }];
+    unicodeCatalog.roots[unicodeRoot] = unicodeDescriptor;
+    const unicodeReader = await api.open(virtualFetch, unicodeCatalog, index);
+    for (const [serialization, expected] of [
+      ['logical', unicodeLogical],
+      ['ascii', unicodeASCII],
+    ]) {
+      const canonical = [];
+      let streamed = '';
+      for await (const chunk of unicodeReader.streamRoot(unicodeRoot, {
+        serialization,
+        max_bytes: Buffer.byteLength(expected),
+        observer: (chunk) => canonical.push(chunk),
+      }))
+        streamed += chunk;
+      assert.strictEqual(streamed, expected);
+      assert.strictEqual(canonical.join(''), unicodeLogical);
+      const materialized = await unicodeReader.materializeRoot(unicodeRoot, {
+        serialization,
+        max_bytes: Buffer.byteLength(expected),
+      });
+      assert.strictEqual(materialized.雪[0], 'é🚀\n');
+      assert.strictEqual(materialized.雪[1], 9007199254740993n);
+      assert.strictEqual(materialized.雪[2], true);
+    }
+    unicodeCatalog.roots[unicodeRoot] = altered(unicodeDescriptor, (v) => {
+      // Keep token transport and the root descriptor's own digest and byte count valid.
+      v.data.logical.sha256 = '0'.repeat(64);
+    });
+    const invalidLogical = await api.open(virtualFetch, unicodeCatalog, index);
+    await assert.rejects(
+      () => invalidLogical.materializeRoot(unicodeRoot),
+      /range logical fingerprint/,
+    );
     const membershipRoot = 'switching-row-sources.json',
       originalMembership = await reader.materializeRoot(membershipRoot),
       seedStrings = catalog.strings.flatMap(
