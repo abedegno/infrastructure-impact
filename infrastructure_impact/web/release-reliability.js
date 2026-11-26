@@ -835,6 +835,222 @@
       '</section>'
     );
   }
+  function deriveCoverage(report) {
+    const result = Object.fromEntries(
+      [
+        'publication',
+        'generated_at',
+        'dataset_observed_at',
+        'catalogue_sha256',
+        'availability',
+      ].map((key) => [key, clone(report[key])]),
+    );
+    Object.assign(result, {
+      schema_version: 1,
+      config: clone(report.config),
+      method: clone(report.method),
+      review_status: report.validation.review_status,
+      sources: clone(report.catalogue?.sources ?? []),
+      trains: [],
+      limitations: [
+        'Counts describe disclosure and collection, not vendor quality. Missing evidence is unknown, never zero. Independent human review pending.',
+        'Inventory lists contain observed versions, not a complete release denominator.',
+        'Undated versions cannot be allocated to a calendar year.',
+        'Dates and original evidence resolve gaps only for the explicitly stated model.',
+        'Independent human review pending.',
+      ],
+    });
+    if (report.availability === 'unavailable') return result;
+    const sources = new Map(result.sources.map((s) => [s.source_id, s])),
+      values = (facts) => new Set(facts.map((r) => r.version)),
+      sorted = (set) =>
+        [...set].sort((a, b) => {
+          const x = Array.from(a, (c) => c.codePointAt(0)),
+            y = Array.from(b, (c) => c.codePointAt(0));
+          for (let i = 0; i < Math.min(x.length, y.length); i++)
+            if (x[i] !== y[i]) return x[i] - y[i];
+          return x.length - y.length;
+        }),
+      without = (set, other) => sorted(new Set([...set].filter((v) => !other.has(v))));
+    for (const train of report.config.trains) {
+      const same = (f) =>
+          f.vendor === train.vendor &&
+          f.train === train.train &&
+          (f.family ?? train.family) === train.family,
+        releases = report.catalogue.releases.filter(same),
+        notices = report.catalogue.notices.filter(same),
+        models = train.platforms.map((model) => {
+          const scoped = releases.filter((r) => r.platforms_stated.includes(model)),
+            known = values(scoped),
+            dated = values(scoped.filter((r) => r.release_date)),
+            originals = values(scoped.filter((r) => r.release_date && original(r, sources))),
+            announced = values(scoped.filter((r) => r.announcement_date));
+          return {
+            model,
+            observed_versions: sorted(known),
+            dated_original_versions: sorted(originals),
+            dated_research_only_versions: without(dated, originals),
+            undated_versions: without(known, dated),
+            announcement_only_versions: without(announced, dated),
+          };
+        });
+      result.trains.push({
+        vendor: train.vendor,
+        family: train.family,
+        train: train.train,
+        models,
+        unbound_versions: sorted(values(releases.filter((r) => !r.platforms_stated.length))),
+        outside_cohort_versions: sorted(
+          values(
+            releases.filter(
+              (r) =>
+                r.platforms_stated.length &&
+                !r.platforms_stated.some((p) => train.platforms.includes(p)),
+            ),
+          ),
+        ),
+        notice_date_unknown_ids: sorted(
+          new Set(notices.filter((n) => n.notice_date === null).map((n) => n.notice_id)),
+        ),
+        notice_model_unresolved_ids: sorted(
+          new Set(notices.filter((n) => !n.platforms_stated.length).map((n) => n.notice_id)),
+        ),
+        release_evidence: clone(releases),
+        notice_evidence: clone(notices),
+        statement_evidence: clone(report.catalogue.statements.filter(same)),
+        coverage_judgements: clone(report.catalogue.coverage.filter(same)),
+        respin_evidence: clone(report.respins.filter(same)),
+        periods: clone(
+          report.annual.filter((a) => a.vendor === train.vendor && a.train === train.train),
+        ),
+      });
+    }
+    return result;
+  }
+  function coverageReport(report) {
+    validate(report);
+    return deriveCoverage(report);
+  }
+  function coverageCSV(report, { max_bytes = 128000000 } = {}) {
+    const payload = (v) => {
+      if (typeof v === 'number') return C.numberToken(v);
+      if (Array.isArray(v)) return '[' + v.map(payload).join(',') + ']';
+      if (v && typeof v === 'object')
+        return (
+          '{' +
+          Object.keys(v)
+            .sort()
+            .map((k) => JSON.stringify(k) + ':' + payload(v[k]))
+            .join(',') +
+          '}'
+        );
+      return J.stringify(v);
+    };
+    const value = coverageReport(report),
+      fields = [
+        'row_type',
+        'publication_id',
+        'generated_at',
+        'catalogue_sha256',
+        'vendor',
+        'train',
+        'model',
+        'year',
+        'metric',
+        'payload',
+      ],
+      identity = {
+        publication_id: value.publication?.id,
+        generated_at: value.generated_at,
+        catalogue_sha256: value.catalogue_sha256,
+      },
+      omit = (v, keys) => Object.fromEntries(Object.entries(v).filter(([k]) => !keys.includes(k))),
+      rows = [
+        {
+          ...identity,
+          row_type: 'context',
+          payload: payload(omit(value, ['sources', 'trains', 'limitations'])),
+        },
+      ];
+    for (const train of value.trains) {
+      const row = { ...identity, vendor: train.vendor, train: train.train };
+      for (const model of train.models)
+        rows.push({
+          ...row,
+          row_type: 'model_inventory',
+          model: model.model,
+          payload: payload(model),
+        });
+      for (const period of train.periods)
+        for (const [metric, fact] of Object.entries(period.metrics))
+          rows.push({
+            ...row,
+            row_type: 'period_metric',
+            year: period.year,
+            metric,
+            payload: payload({ ...omit(period, ['metrics']), metric, ...fact }),
+          });
+      rows.push({
+        ...row,
+        row_type: 'train_gaps',
+        payload: payload(
+          omit(train, [
+            'models',
+            'periods',
+            'release_evidence',
+            'notice_evidence',
+            'statement_evidence',
+            'coverage_judgements',
+            'respin_evidence',
+          ]),
+        ),
+      });
+      for (const kind of [
+        'release_evidence',
+        'notice_evidence',
+        'statement_evidence',
+        'coverage_judgements',
+        'respin_evidence',
+      ])
+        for (const fact of train[kind])
+          rows.push({
+            ...row,
+            row_type: kind === 'coverage_judgements' ? 'coverage_judgement' : kind,
+            payload: payload(fact),
+          });
+    }
+    for (const source of value.sources)
+      rows.push({
+        ...identity,
+        row_type: 'source',
+        vendor: source.vendor,
+        payload: payload(source),
+      });
+    for (const limitation of value.limitations)
+      rows.push({ ...identity, row_type: 'limitation', payload: limitation });
+    return window.InfrastructureSwitching.csvTable(
+      fields,
+      rows.map((r) => fields.map((f) => r[f])),
+      { max_bytes },
+    );
+  }
+  function renderCoverage(report) {
+    const coverage = deriveCoverage(report),
+      rows = coverage.trains.flatMap((t) =>
+        t.models.map(
+          (m) =>
+            `<tr><td>${esc(t.vendor)} · ${esc(t.train)} · ${esc(m.model)}</td><td>${m.observed_versions.length || 'No model-bound observations'}</td><td>${m.observed_versions.length ? m.dated_original_versions.length : 'unknown'}</td><td>${m.observed_versions.length ? m.dated_research_only_versions.length : 'unknown'}</td><td>${m.observed_versions.length ? m.undated_versions.length : 'unknown'}</td></tr>`,
+        ),
+      ),
+      details = coverage.trains
+        .map(
+          (t) =>
+            `<details><summary>${esc(t.vendor)} ${esc(t.train)} · ${t.unbound_versions.length} version observations without model binding · coverage gaps</summary><p>Version observations without stated study-model scope: ${esc(t.unbound_versions.join(', ') || 'No such observations retained')}. Notices without model scope: ${esc(t.notice_model_unresolved_ids.join(', ') || 'No such observations retained')}.</p>${t.models.map((m) => `<p><strong>${esc(m.model)}</strong> · Missing release date: ${esc(m.undated_versions.join(', ') || 'No undated observations retained')}; dates supported only by research excerpts: ${esc(m.dated_research_only_versions.join(', ') || 'No such observations retained')}.</p>`).join('')}${t.periods.map((p) => `<p>${esc(p.year)} · ${esc(p.metrics.releases_shipped.reason)}</p>`).join('')}<p>To resolve a gap, obtain a publisher release-date statement and original capture for the named model/version, plus an explicit archive-completeness statement. Notice and respin rates additionally require complete signal coverage and prior-release history.</p></details>`,
+        )
+        .join('');
+    return `<section class="reliability-coverage"><h4>Coverage gaps by model</h4><p>Inventory counts describe retained observations across the train, including undated versions. They are not annual release totals or completeness claims. Zero inventory means no qualifying observation, not zero releases. Unknown dates cannot be assigned to a year. Study-model scope is never borrowed from another platform.</p><div class="table-wrap"><table><thead><tr><th>Train / model</th><th>Observed version identities</th><th>Dated original evidence</th><th>Research-only dates</th><th>Missing release dates</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>${details}<p><button id="reliability-coverage-json">Coverage JSON</button> <button id="reliability-coverage-csv">Coverage CSV</button></p></section>`;
+  }
+
   function render(report, { loading = false, error = '' } = {}) {
     const period = report
       ? `${report.config.start.slice(0, 4)}–${report.config.end.slice(0, 4)}`
@@ -908,13 +1124,15 @@
       .join('');
     return (
       lead +
-      `<p>Dataset observed: ${esc(report.dataset_observed_at)}. Generated: ${esc(report.generated_at)}.</p><p>Numbers below are observed counts. Research-only observations and unresolved model scope are labelled beside each count; production eligibility, denominators and reasons are in each train’s full metrics. Unknown evidence remains unknown. Research excerpts are research-only. Rates require complete dated release denominators, signal coverage and prior-release history; no cross-vendor rate is inferred.</p>${cards}<p><button id="reliability-json">Release reliability JSON</button> <button id="reliability-csv">Release reliability CSV</button> <button id="reliability-review">Pending review packet JSON</button></p><details><summary>Publisher sources and capture dates</summary>${report.catalogue.sources.map((s) => sourceLinks(report, [{ source_id: s.source_id, locator: s.source_id, quote: '' }], s.vendor)).join('')}</details><details><summary>Selection, methodology, coverage and pending review</summary><pre>${esc(J.stringify({ upgrade_selection: report.upgrade_selection, method: report.method, limitations: report.limitations, review_packet: report.review_packet, validation: report.validation }, null, 2))}</pre></details></section>`
+      `<p>Dataset observed: ${esc(report.dataset_observed_at)}. Generated: ${esc(report.generated_at)}.</p><p>Numbers below are observed counts. Research-only observations and unresolved model scope are labelled beside each count; production eligibility, denominators and reasons are in each train’s full metrics. Unknown evidence remains unknown. Research excerpts are research-only. Rates require complete dated release denominators, signal coverage and prior-release history; no cross-vendor rate is inferred.</p>${renderCoverage(report)}${cards}<p><button id="reliability-json">Release reliability JSON</button> <button id="reliability-csv">Release reliability CSV</button> <button id="reliability-review">Pending review packet JSON</button></p><details><summary>Publisher sources and capture dates</summary>${report.catalogue.sources.map((s) => sourceLinks(report, [{ source_id: s.source_id, locator: s.source_id, quote: '' }], s.vendor)).join('')}</details><details><summary>Selection, methodology, coverage and pending review</summary><pre>${esc(J.stringify({ upgrade_selection: report.upgrade_selection, method: report.method, limitations: report.limitations, review_packet: report.review_packet, validation: report.validation }, null, 2))}</pre></details></section>`
     );
   }
   window.InfrastructureReleaseReliability = {
     validate,
     withUpgrades,
     csvExport,
+    coverageReport,
+    coverageCSV,
     render,
     renderSteps,
   };

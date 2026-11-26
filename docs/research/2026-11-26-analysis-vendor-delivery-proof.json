@@ -1,0 +1,69 @@
+{
+  "publication": {
+    "id": "141c2f9dc8f04c12a795ac819e7b4c8e",
+    "advisory_schema_version": 2
+  },
+  "source_content_sha256": "5b414ecc0bf3f7e73442484ddb33cf58a89ae2fcdecbe293e511396c8ab7b364",
+  "source_logical_bytes": 126633200,
+  "environment": "Python; accepted cached public report; local proof, not browser speed benchmark",
+  "vendors": {
+    "cisco": {
+      "options": {
+        "vendor": "cisco",
+        "window": "2025"
+      },
+      "projection_logical_bytes": 122781333,
+      "counts": {
+        "claims": 34920,
+        "members": 34920,
+        "requirements": 104784
+      },
+      "selected_sha256": "37bb5b7aaa5de970167c6f9795081c795ca0bebac8fd59bc7cdb52d5852593e5",
+      "analysis_csv_sha256": "bda726bb45fbd347315697953b37e99fe3504dd1e0bb36d25d8b268a3b759485",
+      "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+      "exact_json_and_both_csv_equal": true,
+      "proof_seconds": 227.4986090408638
+    },
+    "aruba": {
+      "options": {
+        "vendor": "aruba",
+        "window": "all"
+      },
+      "projection_logical_bytes": 3839930,
+      "counts": {
+        "claims": 884,
+        "members": 425,
+        "requirements": 1461
+      },
+      "selected_sha256": "a0a025a04628329ea286090c44c179b6f4af0f155af053a9469868a5607b1c3a",
+      "analysis_csv_sha256": "c0e92ba984171b1b04d226856a210a65b32128c50362a2f8632aa540c509f13f",
+      "upgrades_csv_sha256": "4a4e94d213d849da7a0caed53d34e5133f126989c0d96be338662a51ebcde1a9",
+      "exact_json_and_both_csv_equal": true,
+      "proof_seconds": 44.99414329091087
+    },
+    "arista": {
+      "options": {
+        "vendor": "arista",
+        "window": "all"
+      },
+      "projection_logical_bytes": 3390303,
+      "counts": {
+        "claims": 788,
+        "members": 94,
+        "requirements": 426
+      },
+      "selected_sha256": "d8d08db5519ecc99b3eeaad175bf84831312b99e4680aa060430872ce4073486",
+      "analysis_csv_sha256": "8ba3be2f56eeb3718f6b5feb5130521bdf9a8d92461bdad814dbcf9c7e5b4588",
+      "upgrades_csv_sha256": "4523e917e3c19634c050b7d46c783ecdcd39a710eeb8d207547ed178bd5d1864",
+      "exact_json_and_both_csv_equal": true,
+      "proof_seconds": 42.85178045812063
+    }
+  },
+  "total_proof_seconds": 319.58115250011906,
+  "measurement_notes": [
+    "Logical byte counts exclude a trailing file newline; the accepted decoded full-report file is 126633201 bytes.",
+    "selected_sha256 is the native canonical selected-JSON fingerprint; CSV hashes are SHA-256 of UTF-8 export bytes.",
+    "proof_seconds and total_proof_seconds are local native proof elapsed times, including repeated validation and comparison work; they are not browser latency or CPU-time measurements.",
+    "No hosted activation, browser speed guarantee, or full retained-generation preview site-budget validation is established by this receipt."
+  ]
+}

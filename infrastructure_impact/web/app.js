@@ -553,25 +553,30 @@ function renderComparison() {
     $('#reliability-jump')?.addEventListener('click', () =>
       $('#release-reliability')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }),
     );
-    for (const kind of ['json', 'csv', 'review'])
+    for (const kind of ['json', 'csv', 'review', 'coverage-json', 'coverage-csv'])
       $('#reliability-' + kind)?.addEventListener('click', () => {
         try {
           window.InfrastructureReleaseReliability.validate(reliabilityReport, accepted);
-          const isJSON = kind !== 'csv',
+          const isCoverage = kind.startsWith('coverage-'),
+            isJSON = !kind.endsWith('csv'),
             value =
-              kind === 'review'
-                ? {
-                    schema_version: 1,
-                    publication: reliabilityReport.publication,
-                    generated_at: reliabilityReport.generated_at,
-                    sources: reliabilityReport.catalogue?.sources ?? [],
-                    items: reliabilityReport.review_packet,
-                    review_status: 'independent_human_review_pending',
-                  }
-                : reliabilityReport,
+              isCoverage && isJSON
+                ? window.InfrastructureReleaseReliability.coverageReport(reliabilityReport)
+                : kind === 'review'
+                  ? {
+                      schema_version: 1,
+                      publication: reliabilityReport.publication,
+                      generated_at: reliabilityReport.generated_at,
+                      sources: reliabilityReport.catalogue?.sources ?? [],
+                      items: reliabilityReport.review_packet,
+                      review_status: 'independent_human_review_pending',
+                    }
+                  : reliabilityReport,
             body = isJSON
               ? appJSON.stringifyBounded(value, null, '', 128000000)
-              : window.InfrastructureReleaseReliability.csvExport(reliabilityReport),
+              : isCoverage
+                ? window.InfrastructureReleaseReliability.coverageCSV(reliabilityReport)
+                : window.InfrastructureReleaseReliability.csvExport(reliabilityReport),
             url = URL.createObjectURL(
               new Blob([body], { type: isJSON ? 'application/json' : 'text/csv' }),
             ),
@@ -579,7 +584,7 @@ function renderComparison() {
           a.href = url;
           a.download =
             'release-reliability-' +
-            (kind === 'review' ? 'review-' : '') +
+            (kind === 'review' ? 'review-' : isCoverage ? 'coverage-' : '') +
             reliabilityReport.publication?.id +
             '.' +
             (isJSON ? 'json' : 'csv');

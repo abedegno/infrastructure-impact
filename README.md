@@ -309,3 +309,7 @@ Independent human review remains pending.
 See the [retained-source switching analysis run](docs/research/2026-11-14-switching-source-run.md)
 for measured target coverage, unknown annual estimates, the separate complete-feed
 KEV audit and native/browser export parity.
+
+### Release reliability coverage
+
+The switching comparison exposes [coverage gaps by model](docs/RELIABILITY_COVERAGE.md), with generation-bound JSON/CSV exports and an offline export command. Observed inventories distinguish original dates, research-only dates, unknown dates and unbound model scope; they do not establish complete release denominators or vendor quality. See the [dated coverage result](docs/research/2026-11-26-reliability-coverage-summary.md).
