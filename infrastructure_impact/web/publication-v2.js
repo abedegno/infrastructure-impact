@@ -1626,27 +1626,18 @@
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
     async function switchingAnalysis(study, options = {}) {
-      window.InfrastructureSwitchingContracts.identity(study, catalog);
       if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
       const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
         deliveryName = 'switching-analysis-delivery.json',
-        requestedVendor = study.selection.requested_vendor,
         analysis = window.InfrastructureSwitchingAnalysis,
         selectedRoot = 'switching-analysis-selected.json',
         precomputed = window.InfrastructureAnalysisPrecomputed;
-      if (
-        study.selection.requested_cve_ids === null &&
-        Object.hasOwn(catalog.roots, selectedRoot)
-      ) {
-        if (!precomputed) fail('missing selected analysis reader');
-        if (precomputed.supported()) {
-          // Own the accepted identity before any shared work or caller mutation.
-          const accepted = json.clone({
-            publication: study.publication,
-            generated_at: study.generated_at,
-            observation_end: study.observation_end,
-            selection: study.selection,
-          });
+      if (Object.hasOwn(catalog.roots, selectedRoot)) {
+        if (!precomputed && study.selection.requested_cve_ids === null)
+          fail('missing selected analysis reader');
+        if (precomputed?.supported() && precomputed.isOrdinaryStudy(study)) {
+          const accepted = precomputed.captureStudy(study);
+          window.InfrastructureSwitchingContracts.identity(accepted, catalog);
           const manifest = await sharedValue(
             'analysis:selected-manifest',
             options,
@@ -1657,8 +1648,9 @@
                 text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
                   await raw(descriptor, owned),
                 );
-              return freeze(
-                precomputed.validateManifest(json.parseStrict(text, { transport: true }), catalog),
+              return precomputed.validateManifest(
+                json.parseStrict(text, { transport: true }),
+                catalog,
               );
             },
           );
@@ -1680,6 +1672,8 @@
           }
         }
       }
+      window.InfrastructureSwitchingContracts.identity(study, catalog);
+      const requestedVendor = study.selection.requested_vendor;
       async function bounded(name, limit) {
         if ((await root(name, options)).logical.bytes > limit) fail('selected byte budget');
       }

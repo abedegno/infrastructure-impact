@@ -38,6 +38,7 @@ const {
   InfrastructureAnalysisPrecomputed: P,
   InfrastructureSwitchingAnalysis: A,
   InfrastructureJSON: J,
+  InfrastructureSwitchingContracts: C,
 } = context.window;
 const parse = (name) => J.parseStrict(fs.readFileSync(path.join(dir, name), 'utf8')),
   { compiled } = parse('source.json'),
@@ -67,34 +68,87 @@ async function main() {
   assert.throws(() => P.copySelected({ value: { bogus: true }, bytes: 1 }), /prepared/i);
   const view = manifest.views[0],
     study = A.context(compiled, view.options),
-    first = await load(view.chunks[0].part);
-  for (const mutate of [
-    (wire) => wire.subarray(0, wire.length - 1),
-    (wire) => {
-      const copy = Buffer.from(wire);
-      copy[copy.length - 8] ^= 1;
-      return copy;
-    },
-    (wire) => Buffer.concat([wire, zlib.gzipSync(Buffer.alloc(0))]),
-    (wire) => Buffer.concat([zlib.gzipSync(Buffer.alloc(0)), wire]),
-    () => zlib.gzipSync(Buffer.alloc(view.decoded.bytes + 100000), { level: 6 }),
+    first = await load(view.chunks[0].part),
+    badCRC = Buffer.from(first);
+  badCRC[badCRC.length - 8] ^= 1;
+  for (const [wire, error] of [
+    [first.subarray(0, first.length - 1), /truncated gzip|gzip Huffman/i],
+    [badCRC, /invalid gzip output/i],
+    [Buffer.concat([first, gzip(Buffer.alloc(0))]), /trailing gzip member/i],
+    [Buffer.concat([gzip(Buffer.alloc(0)), first]), /trailing gzip member/i],
+    [gzip(Buffer.alloc(view.decoded.bytes + 100000)), /decoded gzip byte budget/i],
   ]) {
-    const changed = structuredClone(view),
-      raw = mutate(first),
-      fingerprint = sha(raw);
-    changed.chunks[0].part = {
-      path: `data/v2/${fingerprint}.json.gz`,
-      sha256: fingerprint,
-      bytes: raw.length,
-    };
+    const changed = structuredClone(view);
+    changed.chunks[0].part = wireDescriptor(wire);
+    await assert.rejects(() => P.decodeSelected(changed, study, async () => wire), error);
+  }
+  for (const [raw, error] of [
+    [Buffer.from([0x22, 0xc3, 0x28, 0x22]), /utf-8|encoding/i],
+    [Buffer.from('{"x":1,"x":2}'), /lossless JSON/i],
+  ]) {
+    const [candidate, wire] = rawCandidate(view, raw);
     await assert.rejects(
-      () => P.decodeSelected(changed, study, async () => raw),
-      /gzip|decoded|budget/i,
+      P.decodeSelected(candidate, study, async () => wire),
+      error,
     );
   }
+  await checkPreflightDeadline(view, study, first);
   await checkLosslessCandidate();
+  await checkStandaloneValidation();
   await readerLifecycle();
   console.log('Selected browser JSON, CSV, identity, bounds, gzip, and reader lifecycle passed');
+}
+function gzip(raw) {
+  const zipped = zlib.gzipSync(raw, { level: 6 });
+  zipped[9] = 255;
+  return zipped;
+}
+const digest = (raw) => ({ bytes: raw.length, sha256: sha(raw) });
+const wireDescriptor = (raw) => ({ path: `data/v2/${sha(raw)}.json.gz`, ...digest(raw) });
+function rawCandidate(view, raw, wire = gzip(raw)) {
+  return [
+    {
+      ...view,
+      decoded: digest(raw),
+      chunks: [{ offset: 0, decoded: digest(raw), part: wireDescriptor(wire) }],
+    },
+    wire,
+  ];
+}
+async function checkPreflightDeadline(view, study, valid) {
+  const filler = Buffer.alloc(1000000).fill(Buffer.from([0, 0, 0, 255, 255])),
+    wire = Buffer.concat([valid.subarray(0, 10), filler, valid.subarray(10)]),
+    candidate = structuredClone(view);
+  candidate.chunks[0].part = wireDescriptor(wire);
+  let yieldObserved = false,
+    platformStarted = false,
+    expire;
+  const deadline = new Promise((_, reject) => {
+    expire = reject;
+  });
+  context.setTimeout = (callback, ms) => {
+    yieldObserved = true;
+    expire(Error('fixture owner deadline'));
+    return setTimeout(callback, ms);
+  };
+  context.DecompressionStream = class {
+    constructor() {
+      platformStarted = true;
+      throw Error('inflation started before checkpoint');
+    }
+  };
+  try {
+    await assert.rejects(
+      P.decodeSelected(candidate, study, async () => wire, {
+        run: (work) => Promise.race([work, deadline]),
+      }),
+      /owner deadline/i,
+    );
+    assert(yieldObserved && !platformStarted);
+  } finally {
+    context.setTimeout = setTimeout;
+    context.DecompressionStream = DecompressionStream;
+  }
 }
 async function checkLosslessCandidate() {
   const { compiled } = parse('numeric-source.json'),
@@ -118,11 +172,9 @@ async function checkLosslessCandidate() {
     chunks = [raw.subarray(0, 4000000), raw.subarray(4000000)],
     target = structuredClone(descriptor),
     wire = new Map();
-  const digest = (bytes) => ({ bytes: bytes.length, sha256: sha(bytes) });
   target.decoded = digest(raw);
   target.chunks = chunks.map((chunk, i) => {
-    const zipped = zlib.gzipSync(chunk, { level: 6 });
-    zipped[9] = 255; // The writer uses the OS-neutral fixed gzip header.
+    const zipped = gzip(chunk);
     const path = `data/v2/${sha(zipped)}.json.gz`;
     wire.set(path, zipped);
     return { offset: i * 4000000, decoded: digest(chunk), part: { path, ...digest(zipped) } };
@@ -141,6 +193,147 @@ async function checkLosslessCandidate() {
     P.decodeSelected(badTotal, study, async ({ path }) => wire.get(path)),
     /fingerprint/i,
   );
+}
+
+async function checkStandaloneValidation() {
+  const view = manifest.views[0],
+    study = A.context(compiled, view.options),
+    selected = P.copySelected(await P.decodeSelected(view, study, load));
+  const corrupt = [
+    [(r) => r.disclosure.coverage.selected_affected_claims++, /disclosure/i],
+    [(r) => (r.disclosure.pairs[0].date_period = 'unknown'), /disclosure/i],
+    [(r) => r.model_coverage.models[0].counts.claims++, /model/i],
+    [(r) => (r.kev_reconciliation.summary.state_counts.unknown = 999), /KEV/i],
+    [(r) => (r.kev_reconciliation.entries[0].membership = 'unknown'), /KEV/i],
+    [(r) => r.upgrades.rows[0].supported_event_count++, /event count/i],
+  ];
+  for (const [change, error] of corrupt) {
+    const wrong = structuredClone(selected);
+    change(wrong);
+    assert.throws(() => P.prepareSelected(wrong, study), error);
+  }
+  for (const kind of ['facts', 'inference', 'source']) {
+    const invalid = structuredClone(selected),
+      r = invalid.upgrades.requirements;
+    if (kind === 'facts') {
+      const f = Object.values(r.facts).find((fact) => fact?.source_url);
+      const unused = { ...f, source_locator: 'authored-unused' };
+      r.facts[C.fingerprint(unused)] = unused;
+    } else if (kind === 'inference') {
+      const { group_id, ...g } = r.inference_groups[0];
+      g.maximum_affected = '17.15.99';
+      r.inference_groups.push({ ...g, group_id: C.fingerprint(g) });
+    } else {
+      r.source_groups[0].advisory_id = 'authored-unused';
+    }
+    const { content_sha256, ...unsigned } = r;
+    r.content_sha256 = C.fingerprint(unsigned);
+    assert.throws(() => P.prepareSelected(invalid, study), /reference closure/i);
+  }
+  const oldIdentity = {
+    ...study,
+    generated_at: '2020-12-31T00:00:00Z',
+    observation_end: '2020-12-31',
+  };
+  assert.throws(
+    () =>
+      P.validateManifest(
+        {
+          ...manifest,
+          generated_at: oldIdentity.generated_at,
+          observation_end: oldIdentity.observation_end,
+        },
+        oldIdentity,
+      ),
+    /cutoff/i,
+  );
+  const forgedDefinition = structuredClone(study);
+  forgedDefinition.definition.start_date = '2022-01-01';
+  assert.throws(() => P.prepareSelected(selected, forgedDefinition), /definition/i);
+
+  const wrong = structuredClone(selected),
+    wrongStudy = structuredClone(study);
+  for (const value of [
+    wrong,
+    wrong.upgrades,
+    wrong.disclosure,
+    wrong.model_coverage,
+    wrong.kev_reconciliation,
+    wrong.release_history,
+    wrongStudy,
+  ])
+    value.selection.requested_vendor = 'cisco';
+  assert.throws(() => P.prepareSelected(wrong, wrongStudy), /cohort/i);
+
+  const getter = structuredClone(selected);
+  let accessed = 0;
+  Object.defineProperty(getter.model_coverage, 'interpretation', {
+    enumerable: true,
+    get() {
+      accessed++;
+      return 'borrowed';
+    },
+  });
+  assert.throws(() => P.prepareSelected(getter, study), /accessor|owned JSON/i);
+  assert.equal(accessed, 0);
+  const badView = structuredClone(view);
+  Object.defineProperty(badView.chunks[0], 'part', {
+    enumerable: true,
+    get() {
+      accessed++;
+      return view.chunks[0].part;
+    },
+  });
+  await assert.rejects(P.decodeSelected(badView, study, load), /accessor|owned JSON/i);
+  assert.equal(accessed, 0);
+  const cyclic = structuredClone(selected);
+  cyclic.model_coverage.loop = cyclic;
+  assert.throws(() => P.prepareSelected(cyclic, study), /cyc/i);
+  const large = structuredClone(view);
+  large.unexpected = 'a'.repeat(2100000);
+  await assert.rejects(P.decodeSelected(large, study, load), /budget|metadata/i);
+
+  const borrowed = Buffer.from(await load(view.chunks[0].part));
+  let writes = 0;
+  const prepared = await P.decodeSelected(view, study, async () => borrowed, {
+    run: async (promise) => {
+      const value = await promise;
+      if (++writes === 2) borrowed.fill(0);
+      return value;
+    },
+  });
+  assert.equal(J.stringify(P.copySelected(prepared)), J.stringify(selected));
+
+  const original = parse('numeric-selected.json').views[0],
+    expandedStudy = A.context(parse('numeric-source.json').compiled, original.options),
+    report = P.copySelected(await P.decodeSelected(original, expandedStudy, load)),
+    compact = report.upgrades.requirements,
+    matching = Object.values(compact.members).find((member) =>
+      compact.facts[member.severity_facets_ref].some((facet) => facet.value === 7.5),
+    ),
+    oldRef = matching.severity_facets_ref,
+    facets = compact.facts[oldRef];
+  facets[0].value = 0.000001;
+  const newRef = C.fingerprint({ items: facets });
+  for (const owner of Object.values(compact.members))
+    if (owner.severity_facets_ref === oldRef) owner.severity_facets_ref = newRef;
+  compact.facts[newRef] = facets;
+  delete compact.facts[oldRef];
+  compact.membership_sha256 = C.fingerprint(compact.members);
+  const { content_sha256, ...unsigned } = compact;
+  compact.content_sha256 = C.fingerprint(unsigned);
+  const shortWire = Buffer.from(J.stringify(report).replace('"value":0.000001', '"value":1e-6')),
+    [expanded, trip] = rawCandidate(original, shortWire),
+    loadExpanded = async () => trip,
+    accepted = await P.decodeSelected(expanded, expandedStudy, loadExpanded);
+  assert(accepted.bytes > expanded.decoded.bytes);
+  await assert.rejects(
+    P.decodeSelected(expanded, expandedStudy, loadExpanded, {
+      max_bytes: expanded.decoded.bytes,
+    }),
+    /budget/i,
+  );
+  assert.throws(() => P.copySelected(accepted, expanded.decoded.bytes), /budget/i);
 }
 
 function deferred() {

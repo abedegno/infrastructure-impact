@@ -5,6 +5,8 @@ import json
 from hashlib import sha256
 from pathlib import Path
 
+import pytest
+
 from infrastructure_impact.application import switching_analysis as analysis
 
 
@@ -62,7 +64,6 @@ def test_browser_precomputed_delivery(tmp_path):
     import shutil
     import subprocess
 
-    import pytest
     from test_analysis_delivery import rich_source
 
     node = shutil.which("node")
@@ -80,8 +81,7 @@ def test_browser_precomputed_delivery(tmp_path):
     (tmp_path / "selected.json").write_bytes(precomputed.compact_bytes(manifest))
 
     numeric = numeric_source()
-    compiled_numeric = {"compiled": numeric}
-    (tmp_path / "numeric-source.json").write_bytes(precomputed.compact_bytes(compiled_numeric))
+    (tmp_path / "numeric-source.json").write_bytes(precomputed.compact_bytes({"compiled": numeric}))
     numeric_manifest = precomputed.write_views(tmp_path, numeric, [{"vendor": "arista"}])
     (tmp_path / "numeric-selected.json").write_bytes(precomputed.compact_bytes(numeric_manifest))
 
@@ -118,8 +118,6 @@ def public_projection():
 
 
 def test_public_writer_preview_keeps_legacy_descriptors_and_checks_native_membership(tmp_path):
-    import pytest
-
     from infrastructure_impact.application import analysis_precomputed as precomputed
     from infrastructure_impact.application import publication, publication_v2
     from infrastructure_impact.application.publication_reader import PublicationReader
@@ -168,8 +166,6 @@ def test_public_writer_preview_keeps_legacy_descriptors_and_checks_native_member
 def test_preview_writer_rejects_flag_options_and_forged_authority(tmp_path):
     import copy
 
-    import pytest
-
     from infrastructure_impact.application import analysis_delivery, publication, publication_v2
 
     for kwargs in (
@@ -201,8 +197,6 @@ def test_preview_writer_rejects_flag_options_and_forged_authority(tmp_path):
 
 def test_preview_default_membership_and_unbound_gzip(tmp_path):
     import copy
-
-    import pytest
 
     from infrastructure_impact.application import analysis_precomputed as precomputed
     from infrastructure_impact.application import publication, publication_v2
@@ -279,3 +273,62 @@ def numeric_source():
         evidence_id=9007199254740999,
     )
     return analysis.build_report([], [retained], study)
+
+
+def add_unused_compact_reference(upgrades, kind):
+    compact = upgrades["requirements"]
+    if kind == "facts":
+        old = next(
+            f for f in compact["facts"].values() if isinstance(f, dict) and "source_url" in f
+        )
+        fact = dict(old, source_locator="authored-unused")
+        compact["facts"][analysis._hash(fact)] = fact
+    elif kind == "inference":
+        group = dict(compact["inference_groups"][0], maximum_affected="17.15.99")
+        group.pop("group_id")
+        group["group_id"] = analysis._hash(group)
+        compact["inference_groups"].append(group)
+    else:
+        compact["source_groups"][0]["advisory_id"] = "authored-unused"
+    compact["content_sha256"] = analysis._hash(
+        {key: value for key, value in compact.items() if key != "content_sha256"}
+    )
+
+
+@pytest.mark.parametrize(
+    ("child", "mutate", "failure"),
+    [
+        ("disclosure", lambda d: d["coverage"].update(selected_affected_claims=999), "Disclosure"),
+        ("model_coverage", lambda d: d["models"][0]["counts"].update(claims=999), "Model"),
+        (
+            "kev_reconciliation",
+            lambda d: d["summary"].update(state_counts={"unknown": 999}),
+            "Reconciliation",
+        ),
+        ("release_history", lambda d: d.update(method="forged"), "Release"),
+        ("upgrades", lambda d: d["rows"][0].update(supported_event_count=999), "event count"),
+        ("upgrades", lambda d: add_unused_compact_reference(d, "facts"), "reference closure"),
+        ("upgrades", lambda d: add_unused_compact_reference(d, "inference"), "reference closure"),
+        ("upgrades", lambda d: add_unused_compact_reference(d, "source"), "source group"),
+    ],
+)
+def test_selected_native_rechecks_child_report_semantics(tmp_path, child, mutate, failure):
+    from test_analysis_delivery import rich_source
+
+    from infrastructure_impact.application import analysis_precomputed as precomputed
+
+    compiled = rich_source()
+    option = dict(vendor=None, scope_level="os_family", window="all", cve_ids=None)
+    study = analysis.selection_context(compiled, option)
+    report = analysis.select_report(compiled, study)
+    mutate(report[child])
+
+    def write(path, raw):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(raw)
+
+    view = precomputed.encode_view(report, option, write)
+    manifest = precomputed.build_manifest(compiled, [view])
+    with pytest.raises(ValueError, match=failure):
+        precomputed.read_selected(tmp_path, manifest, study)

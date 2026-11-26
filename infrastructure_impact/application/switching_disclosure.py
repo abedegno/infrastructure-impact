@@ -466,6 +466,10 @@ def validate_report(report):
     """Closed DTO plus recomputable era, identity and distinct-count invariants."""
     contracts._json(report)
     _VALIDATOR.validate(report)
+    return _check_report(report)
+
+
+def _check_report(report):
     if report["selection"]["definition_sha256"] != report["definition_sha256"]:
         raise ValueError("Disclosure definition identity mismatch")
     facts = {f["id"]: f for f in report["advisory_facts"]}

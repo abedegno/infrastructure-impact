@@ -558,23 +558,38 @@
     for (const [key, value] of Object.entries(requirements.facts))
       if (key !== hash(value)) fail('selected fact fingerprint differs');
     if (checkConstraintsToo) {
-      const refs = new Set();
+      const refs = new Set(),
+        inferred = new Set(),
+        memberCVEs = new Map();
+      const advisory = ({ vendor, advisory_id }) => JSON.stringify([vendor, advisory_id]);
       for (const [id, m] of Object.entries(requirements.members)) {
         if (m.claim_id !== id) fail('selected member ownership differs');
         refs.add(m.source_ref);
         refs.add(m.severity_facets_ref);
+        const own = advisory(m);
+        if (!memberCVEs.has(own)) memberCVEs.set(own, new Set());
+        memberCVEs.get(own).add(m.cve_id);
       }
       for (const q of requirements.requirements) {
         if (!Object.hasOwn(requirements.members, q.claim_id))
           fail('selected requirement ownership missing');
         refs.add(q.proof_ref);
         refs.add(q.train_binding_ref);
+        if (q.inference) inferred.add(q.inference.group_id);
       }
       if (
         refs.size !== Object.keys(requirements.facts).length ||
         [...refs].some((id) => !Object.hasOwn(requirements.facts, id))
       )
         fail('selected fact reference closure differs');
+      if (
+        inferred.size !== requirements.inference_groups.length ||
+        requirements.inference_groups.some((g) => !inferred.has(g.group_id)) ||
+        requirements.source_groups.some(
+          (g) => !g.cve_ids.some((cve) => memberCVEs.get(advisory(g))?.has(cve)),
+        )
+      )
+        fail('selected group reference closure differs');
       checkConstraints(requirements);
     } else {
       for (const q of requirements.requirements) {
@@ -614,6 +629,12 @@
           fail('selected row issue order/uniqueness mismatch');
       }
     for (const row of report.rows) {
+      if (
+        checkConstraintsToo &&
+        (row.supported_event_count !== row.events.length ||
+          (row.event_count !== null && row.event_count !== row.events.length))
+      )
+        fail('selected event count differs');
       for (const kind of Object.keys(used)) {
         const ref = row[kind + '_ref'];
         if (!Object.hasOwn(e[kind], ref)) fail('selected row evidence reference missing');
@@ -819,6 +840,47 @@
       }),
     };
   }
+  function disclosureAggregates(pairs, facts) {
+    const periods = ['pre_july', 'from_july', 'unknown'],
+      years = sorted(pairs.map((p) => S.day(p.initial_published_at)?.slice(0, 4)).filter(Boolean));
+    const periodSummaries = Object.fromEntries(
+        periods.map((p) => [p, disclosureSummary(pairs.filter((x) => x.date_period === p))]),
+      ),
+      yearsSummaries = Object.fromEntries(
+        years.map((y) => [
+          y,
+          disclosureSummary(pairs.filter((p) => S.day(p.initial_published_at)?.slice(0, 4) === y)),
+        ]),
+      ),
+      yearPeriods = Object.fromEntries(
+        years.map((y) => [
+          y,
+          Object.fromEntries(
+            periods.map((period) => [
+              period,
+              disclosureSummary(
+                pairs.filter(
+                  (p) =>
+                    S.day(p.initial_published_at)?.slice(0, 4) === y && p.date_period === period,
+                ),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+      coverage = {
+        selected_affected_claims: new Set(pairs.flatMap((p) => p.claim_ids)).size,
+        owned_source_pairs: pairs.length,
+        metadata_advisories: facts.length,
+        missing_counts: countBy(pairs.flatMap((p) => p.missing)),
+        unsupported_advisory_types: sorted(
+          facts
+            .filter((f) => f.metadata?.advisory_type === 'unknown')
+            .map((f) => f.metadata.advisory_type),
+        ),
+      };
+    return { periods: periodSummaries, years: yearsSummaries, year_periods: yearPeriods, coverage };
+  }
   function disclosure(report, s, selected) {
     const out = clone(report),
       ids = new Set(selected.map((c) => c.claim_id));
@@ -878,47 +940,7 @@
       p.missing = p.missing.filter((m) => m !== 'explicit_bundle_unavailable');
       if (!has) p.missing.push('explicit_bundle_unavailable');
     }
-    const periods = ['pre_july', 'from_july', 'unknown'],
-      years = sorted(
-        out.pairs.map((p) => S.day(p.initial_published_at)?.slice(0, 4)).filter(Boolean),
-      );
-    out.periods = Object.fromEntries(
-      periods.map((p) => [p, disclosureSummary(out.pairs.filter((x) => x.date_period === p))]),
-    );
-    out.years = Object.fromEntries(
-      years.map((y) => [
-        y,
-        disclosureSummary(
-          out.pairs.filter((p) => S.day(p.initial_published_at)?.slice(0, 4) === y),
-        ),
-      ]),
-    );
-    out.year_periods = Object.fromEntries(
-      years.map((y) => [
-        y,
-        Object.fromEntries(
-          periods.map((period) => [
-            period,
-            disclosureSummary(
-              out.pairs.filter(
-                (p) => S.day(p.initial_published_at)?.slice(0, 4) === y && p.date_period === period,
-              ),
-            ),
-          ]),
-        ),
-      ]),
-    );
-    out.coverage = {
-      selected_affected_claims: new Set(out.pairs.flatMap((p) => p.claim_ids)).size,
-      owned_source_pairs: out.pairs.length,
-      metadata_advisories: out.advisory_facts.length,
-      missing_counts: countBy(out.pairs.flatMap((p) => p.missing)),
-      unsupported_advisory_types: sorted(
-        out.advisory_facts
-          .filter((f) => f.metadata?.advisory_type === 'unknown')
-          .map((f) => f.metadata.advisory_type),
-      ),
-    };
+    Object.assign(out, disclosureAggregates(out.pairs, out.advisory_facts));
     return out;
   }
   function kevState(claims, e, s, end) {
@@ -973,6 +995,17 @@
       return ['documented_unaffected_for_selected_scope', []];
     return ['unknown', ['vendor_claim_not_explicit_affected_or_unaffected']];
   }
+  function kevSummary(entries) {
+    const mapped = entries.filter((e) => e.mapping.status === 'mapped');
+    return {
+      candidate_cves: new Set(mapped.map((e) => e.cve_id)).size,
+      entry_count: entries.length,
+      unmapped_entries: entries.filter((e) => e.mapping.status === 'unmapped').length,
+      unknown_membership_entries: entries.filter((e) => e.membership === 'unknown').length,
+      state_counts: countBy(mapped.map((e) => e.claim_state)),
+      completeness: 'not_established',
+    };
+  }
   function kev(report, s) {
     const out = clone(report.kev_reconciliation);
     out.selection = clone(s);
@@ -996,15 +1029,7 @@
       if (!e.in_effective_study_cohort) reasons.push('outside_effective_study_cohort');
       e.reason_codes = sorted(reasons);
     }
-    const mapped = out.entries.filter((e) => e.mapping.status === 'mapped');
-    out.summary = {
-      candidate_cves: new Set(mapped.map((e) => e.cve_id)).size,
-      entry_count: out.entries.length,
-      unmapped_entries: out.entries.filter((e) => e.mapping.status === 'unmapped').length,
-      unknown_membership_entries: out.entries.filter((e) => e.membership === 'unknown').length,
-      state_counts: countBy(mapped.map((e) => e.claim_state)),
-      completeness: 'not_established',
-    };
+    out.summary = kevSummary(out.entries);
     return out;
   }
   function selectValidated(report, study) {
@@ -1242,6 +1267,8 @@
     walk,
     detailedRows,
     checkSelectedUpgrades,
+    disclosureAggregates,
+    kevSummary,
     reconciliation: kev,
     compare,
     csv,

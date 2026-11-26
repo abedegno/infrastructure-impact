@@ -11,6 +11,10 @@ from pathlib import Path
 from .. import publication_codec as codec
 from . import switching_analysis as analysis
 from . import switching_comparison as comparison
+from . import switching_disclosure as disclosure
+from . import switching_kev_reconciliation as reconciliation
+from . import switching_model_coverage as models
+from . import switching_releases as releases
 
 ROOT = "switching-analysis-selected.json"
 SLICE = 4_000_000
@@ -311,6 +315,101 @@ def _inflate(wire, chunk):
     return result
 
 
+def _check_children(selected, study):
+    definition = analysis.contracts.definition()
+    selection = study["selection"]
+    end = study["observation_end"]
+    vendors = set(selection["effective_vendors"])
+    families = {t["vendor"]: t["family"] for t in definition["targets"]}
+    cves = set(selection["effective_cve_ids"])
+    window = selection["requested_window"]
+    start, stop = comparison._bounds(definition, end, window)
+
+    def domain(row):
+        return row["vendor"] in vendors and row["family"] == families[row["vendor"]]
+
+    def in_window(date):
+        return comparison._in_window(comparison.day(date), start, stop, window)
+
+    upgrades = selected["upgrades"]
+    if upgrades["availability"] != "available":
+        raise ValueError("Missing selected upgrade requirements")
+    analysis._check_selected_upgrades(upgrades, shape_checked=True, check_closure=True)
+    for member in upgrades["requirements"]["members"].values():
+        if (
+            not domain(member)
+            or (
+                selection["scope_level"] == "model_qualified"
+                and member["scope_level"] != "model_qualified"
+            )
+            or (
+                member["date"] is not None and not definition["start_date"] <= member["date"] <= end
+            )
+        ):
+            raise ValueError("Selected upgrade member outside study")
+    first_year = int((start or definition["start_date"])[:4])
+    last_year = int((stop or end)[:4])
+    if any(
+        not domain(row)
+        or not first_year <= row["year"] <= last_year
+        or any(not in_window(e["date"]) or int(e["date"][:4]) != row["year"] for e in row["events"])
+        for row in upgrades["rows"]
+    ):
+        raise ValueError("Selected upgrade row outside study")
+
+    disclosures = selected["disclosure"]
+    disclosure._check_report(disclosures)
+    affected = {vendor: set() for vendor in vendors}
+    used = set()
+    for pair in disclosures["pairs"]:
+        if (
+            not domain(pair)
+            or pair["cve_id"] not in cves
+            or not in_window(pair["initial_published_at"])
+        ):
+            raise ValueError("Disclosure pair outside study")
+        affected[pair["vendor"]].add(pair["cve_id"])
+        if pair["fact_id"] is not None:
+            used.add(pair["fact_id"])
+    if used != {f["id"] for f in disclosures["advisory_facts"]} or any(
+        not domain(bundle) for bundle in disclosures["bundles"]
+    ):
+        raise ValueError("Disclosure reference closure differs")
+    models._check_selected(selected["model_coverage"], definition)
+
+    kev = selected["kev_reconciliation"]
+    reconciliation._check_report(kev)
+    if kev["evaluated_at"] != study["generated_at"] or any(
+        e["mapping"]["status"] == "mapped" and not domain(e["mapping"]) for e in kev["entries"]
+    ):
+        raise ValueError("Reconciliation outside study")
+
+    history = selected["release_history"]
+    releases._check_report(
+        history, publication=study["publication"], generated_at=study["generated_at"]
+    )
+    if any(
+        not domain(node)
+        for key in ("releases", "bundles", "platform_support")
+        for node in history[key]
+    ):
+        raise ValueError("Release history outside study")
+    for node in history["releases"]:
+        if not node["history"] and not node["references"]:
+            raise ValueError("Release history node lacks selected context")
+        for ref in node["references"]:
+            pool = cves if ref["kind"] == "vendor_fixed" else affected[node["vendor"]]
+            if (
+                ref["cve_id"] not in pool
+                or not in_window(ref["initial_published_at"])
+                or (
+                    selection["scope_level"] == "model_qualified"
+                    and ref["scope_level"] != "model_qualified"
+                )
+            ):
+                raise ValueError("Release reference outside study")
+
+
 def _read_view(view, study, load, max_bytes):
     limit = min(codec.safe_int(max_bytes, minimum=1), codec.MAX_SELECTED)
     decoded = view["decoded"]
@@ -340,7 +439,7 @@ def _read_view(view, study, load, max_bytes):
             raise ValueError("Selected analysis child cohort differs")
     if any(selected[k] != study[k] for k in ("publication", "generated_at")):
         raise ValueError("Selected analysis report identity differs")
-    analysis._check_selected_upgrades(selected["upgrades"], shape_checked=True)
+    _check_children(selected, study)
     codec.charge_value(selected, codec.Budget(limit), ascii=False)
     return selected
 

@@ -17,6 +17,102 @@
       throw Error('Selected analysis: ' + message);
     };
 
+  function ownValue(object, key, required = true) {
+    if (!object || typeof object !== 'object') fail('expected owned JSON object');
+    const property = Object.getOwnPropertyDescriptor(object, key);
+    if (!property && !required) return undefined;
+    if (!property || !Object.hasOwn(property, 'value') || !property.enumerable)
+      fail('expected owned JSON data without accessors');
+    return property.value;
+  }
+  function snapshot(value, max) {
+    // Inspect property descriptors before obtaining values. Precharge the
+    // actual JSON cost before copying further, with a fixed depth and no cycles.
+    const quota = J.budget(max),
+      ancestors = new Set();
+    function string(value) {
+      if (value.length + 2 > quota.remaining) fail('byte budget');
+      if (/[\uD800-\uDFFF]/u.test(value)) fail('invalid owned JSON string');
+      quota.charge(J.stringBytes(value));
+    }
+    function visit(value, depth) {
+      if (depth > 64) fail('owned JSON depth');
+      if (typeof value === 'string') {
+        string(value);
+        return value;
+      }
+      if (
+        value === null ||
+        typeof value === 'boolean' ||
+        (typeof value === 'number' && Number.isFinite(value)) ||
+        typeof value === 'bigint'
+      ) {
+        quota.charge(
+          typeof value === 'bigint' ? value.toString().length : JSON.stringify(value).length,
+        );
+        return value;
+      }
+      if (!value || typeof value !== 'object') fail('expected owned JSON data');
+      if (ancestors.has(value)) fail('cyclic owned JSON data');
+      const array = Array.isArray(value),
+        proto = Object.getPrototypeOf(value);
+      if (array ? !Array.isArray(proto) : proto !== null && Object.getPrototypeOf(proto) !== null)
+        fail('expected ordinary JSON data');
+      ancestors.add(value);
+      const length = array ? Object.getOwnPropertyDescriptor(value, 'length').value : null;
+      if (array && length > quota.remaining) fail('byte budget');
+      const keys = Reflect.ownKeys(value);
+      if (array && keys.length !== length + 1) fail('expected dense JSON array');
+      const count = array ? length : keys.length,
+        out = array ? [] : {};
+      quota.charge(2 + Math.max(0, count - 1));
+      for (let i = 0; i < count; i++) {
+        const key = array ? String(i) : keys[i];
+        if (typeof key !== 'string') fail('expected JSON property name');
+        const child = ownValue(value, key);
+        if (array) out.push(visit(child, depth + 1));
+        else {
+          string(key);
+          quota.charge(1);
+          Object.defineProperty(out, key, {
+            value: visit(child, depth + 1),
+            enumerable: true,
+            writable: true,
+            configurable: true,
+          });
+        }
+      }
+      ancestors.delete(value);
+      return out;
+    }
+    return visit(value, 0);
+  }
+  const capturedStudies = new WeakSet(),
+    capturedManifests = new WeakSet(),
+    capturedViews = new WeakSet();
+  function captureIdentity(identity, study = false) {
+    const required = ['publication', 'generated_at'],
+      optional = study
+        ? ['definition']
+        : ['observation_end', 'definition_sha256', 'content_sha256'];
+    if (study) required.push('observation_end', 'selection');
+    const result = Object.fromEntries(required.map((key) => [key, ownValue(identity, key)]));
+    for (const key of optional) {
+      const value = ownValue(identity, key, false);
+      if (value !== undefined) result[key] = value;
+    }
+    return snapshot(result, MANIFEST_MAX);
+  }
+  function captureStudy(study) {
+    if (capturedStudies.has(study)) return study;
+    const captured = freeze(captureIdentity(study, true));
+    capturedStudies.add(captured);
+    return captured;
+  }
+  function isOrdinaryStudy(study) {
+    return ownValue(ownValue(study, 'selection'), 'requested_cve_ids') === null;
+  }
+
   function fields(value, names) {
     if (
       !value ||
@@ -107,6 +203,8 @@
     }
   }
   function validateManifest(manifest, identity) {
+    manifest = snapshot(manifest, MANIFEST_MAX);
+    identity = captureIdentity(identity);
     fields(manifest, [
       'schema_version',
       'representation',
@@ -118,6 +216,7 @@
       'views',
     ]);
     C.identity(manifest, identity);
+    checkCutoff(manifest);
     if (manifest.publication !== null) {
       fields(manifest.publication, ['id', 'advisory_schema_version']);
       if (
@@ -131,8 +230,6 @@
       manifest.schema_version !== 1 ||
       manifest.representation !== 'analysis-selected-delivery' ||
       manifest.definition_sha256 !== C.policy.definition_sha256 ||
-      typeof manifest.observation_end !== 'string' ||
-      S.day(manifest.generated_at) !== manifest.observation_end ||
       (Object.hasOwn(identity, 'observation_end') &&
         identity.observation_end !== manifest.observation_end) ||
       (Object.hasOwn(identity, 'definition_sha256') &&
@@ -153,10 +250,14 @@
       if (seen.has(k)) fail('duplicate view options');
       seen.add(k);
     }
-    J.measure(manifest, null, '', MANIFEST_MAX);
+    freeze(manifest);
+    capturedManifests.add(manifest);
+    for (const view of manifest.views) capturedViews.add(view);
     return manifest;
   }
   function matchView(manifest, study) {
+    study = captureStudy(study);
+    if (!capturedManifests.has(manifest)) manifest = validateManifest(manifest, study);
     const selection = study.selection;
     if (selection.requested_cve_ids !== null) return null;
     const id = key(selection.requested_vendor, selection.scope_level, selection.requested_window),
@@ -173,22 +274,37 @@
   // the deflate block boundaries without expanding bytes so even an appended
   // empty member, or an empty first member, cannot satisfy the wire contract.
   const codeOrder = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
-  function huffman(lengths) {
+  const FAST_BITS = 9;
+  function huffman(lengths, charge = () => {}) {
     const width = Math.max(...lengths),
-      counts = new Uint16Array(width + 1);
+      fastWidth = Math.min(width, FAST_BITS),
+      size = 1 << fastWidth;
+    // Canonical tables use one entry per symbol plus a small fast prefix.
+    // Bound both table creation and symbol indexing against compressed input.
+    charge(2 * size + 4 * lengths.length + 8 * width);
+    const counts = new Uint16Array(width + 1),
+      first = new Uint16Array(width + 1),
+      offset = new Uint16Array(width + 1);
     for (const n of lengths) if (n) counts[n]++;
-    const next = new Uint16Array(width + 1);
-    for (let n = 1; n <= width; n++) next[n] = (next[n - 1] + counts[n - 1]) * 2;
-    const entries = new Uint16Array(1 << width);
+    for (let n = 1; n <= width; n++) {
+      first[n] = (first[n - 1] + counts[n - 1]) * 2;
+      offset[n] = offset[n - 1] + counts[n - 1];
+    }
+    const next = first.slice(),
+      write = offset.slice(),
+      symbols = new Uint16Array(lengths.length),
+      fast = new Uint16Array(size);
     for (const [symbol, n] of lengths.entries()) {
       if (!n) continue;
-      let code = next[n]++,
-        reversed = 0;
+      let code = next[n]++;
       if (code >= 1 << n) fail('invalid gzip Huffman code');
+      symbols[write[n]++] = symbol;
+      if (n > fastWidth) continue;
+      let reversed = 0;
       for (let j = 0; j < n; j++, code >>>= 1) reversed = (reversed << 1) | (code & 1);
-      for (let i = reversed; i < entries.length; i += 1 << n) entries[i] = (symbol << 4) | n;
+      for (let i = reversed; i < size; i += 1 << n) fast[i] = (symbol << 4) | n;
     }
-    return entries;
+    return { width, counts, first, offset, symbols, fast };
   }
   const fixed = [
     huffman(Array.from({ length: 288 }, (_, i) => (i < 144 ? 8 : i < 256 ? 9 : i < 280 ? 7 : 8))),
@@ -198,12 +314,24 @@
     3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131,
     163, 195, 227, 258,
   ];
-  function singleMember(wire, expected) {
+  async function singleMember(wire, expected, run) {
     const header = [31, 139, 8, 0, 0, 0, 0, 0, 0, 255],
       end = (wire.length - 8) * 8;
     if (wire.length < 20 || header.some((v, i) => wire[i] !== v)) fail('invalid gzip header');
+    const interval = 131072,
+      allowance = 64 * wire.length + 32768;
     let position = 80,
-      produced = 0;
+      produced = 0,
+      work = 0,
+      checkpoint = interval;
+    function charge(n) {
+      work += n;
+      if (work > allowance) fail('gzip preflight work budget');
+    }
+    async function pause() {
+      await run(new Promise((resolve) => setTimeout(resolve, 0)));
+      checkpoint = work + interval;
+    }
     function peek() {
       const i = position >>> 3;
       return (wire[i] | (wire[i + 1] << 8) | (wire[i + 2] << 16)) >>> (position & 7);
@@ -215,11 +343,27 @@
       return value;
     }
     function symbol(table) {
-      const value = table[peek() & (table.length - 1)],
-        n = value & 15;
+      charge(1);
+      let bits = peek(),
+        entry = table.fast[bits & (table.fast.length - 1)];
+      if (!entry && table.width > FAST_BITS) {
+        charge(table.width);
+        let code = 0;
+        for (let n = 1; n <= table.width; n++, bits >>>= 1) {
+          code = (code << 1) | (bits & 1);
+          if (n > FAST_BITS) {
+            const index = code - table.first[n];
+            if (index >= 0 && index < table.counts[n]) {
+              entry = (table.symbols[table.offset[n] + index] << 4) | n;
+              break;
+            }
+          }
+        }
+      }
+      const n = entry & 15;
       position += n;
       if (!n || position > end) fail('invalid gzip Huffman symbol');
-      return value >>> 4;
+      return entry >>> 4;
     }
     function dynamic() {
       const literals = bits(5) + 257,
@@ -227,7 +371,7 @@
         count = bits(4) + 4,
         codeLengths = Array(19).fill(0);
       for (let i = 0; i < count; i++) codeLengths[codeOrder[i]] = bits(3);
-      const table = huffman(codeLengths),
+      const table = huffman(codeLengths, charge),
         lengths = [];
       while (lengths.length < literals + distances) {
         const code = symbol(table);
@@ -240,10 +384,15 @@
         }
       }
       if (lengths.length !== literals + distances || !lengths[256]) fail('invalid gzip codes');
-      return [huffman(lengths.slice(0, literals)), huffman(lengths.slice(literals))];
+      return [
+        huffman(lengths.slice(0, literals), charge),
+        huffman(lengths.slice(literals), charge),
+      ];
     }
     let final;
     do {
+      if (work >= checkpoint) await pause();
+      charge(8);
       final = bits(1);
       const type = bits(2);
       if (type === 0) {
@@ -259,6 +408,7 @@
       if (type === 3) fail('invalid gzip block type');
       const [literal, distance] = type === 1 ? fixed : dynamic();
       for (;;) {
+        if (work >= checkpoint) await pause();
         const code = symbol(literal);
         if (code < 256) {
           if (++produced > expected) fail('decoded gzip byte budget');
@@ -291,6 +441,25 @@
       byte.toString(16).padStart(2, '0'),
     ).join('');
   }
+  const typedArray = Object.getPrototypeOf(Uint8Array.prototype),
+    typedGetter = (key) => Object.getOwnPropertyDescriptor(typedArray, key).get,
+    typedName = typedGetter(Symbol.toStringTag),
+    typedLength = typedGetter('byteLength'),
+    typedOffset = typedGetter('byteOffset'),
+    typedBuffer = typedGetter('buffer');
+  function ownWire(value, length) {
+    if (
+      !ArrayBuffer.isView(value) ||
+      typedName.call(value) !== 'Uint8Array' ||
+      typedLength.call(value) !== length
+    )
+      fail('wire byte size differs');
+    // Use typed array intrinsics so user getters, iterators and a later
+    // mutation of borrowed storage cannot change the authenticated gzip.
+    const wire = new Uint8Array(length);
+    wire.set(new Uint8Array(typedBuffer.call(value), typedOffset.call(value), length));
+    return wire;
+  }
   async function verify(raw, descriptor, run) {
     if (
       !ArrayBuffer.isView(raw) ||
@@ -301,7 +470,7 @@
       fail('bytes or fingerprint differ');
   }
   async function inflate(wire, destination, chunk, run) {
-    singleMember(wire, destination.length);
+    await singleMember(wire, destination.length, run);
     const reader = new Response(wire).body.pipeThrough(new DecompressionStream('gzip')).getReader();
     let used = 0;
     try {
@@ -326,6 +495,249 @@
     }
     if (used !== destination.length) fail('decoded slice length differs');
     await verify(destination, chunk.decoded, run);
+  }
+
+  function checkCutoff(identity) {
+    if (
+      typeof identity.generated_at !== 'string' ||
+      typeof identity.observation_end !== 'string' ||
+      S.day(identity.generated_at) !== identity.observation_end ||
+      identity.observation_end < D.start_date
+    )
+      fail('observation cutoff differs');
+  }
+  function checkStudy(study) {
+    checkCutoff(study);
+    const s = study.selection;
+    if (!s || typeof s !== 'object') fail('invalid study cohort');
+    if (
+      Object.hasOwn(study, 'definition') &&
+      C.fingerprint(study.definition) !== C.policy.definition_sha256
+    )
+      fail('study definition differs');
+    checkCohort(
+      s,
+      {
+        vendor: s.requested_vendor,
+        scope_level: s.scope_level,
+        window: s.requested_window,
+        cve_ids: s.requested_cve_ids,
+      },
+      study.observation_end,
+    );
+  }
+  function disclosurePeriod(day) {
+    return day === null ? 'unknown' : day < '2026-07-01' ? 'pre_july' : 'from_july';
+  }
+  function checkDisclosure(report, domain, effective, dateOK) {
+    const A = window.InfrastructureSwitchingAnalysis,
+      facts = new Map(report.advisory_facts.map((f) => [f.id, f])),
+      used = new Set(),
+      pairs = new Set(),
+      claimIds = new Set(),
+      affected = new Map();
+    for (const p of report.pairs) {
+      const f = facts.get(p.fact_id),
+        date = S.day(p.initial_published_at),
+        key = JSON.stringify([
+          p.vendor,
+          p.family,
+          p.advisory_id,
+          p.cve_id,
+          p.source.source_url,
+          p.source.source_sha256,
+        ]),
+        umbrella = f?.metadata.umbrella_cves.find((u) => u.cve_id === p.cve_id) ?? null;
+      if (
+        !domain(p) ||
+        !effective.has(p.cve_id) ||
+        !dateOK(date) ||
+        p.date_period !== disclosurePeriod(date) ||
+        pairs.has(key) ||
+        !p.claim_ids.length ||
+        p.claim_ids.some((id) => claimIds.has(id)) ||
+        !eq(p.umbrella, umbrella) ||
+        (p.fact_id !== null &&
+          (!f ||
+            f.vendor !== p.vendor ||
+            f.advisory_id !== p.advisory_id ||
+            f.source.source_url !== p.source.source_url ||
+            f.source.source_sha256 !== p.source.source_sha256 ||
+            f.metadata.initial_published_at !== p.initial_published_at ||
+            !eq(f.metadata.method, p.method)))
+      )
+        fail('disclosure ownership differs');
+      pairs.add(key);
+      for (const id of p.claim_ids) claimIds.add(id);
+      if (!affected.has(p.vendor)) affected.set(p.vendor, new Set());
+      affected.get(p.vendor).add(p.cve_id);
+      if (p.fact_id !== null) used.add(p.fact_id);
+    }
+    if (used.size !== facts.size || facts.size !== report.advisory_facts.length)
+      fail('disclosure reference closure differs');
+    for (const bundle of report.bundles) {
+      const memberIds = new Set(bundle.member_advisory_ids),
+        members = report.pairs.filter(
+          (p) =>
+            p.vendor === bundle.vendor &&
+            p.family === bundle.family &&
+            memberIds.has(p.advisory_id),
+        );
+      if (
+        !domain(bundle) ||
+        !members.length ||
+        bundle.date_period !== disclosurePeriod(S.day(bundle.initial_published_at)) ||
+        !eq(bundle.selected_advisory_ids, sorted(members.map((p) => p.advisory_id))) ||
+        !eq(bundle.selected_cve_ids, sorted(members.map((p) => p.cve_id)))
+      )
+        fail('disclosure bundle ownership differs');
+      if (bundle.kind === 'security_hardening') {
+        const owners = report.advisory_facts.filter(
+            (f) =>
+              f.vendor === bundle.vendor &&
+              f.advisory_id === bundle.publisher_id &&
+              eq(f.source, bundle.source),
+          ),
+          metadata = owners[0]?.metadata.bundle;
+        if (
+          owners.length !== 1 ||
+          !metadata ||
+          bundle.initial_published_at !== metadata.initial_published_at ||
+          !eq(bundle.member_advisory_ids, metadata.advisory_ids) ||
+          !eq(bundle.member_cve_ids, metadata.cve_ids)
+        )
+          fail('disclosure hardening bundle ownership differs');
+      }
+    }
+    for (const [name, expected] of Object.entries(
+      A.disclosureAggregates(report.pairs, report.advisory_facts),
+    ))
+      if (!eq(report[name], expected)) fail('disclosure ' + name + ' differs');
+    return affected;
+  }
+  function checkModels(report, vendorOK, effective) {
+    const expectedModels = D.targets
+      .filter((t) => vendorOK(t.vendor))
+      .flatMap((t) => t.models.map((model) => [t.vendor, t.family, model]));
+    if (
+      !eq(
+        report.models.map((m) => [m.vendor, m.family, m.model]),
+        expectedModels,
+      )
+    )
+      fail('model coverage target ownership differs');
+
+    function claimsIn(row) {
+      const ids = new Set(row.claim_ids),
+        n = ids.size,
+        count = row.counts;
+      if (
+        n !== row.claim_ids.length ||
+        n !== count.claims ||
+        count.advisories > n ||
+        count.cves > n
+      )
+        fail('model coverage claim counts differ');
+      if (row.by_status) {
+        const statuses = Object.values(row.by_status);
+        if (
+          statuses.reduce((total, v) => total + v.claims, 0) !== n ||
+          statuses.some(
+            (v) =>
+              v.advisories > Math.min(v.claims, count.advisories) ||
+              v.cves > Math.min(v.claims, count.cves),
+          )
+        )
+          fail('model coverage status counts differ');
+      }
+      return ids;
+    }
+
+    const bound = new Set(),
+      unresolved = new Set(),
+      advisories = new Set();
+    for (const row of report.models) {
+      const ids = claimsIn(row);
+      if (
+        row.counts.advisories !== row.advisory_ids.length ||
+        row.counts.cves !== row.cve_ids.length ||
+        new Set(row.advisory_ids).size !== row.advisory_ids.length ||
+        new Set(row.cve_ids).size !== row.cve_ids.length ||
+        row.cve_ids.some((id) => !effective.has(id))
+      )
+        fail('model coverage row ownership differs');
+      for (const source of row.by_source) {
+        if (
+          [...claimsIn(source)].some((id) => !ids.has(id)) ||
+          source.counts.advisories > row.counts.advisories ||
+          source.counts.cves > row.counts.cves
+        )
+          fail('model coverage source ownership differs');
+      }
+      for (const id of ids) bound.add(id);
+      for (const id of row.advisory_ids) advisories.add(JSON.stringify([row.vendor, id]));
+    }
+    for (const row of report.unresolved) for (const id of claimsIn(row)) unresolved.add(id);
+    const total = report.totals;
+    if (
+      [...unresolved].some((id) => bound.has(id)) ||
+      total.bound_claims !== bound.size ||
+      total.unresolved_claims !== unresolved.size ||
+      total.claims !== bound.size + unresolved.size ||
+      total.cves !== effective.size ||
+      total.advisories < advisories.size ||
+      total.advisories > advisories.size + unresolved.size
+    )
+      fail('model coverage union counts differ');
+  }
+
+  // Exact public CISA pair labels from switching_kev_reconciliation.RULES.
+  const ciscoKevLabels = [
+    'Cisco IOS XE Web UI',
+    'IOS Software and Cisco IOS XE Software',
+    'IOS XE Software',
+    'IOS XE Web UI',
+    'IOS and IOS XE',
+    'IOS and IOS XE Software',
+    'IOS, IOS XR, and IOS XE',
+    'IOS, XR, and XE Software',
+  ];
+  function mapping({ vendorProject, product }) {
+    const rank = vendorProject === 'Cisco' ? ciscoKevLabels.indexOf(product) + 1 : 0;
+    if (rank)
+      return {
+        status: 'mapped',
+        rule_id: 'cisco-iosxe-' + rank,
+        vendor: 'cisco',
+        family: 'cisco-iosxe',
+      };
+    if (vendorProject === 'Arista' && product === 'Extensible Operating System')
+      return { status: 'mapped', rule_id: 'arista-eos-1', vendor: 'arista', family: 'arista-eos' };
+    return { status: 'unmapped', rule_id: null, vendor: null, family: null };
+  }
+  function checkKev(kev, study, domain, effective) {
+    const A = window.InfrastructureSwitchingAnalysis,
+      status = window.InfrastructureKev.reportAvailability(kev);
+    if (
+      kev.evaluated_at !== study.generated_at ||
+      kev.mapping_version !== 'switching-kev-exact-pairs-v1' ||
+      kev.availability !== status ||
+      kev.source.availability !== status
+    )
+      fail('KEV availability or mapping policy differs');
+    if (!eq(kev.summary, A.kevSummary(kev.entries))) fail('KEV summary differs');
+    if (
+      kev.entries.some(
+        (entry, i) =>
+          (i > 0 && kev.entries[i - 1].cve_id >= entry.cve_id) ||
+          !eq(entry.mapping, mapping(entry)) ||
+          (entry.mapping.status === 'mapped' && !domain(entry.mapping)) ||
+          !entry.in_requested_cve_filter ||
+          entry.in_effective_study_cohort !== effective.has(entry.cve_id) ||
+          entry.membership !== (status === 'available' ? 'listed' : 'unknown'),
+      )
+    )
+      fail('KEV mapping or membership differs');
   }
 
   function checkChildren(report, study) {
@@ -390,77 +802,9 @@
         fail('selected row outside study');
     A.checkSelectedUpgrades(upgrades, { shapeChecked: true, checkConstraintsToo: true });
 
-    const disclosure = report.disclosure,
-      facts = new Map(disclosure.advisory_facts.map((f) => [f.id, f])),
-      used = new Set();
-    for (const p of disclosure.pairs) {
-      const f = facts.get(p.fact_id);
-      if (
-        !domain(p) ||
-        !effective.has(p.cve_id) ||
-        !dateOK(S.day(p.initial_published_at)) ||
-        !p.claim_ids.length ||
-        (p.fact_id !== null &&
-          (!f ||
-            f.vendor !== p.vendor ||
-            f.advisory_id !== p.advisory_id ||
-            f.source.source_url !== p.source.source_url ||
-            f.source.source_sha256 !== p.source.source_sha256 ||
-            f.metadata.initial_published_at !== p.initial_published_at ||
-            !eq(f.metadata.method, p.method)))
-      )
-        fail('disclosure ownership differs');
-      if (p.fact_id !== null) used.add(p.fact_id);
-    }
-    if (
-      used.size !== facts.size ||
-      facts.size !== disclosure.advisory_facts.length ||
-      disclosure.bundles.some(
-        (b) => !domain(b) || b.selected_cve_ids.some((id) => !effective.has(id)),
-      )
-    )
-      fail('disclosure reference closure differs');
-    if (
-      disclosure.coverage.owned_source_pairs !== disclosure.pairs.length ||
-      disclosure.coverage.metadata_advisories !== facts.size
-    )
-      fail('disclosure totals differ');
-
-    const coverage = report.model_coverage,
-      expectedModels = D.targets
-        .filter((t) => vendorOK(t.vendor))
-        .flatMap((t) => t.models.map((model) => [t.vendor, t.family, model]));
-    if (
-      !eq(
-        coverage.models.map((m) => [m.vendor, m.family, m.model]),
-        expectedModels,
-      ) ||
-      coverage.totals.cves !== effective.size ||
-      coverage.models.some(
-        (m) =>
-          m.cve_ids.some((cve) => !effective.has(cve)) ||
-          m.by_source.some((s) => s.claim_ids.some((id) => !m.claim_ids.includes(id))),
-      )
-    )
-      fail('model coverage ownership differs');
-
-    const kev = report.kev_reconciliation,
-      mapped = kev.entries.filter((entry) => entry.mapping.status === 'mapped');
-    if (
-      kev.evaluated_at !== study.generated_at ||
-      mapped.some((entry) => !domain(entry.mapping)) ||
-      kev.entries.some(
-        (entry) =>
-          !entry.in_requested_cve_filter ||
-          entry.in_effective_study_cohort !== effective.has(entry.cve_id),
-      ) ||
-      kev.summary.entry_count !== kev.entries.length ||
-      kev.summary.candidate_cves !== new Set(mapped.map((entry) => entry.cve_id)).size ||
-      kev.summary.unmapped_entries !== kev.entries.length - mapped.length ||
-      kev.summary.unknown_membership_entries !==
-        kev.entries.filter((entry) => entry.membership === 'unknown').length
-    )
-      fail('KEV ownership or totals differ');
+    const affected = checkDisclosure(report.disclosure, domain, effective, dateOK);
+    checkModels(report.model_coverage, vendorOK, effective);
+    checkKev(report.kev_reconciliation, study, domain, effective);
 
     const history = report.release_history;
     window.InfrastructureCustomerComparison.checkHistory(history, study);
@@ -468,13 +812,18 @@
       [...history.releases, ...history.bundles, ...history.platform_support].some(
         (node) => !domain(node),
       ) ||
-      history.releases.some((node) =>
-        node.references.some(
-          (ref) =>
-            !effective.has(ref.cve_id) ||
-            !dateOK(S.day(ref.initial_published_at)) ||
-            (selection.scope_level === 'model_qualified' && ref.scope_level !== 'model_qualified'),
-        ),
+      history.releases.some(
+        (node) =>
+          (!node.history.length && !node.references.length) ||
+          node.references.some(
+            (ref) =>
+              !(ref.kind === 'vendor_fixed' ? effective : affected.get(node.vendor))?.has(
+                ref.cve_id,
+              ) ||
+              !dateOK(S.day(ref.initial_published_at)) ||
+              (selection.scope_level === 'model_qualified' &&
+                ref.scope_level !== 'model_qualified'),
+          ),
       )
     )
       fail('release history outside study');
@@ -509,8 +858,9 @@
     return prepared;
   }
   function prepareSelected(report, study, max_bytes = MAX) {
-    J.measure(report, null, '', limit(max_bytes, MAX));
-    return prepareOwned(copy(report), study, max_bytes);
+    const accepted = captureStudy(study);
+    checkStudy(accepted);
+    return prepareOwned(snapshot(report, limit(max_bytes, MAX)), accepted, max_bytes);
   }
   function copySelected(prepared, max_bytes = MAX) {
     if (!verified.has(prepared)) fail('expected prepared report');
@@ -523,20 +873,16 @@
     load,
     { max_bytes = MAX, run = (promise) => promise } = {},
   ) {
-    // Snapshot metadata before invoking a fetch or yielding to another caller.
-    view = freeze(J.clone(view));
-    study = J.clone({
-      publication: study.publication,
-      generated_at: study.generated_at,
-      observation_end: study.observation_end,
-      selection: study.selection,
-    });
+    // Snapshot borrowed metadata before invoking a fetch or yielding.
+    if (!capturedViews.has(view)) view = freeze(snapshot(view, MANIFEST_MAX));
+    study = captureStudy(study);
+    checkStudy(study);
     checkView(view, study.observation_end);
     if (!eq(view.selection, study.selection)) fail('accepted cohort differs');
     limit(view.decoded.bytes, limit(max_bytes, MAX));
     const output = new Uint8Array(view.decoded.bytes);
     for (const chunk of view.chunks) {
-      const wire = await run(load(chunk.part));
+      const wire = ownWire(await run(load(chunk.part)), chunk.part.bytes);
       await verify(wire, chunk.part, run);
       await inflate(
         wire,
@@ -556,6 +902,8 @@
     ROOT,
     MANIFEST_MAX,
     supported,
+    isOrdinaryStudy,
+    captureStudy,
     validateManifest,
     matchView,
     prepareSelected,

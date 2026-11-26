@@ -184,11 +184,12 @@ def validate_requirements(report, *, evidence=None):
     return _validate_requirements(report, evidence=evidence)
 
 
-def _validate_requirements(report, *, evidence=None, evidence_proof=None):
+def _validate_requirements(report, *, evidence=None, evidence_proof=None, shape_checked=False):
     if evidence_proof is not None and evidence is None:
         raise ValueError("Evidence capability requires actual evidence")
     codec.charge_value(report, codec.Budget(codec.MAX_SELECTED))
-    _validate_shape(report, "compact")
+    if not shape_checked:
+        _validate_shape(report, "compact")
     if report["observation_end"] != comparison.day(report["generated_at"]):
         raise ValueError("Compact observation bounds differ")
     if report["kev_context"]["evaluated_at"] != report["generated_at"]:
@@ -418,14 +419,41 @@ def _compact_rows(rows, members):
     return out, evidence
 
 
-def _check_selected_upgrades(report, *, shape_checked=False):
+def _check_selected_upgrades(report, *, shape_checked=False, check_closure=False):
     if not shape_checked:
         _validate_shape(report, "selected_upgrades")
     if report["availability"] == "unavailable":
         return
-    validate_requirements(report["requirements"])
-    _identity(report["requirements"], report)
-    members = report["requirements"]["members"]
+    compact = report["requirements"]
+    _validate_requirements(compact, shape_checked=True)
+    _identity(compact, report)
+    members = compact["members"]
+    if check_closure:
+        references = {
+            member[key]
+            for member in members.values()
+            for key in ("source_ref", "severity_facets_ref")
+        } | {
+            row[key]
+            for row in compact["requirements"]
+            for key in ("proof_ref", "train_binding_ref")
+        }
+        inferred = {r["inference"]["group_id"] for r in compact["requirements"] if r["inference"]}
+        if references != set(compact["facts"]) or inferred != {
+            g["group_id"] for g in compact["inference_groups"]
+        }:
+            raise ValueError("Selected compact reference closure differs")
+        members_by_advisory = {}
+        for member in members.values():
+            key = member["vendor"], member["advisory_id"]
+            members_by_advisory.setdefault(key, set()).add(member["cve_id"])
+        if any(
+            not members_by_advisory.get((g["vendor"], g["advisory_id"]), set()).intersection(
+                g["cve_ids"]
+            )
+            for g in compact["source_groups"]
+        ):
+            raise ValueError("Selected compact source group ownership differs")
     ids = sorted(members)
     evidence = report["row_evidence"]
     if evidence["member_count"] != len(ids) or evidence["member_order_sha256"] != _hash(ids):
@@ -445,6 +473,11 @@ def _check_selected_upgrades(report, *, shape_checked=False):
             ):
                 raise ValueError("Selected row issue order/uniqueness mismatch")
     for row in report["rows"]:
+        if check_closure and (
+            row["supported_event_count"] != len(row["events"])
+            or (row["event_count"] is not None and row["event_count"] != len(row["events"]))
+        ):
+            raise ValueError("Selected upgrade event count differs")
         for kind in used:
             ref = row[kind + "_ref"]
             if ref not in evidence[kind]:

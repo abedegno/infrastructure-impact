@@ -425,6 +425,10 @@ def _reconcile(
 def validate_report(report):
     """Closed public schema plus mapping, cohort, distinct-count and identity checks."""
     _validate(report)
+    return _check_report(report)
+
+
+def _check_report(report):
     if report["summary"] != _summary(report["entries"]):
         raise ValueError("Reconciliation summary mismatch")
     if report["selection"]["definition_sha256"] != report["definition_sha256"]:
