@@ -1,0 +1,50 @@
+[
+  {
+    "vendor": null,
+    "window": "all",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": null,
+    "window": "2025",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": "cisco",
+    "window": "all",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": "cisco",
+    "window": "2025",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": "aruba",
+    "window": "all",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": "aruba",
+    "window": "2025",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": "arista",
+    "window": "all",
+    "scope_level": "os_family",
+    "cve_ids": null
+  },
+  {
+    "vendor": "arista",
+    "window": "2025",
+    "scope_level": "os_family",
+    "cve_ids": null
+  }
+]
