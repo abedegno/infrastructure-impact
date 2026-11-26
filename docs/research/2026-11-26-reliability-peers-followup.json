@@ -1,0 +1,147 @@
+{
+  "research_date": "2026-11-26",
+  "review_status": "human_review_pending",
+  "purpose": "Bounded peer-source coverage follow-up; research only",
+  "scope": {
+    "aruba": {
+      "train": "AOS-CX 10.13",
+      "models": [
+        "6200",
+        "6300"
+      ],
+      "targets": [
+        "6200 latest dated history",
+        "6300 10.13.1001",
+        "6300 10.13.1031",
+        "6300 10.13.1161",
+        "public HPE field/customer advisory evidence"
+      ]
+    },
+    "arista": {
+      "train": "EOS 4.33",
+      "models": [
+        "720XP",
+        "720DP"
+      ],
+      "targets": [
+        "individual binary release dates",
+        "explicit general release/model support evidence"
+      ]
+    }
+  },
+  "baseline_read": [
+    "2026-11-25-round4-aruba.md",
+    "2026-11-25-round4-coverage-aruba.md",
+    "2026-11-25-round4-arista.md",
+    "2026-11-25-round4-coverage-arista.md"
+  ],
+  "eligible_new_facts": [],
+  "eligible_new_fact_count": 0,
+  "effort": {
+    "aruba": {
+      "search_batches": 1,
+      "search_queries": 4,
+      "new_detail_pages": 0
+    },
+    "arista": {
+      "search_batches": 1,
+      "search_queries": 4,
+      "new_detail_pages": 0
+    }
+  },
+  "outcomes": {
+    "aruba": {
+      "status": "unavailable_in_bounded_followup",
+      "finding": "Exact release-history and public HPE customer-advisory queries returned no results. No additional eligible date/model or in-cohort non-security advisory fact established.",
+      "remaining_blockers": [
+        "6200 current complete 10.13 history and 2025–2026 dates remain unresolved.",
+        "6300 10.13.1001, 10.13.1031 and 10.13.1161 still lack dated rows.",
+        "No newly established in-cohort non-security HPE field/customer advisory; complete archive coverage remains unresolved."
+      ]
+    },
+    "arista": {
+      "status": "unavailable_in_bounded_followup",
+      "finding": "Returned official-domain results were security advisory affected/unaffected/fixed-version context. They were excluded from general release/model-support and binary-date evidence.",
+      "exclusion_examples": [
+        {
+          "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24710-security-advisory-0154",
+          "locator": "Search response: Affected Software, Affected Platforms, Resolution",
+          "reason": "Security vulnerability applicability and remediation context; no individual release date or general train-support statement."
+        },
+        {
+          "url": "https://www.arista.com/en/support/advisories-notices/security-advisory/22868-security-advisory-0126",
+          "locator": "Search response: Affected Software and Affected Platforms",
+          "reason": "Affected/unaffected lists are advisory-specific, not a general release support matrix."
+        }
+      ],
+      "remaining_blockers": [
+        "Per-binary EOS 4.33 release dates remain unresolved.",
+        "Explicit general EOS 4.33 support statements for 720XP/720DP remain unresolved.",
+        "Previously observed public lifecycle train date and RSS announcement dates remain insufficient for binary dates."
+      ]
+    }
+  },
+  "captures": [
+    {
+      "path": "$RELIABILITY_COVERAGE_CACHE/peers/aruba-search-1.json",
+      "sha256": "f2bf57eaac547477c99aea898e2e76631913f77d401c803534fd7d906dce0ca8",
+      "id": "aruba-search-1",
+      "capture_kind": "actual_web_tool_response",
+      "source_urls": [],
+      "locator": {
+        "operation": "search_query",
+        "queries": [
+          "site:arubanetworking.hpe.com/techdocs \"6200\" \"10.13.1200\" \"Release Date\"",
+          "site:arubanetworking.hpe.com/techdocs \"6300\" \"10.13.1001\" \"Release Date\"",
+          "site:arubanetworking.hpe.com/techdocs \"6300\" \"10.13.1031\" \"10.13.1161\" date",
+          "site:support.hpe.com \"Customer Advisory\" \"6200\" \"6300\" \"10.13\""
+        ]
+      },
+      "retrieved_at_utc": "2026-11-26T07:17:37.580Z",
+      "original_vendor_document": false,
+      "original_sha256": null
+    },
+    {
+      "path": "$RELIABILITY_COVERAGE_CACHE/peers/arista-search-1.json",
+      "sha256": "0dafebdc5003aea7a36f72ac8ad5e3213edf9accb64ef8f507d3dc96fec0bcfb",
+      "id": "arista-search-1",
+      "capture_kind": "actual_web_tool_response",
+      "source_urls": [
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/24710-security-advisory-0154",
+        "https://www.arista.com/zh/support/advisories-notices/security-advisory/24724-security-advisory-0168",
+        "https://www.arista.com/ko/support/advisories-notices/security-advisory/25036-security-advisory-0214",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/25220-security-advisory-0229",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/25040-security-advisory-0218",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/24515-security-advisory-0147",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/24111-security-advisory-0142",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/22868-security-advisory-0126",
+        "https://www.arista.com/en/support/customer-support",
+        "https://www.arista.com/en/support/customer-support--------------------------------------------------------------------------------",
+        "https://www.arista.com/en/support/advisories-notices/security-advisory/24712-security-advisory-0156",
+        "https://www.arista.com/ko/support/advisories-notices/security-advisory/25220-security-advisory-0229",
+        "https://www.arista.com/zh/support/advisories-notices/security-advisory/24716-security-advisory-0160",
+        "https://www.arista.com/ko/support/advisories-notices/security-advisory/23115-security-advisory-0128"
+      ],
+      "locator": {
+        "operation": "search_query",
+        "queries": [
+          "site:arista.com \"4.33\" \"720XP\" \"supported\"",
+          "site:arista.com \"4.33\" \"720DP\" \"release\"",
+          "site:arista.com \"4.33.0F\" \"release date\"",
+          "site:arista.com \"4.33\" \"720D\" \"Release Notes\""
+        ]
+      },
+      "retrieved_at_utc": "2026-11-26T07:17:43.220Z",
+      "original_vendor_document": false,
+      "original_sha256": null
+    }
+  ],
+  "method_limits": [
+    "Stopped each vendor after one search batch yielded no eligible facts; unused search/detail budget was not consumed.",
+    "No known blocked route retried; no login, challenge bypass, mirror, original-origin request or bulk traversal.",
+    "Capture SHA-256 hashes exact retained JSON receipt bytes containing the actual tool-returned response. They are not original vendor-document hashes.",
+    "Search response is a rendered excerpt/summary; original vendor bytes were not obtained. original_sha256 is null.",
+    "No product code, packaged catalogue, policy, schema, workflow or previous packet changed. No commit.",
+    "No annual denominator, zero-incident inference, rate, reliability ranking or withdrawal inference is supported."
+  ]
+}

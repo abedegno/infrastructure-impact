@@ -24,6 +24,14 @@ assert(
 if (process.argv[2]) {
   const vectors = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
   R.validate(vectors.report);
+  assert.deepStrictEqual(
+    JSON.parse(JSON.stringify(R.coverageReport(vectors.report))),
+    vectors.coverage,
+    'coverage JSON parity',
+  );
+  assert.strictEqual(R.coverageCSV(vectors.report), vectors.coverage_csv, 'coverage CSV parity');
+  assert(R.render(vectors.report).includes('Coverage gaps by model'));
+  assert(R.render(vectors.report).includes('reliability-coverage-json'));
   if (vectors.report.availability === 'available')
     assert(
       R.render(vectors.report).includes('reliability-review'),
@@ -200,7 +208,9 @@ assert(
   presentation.includes('class="reliability-metric-details"'),
   'full metric audit remains expandable',
 );
-const compactPresentation = presentation.replace(/<details\b[\s\S]*?<\/details>/g, '');
+const compactPresentation = presentation
+  .replace(/<section class="reliability-coverage">[\s\S]*?<\/section>/, '')
+  .replace(/<details\b[\s\S]*?<\/details>/g, '');
 assert(
   !compactPresentation.includes('Rate unavailable: complete dated original'),
   'repeated audit reasons stay out of the main summary',
@@ -286,4 +296,56 @@ for (const [section, mutate] of [
     /unsupported release identity/i,
     section + ' validates complete release literals',
   );
+}
+
+// Exercise the actual app download handlers, including accepted generation checks.
+if (process.argv[2]) {
+  const vectors = JSON.parse(fs.readFileSync(process.argv[2], 'utf8')),
+    source = fs.readFileSync('infrastructure_impact/web/app.js', 'utf8'),
+    start = source.indexOf(
+      "    for (const kind of ['json', 'csv', 'review', 'coverage-json', 'coverage-csv'])",
+    ),
+    end = source.indexOf("  $('#analysis-load')", start),
+    handlers = new Map(),
+    downloads = [],
+    bodies = [],
+    state = {
+      window: context.window,
+      reliabilityReport: vectors.report,
+      accepted: vectors.report,
+      reliabilityState: { report: vectors.report, error: '' },
+      appJSON: context.window.InfrastructureJSON,
+      $: (selector) => ({ addEventListener: (_, callback) => handlers.set(selector, callback) }),
+      Blob: class {
+        constructor(parts) {
+          this.body = parts.join('');
+        }
+      },
+      URL: {
+        createObjectURL: (blob) => {
+          bodies.push(blob.body);
+          return 'blob:test';
+        },
+        revokeObjectURL: () => {},
+      },
+      document: {
+        createElement: () => {
+          const a = { click: () => downloads.push(a.download) };
+          return a;
+        },
+      },
+      setTimeout: (f) => f(),
+      renderComparison: () => {},
+    };
+  assert(start >= 0 && end > start, 'real app handlers found');
+  vm.runInNewContext(source.slice(start, end).replace(/\n  }\s*$/, ''), state);
+  handlers.get('#reliability-coverage-json')();
+  handlers.get('#reliability-coverage-csv')();
+  assert.deepStrictEqual(JSON.parse(bodies[0]), vectors.coverage);
+  assert.strictEqual(bodies[1], vectors.coverage_csv);
+  assert(downloads.every((name) => name.startsWith('release-reliability-coverage-')));
+  state.accepted = { ...vectors.report, generated_at: '2000-01-01T00:00:00Z' };
+  handlers.get('#reliability-coverage-json')();
+  assert.strictEqual(downloads.length, 2, 'mixed generation download rejected');
+  assert(state.reliabilityState.error.includes('rejected'));
 }

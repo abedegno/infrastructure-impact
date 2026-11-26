@@ -2,6 +2,8 @@
 
 ## Unreleased — release reliability
 
+- Add a generation-bound release-reliability coverage view and offline JSON/CSV export, with per-model date/provenance gaps and bounded official-source follow-up. No hosted source activation or inferred release dates.
+
 - Add a local release-reliability refresh CLI for original Cisco ROMMON and Arista software RSS captures, with immutable cache revisions, policy-gated Cisco checks and separate candidate and pending-review outputs.
 
 - Add generation-bound release-reliability and human-review reports, per-train/year observed counts and coverage, JSON/CSV exports, native API and browser tables. Keep incomplete rates unavailable and distinguish research excerpts from production-eligible evidence.

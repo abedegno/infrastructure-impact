@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from infrastructure_impact.application import release_reliability as rr
+from infrastructure_impact.application import reliability_coverage as coverage
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -37,7 +38,14 @@ def test_browser_release_reliability_parity(tmp_path):
     path = tmp_path / "vectors.json"
     path.write_text(
         json.dumps(
-            dict(report=report, upgrades=upgrades, selected=selected, csv=rr.csv_export(selected))
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=selected,
+                csv=rr.csv_export(selected),
+                coverage=coverage.build_coverage(report),
+                coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+            )
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
@@ -67,7 +75,14 @@ def test_browser_notice_chronology_and_model_scope(tmp_path, models):
     path = tmp_path / "vectors.json"
     path.write_text(
         json.dumps(
-            dict(report=report, upgrades=upgrades, selected=enriched, csv=rr.csv_export(enriched))
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=enriched,
+                csv=rr.csv_export(enriched),
+                coverage=coverage.build_coverage(report),
+                coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+            )
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
@@ -95,7 +110,14 @@ def test_browser_complete_signal_rate_parity(tmp_path):
     path = tmp_path / "vectors.json"
     path.write_text(
         json.dumps(
-            dict(report=report, upgrades=upgrades, selected=enriched, csv=rr.csv_export(enriched))
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=enriched,
+                csv=rr.csv_export(enriched),
+                coverage=coverage.build_coverage(report),
+                coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+            )
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
@@ -153,7 +175,14 @@ def test_browser_notice_signal_completeness(tmp_path, variant):
     path = tmp_path / "vectors.json"
     path.write_text(
         json.dumps(
-            dict(report=report, upgrades=upgrades, selected=enriched, csv=rr.csv_export(enriched))
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=enriched,
+                csv=rr.csv_export(enriched),
+                coverage=coverage.build_coverage(report),
+                coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+            )
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
@@ -183,7 +212,14 @@ def test_browser_multi_model_respin_order(tmp_path):
     path = tmp_path / "vectors.json"
     path.write_text(
         json.dumps(
-            dict(report=report, upgrades=upgrades, selected=enriched, csv=rr.csv_export(enriched))
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=enriched,
+                csv=rr.csv_export(enriched),
+                coverage=coverage.build_coverage(report),
+                coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+            )
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
@@ -212,7 +248,14 @@ def test_browser_unknown_action_scope_blocks_complete_zero(tmp_path):
     path = tmp_path / "vectors.json"
     path.write_text(
         json.dumps(
-            dict(report=report, upgrades=upgrades, selected=enriched, csv=rr.csv_export(enriched))
+            dict(
+                report=report,
+                upgrades=upgrades,
+                selected=enriched,
+                csv=rr.csv_export(enriched),
+                coverage=coverage.build_coverage(report),
+                coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+            )
         )
     )
     subprocess.run([node, "tests/test_release_reliability_ui.js", str(path)], cwd=ROOT, check=True)
