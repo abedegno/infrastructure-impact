@@ -306,7 +306,7 @@ if (process.argv[2]) {
     start = source.indexOf(
       "    for (const kind of ['json', 'csv', 'review', 'coverage-json', 'coverage-csv'])",
     ),
-    end = source.indexOf("  $('#analysis-load')", start),
+    end = source.indexOf('  window.InfrastructureSwitchingView.mount(', start),
     handlers = new Map(),
     downloads = [],
     bodies = [],

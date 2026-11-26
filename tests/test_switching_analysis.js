@@ -85,7 +85,8 @@ assert(A.render(null, { error: '<script>bad</script>' }).includes('&lt;script&gt
     analysisStudy: null,
     view: 'compare',
     comparisonMode: 'switching',
-    renderComparison: () => {},
+    refreshAnalysisPanel: () => {},
+    renderComparison: () => assert.fail('analysis load rebuilt the enclosing comparison'),
   };
   vm.createContext(race);
   vm.runInContext(

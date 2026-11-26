@@ -313,7 +313,7 @@ vm.runInContext(
   try {
     // Later mutable app state must not change this already-rendered export owner.
     vm.runInContext('analysisReport=null;', context);
-    node('#analysis-json').handlers.get('click')();
+    await node('#analysis-json').handlers.get('click')();
     assert(downloadedBlob, 'compact-fitting accepted analysis reaches the download');
     assert.strictEqual(await downloadedBlob.text(), compact);
     assert.deepStrictEqual(JSON.parse(await downloadedBlob.text()), analysisFixture);
@@ -322,6 +322,34 @@ vm.runInContext(
       'switching-analysis-' + analysisFixture.publication?.id + '.json',
     );
     assert.strictEqual(vm.runInContext('analysisError', context), '');
+    const owner = vm.runInContext('switchingAcceptedDelivery', context),
+      loader = await owner.promise,
+      expectedStudy = vm.runInContext('switchingReport', context);
+    let finish,
+      called = 0;
+    loader.switchingAnalysisExport = (study, format) => {
+      assert.strictEqual(study, expectedStudy);
+      assert.strictEqual(format, 'json');
+      called++;
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    };
+    downloadedBlob = null;
+    const click = node('#analysis-json').handlers.get('click')();
+    await tick();
+    assert.equal(called, 1, 'accepted loader owns asynchronous export');
+    assert.equal(downloadedBlob, null);
+    finish(new TextEncoder().encode('accepted bytes'));
+    await click;
+    assert.equal(await downloadedBlob.text(), 'accepted bytes');
+    loader.switchingAnalysisExport = () => {
+      throw Error('fixture export fault');
+    };
+    downloadedBlob = null;
+    await node('#analysis-json').handlers.get('click')();
+    assert.equal(downloadedBlob, null);
+    assert.match(vm.runInContext('analysisError', context), /fixture export fault/);
   } finally {
     serializer.stringifyBounded = bounded;
     context.URL = originalURL;
