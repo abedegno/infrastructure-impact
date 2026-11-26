@@ -37,7 +37,7 @@ The browser freezes each decoded envelope, validates all applicable existing com
 
 Only an explicit optional analysis request for one vendor reads the manifest and that vendor projection. Failed preparation can be retried. Advertised malformed manifests, missing vendor roots, mixed generations, bad hashes, incomplete scenario ownership and budget failures are errors; they do not trigger a fallback.
 
-A publication without the manifest uses the existing full-root path. All-vendor selection also uses the full root. The Python `PublicationReader.switching_analysis()` remains on its legacy full-root path; the new native projection API and browser loader are the preview surfaces.
+A publication advertising the [packed analysis preview](ANALYSIS_PACKING.md) uses that root for all selections. Without that preview, All-vendor selection uses the full root, as does single-vendor selection when the vendor manifest is absent. The Python `PublicationReader.switching_analysis()` remains on its legacy full-root path; the new native projection API and browser loader are the preview surfaces.
 
 Year and train controls do not reduce delivery in this version. JSON and both CSV exports include all trains, policies and scenarios for the accepted study. The upgrade walk needs earlier version state and taint, and compact selected requirements retain members outside the requested window. Dropping those dependencies would change exports.
 
