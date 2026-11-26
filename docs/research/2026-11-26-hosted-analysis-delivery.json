@@ -66,5 +66,16 @@
     "conservative_accepted_artifact_union_bytes": 941172658,
     "input_is_pinned": true,
     "future_size_guarantee": false
+  },
+  "same_output_transition": {
+    "scope": "Real snapshot CLI selected-to-blank, same managed output directory, authored synthetic SQLite only",
+    "returncode": 0,
+    "inspection": "passed exact physical manifest inventory and capacity",
+    "fresh_native_verification": "passed",
+    "delivery_root": "absent",
+    "previous_only_files_removed": 171,
+    "current_files": 266,
+    "private_inputs": false,
+    "network_requests": 0
   }
 }

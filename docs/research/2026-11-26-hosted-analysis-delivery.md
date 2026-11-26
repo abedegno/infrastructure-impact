@@ -31,6 +31,14 @@ and rejection of missing/unexpected roots and invalid configuration before any
 state directory is created. These times are fixture timings, not production
 performance claims. No vendor requests, private evidence or live collection were used.
 
+A separate real CLI run then cleared the selector while reusing the selected
+output directory. It removed 171 obsolete files, left 266 current files, and
+passed exact physical inventory, capacity and fresh native verification. Managed
+exports are staged and replaced; modified or unmanaged destinations are rejected
+safely rather than overlaid. The covering snapshot/hosted/architecture regression
+run passed 137 tests and 12 subtests after this fix. The earlier 14-module
+profile/operator regression run passed 536 tests.
+
 The profile never establishes release-denominator completeness or vendor quality.
 Existing unknowns and independent human review pending remain unchanged. The
 previous cold-time regression and low-memory/browser limitations still apply.
