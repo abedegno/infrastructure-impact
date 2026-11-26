@@ -542,6 +542,7 @@ function renderComparison() {
       const button = $('#analysis-load');
       button.disabled = true;
       button.textContent = 'Loading analysis…';
+      updateAnalysisAlert(mountedAnalysis);
       return;
     }
     const prior = reliabilityReport;
@@ -682,6 +683,9 @@ function renderComparison() {
   )
     loadSwitching(switchingReport ? studyOptions(switchingReport) : {});
 }
+function updateAnalysisAlert(owner) {
+  $('#analysis-alert').textContent = [analysisError, owner.exportError].filter(Boolean).join(' · ');
+}
 function mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport) {
   if (
     !mountedAnalysis ||
@@ -693,10 +697,12 @@ function mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport) 
   const panel = $('#analysis-panel');
   panel.innerHTML = window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
     loading: analysisLoading,
-    error: [analysisError, owner.exportError].filter(Boolean).join(' · '),
   });
+  const loadButton = $('#analysis-load');
+  loadButton.insertAdjacentHTML('afterend', '<div id="analysis-alert" role="alert"></div>');
+  updateAnalysisAlert(owner);
   window.InfrastructureSwitchingAnalysis.mount(panel, acceptedAnalysis, reliabilityReport);
-  $('#analysis-load').addEventListener('click', () => {
+  loadButton.addEventListener('click', () => {
     owner.exportError = '';
     return loadAnalysis(accepted, delivery);
   });

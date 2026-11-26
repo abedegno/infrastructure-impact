@@ -350,7 +350,7 @@ vm.runInContext(
     downloadedBlob = null;
     await node('#analysis-json').handlers.get('click')();
     assert.equal(downloadedBlob, null);
-    assert.match(node('#analysis-panel').innerHTML, /fixture export fault/);
+    assert.match(node('#analysis-alert').textContent, /fixture export fault/);
     vm.runInContext('switchingLoading=false;', context);
     context.exportStudy = expectedStudy;
     context.exportDelivery = owner;
@@ -375,9 +375,10 @@ vm.runInContext(
       );
       paintAccepted();
       const panel = node('#analysis-panel'),
-        otherMarkup = panel.innerHTML;
+        otherMarkup = panel.innerHTML,
+        otherAlert = node('#analysis-alert').textContent;
       assert.doesNotMatch(
-        otherMarkup,
+        otherAlert,
         /fixture export fault/,
         'export errors belong to their panel',
       );
@@ -390,6 +391,7 @@ vm.runInContext(
       assert.equal(refreshes, 0, 'stale rejection cannot repaint the new ' + change);
       assert.equal(vm.runInContext('analysisError', context), '');
       assert.equal(panel.innerHTML, otherMarkup);
+      assert.equal(node('#analysis-alert').textContent, otherAlert);
       assert.equal(downloadedBlob, null);
       pendingExports[1].resolve(new TextEncoder().encode('old owner download'));
       await lateSuccess;
@@ -414,6 +416,7 @@ vm.runInContext(
         new Promise((_, reject) => {
           failures.refresh = reject;
         });
+      const panelMarkup = node('#analysis-panel').innerHTML;
       const actions = {
         export: node('#analysis-json').handlers.get('click')(),
         refresh: node('#analysis-load').handlers.get('click')(),
@@ -422,14 +425,27 @@ vm.runInContext(
       for (const action of order) {
         failures[action](Error('overlapping ' + action + ' fault'));
         await actions[action];
+        if (action === 'export' && order[0] === 'export') {
+          assert.match(
+            node('#analysis-alert').textContent,
+            /Analysis export rejected: overlapping export fault/,
+            'export rejection is visible while the same panel is still refreshing',
+          );
+          assert.equal(node('#analysis-load').disabled, true, 'the refresh is still pending');
+          assert.equal(
+            node('#analysis-panel').innerHTML,
+            panelMarkup,
+            'analysis panel stays mounted',
+          );
+        }
       }
-      const markup = node('#analysis-panel').innerHTML;
+      const alert = node('#analysis-alert').textContent;
       assert(
-        markup.includes('Analysis export rejected: overlapping export fault'),
+        alert.includes('Analysis export rejected: overlapping export fault'),
         'same-owner export failure visible',
       );
       assert(
-        markup.includes('Analysis selection rejected: overlapping refresh fault'),
+        alert.includes('Analysis selection rejected: overlapping refresh fault'),
         'same-owner refresh failure visible',
       );
     }
