@@ -255,3 +255,22 @@ def test_rich_vendor_closure_parity():
                     assert api().csv_export(actual["upgrades"]) == api().csv_export(
                         expected["upgrades"]
                     )
+
+
+def test_browser_vendor_delivery_and_review_regressions():
+    """Run real browser adapters/lifecycle cases in the ordinary CI suite."""
+    import os
+    import shutil
+    import subprocess
+    from pathlib import Path
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is unavailable")
+    subprocess.run(
+        [node, "tests/test_analysis_delivery.js"],
+        cwd=Path(__file__).resolve().parents[1],
+        env={**os.environ, "TZ": "UTC", "REVIEW_CASE": ""},
+        check=True,
+        timeout=180,
+    )
