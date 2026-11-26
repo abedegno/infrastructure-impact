@@ -393,12 +393,15 @@ def _fixture_generations(directory):
     old, new = (directory / "generations" / (char * 32) for char in "ab")
     for path in (old, new):
         path.mkdir(parents=True)
-        (path / "index.html").write_text(path.name)
+        (path / "data").mkdir()
+        for name in ("index.html", "data/view.json"):
+            (path / name).write_text(path.name)
+        digest = sha256(path.name.encode()).hexdigest()
         (path / "manifest.json").write_text(
             json.dumps(
                 {
                     "generation": path.name,
-                    "sha256": {"index.html": sha256(path.name.encode()).hexdigest()},
+                    "sha256": {"index.html": digest, "data/view.json": digest},
                 }
             )
         )
@@ -464,3 +467,35 @@ def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatc
     assert not list(destination.glob(".snapshot-*"))
     if failure == "concurrent_edit":
         assert (destination / "owner.txt").read_text() == "keep"
+
+
+@pytest.mark.parametrize("rename_fails", [False, True])
+@pytest.mark.parametrize("note", ["operator-note.txt", "view.json"])
+def test_snapshot_refresh_preserves_edits_in_newly_installed_tree(
+    tmp_path, monkeypatch, rename_fails, note
+):
+    old, new = _fixture_generations(tmp_path)
+    destination = tmp_path / "snapshot"
+    publication._export_generation(old, destination)
+    rename = Path.rename
+    content = b"concurrent operator edit"
+
+    def edit_before_manifest(source, target):
+        if source.parent.name == "new" and target == destination / "manifest.json":
+            (destination / "data" / note).write_bytes(content)
+            if rename_fails:
+                raise OSError("simulated manifest rename failure")
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", edit_before_manifest)
+    with pytest.raises(ValueError) as error:
+        publication._export_generation(new, destination)
+    assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
+    assert (destination / "data/view.json").read_text() == old.name
+    preserved = [p for p in destination.rglob(note) if p.read_bytes() == content]
+    assert len(preserved) == 1
+    assert any(
+        str(parent) in str(error.value)
+        for parent in preserved[0].parents
+        if parent.is_relative_to(destination) and parent != destination
+    )
