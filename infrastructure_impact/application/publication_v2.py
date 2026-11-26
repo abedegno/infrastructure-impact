@@ -391,13 +391,17 @@ class Writer:
             indexes[kind] = chunks
         return indexes
 
-    def tables(self):
-        for kind, values, boundary, result in [
-            ("strings", self.encoder.strings, self.snapshot_tables[0], self.string_parts),
-            ("shapes", self.encoder.shapes, self.snapshot_tables[1], self.shape_parts),
-        ]:
+    def tables(self, legacy_end=None):
+        for index, (kind, values, result) in enumerate(
+            (
+                ("strings", self.encoder.strings, self.string_parts),
+                ("shapes", self.encoder.shapes, self.shape_parts),
+            )
+        ):
+            boundary = self.snapshot_tables[index]
+            legacy = len(values) if legacy_end is None else legacy_end[index]
             first = 0
-            for section in (values[:boundary], values[boundary:]):
+            for section in (values[:boundary], values[boundary:legacy], values[legacy:]):
                 for part in self.chunks(kind, section):
                     count = len(
                         codec.strict_loads((self.destination / part["path"]).read_bytes())["data"]
@@ -609,7 +613,14 @@ def logical_views(data):
         yield "changes/" + str(change["id"]) + ".json", change
 
 
-def write_bundle(destination, data, *, analysis_vendor_delivery=False):
+def write_bundle(
+    destination,
+    data,
+    *,
+    analysis_vendor_delivery=False,
+    analysis_precomputed_delivery=False,
+    analysis_precomputed_options=None,
+):
     """Preserve fresh public writer validation for direct v2 callers, too."""
     from .publication import write_bundle as validated_write
 
@@ -618,10 +629,19 @@ def write_bundle(destination, data, *, analysis_vendor_delivery=False):
         data,
         publication_format="v2",
         analysis_vendor_delivery=analysis_vendor_delivery,
+        analysis_precomputed_delivery=analysis_precomputed_delivery,
+        analysis_precomputed_options=analysis_precomputed_options,
     )
 
 
-def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=False):
+def _write_bundle(
+    destination,
+    data,
+    row_sources,
+    *,
+    analysis_vendor_delivery=False,
+    analysis_precomputed_options=None,
+):
     from ..exports import csv_export
     from .eligibility import monitor_summary
     from .publication import write_manifest, write_reader_assets, write_reliability_assets
@@ -686,7 +706,23 @@ def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=Fa
         if size <= MAX_BYTES:
             writer.root(ROOT, index)
     routes = writer.routes()
-    writer.tables()
+    legacy_end = None
+    if analysis_precomputed_options is not None:
+        from . import analysis_precomputed as delivery
+
+        legacy_end = len(writer.encoder.strings), len(writer.encoder.shapes)
+        # This private writer is reached only after the public writer's fresh
+        # report, evidence, records and retained-source authority checks.
+        manifest = delivery._write_views_validated(
+            destination, data["switching_analysis"], analysis_precomputed_options
+        )
+        writer.root(delivery.ROOT, manifest)
+        raw_manifest = delivery.compact_bytes(manifest)
+        path, logical = delivery.manifest_descriptor(writer.root_data[delivery.ROOT])
+        if codec.digest([raw_manifest]) != logical:
+            raise ValueError("Selected analysis sidecar differs from logical root")
+        (destination / path).write_bytes(raw_manifest)
+    writer.tables(legacy_end)
     overview_part = writer.part("overview", overview)
     catalog = dict(
         schema_version=2,
@@ -724,7 +760,12 @@ def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=Fa
     )
     (destination / "comparison-eligibility-summary.json").write_bytes(encode(summary_eligibility))
     write_reliability_assets(destination, data)
-    write_reader_assets(destination, data, publication_format="v2")
+    write_reader_assets(
+        destination,
+        data,
+        publication_format="v2",
+        analysis_precomputed_delivery=analysis_precomputed_options is not None,
+    )
     write_static_delivery(destination, data, publication_v2=descriptor)
     write_manifest(destination, data)
     if sum(p.stat().st_size for p in destination.rglob("*") if p.is_file()) > SITE:
@@ -773,12 +814,32 @@ def inspect_bundle(directory, facts):
         for kind in ("strings", "shapes")
         for row in reader.catalog[kind]
     }
+    from . import analysis_precomputed as delivery
+
     bound_transports = {part["path"] for part in transports.values()}
+    sidecar, selected_transports = None, set()
+    if delivery.ROOT in reader.catalog["roots"]:
+        selected = reader._precomputed_manifest()
+        sidecar, _ = delivery.manifest_descriptor(reader.root(delivery.ROOT))
+        for view in selected["views"]:
+            for chunk in view["chunks"]:
+                part = chunk["part"]
+                name = part["path"]
+                if (
+                    name not in files
+                    or manifest["sha256"][name] != part["sha256"]
+                    or files[name].stat().st_size != part["bytes"]
+                ):
+                    raise ValueError("Selected analysis gzip descriptor differs from inventory")
+                selected_transports.add(name)
     physical_transports = {
         name for name in files if name.endswith(".gz") and name != "snapshot-v2.json.gz"
     }
-    if physical_transports != bound_transports:
-        raise ValueError("unbound or missing table transport gzip")
+    if (
+        physical_transports != bound_transports | selected_transports
+        or bound_transports & selected_transports
+    ):
+        raise ValueError("unbound or missing table transport gzip or selected analysis gzip")
     for raw_path, compressed in transports.items():
         decoded = codec.decode_table_transport(
             files[compressed["path"]].read_bytes(), compressed, table_parts[raw_path]
@@ -789,7 +850,7 @@ def inspect_bundle(directory, facts):
     # including assets not reached by the default route.
     for name, path in files.items():
         if name.startswith("data/v2/"):
-            if name in bound_transports:
+            if name == sidecar or name in bound_transports or name in selected_transports:
                 continue
             value = codec.strict_loads(path.read_bytes())
             if (
@@ -815,7 +876,15 @@ def inspect_bundle(directory, facts):
 
 
 @phase("publication.native_parity")
-def native_parity(database, directory, home, reader, *, switching_analysis_profile: str = ""):
+def native_parity(
+    database,
+    directory,
+    home,
+    reader,
+    *,
+    switching_analysis_profile: str = "",
+    analysis_precomputed_options=None,
+):
     """Bind mandatory roots to independently queried sanitized native facts."""
     from contextlib import closing
 
@@ -843,7 +912,7 @@ def native_parity(database, directory, home, reader, *, switching_analysis_profi
         publication_format="v2",
         **({"include_switching_analysis": True} if analysis is not None else {}),
     )
-    verify_projection(reader, projected)
+    verify_projection(reader, projected, analysis_precomputed_options=analysis_precomputed_options)
     if (Path(directory) / "impact.csv").read_bytes() != csv_export(projected).encode():
         raise ValueError("native CSV mismatch")
     with phase("publication.native_queries"):
@@ -892,7 +961,7 @@ def native_parity(database, directory, home, reader, *, switching_analysis_profi
 
 
 @phase("publication.native_roots")
-def verify_projection(reader, projected):
+def verify_projection(reader, projected, *, analysis_precomputed_options=None):
     """Root membership comes from native views, never the untrusted catalog."""
     from .switching_comparison import summary
 
@@ -961,6 +1030,20 @@ def verify_projection(reader, projected):
         if "switching_analysis" not in projected:
             raise ValueError("Analysis delivery without complete native analysis")
         views.update(delivery_views(projected["switching_analysis"]))
+    from . import analysis_precomputed as selected_delivery
+
+    if (
+        selected_delivery.ROOT in reader.catalog["roots"]
+        or analysis_precomputed_options is not None
+    ):
+        if (
+            "switching_analysis" not in projected
+            or selected_delivery.ROOT not in reader.catalog["roots"]
+        ):
+            raise ValueError("Missing native selected analysis source or mandatory logical root")
+        views[selected_delivery.ROOT] = selected_delivery._verify_views(
+            reader, projected, analysis_precomputed_options
+        )
     if set(views) != set(reader.catalog["roots"]):
         raise ValueError("missing or extra mandatory logical root")
     if "detail_indexes" in reader.catalog["switching"]:

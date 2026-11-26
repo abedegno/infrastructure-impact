@@ -142,6 +142,7 @@
     return (negative ? '-' : '') + token;
   }
   function fingerprintJSON(value) {
+    if (typeof value === 'bigint') return value.toString();
     if (typeof value === 'number') return numberToken(value);
     if (Array.isArray(value)) return '[' + value.map(fingerprintJSON).join(',') + ']';
     if (value && typeof value === 'object')

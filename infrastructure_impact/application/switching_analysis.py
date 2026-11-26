@@ -290,6 +290,12 @@ def _identity(report, study):
 
 
 def select_upgrades(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
+    if report is not None:
+        validate_requirements(report)
+    return _select_upgrades_validated(report, study_selection, max_bytes=max_bytes)
+
+
+def _select_upgrades_validated(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
     selection = study_selection["selection"]
     comparison._selection_evaluation(
         selection["requested_vendor"],
@@ -315,7 +321,6 @@ def select_upgrades(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
     if report is None:
         return dict(base, availability="unavailable", requirements=None, rows=[], row_evidence=None)
     _identity(report, study_selection)
-    validate_requirements(report)
     requested = selection["requested_cve_ids"]
     members = {
         cid
@@ -413,9 +418,9 @@ def _compact_rows(rows, members):
     return out, evidence
 
 
-def detailed_rows(report):
-    """Validate and expand only selected row evidence; native detailed CSV semantics."""
-    _validate_shape(report, "selected_upgrades")
+def _check_selected_upgrades(report, *, shape_checked=False):
+    if not shape_checked:
+        _validate_shape(report, "selected_upgrades")
     if report["availability"] == "unavailable":
         return
     validate_requirements(report["requirements"])
@@ -460,6 +465,15 @@ def detailed_rows(report):
             raise ValueError("Selected row evidence outside affected ownership")
     if any(used[kind] != set(evidence[kind]) for kind in used):
         raise ValueError("Selected row unused evidence reference")
+    return ids
+
+
+def detailed_rows(report):
+    """Validate and expand only selected row evidence; native detailed CSV semantics."""
+    ids = _check_selected_upgrades(report)
+    if ids is None:
+        return
+    evidence = report["row_evidence"]
     for row in report["rows"]:
         yield {
             (
@@ -1052,6 +1066,12 @@ def _kev_selected(report, selection):
 
 
 def select_report(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
+    if report is not None:
+        validate_report(report)
+    return _select_report_validated(report, study_selection, max_bytes=max_bytes)
+
+
+def _select_report_validated(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
     from . import switching_model_coverage as models
 
     if report is None:
@@ -1068,7 +1088,6 @@ def select_report(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
             release_history=upgrades.releases.select_report(None, dict(study_selection, rows=[])),
         )
     _identity(report, study_selection)
-    validate_report(report)
     selection = study_selection["selection"]
     context = selection_context(
         report,
@@ -1088,7 +1107,9 @@ def select_report(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
         generated_at=report["generated_at"],
         selection=copy.deepcopy(study_selection["selection"]),
         availability="available",
-        upgrades=select_upgrades(report["requirements"], study_selection, max_bytes=max_bytes),
+        upgrades=_select_upgrades_validated(
+            report["requirements"], study_selection, max_bytes=max_bytes
+        ),
         disclosure=_disclosure_selected(
             report["disclosure"], study_selection["selection"], selected
         ),

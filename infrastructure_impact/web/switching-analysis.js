@@ -100,63 +100,7 @@
     for (const child of [r, report.disclosure, report.kev_reconciliation])
       for (const key of ['definition_sha256', 'observation_end'])
         if (child[key] !== report[key]) fail('child bounds differ');
-    const groups = new Map(r.inference_groups.map((g) => [g.group_id, g])),
-      seen = new Set(),
-      membership = new Map();
-    if (groups.size !== r.inference_groups.length) fail('duplicate inference group');
-    for (const [id, g] of groups)
-      if (id !== hash(omit(g, ['group_id']))) fail('inference fingerprint differs');
-    for (const q of r.requirements) {
-      const m = r.members[q.claim_id],
-        key = JSON.stringify([q.claim_id, q.train, q.scenario]),
-        scope = JSON.stringify([q.claim_id, q.train]);
-      shape(
-        {
-          ...omit(m, ['source_ref', 'severity_facets_ref']),
-          ...omit(q, ['proof_ref', 'train_binding_ref']),
-          source: r.facts[m.source_ref],
-          severity_facets: r.facts[m.severity_facets_ref],
-          proof: r.facts[q.proof_ref],
-          train_binding: r.facts[q.train_binding_ref],
-        },
-        'upgrade_constraint',
-      );
-      let minimum = q.alternatives[0] ?? null;
-      for (const value of q.alternatives) {
-        const parts = /^([0-9]+)\.([0-9]+)\./.exec(value),
-          order = compare(m.vendor, value, minimum);
-        if (!parts || `${BigInt(parts[1])}.${BigInt(parts[2])}` !== q.train || order === null) {
-          minimum = null;
-          break;
-        }
-        if (order < 0) minimum = value;
-      }
-      if (q.target !== minimum) fail('compiled target differs');
-      if (seen.has(key)) fail('duplicate requirement');
-      seen.add(key);
-      if (!membership.has(scope)) membership.set(scope, new Set());
-      membership.get(scope).add(q.scenario);
-      if (q.target !== null && !r.facts[q.proof_ref].length) fail('target lacks proof');
-      if (m.date === null && !q.issues.includes('unknown_initial_publication'))
-        fail('unknown date lost');
-      if (q.target === null && !q.issues.length) fail('unknown target lost');
-      if (q.inference) {
-        const g = groups.get(q.inference.group_id);
-        if (
-          !g ||
-          !g.affected_claim_ids.includes(q.claim_id) ||
-          g.maximum_affected !== q.inference.maximum_affected
-        )
-          fail('inference membership differs');
-      }
-    }
-    if (
-      [...membership.values()].some(
-        (v) => v.size !== scenarios.length || scenarios.some((s) => !v.has(s)),
-      ) ||
-      new Set(r.requirements.map((q) => q.claim_id)).size !== Object.keys(r.members).length
-    )
-      fail('scenario ownership differs');
+    checkConstraints(r);
     const full = context(report, {}),
       owned = new Map(),
       pairKey = (c) =>
@@ -222,6 +166,65 @@
       if (!eq(e.current_claims, refs)) fail('KEV current claim ownership differs');
     }
     return report;
+  }
+  function checkConstraints(r) {
+    const groups = new Map(r.inference_groups.map((g) => [g.group_id, g])),
+      seen = new Set(),
+      membership = new Map();
+    if (groups.size !== r.inference_groups.length) fail('duplicate inference group');
+    for (const [id, g] of groups)
+      if (id !== hash(omit(g, ['group_id']))) fail('inference fingerprint differs');
+    for (const q of r.requirements) {
+      const m = r.members[q.claim_id],
+        key = JSON.stringify([q.claim_id, q.train, q.scenario]),
+        scope = JSON.stringify([q.claim_id, q.train]);
+      shape(
+        {
+          ...omit(m, ['source_ref', 'severity_facets_ref']),
+          ...omit(q, ['proof_ref', 'train_binding_ref']),
+          source: r.facts[m.source_ref],
+          severity_facets: r.facts[m.severity_facets_ref],
+          proof: r.facts[q.proof_ref],
+          train_binding: r.facts[q.train_binding_ref],
+        },
+        'upgrade_constraint',
+      );
+      let minimum = q.alternatives[0] ?? null;
+      for (const value of q.alternatives) {
+        const parts = /^([0-9]+)\.([0-9]+)\./.exec(value),
+          order = compare(m.vendor, value, minimum);
+        if (!parts || `${BigInt(parts[1])}.${BigInt(parts[2])}` !== q.train || order === null) {
+          minimum = null;
+          break;
+        }
+        if (order < 0) minimum = value;
+      }
+      if (q.target !== minimum) fail('compiled target differs');
+      if (seen.has(key)) fail('duplicate requirement');
+      seen.add(key);
+      if (!membership.has(scope)) membership.set(scope, new Set());
+      membership.get(scope).add(q.scenario);
+      if (q.target !== null && !r.facts[q.proof_ref].length) fail('target lacks proof');
+      if (m.date === null && !q.issues.includes('unknown_initial_publication'))
+        fail('unknown date lost');
+      if (q.target === null && !q.issues.length) fail('unknown target lost');
+      if (q.inference) {
+        const g = groups.get(q.inference.group_id);
+        if (
+          !g ||
+          !g.affected_claim_ids.includes(q.claim_id) ||
+          g.maximum_affected !== q.inference.maximum_affected
+        )
+          fail('inference membership differs');
+      }
+    }
+    if (
+      [...membership.values()].some(
+        (v) => v.size !== scenarios.length || scenarios.some((s) => !v.has(s)),
+      ) ||
+      new Set(r.requirements.map((q) => q.claim_id)).size !== Object.keys(r.members).length
+    )
+      fail('scenario ownership differs');
   }
   function selectedClaims(report, s) {
     const [start, end] = S.bounds(D, report.observation_end, s.requested_window);
@@ -538,8 +541,11 @@
     });
     return { rows: compact, row_evidence: evidence };
   }
-  function* detailedRows(report) {
-    shape(report, 'selected_upgrades');
+  function checkSelectedUpgrades(
+    report,
+    { shapeChecked = false, checkConstraintsToo = false } = {},
+  ) {
+    if (!shapeChecked) shape(report, 'selected_upgrades');
     if (report.availability === 'unavailable') return;
     const requirements = report.requirements;
     C.identity(requirements, report);
@@ -551,20 +557,41 @@
       fail('selected requirement fingerprint differs');
     for (const [key, value] of Object.entries(requirements.facts))
       if (key !== hash(value)) fail('selected fact fingerprint differs');
-    for (const q of requirements.requirements) {
-      const m = requirements.members[q.claim_id];
-      if (!m) fail('selected requirement ownership missing');
-      shape(
-        {
-          ...omit(m, ['source_ref', 'severity_facets_ref']),
-          ...omit(q, ['proof_ref', 'train_binding_ref']),
-          source: requirements.facts[m.source_ref],
-          severity_facets: requirements.facts[m.severity_facets_ref],
-          proof: requirements.facts[q.proof_ref],
-          train_binding: requirements.facts[q.train_binding_ref],
-        },
-        'upgrade_constraint',
-      );
+    if (checkConstraintsToo) {
+      const refs = new Set();
+      for (const [id, m] of Object.entries(requirements.members)) {
+        if (m.claim_id !== id) fail('selected member ownership differs');
+        refs.add(m.source_ref);
+        refs.add(m.severity_facets_ref);
+      }
+      for (const q of requirements.requirements) {
+        if (!Object.hasOwn(requirements.members, q.claim_id))
+          fail('selected requirement ownership missing');
+        refs.add(q.proof_ref);
+        refs.add(q.train_binding_ref);
+      }
+      if (
+        refs.size !== Object.keys(requirements.facts).length ||
+        [...refs].some((id) => !Object.hasOwn(requirements.facts, id))
+      )
+        fail('selected fact reference closure differs');
+      checkConstraints(requirements);
+    } else {
+      for (const q of requirements.requirements) {
+        const m = requirements.members[q.claim_id];
+        if (!m) fail('selected requirement ownership missing');
+        shape(
+          {
+            ...omit(m, ['source_ref', 'severity_facets_ref']),
+            ...omit(q, ['proof_ref', 'train_binding_ref']),
+            source: requirements.facts[m.source_ref],
+            severity_facets: requirements.facts[m.severity_facets_ref],
+            proof: requirements.facts[q.proof_ref],
+            train_binding: requirements.facts[q.train_binding_ref],
+          },
+          'upgrade_constraint',
+        );
+      }
     }
     const members = report.requirements.members,
       ids = Object.keys(members).sort(),
@@ -608,6 +635,12 @@
     }
     if (Object.keys(used).some((kind) => used[kind].size !== Object.keys(e[kind]).length))
       fail('selected row unused evidence reference');
+    return ids;
+  }
+  function* detailedRows(report) {
+    const ids = checkSelectedUpgrades(report);
+    if (!ids) return;
+    const e = report.row_evidence;
     for (const row of report.rows)
       yield Object.fromEntries(
         Object.entries(row).map(([k, v]) =>
@@ -1145,6 +1178,7 @@
     };
   }
   function csvJSON(value) {
+    if (typeof value === 'bigint') return value.toString();
     if (typeof value === 'number') return C.numberToken(value);
     if (Array.isArray(value)) return '[' + value.map(csvJSON).join(',') + ']';
     if (value && typeof value === 'object')
@@ -1207,6 +1241,7 @@
     upgrades,
     walk,
     detailedRows,
+    checkSelectedUpgrades,
     reconciliation: kev,
     compare,
     csv,

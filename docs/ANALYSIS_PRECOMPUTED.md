@@ -1,0 +1,65 @@
+# Precomputed analysis preview
+
+The v2 publication writers accept `analysis_precomputed_delivery=True` to build
+a local preview from a complete public switching-analysis projection. Both
+writers default to disabled. This preview is an alternative to the existing
+vendor-delivery preview. It has no hosted configuration or CLI activation.
+
+Pass `analysis_precomputed_options` as a list of selection dictionaries. The
+supported keys are `vendor`, `window`, `scope_level`, and `cve_ids`. Omitted fields
+mean All vendors, all years, OS family, and no explicit CVE filter. The writer
+accepts up to 32 distinct selections. A supplied CVE subset, including an empty
+list, uses the existing compiled reader. Without an options list, the writer
+selects All vendors and each named vendor for the all-years window and the
+previous calendar year when that year is within the study. Capacity measurements cover the four-view pilot. The default view set requires
+its own capacity check.
+
+```python
+from infrastructure_impact.application import publication_v2
+
+options = [
+    {"vendor": "cisco", "window": "2025"},
+    {"vendor": "aruba"},
+    {"vendor": "arista"},
+    {},
+]
+publication_v2.write_bundle(
+    destination,
+    public_projection,
+    analysis_precomputed_delivery=True,
+    analysis_precomputed_options=options,
+)
+reader = publication_v2.inspect_bundle(destination, {})
+publication_v2.verify_projection(
+    reader, public_projection, analysis_precomputed_options=options
+)
+```
+
+Use a fresh destination. Supply the same explicit options from an independent
+configuration when verifying a pilot. Verification derives selection membership,
+decoded bytes and gzip parts again from the native public facts, checks the
+on-disk manifest sidecar and parts, and streams the ordinary logical roots.
+
+## Format and reader behavior
+
+`switching-analysis-selected.json` is an ordinary v2 logical root. Its compact
+manifest bytes also live at `data/v2/<logical SHA-256>.json`, authenticated by the
+root metadata. Eligible browser reads use that sidecar and the listed chunks
+without loading the complete analysis or global string and shape tables. The
+manifest binds generation, study definition and observation cutoff, source
+fingerprint and complete accepted cohort for each option.
+
+Each selected DTO is one compact native UTF-8 JSON document. The writer slices
+it every 4,000,000 decoded bytes and emits deterministic single-member gzip
+files at `data/v2/<wire SHA-256>.json.gz`. A boundary may split a Unicode
+character or a JSON token. Readers authenticate the individual wire and decoded
+slices, assemble the bounded document and check its aggregate digest before
+strict UTF-8 and JSON parsing. The 8 MB physical-part, 128 MB selected-result,
+16 MB raw-cache and 1 GB site ceilings still apply.
+
+Legacy publications and selections without an advertised view use the existing
+compiled source. The browser also uses that path when gzip support is
+unavailable. An advertised eligible view with corrupt content raises an error.
+The browser retains one prepared view and returns a mutable copy per caller.
+Native JSON retains native key order. The browser uses the compiled reader's
+facts-map order for exact JSON downloads and preserves both CSV exports.

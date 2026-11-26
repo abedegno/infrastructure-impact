@@ -447,12 +447,14 @@
       pool = json.requestPool();
     let bytes = 0;
     const maxCache = Math.min(integer(limits.cache_bytes ?? 16000000), 16000000);
-    async function raw(d, options = {}) {
+    async function raw(d, options = {}, compressed = false) {
       const op = options.operation,
         signal = op?.signal ?? options.signal;
-      d = Object.freeze({ ...descriptor(d) });
+      d = Object.freeze({ ...descriptor(d, compressed) });
       const encoded =
-        typeof DecompressionStream === 'function' && Object.hasOwn(transports, d.path)
+        !compressed &&
+        typeof DecompressionStream === 'function' &&
+        Object.hasOwn(transports, d.path)
           ? transports[d.path]
           : d;
       if (cache.has(d.path)) {
@@ -585,20 +587,44 @@
     // In-flight metadata and preparation have their own bounded owner. Callers
     // stop waiting independently; only the last departing waiter cancels work.
     const verifiedValues = new Map(),
+      preparedSelected = new Map(),
       sharedFlights = new Map();
-    async function sharedValue(key, options, load) {
-      if (!options.operation) return scoped(options, (next) => sharedValue(key, next, load));
-      if (verifiedValues.has(key))
-        return options.operation.run(Promise.resolve(verifiedValues.get(key)));
+    let activePreparation;
+    async function prepareOne(load, owner) {
+      // Keep allocations bounded across different selected keys as well as
+      // across callers sharing one key. Queued work can lose its owner.
+      while (activePreparation) await owner.run(activePreparation);
+      let release;
+      activePreparation = new Promise((resolve) => {
+        release = resolve;
+      });
+      try {
+        await owner.run(Promise.resolve());
+        return await load();
+      } finally {
+        activePreparation = null;
+        release();
+      }
+    }
+    async function sharedValue(key, options, load, single = false) {
+      if (!options.operation)
+        return scoped(options, (next) => sharedValue(key, next, load, single));
+      const values = single ? preparedSelected : verifiedValues;
+      if (values.has(key)) return options.operation.run(Promise.resolve(values.get(key)));
       let flight = sharedFlights.get(key);
       if (!flight) {
         const owner = operation();
         flight = { owner, waiters: new Set() };
         const ownOptions = { operation: owner, signal: owner.signal, deadline: owner.deadline };
         flight.promise = Promise.resolve()
-          .then(() => owner.run(load(ownOptions)))
+          .then(() =>
+            owner.run(single ? prepareOne(() => load(ownOptions), owner) : load(ownOptions)),
+          )
           .then((value) => {
-            verifiedValues.set(key, value);
+            if (sharedFlights.get(key) === flight) {
+              if (single) values.clear();
+              values.set(key, value);
+            }
             return value;
           })
           .finally(() => {
@@ -1605,7 +1631,55 @@
       const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
         deliveryName = 'switching-analysis-delivery.json',
         requestedVendor = study.selection.requested_vendor,
-        analysis = window.InfrastructureSwitchingAnalysis;
+        analysis = window.InfrastructureSwitchingAnalysis,
+        selectedRoot = 'switching-analysis-selected.json',
+        precomputed = window.InfrastructureAnalysisPrecomputed;
+      if (
+        study.selection.requested_cve_ids === null &&
+        Object.hasOwn(catalog.roots, selectedRoot)
+      ) {
+        if (!precomputed) fail('missing selected analysis reader');
+        if (precomputed.supported()) {
+          // Own the accepted identity before any shared work or caller mutation.
+          const accepted = json.clone({
+            publication: study.publication,
+            generated_at: study.generated_at,
+            observation_end: study.observation_end,
+            selection: study.selection,
+          });
+          const manifest = await sharedValue(
+            'analysis:selected-manifest',
+            options,
+            async (owned) => {
+              const { logical } = await root(selectedRoot, owned);
+              if (logical.bytes > precomputed.MANIFEST_MAX) fail('selected manifest byte budget');
+              const descriptor = { ...logical, path: `data/v2/${logical.sha256}.json` },
+                text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
+                  await raw(descriptor, owned),
+                );
+              return freeze(
+                precomputed.validateManifest(json.parseStrict(text, { transport: true }), catalog),
+              );
+            },
+          );
+          const view = precomputed.matchView(manifest, accepted);
+          if (view !== null) {
+            if (view.decoded.bytes > max) fail('selected byte budget');
+            const prepared = await sharedValue(
+              'analysis:selected:' + manifest.views.indexOf(view),
+              options,
+              (owned) =>
+                precomputed.decodeSelected(view, accepted, (part) => raw(part, owned, true), {
+                  max_bytes: selectedMax,
+                  run: (promise) => owned.operation.run(promise),
+                }),
+              true,
+            );
+            await options.operation.run(Promise.resolve());
+            return options.operation.run(Promise.resolve(precomputed.copySelected(prepared, max)));
+          }
+        }
+      }
       async function bounded(name, limit) {
         if ((await root(name, options)).logical.bytes > limit) fail('selected byte budget');
       }
