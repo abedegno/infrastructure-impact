@@ -1,5 +1,7 @@
 # Optional packed switching analysis preview
 
+**Measured preview: do not activate.** The [paired public-data measurement](research/2026-11-26-packed-analysis-preview.md) found no meaningful loading improvement and higher reader traffic. This remains an experimental local opt-in.
+
 A local v2 publication can carry a packed copy of its complete compiled switching analysis. The packed root is disabled by default. It preserves every claim, requirement, field, observation bound, and source reference. Selections still use the existing analysis logic and the same JSON and CSV export functions.
 
 Given a sanitized native projection with complete switching analysis, write to a fresh local directory.

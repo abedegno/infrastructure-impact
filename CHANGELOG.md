@@ -2,7 +2,7 @@
 
 ## Unreleased — release reliability
 
-- Add an opt-in lossless packed-analysis preview and native/browser round-trip, export-parity and lifecycle checks. Retain the original analysis root, public validation boundaries and existing byte limits; hosted activation remains separate.
+- Add an opt-in lossless packed-analysis preview and native/browser round-trip, export-parity and lifecycle checks. Retain the original analysis root, public validation boundaries and existing byte limits; paired public-data measurements found no useful loading gain and higher traffic, so hosted activation is not recommended.
 - Prepare a public vendor evidence-request packet and empty export templates for release-date, platform-support and notice-archive coverage gaps. No vendor contact or new evidence promotion.
 
 - Add a generation-bound release-reliability coverage view and offline JSON/CSV export, with per-model date/provenance gaps and bounded official-source follow-up. No hosted source activation or inferred release dates.

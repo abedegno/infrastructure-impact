@@ -310,10 +310,10 @@ See the [retained-source switching analysis run](docs/research/2026-11-14-switch
 for measured target coverage, unknown annual estimates, the separate complete-feed
 KEV audit and native/browser export parity.
 
-A [lossless packed-analysis preview](docs/ANALYSIS_PACKING.md) reduces repeated
+An experimental [lossless packed-analysis preview](docs/ANALYSIS_PACKING.md) reduces repeated
 claim and upgrade-requirement data while preserving the full study, selected JSON
 and both CSV exports. It is a separate local publication opt-in; existing readers
-retain the original analysis root. Hosted activation requires its own measured
+retain the original analysis root. [Measurements](docs/research/2026-11-26-packed-analysis-preview.md) found no useful loading improvement and higher traffic, so activation is not recommended. Hosted activation requires its own measured
 publication and capacity checks. Reader and site limits are unchanged.
 
 The [vendor evidence-request packet](docs/research/2026-11-26-vendor-evidence-request.md)
