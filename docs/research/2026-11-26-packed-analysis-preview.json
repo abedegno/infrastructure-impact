@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "status": "research-preview-do-not-activate",
+  "publication": {
+    "id": "e05fc9e8e5ce404190173f4c3c037498",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-26T08:22:06.194317+00:00",
+  "baseline_commit": "26ccaef234bfe07d3cf5efd47d0cfe2b94616385",
+  "implementation_commit": "facc846",
+  "method": "One matched sequential pair of fresh Node processes, local verified public v2 parts; same four accepted contexts and export serializers. Exports outside timed phases. Not a browser, WAN or isolated CPU profile.",
+  "native": {
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "source": {
+      "sha256": "da2bb0a09a58d1852b6b823a0a9f1a2188bd73a8ce5cffbb7f57d731d1b27ca1",
+      "bytes": 126637532
+    },
+    "packed": {
+      "sha256": "99705c928b86f0000882024f65a03f403bc90bcb2d4c5fbaf6fc577d2c64f76e",
+      "bytes": 47156423
+    },
+    "counts": {
+      "claims": 36592,
+      "members": 35439,
+      "requirements": 106671
+    },
+    "layouts": 3,
+    "pooled_values": 116206,
+    "exact_source_roundtrip": true,
+    "timings_seconds": {
+      "read_source": 0.4911087090149522,
+      "pack_validate": 15.14159220806323,
+      "unpack_validate": 13.014140125131235
+    },
+    "peak_resident_bytes": 2492334080
+  },
+  "browser": {
+    "baseline": {
+      "mode": "baseline",
+      "kind": "matched_sequential_fresh_node_process_cached_public_parts",
+      "publication": {
+        "id": "e05fc9e8e5ce404190173f4c3c037498",
+        "advisory_schema_version": 2
+      },
+      "node": "v22.23.1",
+      "platform": "darwin",
+      "requests": 192,
+      "received_bytes": 35301697,
+      "phases": {
+        "open": {
+          "seconds": 0.019678292,
+          "requests": 0,
+          "received_bytes": 0,
+          "rss_bytes": 75776000,
+          "peak_resident_bytes": 75825152
+        },
+        "cisco-2025": {
+          "seconds": 48.65219025,
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 997801984,
+          "peak_resident_bytes": 1645903872
+        },
+        "aruba-all": {
+          "seconds": 2.181194499999998,
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 1343979520,
+          "peak_resident_bytes": 1954693120
+        },
+        "arista-all": {
+          "seconds": 2.023811124999993,
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 1384415232,
+          "peak_resident_bytes": 1954693120
+        },
+        "all-all": {
+          "seconds": 14.106113624999999,
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 1358675968,
+          "peak_resident_bytes": 2053537792
+        }
+      },
+      "outputs": {
+        "cisco-2025": {
+          "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+          "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+          "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+          "rows": 342
+        },
+        "aruba-all": {
+          "selected_sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+          "analysis_csv_sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+          "upgrades_csv_sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+          "rows": 468
+        },
+        "arista-all": {
+          "selected_sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+          "analysis_csv_sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+          "upgrades_csv_sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+          "rows": 720
+        },
+        "all-all": {
+          "selected_sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+          "analysis_csv_sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+          "upgrades_csv_sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+          "rows": 3240
+        }
+      },
+      "generated_at": "2026-11-26T08:22:06.194317+00:00",
+      "peak_resident_bytes": 2353577984,
+      "catalog_sha256": "c4079f97530d479fb365cc08694ce2c231878838ac29d9846d4dea60b87e2a59",
+      "catalog_analysis_roots": ["switching-analysis.json"]
+    },
+    "packed": {
+      "mode": "packed",
+      "kind": "matched_sequential_fresh_node_process_cached_public_parts",
+      "publication": {
+        "id": "e05fc9e8e5ce404190173f4c3c037498",
+        "advisory_schema_version": 2
+      },
+      "node": "v22.23.1",
+      "platform": "darwin",
+      "requests": 256,
+      "received_bytes": 62031773,
+      "phases": {
+        "open": {
+          "seconds": 0.019802999999999998,
+          "requests": 0,
+          "received_bytes": 0,
+          "rss_bytes": 75317248,
+          "peak_resident_bytes": 75612160
+        },
+        "cisco-2025": {
+          "seconds": 48.49987125,
+          "requests": 256,
+          "received_bytes": 62031773,
+          "rss_bytes": 1169195008,
+          "peak_resident_bytes": 1481932800
+        },
+        "aruba-all": {
+          "seconds": 2.3552985000000044,
+          "requests": 256,
+          "received_bytes": 62031773,
+          "rss_bytes": 1185136640,
+          "peak_resident_bytes": 1997864960
+        },
+        "arista-all": {
+          "seconds": 2.1842614170000014,
+          "requests": 256,
+          "received_bytes": 62031773,
+          "rss_bytes": 1227177984,
+          "peak_resident_bytes": 1997864960
+        },
+        "all-all": {
+          "seconds": 15.196611791000002,
+          "requests": 256,
+          "received_bytes": 62031773,
+          "rss_bytes": 1283227648,
+          "peak_resident_bytes": 1997864960
+        }
+      },
+      "outputs": {
+        "cisco-2025": {
+          "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+          "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+          "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+          "rows": 342
+        },
+        "aruba-all": {
+          "selected_sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+          "analysis_csv_sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+          "upgrades_csv_sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+          "rows": 468
+        },
+        "arista-all": {
+          "selected_sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+          "analysis_csv_sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+          "upgrades_csv_sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+          "rows": 720
+        },
+        "all-all": {
+          "selected_sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+          "analysis_csv_sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+          "upgrades_csv_sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+          "rows": 3240
+        }
+      },
+      "generated_at": "2026-11-26T08:22:06.194317+00:00",
+      "peak_resident_bytes": 2463940608,
+      "catalog_sha256": "56c2da61a978aa71cb009178b347008d5bcb360ab033f4a5f80a4aa2726b4fd9",
+      "catalog_analysis_roots": ["switching-analysis-packed.json", "switching-analysis.json"]
+    },
+    "exact_selected_json_and_both_csv_all_four_contexts": true
+  },
+  "site": {
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "generated_at": "2026-11-26T08:22:06.194317+00:00",
+    "fresh_public_writer_authority_gate": "passed",
+    "independent_native_verification": "passed",
+    "legacy_root_descriptors_equal": true,
+    "legacy_root_count": 1593,
+    "file_count": 12817,
+    "preview_regular_file_bytes": 971178899,
+    "timings_seconds": {
+      "snapshot_read": 1.1032613751012832,
+      "comparison_read": 2.191751082893461,
+      "analysis_read": 0.5419784998521209,
+      "fresh_authority_gate_and_writer": 256.4331042501144,
+      "independent_native_projection_verification": 251.40571449999698
+    },
+    "peak_resident_bytes": 7168491520,
+    "limitations": [
+      "Reconstructed exclusively from authenticated public projection; no private DB or vault read.",
+      "The site budget and headroom cover the fresh single-generation preview including its current archive. The accepted artifact ZIP inventory was unavailable. Aggregate hosted and retained publication history capacity remain unverified.",
+      "Hosted format activation not authorized."
+    ],
+    "site_budget_bytes": 1000000000,
+    "site_headroom_bytes": 28821101,
+    "final_assets_refreshed": true,
+    "asset_manifest_verified": true,
+    "current_archive": {
+      "included_in_site_total": true,
+      "scope": "snapshot-v1",
+      "dedicated_files": [
+        {
+          "path": "snapshot-v2.json",
+          "bytes": 62811420,
+          "sha256": "fa62e398806b46e714762348751100d640f142389f058a143c84ee154ce839e4"
+        },
+        {
+          "path": "snapshot-v2.json.gz",
+          "bytes": 6912824,
+          "sha256": "9c7255d117cec3736f7edee5171808630f8c4ec4b024acf62cdedce8346490cd"
+        },
+        {
+          "path": "data/v2/d342f1625f6d59fbdbe77b474108ce050dd93a75d919782c7eeb1cb5d201d758.json",
+          "sha256": "d342f1625f6d59fbdbe77b474108ce050dd93a75d919782c7eeb1cb5d201d758",
+          "bytes": 50011
+        }
+      ],
+      "dedicated_file_count": 3,
+      "dedicated_file_bytes": 69774255,
+      "shared_member_file_count": 233,
+      "shared_member_file_bytes": 62717470,
+      "shared_member_groups": {
+        "snapshot_root_descriptor": {
+          "file_count": 1,
+          "bytes": 50257
+        },
+        "snapshot_token_pages": {
+          "file_count": 196,
+          "bytes": 45620811
+        },
+        "snapshot_range_parts": {
+          "file_count": 1,
+          "bytes": 311217
+        },
+        "string_table_parts": {
+          "file_count": 33,
+          "bytes": 16498128
+        },
+        "shape_table_parts": {
+          "file_count": 1,
+          "bytes": 122159
+        },
+        "record_route_parts": {
+          "file_count": 1,
+          "bytes": 114898
+        }
+      },
+      "unique_archive_path_count": 236,
+      "unique_archive_path_bytes": 132491725,
+      "compressed_shared_dictionary_transports_outside_archive_membership": {
+        "included_in_site_total": true,
+        "file_count": 34,
+        "file_bytes": 2564552
+      }
+    },
+    "historical_archive_scope": {
+      "prior_generation_directories_copied": 0,
+      "prior_generation_extra_archive_files_copied": 0,
+      "accepted_artifact_zip_inventory_available": false,
+      "aggregate_hosted_capacity_verified": false,
+      "retained_publication_history_capacity_verified": false
+    }
+  },
+  "decision": "Keep packed delivery disabled. No meaningful cold latency benefit, higher traffic, slower warm selections and higher whole-process peak RSS. Cold preparation peak RSS is lower. Logical-size reduction is not a transfer or loading improvement.",
+  "human_evidence_review": "pending"
+}

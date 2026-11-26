@@ -49,8 +49,11 @@ def _counts(payload):
 
 def _derive(source, vendor):
     root_name(vendor)
-    payload = copy.deepcopy(source)
-    payload["claims"] = {k: v for k, v in payload["claims"].items() if v["vendor"] == vendor}
+    payload = {
+        **source,
+        "claims": {k: v for k, v in source["claims"].items() if v["vendor"] == vendor},
+        "requirements": dict(source["requirements"]),
+    }
     r = payload["requirements"]
     r["members"] = {k: v for k, v in r["members"].items() if v["vendor"] == vendor}
     r["requirements"] = [q for q in r["requirements"] if q["claim_id"] in r["members"]]
@@ -93,7 +96,7 @@ def _derive(source, vendor):
         representation="compiled-analysis-vendor",
         vendor=vendor,
         source_content_sha256=source["content_sha256"],
-        payload=payload,
+        payload=copy.deepcopy(payload),
         counts=_counts(payload),
     )
     out["content_sha256"] = _digest(out)
@@ -157,6 +160,11 @@ def select_vendor(envelope, study, *, max_bytes=codec.MAX_SELECTED):
 def delivery_views(source):
     """Derive every optional root from one freshly validated full public report."""
     analysis.validate_report(source)
+    return _delivery_validated(source)
+
+
+def _delivery_validated(source):
+    """Reuse the private writer's preceding authoritative validation."""
     manifest = {
         k: copy.deepcopy(source[k])
         for k in ("publication", "generated_at", "definition_sha256", "observation_end")

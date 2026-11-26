@@ -772,35 +772,23 @@
         options,
       );
     }
-    const rangeMaps = new Map();
     async function findRange(name, path, options = {}) {
-      if (!rangeMaps.has(name))
-        rangeMaps.set(
-          name,
-          (async () => {
-            const r = await root(name, options),
-              map = new Map();
-            let size = 0;
-            for (const d of r.ranges) {
-              for (const entry of await read(d, 'ranges', options)) {
-                size += json.measure(entry, null, '', 128000000 - size);
-                const key = json.stringifyBounded(entry.path);
-                freeze(entry.range);
-                range(entry.range);
-                if (entry.range.root !== name || map.has(key)) fail('range location');
-                map.set(key, entry.range);
-              }
-            }
-            return map;
-          })(),
-        );
-      let map;
-      try {
-        map = await rangeMaps.get(name);
-      } catch (error) {
-        rangeMaps.delete(name);
-        throw error;
-      }
+      const map = await sharedValue('ranges:' + name, options, async (owned) => {
+        const r = await root(name, owned),
+          map = new Map();
+        let size = 0;
+        for (const d of r.ranges) {
+          for (const entry of await read(d, 'ranges', owned)) {
+            size += json.measure(entry, null, '', 128000000 - size);
+            const key = json.stringifyBounded(entry.path);
+            freeze(entry.range);
+            range(entry.range);
+            if (entry.range.root !== name || map.has(key)) fail('range location');
+            map.set(key, entry.range);
+          }
+        }
+        return map;
+      });
       const found = map.get(JSON.stringify(path));
       if (!found) fail('missing range');
       return found;
@@ -1599,10 +1587,48 @@
       }
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
+    async function packedSourceBytes(name, options) {
+      // The source size is a single integer token. Its authenticated range
+      // can be checked before loading the publication-wide dictionaries.
+      const bound = await findRange(name, ['source_logical_bytes'], options),
+        info = await root(name, options);
+      if (bound.end_token !== bound.first_token + 1 || bound.logical_bytes > 16)
+        fail('packed source byte range');
+      const page = info.pages.find(
+        (item) =>
+          item.first_token <= bound.first_token && item.first_token + item.count >= bound.end_token,
+      );
+      if (!page || page.decoded_upper_bound > Math.min(limits.page_bytes ?? 128000000, 128000000))
+        fail('packed source byte page bound');
+      const tokens = await read(page.part, 'tokens', options),
+        token = tokens[bound.first_token - page.first_token];
+      if (
+        tokens.length !== page.count ||
+        !Array.isArray(token) ||
+        token.length !== 3 ||
+        token[0] !== -2 ||
+        token[1] !== 'i' ||
+        typeof token[2] !== 'string' ||
+        token[2].length !== bound.logical_bytes ||
+        token[2].length > page.decoded_upper_bound
+      )
+        fail('packed source byte token');
+      const value = integer(Number(token[2]), 1),
+        hash = createHash();
+      if (
+        String(value) !== token[2] ||
+        hash.update(token[2]) !== bound.logical_bytes ||
+        hash.digest() !== bound.logical_sha256
+      )
+        fail('packed source byte range fingerprint');
+      return value;
+    }
     async function switchingAnalysis(study, options = {}) {
       window.InfrastructureSwitchingContracts.identity(study, catalog);
       if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
       const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
+        packedName = 'switching-analysis-packed.json',
+        usePacked = Object.hasOwn(catalog.roots, packedName),
         deliveryName = 'switching-analysis-delivery.json',
         requestedVendor = study.selection.requested_vendor,
         analysis = window.InfrastructureSwitchingAnalysis;
@@ -1610,7 +1636,26 @@
         if ((await root(name, options)).logical.bytes > limit) fail('selected byte budget');
       }
       let select;
-      if (requestedVendor !== null && Object.hasOwn(catalog.roots, deliveryName)) {
+      if (usePacked) {
+        await bounded(packedName, max);
+        const sourceBytes = await sharedValue('analysis:packed-source-bytes', options, (owned) =>
+          packedSourceBytes(packedName, owned),
+        );
+        if (sourceBytes > max) fail('selected source byte budget');
+        const plan = await sharedValue('analysis:packed-preflight', options, async (owned) => {
+          const envelope = await materializeRoot(packedName, {
+            ...owned,
+            max_bytes: selectedMax,
+            integer_metadata: true,
+          });
+          if (envelope.source_logical_bytes !== sourceBytes) fail('packed source byte metadata');
+          return window.InfrastructureAnalysisPacking.preflight(envelope, catalog, {
+            max_bytes: selectedMax,
+          });
+        });
+        if (plan.sourceBytes > max) fail('selected source byte budget');
+        select = await sharedValue('analysis:packed', options, () => plan.prepare());
+      } else if (requestedVendor !== null && Object.hasOwn(catalog.roots, deliveryName)) {
         await bounded(deliveryName, Math.min(max, 2000000));
         const manifest = await sharedValue('analysis:manifest', options, async (owned) =>
           analysis.validateDeliveryManifest(
@@ -1646,8 +1691,8 @@
           );
         }
       }
-      const selected = select(study);
-      json.measure(selected, null, '', max);
+      const selected = select(study, { max_bytes: max });
+      if (!usePacked) json.measure(selected, null, '', max);
       return options.operation.run(Promise.resolve(selected));
     }
     let reliabilityPromise;

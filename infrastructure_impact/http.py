@@ -831,6 +831,7 @@ class Application:
                 in {
                     "publication-v2.json",
                     "publication-v2.js",
+                    "analysis-packing.js",
                     "snapshot-v2.json",
                     "snapshot-v2.json.gz",
                 }

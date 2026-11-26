@@ -310,6 +310,17 @@ See the [retained-source switching analysis run](docs/research/2026-11-14-switch
 for measured target coverage, unknown annual estimates, the separate complete-feed
 KEV audit and native/browser export parity.
 
+An experimental [lossless packed-analysis preview](docs/ANALYSIS_PACKING.md) reduces repeated
+claim and upgrade-requirement data while preserving the full study, selected JSON
+and both CSV exports. It is a separate local publication opt-in; existing readers
+retain the original analysis root. [Measurements](docs/research/2026-11-26-packed-analysis-preview.md) found no useful loading improvement and higher traffic, so activation is not recommended. Hosted activation requires its own measured
+publication and capacity checks. Reader and site limits are unchanged.
+
+The [vendor evidence-request packet](docs/research/2026-11-26-vendor-evidence-request.md)
+asks for public release dates, model support and complete notice archives needed
+to resolve the current reliability denominators. Its CSV templates contain headers
+only. No vendors have been contacted; independent human review remains pending.
+
 ### Release reliability coverage
 
 The switching comparison exposes [coverage gaps by model](docs/RELIABILITY_COVERAGE.md), with generation-bound JSON/CSV exports and an offline export command. Observed inventories distinguish original dates, research-only dates, unknown dates and unbound model scope; they do not establish complete release denominators or vendor quality. See the [dated coverage result](docs/research/2026-11-26-reliability-coverage-summary.md).
