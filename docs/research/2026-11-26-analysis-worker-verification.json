@@ -494,9 +494,9 @@
     "legacy_root_descriptors_equal": true,
     "legacy_root_count": 1593,
     "file_count": 12679,
-    "regular_file_bytes": 940257941,
+    "regular_file_bytes": 940258473,
     "site_guard_bytes": 1000000000,
-    "site_headroom_bytes": 59742059,
+    "site_headroom_bytes": 59741527,
     "current_archive": {
       "unique_paths": 236,
       "unique_bytes_within_site": 132491725,
@@ -514,7 +514,7 @@
     "peak_resident_bytes": 4810031104,
     "activation": "disabled; separate approval required",
     "default_eight_view_capacity": "complete native writer and independent verifier passed",
-    "final_reader_assets_commit": "52ce5d00afd79788e8fd395e3ebd0ff606cc928b",
+    "final_reader_assets_commit": "a438533423f930664b6cada838ab8b057426da73",
     "final_asset_manifest_verified": true
   },
   "final_native_readback": {
@@ -540,13 +540,15 @@
     },
     "source_dictionary_not_loaded": true,
     "file_count": 12679,
-    "site_bytes": 940257941,
-    "headroom": 59742059,
+    "site_bytes": 940258473,
+    "headroom": 59741527,
     "accepted_artifact_bytes": 886999090,
     "accepted_artifact_extra_paths": 9,
     "accepted_artifact_extra_bytes": 914185,
-    "conservative_keep_all_old_paths_union_bytes": 941172126,
-    "historical_generation_directories": []
+    "conservative_keep_all_old_paths_union_bytes": 941172658,
+    "historical_generation_directories": [],
+    "final_asset_manifest_commit": "a438533423f930664b6cada838ab8b057426da73",
+    "selected_data_and_worker_asset_unchanged": true
   },
   "accepted_public_inventory": {
     "artifact_id": 15099144817,
@@ -579,5 +581,7 @@
     "Cold wall time rose compared with the preceding local run; responsiveness improved. No overall throughput or total-memory reduction claim."
   ],
   "workflow_or_hosted_changes": false,
-  "evidence_review_status": "independent_human_review_pending"
+  "evidence_review_status": "independent_human_review_pending",
+  "final_ui_feedback_fix_commit": "a438533423f930664b6cada838ab8b057426da73",
+  "final_ui_feedback_note": "Only app alert feedback changed after the measured52ce5d0 browser run. No retiming claim. Worker asset and all selected data remain unchanged; final static manifest and capacity reverified."
 }

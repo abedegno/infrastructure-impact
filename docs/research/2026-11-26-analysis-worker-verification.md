@@ -6,7 +6,11 @@ hosted activation separately gated; the public writer remains disabled by defaul
 
 ## Browser result and tradeoff
 
-The production revision was `52ce5d0`. One visible Chromium 150 / Electron 43.8.10
+The measured production revision was `52ce5d0`. A final alert-feedback fix in
+`a438533` makes export errors visible during a pending refresh; it changes only
+the application UI. Timing was not repeated for that fix. The worker asset and
+all selected data stayed unchanged, and the final static manifest and capacity
+were reverified. One visible Chromium 150 / Electron 43.8.10
 browser on macOS used the complete, verified eight-view publication for generation
 `e05fc9e8e5ce404190173f4c3c037498`, generated `2026-11-26T08:22:06.194317+00:00`.
 The browser viewport was 1150 × 874 CSS pixels.
@@ -108,7 +112,7 @@ reads passed without loading global dictionaries. No new vendor collection or
 private evidence was used.
 
 The full site contains 12,679 regular files totaling
-940,257,941 bytes, with 59,742,059 bytes below the unchanged
+940,258,473 bytes, with 59,741,527 bytes below the unchanged
 1,000,000,000-byte guard. Its current archive references
 236 unique paths totaling
 132,491,725 bytes **within**, not in addition
@@ -123,7 +127,7 @@ directories. Its path inventory exactly matches its publication manifest. No
 private recovery artifacts were downloaded.
 
 Conservatively retaining every old public-artifact path while overlaying the new
-site would total 941,172,126 bytes. The
+site would total 941,172,658 bytes. The
 9 old-only paths contribute
 914,185 bytes. This closes the formerly unknown current
 accepted-artifact inventory. It does not predict future corpus growth; each new
