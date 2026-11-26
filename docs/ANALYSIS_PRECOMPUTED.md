@@ -13,8 +13,9 @@ mean All vendors, all years, OS family, and no explicit CVE filter. The writer
 accepts up to 32 distinct selections. A supplied CVE subset, including an empty
 list, uses the existing compiled reader. Without an options list, the writer
 selects All vendors and each named vendor for the all-years window and the
-previous calendar year when that year is within the study. Capacity measurements cover the four-view pilot. The default view set requires
-its own capacity check.
+previous calendar year when that year is within the study. The [worker/eight-view verification](research/2026-11-26-analysis-worker-verification.md)
+certifies the explicit eight choices for the pinned generation. Future generation
+cutoffs and profile changes require a fresh capacity check.
 
 ```python
 from infrastructure_impact.application import publication_v2
@@ -42,11 +43,13 @@ configuration when verifying a pilot. Verification derives selection membership,
 decoded bytes and gzip parts again from the native public facts, checks the
 on-disk manifest sidecar and parts, and streams the ordinary logical roots.
 
-The [real-browser activation check](research/2026-11-26-precomputed-browser-check.md)
-confirmed exact exports but found a 9.3-second main-thread task on cold Cisco
-loading. Keep hosted activation disabled until responsiveness and memory are
-addressed. Default eight-view standalone parts were measured, but complete
-publication and hosted-history capacity remain uncertified.
+The earlier [in-page browser check](research/2026-11-26-precomputed-browser-check.md)
+found a 9.3-second main-thread task. The subsequent
+[worker and eight-view check](research/2026-11-26-analysis-worker-verification.md)
+reduced the captured cold Cisco task to 365 ms, preserved all checked exports and
+verified the complete publication plus accepted artifact inventory. Cold wall
+time increased in that run; memory figures have different scopes. Hosting stays
+disabled until a separate activation proposal is approved.
 
 ## Format and reader behavior
 

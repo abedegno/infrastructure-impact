@@ -6,8 +6,9 @@ User approved moving decoding/validation into a Web Worker, reducing copies and
 export allocations, repeating browser checks, then certifying eight-view and
 retained-history size. Standing opt-out permits implementation without another
 design/permission loop; existing subagent-driven preference persists. This is a
-continuation of disabled PR91 on its existing isolated branch. No hosted
-activation or merge is authorized by this milestone.
+continuation of disabled PR91 on its existing isolated branch. Hosted activation remains separately gated. The user’s latest Proceed accepts
+the recommended merge of PR91 after the implementation, reviews and checks;
+implementation agents themselves must not push or merge.
 
 ## Approach
 

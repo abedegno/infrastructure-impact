@@ -107,3 +107,7 @@ separate hosted approval.
 Counts continue to describe disclosure and collection, not vendor quality.
 Missing reliability denominators remain unknown. Independent human evidence
 review remains pending.
+
+The subsequent [worker/eight-view verification](2026-11-26-analysis-worker-verification.md)
+addresses the blocking task and completes the pinned capacity/inventory gates.
+This earlier report remains the in-page baseline; its measurements are unchanged.

@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "status": "worker_and_eight_view_verified_hosted_activation_disabled",
+  "implementation_commit": "52ce5d0",
+  "captured_at": "2026-11-26T22:36:11.579Z",
+  "engine": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.7871.250 Electron/43.8.10 Safari/537.36",
+  "visibility": "visible",
+  "viewport": {
+    "width": 1150,
+    "height": 874
+  },
+  "publication": {
+    "id": "e05fc9e8e5ce404190173f4c3c037498",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-26T08:22:06.194317+00:00",
+  "worker_asset": "be4a6f159f57fe653ffb085be9f239efed667451a2f03f02b253a9e1a8ba54b6.js",
+  "worker_asset_sha256_verified": true,
+  "cisco_ui_cold": {
+    "selectorMs": 14248.700000047684,
+    "wallMs": 14502,
+    "maxLongTaskMs": 365,
+    "maxHeartbeatGapMs": 449.7000000476837,
+    "initialHeap": 103511556,
+    "sampledPeakHeap": 257094545,
+    "finalHeap": 257094545,
+    "samples": 563,
+    "domNodes": 76777,
+    "horizontalOverflow": false,
+    "error": "",
+    "requests": 27,
+    "response_body_bytes": 12253145
+  },
+  "cisco_ui_warm": {
+    "selectorMs": 346.19999980926514,
+    "wallMs": 590.7000000476837,
+    "maxLongTaskMs": 387,
+    "maxHeartbeatGapMs": 438.7000000476837,
+    "initialHeap": 207966154,
+    "sampledPeakHeap": 359173032,
+    "finalHeap": 359173032,
+    "samples": 6,
+    "domNodes": 76777,
+    "horizontalOverflow": false,
+    "error": "",
+    "requests": 0,
+    "response_body_bytes": 0
+  },
+  "preceding_cisco_ui_cold": {
+    "wallMs": 9995.599999904633,
+    "selectorMs": 9550.799999952316,
+    "initialHeap": 103864350,
+    "sampledPeakHeap": 807495621,
+    "samples": 22,
+    "finalHeap": 807495621,
+    "maxLongTaskMs": 9307,
+    "availability": "available",
+    "domNodes": 76775,
+    "documentHeight": 29041,
+    "horizontalOverflow": false,
+    "error": "",
+    "requests": 26,
+    "response_bytes": 11422166
+  },
+  "preceding_cisco_ui_warm": {
+    "wallMs": 984.5999999046326,
+    "selectorMs": 284.60000014305115,
+    "initialHeap": 284975456,
+    "sampledPeakHeap": 412265149,
+    "samples": 1,
+    "finalHeap": 412265149,
+    "maxLongTaskMs": 955,
+    "availability": "available",
+    "domNodes": 76775,
+    "documentHeight": 29041,
+    "horizontalOverflow": false,
+    "error": "",
+    "requests": 0,
+    "response_bytes": 0
+  },
+  "ui_downloads": {
+    "state": "captured",
+    "outputs": {
+      "json": {
+        "bytes": 94924683,
+        "type": "application/json",
+        "start": 256184.20000004768,
+        "heapBeforeHash": 404391916,
+        "sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+        "ms": 17145.10000014305,
+        "heapAfterHash": 499321511,
+        "mainLongTasks": []
+      },
+      "csv": {
+        "bytes": 16829208,
+        "type": "text/csv",
+        "start": 273581,
+        "heapBeforeHash": 516044343,
+        "sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+        "ms": 5827.200000047684,
+        "heapAfterHash": 516044343,
+        "mainLongTasks": []
+      },
+      "upgrades-csv": {
+        "bytes": 13630735,
+        "type": "text/csv",
+        "start": 279644.10000014305,
+        "heapBeforeHash": 546750000,
+        "sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+        "ms": 5727.399999856949,
+        "heapAfterHash": 546750000,
+        "mainLongTasks": []
+      }
+    },
+    "clicks": [
+      {
+        "name": "switching-analysis-e05fc9e8e5ce404190173f4c3c037498.json",
+        "kind": "json"
+      },
+      {
+        "name": "switching-analysis-e05fc9e8e5ce404190173f4c3c037498.csv",
+        "kind": "csv"
+      },
+      {
+        "name": "switching-analysis-e05fc9e8e5ce404190173f4c3c037498.csv",
+        "kind": "upgrades-csv"
+      }
+    ],
+    "mainSerializationCalls": 0,
+    "pending": 0,
+    "active": "upgrades-csv",
+    "started": 279644.10000014305
+  },
+  "other_views": {
+    "aruba-all": {
+      "start": 305805.2000000477,
+      "initialHeap": 309209831,
+      "sampledPeakHeap": 310212723,
+      "maxHeartbeatGapMs": 28.100000143051147,
+      "lastTick": 306107.30000019073,
+      "samples": 12,
+      "selectorMs": 349.5,
+      "finalHeap": 310212723,
+      "resources": [
+        {
+          "name": "/data/v2/ecd1bcb11ef724a28ee7f092c5fcd6ec5f92cc0914ca30f45e4e8f203a3fd2da.json.gz",
+          "bytes": 312551,
+          "transfer": 312851
+        }
+      ],
+      "longTasks": [],
+      "maxLongTaskMs": 0,
+      "exports": {
+        "json": {
+          "bytes": 3571916,
+          "sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+          "ms": 62.39999985694885,
+          "mainHeap": 318115010
+        },
+        "csv": {
+          "bytes": 2591400,
+          "sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+          "ms": 133.40000009536743,
+          "mainHeap": 321064530
+        },
+        "upgrades-csv": {
+          "bytes": 513996,
+          "sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+          "ms": 92.59999990463257,
+          "mainHeap": 321923814
+        }
+      },
+      "maxHeartbeatGapIncludingFinalDeliveryMs": 47.39999985694885
+    },
+    "arista-all": {
+      "start": 306495.90000009537,
+      "initialHeap": 321923814,
+      "sampledPeakHeap": 320788125,
+      "maxHeartbeatGapMs": 27.299999952316284,
+      "lastTick": 306622.5,
+      "samples": 5,
+      "selectorMs": 150.09999990463257,
+      "finalHeap": 320788125,
+      "resources": [
+        {
+          "name": "/data/v2/9f4a70bea833ca5715ad098dc9828e4e84a155992ec8148a2c1d31c4cf085576.json.gz",
+          "bytes": 156689,
+          "transfer": 156989
+        }
+      ],
+      "longTasks": [],
+      "maxLongTaskMs": 0,
+      "exports": {
+        "json": {
+          "bytes": 2028211,
+          "sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+          "ms": 41.799999952316284,
+          "mainHeap": 325297987
+        },
+        "csv": {
+          "bytes": 1600307,
+          "sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+          "ms": 54.200000047683716,
+          "mainHeap": 327254086
+        },
+        "upgrades-csv": {
+          "bytes": 251037,
+          "sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+          "ms": 34.200000047683716,
+          "mainHeap": 327254086
+        }
+      },
+      "maxHeartbeatGapIncludingFinalDeliveryMs": 27.299999952316284
+    },
+    "all-all": {
+      "start": 306831.10000014305,
+      "initialHeap": 327860115,
+      "sampledPeakHeap": 458925753,
+      "maxHeartbeatGapMs": 35.09999990463257,
+      "lastTick": 317133.80000019073,
+      "samples": 412,
+      "selectorMs": 10637.700000047684,
+      "finalHeap": 458925753,
+      "resources": [
+        {
+          "name": "/data/v2/7e79910718e4e34385004dbffa495be712a20fd62229b9544623fb24458aeb16.json.gz",
+          "bytes": 895549,
+          "transfer": 895849
+        },
+        {
+          "name": "/data/v2/a631552e7f207e502a8ed6a04d09a68747a7d89cceb6cbde2fa162dfa7f327a4.json.gz",
+          "bytes": 849408,
+          "transfer": 849708
+        },
+        {
+          "name": "/data/v2/d53e272b2c21f1b36d5eaadcde6678df34edd7586484dfead1f8e8ec6f6332b9.json.gz",
+          "bytes": 851278,
+          "transfer": 851578
+        },
+        {
+          "name": "/data/v2/b277a4a4cac8531a3f04dc68202617e3b43efbf8e5de31e32f9307ce6d63f5c2.json.gz",
+          "bytes": 856119,
+          "transfer": 856419
+        },
+        {
+          "name": "/data/v2/96127eca14174b1be84db82d3268b242f07f07dca99f8de8ff8965673bd68bde.json.gz",
+          "bytes": 856736,
+          "transfer": 857036
+        },
+        {
+          "name": "/data/v2/908b06e84599da3db01f6e6d8a9a1b9063b4b2d5a83e0ecfb17ad9fb51b265a0.json.gz",
+          "bytes": 619149,
+          "transfer": 619449
+        },
+        {
+          "name": "/data/v2/ee7d58d4aa9afedd0ee5f48525ecf1dcf01e880d9f96a1d8b2a6d7739caca5f6.json.gz",
+          "bytes": 411103,
+          "transfer": 411403
+        },
+        {
+          "name": "/data/v2/cad82f5e5eae4d1c458cd09d95e7d906bdbd7bc165702e7c6283d3c748951da3.json.gz",
+          "bytes": 433062,
+          "transfer": 433362
+        },
+        {
+          "name": "/data/v2/3115c1fe893a2b8a7c1b1e2af12846896672dcfb7530c5cdd45a475f1da22ad2.json.gz",
+          "bytes": 438660,
+          "transfer": 438960
+        },
+        {
+          "name": "/data/v2/1bf4381d929c823e9513829a28804289679addf3cf9183e1fd2cba50410b88c7.json.gz",
+          "bytes": 423231,
+          "transfer": 423531
+        },
+        {
+          "name": "/data/v2/e83d8f54c091cb1681c2c677805171adce9da4d24f6603bae8b2e6247ab78360.json.gz",
+          "bytes": 298596,
+          "transfer": 298896
+        },
+        {
+          "name": "/data/v2/719eb9d6b4e87f787921d36950cbc0adfc06c030878c15429da8c9b9d6541907.json.gz",
+          "bytes": 337069,
+          "transfer": 337369
+        },
+        {
+          "name": "/data/v2/0fd9aff71f2c8805596998bdaa4b2ae0292fd3a9ddb6b32915f88a0121dea133.json.gz",
+          "bytes": 308428,
+          "transfer": 308728
+        },
+        {
+          "name": "/data/v2/aec3f60c75a8ccd9c7ecc48ed6e4750b8a3f4a50df0a032de62597a37bb3641b.json.gz",
+          "bytes": 312806,
+          "transfer": 313106
+        },
+        {
+          "name": "/data/v2/15a7ec3b94944f54952ccb6999166b55f929723ecd55bb6c3ce6a38f09a7bc2c.json.gz",
+          "bytes": 324923,
+          "transfer": 325223
+        },
+        {
+          "name": "/data/v2/7e622903f999fa2d401eb8bb5f0dc5d05a2994c1b1ff9a244050ef789ff459c7.json.gz",
+          "bytes": 330613,
+          "transfer": 330913
+        },
+        {
+          "name": "/data/v2/f68b974efedb0c06013a69389f04db9edabe972527d02daee2867d16ca7252e3.json.gz",
+          "bytes": 331272,
+          "transfer": 331572
+        },
+        {
+          "name": "/data/v2/8d5245649cb899e96b9b2b7cf4cf77b4168ec1c7d3c6f4c32c83151880fe6a36.json.gz",
+          "bytes": 318819,
+          "transfer": 319119
+        },
+        {
+          "name": "/data/v2/114e0112cde5c385439d6c98b46450ec4c94c5f42824dc2f88851656eadee0dd.json.gz",
+          "bytes": 315574,
+          "transfer": 315874
+        },
+        {
+          "name": "/data/v2/63fac09767606e2b447d512007ef4a7777deeb1b0c48c9a2b7394235a3ea3082.json.gz",
+          "bytes": 311718,
+          "transfer": 312018
+        },
+        {
+          "name": "/data/v2/6cde87624091f6fbd68270814494207d5b5bce6822a4e74dc51edc2b0ba0c062.json.gz",
+          "bytes": 420966,
+          "transfer": 421266
+        },
+        {
+          "name": "/data/v2/3e7731eb3f0c1e9c715f63d8e39199a1ffc5399ffca6fc10d542db68c455b6d7.json.gz",
+          "bytes": 537456,
+          "transfer": 537756
+        },
+        {
+          "name": "/data/v2/0020b22f8452d5e279bbdd7719cc5a48113c428c986995913ab841c860de88d2.json.gz",
+          "bytes": 215195,
+          "transfer": 215495
+        },
+        {
+          "name": "/data/v2/6f5ed160dc0be2e5b2198a7b9b1a9d1f60a53235577c3578f7fff52f736b1c57.json.gz",
+          "bytes": 256657,
+          "transfer": 256957
+        },
+        {
+          "name": "/data/v2/06c2a3134055e44dc0581692e12f022460cb1498b20ea0e915669c84a5c40dc1.json.gz",
+          "bytes": 1543398,
+          "transfer": 1543698
+        },
+        {
+          "name": "/data/v2/1d2d0bc550eed3462940cf3e27a03e7c7102ce56a21c9ea9c27bdf78355ea083.json.gz",
+          "bytes": 1264530,
+          "transfer": 1264830
+        },
+        {
+          "name": "/data/v2/c9878782ffc818c7b6ea96acd108f40b4dc35c8852add6a4e745daf1ad87c016.json.gz",
+          "bytes": 41879,
+          "transfer": 42179
+        },
+        {
+          "name": "/data/v2/b6f2e5b44a700dd83180e819743370d55bf2cb6c7c3d8d4ba19e1db4b862d9c1.json.gz",
+          "bytes": 43156,
+          "transfer": 43456
+        },
+        {
+          "name": "/data/v2/062da8e0449c4b269ebf94b36093fbddcc349ac34c4dbafbdf78cbac67dee2be.json.gz",
+          "bytes": 41964,
+          "transfer": 42264
+        },
+        {
+          "name": "/data/v2/c869517a7f9b9112d4ed45870cdd20b2057ca84ee0127ddd11f685e8cef7b94c.json.gz",
+          "bytes": 247357,
+          "transfer": 247657
+        }
+      ],
+      "longTasks": [
+        {
+          "start": 317133.90000009537,
+          "duration": 335
+        }
+      ],
+      "maxLongTaskMs": 335,
+      "exports": {
+        "json": {
+          "bytes": 119678847,
+          "sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+          "ms": 2545.800000190735,
+          "mainHeap": 563910224
+        },
+        "csv": {
+          "bytes": 46300610,
+          "sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+          "ms": 6734.799999952316,
+          "mainHeap": 474710695
+        },
+        "upgrades-csv": {
+          "bytes": 38684063,
+          "sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+          "ms": 6788.100000143051,
+          "mainHeap": 393511039
+        }
+      },
+      "maxHeartbeatGapIncludingFinalDeliveryMs": 335.0
+    }
+  },
+  "all_12_export_hashes_match": true,
+  "returned_result_mutation_did_not_poison_exports": true,
+  "captured_errors": [],
+  "worker_traffic": {
+    "created": 2,
+    "terminated_during_capture": 1,
+    "operations": {
+      "prepare": 5,
+      "chunk": 80,
+      "deliver": 17
+    },
+    "delivery_formats": {
+      "report": 5,
+      "json": 4,
+      "csv": 4,
+      "upgrades-csv": 4
+    },
+    "largest_transfer_bytes": 1543398
+  },
+  "renderer_memory": {
+    "scope": "all_Orca_renderer_processes_including_workers_and_other_Orca_surfaces_not_isolated_page",
+    "interval_seconds": 0.25,
+    "sample_count": 696,
+    "first_aggregate_rss_bytes": 320241664,
+    "peak_aggregate_rss_bytes": 1825308672,
+    "last_aggregate_rss_bytes": 205291520,
+    "renderer_counts": [2],
+    "isolated_browser_or_low_memory_certification": false
+  },
+  "native_eight_view": {
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "generated_at": "2026-11-26T08:22:06.194317+00:00",
+    "source": "authenticated retained public projection only",
+    "explicit_options": [
+      {
+        "vendor": null,
+        "window": "all",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": null,
+        "window": "2025",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": "cisco",
+        "window": "all",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": "cisco",
+        "window": "2025",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": "aruba",
+        "window": "all",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": "aruba",
+        "window": "2025",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": "arista",
+        "window": "all",
+        "scope_level": "os_family",
+        "cve_ids": null
+      },
+      {
+        "vendor": "arista",
+        "window": "2025",
+        "scope_level": "os_family",
+        "cve_ids": null
+      }
+    ],
+    "source_authority_gate": "passed",
+    "independent_verification": "passed",
+    "legacy_root_descriptors_equal": true,
+    "legacy_root_count": 1593,
+    "file_count": 12679,
+    "regular_file_bytes": 940257941,
+    "site_guard_bytes": 1000000000,
+    "site_headroom_bytes": 59742059,
+    "current_archive": {
+      "unique_paths": 236,
+      "unique_bytes_within_site": 132491725,
+      "shared_members": 233,
+      "historical_generation_dirs_copied": 0,
+      "aggregate_hosted_history_capacity": "accepted public artifact inventory verified; no historical-generation directories"
+    },
+    "timings_seconds": {
+      "read_snapshot": 1.166804292006418,
+      "read_comparison": 3.413416458060965,
+      "read_analysis": 0.5944869590457529,
+      "source_authority_and_complete_writer": 364.7385977921076,
+      "independent_native_verification": 376.6824360000901
+    },
+    "peak_resident_bytes": 4810031104,
+    "activation": "disabled; separate approval required",
+    "default_eight_view_capacity": "complete native writer and independent verifier passed",
+    "final_reader_assets_commit": "52ce5d00afd79788e8fd395e3ebd0ff606cc928b",
+    "final_asset_manifest_verified": true
+  },
+  "final_native_readback": {
+    "head": "52ce5d00afd79788e8fd395e3ebd0ff606cc928b",
+    "manifest_verified": true,
+    "reader_checks": {
+      "cisco-2025": {
+        "bytes": 94924707,
+        "sha256": "7a96491526096c620dae5030daea0cc51eca5e86ffd5bb52c534b34ff0912a1f"
+      },
+      "aruba-all": {
+        "bytes": 3571916,
+        "sha256": "edfc5f63e3d911217c8aa7b62a3e5028e383cbe895857262a992c576f5088a0a"
+      },
+      "arista-all": {
+        "bytes": 2028217,
+        "sha256": "0d6be334d3371af908d56ee19de8a3773a2a9305ea4baced911e60ca23c3ae6a"
+      },
+      "all-all": {
+        "bytes": 119678881,
+        "sha256": "7187ae7dba793fa8561ed781563443ab1a8a076ab4580c80afd420c95abcc61b"
+      }
+    },
+    "source_dictionary_not_loaded": true,
+    "file_count": 12679,
+    "site_bytes": 940257941,
+    "headroom": 59742059,
+    "accepted_artifact_bytes": 886999090,
+    "accepted_artifact_extra_paths": 9,
+    "accepted_artifact_extra_bytes": 914185,
+    "conservative_keep_all_old_paths_union_bytes": 941172126,
+    "historical_generation_directories": []
+  },
+  "accepted_public_inventory": {
+    "artifact_id": 15099144817,
+    "artifact_name": "github-pages",
+    "artifact_digest": "sha256:2cad3222732da8c9c81655d2e9e3acdc73936dfa467345fa53172900a47eef6d",
+    "artifact_zip_bytes": 100012231,
+    "producer_head": "26ccaef234bfe07d3cf5efd47d0cfe2b94616385",
+    "producer_run_id": 45781834286,
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "generated_at": "2026-11-26T08:22:06.194317+00:00",
+    "regular_file_count": 12555,
+    "regular_file_bytes": 886999090,
+    "tar_entry_type": "regular files and directories only",
+    "historical_generation_directories": [],
+    "manifest_inventory_exact": true
+  },
+  "accepted_inventory_sha256": "3388d32b8307e99f89fd19e49b63d249bb01a1af1a001f74a0f48c754e01ca59",
+  "raw_browser_receipt_sha256": "33e192b9d821245150ede5bb33213f5ce581791b4645bb7fc49596808cda1f71",
+  "screenshot_sha256": "e6df6aa125e2a48b07d198330c7d9f1219f4fd5f318f51e2b272d65b39811629",
+  "limitations": [
+    "One local real Chromium/Electron run, no fresh browser baseline/WAN/low-memory-device certification.",
+    "Cisco phases are actual UI actions; other views use the production reader with pinned accepted contexts in the same page.",
+    "UI download byte streams were captured and hashed before the browser download manager; disk saving was suppressed.",
+    "Main-thread serializer calls were trapped; zero were used for the eligible downloads.",
+    "Main JS heap excludes worker heap; aggregate OS renderer RSS includes other Orca surfaces.",
+    "Sampling and SHA-256 instrumentation add overhead. Cold JSON export includes a worker re-preparation after the configured60s idle expiry.",
+    "Cold wall time rose compared with the preceding local run; responsiveness improved. No overall throughput or total-memory reduction claim."
+  ],
+  "workflow_or_hosted_changes": false,
+  "evidence_review_status": "independent_human_review_pending"
+}

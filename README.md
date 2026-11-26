@@ -315,7 +315,7 @@ common vendor/year selections during publication. Eligible selections load their
 own bounded gzip parts; custom filters retain the compiled analysis path. The
 prototype preserves native and browser JSON and both CSV exports. It is disabled
 by default, with hosted activation and full default-view capacity separately gated.
-The [pinned public-data measurement](docs/research/2026-11-26-precomputed-analysis-preview.md) records the loading improvement and the remaining memory limitations.
+The [pinned public-data measurement](docs/research/2026-11-26-precomputed-analysis-preview.md) records the original loading improvement. The [worker/eight-view verification](docs/research/2026-11-26-analysis-worker-verification.md) records improved responsiveness, exact worker-produced downloads, the cold-time tradeoff and the complete capacity proof. Hosted activation remains disabled.
 
 ### Release reliability coverage
 
