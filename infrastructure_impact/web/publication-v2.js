@@ -582,66 +582,84 @@
         fail('mixed generation or kind');
       return value.data;
     }
-    let tablePromise;
-    async function getTables(options = {}) {
-      if (!tablePromise)
-        tablePromise = (async () => {
-          const result = [];
-          for (const [kind, entries] of [
-            ['strings', catalog.strings],
-            ['shapes', catalog.shapes],
-          ]) {
-            const rows = [];
-            let size = 0;
-            for (const entry of entries) {
-              if (entry.first !== rows.length) fail('table contiguity');
-              const data = await read(entry.part, kind, options);
-              if (data.length !== entry.count) fail('table count');
-              for (const item of data) {
-                size += encoder.encode(JSON.stringify(item)).length;
-                if (size > 128000000) fail('table decoded budget');
-                rows.push(item);
-              }
-            }
-            result.push(rows);
-          }
-          tables(...result);
-          freeze(result);
-          ownedTables.set(result[0], result[1]);
-          return result;
-        })();
+    // In-flight metadata and preparation have their own bounded owner. Callers
+    // stop waiting independently; only the last departing waiter cancels work.
+    const verifiedValues = new Map(),
+      sharedFlights = new Map();
+    async function sharedValue(key, options, load) {
+      if (!options.operation) return scoped(options, (next) => sharedValue(key, next, load));
+      if (verifiedValues.has(key))
+        return options.operation.run(Promise.resolve(verifiedValues.get(key)));
+      let flight = sharedFlights.get(key);
+      if (!flight) {
+        const owner = operation();
+        flight = { owner, waiters: new Set() };
+        const ownOptions = { operation: owner, signal: owner.signal, deadline: owner.deadline };
+        flight.promise = Promise.resolve()
+          .then(() => owner.run(load(ownOptions)))
+          .then((value) => {
+            verifiedValues.set(key, value);
+            return value;
+          })
+          .finally(() => {
+            owner.close();
+            if (sharedFlights.get(key) === flight) sharedFlights.delete(key);
+          });
+        sharedFlights.set(key, flight);
+      }
+      const waiter = {};
+      flight.waiters.add(waiter);
       try {
-        return await tablePromise;
-      } catch (error) {
-        tablePromise = null;
-        throw error;
+        return await options.operation.run(flight.promise);
+      } finally {
+        flight.waiters.delete(waiter);
+        if (!flight.waiters.size && sharedFlights.get(key) === flight) {
+          sharedFlights.delete(key);
+          flight.owner.close();
+        }
       }
     }
-    const roots = new Map();
+    async function getTables(options = {}) {
+      return sharedValue('tables', options, async (owned) => {
+        const result = [];
+        for (const [kind, entries] of [
+          ['strings', catalog.strings],
+          ['shapes', catalog.shapes],
+        ]) {
+          const rows = [];
+          let size = 0;
+          for (const entry of entries) {
+            if (entry.first !== rows.length) fail('table contiguity');
+            const data = await read(entry.part, kind, owned);
+            if (data.length !== entry.count) fail('table count');
+            for (const item of data) {
+              size += encoder.encode(JSON.stringify(item)).length;
+              if (size > 128000000) fail('table decoded budget');
+              rows.push(item);
+            }
+          }
+          result.push(rows);
+        }
+        tables(...result);
+        freeze(result);
+        ownedTables.set(result[0], result[1]);
+        return result;
+      });
+    }
     async function root(name, options = {}) {
       if (!Object.hasOwn(catalog.roots, name)) fail('unknown root');
-      if (!roots.has(name))
-        roots.set(
-          name,
-          (async () => {
-            const data = await read(catalog.roots[name], 'root', options);
-            if (data.name !== name) fail('root name');
-            let end = 0;
-            for (const page of data.pages) {
-              if (page.first_token !== end) fail('page contiguity');
-              integer(page.decoded_upper_bound, 1);
-              end += integer(page.count, 1);
-            }
-            if (end !== data.token_count) fail('root token count');
-            return freeze(data);
-          })(),
-        );
-      try {
-        return await roots.get(name);
-      } catch (error) {
-        roots.delete(name);
-        throw error;
-      }
+      return sharedValue('root:' + name, options, async (owned) => {
+        const data = await read(catalog.roots[name], 'root', owned);
+        if (data.name !== name) fail('root name');
+        let end = 0;
+        for (const page of data.pages) {
+          if (page.first_token !== end) fail('page contiguity');
+          integer(page.decoded_upper_bound, 1);
+          end += integer(page.count, 1);
+        }
+        if (end !== data.token_count) fail('root token count');
+        return freeze(data);
+      });
     }
     let tokenPage = null; // One verified decoded page, never an unbounded page cache.
     async function* tokens(name, first = 0, end = null, options = {}) {
@@ -1581,73 +1599,56 @@
       }
       return materializeRoot('runtime-snapshot', { ...options, max_bytes: max });
     }
-    let analysisPromise, analysisDeliveryPromise;
-    const vendorAnalysisPromises = new Map();
     async function switchingAnalysis(study, options = {}) {
       window.InfrastructureSwitchingContracts.identity(study, catalog);
       if (!options.operation) return scoped(options, (next) => switchingAnalysis(study, next));
-      const deliveryName = 'switching-analysis-delivery.json',
-        requestedVendor = study.selection.requested_vendor;
+      const max = Math.min(selectedMax, integer(options.max_bytes ?? selectedMax, 1)),
+        deliveryName = 'switching-analysis-delivery.json',
+        requestedVendor = study.selection.requested_vendor,
+        analysis = window.InfrastructureSwitchingAnalysis;
+      async function bounded(name, limit) {
+        if ((await root(name, options)).logical.bytes > limit) fail('selected byte budget');
+      }
+      let select;
       if (requestedVendor !== null && Object.hasOwn(catalog.roots, deliveryName)) {
-        const analysis = window.InfrastructureSwitchingAnalysis;
-        if (!analysisDeliveryPromise)
-          analysisDeliveryPromise = (async () =>
-            analysis.validateDeliveryManifest(
-              await materializeRoot(deliveryName, { ...options, max_bytes: 2000000 }),
-              catalog,
-            ))().catch((error) => {
-            analysisDeliveryPromise = null;
-            throw error;
-          });
-        const manifest = await options.operation.run(analysisDeliveryPromise),
-          entry = manifest.vendors[requestedVendor];
+        await bounded(deliveryName, Math.min(max, 2000000));
+        const manifest = await sharedValue('analysis:manifest', options, async (owned) =>
+          analysis.validateDeliveryManifest(
+            await materializeRoot(deliveryName, {
+              ...owned,
+              max_bytes: Math.min(selectedMax, 2000000),
+            }),
+            catalog,
+          ),
+        );
+        const entry = manifest.vendors[requestedVendor];
         if (!entry || !Object.hasOwn(catalog.roots, entry.root))
           throw Error('Missing advertised analysis delivery vendor root');
-        if (!vendorAnalysisPromises.has(requestedVendor))
-          vendorAnalysisPromises.set(
-            requestedVendor,
-            (async () => {
-              const envelope = await materializeRoot(entry.root, {
-                ...options,
-                max_bytes: Math.min(options.max_bytes ?? 128000000, 128000000),
-              });
-              return analysis.prepareVendor(envelope, catalog, {
-                ...entry,
-                source_content_sha256: manifest.source_content_sha256,
-              });
-            })().catch((error) => {
-              vendorAnalysisPromises.delete(requestedVendor);
-              throw error;
-            }),
-          );
-        const select = await options.operation.run(vendorAnalysisPromises.get(requestedVendor)),
-          selected = select(study);
-        json.measure(selected, null, '', Math.min(options.max_bytes ?? 128000000, 128000000));
-        return selected;
-      }
-      if (!analysisPromise)
-        analysisPromise = (async () => {
-          const name = 'switching-analysis.json',
-            analysis = window.InfrastructureSwitchingAnalysis;
-          if (!Object.hasOwn(catalog.roots, name)) return (study) => analysis.select(null, study);
-          const identity = {
-            publication: await field(name, ['publication'], options),
-            generated_at: await field(name, ['generated_at'], options),
-          };
-          window.InfrastructureSwitchingContracts.identity(identity, catalog);
-          const report = await materializeRoot(name, {
-            ...options,
-            max_bytes: Math.min(options.max_bytes ?? 128000000, 128000000),
+        await bounded(entry.root, max);
+        select = await sharedValue('analysis:' + requestedVendor, options, async (owned) => {
+          const envelope = await materializeRoot(entry.root, { ...owned, max_bytes: selectedMax });
+          return analysis.prepareVendor(envelope, catalog, {
+            ...entry,
+            source_content_sha256: manifest.source_content_sha256,
           });
-          return analysis.prepare(report, catalog);
-        })().catch((error) => {
-          analysisPromise = null;
-          throw error;
         });
-      const select = await options.operation.run(analysisPromise);
+      } else {
+        const name = 'switching-analysis.json';
+        if (!Object.hasOwn(catalog.roots, name))
+          select = (accepted) => analysis.select(null, accepted);
+        else {
+          await bounded(name, max);
+          select = await sharedValue('analysis:all', options, async (owned) =>
+            analysis.prepare(
+              await materializeRoot(name, { ...owned, max_bytes: selectedMax }),
+              catalog,
+            ),
+          );
+        }
+      }
       const selected = select(study);
-      json.measure(selected, null, '', Math.min(options.max_bytes ?? 128000000, 128000000));
-      return selected;
+      json.measure(selected, null, '', max);
+      return options.operation.run(Promise.resolve(selected));
     }
     let reliabilityPromise;
     async function releaseReliability(options = {}) {

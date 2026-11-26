@@ -149,6 +149,188 @@ r=PublicationReader(sys.argv[1]);print(json.dumps(r.materialize_range(r.ranges('
     const all = await loader.switchingAnalysis(A.context(fullNative, {}));
     assert.strictEqual(all.availability, 'available');
     assert(reads.includes(catalog.roots[fullName].path), 'all vendors retains legacy full root');
+    const cases = [
+      [
+        'ceiling',
+        async () => {
+          for (const cat of [catalog, legacy]) {
+            const bounded = await context.window.InfrastructurePublicationV2.open(
+              fetch,
+              cat,
+              index,
+              { selected_bytes: 1 },
+            );
+            await assert.rejects(
+              () => bounded.switchingAnalysis(study, { max_bytes: 128000000 }),
+              /budget/i,
+            );
+          }
+          await assert.rejects(() => loader.switchingAnalysis(study, { max_bytes: 1 }), /budget/i);
+        },
+      ],
+      [
+        'cutoff',
+        async () => {
+          const mixed = { ...study, observation_end: '2025-01-05' };
+          await assert.rejects(
+            () => loader.switchingAnalysis(mixed),
+            /observation|identity|cutoff/i,
+          );
+          await assert.rejects(
+            () => fallback.switchingAnalysis(mixed),
+            /observation|identity|cutoff/i,
+          );
+          assert.throws(() => A.select(fullNative, mixed), /observation|identity|cutoff/i);
+        },
+      ],
+      [
+        'budget-race',
+        async () => {
+          for (const smallFirst of [true, false]) {
+            const fresh = await open(catalog),
+              small = () => fresh.switchingAnalysis(study, { max_bytes: 1 }),
+              ordinary = () => fresh.switchingAnalysis(study),
+              results = await Promise.allSettled(
+                smallFirst ? [small(), ordinary()] : [ordinary(), small()],
+              );
+            assert.strictEqual(results[smallFirst ? 0 : 1].status, 'rejected');
+            assert.strictEqual(
+              results[smallFirst ? 1 : 0].status,
+              'fulfilled',
+              'one request budget must not reject another caller',
+            );
+          }
+        },
+      ],
+      [
+        'last-waiter',
+        async () => {
+          let enter,
+            release,
+            observeAbort,
+            paused = false;
+          const entered = new Promise((r) => {
+              enter = r;
+            }),
+            gate = new Promise((r) => {
+              release = r;
+            }),
+            aborted = new Promise((r) => {
+              observeAbort = r;
+            }),
+            delayed = async (name, options) => {
+              if (name === catalog.roots[manifestName].path && !paused) {
+                paused = true;
+                options.signal.addEventListener('abort', observeAbort, { once: true });
+                enter();
+                await gate;
+              }
+              return fetch(name, options);
+            },
+            fresh = await context.window.InfrastructurePublicationV2.open(delayed, catalog, index),
+            controller = new AbortController(),
+            result = fresh.switchingAnalysis(study, { signal: controller.signal }).then(
+              () => 'fulfilled',
+              () => 'rejected',
+            );
+          await entered;
+          controller.abort();
+          assert.strictEqual(await result, 'rejected');
+          let timer;
+          try {
+            await Promise.race([
+              aborted,
+              new Promise((_, reject) => {
+                timer = setTimeout(() => reject(Error('Last waiter left transport running')), 5000);
+              }),
+            ]);
+          } finally {
+            clearTimeout(timer);
+            release();
+          }
+          assert.strictEqual((await fresh.switchingAnalysis(study)).availability, 'available');
+        },
+      ],
+      [
+        'transport-retry',
+        async () => {
+          let failed = false;
+          const transient = async (name, options) => {
+              if (name === catalog.roots[manifestName].path && !failed) {
+                failed = true;
+                return { ok: false, status: 503 };
+              }
+              return fetch(name, options);
+            },
+            fresh = await context.window.InfrastructurePublicationV2.open(
+              transient,
+              catalog,
+              index,
+            );
+          await assert.rejects(() => fresh.switchingAnalysis(study), /part unavailable/i);
+          assert.strictEqual((await fresh.switchingAnalysis(study)).availability, 'available');
+        },
+      ],
+      [
+        'cancel-race',
+        async () => {
+          for (const pausedPath of [
+            catalog.roots[manifestName].path,
+            catalog.roots[vendorName].path,
+          ]) {
+            let enter,
+              release,
+              paused = false;
+            const entered = new Promise((r) => {
+                enter = r;
+              }),
+              gate = new Promise((r) => {
+                release = r;
+              }),
+              delayed = async (name, options) => {
+                if (name === pausedPath && !paused) {
+                  paused = true;
+                  enter();
+                  await gate;
+                }
+                return fetch(name, options);
+              },
+              fresh = await context.window.InfrastructurePublicationV2.open(
+                delayed,
+                catalog,
+                index,
+              ),
+              controller = new AbortController(),
+              first = fresh.switchingAnalysis(study, { signal: controller.signal });
+            // Attach rejection handlers before cancellation to avoid an artificial unhandled rejection.
+            const firstResult = first.then(
+              () => 'fulfilled',
+              () => 'rejected',
+            );
+            await entered;
+            const otherStudy =
+                pausedPath === catalog.roots[manifestName].path
+                  ? A.context(fullNative, { vendor: 'aruba' })
+                  : study,
+              second = fresh.switchingAnalysis(otherStudy),
+              both = Promise.allSettled([first, second]);
+            controller.abort();
+            release();
+            const results = await both;
+            assert.strictEqual(await firstResult, 'rejected');
+            assert.strictEqual(
+              results[1].status,
+              'fulfilled',
+              'one cancelled waiter must not cancel the healthy caller',
+            );
+            assert.strictEqual((await fresh.switchingAnalysis(study)).availability, 'available');
+          }
+        },
+      ],
+    ];
+    for (const [name, run] of cases)
+      if (!process.env.REVIEW_CASE || process.env.REVIEW_CASE === name) await run();
+
     console.log(
       'Opt-in vendor lazy transport, cache, budgets and absent-manifest compatibility passed',
     );

@@ -559,18 +559,19 @@ function renderComparison() {
           window.InfrastructureReleaseReliability.validate(reliabilityReport, accepted);
           const isCoverage = kind.startsWith('coverage-'),
             isJSON = !kind.endsWith('csv'),
-            value = isCoverage
-              ? window.InfrastructureReleaseReliability.coverageReport(reliabilityReport)
-              : kind === 'review'
-                ? {
-                    schema_version: 1,
-                    publication: reliabilityReport.publication,
-                    generated_at: reliabilityReport.generated_at,
-                    sources: reliabilityReport.catalogue?.sources ?? [],
-                    items: reliabilityReport.review_packet,
-                    review_status: 'independent_human_review_pending',
-                  }
-                : reliabilityReport,
+            value =
+              isCoverage && isJSON
+                ? window.InfrastructureReleaseReliability.coverageReport(reliabilityReport)
+                : kind === 'review'
+                  ? {
+                      schema_version: 1,
+                      publication: reliabilityReport.publication,
+                      generated_at: reliabilityReport.generated_at,
+                      sources: reliabilityReport.catalogue?.sources ?? [],
+                      items: reliabilityReport.review_packet,
+                      review_status: 'independent_human_review_pending',
+                    }
+                  : reliabilityReport,
             body = isJSON
               ? appJSON.stringifyBounded(value, null, '', 128000000)
               : isCoverage

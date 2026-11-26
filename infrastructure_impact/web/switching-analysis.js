@@ -975,6 +975,8 @@
     return out;
   }
   function selectValidated(report, study) {
+    if (report !== null && report.observation_end !== study.observation_end)
+      fail('observation cutoff differs');
     const expected =
       report === null
         ? null

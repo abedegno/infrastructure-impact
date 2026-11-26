@@ -835,8 +835,7 @@
       '</section>'
     );
   }
-  function coverageReport(report) {
-    validate(report);
+  function deriveCoverage(report) {
     const result = Object.fromEntries(
       [
         'publication',
@@ -848,6 +847,8 @@
     );
     Object.assign(result, {
       schema_version: 1,
+      config: clone(report.config),
+      method: clone(report.method),
       review_status: report.validation.review_status,
       sources: clone(report.catalogue?.sources ?? []),
       trains: [],
@@ -862,7 +863,14 @@
     if (report.availability === 'unavailable') return result;
     const sources = new Map(result.sources.map((s) => [s.source_id, s])),
       values = (facts) => new Set(facts.map((r) => r.version)),
-      sorted = (set) => [...set].sort(),
+      sorted = (set) =>
+        [...set].sort((a, b) => {
+          const x = Array.from(a, (c) => c.codePointAt(0)),
+            y = Array.from(b, (c) => c.codePointAt(0));
+          for (let i = 0; i < Math.min(x.length, y.length); i++)
+            if (x[i] !== y[i]) return x[i] - y[i];
+          return x.length - y.length;
+        }),
       without = (set, other) => sorted(new Set([...set].filter((v) => !other.has(v))));
     for (const train of report.config.trains) {
       const same = (f) =>
@@ -909,12 +917,19 @@
         ),
         release_evidence: clone(releases),
         notice_evidence: clone(notices),
+        statement_evidence: clone(report.catalogue.statements.filter(same)),
+        coverage_judgements: clone(report.catalogue.coverage.filter(same)),
+        respin_evidence: clone(report.respins.filter(same)),
         periods: clone(
           report.annual.filter((a) => a.vendor === train.vendor && a.train === train.train),
         ),
       });
     }
     return result;
+  }
+  function coverageReport(report) {
+    validate(report);
+    return deriveCoverage(report);
   }
   function coverageCSV(report, { max_bytes = 128000000 } = {}) {
     const payload = (v) => {
@@ -978,11 +993,31 @@
       rows.push({
         ...row,
         row_type: 'train_gaps',
-        payload: payload(omit(train, ['models', 'periods', 'release_evidence', 'notice_evidence'])),
+        payload: payload(
+          omit(train, [
+            'models',
+            'periods',
+            'release_evidence',
+            'notice_evidence',
+            'statement_evidence',
+            'coverage_judgements',
+            'respin_evidence',
+          ]),
+        ),
       });
-      for (const kind of ['release_evidence', 'notice_evidence'])
+      for (const kind of [
+        'release_evidence',
+        'notice_evidence',
+        'statement_evidence',
+        'coverage_judgements',
+        'respin_evidence',
+      ])
         for (const fact of train[kind])
-          rows.push({ ...row, row_type: kind, payload: payload(fact) });
+          rows.push({
+            ...row,
+            row_type: kind === 'coverage_judgements' ? 'coverage_judgement' : kind,
+            payload: payload(fact),
+          });
     }
     for (const source of value.sources)
       rows.push({
@@ -1000,7 +1035,7 @@
     );
   }
   function renderCoverage(report) {
-    const coverage = coverageReport(report),
+    const coverage = deriveCoverage(report),
       rows = coverage.trains.flatMap((t) =>
         t.models.map(
           (m) =>

@@ -117,3 +117,27 @@ def test_cli_exports_and_refuses_input_aliases(tmp_path):
         with pytest.raises(SystemExit):
             main(["--input", str(source), "--output", str(target)])
     assert source.read_bytes() == before
+
+
+def test_coverage_exports_retain_statement_judgement_and_respin_evidence():
+    from test_release_reliability import action, complete_coverage
+
+    cat = specimen()
+    cat["releases"] = [release("17.12.7", "2024-12-25"), release("17.12.7a", "2025-01-10")]
+    cat["statements"] = [action()]
+    cat["coverage"] = [complete_coverage()]
+    accepted = report(cat)
+    value = coverage.build_coverage(accepted)
+    train = value["trains"][0]
+    assert train["statement_evidence"] == cat["statements"]
+    assert train["statement_evidence"][0]["evidence"][0]["locator"]
+    assert train["coverage_judgements"] == cat["coverage"]
+    assert train["coverage_judgements"][0]["source_ids"] == ["s1"]
+    assert train["respin_evidence"] == accepted["respins"]
+    assert value["config"] == accepted["config"] and value["method"] == accepted["method"]
+    rows = list(csv.DictReader(io.StringIO(coverage.csv_export(value))))
+    assert {"statement_evidence", "coverage_judgement", "respin_evidence"} <= {
+        r["row_type"] for r in rows
+    }
+    train["statement_evidence"][0]["evidence"][0]["locator"] = "edited"
+    assert cat["statements"][0]["evidence"][0]["locator"] != "edited"

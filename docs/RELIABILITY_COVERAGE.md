@@ -39,7 +39,7 @@ python -m infrastructure_impact.reliability_coverage_cli \
 ```
 
 CSV includes model inventories, per-period metric reasons, unbound observations,
-release/notice facts, source receipts and limitations. JSON embedded in CSV uses
+release/notice/statement facts, coverage judgements, respin relationships, configuration, method, source receipts and limitations. JSON embedded in CSV uses
 the project's exact finite-number token convention for cross-runtime parity;
 this changes numeric spelling, not values. CSV cells are spreadsheet-safe.
 Unavailable legacy reports produce an explicitly unavailable coverage view.

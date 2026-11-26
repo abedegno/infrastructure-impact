@@ -36,6 +36,8 @@ def build_coverage(report):
         )
     }
     result.update(
+        config=deepcopy(report["config"]),
+        method=deepcopy(report["method"]),
         schema_version=1,
         review_status=report["validation"]["review_status"],
         sources=deepcopy((report["catalogue"] or {}).get("sources", [])),
@@ -105,6 +107,9 @@ def build_coverage(report):
                 ),
                 release_evidence=deepcopy(releases),
                 notice_evidence=deepcopy(notices),
+                statement_evidence=deepcopy([f for f in cat["statements"] if same(f)]),
+                coverage_judgements=deepcopy([f for f in cat["coverage"] if same(f)]),
+                respin_evidence=deepcopy([f for f in report["respins"] if same(f)]),
                 periods=deepcopy(
                     [
                         a
@@ -174,13 +179,31 @@ def csv_export(coverage, *, max_bytes=None):
                     {
                         k: v
                         for k, v in train.items()
-                        if k not in {"models", "periods", "release_evidence", "notice_evidence"}
+                        if k
+                        not in {
+                            "models",
+                            "periods",
+                            "release_evidence",
+                            "notice_evidence",
+                            "statement_evidence",
+                            "coverage_judgements",
+                            "respin_evidence",
+                        }
                     }
                 ),
             )
-            for kind in ("release_evidence", "notice_evidence"):
+            for kind in (
+                "release_evidence",
+                "notice_evidence",
+                "statement_evidence",
+                "coverage_judgements",
+                "respin_evidence",
+            ):
                 for fact in train[kind]:
-                    yield row | dict(row_type=kind, payload=payload(fact))
+                    yield row | dict(
+                        row_type="coverage_judgement" if kind == "coverage_judgements" else kind,
+                        payload=payload(fact),
+                    )
         for source in coverage["sources"]:
             yield identity | dict(
                 row_type="source", vendor=source["vendor"], payload=payload(source)

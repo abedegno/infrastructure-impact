@@ -276,6 +276,23 @@ def test_browser_coverage_fractional_rate(tmp_path, escape_model):
         release("17.12.8", "2025-01-03"),
     ]
     catalogue["statements"] = [action(action_date="2025-01-05")]
+    catalogue["notices"] = [
+        dict(
+            vendor="cisco",
+            family="IOS XE",
+            train="17.12",
+            notice_id=notice_id,
+            title="Notice",
+            notice_date=None,
+            action_date=None,
+            affected_releases=[],
+            platforms_stated=[],
+            replacement_release=None,
+            classification="software_defect",
+            evidence=[dict(source_id="s1", locator="Notice scope", quote="Scope not stated")],
+        )
+        for notice_id in ["\U00010000", "\ue000"]
+    ]
     catalogue["coverage"] = [complete_coverage()]
     configuration = config()
     if escape_model:
