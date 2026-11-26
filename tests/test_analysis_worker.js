@@ -306,6 +306,7 @@ async function numericProtocol() {
     thread = new Thread(prefix + bundle, { eval: true }),
     generation = JSON.stringify([study.publication?.id, study.generated_at]),
     key = view.decoded.sha256;
+  expected.upgrades.rows[0].start_version = '=SYNTHETIC("雪")';
   let sequence = 0;
   function call(type, fields) {
     const id = ++sequence;
@@ -313,9 +314,10 @@ async function numericProtocol() {
       function receive(data) {
         if (data.type === 'load') {
           const bytes = new Uint8Array(read(view.chunks[data.index].part.path));
-          thread.postMessage({ type: 'chunk', id, key, generation, index: data.index, bytes }, [
-            bytes.buffer,
-          ]);
+          thread.postMessage(
+            { type: 'chunk', id, key: data.key, generation, index: data.index, bytes },
+            [bytes.buffer],
+          );
           return;
         }
         thread.off('message', receive);
@@ -341,6 +343,19 @@ async function numericProtocol() {
       const bytes = await call('deliver', { format });
       assert.deepEqual(Buffer.from(bytes), Buffer.from(body));
     }
+    assert.deepEqual(
+      Buffer.from(await call('deliver', { format: 'csv' })),
+      read('numeric-analysis.csv'),
+    );
+    const nativeUpgrades = read('numeric-upgrades.csv');
+    assert(
+      nativeUpgrades.includes(Buffer.from(`"'=SYNTHETIC(""雪"")"`)),
+      'formula quoting and UTF-8 retained',
+    );
+    assert.deepEqual(
+      Buffer.from(await call('deliver', { format: 'upgrades-csv' })),
+      nativeUpgrades,
+    );
     const forged = structuredClone(study);
     forged.definition.start_date = '2022-01-01';
     await assert.rejects(call('deliver', { format: 'report', study: forged }), /definition/i);
@@ -348,7 +363,7 @@ async function numericProtocol() {
     await assert.rejects(call('deliver', { format: 'json', generation: 'other' }), /generation/i);
     const bad = structuredClone(view);
     bad.decoded.sha256 = '1'.repeat(64);
-    await assert.rejects(call('prepare', { view: bad }), /fingerprint|view/i);
+    await assert.rejects(call('prepare', { view: bad, key: bad.decoded.sha256 }), /fingerprint/i);
     await call('prepare', { view });
     equal(await call('deliver', { format: 'report' }), expected);
   } finally {
