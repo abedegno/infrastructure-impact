@@ -391,13 +391,17 @@ class Writer:
             indexes[kind] = chunks
         return indexes
 
-    def tables(self):
-        for kind, values, boundary, result in [
-            ("strings", self.encoder.strings, self.snapshot_tables[0], self.string_parts),
-            ("shapes", self.encoder.shapes, self.snapshot_tables[1], self.shape_parts),
-        ]:
+    def tables(self, legacy_boundary=None):
+        for i, (kind, values, result) in enumerate(
+            (
+                ("strings", self.encoder.strings, self.string_parts),
+                ("shapes", self.encoder.shapes, self.shape_parts),
+            )
+        ):
+            boundary = self.snapshot_tables[i]
+            legacy = len(values) if legacy_boundary is None else legacy_boundary[i]
             first = 0
-            for section in (values[:boundary], values[boundary:]):
+            for section in (values[:boundary], values[boundary:legacy], values[legacy:]):
                 for part in self.chunks(kind, section):
                     count = len(
                         codec.strict_loads((self.destination / part["path"]).read_bytes())["data"]
@@ -609,7 +613,9 @@ def logical_views(data):
         yield "changes/" + str(change["id"]) + ".json", change
 
 
-def write_bundle(destination, data, *, analysis_vendor_delivery=False):
+def write_bundle(
+    destination, data, *, analysis_vendor_delivery=False, analysis_packed_delivery=False
+):
     """Preserve fresh public writer validation for direct v2 callers, too."""
     from .publication import write_bundle as validated_write
 
@@ -618,10 +624,18 @@ def write_bundle(destination, data, *, analysis_vendor_delivery=False):
         data,
         publication_format="v2",
         analysis_vendor_delivery=analysis_vendor_delivery,
+        analysis_packed_delivery=analysis_packed_delivery,
     )
 
 
-def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=False):
+def _write_bundle(
+    destination,
+    data,
+    row_sources,
+    *,
+    analysis_vendor_delivery=False,
+    analysis_packed_delivery=False,
+):
     from ..exports import csv_export
     from .eligibility import monitor_summary
     from .publication import write_manifest, write_reader_assets, write_reliability_assets
@@ -651,9 +665,9 @@ def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=Fa
             alias="switching-evidence.json" if name == "switching-comparison.json" else None,
         )
     if analysis_vendor_delivery:
-        from .analysis_delivery import delivery_views
+        from .analysis_delivery import _delivery_validated
 
-        for name, value in delivery_views(data["switching_analysis"]).items():
+        for name, value in _delivery_validated(data["switching_analysis"]).items():
             writer.root(name, value)
     overview = writer.overview(summary(data["switching_comparison"]))
     runtime = {
@@ -686,7 +700,15 @@ def _write_bundle(destination, data, row_sources, *, analysis_vendor_delivery=Fa
         if size <= MAX_BYTES:
             writer.root(ROOT, index)
     routes = writer.routes()
-    writer.tables()
+    if analysis_packed_delivery:
+        from .analysis_packing import ROOT as PACKED_ROOT
+        from .analysis_packing import _pack_validated
+
+        legacy_boundary = (len(writer.encoder.strings), len(writer.encoder.shapes))
+        writer.root(PACKED_ROOT, _pack_validated(data["switching_analysis"]))
+        writer.tables(legacy_boundary)
+    else:
+        writer.tables()
     overview_part = writer.part("overview", overview)
     catalog = dict(
         schema_version=2,
@@ -956,7 +978,15 @@ def verify_projection(reader, projected):
         views[ROOT] = expected_index
     from .analysis_delivery import MANIFEST as ANALYSIS_MANIFEST
     from .analysis_delivery import delivery_views
+    from .analysis_packing import ROOT as PACKED_ROOT
+    from .analysis_packing import pack_report
 
+    if PACKED_ROOT in reader.catalog["roots"]:
+        if ANALYSIS_MANIFEST in reader.catalog["roots"]:
+            raise ValueError("Published analysis delivery representations conflict")
+        if "switching_analysis" not in projected:
+            raise ValueError("Packed analysis delivery without complete native analysis")
+        views[PACKED_ROOT] = pack_report(projected["switching_analysis"])
     if ANALYSIS_MANIFEST in reader.catalog["roots"]:
         if "switching_analysis" not in projected:
             raise ValueError("Analysis delivery without complete native analysis")

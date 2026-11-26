@@ -363,7 +363,14 @@ def public_projection(
 
 
 @phase("publication.writing")
-def write_bundle(destination, data, *, publication_format="v1", analysis_vendor_delivery=False):
+def write_bundle(
+    destination,
+    data,
+    *,
+    publication_format="v1",
+    analysis_vendor_delivery=False,
+    analysis_packed_delivery=False,
+):
     from .publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
@@ -371,8 +378,16 @@ def write_bundle(destination, data, *, publication_format="v1", analysis_vendor_
         analysis_vendor_delivery and publication_format != "v2"
     ):
         raise ValueError("Vendor analysis delivery requires explicit v2 preview")
+    if type(analysis_packed_delivery) is not bool:
+        raise ValueError("Packed analysis delivery requires an explicit boolean")
+    if analysis_packed_delivery and analysis_vendor_delivery:
+        raise ValueError("Cannot combine packed and vendor analysis delivery")
+    if analysis_packed_delivery and publication_format != "v2":
+        raise ValueError("Packed analysis delivery requires explicit v2 preview")
     if analysis_vendor_delivery and "switching_analysis" not in data:
         raise ValueError("Vendor analysis delivery requires complete analysis")
+    if analysis_packed_delivery and "switching_analysis" not in data:
+        raise ValueError("Packed analysis delivery requires complete analysis")
     if publication_format == "v2" and "switching_row_sources" in data:
         raise ValueError("Published Source membership is writer-owned")
     from .current_evidence import report_bytes
@@ -504,6 +519,7 @@ def write_bundle(destination, data, *, publication_format="v1", analysis_vendor_
             data,
             row_sources,
             **({"analysis_vendor_delivery": True} if analysis_vendor_delivery else {}),
+            **({"analysis_packed_delivery": True} if analysis_packed_delivery else {}),
         )
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
@@ -665,7 +681,7 @@ def write_manifest(destination, data):
 
 def write_reader_assets(destination, data, *, publication_format="v1"):
     for name in (
-        *(("publication-v2.js",) if publication_format == "v2" else ()),
+        *(("publication-v2.js", "analysis-packing.js") if publication_format == "v2" else ()),
         "lossless-json.js",
         "current-evidence.js",
         "release-reliability.js",
@@ -696,12 +712,16 @@ def write_reader_assets(destination, data, *, publication_format="v1"):
             '<script defer src="/delivery.js">',
             '<script defer src="/publication-v2.js"></script><script defer src="/delivery.js">',
         )
-        html = html.replace("/snapshot.json.gz", "/snapshot-v2.json.gz")
+        html = html.replace(
+            '<script defer src="/switching-analysis.js"></script>',
+            '<script defer src="/switching-analysis.js"></script>'
+            '<script defer src="/analysis-packing.js"></script>',
+        ).replace("/snapshot.json.gz", "/snapshot-v2.json.gz")
     # Immutable script/style paths avoid mixing old cached readers with a new
     # delivery contract. Root names remain available for existing integrations.
     (destination / "assets").mkdir(exist_ok=True)
     for name in (
-        *(("publication-v2.js",) if publication_format == "v2" else ()),
+        *(("publication-v2.js", "analysis-packing.js") if publication_format == "v2" else ()),
         "lossless-json.js",
         "current-evidence.js",
         "release-reliability.js",

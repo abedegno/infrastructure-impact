@@ -1,12 +1,15 @@
 /* Exact JSON integers without reviver context, rawJSON, dependencies or global patches. */
 (() => {
-  function parse(text, strict = false, transport = false) {
+  function parse(text, strict = false, transport = false, compact = false) {
     let i = 0;
     const fail = () => {
       throw Error('Invalid lossless JSON');
     };
     const space = () => {
-      while (/[\x20\t\r\n]/.test(text[i] ?? '') && i < text.length) i++;
+      while (/[\x20\t\r\n]/.test(text[i] ?? '') && i < text.length) {
+        if (compact) fail();
+        i++;
+      }
     };
     function value(key = '', depth = 0, path = []) {
       if (strict && depth > 64) fail();
@@ -264,7 +267,7 @@
     stringBytes,
     stringifyBounded,
     requestPool,
-    parseStrict: (text, options = {}) => parse(text, true, options.transport),
+    parseStrict: (text, options = {}) => parse(text, true, options.transport, options.compact),
     stringify,
     clone: (value) => parse(stringify(value)),
   };
