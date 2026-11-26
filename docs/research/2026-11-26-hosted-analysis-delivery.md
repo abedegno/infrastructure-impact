@@ -49,7 +49,11 @@ Existing nonempty exports must match a retained local generation. Use a fresh
 output directory if that prior generation is unavailable or the export was
 modified. Refresh needs temporary space on the output filesystem; forced
 termination can leave scratch data for recovery. Readers of the export directory
-may observe a transition between manifests. The separately served generation
+may observe a transition between manifests. A concurrent edit fails the refresh,
+restores prior entries where safe, and preserves changed bytes at a reported
+recovery path. That directory needs operator attention before reuse. The
+subsequent install/rollback regression run passed 118 tests and 12 subtests;
+these overlapping runs are not additive test totals. The separately served generation
 and its atomic `current` pointer retain their existing behavior. Mounted-output
 coverage uses a simulated mount plus real held-directory and `--output .` checks;
 no privileged mount or live deployment was performed.
