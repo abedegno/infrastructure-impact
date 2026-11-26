@@ -152,7 +152,12 @@
     }</aside>`;
   }
   if (typeof window !== 'undefined')
-    window.InfrastructureKev = { selectReport, validateQuery, renderContext };
+    window.InfrastructureKev = {
+      selectReport,
+      validateQuery,
+      renderContext,
+      reportAvailability: (report) => availability(report, timestamp(report.evaluated_at)),
+    };
   if (typeof module !== 'undefined' && module.exports)
     module.exports = { selectReport, validateQuery, renderContext };
 })();

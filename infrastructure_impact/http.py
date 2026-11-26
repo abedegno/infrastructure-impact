@@ -831,10 +831,11 @@ class Application:
                 in {
                     "publication-v2.json",
                     "publication-v2.js",
+                    "analysis-precomputed.js",
                     "snapshot-v2.json",
                     "snapshot-v2.json.gz",
                 }
-                or re.fullmatch(r"data/v2/[a-f0-9]{64}\.json", name)
+                or re.fullmatch(r"data/v2/[a-f0-9]{64}\.json(?:\.gz)?", name)
                 or name
                 in {
                     "schemas/publication-v2.json",
@@ -852,7 +853,12 @@ class Application:
                         while chunk := stream.read(65536):
                             yield chunk
 
-                return 200, mimetypes.guess_type(target)[0] or "application/octet-stream", chunks()
+                content_type = (
+                    "application/gzip"
+                    if name.endswith(".gz")
+                    else mimetypes.guess_type(target)[0] or "application/octet-stream"
+                )
+                return 200, content_type, chunks()
             return self.route(environ, _opened=(generation, reader.metadata()))
         if path == "/api/v1/release-reliability":
             return self._release_reliability(environ, generation, reader)

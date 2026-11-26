@@ -65,17 +65,8 @@ class PublicationReader(codec.CatalogReader):
         if any(value.get(k) != v for k, v in self.identity.items()):
             raise ValueError("mixed publication generation")
 
-    def fetch(self, descriptor, *, fixed=None, maximum=None, kind=None, ordinary=False):
+    def _fetch_bytes(self, descriptor, *, fixed=None, maximum=None):
         maximum = maximum or self.limits["part"]
-        if ordinary:
-            import re
-
-            path = descriptor.get("path", "")
-            if not re.fullmatch(r"data/[a-f0-9]{64}\.json", path) or path[5:-5] != descriptor.get(
-                "sha256"
-            ):
-                raise ValueError("ordinary part path")
-            fixed = {path}
         codec.validate_descriptor(descriptor, paths=fixed, max_bytes=maximum)
         path = descriptor["path"]
         raw = self.cache.pop(path, None)
@@ -90,11 +81,25 @@ class PublicationReader(codec.CatalogReader):
                 self.cache_bytes -= len(evicted)
             if len(raw) <= self.limits["cache"]:
                 self.cache_bytes += len(raw)
-        else:
+        elif len(raw) != descriptor["bytes"]:
             self.cache_bytes -= len(raw)
-            self.cache_bytes += len(raw)
+            raise ValueError("part bytes mismatch")
         if len(raw) <= self.limits["cache"]:
             self.cache[path] = raw
+        return raw
+
+    def fetch(self, descriptor, *, fixed=None, maximum=None, kind=None, ordinary=False):
+        maximum = maximum or self.limits["part"]
+        if ordinary:
+            import re
+
+            path = descriptor.get("path", "")
+            if not re.fullmatch(r"data/[a-f0-9]{64}\.json", path) or path[5:-5] != descriptor.get(
+                "sha256"
+            ):
+                raise ValueError("ordinary part path")
+            fixed = {path}
+        raw = self._fetch_bytes(descriptor, fixed=fixed, maximum=maximum)
         result = codec.strict_loads(
             raw, max_bytes=maximum, transport=not ordinary and kind != "overview"
         )
@@ -592,13 +597,48 @@ class PublicationReader(codec.CatalogReader):
         for claim, remediation, binding in links:
             contracts._validate_reviewed_link(claim, remediation, binding, fixed)
 
+    def _precomputed_manifest(self):
+        from . import analysis_precomputed as delivery
+
+        path, logical = delivery.manifest_descriptor(self.root(delivery.ROOT))
+        maximum = min(self.limits["part"], delivery.MANIFEST_MAX)
+        raw = self._fetch_bytes(dict(logical, path=path), maximum=maximum)
+        manifest = codec.strict_loads(raw, max_bytes=maximum, transport=True)
+        return delivery.validate_manifest(manifest, self.identity)
+
     def switching_analysis(self, study_selection=None, *, options=None):
         """Optional identity-first root; never hydrate the switching claim catalogue."""
+        from . import analysis_precomputed as delivery
         from . import switching_analysis as analysis
 
         name = "switching-analysis.json"
         if study_selection is not None:
             self._identity(study_selection)
+        wanted_cves = (
+            study_selection["selection"]["requested_cve_ids"]
+            if study_selection is not None
+            else (options or {}).get("cve_ids")
+        )
+        if wanted_cves is None and delivery.ROOT in self.catalog["roots"]:
+            manifest = self._precomputed_manifest()
+            context = study_selection
+            if context is None:
+                context = analysis.selection_context(manifest, options or {})
+                requested = delivery.DEFAULT_OPTION | (options or {})
+                view = next(
+                    (v for v in manifest["views"] if v["options"] == requested),
+                    None,
+                )
+                if view is not None:
+                    context["selection"] = view["selection"]
+            view = delivery.match_view(manifest, context)
+            if view is not None:
+                return delivery._read_view(
+                    view,
+                    context,
+                    lambda part: self._fetch_bytes(part, fixed={part["path"]}),
+                    self.limits["selected"],
+                )
         if name not in self.catalog["roots"]:
             context = study_selection or analysis.selection_context(
                 {
@@ -614,7 +654,7 @@ class PublicationReader(codec.CatalogReader):
         value = self.materialize_range(self.ranges(name)[()])
         analysis.validate_report(value)
         context = study_selection or analysis.selection_context(value, options or {})
-        return analysis.select_report(value, context, max_bytes=self.limits["selected"])
+        return analysis._select_report_validated(value, context, max_bytes=self.limits["selected"])
 
     def switching_release_history(self, study_selection):
         """Optional lazy root; authenticate generation before reading release arrays."""

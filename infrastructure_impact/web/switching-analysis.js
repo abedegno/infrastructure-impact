@@ -100,63 +100,7 @@
     for (const child of [r, report.disclosure, report.kev_reconciliation])
       for (const key of ['definition_sha256', 'observation_end'])
         if (child[key] !== report[key]) fail('child bounds differ');
-    const groups = new Map(r.inference_groups.map((g) => [g.group_id, g])),
-      seen = new Set(),
-      membership = new Map();
-    if (groups.size !== r.inference_groups.length) fail('duplicate inference group');
-    for (const [id, g] of groups)
-      if (id !== hash(omit(g, ['group_id']))) fail('inference fingerprint differs');
-    for (const q of r.requirements) {
-      const m = r.members[q.claim_id],
-        key = JSON.stringify([q.claim_id, q.train, q.scenario]),
-        scope = JSON.stringify([q.claim_id, q.train]);
-      shape(
-        {
-          ...omit(m, ['source_ref', 'severity_facets_ref']),
-          ...omit(q, ['proof_ref', 'train_binding_ref']),
-          source: r.facts[m.source_ref],
-          severity_facets: r.facts[m.severity_facets_ref],
-          proof: r.facts[q.proof_ref],
-          train_binding: r.facts[q.train_binding_ref],
-        },
-        'upgrade_constraint',
-      );
-      let minimum = q.alternatives[0] ?? null;
-      for (const value of q.alternatives) {
-        const parts = /^([0-9]+)\.([0-9]+)\./.exec(value),
-          order = compare(m.vendor, value, minimum);
-        if (!parts || `${BigInt(parts[1])}.${BigInt(parts[2])}` !== q.train || order === null) {
-          minimum = null;
-          break;
-        }
-        if (order < 0) minimum = value;
-      }
-      if (q.target !== minimum) fail('compiled target differs');
-      if (seen.has(key)) fail('duplicate requirement');
-      seen.add(key);
-      if (!membership.has(scope)) membership.set(scope, new Set());
-      membership.get(scope).add(q.scenario);
-      if (q.target !== null && !r.facts[q.proof_ref].length) fail('target lacks proof');
-      if (m.date === null && !q.issues.includes('unknown_initial_publication'))
-        fail('unknown date lost');
-      if (q.target === null && !q.issues.length) fail('unknown target lost');
-      if (q.inference) {
-        const g = groups.get(q.inference.group_id);
-        if (
-          !g ||
-          !g.affected_claim_ids.includes(q.claim_id) ||
-          g.maximum_affected !== q.inference.maximum_affected
-        )
-          fail('inference membership differs');
-      }
-    }
-    if (
-      [...membership.values()].some(
-        (v) => v.size !== scenarios.length || scenarios.some((s) => !v.has(s)),
-      ) ||
-      new Set(r.requirements.map((q) => q.claim_id)).size !== Object.keys(r.members).length
-    )
-      fail('scenario ownership differs');
+    checkConstraints(r);
     const full = context(report, {}),
       owned = new Map(),
       pairKey = (c) =>
@@ -222,6 +166,65 @@
       if (!eq(e.current_claims, refs)) fail('KEV current claim ownership differs');
     }
     return report;
+  }
+  function checkConstraints(r) {
+    const groups = new Map(r.inference_groups.map((g) => [g.group_id, g])),
+      seen = new Set(),
+      membership = new Map();
+    if (groups.size !== r.inference_groups.length) fail('duplicate inference group');
+    for (const [id, g] of groups)
+      if (id !== hash(omit(g, ['group_id']))) fail('inference fingerprint differs');
+    for (const q of r.requirements) {
+      const m = r.members[q.claim_id],
+        key = JSON.stringify([q.claim_id, q.train, q.scenario]),
+        scope = JSON.stringify([q.claim_id, q.train]);
+      shape(
+        {
+          ...omit(m, ['source_ref', 'severity_facets_ref']),
+          ...omit(q, ['proof_ref', 'train_binding_ref']),
+          source: r.facts[m.source_ref],
+          severity_facets: r.facts[m.severity_facets_ref],
+          proof: r.facts[q.proof_ref],
+          train_binding: r.facts[q.train_binding_ref],
+        },
+        'upgrade_constraint',
+      );
+      let minimum = q.alternatives[0] ?? null;
+      for (const value of q.alternatives) {
+        const parts = /^([0-9]+)\.([0-9]+)\./.exec(value),
+          order = compare(m.vendor, value, minimum);
+        if (!parts || `${BigInt(parts[1])}.${BigInt(parts[2])}` !== q.train || order === null) {
+          minimum = null;
+          break;
+        }
+        if (order < 0) minimum = value;
+      }
+      if (q.target !== minimum) fail('compiled target differs');
+      if (seen.has(key)) fail('duplicate requirement');
+      seen.add(key);
+      if (!membership.has(scope)) membership.set(scope, new Set());
+      membership.get(scope).add(q.scenario);
+      if (q.target !== null && !r.facts[q.proof_ref].length) fail('target lacks proof');
+      if (m.date === null && !q.issues.includes('unknown_initial_publication'))
+        fail('unknown date lost');
+      if (q.target === null && !q.issues.length) fail('unknown target lost');
+      if (q.inference) {
+        const g = groups.get(q.inference.group_id);
+        if (
+          !g ||
+          !g.affected_claim_ids.includes(q.claim_id) ||
+          g.maximum_affected !== q.inference.maximum_affected
+        )
+          fail('inference membership differs');
+      }
+    }
+    if (
+      [...membership.values()].some(
+        (v) => v.size !== scenarios.length || scenarios.some((s) => !v.has(s)),
+      ) ||
+      new Set(r.requirements.map((q) => q.claim_id)).size !== Object.keys(r.members).length
+    )
+      fail('scenario ownership differs');
   }
   function selectedClaims(report, s) {
     const [start, end] = S.bounds(D, report.observation_end, s.requested_window);
@@ -538,8 +541,11 @@
     });
     return { rows: compact, row_evidence: evidence };
   }
-  function* detailedRows(report) {
-    shape(report, 'selected_upgrades');
+  function checkSelectedUpgrades(
+    report,
+    { shapeChecked = false, checkConstraintsToo = false } = {},
+  ) {
+    if (!shapeChecked) shape(report, 'selected_upgrades');
     if (report.availability === 'unavailable') return;
     const requirements = report.requirements;
     C.identity(requirements, report);
@@ -551,20 +557,56 @@
       fail('selected requirement fingerprint differs');
     for (const [key, value] of Object.entries(requirements.facts))
       if (key !== hash(value)) fail('selected fact fingerprint differs');
-    for (const q of requirements.requirements) {
-      const m = requirements.members[q.claim_id];
-      if (!m) fail('selected requirement ownership missing');
-      shape(
-        {
-          ...omit(m, ['source_ref', 'severity_facets_ref']),
-          ...omit(q, ['proof_ref', 'train_binding_ref']),
-          source: requirements.facts[m.source_ref],
-          severity_facets: requirements.facts[m.severity_facets_ref],
-          proof: requirements.facts[q.proof_ref],
-          train_binding: requirements.facts[q.train_binding_ref],
-        },
-        'upgrade_constraint',
-      );
+    if (checkConstraintsToo) {
+      const refs = new Set(),
+        inferred = new Set(),
+        memberCVEs = new Map();
+      const advisory = ({ vendor, advisory_id }) => JSON.stringify([vendor, advisory_id]);
+      for (const [id, m] of Object.entries(requirements.members)) {
+        if (m.claim_id !== id) fail('selected member ownership differs');
+        refs.add(m.source_ref);
+        refs.add(m.severity_facets_ref);
+        const own = advisory(m);
+        if (!memberCVEs.has(own)) memberCVEs.set(own, new Set());
+        memberCVEs.get(own).add(m.cve_id);
+      }
+      for (const q of requirements.requirements) {
+        if (!Object.hasOwn(requirements.members, q.claim_id))
+          fail('selected requirement ownership missing');
+        refs.add(q.proof_ref);
+        refs.add(q.train_binding_ref);
+        if (q.inference) inferred.add(q.inference.group_id);
+      }
+      if (
+        refs.size !== Object.keys(requirements.facts).length ||
+        [...refs].some((id) => !Object.hasOwn(requirements.facts, id))
+      )
+        fail('selected fact reference closure differs');
+      if (
+        inferred.size !== requirements.inference_groups.length ||
+        requirements.inference_groups.some((g) => !inferred.has(g.group_id)) ||
+        requirements.source_groups.some(
+          (g) => !g.cve_ids.some((cve) => memberCVEs.get(advisory(g))?.has(cve)),
+        )
+      )
+        fail('selected group reference closure differs');
+      checkConstraints(requirements);
+    } else {
+      for (const q of requirements.requirements) {
+        const m = requirements.members[q.claim_id];
+        if (!m) fail('selected requirement ownership missing');
+        shape(
+          {
+            ...omit(m, ['source_ref', 'severity_facets_ref']),
+            ...omit(q, ['proof_ref', 'train_binding_ref']),
+            source: requirements.facts[m.source_ref],
+            severity_facets: requirements.facts[m.severity_facets_ref],
+            proof: requirements.facts[q.proof_ref],
+            train_binding: requirements.facts[q.train_binding_ref],
+          },
+          'upgrade_constraint',
+        );
+      }
     }
     const members = report.requirements.members,
       ids = Object.keys(members).sort(),
@@ -587,6 +629,12 @@
           fail('selected row issue order/uniqueness mismatch');
       }
     for (const row of report.rows) {
+      if (
+        checkConstraintsToo &&
+        (row.supported_event_count !== row.events.length ||
+          (row.event_count !== null && row.event_count !== row.events.length))
+      )
+        fail('selected event count differs');
       for (const kind of Object.keys(used)) {
         const ref = row[kind + '_ref'];
         if (!Object.hasOwn(e[kind], ref)) fail('selected row evidence reference missing');
@@ -608,6 +656,12 @@
     }
     if (Object.keys(used).some((kind) => used[kind].size !== Object.keys(e[kind]).length))
       fail('selected row unused evidence reference');
+    return ids;
+  }
+  function* detailedRows(report) {
+    const ids = checkSelectedUpgrades(report);
+    if (!ids) return;
+    const e = report.row_evidence;
     for (const row of report.rows)
       yield Object.fromEntries(
         Object.entries(row).map(([k, v]) =>
@@ -786,6 +840,47 @@
       }),
     };
   }
+  function disclosureAggregates(pairs, facts) {
+    const periods = ['pre_july', 'from_july', 'unknown'],
+      years = sorted(pairs.map((p) => S.day(p.initial_published_at)?.slice(0, 4)).filter(Boolean));
+    const periodSummaries = Object.fromEntries(
+        periods.map((p) => [p, disclosureSummary(pairs.filter((x) => x.date_period === p))]),
+      ),
+      yearsSummaries = Object.fromEntries(
+        years.map((y) => [
+          y,
+          disclosureSummary(pairs.filter((p) => S.day(p.initial_published_at)?.slice(0, 4) === y)),
+        ]),
+      ),
+      yearPeriods = Object.fromEntries(
+        years.map((y) => [
+          y,
+          Object.fromEntries(
+            periods.map((period) => [
+              period,
+              disclosureSummary(
+                pairs.filter(
+                  (p) =>
+                    S.day(p.initial_published_at)?.slice(0, 4) === y && p.date_period === period,
+                ),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+      coverage = {
+        selected_affected_claims: new Set(pairs.flatMap((p) => p.claim_ids)).size,
+        owned_source_pairs: pairs.length,
+        metadata_advisories: facts.length,
+        missing_counts: countBy(pairs.flatMap((p) => p.missing)),
+        unsupported_advisory_types: sorted(
+          facts
+            .filter((f) => f.metadata?.advisory_type === 'unknown')
+            .map((f) => f.metadata.advisory_type),
+        ),
+      };
+    return { periods: periodSummaries, years: yearsSummaries, year_periods: yearPeriods, coverage };
+  }
   function disclosure(report, s, selected) {
     const out = clone(report),
       ids = new Set(selected.map((c) => c.claim_id));
@@ -845,47 +940,7 @@
       p.missing = p.missing.filter((m) => m !== 'explicit_bundle_unavailable');
       if (!has) p.missing.push('explicit_bundle_unavailable');
     }
-    const periods = ['pre_july', 'from_july', 'unknown'],
-      years = sorted(
-        out.pairs.map((p) => S.day(p.initial_published_at)?.slice(0, 4)).filter(Boolean),
-      );
-    out.periods = Object.fromEntries(
-      periods.map((p) => [p, disclosureSummary(out.pairs.filter((x) => x.date_period === p))]),
-    );
-    out.years = Object.fromEntries(
-      years.map((y) => [
-        y,
-        disclosureSummary(
-          out.pairs.filter((p) => S.day(p.initial_published_at)?.slice(0, 4) === y),
-        ),
-      ]),
-    );
-    out.year_periods = Object.fromEntries(
-      years.map((y) => [
-        y,
-        Object.fromEntries(
-          periods.map((period) => [
-            period,
-            disclosureSummary(
-              out.pairs.filter(
-                (p) => S.day(p.initial_published_at)?.slice(0, 4) === y && p.date_period === period,
-              ),
-            ),
-          ]),
-        ),
-      ]),
-    );
-    out.coverage = {
-      selected_affected_claims: new Set(out.pairs.flatMap((p) => p.claim_ids)).size,
-      owned_source_pairs: out.pairs.length,
-      metadata_advisories: out.advisory_facts.length,
-      missing_counts: countBy(out.pairs.flatMap((p) => p.missing)),
-      unsupported_advisory_types: sorted(
-        out.advisory_facts
-          .filter((f) => f.metadata?.advisory_type === 'unknown')
-          .map((f) => f.metadata.advisory_type),
-      ),
-    };
+    Object.assign(out, disclosureAggregates(out.pairs, out.advisory_facts));
     return out;
   }
   function kevState(claims, e, s, end) {
@@ -940,6 +995,17 @@
       return ['documented_unaffected_for_selected_scope', []];
     return ['unknown', ['vendor_claim_not_explicit_affected_or_unaffected']];
   }
+  function kevSummary(entries) {
+    const mapped = entries.filter((e) => e.mapping.status === 'mapped');
+    return {
+      candidate_cves: new Set(mapped.map((e) => e.cve_id)).size,
+      entry_count: entries.length,
+      unmapped_entries: entries.filter((e) => e.mapping.status === 'unmapped').length,
+      unknown_membership_entries: entries.filter((e) => e.membership === 'unknown').length,
+      state_counts: countBy(mapped.map((e) => e.claim_state)),
+      completeness: 'not_established',
+    };
+  }
   function kev(report, s) {
     const out = clone(report.kev_reconciliation);
     out.selection = clone(s);
@@ -963,15 +1029,7 @@
       if (!e.in_effective_study_cohort) reasons.push('outside_effective_study_cohort');
       e.reason_codes = sorted(reasons);
     }
-    const mapped = out.entries.filter((e) => e.mapping.status === 'mapped');
-    out.summary = {
-      candidate_cves: new Set(mapped.map((e) => e.cve_id)).size,
-      entry_count: out.entries.length,
-      unmapped_entries: out.entries.filter((e) => e.mapping.status === 'unmapped').length,
-      unknown_membership_entries: out.entries.filter((e) => e.membership === 'unknown').length,
-      state_counts: countBy(mapped.map((e) => e.claim_state)),
-      completeness: 'not_established',
-    };
+    out.summary = kevSummary(out.entries);
     return out;
   }
   function selectValidated(report, study) {
@@ -1145,6 +1203,7 @@
     };
   }
   function csvJSON(value) {
+    if (typeof value === 'bigint') return value.toString();
     if (typeof value === 'number') return C.numberToken(value);
     if (Array.isArray(value)) return '[' + value.map(csvJSON).join(',') + ']';
     if (value && typeof value === 'object')
@@ -1179,22 +1238,22 @@
     const fields = upgradesOnly
       ? upgradeFields
       : ['row_type', 'vendor', 'cve_id', 'year', 'event_count', 'payload'];
-    const sections = [['upgrade', [...detailedRows(report.upgrades)]]];
-    if (!upgradesOnly && report.availability === 'available')
-      sections.push(
-        ['disclosure', report.disclosure.pairs],
-        ['kev_reconciliation', report.kev_reconciliation.entries],
-        ['model_coverage', report.model_coverage.models],
-        ['release_history', report.release_history.releases],
-      );
-    const rows = sections.flatMap(([kind, values]) =>
-      values.map((v) =>
-        upgradesOnly
-          ? fields.map((k) => (v[k] !== null && typeof v[k] === 'object' ? csvJSON(v[k]) : v[k]))
-          : [kind, ...fields.slice(1, -1).map((k) => v[k]), csvJSON(v)],
-      ),
-    );
-    return S.csvTable(fields, rows, { max_bytes });
+    function* rows() {
+      const sections = [['upgrade', detailedRows(report.upgrades)]];
+      if (!upgradesOnly && report.availability === 'available')
+        sections.push(
+          ['disclosure', report.disclosure.pairs],
+          ['kev_reconciliation', report.kev_reconciliation.entries],
+          ['model_coverage', report.model_coverage.models],
+          ['release_history', report.release_history.releases],
+        );
+      for (const [kind, values] of sections)
+        for (const v of values)
+          yield upgradesOnly
+            ? fields.map((k) => (v[k] !== null && typeof v[k] === 'object' ? csvJSON(v[k]) : v[k]))
+            : [kind, ...fields.slice(1, -1).map((k) => v[k]), csvJSON(v)];
+    }
+    return S.csvTable(fields, rows(), { max_bytes });
   }
   window.InfrastructureSwitchingAnalysis = {
     validate,
@@ -1207,6 +1266,9 @@
     upgrades,
     walk,
     detailedRows,
+    checkSelectedUpgrades,
+    disclosureAggregates,
+    kevSummary,
     reconciliation: kev,
     compare,
     csv,

@@ -42,6 +42,9 @@
   }
   function validateHistory(history, identity = history) {
     contracts.validate('switching-release-history-v1.json', history);
+    return checkHistory(history, identity);
+  }
+  function checkHistory(history, identity) {
     contracts.identity(history, identity);
     const end = history.observation_end;
     if (
@@ -404,6 +407,7 @@
     build,
     validate,
     validateHistory,
+    checkHistory,
     selectHistory,
     csvExport,
     render,

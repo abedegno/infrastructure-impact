@@ -443,13 +443,7 @@ def _build_report(
             owned_source_pairs=len(pairs),
             metadata_advisories=len(facts),
             missing_counts=dict(sorted(Counter(m for p in pairs for m in p["missing"]).items())),
-            unsupported_advisory_types=sorted(
-                {
-                    f["metadata"]["advisory_type"]
-                    for f in facts.values()
-                    if f["metadata"]["advisory_type"] == "unknown"
-                }
-            ),
+            unsupported_advisory_types=_unsupported_advisory_types(facts.values()),
         ),
         limitations=LIMITATIONS.copy(),
     )
@@ -466,6 +460,20 @@ def validate_report(report):
     """Closed DTO plus recomputable era, identity and distinct-count invariants."""
     contracts._json(report)
     _VALIDATOR.validate(report)
+    return _check_report(report)
+
+
+def _unsupported_advisory_types(facts):
+    return sorted(
+        {
+            f["metadata"]["advisory_type"]
+            for f in facts
+            if f["metadata"]["advisory_type"] == "unknown"
+        }
+    )
+
+
+def _check_report(report, *, selected=False):
     if report["selection"]["definition_sha256"] != report["definition_sha256"]:
         raise ValueError("Disclosure definition identity mismatch")
     facts = {f["id"]: f for f in report["advisory_facts"]}
@@ -531,6 +539,11 @@ def validate_report(report):
         or report["coverage"]["metadata_advisories"] != len(facts)
         or report["coverage"]["missing_counts"]
         != dict(sorted(Counter(m for p in report["pairs"] for m in p["missing"]).items()))
+        or (
+            selected
+            and report["coverage"]["unsupported_advisory_types"]
+            != _unsupported_advisory_types(facts.values())
+        )
     ):
         raise ValueError("Disclosure coverage mismatch")
     for b in report["bundles"]:
@@ -541,9 +554,11 @@ def validate_report(report):
             and p["family"] == b["family"]
             and p["advisory_id"] in b["member_advisory_ids"]
         ]
-        if b["selected_advisory_ids"] != sorted({p["advisory_id"] for p in members}) or b[
-            "selected_cve_ids"
-        ] != sorted({p["cve_id"] for p in members}):
+        if (
+            (selected and not members)
+            or b["selected_advisory_ids"] != sorted({p["advisory_id"] for p in members})
+            or b["selected_cve_ids"] != sorted({p["cve_id"] for p in members})
+        ):
             raise ValueError("Disclosure selected bundle members mismatch")
         if b["kind"] == "security_hardening":
             owners = [

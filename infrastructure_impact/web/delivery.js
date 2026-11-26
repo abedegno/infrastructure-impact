@@ -775,6 +775,9 @@ async function createStaticDelivery(fetchPart, siteBase) {
     load.releaseReliability = publicationV2.releaseReliability;
     load.switchingReleaseHistory = publicationV2.switchingReleaseHistory;
     load.switchingAnalysis = publicationV2.switchingAnalysis;
+    load.switchingAnalysisExport = publicationV2.switchingAnalysisExport;
+    load.dispose = publicationV2.dispose;
+    load.retireAnalysisWorker = publicationV2.retireAnalysisWorker;
     load.switchingOverview = publicationV2.switchingOverview;
     load.switchingSummary = publicationV2.switchingOverview;
     load.switchingSelection = publicationV2.switchingSelection;

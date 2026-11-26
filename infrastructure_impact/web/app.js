@@ -487,7 +487,9 @@ function comparisonCoverage(v) {
   const s = v.source_coverage;
   return `<details><summary>Product scope and evidence gaps</summary><p>Scope: ${esc(v.product_scope.mode.replaceAll('_', ' '))}. ${esc(v.product_scope.labels.join('; ') || 'No products selected')}.</p><p>Declared families are context, not a verified inventory: ${esc(v.product_scope.declared_families.join('; ') || 'Not declared')}.</p><p>${esc(s.history_scope)}</p>${s.archives.map((a) => `<p>${link(a.source_url, 'Archive source')} · ${a.documents.done} processed documents; ${a.documents.pending} pending; ${a.documents.error} failed. ${esc((a.observed_scopes || []).join('; '))}</p>`).join('')}${s.errors.map((e) => `<p>${link(e.source_url, 'Source gap')} · ${esc(e.error_code || 'collection error')} · checked ${date(e.checked_at)}</p>`).join('')}<ul>${s.known_gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul><p>Rate and timing blockers: ${esc(v.eligibility.reason_codes.map((r) => r.replaceAll('_', ' ')).join('; '))}.</p></details>`;
 }
+let refreshAnalysisPanel, mountedAnalysis;
 function renderComparison() {
+  refreshAnalysisPanel = null;
   $('#view').innerHTML =
     `<label for="comparison-mode">Comparison view<select id="comparison-mode" aria-label="Comparison view"><option value="benchmark" ${comparisonMode === 'benchmark' ? 'selected' : ''}>Scoped benchmark comparison</option><option value="switching" ${comparisonMode === 'switching' ? 'selected' : ''}>Campus/branch switching study · descriptive disclosure</option><option value="customer" ${comparisonMode === 'customer' ? 'selected' : ''}>Customer switching comparison</option></select></label><div id="comparison-content"></div>`;
   $('#comparison-mode').addEventListener('change', (e) => {
@@ -503,19 +505,23 @@ function renderComparison() {
   const accepted = customer ? customerStudy : switchingReport,
     delivery = customer ? customerAcceptedDelivery : switchingAcceptedDelivery;
   privateKev?.update({ study: accepted, cisa: accepted?.inputs?.kev ?? data.kev ?? null });
-  const reliabilityState = releaseReliabilityState(accepted, delivery),
+  const reliabilityState = releaseReliabilityState(accepted, delivery);
+  let acceptedAnalysis, reliabilityReport;
+  function selectPanels() {
     acceptedAnalysis = analysisStudy === accepted ? analysisReport : null;
-  let reliabilityReport = reliabilityState.report;
-  try {
-    if (reliabilityReport && acceptedAnalysis)
-      reliabilityReport = window.InfrastructureReleaseReliability.withUpgrades(
-        reliabilityReport,
-        acceptedAnalysis.upgrades,
-      );
-  } catch (error) {
-    reliabilityReport = null;
-    reliabilityState.error = error.message;
+    reliabilityReport = reliabilityState.report;
+    try {
+      if (reliabilityReport && acceptedAnalysis)
+        reliabilityReport = window.InfrastructureReleaseReliability.withUpgrades(
+          reliabilityReport,
+          acceptedAnalysis.upgrades,
+        );
+    } catch (error) {
+      reliabilityReport = null;
+      reliabilityState.error = error.message;
+    }
   }
+  selectPanels();
   const renderStudy = customer
     ? window.InfrastructureCustomerComparison.render
     : window.InfrastructureSwitching.render;
@@ -529,18 +535,25 @@ function renderComparison() {
     validationPublication: data.publication,
     validationGeneratedAt: data.generated_at,
   });
-  $('#comparison-content').insertAdjacentHTML(
-    'beforeend',
-    window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
-      loading: analysisLoading,
-      error: analysisError,
-    }),
-  );
-  window.InfrastructureSwitchingAnalysis.mount(
-    $('#comparison-content'),
-    acceptedAnalysis,
-    reliabilityReport,
-  );
+  $('#comparison-content').insertAdjacentHTML('beforeend', '<div id="analysis-panel"></div>');
+  mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport);
+  refreshAnalysisPanel = () => {
+    if (analysisLoading) {
+      const button = $('#analysis-load');
+      button.disabled = true;
+      button.textContent = 'Loading analysis…';
+      updateAnalysisAlert(mountedAnalysis);
+      return;
+    }
+    const prior = reliabilityReport;
+    selectPanels();
+    if (Boolean(prior) !== Boolean(reliabilityReport)) return renderComparison();
+    const details = $('#reliability-selection-details');
+    if (details && reliabilityReport)
+      details.textContent =
+        window.InfrastructureReleaseReliability.selectionDetails(reliabilityReport);
+    mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport);
+  };
   if (window.InfrastructureReleaseReliability) {
     $('#comparison-content').insertAdjacentHTML(
       'beforeend',
@@ -597,33 +610,6 @@ function renderComparison() {
         }
       });
   }
-  $('#analysis-load').addEventListener('click', () => loadAnalysis(accepted, delivery));
-  for (const kind of ['json', 'csv', 'upgrades-csv'])
-    $('#analysis-' + kind)?.addEventListener('click', () => {
-      try {
-        const body =
-            kind === 'json'
-              ? appJSON.stringifyBounded(acceptedAnalysis, null, '', 128000000)
-              : window.InfrastructureSwitchingAnalysis.csv(acceptedAnalysis, {
-                  upgradesOnly: kind === 'upgrades-csv',
-                }),
-          url = URL.createObjectURL(
-            new Blob([body], { type: kind === 'json' ? 'application/json' : 'text/csv' }),
-          ),
-          a = document.createElement('a');
-        a.href = url;
-        a.download =
-          'switching-analysis-' +
-          acceptedAnalysis.publication?.id +
-          '.' +
-          (kind === 'json' ? 'json' : 'csv');
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      } catch (error) {
-        analysisError = 'Analysis export rejected: ' + error.message;
-        renderComparison();
-      }
-    });
   window.InfrastructureSwitchingView.mount(
     $('#comparison-content'),
     accepted,
@@ -697,6 +683,70 @@ function renderComparison() {
   )
     loadSwitching(switchingReport ? studyOptions(switchingReport) : {});
 }
+function updateAnalysisAlert(owner) {
+  $('#analysis-alert').textContent = [analysisError, owner.exportError].filter(Boolean).join(' · ');
+}
+function mountAnalysis(accepted, delivery, acceptedAnalysis, reliabilityReport) {
+  if (
+    !mountedAnalysis ||
+    mountedAnalysis.study !== accepted ||
+    mountedAnalysis.delivery !== delivery
+  )
+    mountedAnalysis = { study: accepted, delivery, exportError: '' };
+  const owner = mountedAnalysis;
+  const panel = $('#analysis-panel');
+  panel.innerHTML = window.InfrastructureSwitchingAnalysis.render(acceptedAnalysis, {
+    loading: analysisLoading,
+  });
+  const loadButton = $('#analysis-load');
+  loadButton.insertAdjacentHTML('afterend', '<div id="analysis-alert" role="alert"></div>');
+  updateAnalysisAlert(owner);
+  window.InfrastructureSwitchingAnalysis.mount(panel, acceptedAnalysis, reliabilityReport);
+  loadButton.addEventListener('click', () => {
+    owner.exportError = '';
+    return loadAnalysis(accepted, delivery);
+  });
+  for (const kind of ['json', 'csv', 'upgrades-csv'])
+    $('#analysis-' + kind)?.addEventListener('click', async () => {
+      try {
+        const loader = await delivery?.promise;
+        if (loader?.switchingAnalysisExport)
+          window.InfrastructureSwitchingContracts.identity(loader, accepted);
+        const encoded = loader?.switchingAnalysisExport
+          ? await loader.switchingAnalysisExport(accepted, kind)
+          : null;
+        const body =
+            encoded === null
+              ? kind === 'json'
+                ? appJSON.stringifyBounded(acceptedAnalysis, null, '', 128000000)
+                : window.InfrastructureSwitchingAnalysis.csv(acceptedAnalysis, {
+                    upgradesOnly: kind === 'upgrades-csv',
+                  })
+              : encoded,
+          url = URL.createObjectURL(
+            new Blob([body], { type: kind === 'json' ? 'application/json' : 'text/csv' }),
+          ),
+          a = document.createElement('a');
+        a.href = url;
+        a.download =
+          'switching-analysis-' +
+          acceptedAnalysis.publication?.id +
+          '.' +
+          (kind === 'json' ? 'json' : 'csv');
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (error) {
+        if (
+          owner !== mountedAnalysis ||
+          view !== 'compare' ||
+          !['switching', 'customer'].includes(comparisonMode)
+        )
+          return;
+        owner.exportError = 'Analysis export rejected: ' + error.message;
+        refreshAnalysisPanel?.();
+      }
+    });
+}
 function releaseReliabilityState(study, delivery) {
   if (!study || !delivery || !window.InfrastructureReleaseReliability) return { report: null };
   if (reliabilityRoots.has(delivery)) return reliabilityRoots.get(delivery);
@@ -724,7 +774,7 @@ async function loadAnalysis(study, delivery) {
     studySequence = switchingSequence;
   analysisLoading = true;
   analysisError = '';
-  renderComparison();
+  refreshAnalysisPanel?.();
   try {
     const loader = await delivery.promise;
     window.InfrastructureSwitchingContracts.identity(loader, study);
@@ -741,7 +791,8 @@ async function loadAnalysis(study, delivery) {
     analysisError = 'Analysis selection rejected: ' + error.message;
   }
   analysisLoading = false;
-  if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode)) renderComparison();
+  if (view === 'compare' && ['switching', 'customer'].includes(comparisonMode))
+    refreshAnalysisPanel?.();
 }
 function studyOptions(report) {
   return {
@@ -813,6 +864,7 @@ async function loadSwitching(options = {}) {
       )
         throw Error('Mixed publication generations');
     }
+    const previousDeliveries = new Set([switchingAcceptedDelivery, customerAcceptedDelivery]);
     switchingReport = accepted;
     if (customer) {
       customerReport = envelope;
@@ -821,6 +873,12 @@ async function loadSwitching(options = {}) {
     }
     delivery.factCatalog = loader.factCatalog;
     switchingAcceptedDelivery = delivery;
+    for (const prior of previousDeliveries)
+      if (prior && prior !== delivery && prior !== customerAcceptedDelivery)
+        prior.promise.then(
+          (reader) => reader.retireAnalysisWorker?.(),
+          () => {},
+        );
     switchingLoading = false;
   } catch (error) {
     if (sequence !== switchingSequence) return;

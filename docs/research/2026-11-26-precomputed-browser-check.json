@@ -1,0 +1,391 @@
+{
+  "schema_version": 1,
+  "status": "activation_blocked_main_thread_responsiveness",
+  "implementation_commit": "4bf46ef",
+  "publication": {
+    "id": "e05fc9e8e5ce404190173f4c3c037498",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-26T08:22:06.194317+00:00",
+  "engine": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.7871.250 Electron/43.8.10 Safari/537.36",
+  "visibility": "visible",
+  "viewport": {
+    "width": 1150,
+    "height": 874
+  },
+  "method": "Local HTTP, actual application Cisco/2025 Load and Refresh buttons; other pinned contexts through the production reader in the same real browser. SHA-256 export checks outside timed reads.",
+  "cisco_ui_cold": {
+    "wallMs": 9995.599999904633,
+    "selectorMs": 9550.799999952316,
+    "initialHeap": 103864350,
+    "sampledPeakHeap": 807495621,
+    "samples": 22,
+    "finalHeap": 807495621,
+    "maxLongTaskMs": 9307,
+    "availability": "available",
+    "domNodes": 76775,
+    "documentHeight": 29041,
+    "horizontalOverflow": false,
+    "error": "",
+    "requests": 26,
+    "response_bytes": 11422166
+  },
+  "cisco_ui_warm": {
+    "wallMs": 984.5999999046326,
+    "selectorMs": 284.60000014305115,
+    "initialHeap": 284975456,
+    "sampledPeakHeap": 412265149,
+    "samples": 1,
+    "finalHeap": 412265149,
+    "maxLongTaskMs": 955,
+    "availability": "available",
+    "domNodes": 76775,
+    "documentHeight": 29041,
+    "horizontalOverflow": false,
+    "error": "",
+    "requests": 0,
+    "response_bytes": 0
+  },
+  "other_reader_cases": {
+    "aruba-all": {
+      "selector_ms": 376.10000014305115,
+      "initial_heap_bytes": 364108289,
+      "sampled_peak_heap_bytes": 390959974,
+      "final_heap_bytes": 390959974,
+      "requests": 1,
+      "response_bytes": 312551
+    },
+    "arista-all": {
+      "selector_ms": 147.10000014305115,
+      "initial_heap_bytes": 321518925,
+      "sampled_peak_heap_bytes": 343255175,
+      "final_heap_bytes": 343255175,
+      "requests": 1,
+      "response_bytes": 156689
+    },
+    "all-all": {
+      "selector_ms": 11238.5,
+      "initial_heap_bytes": 332138240,
+      "sampled_peak_heap_bytes": 927685234,
+      "final_heap_bytes": 927685234,
+      "requests": 30,
+      "response_bytes": 14436671
+    }
+  },
+  "exports": {
+    "cisco-2025": {
+      "json": {
+        "bytes": 94924683,
+        "sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+        "ms": 1659.5,
+        "heap": 1055587094
+      },
+      "csv": {
+        "bytes": 16829208,
+        "sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+        "ms": 5641.700000047684,
+        "heap": 1473303174
+      },
+      "upgrades_csv": {
+        "bytes": 13630735,
+        "sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+        "ms": 5624.899999856949,
+        "heap": 2014406921
+      }
+    },
+    "aruba-all": {
+      "json": {
+        "bytes": 3571916,
+        "sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+        "heap": 413506013
+      },
+      "csv": {
+        "bytes": 2591400,
+        "sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+        "heap": 414988057
+      },
+      "upgrades_csv": {
+        "bytes": 513996,
+        "sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+        "heap": 321518925
+      }
+    },
+    "arista-all": {
+      "json": {
+        "bytes": 2028211,
+        "sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+        "heap": 343255175
+      },
+      "csv": {
+        "bytes": 1600307,
+        "sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+        "heap": 332138240
+      },
+      "upgrades_csv": {
+        "bytes": 251037,
+        "sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+        "heap": 332138240
+      }
+    },
+    "all-all": {
+      "json": {
+        "bytes": 119678847,
+        "sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+        "heap": 1375188046
+      },
+      "csv": {
+        "bytes": 46300610,
+        "sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+        "heap": 1865602096
+      },
+      "upgrades_csv": {
+        "bytes": 38684063,
+        "sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+        "heap": 1206955013
+      }
+    }
+  },
+  "all_12_export_hashes_match_pinned_oracle": true,
+  "observed_heap_after_export_verification_bytes": 2014406921,
+  "export_verification_ms": 12926.400000095367,
+  "captured_errors": [],
+  "separated_long_task_diagnostic": {
+    "state": "complete",
+    "cases": {
+      "aruba-all": {
+        "start": 450215.19999980927,
+        "end": 450544.89999985695,
+        "selectorMs": 329.7000000476837,
+        "initialHeap": 389972513,
+        "finalHeap": 416139398,
+        "availability": "available",
+        "longTasks": [
+          {
+            "start": 450221.5,
+            "duration": 323
+          }
+        ],
+        "maxLongTaskMs": 323
+      },
+      "arista-all": {
+        "start": 450599.7999999523,
+        "end": 450752.09999990463,
+        "selectorMs": 152.29999995231628,
+        "initialHeap": 412767690,
+        "finalHeap": 426339972,
+        "availability": "available",
+        "longTasks": [
+          {
+            "start": 450607.2999999523,
+            "duration": 144
+          }
+        ],
+        "maxLongTaskMs": 144
+      },
+      "all-all": {
+        "start": 450802.59999990463,
+        "end": 462214.09999990463,
+        "selectorMs": 11411.5,
+        "initialHeap": 426346000,
+        "finalHeap": 897960548,
+        "availability": "available",
+        "longTasks": [
+          {
+            "start": 451864.19999980927,
+            "duration": 10350
+          }
+        ],
+        "maxLongTaskMs": 10350
+      }
+    }
+  },
+  "raw_receipt_sha256": "3cd467d5cdedc9b49a258fe8e0ba921646b693a83be28f392ec67fe287a61d98",
+  "screenshot_sha256": "a82b881d8f91c215e3954886837712807b65ec41806bca15517168359a0d376e",
+  "limitations": [
+    "One local real Chromium/Electron browser run; no independent fresh-process browser baseline or WAN test.",
+    "Cisco cold/warm are actual application UI actions; other three views call the production reader with pinned public contexts in the same page.",
+    "Heap is sampled/advisory JavaScript heap, not process RSS or a certified peak.",
+    "SHA-256 exports are measured separately and do not simulate the browser download manager.",
+    "Isolated read diagnostic yields before exports to separate long tasks; a native capacity job overlapped it, so its timings are diagnostic only.",
+    "No CPU-heavy publication job overlapped the primary Cisco UI and three reader/export runs.",
+    "The later separated-long-task diagnostic overlapped the capacity job; it is qualitative corroboration, not a fresh controlled timing pair.",
+    "No customer data, login, new vendor collection or hosted configuration changes."
+  ],
+  "ci": {
+    "implementation_head": "4bf46ef",
+    "run": 45889396974,
+    "python_3_11": "success",
+    "python_3_13": "success",
+    "container": "success"
+  },
+  "default_profile_capacity": {
+    "kind": "standalone_default_profile_capacity_not_complete_publication_certification",
+    "generation": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "source_sha256": "7db74072839ddbbcedd759cefddede1941e29df841d77d6796a62efd159bea7f",
+    "seconds": 151.50016766716726,
+    "manifest_bytes": 57832,
+    "manifest_sha256": "69e29a3d6a9f1f92f1c0694bea84efaed44d67bebf4fd3d8f817bc7ceff1692b",
+    "views": [
+      {
+        "options": {
+          "vendor": null,
+          "window": "all",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 119678881,
+        "wire_bytes": 14436671,
+        "chunks": 30
+      },
+      {
+        "options": {
+          "vendor": null,
+          "window": "2025",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 96816838,
+        "wire_bytes": 11599713,
+        "chunks": 25
+      },
+      {
+        "options": {
+          "vendor": "cisco",
+          "window": "all",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 115651514,
+        "wire_bytes": 14035763,
+        "chunks": 29
+      },
+      {
+        "options": {
+          "vendor": "cisco",
+          "window": "2025",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 94924707,
+        "wire_bytes": 11388609,
+        "chunks": 24
+      },
+      {
+        "options": {
+          "vendor": "aruba",
+          "window": "all",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 3571916,
+        "wire_bytes": 312551,
+        "chunks": 1
+      },
+      {
+        "options": {
+          "vendor": "aruba",
+          "window": "2025",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 2208065,
+        "wire_bytes": 191536,
+        "chunks": 1
+      },
+      {
+        "options": {
+          "vendor": "arista",
+          "window": "all",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 2028217,
+        "wire_bytes": 156689,
+        "chunks": 1
+      },
+      {
+        "options": {
+          "vendor": "arista",
+          "window": "2025",
+          "scope_level": "os_family",
+          "cve_ids": null
+        },
+        "decoded_bytes": 1252680,
+        "wire_bytes": 90857,
+        "chunks": 1
+      }
+    ],
+    "standalone_unique_bytes": 52270221,
+    "new_bytes_above_retained_four_view_site": 25975701,
+    "retained_four_view_site_bytes": 913449606,
+    "limits": [
+      "Original four-view preview kept intact; additive eight-view part inventory only.",
+      "Normal v2 root/table encoding and complete publication authority/capacity gates have not been rerun for eight views.",
+      "No hosted activation or schedule changes."
+    ],
+    "additive_part_inventory_total": 939425307
+  },
+  "proposed_hosted_options": [
+    {
+      "vendor": null,
+      "window": "all",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": null,
+      "window": "2025",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": "cisco",
+      "window": "all",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": "cisco",
+      "window": "2025",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": "aruba",
+      "window": "all",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": "aruba",
+      "window": "2025",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": "arista",
+      "window": "all",
+      "scope_level": "os_family",
+      "cve_ids": null
+    },
+    {
+      "vendor": "arista",
+      "window": "2025",
+      "scope_level": "os_family",
+      "cve_ids": null
+    }
+  ],
+  "activation_gates": {
+    "implementation_ci": "passed",
+    "four_browser_export_sets": "passed",
+    "browser_main_thread_responsiveness": "failed",
+    "low_memory_browser_certification": "unknown",
+    "default_eight_standalone_parts": "generated",
+    "default_eight_complete_publication": "not_run",
+    "hosted_retained_history_inventory": "unknown",
+    "hosted_activation": "disabled"
+  }
+}

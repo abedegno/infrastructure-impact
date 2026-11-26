@@ -17,6 +17,10 @@ def _counts(claims):
     )
 
 
+def _source_key(source):
+    return tuple(source[k] for k in contracts._SOURCE_FIELDS)
+
+
 def _sources(claims, model=None):
     values = {}
     for c in claims:
@@ -25,7 +29,7 @@ def _sources(claims, model=None):
             for b in c["platform_bindings"]
             if b["source"] is not None and (model is None or b["model"] == model)
         ]:
-            values[tuple(source[k] for k in contracts._SOURCE_FIELDS)] = source
+            values[_source_key(source)] = source
     return [deepcopy(v) for _, v in sorted(values.items())]
 
 
@@ -42,7 +46,7 @@ def _by_source(claims, model):
         for b in c["platform_bindings"]:
             if b["model"] != model or b["basis"] == "unresolved" or b["source"] is None:
                 continue
-            key = tuple(b["source"][k] for k in contracts._SOURCE_FIELDS)
+            key = _source_key(b["source"])
             source, owned = groups.setdefault(key, (b["source"], {}))
             owned[c["claim_id"]] = c
     return [
@@ -145,3 +149,80 @@ def from_selected(selected, study_selection, *, publication, generated_at):
             for reason, claims in sorted(unresolved.items())
         ],
     )
+
+
+def _check_selected(report, definition):
+    """Reconcile counts with the selected DTO's own lists and source groups."""
+    selection = report["selection"]
+    vendors = selection["effective_vendors"]
+    cves = set(selection["effective_cve_ids"])
+    expected_models = [
+        (target["vendor"], target["family"], model)
+        for target in definition["targets"]
+        if target["vendor"] in vendors
+        for model in target["models"]
+    ]
+    if [(m["vendor"], m["family"], m["model"]) for m in report["models"]] != expected_models:
+        raise ValueError("Model coverage target ownership differs")
+
+    def counts(row, claims):
+        values = row["counts"]
+        if (
+            len(row["claim_ids"]) != len(claims)
+            or values["claims"] != len(claims)
+            or any(values[key] > len(claims) for key in ("advisories", "cves"))
+        ):
+            raise ValueError("Model coverage claim counts differ")
+        if "by_status" in row and (
+            sum(v["claims"] for v in row["by_status"].values()) != len(claims)
+            or any(
+                v[k] > min(v["claims"], values[k])
+                for v in row["by_status"].values()
+                for k in ("advisories", "cves")
+            )
+        ):
+            raise ValueError("Model coverage status counts differ")
+
+    bound, unresolved, advisories = set(), set(), set()
+    for row in report["models"]:
+        claims = set(row["claim_ids"])
+        counts(row, claims)
+        if (
+            row["counts"]["advisories"] != len(row["advisory_ids"])
+            or row["counts"]["cves"] != len(row["cve_ids"])
+            or len(set(row["advisory_ids"])) != len(row["advisory_ids"])
+            or len(set(row["cve_ids"])) != len(row["cve_ids"])
+            or not cves.issuperset(row["cve_ids"])
+        ):
+            raise ValueError("Model coverage row ownership differs")
+        remaining_sources = {_source_key(source) for source in row["sources"]}
+        for source in row["by_source"]:
+            key = _source_key(source["source"])
+            owned = set(source["claim_ids"])
+            counts(source, owned)
+            if (
+                key not in remaining_sources
+                or not claims.issuperset(owned)
+                or any(
+                    source["counts"][field] > row["counts"][field]
+                    for field in ("advisories", "cves")
+                )
+            ):
+                raise ValueError("Model coverage source ownership differs")
+            remaining_sources.remove(key)
+        bound.update(claims)
+        advisories.update((row["vendor"], identifier) for identifier in row["advisory_ids"])
+    for row in report["unresolved"]:
+        claims = set(row["claim_ids"])
+        counts(row, claims)
+        unresolved.update(claims)
+    total = report["totals"]
+    if (
+        bound.intersection(unresolved)
+        or total["bound_claims"] != len(bound)
+        or total["unresolved_claims"] != len(unresolved)
+        or total["claims"] != len(bound | unresolved)
+        or total["cves"] != len(cves)
+        or not len(advisories) <= total["advisories"] <= len(advisories) + len(unresolved)
+    ):
+        raise ValueError("Model coverage union counts differ")

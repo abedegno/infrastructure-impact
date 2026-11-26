@@ -1,0 +1,598 @@
+{
+  "schema_version": 1,
+  "status": "disabled-local-prototype",
+  "reader_commit": "4ff6327",
+  "native_writer_commit": "707694d",
+  "publication": {
+    "id": "e05fc9e8e5ce404190173f4c3c037498",
+    "advisory_schema_version": 2
+  },
+  "generated_at": "2026-11-26T08:22:06.194317+00:00",
+  "baseline_commit": "26ccaef234bfe07d3cf5efd47d0cfe2b94616385",
+  "method": "Matched sequential fresh Node processes, cached public parts, same five contexts; one same-selection repeat. Exports outside timed phases. Four distinct JSON+analysisCSV+upgradeCSV comparisons, plus identical warm JSON. CSV hashes reused only after byte-identical JSON. Not browser or WAN measurements.",
+  "baseline": {
+    "mode": "baseline",
+    "kind": "matched_sequential_fresh_node_process_cached_public_parts",
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "asset_sha256": {
+      "lossless-json.js": "b788aa834669b3a133035b2c5c9900c672e8844a24176ddf4831850eb5283a1a",
+      "kev.js": "1c315ece79bf63d02d2c78e645f44264a7fbfb444133e22c596c8a5b7807ff75",
+      "switching-contracts.js": "5557d36887f130687945b044570f09bef4dc3b0340a0cc45d740eb4bb145d21b",
+      "switching.js": "f801855a1a19cf629a25780ab2086ab2ed6f590ee2ae9e6668b8eabeae34518d",
+      "customer-comparison.js": "6e02335d76400c36077adcc29c1e6e21271837c3a73277cc3f124ab0aa8e773b",
+      "switching-analysis.js": "7670ff6612bb33dbfc121388f3988743dbb36cbff35b3ddc42c826f20d5c7012",
+      "publication-v2.js": "64a2efec28e644d84d3f3939556acbcee7f0948575f3463f5419179d39a73867"
+    },
+    "contexts_sha256": "9e1e5eb5b4e0b18b6164dfa51da3fb2a2cc49d9ee386aa2b6414ea1bcb40286f",
+    "node": "v22.23.1",
+    "platform": "darwin",
+    "requests": 192,
+    "received_bytes": 35301697,
+    "phases": {
+      "open": {
+        "seconds": 0.024990958000000008,
+        "cpu_microseconds": {
+          "user": 50444,
+          "system": 2228
+        },
+        "requests": 0,
+        "received_bytes": 0,
+        "rss_bytes": 75776000,
+        "peak_resident_bytes": 77250560
+      },
+      "cisco-2025": {
+        "seconds": 70.495912083,
+        "cpu_microseconds": {
+          "user": 68319398,
+          "system": 1908903
+        },
+        "requests": 192,
+        "received_bytes": 35301697,
+        "rss_bytes": 1046740992,
+        "peak_resident_bytes": 1514487808
+      },
+      "cisco-2025-warm": {
+        "seconds": 10.707686,
+        "cpu_microseconds": {
+          "user": 11061162,
+          "system": 175300
+        },
+        "requests": 192,
+        "received_bytes": 35301697,
+        "rss_bytes": 1436811264,
+        "peak_resident_bytes": 1888550912
+      },
+      "aruba-all": {
+        "seconds": 2.104816584,
+        "cpu_microseconds": {
+          "user": 2187130,
+          "system": 16746
+        },
+        "requests": 192,
+        "received_bytes": 35301697,
+        "rss_bytes": 1940209664,
+        "peak_resident_bytes": 2112176128
+      },
+      "arista-all": {
+        "seconds": 1.8758737080000136,
+        "cpu_microseconds": {
+          "user": 1917637,
+          "system": 12876
+        },
+        "requests": 192,
+        "received_bytes": 35301697,
+        "rss_bytes": 1970208768,
+        "peak_resident_bytes": 2112176128
+      },
+      "all-all": {
+        "seconds": 14.944751665999997,
+        "cpu_microseconds": {
+          "user": 15170360,
+          "system": 329199
+        },
+        "requests": 192,
+        "received_bytes": 35301697,
+        "rss_bytes": 1610203136,
+        "peak_resident_bytes": 2512289792
+      }
+    },
+    "outputs": {
+      "cisco-2025": {
+        "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+        "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+        "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+        "rows": 342
+      },
+      "cisco-2025-warm": {
+        "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+        "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+        "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+        "rows": 342,
+        "reused_csv_after_identical_json": true
+      },
+      "aruba-all": {
+        "selected_sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+        "analysis_csv_sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+        "upgrades_csv_sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+        "rows": 468
+      },
+      "arista-all": {
+        "selected_sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+        "analysis_csv_sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+        "upgrades_csv_sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+        "rows": 720
+      },
+      "all-all": {
+        "selected_sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+        "analysis_csv_sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+        "upgrades_csv_sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+        "rows": 3240
+      }
+    },
+    "generated_at": "2026-11-26T08:22:06.194317+00:00",
+    "catalog_sha256": "c4079f97530d479fb365cc08694ce2c231878838ac29d9846d4dea60b87e2a59",
+    "catalog_analysis_roots": ["switching-analysis.json"],
+    "peak_resident_bytes": 2675703808
+  },
+  "precomputed": {
+    "mode": "precomputed",
+    "kind": "matched_sequential_fresh_node_process_cached_public_parts",
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "asset_sha256": {
+      "lossless-json.js": "b788aa834669b3a133035b2c5c9900c672e8844a24176ddf4831850eb5283a1a",
+      "kev.js": "d427e37c3f34be606fe481f19f51329133948b41c58eb1ba4d4d72b2cee18674",
+      "switching-contracts.js": "e5171266b7bd52e543f7f1e787eb054ddb22b954dae3307c9388dd1c3adbf764",
+      "switching.js": "f801855a1a19cf629a25780ab2086ab2ed6f590ee2ae9e6668b8eabeae34518d",
+      "customer-comparison.js": "6c0398248699f760aa456219fa11ca7bd4dc8148f5d53b8c001f3c1066939389",
+      "switching-analysis.js": "942968ff3a9a9e715ceec9d514bc470323a71b9f8b86df011fa36732c2582411",
+      "analysis-precomputed.js": "36e59f105159b94bc644b04a4732881e7faa5413714d44f01693e5ba204fe231",
+      "publication-v2.js": "0816f544be5e53f3100fcfe1eb4a169f473433f4f7cb31ae26ca8125b613c19d"
+    },
+    "contexts_sha256": "9e1e5eb5b4e0b18b6164dfa51da3fb2a2cc49d9ee386aa2b6414ea1bcb40286f",
+    "node": "v22.23.1",
+    "platform": "darwin",
+    "requests": 58,
+    "received_bytes": 26328077,
+    "phases": {
+      "open": {
+        "seconds": 0.019371667000000002,
+        "cpu_microseconds": {
+          "user": 42292,
+          "system": 922
+        },
+        "requests": 0,
+        "received_bytes": 0,
+        "rss_bytes": 74006528,
+        "peak_resident_bytes": 75169792
+      },
+      "cisco-2025": {
+        "seconds": 9.270213041,
+        "cpu_microseconds": {
+          "user": 9550894,
+          "system": 245038
+        },
+        "requests": 26,
+        "received_bytes": 11422166,
+        "rss_bytes": 1127432192,
+        "peak_resident_bytes": 1129234432
+      },
+      "cisco-2025-warm": {
+        "seconds": 0.2699195839999993,
+        "cpu_microseconds": {
+          "user": 322876,
+          "system": 16537
+        },
+        "requests": 26,
+        "received_bytes": 11422166,
+        "rss_bytes": 1473691648,
+        "peak_resident_bytes": 2009743360
+      },
+      "aruba-all": {
+        "seconds": 0.3420183339999967,
+        "cpu_microseconds": {
+          "user": 392860,
+          "system": 10561
+        },
+        "requests": 27,
+        "received_bytes": 11734717,
+        "rss_bytes": 1757757440,
+        "peak_resident_bytes": 2017050624
+      },
+      "arista-all": {
+        "seconds": 0.14467304200000217,
+        "cpu_microseconds": {
+          "user": 180553,
+          "system": 2950
+        },
+        "requests": 28,
+        "received_bytes": 11891406,
+        "rss_bytes": 1785937920,
+        "peak_resident_bytes": 2017050624
+      },
+      "all-all": {
+        "seconds": 10.842716415999996,
+        "cpu_microseconds": {
+          "user": 11130426,
+          "system": 186041
+        },
+        "requests": 58,
+        "received_bytes": 26328077,
+        "rss_bytes": 1724252160,
+        "peak_resident_bytes": 2017050624
+      }
+    },
+    "outputs": {
+      "cisco-2025": {
+        "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+        "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+        "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+        "rows": 342
+      },
+      "cisco-2025-warm": {
+        "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+        "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+        "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+        "rows": 342,
+        "reused_csv_after_identical_json": true
+      },
+      "aruba-all": {
+        "selected_sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+        "analysis_csv_sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+        "upgrades_csv_sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+        "rows": 468
+      },
+      "arista-all": {
+        "selected_sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+        "analysis_csv_sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+        "upgrades_csv_sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+        "rows": 720
+      },
+      "all-all": {
+        "selected_sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+        "analysis_csv_sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+        "upgrades_csv_sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+        "rows": 3240
+      }
+    },
+    "generated_at": "2026-11-26T08:22:06.194317+00:00",
+    "catalog_sha256": "a6708e7f74cdc870dd659c8c2f4ba8acbf2230df2f3f0d6110a2adf1c361e59c",
+    "catalog_analysis_roots": ["switching-analysis-selected.json", "switching-analysis.json"],
+    "peak_resident_bytes": 2733113344
+  },
+  "exports_identical": true,
+  "native_preview": {
+    "publication": {
+      "id": "e05fc9e8e5ce404190173f4c3c037498",
+      "advisory_schema_version": 2
+    },
+    "generated_at": "2026-11-26T08:22:06.194317+00:00",
+    "source": "authenticated retained public projection only",
+    "pilot_options": [
+      {
+        "vendor": "cisco",
+        "window": "2025"
+      },
+      {
+        "vendor": "aruba",
+        "window": "all"
+      },
+      {
+        "vendor": "arista",
+        "window": "all"
+      },
+      {
+        "vendor": null,
+        "window": "all"
+      }
+    ],
+    "source_authority_gate": "passed",
+    "independent_verification": "passed",
+    "legacy_root_descriptors_equal": true,
+    "legacy_root_count": 1593,
+    "file_count": 12620,
+    "regular_file_bytes": 913449606,
+    "site_guard_bytes": 1000000000,
+    "site_headroom_bytes": 86550394,
+    "current_archive": {
+      "unique_paths": 236,
+      "unique_bytes_within_site": 132491725,
+      "shared_members": 233,
+      "historical_generation_dirs_copied": 0,
+      "aggregate_hosted_history_capacity": "unverified; current accepted artifact extras not inventoried"
+    },
+    "timings_seconds": {
+      "read_snapshot": 1.3678352918941528,
+      "read_comparison": 4.286223666975275,
+      "read_analysis": 0.8252399999182671,
+      "source_authority_and_complete_writer": 403.46272725006565,
+      "independent_native_verification": 482.08259249990806
+    },
+    "peak_resident_bytes": 3514941440,
+    "activation": "not authorized",
+    "default_eight_view_capacity": "not certified by four-view pilot",
+    "final_assets_refreshed": true,
+    "final_asset_manifest_verified": true,
+    "final_selected_reader_replay": "four native JSONs exact"
+  },
+  "native_reader_replay": {
+    "reader_checks": {
+      "cisco-2025": {
+        "bytes": 94924707,
+        "sha256": "7a96491526096c620dae5030daea0cc51eca5e86ffd5bb52c534b34ff0912a1f",
+        "seconds": 7.885226416168734
+      },
+      "aruba-all": {
+        "bytes": 3571916,
+        "sha256": "edfc5f63e3d911217c8aa7b62a3e5028e383cbe895857262a992c576f5088a0a",
+        "seconds": 0.23625750001519918
+      },
+      "arista-all": {
+        "bytes": 2028217,
+        "sha256": "0d6be334d3371af908d56ee19de8a3773a2a9305ea4baced911e60ca23c3ae6a",
+        "seconds": 0.11583583289757371
+      },
+      "all-all": {
+        "bytes": 119678881,
+        "sha256": "7187ae7dba793fa8561ed781563443ab1a8a076ab4580c80afd420c95abcc61b",
+        "seconds": 9.561886708950624
+      }
+    },
+    "manifest_verified": true,
+    "source_dictionary_not_loaded": true,
+    "obsolete_assets_removed": 1,
+    "site_bytes": 913449606,
+    "headroom": 86550394
+  },
+  "earlier_feasibility": {
+    "baseline": {
+      "mode": "baseline",
+      "kind": "matched_sequential_fresh_node_process_cached_public_parts",
+      "publication": {
+        "id": "e05fc9e8e5ce404190173f4c3c037498",
+        "advisory_schema_version": 2
+      },
+      "node": "v22.23.1",
+      "platform": "darwin",
+      "requests": 192,
+      "received_bytes": 35301697,
+      "phases": {
+        "open": {
+          "seconds": 0.024983124999999988,
+          "cpu_microseconds": {
+            "user": 51702,
+            "system": 2992
+          },
+          "requests": 0,
+          "received_bytes": 0,
+          "rss_bytes": 78331904,
+          "peak_resident_bytes": 78331904
+        },
+        "cisco-2025": {
+          "seconds": 77.616169459,
+          "cpu_microseconds": {
+            "user": 71957448,
+            "system": 3519465
+          },
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 379928576,
+          "peak_resident_bytes": 1363230720
+        },
+        "cisco-2025-warm": {
+          "seconds": 19.62291658399999,
+          "cpu_microseconds": {
+            "user": 16532403,
+            "system": 1021492
+          },
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 306036736,
+          "peak_resident_bytes": 1480900608
+        },
+        "aruba-all": {
+          "seconds": 4.108580583000003,
+          "cpu_microseconds": {
+            "user": 3419732,
+            "system": 244968
+          },
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 206716928,
+          "peak_resident_bytes": 1480900608
+        },
+        "arista-all": {
+          "seconds": 3.7873575000000126,
+          "cpu_microseconds": {
+            "user": 3102877,
+            "system": 229514
+          },
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 236552192,
+          "peak_resident_bytes": 1480900608
+        },
+        "all-all": {
+          "seconds": 27.071525832999992,
+          "cpu_microseconds": {
+            "user": 21302831,
+            "system": 2137589
+          },
+          "requests": 192,
+          "received_bytes": 35301697,
+          "rss_bytes": 295878656,
+          "peak_resident_bytes": 1480900608
+        }
+      },
+      "outputs": {
+        "cisco-2025": {
+          "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+          "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+          "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+          "rows": 342
+        },
+        "cisco-2025-warm": {
+          "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+          "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+          "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+          "rows": 342,
+          "reused_csv_after_identical_json": true
+        },
+        "aruba-all": {
+          "selected_sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+          "analysis_csv_sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+          "upgrades_csv_sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+          "rows": 468
+        },
+        "arista-all": {
+          "selected_sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+          "analysis_csv_sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+          "upgrades_csv_sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+          "rows": 720
+        },
+        "all-all": {
+          "selected_sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+          "analysis_csv_sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+          "upgrades_csv_sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+          "rows": 3240
+        }
+      },
+      "generated_at": "2026-11-26T08:22:06.194317+00:00",
+      "catalog_sha256": "c4079f97530d479fb365cc08694ce2c231878838ac29d9846d4dea60b87e2a59",
+      "catalog_analysis_roots": ["switching-analysis.json"],
+      "peak_resident_bytes": 1480900608
+    },
+    "precomputed": {
+      "mode": "precomputed",
+      "kind": "matched_sequential_fresh_node_process_cached_public_parts",
+      "publication": {
+        "id": "e05fc9e8e5ce404190173f4c3c037498",
+        "advisory_schema_version": 2
+      },
+      "node": "v22.23.1",
+      "platform": "darwin",
+      "requests": 58,
+      "received_bytes": 26328077,
+      "phases": {
+        "open": {
+          "seconds": 0.02242133299999999,
+          "cpu_microseconds": {
+            "user": 45123,
+            "system": 1726
+          },
+          "requests": 0,
+          "received_bytes": 0,
+          "rss_bytes": 75415552,
+          "peak_resident_bytes": 76480512
+        },
+        "cisco-2025": {
+          "seconds": 9.574509707999999,
+          "cpu_microseconds": {
+            "user": 9901098,
+            "system": 288535
+          },
+          "requests": 26,
+          "received_bytes": 11422166,
+          "rss_bytes": 1101905920,
+          "peak_resident_bytes": 1111670784
+        },
+        "cisco-2025-warm": {
+          "seconds": 0.2871148329999996,
+          "cpu_microseconds": {
+            "user": 342217,
+            "system": 21883
+          },
+          "requests": 26,
+          "received_bytes": 11422166,
+          "rss_bytes": 1009303552,
+          "peak_resident_bytes": 1733394432
+        },
+        "aruba-all": {
+          "seconds": 0.34183845799999835,
+          "cpu_microseconds": {
+            "user": 371571,
+            "system": 23886
+          },
+          "requests": 27,
+          "received_bytes": 11734717,
+          "rss_bytes": 1589755904,
+          "peak_resident_bytes": 1769177088
+        },
+        "arista-all": {
+          "seconds": 0.12415799999999945,
+          "cpu_microseconds": {
+            "user": 158644,
+            "system": 3077
+          },
+          "requests": 28,
+          "received_bytes": 11891406,
+          "rss_bytes": 1611841536,
+          "peak_resident_bytes": 1769177088
+        },
+        "all-all": {
+          "seconds": 13.910194625,
+          "cpu_microseconds": {
+            "user": 13695954,
+            "system": 437868
+          },
+          "requests": 58,
+          "received_bytes": 26328077,
+          "rss_bytes": 1011793920,
+          "peak_resident_bytes": 1769177088
+        }
+      },
+      "outputs": {
+        "cisco-2025": {
+          "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+          "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+          "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+          "rows": 342
+        },
+        "cisco-2025-warm": {
+          "selected_sha256": "673b0812ff64cf46719fb5c20509a3d8b97b68fe9161a7ed3d6e5cf357fb460e",
+          "analysis_csv_sha256": "30fe57f417fb91189268429e7ef9819b2230a8d62265bf9f944a5cef4b41e396",
+          "upgrades_csv_sha256": "367f01d76097ba649876ca03bac431b7e911d420e56d99067df031b75209257a",
+          "rows": 342,
+          "reused_csv_after_identical_json": true
+        },
+        "aruba-all": {
+          "selected_sha256": "f6483af98d3e5eb18196bf647f47b00bc2bc2f37f64cf73fea6d5602c1fb9964",
+          "analysis_csv_sha256": "35da0b226e40532e2fecc52c197ff6678fabc45b8dce11ff8215766b345aee92",
+          "upgrades_csv_sha256": "3263f209858c4e58e14eefd88a00edccdb5defc553c8dd547874ca4ee967d607",
+          "rows": 468
+        },
+        "arista-all": {
+          "selected_sha256": "d100ecd4ed3064bf6f113b8af5d60f7b48063983b654c83c4dfc134bed34e31d",
+          "analysis_csv_sha256": "5291ce523965aecd37b6f9c49e3c2e88b8fce0f7ff0d3ebc02d759ddbd64ce0f",
+          "upgrades_csv_sha256": "25a7ce19e85f4cb9d4aacc0683ed79afccd94ade2960cce5f2ff815ae00ea5ea",
+          "rows": 720
+        },
+        "all-all": {
+          "selected_sha256": "70a1a5282c0848954feb8ba13f704583c06e7f69aae5c1c04e9bd2a5b4ed4f45",
+          "analysis_csv_sha256": "47f0e74b98c9c31da3ae79a2adfe0caa18366687d87fcf610d52562a35bd841d",
+          "upgrades_csv_sha256": "4547ddce4869cea0466d45e9adf3dfa897a9b4f7319add687f0dab6d805cf6f9",
+          "rows": 3240
+        }
+      },
+      "generated_at": "2026-11-26T08:22:06.194317+00:00",
+      "catalog_sha256": "d360541436ad27166812f1314c9ecf95b36d1c4de2378a15c2e70d04fb53a34f",
+      "catalog_analysis_roots": ["switching-analysis-selected.json", "switching-analysis.json"],
+      "peak_resident_bytes": 1923284992
+    },
+    "note": "Before review hardening; not the headline benchmark. Whole-process peak memory was higher in this pair too."
+  },
+  "limits": [
+    "No hosted activation or workflow changes.",
+    "Four pilot selections do not certify default eight-view capacity.",
+    "Hosted historical extra-file inventory unverified.",
+    "Peak memory includes export work, varies with GC; real-browser memory profiling remains required."
+  ],
+  "evidence_human_review": "pending",
+  "final_validation_commit": "53fe0637602fe4a70a27b10588bbbe4e669e1075",
+  "final_validation_note": "Acceptance tightened after recorded timing run; final refreshed asset manifest and all four native JSON reads verified. Timing receipts remain the original measured code, 4ff6327."
+}

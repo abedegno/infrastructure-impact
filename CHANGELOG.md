@@ -2,6 +2,11 @@
 
 ## Unreleased — release reliability
 
+- Run eligible precomputed analysis and exact byte downloads in an immutable dedicated worker, with independent caller cancellation, bounded lifecycle and retry. Expand CSV rows lazily and refresh the optional analysis panel without rebuilding the whole comparison. Record the full eight-view/native and accepted-artifact capacity proof plus browser responsiveness, wall-time and memory caveats; hosting stays disabled.
+
+- Add a disabled precomputed-analysis prototype for common vendor/year selections, with independent bounded gzip parts, exact native/browser export parity and custom-selection fallback. Keep the original compiled root, native source-authority checks and existing budgets.
+- Preserve exact large integer tokens in browser analysis fingerprints and CSV cells; ordinary integer and fractional representations are unchanged.
+
 - Add a generation-bound release-reliability coverage view and offline JSON/CSV export, with per-model date/provenance gaps and bounded official-source follow-up. No hosted source activation or inferred release dates.
 
 - Add a local release-reliability refresh CLI for original Cisco ROMMON and Arista software RSS captures, with immutable cache revisions, policy-gated Cisco checks and separate candidate and pending-review outputs.

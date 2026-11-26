@@ -1051,6 +1051,19 @@
     return `<section class="reliability-coverage"><h4>Coverage gaps by model</h4><p>Inventory counts describe retained observations across the train, including undated versions. They are not annual release totals or completeness claims. Zero inventory means no qualifying observation, not zero releases. Unknown dates cannot be assigned to a year. Study-model scope is never borrowed from another platform.</p><div class="table-wrap"><table><thead><tr><th>Train / model</th><th>Observed version identities</th><th>Dated original evidence</th><th>Research-only dates</th><th>Missing release dates</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>${details}<p><button id="reliability-coverage-json">Coverage JSON</button> <button id="reliability-coverage-csv">Coverage CSV</button></p></section>`;
   }
 
+  function selectionDetails(report) {
+    return J.stringify(
+      {
+        upgrade_selection: report.upgrade_selection,
+        method: report.method,
+        limitations: report.limitations,
+        review_packet: report.review_packet,
+        validation: report.validation,
+      },
+      null,
+      2,
+    );
+  }
   function render(report, { loading = false, error = '' } = {}) {
     const period = report
       ? `${report.config.start.slice(0, 4)}–${report.config.end.slice(0, 4)}`
@@ -1124,10 +1137,11 @@
       .join('');
     return (
       lead +
-      `<p>Dataset observed: ${esc(report.dataset_observed_at)}. Generated: ${esc(report.generated_at)}.</p><p>Numbers below are observed counts. Research-only observations and unresolved model scope are labelled beside each count; production eligibility, denominators and reasons are in each train’s full metrics. Unknown evidence remains unknown. Research excerpts are research-only. Rates require complete dated release denominators, signal coverage and prior-release history; no cross-vendor rate is inferred.</p>${renderCoverage(report)}${cards}<p><button id="reliability-json">Release reliability JSON</button> <button id="reliability-csv">Release reliability CSV</button> <button id="reliability-review">Pending review packet JSON</button></p><details><summary>Publisher sources and capture dates</summary>${report.catalogue.sources.map((s) => sourceLinks(report, [{ source_id: s.source_id, locator: s.source_id, quote: '' }], s.vendor)).join('')}</details><details><summary>Selection, methodology, coverage and pending review</summary><pre>${esc(J.stringify({ upgrade_selection: report.upgrade_selection, method: report.method, limitations: report.limitations, review_packet: report.review_packet, validation: report.validation }, null, 2))}</pre></details></section>`
+      `<p>Dataset observed: ${esc(report.dataset_observed_at)}. Generated: ${esc(report.generated_at)}.</p><p>Numbers below are observed counts. Research-only observations and unresolved model scope are labelled beside each count; production eligibility, denominators and reasons are in each train’s full metrics. Unknown evidence remains unknown. Research excerpts are research-only. Rates require complete dated release denominators, signal coverage and prior-release history; no cross-vendor rate is inferred.</p>${renderCoverage(report)}${cards}<p><button id="reliability-json">Release reliability JSON</button> <button id="reliability-csv">Release reliability CSV</button> <button id="reliability-review">Pending review packet JSON</button></p><details><summary>Publisher sources and capture dates</summary>${report.catalogue.sources.map((s) => sourceLinks(report, [{ source_id: s.source_id, locator: s.source_id, quote: '' }], s.vendor)).join('')}</details><details><summary>Selection, methodology, coverage and pending review</summary><pre id="reliability-selection-details">${esc(selectionDetails(report))}</pre></details></section>`
     );
   }
   window.InfrastructureReleaseReliability = {
+    selectionDetails,
     validate,
     withUpgrades,
     csvExport,

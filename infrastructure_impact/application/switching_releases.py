@@ -488,6 +488,10 @@ def _build(
 
 def validate_report(report, *, publication=contracts._UNSET, generated_at=contracts._UNSET):
     contracts._validate(report, "switching-release-history-v1.json")
+    return _check_report(report, publication=publication, generated_at=generated_at)
+
+
+def _check_report(report, *, publication=contracts._UNSET, generated_at=contracts._UNSET):
     contracts._publication(report, publication, generated_at)
     _validate_observation_end(report["generated_at"], report["observation_end"])
     if (

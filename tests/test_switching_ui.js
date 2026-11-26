@@ -313,7 +313,7 @@ vm.runInContext(
   try {
     // Later mutable app state must not change this already-rendered export owner.
     vm.runInContext('analysisReport=null;', context);
-    node('#analysis-json').handlers.get('click')();
+    await node('#analysis-json').handlers.get('click')();
     assert(downloadedBlob, 'compact-fitting accepted analysis reaches the download');
     assert.strictEqual(await downloadedBlob.text(), compact);
     assert.deepStrictEqual(JSON.parse(await downloadedBlob.text()), analysisFixture);
@@ -322,6 +322,133 @@ vm.runInContext(
       'switching-analysis-' + analysisFixture.publication?.id + '.json',
     );
     assert.strictEqual(vm.runInContext('analysisError', context), '');
+    const owner = vm.runInContext('switchingAcceptedDelivery', context),
+      loader = await owner.promise,
+      expectedStudy = vm.runInContext('switchingReport', context);
+    let finish,
+      called = 0;
+    loader.switchingAnalysisExport = (study, format) => {
+      assert.strictEqual(study, expectedStudy);
+      assert.strictEqual(format, 'json');
+      called++;
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    };
+    downloadedBlob = null;
+    const click = node('#analysis-json').handlers.get('click')();
+    await tick();
+    assert.equal(called, 1, 'accepted loader owns asynchronous export');
+    assert.equal(downloadedBlob, null);
+    finish(new TextEncoder().encode('accepted bytes'));
+    await click;
+    assert.equal(await downloadedBlob.text(), 'accepted bytes');
+    loader.switchingAnalysisExport = () => {
+      throw Error('fixture export fault');
+    };
+    vm.runInContext('switchingLoading=true;', context);
+    downloadedBlob = null;
+    await node('#analysis-json').handlers.get('click')();
+    assert.equal(downloadedBlob, null);
+    assert.match(node('#analysis-alert').textContent, /fixture export fault/);
+    vm.runInContext('switchingLoading=false;', context);
+    context.exportStudy = expectedStudy;
+    context.exportDelivery = owner;
+    for (const change of ['study', 'delivery']) {
+      vm.runInContext(
+        'switchingReport=exportStudy; switchingAcceptedDelivery=exportDelivery; analysisStudy=exportStudy; analysisReport=analysisFixture; analysisError="";',
+        context,
+      );
+      paintAccepted();
+      const pendingExports = [];
+      loader.switchingAnalysisExport = () =>
+        new Promise((resolve, reject) => pendingExports.push({ resolve, reject }));
+      const exportClick = node('#analysis-json').handlers.get('click'),
+        lateFailure = exportClick(),
+        lateSuccess = exportClick();
+      await tick();
+      vm.runInContext(
+        change === 'study'
+          ? 'switchingReport={...exportStudy}; analysisStudy=switchingReport;'
+          : 'switchingAcceptedDelivery={...exportDelivery};',
+        context,
+      );
+      paintAccepted();
+      const panel = node('#analysis-panel'),
+        otherMarkup = panel.innerHTML,
+        otherAlert = node('#analysis-alert').textContent;
+      assert.doesNotMatch(
+        otherAlert,
+        /fixture export fault/,
+        'export errors belong to their panel',
+      );
+      let refreshes = 0;
+      context.countRefresh = () => refreshes++;
+      vm.runInContext('refreshAnalysisPanel=countRefresh;', context);
+      downloadedBlob = null;
+      pendingExports[0].reject(Error('late failure from old owner'));
+      await lateFailure;
+      assert.equal(refreshes, 0, 'stale rejection cannot repaint the new ' + change);
+      assert.equal(vm.runInContext('analysisError', context), '');
+      assert.equal(panel.innerHTML, otherMarkup);
+      assert.equal(node('#analysis-alert').textContent, otherAlert);
+      assert.equal(downloadedBlob, null);
+      pendingExports[1].resolve(new TextEncoder().encode('old owner download'));
+      await lateSuccess;
+      assert.equal(await downloadedBlob.text(), 'old owner download');
+    }
+    vm.runInContext(
+      'switchingReport=exportStudy; switchingAcceptedDelivery=exportDelivery;',
+      context,
+    );
+    vm.runInContext('analysisStudy=exportStudy; analysisReport=analysisFixture;', context);
+    paintAccepted();
+    for (const order of [
+      ['export', 'refresh'],
+      ['refresh', 'export'],
+    ]) {
+      const failures = {};
+      loader.switchingAnalysisExport = () =>
+        new Promise((_, reject) => {
+          failures.export = reject;
+        });
+      loader.switchingAnalysis = () =>
+        new Promise((_, reject) => {
+          failures.refresh = reject;
+        });
+      const panelMarkup = node('#analysis-panel').innerHTML;
+      const actions = {
+        export: node('#analysis-json').handlers.get('click')(),
+        refresh: node('#analysis-load').handlers.get('click')(),
+      };
+      await tick();
+      for (const action of order) {
+        failures[action](Error('overlapping ' + action + ' fault'));
+        await actions[action];
+        if (action === 'export' && order[0] === 'export') {
+          assert.match(
+            node('#analysis-alert').textContent,
+            /Analysis export rejected: overlapping export fault/,
+            'export rejection is visible while the same panel is still refreshing',
+          );
+          assert.equal(node('#analysis-load').disabled, true, 'the refresh is still pending');
+          assert.equal(
+            node('#analysis-panel').innerHTML,
+            panelMarkup,
+            'analysis panel stays mounted',
+          );
+        }
+      }
+      const alert = node('#analysis-alert').textContent;
+      assert(
+        alert.includes('Analysis export rejected: overlapping export fault'),
+        'same-owner export failure visible',
+      );
+      assert(
+        alert.includes('Analysis selection rejected: overlapping refresh fault'),
+        'same-owner refresh failure visible',
+      );
+    }
   } finally {
     serializer.stringifyBounded = bounded;
     context.URL = originalURL;

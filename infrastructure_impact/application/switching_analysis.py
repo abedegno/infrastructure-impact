@@ -20,25 +20,37 @@ _SCHEMA = json.loads((PACKAGE / "schemas/switching-analysis-v1.json").read_text(
 _VALIDATOR = Draft202012Validator(_SCHEMA)
 
 
-@lru_cache(maxsize=len(_SCHEMA["$defs"]))
-def _compiled_shape(definition):
-    """Existing project engine/pattern semantics; formats were never enabled here."""
+def _component_formats():
+    return contracts._validators()["switching-release-history-v1.json"].format_checker
+
+
+@lru_cache(maxsize=len(_SCHEMA["$defs"]) + 1)
+def _compiled_shape(definition, check_formats=False):
+    """Use the component validators' format semantics at selected delivery acceptance."""
     import jsonschema_rs
 
+    checker = _component_formats() if check_formats else None
     return jsonschema_rs.Draft202012Validator(
         {"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]},
-        validate_formats=False,
+        formats={
+            name: (lambda value, fmt=name: checker.conforms(value, fmt))
+            for name in checker.checkers
+        }
+        if checker is not None
+        else {},
+        validate_formats=check_formats,
         keywords={"pattern": contracts._PythonPattern},
         offline=True,
     )
 
 
-def _validate_shape(value, definition):
-    if _compiled_shape(definition).is_valid(value):
+def _validate_shape(value, definition, *, check_formats=False):
+    if _compiled_shape(definition, check_formats).is_valid(value):
         return
     try:
         _VALIDATOR.evolve(
-            schema={"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]}
+            schema={"$ref": "#/$defs/" + definition, "$defs": _SCHEMA["$defs"]},
+            format_checker=_component_formats() if check_formats else None,
         ).validate(value)
     except ValidationError as error:
         raise ValueError("Invalid analysis DTO: " + error.message) from None
@@ -184,11 +196,12 @@ def validate_requirements(report, *, evidence=None):
     return _validate_requirements(report, evidence=evidence)
 
 
-def _validate_requirements(report, *, evidence=None, evidence_proof=None):
+def _validate_requirements(report, *, evidence=None, evidence_proof=None, shape_checked=False):
     if evidence_proof is not None and evidence is None:
         raise ValueError("Evidence capability requires actual evidence")
     codec.charge_value(report, codec.Budget(codec.MAX_SELECTED))
-    _validate_shape(report, "compact")
+    if not shape_checked:
+        _validate_shape(report, "compact")
     if report["observation_end"] != comparison.day(report["generated_at"]):
         raise ValueError("Compact observation bounds differ")
     if report["kev_context"]["evaluated_at"] != report["generated_at"]:
@@ -290,6 +303,12 @@ def _identity(report, study):
 
 
 def select_upgrades(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
+    if report is not None:
+        validate_requirements(report)
+    return _select_upgrades_validated(report, study_selection, max_bytes=max_bytes)
+
+
+def _select_upgrades_validated(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
     selection = study_selection["selection"]
     comparison._selection_evaluation(
         selection["requested_vendor"],
@@ -315,7 +334,6 @@ def select_upgrades(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
     if report is None:
         return dict(base, availability="unavailable", requirements=None, rows=[], row_evidence=None)
     _identity(report, study_selection)
-    validate_requirements(report)
     requested = selection["requested_cve_ids"]
     members = {
         cid
@@ -413,14 +431,41 @@ def _compact_rows(rows, members):
     return out, evidence
 
 
-def detailed_rows(report):
-    """Validate and expand only selected row evidence; native detailed CSV semantics."""
-    _validate_shape(report, "selected_upgrades")
+def _check_selected_upgrades(report, *, shape_checked=False, check_closure=False):
+    if not shape_checked:
+        _validate_shape(report, "selected_upgrades")
     if report["availability"] == "unavailable":
         return
-    validate_requirements(report["requirements"])
-    _identity(report["requirements"], report)
-    members = report["requirements"]["members"]
+    compact = report["requirements"]
+    _validate_requirements(compact, shape_checked=True)
+    _identity(compact, report)
+    members = compact["members"]
+    if check_closure:
+        references = {
+            member[key]
+            for member in members.values()
+            for key in ("source_ref", "severity_facets_ref")
+        } | {
+            row[key]
+            for row in compact["requirements"]
+            for key in ("proof_ref", "train_binding_ref")
+        }
+        inferred = {r["inference"]["group_id"] for r in compact["requirements"] if r["inference"]}
+        if references != set(compact["facts"]) or inferred != {
+            g["group_id"] for g in compact["inference_groups"]
+        }:
+            raise ValueError("Selected compact reference closure differs")
+        members_by_advisory = {}
+        for member in members.values():
+            key = member["vendor"], member["advisory_id"]
+            members_by_advisory.setdefault(key, set()).add(member["cve_id"])
+        if any(
+            not members_by_advisory.get((g["vendor"], g["advisory_id"]), set()).intersection(
+                g["cve_ids"]
+            )
+            for g in compact["source_groups"]
+        ):
+            raise ValueError("Selected compact source group ownership differs")
     ids = sorted(members)
     evidence = report["row_evidence"]
     if evidence["member_count"] != len(ids) or evidence["member_order_sha256"] != _hash(ids):
@@ -440,6 +485,11 @@ def detailed_rows(report):
             ):
                 raise ValueError("Selected row issue order/uniqueness mismatch")
     for row in report["rows"]:
+        if check_closure and (
+            row["supported_event_count"] != len(row["events"])
+            or (row["event_count"] is not None and row["event_count"] != len(row["events"]))
+        ):
+            raise ValueError("Selected upgrade event count differs")
         for kind in used:
             ref = row[kind + "_ref"]
             if ref not in evidence[kind]:
@@ -460,6 +510,15 @@ def detailed_rows(report):
             raise ValueError("Selected row evidence outside affected ownership")
     if any(used[kind] != set(evidence[kind]) for kind in used):
         raise ValueError("Selected row unused evidence reference")
+    return ids
+
+
+def detailed_rows(report):
+    """Validate and expand only selected row evidence; native detailed CSV semantics."""
+    ids = _check_selected_upgrades(report)
+    if ids is None:
+        return
+    evidence = report["row_evidence"]
     for row in report["rows"]:
         yield {
             (
@@ -994,13 +1053,7 @@ def _disclosure_selected(report, selection, selected):
         owned_source_pairs=len(pairs),
         metadata_advisories=len(out["advisory_facts"]),
         missing_counts=dict(sorted(Counter(m for p in pairs for m in p["missing"]).items())),
-        unsupported_advisory_types=sorted(
-            {
-                f["metadata"]["advisory_type"]
-                for f in out["advisory_facts"]
-                if f["metadata"]["advisory_type"] == "unknown"
-            }
-        ),
+        unsupported_advisory_types=disclosure._unsupported_advisory_types(out["advisory_facts"]),
     )
     disclosure.validate_report(out)
     return out
@@ -1052,6 +1105,12 @@ def _kev_selected(report, selection):
 
 
 def select_report(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
+    if report is not None:
+        validate_report(report)
+    return _select_report_validated(report, study_selection, max_bytes=max_bytes)
+
+
+def _select_report_validated(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
     from . import switching_model_coverage as models
 
     if report is None:
@@ -1068,7 +1127,6 @@ def select_report(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
             release_history=upgrades.releases.select_report(None, dict(study_selection, rows=[])),
         )
     _identity(report, study_selection)
-    validate_report(report)
     selection = study_selection["selection"]
     context = selection_context(
         report,
@@ -1088,7 +1146,9 @@ def select_report(report, study_selection, *, max_bytes=codec.MAX_SELECTED):
         generated_at=report["generated_at"],
         selection=copy.deepcopy(study_selection["selection"]),
         availability="available",
-        upgrades=select_upgrades(report["requirements"], study_selection, max_bytes=max_bytes),
+        upgrades=_select_upgrades_validated(
+            report["requirements"], study_selection, max_bytes=max_bytes
+        ),
         disclosure=_disclosure_selected(
             report["disclosure"], study_selection["selection"], selected
         ),
