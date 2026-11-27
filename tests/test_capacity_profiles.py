@@ -5,6 +5,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,7 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def synthetic_vault(path):
-    with connect(path) as db:
+    # SQLite's transaction context does not close the writer or checkpoint its WAL.
+    with closing(connect(path)) as db, db:
         db.execute(
             "INSERT INTO evidence(source_url,sha256,observed_at,raw,media_type) VALUES(?,?,?,?,?)",
             (
@@ -39,7 +41,7 @@ def synthetic_vault(path):
 
 def test_storage_profile_is_read_only_aggregate_and_counts_unicode_bytes(tmp_path):
     database = synthetic_vault(tmp_path / "source.sqlite3")
-    with sqlite3.connect(database) as db:
+    with closing(sqlite3.connect(database)) as db, db:
         db.execute(
             "INSERT INTO documents(evidence_id,vendor,product,document_type,source_url,text) VALUES(1,'test','test','test','https://private.example',?)",
             ("é🦅",),
