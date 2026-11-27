@@ -37,20 +37,36 @@ summed as incident counts.
 - **Explicit deferred/withdrawn releases:** literal publisher actions, assigned to
   the shipped-release cohort only when its release date is known. A separate
   deferral-notice count uses notice year. Notice year is not release year.
-- **Possible follow-ups within 30/90 days:** nearest observed same-base releases,
+- **Possible follow-ups within 30/90 days:** configured rebuild candidates and their nearest preceding regular release on the same maintenance line,
   using their stated software dates. The numerator is distinct follow-up versions
   published in that year, divided by releases published in that year when coverage
   supports it. This is the share published as follow-ups, not the probability a
-  release will later require a correction. Routine maintenance can qualify.
+  release will later require a correction. Regular AOS-CX maintenance builds do not qualify.
 - **Corrective follow-ups:** additionally require an explicit publisher statement
   connecting the versions and stating the reason. Timing never supplies a reason.
 - **Software-defect and deferral notices:** classified publisher documents counted
   by notice date; hardware and configuration remedies remain separate context.
 
-Same-base rules are configured: Cisco letter rebuilds share the numeric base;
-Aruba initially groups 10xx/11xx maintenance lines separately; EOS sub-releases
-must retain the same F/M suffix. These are candidate grouping rules, not claims
-that the vendor called a release an emergency correction.
+Each `config.trains` entry selects a `respin_rule`: `letter_suffix` for Cisco,
+`non_decadal_build` for Aruba, or `subrelease` for Arista. AOS-CX regular builds
+are divisible by ten; 1003 and 1005 are both anchored to 1000, not each other.
+An absent expected regular build (such as 1100 for 1101) is flagged explicitly;
+absence is not withdrawal evidence. Missing anchor/date inputs retain null
+intervals, stay outside 30/90-day counts and block complete signal coverage.
+EOS pairs retain the same F/M suffix. These are candidate rules, not claims
+that a vendor called a release an emergency correction. Historical reports
+without the optional rule retain their original derivation semantics.
+
+New catalogues have one record per vendor/train/literal version, with a union of
+stated platforms and evidence. Optional `observations` retain every original
+model/date/source statement. Dates or original-source eligibility never transfer
+between models. `release_identity: vendor_train_version` opts into strict
+uniqueness validation; older archived catalogues remain readable. The review
+packet includes the corrected candidates and unresolved anchors, all pending.
+
+The [27 November phase-one correction report](research/2026-11-27-reliability-corrections.md)
+records recalculated counts and exact version-gap findings. It is an unpublished
+preview; the approved stop point precedes staircase and release-date work.
 
 A rate needs a complete original, dated release denominator and explicit complete
 signal history; respin rates also require enough preceding history for the stated

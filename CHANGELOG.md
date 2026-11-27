@@ -2,6 +2,8 @@
 
 ## Unreleased — release reliability
 
+- Correct configurable rebuild detection: AOS-CX decadal maintenance builds are not respins; retain missing regular-base candidates with unknown intervals. Deduplicate release identities without transferring dates, scope or original-source eligibility between model observations. Add uniqueness checks, native/browser parity and a refreshed pending-review preview. Record the 17.12.7/17.12.7a and 10.13.1031/1161 source findings; staircase and publication work remain deferred.
+
 - Add a closed, disabled hosted delivery profile for the eight verified vendor/year analysis views, with explicit scientific opt-in, independent isolated verification and compatibility checks before private collection. Keep current hosted settings and activation unchanged.
 
 - Run eligible precomputed analysis and exact byte downloads in an immutable dedicated worker, with independent caller cancellation, bounded lifecycle and retry. Expand CSV rows lazily and refresh the optional analysis panel without rebuilding the whole comparison. Record the full eight-view/native and accepted-artifact capacity proof plus browser responsiveness, wall-time and memory caveats; hosting stays disabled.
