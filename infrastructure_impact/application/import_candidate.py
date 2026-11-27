@@ -959,7 +959,7 @@ def _worker(
             **delivery_options,
         )
         if publication_format == "v2":
-            from .publication_v2 import inspect_bundle, native_parity
+            from .publication_v2 import inspect_bundle, operator_native_parity
 
             reader = inspect_bundle(public, result["candidate"])
         else:
@@ -968,7 +968,7 @@ def _worker(
         # comparison. Every gate remains mandatory for an accepted candidate.
         _monitors(public, home, result["candidate"], base_path=_base_path(home))
         if publication_format == "v2":
-            native_parity(
+            operator_native_parity(
                 database,
                 public,
                 home,

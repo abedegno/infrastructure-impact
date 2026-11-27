@@ -1,6 +1,7 @@
 """Offline operator routes with authored state and installed public profiles."""
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -147,8 +148,9 @@ def test_native_parity_binds_selected_roots_and_preserves_raw_options(tmp_path, 
 
     monkeypatch.setattr(query, "state", query_state)
 
-    def parity(path, **kwargs):
-        publication_v2.native_parity(
+    def parity(path, *, operator=False, **kwargs):
+        verify = publication_v2.operator_native_parity if operator else publication_v2.native_parity
+        verify(
             "fixture",
             path,
             tmp_path,
@@ -161,7 +163,7 @@ def test_native_parity_binds_selected_roots_and_preserves_raw_options(tmp_path, 
         data, tmp_path / "plain", publication_format="v2", include_switching_analysis=True
     )
     with pytest.raises(ValueError, match="root"):
-        parity(plain, analysis_delivery_profile=DELIVERY)
+        parity(plain, operator=True, analysis_delivery_profile=DELIVERY)
     out = publication.publish(
         data,
         tmp_path / "named",
@@ -170,10 +172,10 @@ def test_native_parity_binds_selected_roots_and_preserves_raw_options(tmp_path, 
         analysis_delivery_profile=DELIVERY,
     )
     before = len(queries)
-    parity(out, analysis_delivery_profile=DELIVERY)
+    parity(out, operator=True, analysis_delivery_profile=DELIVERY)
     assert len(queries) == before + 1
     with pytest.raises(ValueError, match="root"):
-        parity(out)
+        parity(out, operator=True)
     with pytest.raises(ValueError, match="raw"):
         parity(out, analysis_delivery_profile=DELIVERY, analysis_precomputed_options=expected())
 
@@ -192,10 +194,11 @@ def test_native_parity_binds_selected_roots_and_preserves_raw_options(tmp_path, 
     )
     parity(raw, analysis_precomputed_options=options)
     with pytest.raises(ValueError, match="membership"):
-        parity(raw, analysis_delivery_profile=DELIVERY)
+        parity(raw, operator=True, analysis_delivery_profile=DELIVERY)
     defaults = tmp_path / "prototype-defaults"
     publication_v2.write_bundle(defaults, projected, analysis_precomputed_delivery=True)
     parity(defaults, analysis_precomputed_options=None)
+    parity(defaults)
 
 
 @pytest.mark.parametrize(
@@ -444,14 +447,18 @@ def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatc
     destination = tmp_path / "snapshot"
     publication._export_generation(old, destination)
     rename = Path.rename
+    link = os.link
 
-    def interrupted(source, target):
+    def interrupt_install(source, target, **kwargs):
         if (
             failure == "replace"
             and source.parent.name == "new"
             and target == destination / "manifest.json"
         ):
-            raise OSError("simulated failed rename")
+            raise OSError("simulated failed install")
+        return link(source, target, **kwargs)
+
+    def edit_during_backup(source, target):
         if (
             failure == "concurrent_edit"
             and source == destination / "index.html"
@@ -460,7 +467,8 @@ def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatc
             (destination / "owner.txt").write_text("keep")
         return rename(source, target)
 
-    monkeypatch.setattr(Path, "rename", interrupted)
+    monkeypatch.setattr(os, "link", interrupt_install)
+    monkeypatch.setattr(Path, "rename", edit_during_backup)
     with pytest.raises((ValueError, OSError), match="changed|simulated"):
         publication._export_generation(new, destination)
     assert (destination / "index.html").read_text() == old.name
@@ -469,25 +477,25 @@ def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatc
         assert (destination / "owner.txt").read_text() == "keep"
 
 
-@pytest.mark.parametrize("rename_fails", [False, True])
+@pytest.mark.parametrize("install_fails", [False, True])
 @pytest.mark.parametrize("note", ["operator-note.txt", "view.json"])
 def test_snapshot_refresh_preserves_edits_in_newly_installed_tree(
-    tmp_path, monkeypatch, rename_fails, note
+    tmp_path, monkeypatch, install_fails, note
 ):
     old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
     publication._export_generation(old, destination)
-    rename = Path.rename
+    link = os.link
     content = b"concurrent operator edit"
 
-    def edit_before_manifest(source, target):
+    def edit_before_manifest(source, target, **kwargs):
         if source.parent.name == "new" and target == destination / "manifest.json":
             (destination / "data" / note).write_bytes(content)
-            if rename_fails:
-                raise OSError("simulated manifest rename failure")
-        return rename(source, target)
+            if install_fails:
+                raise OSError("simulated manifest install failure")
+        return link(source, target, **kwargs)
 
-    monkeypatch.setattr(Path, "rename", edit_before_manifest)
+    monkeypatch.setattr(os, "link", edit_before_manifest)
     with pytest.raises(ValueError) as error:
         publication._export_generation(new, destination)
     assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
@@ -499,3 +507,120 @@ def test_snapshot_refresh_preserves_edits_in_newly_installed_tree(
         for parent in preserved[0].parents
         if parent.is_relative_to(destination) and parent != destination
     )
+
+
+@pytest.mark.parametrize("collision", ["install", "restore"])
+def test_snapshot_refresh_preserves_collision_at_file_installation(
+    tmp_path, monkeypatch, collision
+):
+    old, new = _fixture_generations(tmp_path)
+    destination = tmp_path / "snapshot"
+    publication._export_generation(old, destination)
+    target = destination / "manifest.json"
+    original = target.read_bytes()
+    content = b"concurrent operator file"
+
+    def intercept(operation):
+        def run(source, path, *args, **kwargs):
+            if Path(path) == target:
+                installing = Path(source).parent.name == "new"
+                restoring = Path(source).parent.name == "previous"
+                if installing and collision == "restore":
+                    raise OSError("simulated manifest install failure")
+                if (installing and collision == "install") or (
+                    restoring and collision == "restore"
+                ):
+                    with target.open("xb") as stream:
+                        stream.write(content)
+            return operation(source, path, *args, **kwargs)
+
+        return run
+
+    # Inject a real file at the filesystem operation, after any user-space check.
+    monkeypatch.setattr(os, "rename", intercept(os.rename))
+    monkeypatch.setattr(os, "link", intercept(os.link))
+    with pytest.raises(ValueError, match="retained at") as error:
+        publication._export_generation(new, destination)
+    assert target.read_bytes() == content
+    workspace = next(destination.glob(".snapshot-*"))
+    assert str(workspace) in str(error.value)
+    assert (workspace / "previous/manifest.json").read_bytes() == original
+    assert (destination / "data/view.json").read_text() == old.name
+
+
+@pytest.mark.parametrize("collision", ["install", "restore"])
+def test_snapshot_refresh_preserves_colliding_directory_inode(tmp_path, monkeypatch, collision):
+    old, new = _fixture_generations(tmp_path)
+    destination = tmp_path / "snapshot"
+    publication._export_generation(old, destination)
+    target = destination / "data"
+    mkdir, link = os.mkdir, os.link
+    restoring = False
+    collision_stat = None
+
+    def create_directory(path, *args, **kwargs):
+        nonlocal collision_stat
+        if path == target and collision_stat is None and restoring == (collision == "restore"):
+            mkdir(target)
+            collision_stat = target.stat()
+        return mkdir(path, *args, **kwargs)
+
+    def interrupt_install(source, path, **kwargs):
+        nonlocal restoring
+        if source.parent.name == "new" and path == destination / "manifest.json":
+            restoring = True
+            raise OSError("simulated manifest install failure")
+        return link(source, path, **kwargs)
+
+    monkeypatch.setattr(os, "mkdir", create_directory)
+    monkeypatch.setattr(os, "link", interrupt_install)
+    with pytest.raises(ValueError, match="retained at") as error:
+        publication._export_generation(new, destination)
+    assert os.path.samestat(collision_stat, target.stat())
+    assert list(target.iterdir()) == []
+    workspace = next(destination.glob(".snapshot-*"))
+    assert str(workspace) in str(error.value)
+    assert (workspace / "previous/data/view.json").read_text() == old.name
+    assert (destination / "index.html").read_text() == old.name
+
+
+def test_snapshot_refresh_retains_previous_export_on_filesystem_without_links(
+    tmp_path, monkeypatch
+):
+    import errno
+
+    old, new = _fixture_generations(tmp_path)
+    destination = tmp_path / "snapshot"
+    publication._export_generation(old, destination)
+
+    def unsupported_link(*args, **kwargs):
+        raise OSError(errno.ENOTSUP, "filesystem does not support hard links")
+
+    monkeypatch.setattr(os, "link", unsupported_link)
+    with pytest.raises(OSError, match="hard links"):
+        publication._export_generation(new, destination)
+    assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
+    assert (destination / "data/view.json").read_text() == old.name
+    assert not list(destination.glob(".snapshot-*"))
+
+
+def test_snapshot_refresh_rejects_edit_in_staging_before_install(tmp_path, monkeypatch):
+    old, new = _fixture_generations(tmp_path)
+    destination = tmp_path / "snapshot"
+    publication._export_generation(old, destination)
+    content = b"concurrent edit to staged file"
+    rename = Path.rename
+
+    def edit_after_inventory(source, target):
+        if source == destination / "manifest.json" and target.parent.name == "previous":
+            (target.parent.parent / "new/index.html").write_bytes(content)
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", edit_after_inventory)
+    with pytest.raises(ValueError, match="retained at") as error:
+        publication._export_generation(new, destination)
+    workspace = next(destination.glob(".snapshot-*"))
+    assert str(workspace) in str(error.value)
+    assert any(path.read_bytes() == content for path in workspace.rglob("index.html"))
+    assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
+    assert (destination / "index.html").read_text() == old.name

@@ -926,6 +926,17 @@ def publish(
     return final
 
 
+def _snapshot_stat(info):
+    return (
+        info.st_dev,
+        info.st_ino,
+        info.st_mode,
+        info.st_size,
+        info.st_mtime_ns,
+        info.st_ctime_ns,
+    )
+
+
 def _snapshot_entries(directory, *, exclude=None):
     if directory.is_symlink() or not directory.is_dir():
         raise ValueError("Unsafe snapshot destination")
@@ -940,14 +951,7 @@ def _snapshot_entries(directory, *, exclude=None):
                 pending.append(path)
             elif not stat.S_ISREG(info.st_mode):
                 raise ValueError("Unsafe entry in snapshot destination")
-            entries[path.relative_to(directory)] = (
-                info.st_dev,
-                info.st_ino,
-                info.st_mode,
-                info.st_size,
-                info.st_mtime_ns,
-                info.st_ctime_ns,
-            )
+            entries[path.relative_to(directory)] = _snapshot_stat(info)
     return entries
 
 
@@ -994,14 +998,55 @@ def _validate_previous_export(directory, generations):
     return entries
 
 
+class _ChangedSnapshotSource(ValueError):
+    """A private staged entry changed after inventory and needs recovery."""
+
+
+def _install_snapshot_entry(source, target, key, placed, *, parent_fd=None, expected=None):
+    """Transfer a private tree using only exclusive creations in the public directory."""
+    info = source.lstat()
+    if expected is not None and _snapshot_stat(info) != expected.get(key):
+        raise _ChangedSnapshotSource("Changed staged snapshot entry")
+    if stat.S_ISREG(info.st_mode):
+        os.link(source, target, dst_dir_fd=parent_fd, follow_symlinks=False)
+        placed[key] = _snapshot_stat(info)
+        if expected is not None:
+            source.unlink()  # Keep prior backups intact through the entire restoration.
+        # Linking and unlinking change ctime. Keep the source inode, mode and size
+        # in the expectation so a replacement at the public name fails inspection.
+        current = os.stat(target, dir_fd=parent_fd, follow_symlinks=False)
+        placed[key] = (*placed[key][:-1], current.st_ctime_ns)
+        return
+    if not stat.S_ISDIR(info.st_mode):
+        raise ValueError("Unsafe entry in snapshot installation")
+
+    os.mkdir(target, 0o700, dir_fd=parent_fd)
+    placed[key] = _snapshot_stat(info)
+    fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd)
+    try:
+        for child in source.iterdir():
+            _install_snapshot_entry(
+                child, child.name, key / child.name, placed, parent_fd=fd, expected=expected
+            )
+        os.fchmod(fd, stat.S_IMODE(info.st_mode))
+        os.utime(fd, ns=(info.st_atime_ns, info.st_mtime_ns))
+    finally:
+        placed[key] = _snapshot_stat(os.fstat(fd))
+        os.close(fd)
+
+
 def _refresh_export(generation, destination):
     entries = _validate_previous_export(destination, generation.parent)
     # The output may be a bind mount. Stage on that filesystem and keep its root inode.
     workspace = Path(tempfile.mkdtemp(prefix=".snapshot-", dir=destination))
     staged, previous = workspace / "new", workspace / "previous"
     keep_backup = False
-    installed = []
+    installed = {}
     try:
+        # Test the output filesystem before staging or retiring any accepted contents.
+        probe = workspace / "link-check"
+        probe.touch()
+        os.link(probe, workspace / "link-check-alias")
         shutil.copytree(generation, staged)
         staged_entries = _snapshot_entries(staged)
         previous.mkdir()
@@ -1018,48 +1063,56 @@ def _refresh_export(generation, destination):
             # Expose the new manifest only once its files are in place.
             for entry in sorted(staged.iterdir(), key=lambda path: path.name == "manifest.json"):
                 target = destination / entry.name
-                if os.path.lexists(target):
-                    raise ValueError("Snapshot destination changed during export")
-                entry.rename(target)
-                installed.append(target)
-                key = Path(target.name)
-                staged_entries[key] = (*staged_entries[key][:-1], target.lstat().st_ctime_ns)
+                _install_snapshot_entry(
+                    entry, target, Path(entry.name), installed, expected=staged_entries
+                )
             if (
-                _snapshot_entries(destination, exclude=workspace) != staged_entries
+                installed.keys() != staged_entries.keys()
+                or _snapshot_entries(destination, exclude=workspace) != installed
                 or _snapshot_entries(previous) != entries
             ):
                 raise ValueError("Snapshot destination changed during export")
-        except BaseException:
+        except BaseException as failure:
             # If restoration itself fails, preserve the backup for recovery.
             keep_backup = True
+            recovered = workspace / "recovered"
+            recovered.mkdir()
             edited = False
-            for target in reversed(installed):
-                key = Path(target.name)
+            installed_roots = [key for key in installed if len(key.parts) == 1]
+            for key in reversed(installed_roots):
+                target = destination / key
                 if not os.path.lexists(target):
                     edited = True
                     continue
-                if target.lstat().st_ctime_ns != staged_entries[key][-1]:
+                if target.lstat().st_ctime_ns != installed[key][-1]:
                     edited = True
-                recovered = staged / key
-                target.rename(recovered)
-                staged_entries[key] = (*staged_entries[key][:-1], recovered.lstat().st_ctime_ns)
+                target.rename(recovered / key)
+                installed[key] = (*installed[key][:-1], (recovered / key).lstat().st_ctime_ns)
             conflicts = False
             for backup in sorted(previous.iterdir(), key=lambda path: path.name == "manifest.json"):
                 target = destination / backup.name
-                if os.path.lexists(target):
+                try:
+                    _install_snapshot_entry(backup, target, Path(backup.name), {})
+                except FileExistsError:
                     conflicts = True
-                    continue
-                backup.rename(target)
+                except (OSError, ValueError) as exc:
+                    raise ValueError(
+                        "Snapshot restoration failed; backup retained at " + str(workspace)
+                    ) from exc
             if conflicts:
                 raise ValueError("Conflicting snapshot entry; backup retained at " + str(workspace))
             # Inspect after moving the new trees back. An uncoordinated writer
             # may have added or changed a descendant before the installation failed.
             try:
-                edited = edited or _snapshot_entries(staged) != staged_entries
+                edited = edited or _snapshot_entries(recovered) != installed
             except (ValueError, OSError):
                 edited = True
+            if isinstance(failure, _ChangedSnapshotSource):
+                raise ValueError(
+                    "Concurrent snapshot edits retained at " + str(workspace)
+                ) from failure
             if edited:
-                raise ValueError("Concurrent snapshot edits retained at " + str(staged))
+                raise ValueError("Concurrent snapshot edits retained at " + str(recovered))
             keep_backup = False
             raise
     finally:

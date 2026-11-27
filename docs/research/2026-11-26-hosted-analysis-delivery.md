@@ -47,9 +47,12 @@ previous cold-time regression and low-memory/browser limitations still apply.
 
 Existing nonempty exports must match a retained local generation. Use a fresh
 output directory if that prior generation is unavailable or the export was
-modified. Refresh needs temporary space on the output filesystem; forced
-termination can leave scratch data for recovery. Readers of the export directory
-may observe a transition between manifests. A concurrent edit fails the refresh,
+modified. The output filesystem must support hard links. Each link exposes a
+complete staged file at its final name and fails atomically if that name is
+occupied. Refresh tests this capability before retiring prior contents. Use a
+hard-link-capable output volume if the check fails. Refresh also needs temporary
+space on that filesystem. Forced termination can leave scratch data for recovery.
+Readers of the export directory may observe a transition between manifests. A concurrent edit fails the refresh,
 restores prior entries where safe, and preserves changed bytes at a reported
 recovery path. That directory needs operator attention before reuse. The
 subsequent install/rollback regression run passed 118 tests and 12 subtests;
@@ -74,12 +77,29 @@ against the tested tree before application. The older pin lacks this selector;
 do not set the delivery variable alone. The workflow checks helper capability
 before the private collector and rejects incompatible selections.
 
-After separate approval, apply the reviewed source pin and delivery variable,
-then run one ordinary collection/publication. Accept only a successful isolated
-verification, exactly eight advertised choices, intact existing roots and exports,
-and a site within the unchanged capacity limits. Check the deployed immutable
-worker and selected downloads against that newly published generation. A failed
-candidate must not replace the accepted publication.
+The isolated target-import worker has separate fixture evidence. On a staged
+synthetic database it checked the caller's selector against the request and
+context, rebuilt the publication and verified the selected views against fresh
+native queries. The earlier pinned public-data run supplies the browser and
+capacity measurements above. Each proof identifies its own input and generation.
+
+After separate approval, apply the reviewed source pin and delivery variable
+and run one ordinary collection/publication. Before upload, the helper requires
+an `ok` or `partial` collection outcome, completion of the v2 writer's schema
+and byte-budget checks (including the 1 GB site limit), a successful audit and
+verified encrypted recovery. The workflow requires successful preflight and
+the ordinary helper's recovery and publication readiness signals. A successful
+artifact upload for the current attempt and the recorded source commit allow
+the deploy job to proceed automatically.
+
+After deployment, check the workflow's public availability and freshness result.
+Record the served generation ID and catalog hash. For that generation, confirm
+the eight advertised choices, existing roots and exports. Verify the immutable
+worker against the artifact manifest. Compare the browser JSON and both CSV
+downloads with the native exports from that publication's selected reports.
+Record the generated site size from the matching artifact against the existing
+limit. These observations can identify a problem after Pages has switched.
+A failed observation calls for the separately approved rollback below.
 
 Rollback disables the delivery variable (remove it or set it blank), returning
 future publications to the ordinary path. Restoring the captured source pin is a

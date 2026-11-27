@@ -875,9 +875,32 @@ def inspect_bundle(directory, facts):
     return reader
 
 
-# Raw prototype callers can explicitly ask for observation-relative default views
-# with None. Hosted verification omits the raw option entirely.
+# Distinguish an explicit raw choice (including None) from a named profile's defaults.
 _NO_RAW_OPTIONS = object()
+
+
+def operator_native_parity(
+    database,
+    directory,
+    home,
+    reader,
+    *,
+    switching_analysis_profile: str = "",
+    analysis_delivery_profile: str = "",
+):
+    """Verify the exact selected-root mode requested by the operator."""
+    from .analysis_precomputed import ROOT
+
+    if analysis_delivery_profile == "" and ROOT in reader.catalog["roots"]:
+        raise ValueError("Unexpected selected analysis root for configured operator mode")
+    return native_parity(
+        database,
+        directory,
+        home,
+        reader,
+        switching_analysis_profile=switching_analysis_profile,
+        analysis_delivery_profile=analysis_delivery_profile,
+    )
 
 
 @phase("publication.native_parity")
@@ -898,7 +921,6 @@ def native_parity(
     from ..exports import csv_export, switching_csv
     from ..storage.repository import connect
     from .analysis_delivery_profiles import hosted_profiles
-    from .analysis_precomputed import ROOT as PRECOMPUTED_ROOT
     from .publication import public_projection
     from .query import state
     from .switching_comparison import VENDORS, _select_summaries, _selected_sources
@@ -912,8 +934,6 @@ def native_parity(
             raise ValueError("Named analysis delivery conflicts with raw precomputed options")
         analysis_precomputed_options = delivery.options()
     elif analysis_precomputed_options is _NO_RAW_OPTIONS:
-        if PRECOMPUTED_ROOT in reader.catalog["roots"]:
-            raise ValueError("Unexpected selected analysis root for configured operator mode")
         analysis_precomputed_options = None
     with closing(connect(database, read_only=True)) as db:
         native = state(db)
