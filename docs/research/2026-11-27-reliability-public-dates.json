@@ -1,0 +1,534 @@
+{
+  "schema_version": 1,
+  "kind": "release_reliability_public_date_research",
+  "recorded_at": "2026-11-27T12:12:37.807Z",
+  "review_status": "independent_human_review_pending",
+  "source_policy": "Primary public anonymous sources only. Research excerpts are not original documents. No login, challenge bypass, mirrors, known gated-route retries or origin requests after Cisco robots403.",
+  "cache_root_convention": "$PUBLIC_DATE_RESEARCH_CACHE = outside-Git data/reliability-phase2-20261127/public-date-research; $RELEASE_RELIABILITY_CACHE = existing outside-Git data/release-reliability-round4; $RELIABILITY_CORRECTIONS_CACHE = prior outside-Git data/reliability-corrections-20261127",
+  "result": {
+    "new_admissible_model_bound_binary_release_dates": 0,
+    "cisco_17_12_catalyst_9200_9300_release_dates": "unknown",
+    "arista_eos_4_33_720xp_720dp_release_dates": "unknown",
+    "cisco_17_9_6_withdrawal": "unverified",
+    "cisco_17_9_6_deferral": "unverified",
+    "cisco_17_9_6_action_date": null,
+    "complete_denominator": false,
+    "catalogue_changes": 0
+  },
+  "prior_packets": [
+    {
+      "path": "docs/research/2026-11-25-round4-coverage-cisco.json",
+      "packet_sha256": "83aebcdde26066ef3ab52e2fe66b0d4dce3a90d06082355acc358631cefd35ae",
+      "fingerprint_scope": "local evidence packet bytes; original-source hashes remain separately labelled in packet"
+    },
+    {
+      "path": "docs/research/2026-11-25-round4-coverage-arista.json",
+      "packet_sha256": "5186c8a25afc6ec24fffe56adee7959713335564c5ae38237ff9102636d112fe",
+      "fingerprint_scope": "local evidence packet bytes; original-source hashes remain separately labelled in packet"
+    },
+    {
+      "path": "docs/research/2026-11-27-reliability-version-gaps.json",
+      "packet_sha256": "7e559ac69b6ce2b6294f4e582332f0f3238a4a6c5e2e6e2b3235241d3d687744",
+      "fingerprint_scope": "local evidence packet bytes; original-source hashes remain separately labelled in packet"
+    }
+  ],
+  "existing_original_capture_checks": [
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/coverage-c9300-whatsnew.response",
+      "sha256": "8a37a88819a1b16a38d8e4911bef05b3db27aab3f85dd0c850384cd9fe176ab5",
+      "check": "rehashed_existing_original_capture_no_new_origin_request"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/coverage-c9200-whatsnew.response",
+      "sha256": "a30f478f577073da0b48b9e0f30e4494bfd4ebd085756c2745632c990174969c",
+      "check": "rehashed_existing_original_capture_no_new_origin_request"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/coverage-ISSU_Release_Lookup.xlsx",
+      "sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+      "check": "rehashed_existing_original_capture_no_new_origin_request"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-eos-lifecycle.jpg",
+      "sha256": "2f073645658b4caa092351ab8fee8a6141e9ec6acf6243a860fee57621e86f27",
+      "check": "rehashed_existing_original_capture_no_new_origin_request"
+    }
+  ],
+  "evidence": [
+    {
+      "source_id": "c9200-index-date-control",
+      "source_url": "https://www.cisco.com/c/en/us/support/switches/catalyst-9200-r-series-switches/series.html",
+      "locator": "Indexed primary excerpt / Overview and Release Notes",
+      "quote": "Series Release Date | 13-NOV-2018",
+      "date_kind": "product_series_release_date",
+      "date": "2018-11-13",
+      "scope": "Catalyst 9200 hardware series; not IOS XE software release",
+      "capture_kind": "web_search_excerpt",
+      "retrieved_at": "2026-11-27T12:11:50.141Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "original_sha256": null,
+      "excerpt_sha256": "e7021a9e8811b9f7dcae0cbf021c88fdeb641a2e35706df33748730e1d52080c",
+      "fingerprint_scope": "locally serialized extracted URL, locator, quotation and qualifiers; not original bytes",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/c9200-index-date-control.excerpt.json",
+      "tool_response_receipt": "search-03",
+      "production_admission": "not_eligible_research_only"
+    },
+    {
+      "source_id": "c9300-index-date-control",
+      "source_url": "https://www.cisco.com/c/en/us/support/switches/catalyst-9300-series-switches/series.html",
+      "locator": "Indexed primary excerpt / Overview",
+      "quote": "Series Release Date | 20-JUN-2017",
+      "date_kind": "product_series_release_date",
+      "date": "2017-06-20",
+      "scope": "Catalyst 9300 hardware series; not IOS XE software release",
+      "capture_kind": "web_search_excerpt",
+      "retrieved_at": "2026-11-27T12:11:40.429Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "original_sha256": null,
+      "excerpt_sha256": "dc20e17a4b6b00cf6ab1906ed06df92d044c6e48623700087b67cadba1600405",
+      "fingerprint_scope": "locally serialized extracted URL, locator, quotation and qualifiers; not original bytes",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/c9300-index-date-control.excerpt.json",
+      "tool_response_receipt": "search-01",
+      "production_admission": "not_eligible_research_only"
+    },
+    {
+      "source_id": "c9300-1796-release-caveat-reference",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/caveats.html",
+      "locator": "Indexed primary excerpt / release caveat heading",
+      "quote": "Resolved Caveats in Cisco IOS XE Cupertino 17.9.6",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "scope": "Catalyst 9300 release caveat reference; neither availability nor publisher action proven",
+      "capture_kind": "web_search_excerpt",
+      "retrieved_at": "2026-11-27T12:11:40.482Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "original_sha256": null,
+      "excerpt_sha256": "59dbc54f3d66bd7457b01fffeee5d2d2d7b7136ac43ed3d3145fc2a19bd9edda",
+      "fingerprint_scope": "locally serialized extracted URL, locator, quotation and qualifiers; not original bytes",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/c9300-1796-release-caveat-reference.excerpt.json",
+      "tool_response_receipt": "search-02",
+      "production_admission": "not_eligible_research_only"
+    },
+    {
+      "source_id": "command-removal-control",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9600/software/release/17-9/command_reference/b_179_9600_cr/system_management_commands.html",
+      "locator": "Indexed primary excerpt / ip http banner / Command History row 17.9.6",
+      "quote": "This command was removed.",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "scope": "Catalyst 9600 ip http banner command removal; not software withdrawal",
+      "capture_kind": "web_search_excerpt",
+      "retrieved_at": "2026-11-27T12:11:40.482Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "original_sha256": null,
+      "excerpt_sha256": "04cd4cc3d2b95443fee71c7363ad1fcf21fe1f4071330206a224b18a1c154054",
+      "fingerprint_scope": "locally serialized extracted URL, locator, quotation and qualifiers; not original bytes",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/command-removal-control.excerpt.json",
+      "tool_response_receipt": "search-02",
+      "production_admission": "not_eligible_research_only"
+    },
+    {
+      "source_id": "wlc-removal-control",
+      "source_url": "https://www.cisco.com/c/en/us/support/docs/wireless/catalyst-9800-series-wireless-controllers/214749-tac-recommended-ios-xe-builds-for-wirele.html",
+      "locator": "Indexed primary excerpt / 17.12.6 heading",
+      "quote": "17.12.6 has been removed for download from cisco.com due to an mDNS gateway regression",
+      "date_kind": "no_action_date_stated",
+      "date": null,
+      "scope": "Catalyst 9800 Wireless LAN Controllers and 17.12.6 only; cannot establish 17.9.6 action or switch applicability",
+      "capture_kind": "web_search_excerpt",
+      "retrieved_at": "2026-11-27T12:12:10.831Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "original_sha256": null,
+      "excerpt_sha256": "fd1c7aa4e0bd8f365416e4737b9e51e064651e6b793ac3ad6a177a6fac61c3a8",
+      "fingerprint_scope": "locally serialized extracted URL, locator, quotation and qualifiers; not original bytes",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/wlc-removal-control.excerpt.json",
+      "tool_response_receipt": "search-05",
+      "production_admission": "not_eligible_research_only"
+    },
+    {
+      "source_id": "arista-advisory-date-control",
+      "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/24712-security-advisory-0156",
+      "locator": "Indexed primary excerpt / heading Date and Affected Software",
+      "quote": "Date: September 9, 2026",
+      "date_kind": "advisory_notice_date",
+      "date": "2026-09-09",
+      "scope": "Security Advisory 0156; not any EOS binary release date",
+      "capture_kind": "web_search_excerpt",
+      "retrieved_at": "2026-11-27T12:12:00.515Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "original_sha256": null,
+      "excerpt_sha256": "f84834f13cc436a072ffb0f51e224b2f400dcca11c85141221ffec200a9ff714",
+      "fingerprint_scope": "locally serialized extracted URL, locator, quotation and qualifiers; not original bytes",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/arista-advisory-date-control.excerpt.json",
+      "tool_response_receipt": "search-04",
+      "production_admission": "not_eligible_research_only"
+    }
+  ],
+  "search_receipts": [
+    {
+      "receipt_id": "search-01",
+      "queries": [
+        "site:cisco.com \"17.9.6\" \"deferred\"",
+        "site:cisco.com \"17.9.6\" \"withdrawn\"",
+        "site:cisco.com \"Catalyst 9300\" \"17.12\" \"Release Date\"",
+        "site:arista.com \"4.33\" \"720XP\" \"release date\""
+      ],
+      "recorded_at": "2026-11-27T12:11:40.429Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/search-01.json",
+      "tool_response_sha256": "7e3c0348c778ea2526071b4fa9627657c44b44fa773030e9b9b88964ea11ef2e",
+      "fingerprint_scope": "entire locally serialized web-tool response, not original publisher bytes",
+      "original_sha256": null
+    },
+    {
+      "receipt_id": "search-02",
+      "queries": [
+        "site:www.cisco.com \"17.9.6\" \"deferred\"",
+        "site:www.cisco.com \"17.9.6\" \"withdrawn\"",
+        "site:www.cisco.com \"17.9.6\" \"removed\""
+      ],
+      "recorded_at": "2026-11-27T12:11:40.482Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/search-02.json",
+      "tool_response_sha256": "fdd7200ce6f10511cfa956d0e71951c5a2f77c714fa803ec26fd1b91fadf5db1",
+      "fingerprint_scope": "entire locally serialized web-tool response, not original publisher bytes",
+      "original_sha256": null
+    },
+    {
+      "receipt_id": "search-03",
+      "queries": [
+        "site:www.arista.com \"EOS\" \"4.33\" \"Release Date\" \"720\"",
+        "site:www.arista.com \"EOS-4.33\" \"Release Date\"",
+        "site:www.cisco.com \"Catalyst 9200\" \"17.12.4\" \"release date\""
+      ],
+      "recorded_at": "2026-11-27T12:11:50.141Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/search-03.json",
+      "tool_response_sha256": "e9af1e3e998d57e51c89becd42a54e48e3c41ed835cfaf513cebf4c2f8d59700",
+      "fingerprint_scope": "entire locally serialized web-tool response, not original publisher bytes",
+      "original_sha256": null
+    },
+    {
+      "receipt_id": "search-04",
+      "queries": [
+        "site:arista.com \"4.33\" \"720DP\"",
+        "site:arista.com \"4.33.0F\" \"release date\"",
+        "site:arista.com \"4.33.1F\" \"Release Date\""
+      ],
+      "recorded_at": "2026-11-27T12:12:00.515Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/search-04.json",
+      "tool_response_sha256": "e25b9777d0b16dfab105b1e5f2742593035a559f9a533929bd651cb40fad21c5",
+      "fingerprint_scope": "entire locally serialized web-tool response, not original publisher bytes",
+      "original_sha256": null
+    },
+    {
+      "receipt_id": "search-05",
+      "queries": [
+        "site:www.cisco.com \"17.9.6\" \"defer\"",
+        "site:www.cisco.com \"17.9.6\" \"download\" \"removed\"",
+        "site:www.cisco.com \"17.12.7a\" \"Release Date\" \"9200\""
+      ],
+      "recorded_at": "2026-11-27T12:12:10.831Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/search-05.json",
+      "tool_response_sha256": "e7031b8c1eb40ca68791d6a81db04dc73eee4b3f3a9eb9f25eef3bd6c9aa5d65",
+      "fingerprint_scope": "entire locally serialized web-tool response, not original publisher bytes",
+      "original_sha256": null
+    },
+    {
+      "receipt_id": "search-06",
+      "queries": [
+        "site:www.cisco.com \"17.9.6\" \"Catalyst\" \"deferred release\"",
+        "site:www.cisco.com \"17.9.6\" \"not available for download\"",
+        "site:www.arista.com \"4.33.0F\" \"720XP\" -site:www.arista.com/jp -site:www.arista.com/ko -site:www.arista.com/zh"
+      ],
+      "recorded_at": "2026-11-27T12:12:37.807Z",
+      "retrieval_time_basis": "local recording of returned web-search response; origin retrieval instant unknown",
+      "cache_path": "$PUBLIC_DATE_RESEARCH_CACHE/search-06.json",
+      "tool_response_sha256": "afe4d77be96f19dd9a11c27ce0d13aa441e42a25643bdca48105ec2fc3640f1a",
+      "fingerprint_scope": "entire locally serialized web-tool response, not original publisher bytes",
+      "original_sha256": null
+    }
+  ],
+  "access": {
+    "cisco_robots_receipt": "$RELIABILITY_CORRECTIONS_CACHE/cisco-robots.json",
+    "cisco_robots_status": 403,
+    "origin_requests_this_pass": 0,
+    "web_tool_detail_opens_this_pass": 0,
+    "web_tool_search_batches": 6,
+    "arista_previously_gated_routes_retried": false,
+    "alternate_cisco_hosts": "returned incidentally by search; excluded, never opened",
+    "search_result_transport_status": "not supplied; no invented HTTP status"
+  },
+  "interpretation": [
+    "No result establishes an explicit software release calendar date together with requested model applicability. Index-only associations do not qualify.",
+    "Reused Cisco c9500h workbook dates and ISSU supplemental dates remain restricted to their originally stated platforms. They do not transfer to C9200/C9300.",
+    "Reused Arista 10-Oct-2024 is a 4.33.x train initial date; 23-Oct-2026 is image revision date. Neither establishes a literal binary/model release date.",
+    "EOS RSS availability/announcement dates, TOI dates, certification approvals, document updates and advisory notice dates are excluded from software release dates.",
+    "The 17.9.6 action is unverified, not disproved. CLI command removal, version absence from an index and existence of a later rebuild cannot prove withdrawal/deferral.",
+    "Search results mix query outcomes; the serialized combined response is retained without claiming an empty per-query result is a complete archive search."
+  ],
+  "stop_reason": "Bounded repeat pass returned the same index/document dates, security/certification context, command-removal and unrelated WLC material. Existing detailed origin captures and known access gates were not retried. Unknown is retained; this is not proof no public source exists.",
+  "reused_scope_controls": {
+    "cisco_other_platform_date_facts": [
+      {
+        "id": "cisco-coverage-17-12-1",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.1",
+        "release_date": "2023-07-28",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A23:B23",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.1 2023-07-28",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "6d73a284c8e018cc9b21d9c9f97604a5894d9cdfa3e75d971f608fa81325f9be",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-1.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-2",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.2",
+        "release_date": "2023-11-15",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A22:B22",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.2 2023-11-15",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "458367e264fc3203f383ddf75003770a4c5422c936c492b736b6a59e1dcf2c74",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-2.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-3",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.3",
+        "release_date": "2024-03-21",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A21:B21",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.3 2024-03-21",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "204b8e36d6ac71765316fa471c9ee76a4e77c1411833b26154be62161011b214",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-3.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-4",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.4",
+        "release_date": "2024-07-24",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A20:B20",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.4 2024-07-24",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "85ff0e6226510268303e3adc3506170a55459098d086cd89dda6db1e87fa5612",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-4.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-5",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.5",
+        "release_date": "2025-03-18",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A19:B19",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.5 2025-03-18",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "595234730c0f05166a4d8ed091c90511309cb5aae57af87ea38e8a5350845893",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-5.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-6",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.6",
+        "release_date": "2025-09-01",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A18:B18",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.6 2025-09-01",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "9f46ca7a8b5472667ae99f569a21e053fe08e09163f28cb7a525c3ea2611a620",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-6.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-7a",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.7a",
+        "release_date": "2026-03-25",
+        "date_basis": "Explicit Release / Release Date cells in official public ISSU lookup workbook",
+        "source_model_scope": [
+          "Catalyst 9500 High Performance"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/ISSU_Release_Lookup.xlsx?v=20260806-2",
+        "source_locator": {
+          "worksheet": "c9500h",
+          "range": "A17:B17",
+          "date_column_header": "B1 = Release Date",
+          "version_column_header": "A1 = Release"
+        },
+        "quoted_statement": "17.12.7a 2026-03-25",
+        "retrieved_at": "2026-11-25T18:39:08.253935+00:00",
+        "capture_method": "anonymous_origin_http_xlsx_xml_extraction",
+        "original_sha256": "da05d5e64be3aa840aed87d796808e6c5c40f802aceb7c8ba2013f9d4aaf3b09",
+        "excerpt_sha256": "e94e7a54e24f3554271c46e7f533319a1b42958da9690e3a325afafd86dbce92",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-7a.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      },
+      {
+        "id": "cisco-coverage-17-12-8",
+        "vendor": "Cisco",
+        "train": "17.12",
+        "version": "17.12.8",
+        "release_date": "2026-08-05",
+        "date_basis": "Explicit supplemental release record and Release Date assignment in official public ISSU page inline JavaScript; static source inspection, not document update date",
+        "source_model_scope": [
+          "Selectable C9400/C9400X, C9500/C9500H/C9500X, C9600/C9600X platforms in inline selectedPlatformIds set"
+        ],
+        "study_model_scope": "unknown",
+        "binds_to_c9200_c9300": false,
+        "source_url": "https://www.cisco.com/c/dam/en/us/td/docs/Website/enterprise/issu-matrix/pages/cat9k/cat9k-issu-matrix.html",
+        "source_locator": "Inline script following xlsx.full.min.js: releaseDate variable, commonReleases 17.12.8 record, and supplemental map assigning Release Date",
+        "quoted_statement": "var releaseDate = \"2026-08-05\";\n{ release: \"17.12.8\", train: \"17.12\" }\n\"Release Date\": releaseDate",
+        "retrieved_at": "2026-11-25T18:36:43.854289+00:00",
+        "capture_method": "anonymous_origin_http_inline_javascript_static_inspection",
+        "original_sha256": "20ddb58532c0af5f51d460694930060fbb553403df4fb9ebb7aee287338f6731",
+        "excerpt_sha256": "ad66d4edc05c9c5c6d1c28105bb93e93f06f63cb55f9fb185aa679cac8a05388",
+        "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/cisco-coverage-17-12-8.excerpt.txt",
+        "review_status": "review_pending",
+        "date_format_normalization": {
+          "source_format": "ISO 8601 calendar-date string YYYY-MM-DD",
+          "operation": "Identity; no Excel serial conversion, timezone inference, or document-date substitution"
+        }
+      }
+    ],
+    "arista_lifecycle_matrix": {
+      "url": "https://www.arista.com/assets/images/article/EOS-Life-Cycle-Policy.jpg",
+      "locator": "EOS release support matrix: row Arista EOS 4.33.x; column Initial Release Date; image1220x610, rowy212\u2013263; footer Last Updated",
+      "short_quote": "Arista EOS 4.33.x | 10-Oct-2024; Last Updated: Oct. 23, 2026",
+      "quote_type": "visual_transcription_of_table_cells_and_footer",
+      "retrieved_at": "2026-11-25T18:37:15.106817+00:00",
+      "retrieved_at_precision": "instant",
+      "retrieval_time_basis": "local file modification time at successful bounded anonymous fetch completion",
+      "capture_method": "anonymous_origin_image",
+      "original_sha256": "2f073645658b4caa092351ab8fee8a6141e9ec6acf6243a860fee57621e86f27",
+      "excerpt_sha256": null,
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-eos-lifecycle.jpg"
+    }
+  },
+  "locator_normalization": "Transient tool result IDs are omitted from public locators; excerpt fingerprints refer to the cached original extracted records."
+}

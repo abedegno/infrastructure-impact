@@ -1,0 +1,3912 @@
+{
+  "schema_version": 1,
+  "publication": null,
+  "generated_at": "2026-11-27T11:29:31.134060+00:00",
+  "availability": "available",
+  "dataset_observed_at": "2026-11-25T16:48:07.849674+00:00",
+  "catalogue_sha256": "1cdd4ddb52f1fe0b4d9f9ab068d78445aa0255e28eb429322c11114cf2285428",
+  "catalogue": {
+    "schema_version": 1,
+    "generated_at": "2026-11-25T16:48:07.849674+00:00",
+    "review_status": "independent_human_review_pending",
+    "sources": [
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "172c93576c9dafd73afc3a339b96d98b4eb53d12e43aeed40155dcbb3a96fc4f",
+        "source_id": "cisco-db37a2d5618261d87b16ea9e"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "6c24f77180fd0b17bdfcdf61ec3340709b801744d2f74bdebf4aecdf890e7e3c",
+        "source_id": "cisco-f358dcffeb791b44773e352d"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "b4ffb807b95eb9251c8c3b20d9ec31f2576531d0aa92d7204aa852506bdc6eae",
+        "source_id": "cisco-936a1cac7cbfdc877cafd910"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "ebb5ce12bd17d311763457a048558dbd10bb25d2c86c835a8ba3a94300eee92b",
+        "source_id": "cisco-90382cb9f0b6c95c12496c9e"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "56a989e43b9c538d32c06553739c5f1dd3c815bcf98a166da29bd8623a200706",
+        "source_id": "cisco-bf73ec0fd87975d457fb57d0"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "733cd412b1ea53f8006e372deb81e73b191d9208d84bccc86cb4b1993782917d",
+        "source_id": "cisco-010f08f71ceee8eab60413e5"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "c86595430ac411d94af959947fd4540da9bcb664318d32753157f2bc2e49c5f5",
+        "source_id": "cisco-c53a168eb6152b87789b15b5"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:54.221989+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "150131e3572b6c450693ce20164b27b7abacde0b1bc0ed1409e5c5fd48cfc31e",
+        "excerpt_sha256": "196536f2e9812fee9a770b01961fcb1979fcb0b6f7abeaf9129c3a750420fd3e",
+        "source_id": "cisco-a1f06c26952a3f4835d48be5"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "172c93576c9dafd73afc3a339b96d98b4eb53d12e43aeed40155dcbb3a96fc4f",
+        "source_id": "cisco-6301c9eaf82fb91a7ccc10b8"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "6c24f77180fd0b17bdfcdf61ec3340709b801744d2f74bdebf4aecdf890e7e3c",
+        "source_id": "cisco-e6de11fab6560d91e357a719"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "b4ffb807b95eb9251c8c3b20d9ec31f2576531d0aa92d7204aa852506bdc6eae",
+        "source_id": "cisco-edaf6687a83eb1bb987713b7"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "ebb5ce12bd17d311763457a048558dbd10bb25d2c86c835a8ba3a94300eee92b",
+        "source_id": "cisco-b8d99593613c20785f170711"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "56a989e43b9c538d32c06553739c5f1dd3c815bcf98a166da29bd8623a200706",
+        "source_id": "cisco-e6f8a678cc81d5a689e02c92"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "733cd412b1ea53f8006e372deb81e73b191d9208d84bccc86cb4b1993782917d",
+        "source_id": "cisco-dce61016b00eaa32f36c014c"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "c86595430ac411d94af959947fd4540da9bcb664318d32753157f2bc2e49c5f5",
+        "source_id": "cisco-19ecc8fedb88e02ddccd111c"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/rommon_versions.html",
+        "retrieved_at": "2026-11-25T16:47:30.091432+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "718259d0467da9f1d43513961be3d1a54c085ece75d9e6bf4df84a461ce86f68",
+        "excerpt_sha256": "196536f2e9812fee9a770b01961fcb1979fcb0b6f7abeaf9129c3a750420fd3e",
+        "source_id": "cisco-88396228eabada30ddcfe39b"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/support/docs/field-notices/742/fn74221.html",
+        "retrieved_at": "2026-11-25T16:47:56.485106+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "3641fc408c9abed001a3a9e98097a5ce8243ea13bd667645f462a0c5d4843d2e",
+        "excerpt_sha256": "610c9f8d465a8e23b1e883051589389f3f29b95fa55eae47e04e5977590a3c4e",
+        "source_id": "cisco-92caae3bb7b328494d56552c"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/support/docs/field-notices/724/fn72416.html",
+        "retrieved_at": "2026-11-25T16:48:03.248787+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "e9287a2b7f81743e36020d7f88bbf635b4c55ed5103908f31849da397a3a37ef",
+        "excerpt_sha256": "d7fc1ef4b9005173f06bf2ac9665e6e8535f7ca7e584b6e324e324909e0c6fde",
+        "source_id": "cisco-9523b96ebf1dc415fccda7a8"
+      },
+      {
+        "vendor": "cisco",
+        "source_url": "https://www.cisco.com/c/en/us/support/docs/field-notices/741/fn74135.html",
+        "retrieved_at": "2026-11-25T16:48:05.495321+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "29bf301c68bb91063021a52f6b6a5cc433dd9bb8aac5b9c2447bbfad65c352ff",
+        "excerpt_sha256": "688a443cf9c7b18b42f8eb94a241d257148884f79dc36d80e9b335e31aa38051",
+        "source_id": "cisco-bd017a06116272e30dc6e151"
+      },
+      {
+        "vendor": "aruba",
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/version-history-16.html",
+        "retrieved_at": "2026-11-25T16:46:25.590Z",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "34f62ecededaba4c305d00359be67122bab3c5cfec0401862478419ffc1a7362",
+        "source_id": "aruba-a25d9956d6d2dc4468d91467"
+      },
+      {
+        "vendor": "aruba",
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6300-6400%20Release%20Notes/aos-cx-10-13-xx/products-supported.html",
+        "retrieved_at": "2026-11-25T16:46:47.772Z",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "38aa23461da0d87588bcfd5283cef6accf69312460d4188e698ee1d22555a611",
+        "source_id": "aruba-7c2f272815fd0daa4236a87d"
+      },
+      {
+        "vendor": "aruba",
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-19.html",
+        "retrieved_at": "2026-11-25T16:46:28.251Z",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "577a328c76411d0d319dba4315d6201d104dc6c1a5595ca71e4017ac4d60bb39",
+        "source_id": "aruba-685df04322baa38b62cf829d"
+      },
+      {
+        "vendor": "aruba",
+        "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/products-supported-17.html",
+        "retrieved_at": "2026-11-25T16:46:45.725Z",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "f277c6053e0caa68ebeb79fb2c63ec09ff66ee468510b1ad75e7e2c635262950",
+        "source_id": "aruba-3a765657cd1176ec63b71323"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/product-documentation",
+        "retrieved_at": "2026-11-25",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "7ea1998748c78c6e0e6e92bec144139ba0df936e1403181369e22877d33fe7ae",
+        "source_id": "arista-c944b764dd79cfb72ecc3ecc"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/fieldnotice?start=40",
+        "retrieved_at": "2026-11-25",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "d8fbad6cdc0fc04306c1a1325dc3ec082ff3b8634771476cc57d2f89246af63e",
+        "source_id": "arista-1db2b93b020a13697ad0925a"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/advisories-notices/security-advisory/22869-security-advisory-0127",
+        "retrieved_at": "2026-11-25",
+        "capture_kind": "tool_excerpt",
+        "original_sha256": null,
+        "excerpt_sha256": "8fe543e5fbffe38c104500561a05a070d999a05c0b29e3fd71c0ce845ad48240",
+        "source_id": "arista-4c6aec43a61d4a345a06b5fd"
+      },
+      {
+        "vendor": "arista",
+        "source_url": "https://www.arista.com/en/support/release-notes",
+        "retrieved_at": "2026-11-25T16:44:18.157258+00:00",
+        "capture_kind": "original_document",
+        "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
+        "excerpt_sha256": null,
+        "source_id": "arista-febee22fd3bcc2e460936930"
+      }
+    ],
+    "releases": [
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.1",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-db37a2d5618261d87b16ea9e",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.1"
+          },
+          {
+            "source_id": "cisco-6301c9eaf82fb91a7ccc10b8",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.1"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.1",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-db37a2d5618261d87b16ea9e",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.1"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.1",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-6301c9eaf82fb91a7ccc10b8",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.1"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.2",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-f358dcffeb791b44773e352d",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.2"
+          },
+          {
+            "source_id": "cisco-e6de11fab6560d91e357a719",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.2"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.2",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-f358dcffeb791b44773e352d",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.2"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.2",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-e6de11fab6560d91e357a719",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.3",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-936a1cac7cbfdc877cafd910",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.3"
+          },
+          {
+            "source_id": "cisco-edaf6687a83eb1bb987713b7",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.3"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.3",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-936a1cac7cbfdc877cafd910",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.3"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.3",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-edaf6687a83eb1bb987713b7",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.3"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.4",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-90382cb9f0b6c95c12496c9e",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.4"
+          },
+          {
+            "source_id": "cisco-b8d99593613c20785f170711",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.4"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.4",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-90382cb9f0b6c95c12496c9e",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.4"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.4",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-b8d99593613c20785f170711",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.4"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.5",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-bf73ec0fd87975d457fb57d0",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.5"
+          },
+          {
+            "source_id": "cisco-e6f8a678cc81d5a689e02c92",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.5"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.5",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-bf73ec0fd87975d457fb57d0",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.5"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.5",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-e6f8a678cc81d5a689e02c92",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.5"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.6",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-010f08f71ceee8eab60413e5",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.6"
+          },
+          {
+            "source_id": "cisco-dce61016b00eaa32f36c014c",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.6"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.6",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-010f08f71ceee8eab60413e5",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.6"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.6",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-dce61016b00eaa32f36c014c",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.6"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.7a",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-c53a168eb6152b87789b15b5",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.7a"
+          },
+          {
+            "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.7a"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.7a",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-c53a168eb6152b87789b15b5",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.7a"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.7a",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.7a"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "version": "17.12.8",
+        "observation_basis": "version_table",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-a1f06c26952a3f4835d48be5",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.8"
+          },
+          {
+            "source_id": "cisco-88396228eabada30ddcfe39b",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.8"
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.8",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-a1f06c26952a3f4835d48be5",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.8"
+              }
+            ]
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.8",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-88396228eabada30ddcfe39b",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.8"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1200",
+        "observation_basis": "release_history",
+        "release_date": "2026-09-10",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1200 / rendered line 94",
+            "quote": "10.13.1200  | 10/09/2026"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1190",
+        "observation_basis": "release_history",
+        "release_date": "2026-08-14",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1190 / rendered line 95",
+            "quote": "10.13.1190  | 14/08/2026"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1180",
+        "observation_basis": "release_history",
+        "release_date": "2026-06-11",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1180 / rendered line 96",
+            "quote": "10.13.1180  | 11/06/2026"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1170",
+        "observation_basis": "release_history",
+        "release_date": "2026-04-23",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1170 / rendered line 97",
+            "quote": "10.13.1170  | 23/04/2026"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1160",
+        "observation_basis": "release_history",
+        "release_date": "2026-02-13",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1160 / rendered line 98",
+            "quote": "10.13.1160  | 13/02/2026"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1150",
+        "observation_basis": "release_history",
+        "release_date": "2025-12-12",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1150 / rendered line 99",
+            "quote": "10.13.1150  | 12/12/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1140",
+        "observation_basis": "release_history",
+        "release_date": "2025-10-17",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1140 / rendered line 100",
+            "quote": "10.13.1140  | 17/10/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1130",
+        "observation_basis": "release_history",
+        "release_date": "2025-09-05",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1130 / rendered line 101",
+            "quote": "10.13.1130  | 05/09/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1120",
+        "observation_basis": "release_history",
+        "release_date": "2025-07-28",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1120 / rendered line 102",
+            "quote": "10.13.1120  | 28/07/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1110",
+        "observation_basis": "release_history",
+        "release_date": "2025-06-12",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1110 / rendered line 103",
+            "quote": "10.13.1110  | 12/06/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1101",
+        "observation_basis": "release_history",
+        "release_date": "2025-05-09",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+            "quote": "10.13.1101  | 09/05/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1090",
+        "observation_basis": "release_history",
+        "release_date": "2025-03-20",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1090 / rendered line 105",
+            "quote": "10.13.1090  | 20/03/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1080",
+        "observation_basis": "release_history",
+        "release_date": "2025-01-30",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1080 / rendered line 106",
+            "quote": "10.13.1080  | 30/01/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1070",
+        "observation_basis": "release_history",
+        "release_date": "2024-12-12",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1070 / rendered line 107",
+            "quote": "10.13.1070  | 12/12/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1060",
+        "observation_basis": "release_history",
+        "release_date": "2024-10-24",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1060 / rendered line 108",
+            "quote": "10.13.1060  | 24/10/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1050",
+        "observation_basis": "release_history",
+        "release_date": "2024-09-19",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1050 / rendered line 109",
+            "quote": "10.13.1050  | 19/09/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1040",
+        "observation_basis": "release_history",
+        "release_date": "2024-08-01",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1040 / rendered line 110",
+            "quote": "10.13.1040  | 01/08/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1030",
+        "observation_basis": "release_history",
+        "release_date": "2024-06-27",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1030 / rendered line 111",
+            "quote": "10.13.1030  | 27/06/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1020",
+        "observation_basis": "release_history",
+        "release_date": "2024-05-20",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1020 / rendered line 112",
+            "quote": "10.13.1020  | 20/05/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1010",
+        "observation_basis": "release_history",
+        "release_date": "2024-04-09",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1010 / rendered line 113",
+            "quote": "10.13.1010  | 09/04/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1000",
+        "observation_basis": "release_history",
+        "release_date": "2024-01-31",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6200",
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1000",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-31",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6300"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+                "quote": "10.13.1000  | 31/01/2024"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ]
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1000",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-31",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                "quote": "10.13.1000  | 31/01/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.0010",
+        "observation_basis": "release_history",
+        "release_date": "2024-01-10",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6200",
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.0010 / rendered line 115",
+            "quote": "10.13.0010  | 10/01/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.0010 / rendered line 99",
+            "quote": "10.13.0010  | 10/01/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.0010",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-10",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6300"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.0010 / rendered line 115",
+                "quote": "10.13.0010  | 10/01/2024"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ]
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.0010",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-10",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.0010 / rendered line 99",
+                "quote": "10.13.0010  | 10/01/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1005",
+        "observation_basis": "release_history",
+        "release_date": "2024-03-22",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6200",
+          "6300"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+            "quote": "10.13.1005  | 22/03/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+            "quote": "10.13.1005  | 22/03/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          }
+        ],
+        "observations": [
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1005",
+            "observation_basis": "release_history",
+            "release_date": "2024-03-22",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6300"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+                "quote": "10.13.1005  | 22/03/2024"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ]
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1005",
+            "observation_basis": "release_history",
+            "release_date": "2024-03-22",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+                "quote": "10.13.1005  | 22/03/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "version": "10.13.1003",
+        "observation_basis": "release_history",
+        "release_date": "2024-03-05",
+        "date_status": "stated",
+        "announcement_date": null,
+        "platforms_stated": [
+          "6200"
+        ],
+        "evidence": [
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+            "quote": "10.13.1003  | 05/03/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.0F",
+        "observation_basis": "document_index_reference",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-c944b764dd79cfb72ecc3ecc",
+            "locator": "Product Bulletins :: EOS; rendered lines 173\u2013175",
+            "quote": "EOS Release 4.33.2F; EOS Release 4.33.1F; EOS Release 4.33.0F"
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.1F",
+        "observation_basis": "document_index_reference",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-c944b764dd79cfb72ecc3ecc",
+            "locator": "Product Bulletins :: EOS; rendered lines 173\u2013175",
+            "quote": "EOS Release 4.33.2F; EOS Release 4.33.1F; EOS Release 4.33.0F"
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.2F",
+        "observation_basis": "document_index_reference",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-c944b764dd79cfb72ecc3ecc",
+            "locator": "Product Bulletins :: EOS; rendered lines 173\u2013175",
+            "quote": "EOS Release 4.33.2F; EOS Release 4.33.1F; EOS Release 4.33.0F"
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.3F",
+        "observation_basis": "notice_version_reference",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 102\u2013110",
+            "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.4M",
+        "observation_basis": "advisory_version_reference",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-4c6aec43a61d4a345a06b5fd",
+            "locator": "Affected Software; Affected Platforms (not affected); Resolution",
+            "quote": "4.33.4M and below; 4.33.5M and later; 720D Series; 720XP/722XPM Series"
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.5M",
+        "observation_basis": "advisory_version_reference",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-4c6aec43a61d4a345a06b5fd",
+            "locator": "Affected Software; Affected Platforms (not affected); Resolution",
+            "quote": "4.33.4M and below; 4.33.5M and later; 720D Series; 720XP/722XPM Series"
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.11.2M",
+        "observation_basis": "availability_announcement",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": "2026-11-03",
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-febee22fd3bcc2e460936930",
+            "locator": "RSS channel/item[5]/title and pubDate",
+            "quote": "EOS-4.33.11.2M is now available for download."
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.11M",
+        "observation_basis": "availability_announcement",
+        "release_date": null,
+        "date_status": "unknown",
+        "announcement_date": "2026-10-15",
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-febee22fd3bcc2e460936930",
+            "locator": "RSS channel/item[12]/title and pubDate",
+            "quote": "EOS-4.33.11M is now available for download."
+          }
+        ]
+      }
+    ],
+    "notices": [
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "notice_id": "FN74221",
+        "title": "Conditional Umbrella registration issue for Catalyst 9200/9300 using API keys. The affected-release table explicitly names 17.12.1\u201317.12.4. Token registration is excluded; certificate replacement is prescribed. No release withdrawal is stated.",
+        "notice_date": "2025-01-17",
+        "action_date": null,
+        "affected_releases": [
+          "17.12.1",
+          "17.12.2",
+          "17.12.3",
+          "17.12.4"
+        ],
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "replacement_release": null,
+        "classification": "configuration_remediation",
+        "revision_date": "2025-01-17",
+        "date_note": null,
+        "fixed_releases": [],
+        "evidence": [
+          {
+            "source_id": "cisco-92caae3bb7b328494d56552c",
+            "locator": "First Published; Products Affected; Background; Workaround/Solution",
+            "quote": "2025-Jan-17 | 17.12.1, 17.12.2, 17.12.3, 17.12.4 | token-based authentication | must have the affected certificate replaced"
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "notice_id": "FN72416",
+        "title": "Limited DRAM manufacturing defect on specified C9300/C9300L hardware. Hardware remediation context, not a software withdrawal. Header and initial-revision dates conflict and are retained independently.",
+        "notice_date": null,
+        "action_date": null,
+        "affected_releases": [],
+        "platforms_stated": [
+          "Catalyst 9300"
+        ],
+        "replacement_release": null,
+        "classification": "hardware",
+        "revision_date": "2025-01-27",
+        "date_note": "First Published header 2024-05-24 conflicts with revision 1.0 2024-05-22",
+        "fixed_releases": [],
+        "evidence": [
+          {
+            "source_id": "cisco-9523b96ebf1dc415fccda7a8",
+            "locator": "First/Last Published; Problem Description; Revision History 1.0",
+            "quote": "2024-May-24 | 2025-Jan-27 | memory supplier's manufacturing process | 2024-MAY-22"
+          }
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "notice_id": "FN74135",
+        "title": "SUDI certificate remediation is conditional on platform and affected-unit status. C9200 display defect fixes are 17.12.2 and later; the C9300 Not Affected-unit display defect fixes are 17.12.1 and later. These are fixed-version statements, not withdrawal or release dates.",
+        "notice_date": "2024-05-14",
+        "action_date": null,
+        "affected_releases": [],
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "replacement_release": null,
+        "classification": "configuration_remediation",
+        "revision_date": null,
+        "date_note": null,
+        "fixed_releases": [
+          {
+            "version": "17.12.2",
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "conditions": "Conditional SUDI display defect; affected-unit status and platform subcase require review"
+          },
+          {
+            "version": "17.12.1",
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "conditions": "Not Affected-unit SUDI display defect only; not a remedy for all affected certificates"
+          }
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-bd017a06116272e30dc6e151",
+            "locator": "Revision History 1.0; Workaround/Solution / Catalyst 9200 and Catalyst 9300",
+            "quote": "2024-MAY-14 | versions 17.12.2/17.9.5/17.13.1 | versions 17.12.1/17.9.5/17.13.1"
+          }
+        ]
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "notice_id": "FN0103",
+        "title": "EOS 4.33.3F deferred due to software defect Bug ID 1165537",
+        "notice_date": "2025-07-01",
+        "action_date": null,
+        "affected_releases": [
+          "4.33.3F"
+        ],
+        "platforms_stated": [],
+        "replacement_release": null,
+        "classification": "release_deferral",
+        "evidence": [
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 102\u2013110",
+            "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+          },
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 104\u2013108",
+            "quote": "July 01, 2025"
+          }
+        ]
+      }
+    ],
+    "statements": [
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.3F",
+        "status": "deferred",
+        "notice_date": "2025-07-01",
+        "action_date": null,
+        "related_release": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 102\u2013110",
+            "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+          },
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 104\u2013108",
+            "quote": "July 01, 2025"
+          }
+        ]
+      }
+    ],
+    "coverage": [
+      {
+        "vendor": "cisco",
+        "train": "17.12",
+        "year": 2024,
+        "status": "partial",
+        "platforms": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved.",
+        "source_ids": [
+          "cisco-db37a2d5618261d87b16ea9e",
+          "cisco-f358dcffeb791b44773e352d",
+          "cisco-936a1cac7cbfdc877cafd910",
+          "cisco-90382cb9f0b6c95c12496c9e",
+          "cisco-bf73ec0fd87975d457fb57d0",
+          "cisco-010f08f71ceee8eab60413e5",
+          "cisco-c53a168eb6152b87789b15b5",
+          "cisco-a1f06c26952a3f4835d48be5",
+          "cisco-6301c9eaf82fb91a7ccc10b8",
+          "cisco-e6de11fab6560d91e357a719",
+          "cisco-edaf6687a83eb1bb987713b7",
+          "cisco-b8d99593613c20785f170711",
+          "cisco-e6f8a678cc81d5a689e02c92",
+          "cisco-dce61016b00eaa32f36c014c",
+          "cisco-19ecc8fedb88e02ddccd111c",
+          "cisco-88396228eabada30ddcfe39b",
+          "cisco-92caae3bb7b328494d56552c",
+          "cisco-9523b96ebf1dc415fccda7a8",
+          "cisco-bd017a06116272e30dc6e151"
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "train": "17.12",
+        "year": 2025,
+        "status": "partial",
+        "platforms": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved.",
+        "source_ids": [
+          "cisco-db37a2d5618261d87b16ea9e",
+          "cisco-f358dcffeb791b44773e352d",
+          "cisco-936a1cac7cbfdc877cafd910",
+          "cisco-90382cb9f0b6c95c12496c9e",
+          "cisco-bf73ec0fd87975d457fb57d0",
+          "cisco-010f08f71ceee8eab60413e5",
+          "cisco-c53a168eb6152b87789b15b5",
+          "cisco-a1f06c26952a3f4835d48be5",
+          "cisco-6301c9eaf82fb91a7ccc10b8",
+          "cisco-e6de11fab6560d91e357a719",
+          "cisco-edaf6687a83eb1bb987713b7",
+          "cisco-b8d99593613c20785f170711",
+          "cisco-e6f8a678cc81d5a689e02c92",
+          "cisco-dce61016b00eaa32f36c014c",
+          "cisco-19ecc8fedb88e02ddccd111c",
+          "cisco-88396228eabada30ddcfe39b",
+          "cisco-92caae3bb7b328494d56552c",
+          "cisco-9523b96ebf1dc415fccda7a8",
+          "cisco-bd017a06116272e30dc6e151"
+        ]
+      },
+      {
+        "vendor": "cisco",
+        "train": "17.12",
+        "year": 2026,
+        "status": "partial",
+        "platforms": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved.",
+        "source_ids": [
+          "cisco-db37a2d5618261d87b16ea9e",
+          "cisco-f358dcffeb791b44773e352d",
+          "cisco-936a1cac7cbfdc877cafd910",
+          "cisco-90382cb9f0b6c95c12496c9e",
+          "cisco-bf73ec0fd87975d457fb57d0",
+          "cisco-010f08f71ceee8eab60413e5",
+          "cisco-c53a168eb6152b87789b15b5",
+          "cisco-a1f06c26952a3f4835d48be5",
+          "cisco-6301c9eaf82fb91a7ccc10b8",
+          "cisco-e6de11fab6560d91e357a719",
+          "cisco-edaf6687a83eb1bb987713b7",
+          "cisco-b8d99593613c20785f170711",
+          "cisco-e6f8a678cc81d5a689e02c92",
+          "cisco-dce61016b00eaa32f36c014c",
+          "cisco-19ecc8fedb88e02ddccd111c",
+          "cisco-88396228eabada30ddcfe39b",
+          "cisco-92caae3bb7b328494d56552c",
+          "cisco-9523b96ebf1dc415fccda7a8",
+          "cisco-bd017a06116272e30dc6e151"
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "train": "10.13",
+        "year": 2024,
+        "status": "partial",
+        "platforms": [
+          "6200",
+          "6300"
+        ],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established.",
+        "source_ids": [
+          "aruba-a25d9956d6d2dc4468d91467",
+          "aruba-7c2f272815fd0daa4236a87d",
+          "aruba-685df04322baa38b62cf829d",
+          "aruba-3a765657cd1176ec63b71323"
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "train": "10.13",
+        "year": 2025,
+        "status": "partial",
+        "platforms": [
+          "6200",
+          "6300"
+        ],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established.",
+        "source_ids": [
+          "aruba-a25d9956d6d2dc4468d91467",
+          "aruba-7c2f272815fd0daa4236a87d",
+          "aruba-685df04322baa38b62cf829d",
+          "aruba-3a765657cd1176ec63b71323"
+        ]
+      },
+      {
+        "vendor": "aruba",
+        "train": "10.13",
+        "year": 2026,
+        "status": "partial",
+        "platforms": [
+          "6200",
+          "6300"
+        ],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established.",
+        "source_ids": [
+          "aruba-a25d9956d6d2dc4468d91467",
+          "aruba-7c2f272815fd0daa4236a87d",
+          "aruba-685df04322baa38b62cf829d",
+          "aruba-3a765657cd1176ec63b71323"
+        ]
+      },
+      {
+        "vendor": "arista",
+        "train": "4.33",
+        "year": 2024,
+        "status": "partial",
+        "platforms": [],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved.",
+        "source_ids": [
+          "arista-c944b764dd79cfb72ecc3ecc",
+          "arista-1db2b93b020a13697ad0925a",
+          "arista-4c6aec43a61d4a345a06b5fd",
+          "arista-febee22fd3bcc2e460936930"
+        ]
+      },
+      {
+        "vendor": "arista",
+        "train": "4.33",
+        "year": 2025,
+        "status": "partial",
+        "platforms": [],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved.",
+        "source_ids": [
+          "arista-c944b764dd79cfb72ecc3ecc",
+          "arista-1db2b93b020a13697ad0925a",
+          "arista-4c6aec43a61d4a345a06b5fd",
+          "arista-febee22fd3bcc2e460936930"
+        ]
+      },
+      {
+        "vendor": "arista",
+        "train": "4.33",
+        "year": 2026,
+        "status": "partial",
+        "platforms": [],
+        "enumeration_complete": false,
+        "date_coverage_complete": false,
+        "reason": "Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved.",
+        "source_ids": [
+          "arista-c944b764dd79cfb72ecc3ecc",
+          "arista-1db2b93b020a13697ad0925a",
+          "arista-4c6aec43a61d4a345a06b5fd",
+          "arista-febee22fd3bcc2e460936930"
+        ]
+      }
+    ],
+    "release_identity": "vendor_train_version"
+  },
+  "config": {
+    "schema_version": 1,
+    "start": "2024-01-01",
+    "end": "2026-12-31",
+    "trains": [
+      {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "platforms": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "base_pattern": "^(17\\.12\\.\\d+)[a-z]?$",
+        "base_replacement": "\\1",
+        "respin_rule": "letter_suffix"
+      },
+      {
+        "vendor": "aruba",
+        "family": "AOS-CX",
+        "train": "10.13",
+        "platforms": [
+          "6200",
+          "6300"
+        ],
+        "base_pattern": "^(10\\.13\\.\\d{2})\\d{2}$",
+        "base_replacement": "\\1xx",
+        "respin_rule": "non_decadal_build"
+      },
+      {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "platforms": [
+          "720XP",
+          "720DP"
+        ],
+        "base_pattern": "^(4\\.33\\.\\d+)(?:\\.\\d+)?([FM])$",
+        "base_replacement": "\\1\\2",
+        "respin_rule": "subrelease"
+      }
+    ]
+  },
+  "annual": [
+    {
+      "vendor": "cisco",
+      "train": "17.12",
+      "year": 2024,
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "year_to_date": false,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        }
+      }
+    },
+    {
+      "vendor": "cisco",
+      "train": "17.12",
+      "year": 2025,
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "year_to_date": false,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        }
+      }
+    },
+    {
+      "vendor": "cisco",
+      "train": "17.12",
+      "year": 2026,
+      "period_start": "2026-01-01",
+      "period_end": "2026-11-25",
+      "year_to_date": true,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved."
+        }
+      }
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "year": 2024,
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "year_to_date": false,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": 11,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "partial",
+          "evidence_class": "research_only",
+          "model_unresolved_count": 0,
+          "research_only_count": 11,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "possible_respin_90": {
+          "observed_count": 2,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "partial",
+          "evidence_class": "research_only",
+          "model_unresolved_count": 0,
+          "research_only_count": 2,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        }
+      }
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "year": 2025,
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "year_to_date": false,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": 8,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "partial",
+          "evidence_class": "research_only",
+          "model_unresolved_count": 0,
+          "research_only_count": 8,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        }
+      }
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "year": 2026,
+      "period_start": "2026-01-01",
+      "period_end": "2026-11-25",
+      "year_to_date": true,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": 5,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "partial",
+          "evidence_class": "research_only",
+          "model_unresolved_count": 0,
+          "research_only_count": 5,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established."
+        }
+      }
+    },
+    {
+      "vendor": "arista",
+      "train": "4.33",
+      "year": 2024,
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "year_to_date": false,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 1,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved. Unresolved action inputs: 1 (model scope: 1; release cohort: 1)."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        }
+      }
+    },
+    {
+      "vendor": "arista",
+      "train": "4.33",
+      "year": 2025,
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "year_to_date": false,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 1,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved. Unresolved action inputs: 1 (model scope: 1; release cohort: 1)."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "deferral_notices": {
+          "observed_count": 1,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "partial",
+          "evidence_class": "research_only",
+          "model_unresolved_count": 1,
+          "research_only_count": 1,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        }
+      }
+    },
+    {
+      "vendor": "arista",
+      "train": "4.33",
+      "year": 2026,
+      "period_start": "2026-01-01",
+      "period_end": "2026-11-25",
+      "year_to_date": true,
+      "metrics": {
+        "releases_shipped": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "deferred_or_withdrawn": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 1,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved. Unresolved action inputs: 1 (model scope: 1; release cohort: 1)."
+        },
+        "possible_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "possible_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "corrective_respin_30": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "corrective_respin_90": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "software_defect_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        },
+        "deferral_notices": {
+          "observed_count": null,
+          "numerator": null,
+          "denominator": null,
+          "rate": null,
+          "coverage": "unknown",
+          "evidence_class": "unknown",
+          "model_unresolved_count": 0,
+          "research_only_count": null,
+          "reason": "Rate unavailable: complete dated original release denominator and signal coverage not established. Rolling RSS and two field-notice index pages are incomplete. Announcement dates are not release dates. Model applicability and full release history unavailable; detail routes require login; automation permission unresolved."
+        }
+      }
+    }
+  ],
+  "respins": [
+    {
+      "vendor": "cisco",
+      "train": "17.12",
+      "base_version": "17.12.7",
+      "previous_release": null,
+      "followup_release": "17.12.7a",
+      "previous_release_date": null,
+      "followup_release_date": null,
+      "days": null,
+      "within_30_days": null,
+      "within_90_days": null,
+      "classification": "possible_respin",
+      "reason": null,
+      "platforms_stated": [
+        "Catalyst 9200"
+      ],
+      "production_eligible": false,
+      "evidence": [
+        {
+          "source_id": "cisco-c53a168eb6152b87789b15b5",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.7a"
+        }
+      ],
+      "respin_rule": "letter_suffix"
+    },
+    {
+      "vendor": "cisco",
+      "train": "17.12",
+      "base_version": "17.12.7",
+      "previous_release": null,
+      "followup_release": "17.12.7a",
+      "previous_release_date": null,
+      "followup_release_date": null,
+      "days": null,
+      "within_30_days": null,
+      "within_90_days": null,
+      "classification": "possible_respin",
+      "reason": null,
+      "platforms_stated": [
+        "Catalyst 9300"
+      ],
+      "production_eligible": false,
+      "evidence": [
+        {
+          "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+          "locator": "ROMMON Versions / Release column",
+          "quote": "Dublin 17.12.7a"
+        }
+      ],
+      "respin_rule": "letter_suffix"
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "base_version": "10.13.11xx",
+      "previous_release": null,
+      "followup_release": "10.13.1101",
+      "previous_release_date": null,
+      "followup_release_date": "2025-05-09",
+      "days": null,
+      "within_30_days": null,
+      "within_90_days": null,
+      "classification": "possible_respin",
+      "reason": null,
+      "platforms_stated": [
+        "6300"
+      ],
+      "production_eligible": false,
+      "evidence": [
+        {
+          "source_id": "aruba-a25d9956d6d2dc4468d91467",
+          "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+          "quote": "10.13.1101  | 09/05/2025"
+        },
+        {
+          "source_id": "aruba-7c2f272815fd0daa4236a87d",
+          "locator": "Products Supported / paragraph / rendered line85",
+          "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        }
+      ],
+      "respin_rule": "non_decadal_build",
+      "expected_regular_build": "10.13.1100",
+      "expected_regular_build_absent": true
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "base_version": "10.13.10xx",
+      "previous_release": "10.13.1000",
+      "followup_release": "10.13.1005",
+      "previous_release_date": "2024-01-31",
+      "followup_release_date": "2024-03-22",
+      "days": 51,
+      "within_30_days": false,
+      "within_90_days": true,
+      "classification": "possible_respin",
+      "reason": null,
+      "platforms_stated": [
+        "6300"
+      ],
+      "production_eligible": false,
+      "evidence": [
+        {
+          "source_id": "aruba-a25d9956d6d2dc4468d91467",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-7c2f272815fd0daa4236a87d",
+          "locator": "Products Supported / paragraph / rendered line85",
+          "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        },
+        {
+          "source_id": "aruba-a25d9956d6d2dc4468d91467",
+          "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+          "quote": "10.13.1005  | 22/03/2024"
+        },
+        {
+          "source_id": "aruba-7c2f272815fd0daa4236a87d",
+          "locator": "Products Supported / paragraph / rendered line85",
+          "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        }
+      ],
+      "respin_rule": "non_decadal_build",
+      "expected_regular_build": "10.13.1000",
+      "expected_regular_build_absent": false
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "base_version": "10.13.10xx",
+      "previous_release": "10.13.1000",
+      "followup_release": "10.13.1003",
+      "previous_release_date": "2024-01-31",
+      "followup_release_date": "2024-03-05",
+      "days": 34,
+      "within_30_days": false,
+      "within_90_days": true,
+      "classification": "possible_respin",
+      "reason": null,
+      "platforms_stated": [
+        "6200"
+      ],
+      "production_eligible": false,
+      "evidence": [
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        },
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+          "quote": "10.13.1003  | 05/03/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "respin_rule": "non_decadal_build",
+      "expected_regular_build": "10.13.1000",
+      "expected_regular_build_absent": false
+    },
+    {
+      "vendor": "aruba",
+      "train": "10.13",
+      "base_version": "10.13.10xx",
+      "previous_release": "10.13.1000",
+      "followup_release": "10.13.1005",
+      "previous_release_date": "2024-01-31",
+      "followup_release_date": "2024-03-22",
+      "days": 51,
+      "within_30_days": false,
+      "within_90_days": true,
+      "classification": "possible_respin",
+      "reason": null,
+      "platforms_stated": [
+        "6200"
+      ],
+      "production_eligible": false,
+      "evidence": [
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        },
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+          "quote": "10.13.1005  | 22/03/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "respin_rule": "non_decadal_build",
+      "expected_regular_build": "10.13.1000",
+      "expected_regular_build_absent": false
+    }
+  ],
+  "upgrade_annotations": [],
+  "upgrade_selection": null,
+  "review_packet": [
+    {
+      "type": "notice",
+      "index": 0,
+      "vendor": "cisco",
+      "train": "17.12",
+      "classification": "configuration_remediation",
+      "notice_date": "2025-01-17",
+      "action_date": null,
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
+      "evidence": [
+        {
+          "source_id": "cisco-92caae3bb7b328494d56552c",
+          "locator": "First Published; Products Affected; Background; Workaround/Solution",
+          "quote": "2025-Jan-17 | 17.12.1, 17.12.2, 17.12.3, 17.12.4 | token-based authentication | must have the affected certificate replaced"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "notice_id": "FN74221",
+        "title": "Conditional Umbrella registration issue for Catalyst 9200/9300 using API keys. The affected-release table explicitly names 17.12.1\u201317.12.4. Token registration is excluded; certificate replacement is prescribed. No release withdrawal is stated.",
+        "notice_date": "2025-01-17",
+        "action_date": null,
+        "affected_releases": [
+          "17.12.1",
+          "17.12.2",
+          "17.12.3",
+          "17.12.4"
+        ],
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "replacement_release": null,
+        "classification": "configuration_remediation",
+        "revision_date": "2025-01-17",
+        "date_note": null,
+        "fixed_releases": [],
+        "evidence": [
+          {
+            "source_id": "cisco-92caae3bb7b328494d56552c",
+            "locator": "First Published; Products Affected; Background; Workaround/Solution",
+            "quote": "2025-Jan-17 | 17.12.1, 17.12.2, 17.12.3, 17.12.4 | token-based authentication | must have the affected certificate replaced"
+          }
+        ]
+      }
+    },
+    {
+      "type": "notice",
+      "index": 1,
+      "vendor": "cisco",
+      "train": "17.12",
+      "classification": "hardware",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "Catalyst 9300"
+      ],
+      "evidence": [
+        {
+          "source_id": "cisco-9523b96ebf1dc415fccda7a8",
+          "locator": "First/Last Published; Problem Description; Revision History 1.0",
+          "quote": "2024-May-24 | 2025-Jan-27 | memory supplier's manufacturing process | 2024-MAY-22"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "notice_id": "FN72416",
+        "title": "Limited DRAM manufacturing defect on specified C9300/C9300L hardware. Hardware remediation context, not a software withdrawal. Header and initial-revision dates conflict and are retained independently.",
+        "notice_date": null,
+        "action_date": null,
+        "affected_releases": [],
+        "platforms_stated": [
+          "Catalyst 9300"
+        ],
+        "replacement_release": null,
+        "classification": "hardware",
+        "revision_date": "2025-01-27",
+        "date_note": "First Published header 2024-05-24 conflicts with revision 1.0 2024-05-22",
+        "fixed_releases": [],
+        "evidence": [
+          {
+            "source_id": "cisco-9523b96ebf1dc415fccda7a8",
+            "locator": "First/Last Published; Problem Description; Revision History 1.0",
+            "quote": "2024-May-24 | 2025-Jan-27 | memory supplier's manufacturing process | 2024-MAY-22"
+          }
+        ]
+      }
+    },
+    {
+      "type": "notice",
+      "index": 2,
+      "vendor": "cisco",
+      "train": "17.12",
+      "classification": "configuration_remediation",
+      "notice_date": "2024-05-14",
+      "action_date": null,
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
+      "evidence": [
+        {
+          "source_id": "cisco-bd017a06116272e30dc6e151",
+          "locator": "Revision History 1.0; Workaround/Solution / Catalyst 9200 and Catalyst 9300",
+          "quote": "2024-MAY-14 | versions 17.12.2/17.9.5/17.13.1 | versions 17.12.1/17.9.5/17.13.1"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "cisco",
+        "family": "IOS XE",
+        "train": "17.12",
+        "notice_id": "FN74135",
+        "title": "SUDI certificate remediation is conditional on platform and affected-unit status. C9200 display defect fixes are 17.12.2 and later; the C9300 Not Affected-unit display defect fixes are 17.12.1 and later. These are fixed-version statements, not withdrawal or release dates.",
+        "notice_date": "2024-05-14",
+        "action_date": null,
+        "affected_releases": [],
+        "platforms_stated": [
+          "Catalyst 9200",
+          "Catalyst 9300"
+        ],
+        "replacement_release": null,
+        "classification": "configuration_remediation",
+        "revision_date": null,
+        "date_note": null,
+        "fixed_releases": [
+          {
+            "version": "17.12.2",
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "conditions": "Conditional SUDI display defect; affected-unit status and platform subcase require review"
+          },
+          {
+            "version": "17.12.1",
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "conditions": "Not Affected-unit SUDI display defect only; not a remedy for all affected certificates"
+          }
+        ],
+        "evidence": [
+          {
+            "source_id": "cisco-bd017a06116272e30dc6e151",
+            "locator": "Revision History 1.0; Workaround/Solution / Catalyst 9200 and Catalyst 9300",
+            "quote": "2024-MAY-14 | versions 17.12.2/17.9.5/17.13.1 | versions 17.12.1/17.9.5/17.13.1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "notice",
+      "index": 3,
+      "vendor": "arista",
+      "train": "4.33",
+      "classification": "release_deferral",
+      "notice_date": "2025-07-01",
+      "action_date": null,
+      "platforms_stated": [],
+      "evidence": [
+        {
+          "source_id": "arista-1db2b93b020a13697ad0925a",
+          "locator": "Field Notice 0103; rendered lines 102\u2013110",
+          "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+        },
+        {
+          "source_id": "arista-1db2b93b020a13697ad0925a",
+          "locator": "Field Notice 0103; rendered lines 104\u2013108",
+          "quote": "July 01, 2025"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "notice_id": "FN0103",
+        "title": "EOS 4.33.3F deferred due to software defect Bug ID 1165537",
+        "notice_date": "2025-07-01",
+        "action_date": null,
+        "affected_releases": [
+          "4.33.3F"
+        ],
+        "platforms_stated": [],
+        "replacement_release": null,
+        "classification": "release_deferral",
+        "evidence": [
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 102\u2013110",
+            "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+          },
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 104\u2013108",
+            "quote": "July 01, 2025"
+          }
+        ]
+      }
+    },
+    {
+      "type": "statement",
+      "index": 0,
+      "vendor": "arista",
+      "train": "4.33",
+      "classification": "deferred",
+      "notice_date": "2025-07-01",
+      "action_date": null,
+      "platforms_stated": [],
+      "evidence": [
+        {
+          "source_id": "arista-1db2b93b020a13697ad0925a",
+          "locator": "Field Notice 0103; rendered lines 102\u2013110",
+          "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+        },
+        {
+          "source_id": "arista-1db2b93b020a13697ad0925a",
+          "locator": "Field Notice 0103; rendered lines 104\u2013108",
+          "quote": "July 01, 2025"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "arista",
+        "family": "EOS",
+        "train": "4.33",
+        "version": "4.33.3F",
+        "status": "deferred",
+        "notice_date": "2025-07-01",
+        "action_date": null,
+        "related_release": null,
+        "platforms_stated": [],
+        "evidence": [
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 102\u2013110",
+            "quote": "EOS release 4.33.3F has been deferred for all supported platforms due to software defect Bug ID 1165537."
+          },
+          {
+            "source_id": "arista-1db2b93b020a13697ad0925a",
+            "locator": "Field Notice 0103; rendered lines 104\u2013108",
+            "quote": "July 01, 2025"
+          }
+        ]
+      }
+    },
+    {
+      "type": "respin",
+      "index": 0,
+      "vendor": "cisco",
+      "train": "17.12",
+      "classification": "possible_respin",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "Catalyst 9200"
+      ],
+      "evidence": [
+        {
+          "source_id": "cisco-c53a168eb6152b87789b15b5",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.7a"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "cisco",
+        "train": "17.12",
+        "base_version": "17.12.7",
+        "previous_release": null,
+        "followup_release": "17.12.7a",
+        "previous_release_date": null,
+        "followup_release_date": null,
+        "days": null,
+        "within_30_days": null,
+        "within_90_days": null,
+        "classification": "possible_respin",
+        "reason": null,
+        "platforms_stated": [
+          "Catalyst 9200"
+        ],
+        "production_eligible": false,
+        "evidence": [
+          {
+            "source_id": "cisco-c53a168eb6152b87789b15b5",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.7a"
+          }
+        ],
+        "respin_rule": "letter_suffix"
+      }
+    },
+    {
+      "type": "respin",
+      "index": 1,
+      "vendor": "cisco",
+      "train": "17.12",
+      "classification": "possible_respin",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "Catalyst 9300"
+      ],
+      "evidence": [
+        {
+          "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+          "locator": "ROMMON Versions / Release column",
+          "quote": "Dublin 17.12.7a"
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "cisco",
+        "train": "17.12",
+        "base_version": "17.12.7",
+        "previous_release": null,
+        "followup_release": "17.12.7a",
+        "previous_release_date": null,
+        "followup_release_date": null,
+        "days": null,
+        "within_30_days": null,
+        "within_90_days": null,
+        "classification": "possible_respin",
+        "reason": null,
+        "platforms_stated": [
+          "Catalyst 9300"
+        ],
+        "production_eligible": false,
+        "evidence": [
+          {
+            "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.7a"
+          }
+        ],
+        "respin_rule": "letter_suffix"
+      }
+    },
+    {
+      "type": "respin",
+      "index": 2,
+      "vendor": "aruba",
+      "train": "10.13",
+      "classification": "possible_respin",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "6300"
+      ],
+      "evidence": [
+        {
+          "source_id": "aruba-a25d9956d6d2dc4468d91467",
+          "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+          "quote": "10.13.1101  | 09/05/2025"
+        },
+        {
+          "source_id": "aruba-7c2f272815fd0daa4236a87d",
+          "locator": "Products Supported / paragraph / rendered line85",
+          "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "aruba",
+        "train": "10.13",
+        "base_version": "10.13.11xx",
+        "previous_release": null,
+        "followup_release": "10.13.1101",
+        "previous_release_date": null,
+        "followup_release_date": "2025-05-09",
+        "days": null,
+        "within_30_days": null,
+        "within_90_days": null,
+        "classification": "possible_respin",
+        "reason": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "production_eligible": false,
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+            "quote": "10.13.1101  | 09/05/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ],
+        "respin_rule": "non_decadal_build",
+        "expected_regular_build": "10.13.1100",
+        "expected_regular_build_absent": true
+      }
+    },
+    {
+      "type": "respin",
+      "index": 3,
+      "vendor": "aruba",
+      "train": "10.13",
+      "classification": "possible_respin",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "6300"
+      ],
+      "evidence": [
+        {
+          "source_id": "aruba-a25d9956d6d2dc4468d91467",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-7c2f272815fd0daa4236a87d",
+          "locator": "Products Supported / paragraph / rendered line85",
+          "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        },
+        {
+          "source_id": "aruba-a25d9956d6d2dc4468d91467",
+          "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+          "quote": "10.13.1005  | 22/03/2024"
+        },
+        {
+          "source_id": "aruba-7c2f272815fd0daa4236a87d",
+          "locator": "Products Supported / paragraph / rendered line85",
+          "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "aruba",
+        "train": "10.13",
+        "base_version": "10.13.10xx",
+        "previous_release": "10.13.1000",
+        "followup_release": "10.13.1005",
+        "previous_release_date": "2024-01-31",
+        "followup_release_date": "2024-03-22",
+        "days": 51,
+        "within_30_days": false,
+        "within_90_days": true,
+        "classification": "possible_respin",
+        "reason": null,
+        "platforms_stated": [
+          "6300"
+        ],
+        "production_eligible": false,
+        "evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          },
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+            "quote": "10.13.1005  | 22/03/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ],
+        "respin_rule": "non_decadal_build",
+        "expected_regular_build": "10.13.1000",
+        "expected_regular_build_absent": false
+      }
+    },
+    {
+      "type": "respin",
+      "index": 4,
+      "vendor": "aruba",
+      "train": "10.13",
+      "classification": "possible_respin",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "6200"
+      ],
+      "evidence": [
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        },
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+          "quote": "10.13.1003  | 05/03/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "aruba",
+        "train": "10.13",
+        "base_version": "10.13.10xx",
+        "previous_release": "10.13.1000",
+        "followup_release": "10.13.1003",
+        "previous_release_date": "2024-01-31",
+        "followup_release_date": "2024-03-05",
+        "days": 34,
+        "within_30_days": false,
+        "within_90_days": true,
+        "classification": "possible_respin",
+        "reason": null,
+        "platforms_stated": [
+          "6200"
+        ],
+        "production_eligible": false,
+        "evidence": [
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+            "quote": "10.13.1003  | 05/03/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          }
+        ],
+        "respin_rule": "non_decadal_build",
+        "expected_regular_build": "10.13.1000",
+        "expected_regular_build_absent": false
+      }
+    },
+    {
+      "type": "respin",
+      "index": 5,
+      "vendor": "aruba",
+      "train": "10.13",
+      "classification": "possible_respin",
+      "notice_date": null,
+      "action_date": null,
+      "platforms_stated": [
+        "6200"
+      ],
+      "evidence": [
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        },
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+          "quote": "10.13.1005  | 22/03/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "review_status": "independent_human_review_pending",
+      "fact": {
+        "vendor": "aruba",
+        "train": "10.13",
+        "base_version": "10.13.10xx",
+        "previous_release": "10.13.1000",
+        "followup_release": "10.13.1005",
+        "previous_release_date": "2024-01-31",
+        "followup_release_date": "2024-03-22",
+        "days": 51,
+        "within_30_days": false,
+        "within_90_days": true,
+        "classification": "possible_respin",
+        "reason": null,
+        "platforms_stated": [
+          "6200"
+        ],
+        "production_eligible": false,
+        "evidence": [
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+            "quote": "10.13.1005  | 22/03/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          }
+        ],
+        "respin_rule": "non_decadal_build",
+        "expected_regular_build": "10.13.1000",
+        "expected_regular_build_absent": false
+      }
+    }
+  ],
+  "validation": {
+    "status": "passed",
+    "checks": [
+      "catalogue_schema",
+      "source_provenance",
+      "date_separation",
+      "model_scope",
+      "same_base_chronology",
+      "unique_release_identity"
+    ],
+    "review_status": "independent_human_review_pending"
+  },
+  "limitations": [
+    "Counts describe disclosure and collection, not vendor quality. Missing evidence is unknown, never zero. Independent human review pending.",
+    "Research excerpts are observed context, not production-eligible original evidence.",
+    "Notice dates, action dates and software release dates retain separate meanings.",
+    "A model-unresolved upgrade match is context, never proven applicability.",
+    "Rates require complete original release and signal coverage; respins use the follow-up release cohort."
+  ],
+  "method": {
+    "release_cohort": "software release date",
+    "notice_cohort": "notice date",
+    "withdrawal_cohort": "affected shipped release date",
+    "respin_cohort": "follow-up software release date",
+    "respin_denominator": "releases shipped in follow-up cohort year",
+    "rate_support": "complete dated original release enumeration and explicit complete signal coverage; 30/90 day prior original release history for respins",
+    "review_status": "independent_human_review_pending"
+  }
+}

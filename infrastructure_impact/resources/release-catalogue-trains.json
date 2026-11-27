@@ -9,7 +9,8 @@
       "train": "17.12",
       "platforms": ["Catalyst 9200", "Catalyst 9300"],
       "base_pattern": "^(17\\.12\\.\\d+)[a-z]?$",
-      "base_replacement": "\\1"
+      "base_replacement": "\\1",
+      "respin_rule": "letter_suffix"
     },
     {
       "vendor": "aruba",
@@ -17,7 +18,8 @@
       "train": "10.13",
       "platforms": ["6200", "6300"],
       "base_pattern": "^(10\\.13\\.\\d{2})\\d{2}$",
-      "base_replacement": "\\1xx"
+      "base_replacement": "\\1xx",
+      "respin_rule": "non_decadal_build"
     },
     {
       "vendor": "arista",
@@ -25,7 +27,8 @@
       "train": "4.33",
       "platforms": ["720XP", "720DP"],
       "base_pattern": "^(4\\.33\\.\\d+)(?:\\.\\d+)?([FM])$",
-      "base_replacement": "\\1\\2"
+      "base_replacement": "\\1\\2",
+      "respin_rule": "subrelease"
     }
   ]
 }

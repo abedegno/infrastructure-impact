@@ -3,6 +3,7 @@
 import json
 import re
 from collections import defaultdict
+from copy import deepcopy
 from datetime import date, datetime
 from functools import cache
 from itertools import pairwise
@@ -25,9 +26,11 @@ _HOSTS = {
         "arubanetworks.com",
         "www.arubanetworks.com",
         "support.hpe.com",
+        "csaf.arubanetworking.hpe.com",
     },
     "arista": {"www.arista.com", "arista.com"},
 }
+RESPIN_RULES = {"cisco": "letter_suffix", "aruba": "non_decadal_build", "arista": "subrelease"}
 
 
 def _version_key(vendor, literal):
@@ -71,6 +74,26 @@ def validate_catalogue(value):
         _validator().validate(value)
     except ValidationError as error:
         raise ValueError("Invalid release catalogue: " + error.message) from error
+    identities = set()
+    flattened = []
+    for row in value["releases"]:
+        key = (row["vendor"], row["train"], row["version"])
+        if value.get("release_identity") and key in identities:
+            raise ValueError("Duplicate release identity")
+        identities.add(key)
+        observations = row.get("observations")
+        if observations:
+            if any((o["vendor"], o["train"], o["version"]) != key for o in observations):
+                raise ValueError("Release observation identity differs")
+            if _merge_release(observations) != row:
+                raise ValueError("Release observation union differs")
+            flattened.extend(observations)
+        else:
+            flattened.append(row)
+    if any("observations" in row for row in value["releases"]):
+        legacy = {**value, "releases": flattened}
+        legacy.pop("release_identity", None)
+        validate_catalogue(legacy)
     generated = datetime.fromisoformat(value["generated_at"].upper())
     if generated.tzinfo is None:
         raise ValueError("Catalogue timestamp requires timezone")
@@ -146,6 +169,51 @@ def validate_catalogue(value):
     return value
 
 
+def _merge_release(rows):
+    """Union identity records without transferring dates or eligibility across scopes."""
+    observations = []
+    for row in rows:
+        for observation in row.get("observations", [row]):
+            if observation not in observations:
+                observations.append(deepcopy(observation))
+    merged = deepcopy(observations[0])
+    if any(row["family"] != merged["family"] for row in observations):
+        raise ValueError("Conflicting release family")
+    merged["platforms_stated"] = sorted(
+        {p for row in observations for p in row["platforms_stated"]}
+    )
+    merged["evidence"] = []
+    for row in observations:
+        for reference in row["evidence"]:
+            if reference not in merged["evidence"]:
+                merged["evidence"].append(deepcopy(reference))
+    for field in ("release_date", "announcement_date"):
+        dates = {row[field] for row in observations}
+        merged[field] = dates.pop() if len(dates) == 1 else None
+    merged["date_status"] = "stated" if merged["release_date"] else "unknown"
+    if len({row.get("observation_basis") for row in observations}) > 1:
+        merged.pop("observation_basis", None)
+    if len(observations) > 1:
+        merged["observations"] = observations
+    return merged
+
+
+def deduplicate_releases(value):
+    """Return one record per vendor/train/version; preserve the input and all observations."""
+    legacy = deepcopy(value)
+    legacy.pop("release_identity", None)
+    validate_catalogue(legacy)
+    groups = defaultdict(list)
+    for row in legacy["releases"]:
+        groups[row["vendor"], row["train"], row["version"]].append(row)
+    result = {
+        **legacy,
+        "release_identity": "vendor_train_version",
+        "releases": [_merge_release(rows) for rows in groups.values()],
+    }
+    return validate_catalogue(result)
+
+
 def validate_config(config):
     if set(config) != {"schema_version", "start", "end", "trains"} or config["schema_version"] != 1:
         raise ValueError("Invalid catalogue configuration")
@@ -154,7 +222,7 @@ def validate_config(config):
         raise ValueError("Invalid catalogue period")
     seen = set()
     for row in config["trains"]:
-        if set(row) != {
+        if set(row) - {"respin_rule"} != {
             "vendor",
             "family",
             "train",
@@ -168,6 +236,8 @@ def validate_config(config):
             raise ValueError("Invalid or duplicate configured train")
         seen.add(key)
         re.compile(row["base_pattern"])
+        if "respin_rule" in row and row["respin_rule"] != RESPIN_RULES[row["vendor"]]:
+            raise ValueError("Invalid vendor respin rule")
     return config
 
 
@@ -184,7 +254,8 @@ def _scope(fact, train):
 def _releases(value, train):
     return [
         r
-        for r in value["releases"]
+        for record in value["releases"]
+        for r in record.get("observations", [record])
         if (r["vendor"], r["family"], r["train"])
         == (train["vendor"], train["family"], train["train"])
     ]
@@ -270,56 +341,103 @@ def catalogue_summary(value, config):
     }
 
 
+def _regular(vendor, version):
+    parts = _version_key(vendor, version)
+    if vendor == "aruba":
+        return parts[2] % 10 == 0
+    return parts[3] == 0
+
+
 def find_respins(value, config):
-    """Nearest same-base predecessor per stated model, bounded to 90 release-date days."""
+    """Configured rebuilds use a regular predecessor; legacy reports remain readable.
+
+    Missing or undated anchors remain explicit candidates with unknown intervals.
+    They never enter 30/90-day numerators or establish withdrawal evidence.
+    """
     validate_catalogue(value)
     validate_config(config)
     sources = {s["source_id"]: s for s in value["sources"]}
     result = {}
     for train in config["trains"]:
+        corrected = "respin_rule" in train
         groups = defaultdict(dict)
         for row in _releases(value, train):
             match = re.fullmatch(train["base_pattern"], row["version"])
-            if not match or not row["release_date"]:
+            if not match or (not corrected and not row["release_date"]):
                 continue
             base = match.expand(train["base_replacement"])
             for platform in sorted(_scope(row, train)):
                 key = (base, platform)
                 # Duplicate source rows do not create extra releases.
                 existing = groups[key].get(row["version"])
-                if existing is None or (
-                    _original(row, sources) and not _original(existing, sources)
+                if (
+                    existing is None
+                    or (
+                        corrected
+                        and (bool(row["release_date"]), _original(row, sources))
+                        > (bool(existing["release_date"]), _original(existing, sources))
+                    )
+                    or (
+                        not corrected
+                        and _original(row, sources)
+                        and not _original(existing, sources)
+                    )
                 ):
                     groups[key][row["version"]] = row
         for (base, platform), versions in groups.items():
             ordered = sorted(
-                versions.values(),
+                (r for r in versions.values() if r["release_date"]),
                 key=lambda r: (r["release_date"], _version_key(train["vendor"], r["version"])),
             )
+            # Ordering is validated independently of candidate selection and interval.
             for previous, current in pairwise(ordered):
-                if (
-                    not config["start"]
-                    <= current["release_date"]
-                    <= min(config["end"], value["generated_at"][:10])
-                ):
-                    continue
-                days = (
-                    date.fromisoformat(current["release_date"])
-                    - date.fromisoformat(previous["release_date"])
-                ).days
-                if _version_key(train["vendor"], current["version"]) <= _version_key(
+                if corrected and _version_key(train["vendor"], current["version"]) <= _version_key(
                     train["vendor"], previous["version"]
                 ):
                     raise ValueError("Release dates are not monotonic within a maintenance line")
-                if not 0 <= days <= 90:
+            candidates = list(pairwise(ordered))
+            if corrected:
+                candidates = []
+                by_version = sorted(
+                    versions.values(), key=lambda r: _version_key(train["vendor"], r["version"])
+                )
+                for current in by_version:
+                    if _regular(train["vendor"], current["version"]):
+                        continue
+                    preceding = [
+                        r
+                        for r in by_version
+                        if _regular(train["vendor"], r["version"])
+                        and _version_key(train["vendor"], r["version"])
+                        < _version_key(train["vendor"], current["version"])
+                    ]
+                    candidates.append((preceding[-1] if preceding else None, current))
+            for previous, current in candidates:
+                if current["release_date"] is not None and not config["start"] <= current[
+                    "release_date"
+                ] <= min(config["end"], value["generated_at"][:10]):
+                    continue
+                if not corrected and _version_key(
+                    train["vendor"], current["version"]
+                ) <= _version_key(train["vendor"], previous["version"]):
+                    raise ValueError("Release dates are not monotonic within a maintenance line")
+                days = (
+                    (
+                        date.fromisoformat(current["release_date"])
+                        - date.fromisoformat(previous["release_date"])
+                    ).days
+                    if previous and previous["release_date"] and current["release_date"]
+                    else None
+                )
+                if days is not None and not 0 <= days <= 90:
                     continue
                 identity = (
                     train["vendor"],
                     train["train"],
-                    previous["version"],
+                    previous["version"] if previous else None,
                     current["version"],
                 )
-                evidence = [*previous["evidence"], *current["evidence"]]
+                evidence = [*(previous["evidence"] if previous else []), *current["evidence"]]
                 explicit = [
                     s
                     for s in value["statements"]
@@ -337,21 +455,30 @@ def find_respins(value, config):
                         "vendor": train["vendor"],
                         "train": train["train"],
                         "base_version": base,
-                        "previous_release": previous["version"],
+                        "previous_release": previous["version"] if previous else None,
                         "followup_release": current["version"],
-                        "previous_release_date": previous["release_date"],
+                        "previous_release_date": previous["release_date"] if previous else None,
                         "followup_release_date": current["release_date"],
                         "days": days,
-                        "within_30_days": days <= 30,
-                        "within_90_days": True,
+                        "within_30_days": days <= 30 if days is not None else None,
+                        "within_90_days": True if days is not None else None,
                         "classification": classification,
                         "reason": explicit[0]["evidence"][0]["quote"] if explicit else None,
                         "platforms_stated": [],
-                        "production_eligible": _original(previous, sources)
+                        "production_eligible": previous is not None
+                        and days is not None
+                        and _original(previous, sources)
                         and _original(current, sources)
                         and all(_original(s, sources) for s in explicit),
                         "evidence": evidence,
                     },
                 )
+                if corrected:
+                    row["respin_rule"] = train["respin_rule"]
+                    if train["vendor"] == "aruba":
+                        build = _version_key("aruba", current["version"])[2]
+                        expected = f"{train['train']}.{build - build % 10:04d}"
+                        row["expected_regular_build"] = expected
+                        row["expected_regular_build_absent"] = expected not in versions
                 row["platforms_stated"].append(platform)
     return list(result.values())

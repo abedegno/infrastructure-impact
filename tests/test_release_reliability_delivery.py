@@ -37,6 +37,37 @@ def test_report_is_separate_generation_bound_root(generation):
         assert "release_reliability" not in common
 
 
+@pytest.mark.parametrize("version", ["v1", "v2"])
+def test_scientific_publication_retains_bounded_default_context_and_lazy_browser_reader(
+    tmp_path, version
+):
+    from infrastructure_impact.application.release_reliability import validate_published_report
+
+    root = tmp_path / version
+    path = publish(dataset(), root, publication_format=version, include_switching_analysis=True)
+    report = json.loads((path / "release-reliability.json").read_text())
+    validate_published_report(report)
+    assert report["published_staircase_version"] == 1
+    assert report["upgrade_selection"]["kind"] == "configured_staircases"
+    assert report["upgrade_selection"]["start"] == "2024-01-01"
+    assert report["upgrade_selection"]["end"] == "2026-12-31"
+    assert report["upgrade_selection"]["trains"] == [
+        dict(vendor="cisco", train="17.12"),
+        dict(vendor="aruba", train="10.13"),
+        dict(vendor="arista", train="4.33"),
+    ]
+    if version == "v2":
+        assert PublicationReader(path).release_reliability() == report
+    status, _, raw = Application(root).route(
+        {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/v1/release-reliability"}
+    )
+    assert status == 200 and json.loads(raw) == report
+    # Exercise the actual indexed reader, its retry path and owned return copies.
+    test_browser_optional_reader_retries_failed_validation_and_returns_owned_copy(
+        (root, path, version)
+    )
+
+
 def test_api_base_report_and_query_boundary(generation):
     root, path, _ = generation
     app = Application(root)

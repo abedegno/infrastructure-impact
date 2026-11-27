@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "kind": "release_reliability_version_gap_findings",
+  "recorded_at": "2026-11-27T11:29:31.014316+00:00",
+  "baseline_publication": "58fe89dbb1e847e09d20e3e27b08492b",
+  "review_status": "independent_human_review_pending",
+  "source_policy": "Primary public sources only; no login, challenge bypass, mirrors or full vendor documents in Git.",
+  "sources": [
+    {
+      "source_id": "cisco-9300-images",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/upgrading_the_switch_software.html",
+      "retrieved_at": "2026-11-27T11:29:31.014316+00:00",
+      "retrieval_time_basis": "tool excerpt recorded locally; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "df17a80b072d1e4f89254ce5682e0bd308e999e5685a1b9ebc83f5b137adcebe",
+      "fingerprint_scope": "recorded quoted fact and locator, not original document bytes",
+      "access": {
+        "robots_status": 403,
+        "original_document_fetch": "not_attempted_after_robots_denial",
+        "public_indexed_excerpt": "available"
+      }
+    },
+    {
+      "source_id": "cisco-9200-whats-new",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/whats_new_in_cisco_ios_dublin_1712x.html",
+      "retrieved_at": "2026-11-27T11:29:31.014316+00:00",
+      "retrieval_time_basis": "tool excerpt recorded locally; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "e7869ed6e30ebfb5c91d2dedb296b41efd753c88328bea17e76eabb35d867231",
+      "fingerprint_scope": "recorded quoted fact and locator, not original document bytes",
+      "access": {
+        "robots_status": 403,
+        "original_document_fetch": "not_attempted_after_robots_denial",
+        "public_indexed_excerpt": "available"
+      }
+    },
+    {
+      "source_id": "aruba-04669",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "retrieved_at": "2026-11-27T11:20:49.882570+00:00",
+      "retrieval_time_basis": "successful anonymous original-byte fetch completion",
+      "capture_kind": "original_document",
+      "original_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "excerpt_sha256": null,
+      "access": {
+        "robots_status": 404,
+        "document_status": 200
+      }
+    },
+    {
+      "source_id": "aruba-05027",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2026/hpe_aruba_networking_-_hpesbnw05027.json",
+      "retrieved_at": "2026-11-27T11:20:51.598374+00:00",
+      "retrieval_time_basis": "successful anonymous original-byte fetch completion",
+      "capture_kind": "original_document",
+      "original_sha256": "cb5b3327c97f3dd20718278feec4413c5e3a31a524319c186d0fb6c226f629fd",
+      "excerpt_sha256": null,
+      "access": {
+        "robots_status": 404,
+        "document_status": 200
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "cisco-17.12.7-vs-17.12.7a",
+      "vendor": "cisco",
+      "train": "17.12",
+      "versions": [
+        "17.12.7",
+        "17.12.7a"
+      ],
+      "status": "documented_image_and_model_specific_rebuild_reference",
+      "release_date": null,
+      "notice_date": null,
+      "action_date": null,
+      "document_revision_date": "2026-08-05",
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "analysis_extraction_defect_found": false,
+      "reason": "The 9300 software-image table explicitly names 17.12.7 and its binary. The 9200 feature chapter names 17.12.7a. Neither states a withdrawal, deferral or replacement relationship. Do not replace numeric targets across models.",
+      "evidence": [
+        {
+          "source_id": "cisco-9300-images",
+          "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+          "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin",
+          "platforms_stated": [
+            "Catalyst 9300"
+          ]
+        },
+        {
+          "source_id": "cisco-9200-whats-new",
+          "locator": "Software Features in Cisco IOS XE 17.12.7a / heading; rendered line 123",
+          "quote": "Software Features in Cisco IOS XE 17.12.7a",
+          "platforms_stated": [
+            "Catalyst 9200"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aruba-10.13.1031",
+      "vendor": "aruba",
+      "train": "10.13",
+      "versions": [
+        "10.13.1031"
+      ],
+      "status": "explicit_vendor_fix_version",
+      "notice_date": "2024-07-09",
+      "action_date": null,
+      "release_date": null,
+      "advisory_revision_date": "2024-07-31",
+      "analysis_extraction_defect_found": false,
+      "scope": "AOS-CX software family; no model inferred from this fix reference",
+      "platforms_stated": [],
+      "advisory_id": "HPESBNW04669",
+      "cve_ids": [
+        "CVE-2024-6387"
+      ],
+      "reason": "Both product_status.fixed and remediation text name the literal version. It is not a mistaken reading of the adjacent regular build. The release-history omission does not prove absence or withdrawal; a binary-release date and catalogue model binding remain unknown.",
+      "evidence": [
+        {
+          "source_id": "aruba-04669",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "10.13.1031 and above"
+        }
+      ]
+    },
+    {
+      "id": "aruba-10.13.1161",
+      "vendor": "aruba",
+      "train": "10.13",
+      "versions": [
+        "10.13.1161"
+      ],
+      "status": "explicit_vendor_fix_version",
+      "notice_date": "2026-03-10",
+      "action_date": null,
+      "release_date": null,
+      "advisory_revision_date": "2026-03-10",
+      "analysis_extraction_defect_found": false,
+      "scope": "AOS-CX software family; no model inferred from this fix reference",
+      "platforms_stated": [],
+      "advisory_id": "HPESBNW05027",
+      "cve_ids": [
+        "CVE-2026-23813",
+        "CVE-2026-23814",
+        "CVE-2026-23815",
+        "CVE-2026-23816",
+        "CVE-2026-23817"
+      ],
+      "reason": "Both product_status.fixed and remediation text name the literal version. It is not a mistaken reading of the adjacent regular build. The release-history omission does not prove absence or withdrawal; a binary-release date and catalogue model binding remain unknown.",
+      "evidence": [
+        {
+          "source_id": "aruba-05027",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Document revision, advisory notice, action and software release dates remain separate.",
+    "No analysis target or model applicability was changed.",
+    "Cisco publisher status and software release dates remain unknown.",
+    "Findings are not promoted into the packaged release denominator during this phase."
+  ],
+  "search_scope": {
+    "vendor": "cisco",
+    "queries": [
+      "site:cisco.com 17.12.7a supersedes",
+      "site:cisco.com 17.12.7 deferred",
+      "site:cisco.com 17.12.7 withdrawn"
+    ],
+    "excluded_results": "Wireless-controller, AP, unrelated Catalyst-family and community statements do not establish the requested 9200/9300 release action."
+  }
+}

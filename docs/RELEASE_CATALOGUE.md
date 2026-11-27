@@ -53,18 +53,26 @@ The older `release-signals` event contract is unchanged.
 
 ## Follow-up rules and coverage
 
-Pairs are the nearest observed predecessor within the same base and stated model,
-using explicit release dates, within 30 or 90 calendar days. These are observations,
-not a reconstructed complete sequence; missing intermediate releases remain possible.
-Cisco groups letter rebuilds under their numeric release; EOS groups sub-releases
-only with the same F/M suffix. The initial AOS-CX convention groups `10.13.10xx`
-and `10.13.11xx` separately. This is a configured candidate grouping, not a vendor
-claim that build increments were emergency corrections. Routine maintenance can
-therefore appear as a possible respin. Timing alone never establishes a reason.
+Each configured train supplies an explicit vendor `respin_rule`, alongside its
+maintenance-line pattern and stated model scope. Cisco pairs letter suffixes with
+their preceding regular numeric base; EOS pairs sub-releases with a preceding
+regular base retaining the same F/M suffix. AOS-CX regular builds are divisible
+by ten; ordinary 1000, 1010 and 1020 maintenance releases do not become respins.
+Non-decadal 1003 and 1005 pair with 1000, not with each other. The expected regular
+build is recorded; a missing 1100 for 1101 is collection-absence evidence only.
+Candidate pairs need dated inputs to enter 30/90-day counts. Undated candidates
+or missing regular anchors retain null intervals and review entries, not a zero
+or invented predecessor date. Historical reports without `respin_rule` preserve
+their old derivation, including the now-superseded broad Aruba grouping.
+Timing alone never establishes a corrective reason.
 A corrective relationship needs a separately quoted publisher statement for the
 same family, model and exact release pair. Model-specific dates and evidence do
 not transfer to other models. Shared strings never establish platform support.
 
+New packaged catalogues contain one record per vendor/train/version. Stated
+platforms and all evidence are retained in the union; optional original
+`observations` preserve model-specific dates, date unknowns and evidence classes.
+Their union is validated and cannot add an unstated model or date.
 The summary reports distinct dated version identities, not summed model rows.
 Research dates are counted separately. All current denominators are null because
 complete, original, dated release enumeration has not been established. A coverage

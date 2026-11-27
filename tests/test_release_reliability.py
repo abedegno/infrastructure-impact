@@ -6,7 +6,7 @@ from test_release_catalogue import config, evidence, release, specimen
 from infrastructure_impact.application import release_reliability as rr
 
 PUB = {"id": "release-test", "advisory_schema_version": 2}
-NOW = "2026-11-25T18:00:00Z"
+NOW = "2026-11-28T00:00:00Z"
 
 
 def build(d=None, c=None):
@@ -52,9 +52,9 @@ def test_frozen_metrics_preserve_research_and_unknown_rates():
     assert all(
         r["review_status"] == "independent_human_review_pending" for r in report["review_packet"]
     )
-    assert len(report["review_packet"]) == len(report["catalogue"]["notices"]) + len(
-        report["catalogue"]["statements"]
-    )
+    assert len(report["review_packet"]) == len(report["respins"]) + len(
+        report["catalogue"]["notices"]
+    ) + len(report["catalogue"]["statements"])
 
 
 def test_future_capture_is_unavailable_and_identity_fails_closed():
@@ -113,7 +113,7 @@ def test_csv_is_safe_and_keeps_publication_context():
     report = build()
     report["limitations"][0] = "=SUM(A1)"
     output = rr.csv_export(report)
-    assert "release-test" in output and "2026-11-25T18:00:00Z" in output
+    assert "release-test" in output and NOW in output
     assert "'=SUM(A1)" in output
     with pytest.raises(ValueError):
         rr.csv_export(report, max_bytes=10)
@@ -261,6 +261,9 @@ def test_standalone_review_items_retain_full_source_identity_and_scope():
     items = report["review_packet"]
     assert items
     for item in items:
+        if item["type"] == "respin":
+            assert item["fact"] == report["respins"][item["index"]]
+            continue
         section = "notices" if item["type"] == "notice" else "statements"
         assert item["fact"] == report["catalogue"][section][item["index"]]
 
@@ -370,7 +373,7 @@ def test_csv_retains_resolvable_source_facts_and_review_items():
 
     report = rr.build_report(
         publication={"id": "csv-proof", "advisory_schema_version": 2},
-        generated_at="2026-11-26T00:00:00Z",
+        generated_at=NOW,
     )
     rows = list(csv.DictReader(io.StringIO(rr.csv_export(report))))
     sources = [json.loads(row["payload"]) for row in rows if row["row_type"] == "catalogue_source"]

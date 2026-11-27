@@ -7,7 +7,7 @@ from datetime import datetime
 from ..collection.reliability_refresh import SOURCES
 from ..release_catalogue_cli import read_json
 from ..settings import PACKAGE
-from .release_catalogue import catalogue_summary, validate_catalogue
+from .release_catalogue import catalogue_summary, deduplicate_releases, validate_catalogue
 from .release_reliability import build_report
 
 
@@ -166,8 +166,9 @@ def prepare(cache, baseline):
     candidate = deepcopy(validate_catalogue(baseline))
     sources = {source["source_id"]: source for source in candidate["sources"]}
     versions = defaultdict(list)
-    for fact in candidate["releases"]:
-        versions[_identity(fact)].append(fact)
+    for record in candidate["releases"]:
+        for fact in record.get("observations", [record]):
+            versions[_identity(fact)].append(fact)
     review = {
         "schema_version": 1,
         "review_status": candidate["review_status"],
@@ -209,6 +210,7 @@ def prepare(cache, baseline):
                 processed.add(digest)
 
     config = read_json(PACKAGE / "resources/release-catalogue-trains.json")
+    candidate = deduplicate_releases(candidate)
     review["summary"] = catalogue_summary(candidate, config)
     preview = build_report(
         catalogue=candidate, config=config, publication=None, generated_at=candidate["generated_at"]

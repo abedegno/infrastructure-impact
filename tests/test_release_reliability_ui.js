@@ -64,6 +64,11 @@ if (process.argv[2]) {
   assert(!html.includes('href="javascript:'), 'unsafe source URL cannot become a link');
   const steps = R.renderSteps(selected, vectors.upgrades.rows, vectors.upgrades.selection);
   assert(steps.includes('Model') || !selected.upgrade_annotations.length);
+  if (selected.staircase_join_version === 1 && selected.upgrade_annotations.length) {
+    assert(steps.includes('release-catalogue-marker'));
+    assert(steps.includes('data-version-match="exact"'));
+    assert(steps.includes('Notice date:') && steps.includes('action date:'));
+  }
 }
 console.log('Release reliability browser tests passed');
 if (process.argv[2]) {
@@ -89,6 +94,23 @@ if (process.argv[2]) {
   assert(R.csvExport(guarded).includes("'=SUM(A1)"));
   assert(R.csvExport(guarded).includes("'\t@danger"));
   assert(R.renderSteps(v.selected, v.upgrades.rows, { different: true }).includes('unavailable'));
+  if (v.report.catalogue.release_identity) {
+    bad = copy(v.report);
+    bad.catalogue.releases.push(copy(bad.catalogue.releases[0]));
+    bad.catalogue_sha256 = context.window.InfrastructureSwitchingContracts.fingerprint(
+      bad.catalogue,
+    );
+    assert.throws(() => R.validate(bad), /duplicate release identity/);
+    const index = v.report.catalogue.releases.findIndex((r) => r.observations);
+    if (index >= 0) {
+      bad = copy(v.report);
+      bad.catalogue.releases[index].platforms_stated.push('unstated model');
+      bad.catalogue_sha256 = context.window.InfrastructureSwitchingContracts.fingerprint(
+        bad.catalogue,
+      );
+      assert.throws(() => R.validate(bad), /observation union/);
+    }
+  }
 }
 // Exercise the real app loader with late completion and mixed generation roots.
 (async () => {

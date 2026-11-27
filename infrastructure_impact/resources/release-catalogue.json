@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-25T16:48:07.849674+00:00",
+  "generated_at": "2026-11-27T11:29:31.014316+00:00",
   "review_status": "independent_human_review_pending",
   "sources": [
     {
@@ -245,6 +245,33 @@
       "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
       "excerpt_sha256": null,
       "source_id": "arista-febee22fd3bcc2e460936930"
+    },
+    {
+      "source_id": "cisco-9300-images",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/upgrading_the_switch_software.html",
+      "retrieved_at": "2026-11-27T11:29:31.014316+00:00",
+      "capture_kind": "tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "df17a80b072d1e4f89254ce5682e0bd308e999e5685a1b9ebc83f5b137adcebe"
+    },
+    {
+      "source_id": "aruba-04669",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "retrieved_at": "2026-11-27T11:20:49.882570+00:00",
+      "capture_kind": "original_document",
+      "original_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "excerpt_sha256": null
+    },
+    {
+      "source_id": "aruba-05027",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2026/hpe_aruba_networking_-_hpesbnw05027.json",
+      "retrieved_at": "2026-11-27T11:20:51.598374+00:00",
+      "capture_kind": "original_document",
+      "original_sha256": "cb5b3327c97f3dd20718278feec4413c5e3a31a524319c186d0fb6c226f629fd",
+      "excerpt_sha256": null
     }
   ],
   "releases": [
@@ -257,157 +284,56 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
         {
           "source_id": "cisco-db37a2d5618261d87b16ea9e",
           "locator": "Boot Loader Versions / Release column",
           "quote": "Dublin 17.12.1"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.2",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-f358dcffeb791b44773e352d",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.2"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.3",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-936a1cac7cbfdc877cafd910",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.3"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.4",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-90382cb9f0b6c95c12496c9e",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.4"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.5",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-bf73ec0fd87975d457fb57d0",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.5"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.6",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-010f08f71ceee8eab60413e5",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.6"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.7a",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-c53a168eb6152b87789b15b5",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.7a"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.8",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200"],
-      "evidence": [
-        {
-          "source_id": "cisco-a1f06c26952a3f4835d48be5",
-          "locator": "Boot Loader Versions / Release column",
-          "quote": "Dublin 17.12.8"
-        }
-      ]
-    },
-    {
-      "vendor": "cisco",
-      "family": "IOS XE",
-      "train": "17.12",
-      "version": "17.12.1",
-      "observation_basis": "version_table",
-      "release_date": null,
-      "date_status": "unknown",
-      "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
-      "evidence": [
+        },
         {
           "source_id": "cisco-6301c9eaf82fb91a7ccc10b8",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.1"
         }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.1",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-db37a2d5618261d87b16ea9e",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.1"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.1",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-6301c9eaf82fb91a7ccc10b8",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.1"
+            }
+          ]
+        }
       ]
     },
     {
@@ -419,12 +345,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-f358dcffeb791b44773e352d",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.2"
+        },
         {
           "source_id": "cisco-e6de11fab6560d91e357a719",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.2"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.2",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-f358dcffeb791b44773e352d",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.2"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.2",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-e6de11fab6560d91e357a719",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.2"
+            }
+          ]
         }
       ]
     },
@@ -437,12 +406,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-936a1cac7cbfdc877cafd910",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.3"
+        },
         {
           "source_id": "cisco-edaf6687a83eb1bb987713b7",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.3"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.3",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-936a1cac7cbfdc877cafd910",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.3"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.3",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-edaf6687a83eb1bb987713b7",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.3"
+            }
+          ]
         }
       ]
     },
@@ -455,12 +467,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-90382cb9f0b6c95c12496c9e",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.4"
+        },
         {
           "source_id": "cisco-b8d99593613c20785f170711",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.4"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.4",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-90382cb9f0b6c95c12496c9e",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.4"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.4",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-b8d99593613c20785f170711",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.4"
+            }
+          ]
         }
       ]
     },
@@ -473,12 +528,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-bf73ec0fd87975d457fb57d0",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.5"
+        },
         {
           "source_id": "cisco-e6f8a678cc81d5a689e02c92",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.5"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.5",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-bf73ec0fd87975d457fb57d0",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.5"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.5",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-e6f8a678cc81d5a689e02c92",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.5"
+            }
+          ]
         }
       ]
     },
@@ -491,12 +589,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-010f08f71ceee8eab60413e5",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.6"
+        },
         {
           "source_id": "cisco-dce61016b00eaa32f36c014c",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.6"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.6",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-010f08f71ceee8eab60413e5",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.6"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.6",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-dce61016b00eaa32f36c014c",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.6"
+            }
+          ]
         }
       ]
     },
@@ -509,12 +650,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-c53a168eb6152b87789b15b5",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.7a"
+        },
         {
           "source_id": "cisco-19ecc8fedb88e02ddccd111c",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.7a"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.7a",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-c53a168eb6152b87789b15b5",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.7a"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.7a",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.7a"
+            }
+          ]
         }
       ]
     },
@@ -527,12 +711,55 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
       "evidence": [
+        {
+          "source_id": "cisco-a1f06c26952a3f4835d48be5",
+          "locator": "Boot Loader Versions / Release column",
+          "quote": "Dublin 17.12.8"
+        },
         {
           "source_id": "cisco-88396228eabada30ddcfe39b",
           "locator": "ROMMON Versions / Release column",
           "quote": "Dublin 17.12.8"
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.8",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9200"],
+          "evidence": [
+            {
+              "source_id": "cisco-a1f06c26952a3f4835d48be5",
+              "locator": "Boot Loader Versions / Release column",
+              "quote": "Dublin 17.12.8"
+            }
+          ]
+        },
+        {
+          "vendor": "cisco",
+          "family": "IOS XE",
+          "train": "17.12",
+          "version": "17.12.8",
+          "observation_basis": "version_table",
+          "release_date": null,
+          "date_status": "unknown",
+          "announcement_date": null,
+          "platforms_stated": ["Catalyst 9300"],
+          "evidence": [
+            {
+              "source_id": "cisco-88396228eabada30ddcfe39b",
+              "locator": "ROMMON Versions / Release column",
+              "quote": "Dublin 17.12.8"
+            }
+          ]
         }
       ]
     },
@@ -1005,7 +1232,7 @@
       "release_date": "2024-01-31",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": ["6200", "6300"],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1016,6 +1243,64 @@
           "source_id": "aruba-7c2f272815fd0daa4236a87d",
           "locator": "Products Supported / paragraph / rendered line85",
           "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        },
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+          "quote": "10.13.1000  | 31/01/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "aruba",
+          "family": "AOS-CX",
+          "train": "10.13",
+          "version": "10.13.1000",
+          "observation_basis": "release_history",
+          "release_date": "2024-01-31",
+          "date_status": "stated",
+          "announcement_date": null,
+          "platforms_stated": ["6300"],
+          "evidence": [
+            {
+              "source_id": "aruba-a25d9956d6d2dc4468d91467",
+              "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+              "quote": "10.13.1000  | 31/01/2024"
+            },
+            {
+              "source_id": "aruba-7c2f272815fd0daa4236a87d",
+              "locator": "Products Supported / paragraph / rendered line85",
+              "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+            }
+          ]
+        },
+        {
+          "vendor": "aruba",
+          "family": "AOS-CX",
+          "train": "10.13",
+          "version": "10.13.1000",
+          "observation_basis": "release_history",
+          "release_date": "2024-01-31",
+          "date_status": "stated",
+          "announcement_date": null,
+          "platforms_stated": ["6200"],
+          "evidence": [
+            {
+              "source_id": "aruba-685df04322baa38b62cf829d",
+              "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+              "quote": "10.13.1000  | 31/01/2024"
+            },
+            {
+              "source_id": "aruba-3a765657cd1176ec63b71323",
+              "locator": "Products Supported / paragraph / rendered line87",
+              "quote": "This release applies to the 6200 Switch series."
+            }
+          ]
         }
       ]
     },
@@ -1028,7 +1313,7 @@
       "release_date": "2024-01-10",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": ["6200", "6300"],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1039,6 +1324,64 @@
           "source_id": "aruba-7c2f272815fd0daa4236a87d",
           "locator": "Products Supported / paragraph / rendered line85",
           "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+        },
+        {
+          "source_id": "aruba-685df04322baa38b62cf829d",
+          "locator": "Version history table / Version number=10.13.0010 / rendered line 99",
+          "quote": "10.13.0010  | 10/01/2024"
+        },
+        {
+          "source_id": "aruba-3a765657cd1176ec63b71323",
+          "locator": "Products Supported / paragraph / rendered line87",
+          "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "aruba",
+          "family": "AOS-CX",
+          "train": "10.13",
+          "version": "10.13.0010",
+          "observation_basis": "release_history",
+          "release_date": "2024-01-10",
+          "date_status": "stated",
+          "announcement_date": null,
+          "platforms_stated": ["6300"],
+          "evidence": [
+            {
+              "source_id": "aruba-a25d9956d6d2dc4468d91467",
+              "locator": "Version history table / Version number=10.13.0010 / rendered line 115",
+              "quote": "10.13.0010  | 10/01/2024"
+            },
+            {
+              "source_id": "aruba-7c2f272815fd0daa4236a87d",
+              "locator": "Products Supported / paragraph / rendered line85",
+              "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+            }
+          ]
+        },
+        {
+          "vendor": "aruba",
+          "family": "AOS-CX",
+          "train": "10.13",
+          "version": "10.13.0010",
+          "observation_basis": "release_history",
+          "release_date": "2024-01-10",
+          "date_status": "stated",
+          "announcement_date": null,
+          "platforms_stated": ["6200"],
+          "evidence": [
+            {
+              "source_id": "aruba-685df04322baa38b62cf829d",
+              "locator": "Version history table / Version number=10.13.0010 / rendered line 99",
+              "quote": "10.13.0010  | 10/01/2024"
+            },
+            {
+              "source_id": "aruba-3a765657cd1176ec63b71323",
+              "locator": "Products Supported / paragraph / rendered line87",
+              "quote": "This release applies to the 6200 Switch series."
+            }
+          ]
         }
       ]
     },
@@ -1051,7 +1394,7 @@
       "release_date": "2024-03-22",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": ["6200", "6300"],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1062,20 +1405,7 @@
           "source_id": "aruba-7c2f272815fd0daa4236a87d",
           "locator": "Products Supported / paragraph / rendered line85",
           "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
-        }
-      ]
-    },
-    {
-      "vendor": "aruba",
-      "family": "AOS-CX",
-      "train": "10.13",
-      "version": "10.13.1005",
-      "observation_basis": "release_history",
-      "release_date": "2024-03-22",
-      "date_status": "stated",
-      "announcement_date": null,
-      "platforms_stated": ["6200"],
-      "evidence": [
+        },
         {
           "source_id": "aruba-685df04322baa38b62cf829d",
           "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
@@ -1085,6 +1415,54 @@
           "source_id": "aruba-3a765657cd1176ec63b71323",
           "locator": "Products Supported / paragraph / rendered line87",
           "quote": "This release applies to the 6200 Switch series."
+        }
+      ],
+      "observations": [
+        {
+          "vendor": "aruba",
+          "family": "AOS-CX",
+          "train": "10.13",
+          "version": "10.13.1005",
+          "observation_basis": "release_history",
+          "release_date": "2024-03-22",
+          "date_status": "stated",
+          "announcement_date": null,
+          "platforms_stated": ["6300"],
+          "evidence": [
+            {
+              "source_id": "aruba-a25d9956d6d2dc4468d91467",
+              "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+              "quote": "10.13.1005  | 22/03/2024"
+            },
+            {
+              "source_id": "aruba-7c2f272815fd0daa4236a87d",
+              "locator": "Products Supported / paragraph / rendered line85",
+              "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+            }
+          ]
+        },
+        {
+          "vendor": "aruba",
+          "family": "AOS-CX",
+          "train": "10.13",
+          "version": "10.13.1005",
+          "observation_basis": "release_history",
+          "release_date": "2024-03-22",
+          "date_status": "stated",
+          "announcement_date": null,
+          "platforms_stated": ["6200"],
+          "evidence": [
+            {
+              "source_id": "aruba-685df04322baa38b62cf829d",
+              "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+              "quote": "10.13.1005  | 22/03/2024"
+            },
+            {
+              "source_id": "aruba-3a765657cd1176ec63b71323",
+              "locator": "Products Supported / paragraph / rendered line87",
+              "quote": "This release applies to the 6200 Switch series."
+            }
+          ]
         }
       ]
     },
@@ -1103,52 +1481,6 @@
           "source_id": "aruba-685df04322baa38b62cf829d",
           "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
           "quote": "10.13.1003  | 05/03/2024"
-        },
-        {
-          "source_id": "aruba-3a765657cd1176ec63b71323",
-          "locator": "Products Supported / paragraph / rendered line87",
-          "quote": "This release applies to the 6200 Switch series."
-        }
-      ]
-    },
-    {
-      "vendor": "aruba",
-      "family": "AOS-CX",
-      "train": "10.13",
-      "version": "10.13.1000",
-      "observation_basis": "release_history",
-      "release_date": "2024-01-31",
-      "date_status": "stated",
-      "announcement_date": null,
-      "platforms_stated": ["6200"],
-      "evidence": [
-        {
-          "source_id": "aruba-685df04322baa38b62cf829d",
-          "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
-          "quote": "10.13.1000  | 31/01/2024"
-        },
-        {
-          "source_id": "aruba-3a765657cd1176ec63b71323",
-          "locator": "Products Supported / paragraph / rendered line87",
-          "quote": "This release applies to the 6200 Switch series."
-        }
-      ]
-    },
-    {
-      "vendor": "aruba",
-      "family": "AOS-CX",
-      "train": "10.13",
-      "version": "10.13.0010",
-      "observation_basis": "release_history",
-      "release_date": "2024-01-10",
-      "date_status": "stated",
-      "announcement_date": null,
-      "platforms_stated": ["6200"],
-      "evidence": [
-        {
-          "source_id": "aruba-685df04322baa38b62cf829d",
-          "locator": "Version history table / Version number=10.13.0010 / rendered line 99",
-          "quote": "10.13.0010  | 10/01/2024"
         },
         {
           "source_id": "aruba-3a765657cd1176ec63b71323",
@@ -1298,6 +1630,60 @@
           "source_id": "arista-febee22fd3bcc2e460936930",
           "locator": "RSS channel/item[12]/title and pubDate",
           "quote": "EOS-4.33.11M is now available for download."
+        }
+      ]
+    },
+    {
+      "vendor": "cisco",
+      "family": "IOS XE",
+      "train": "17.12",
+      "version": "17.12.7",
+      "observation_basis": "version_table",
+      "release_date": null,
+      "date_status": "unknown",
+      "announcement_date": null,
+      "platforms_stated": ["Catalyst 9300"],
+      "evidence": [
+        {
+          "source_id": "cisco-9300-images",
+          "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+          "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin"
+        }
+      ]
+    },
+    {
+      "vendor": "aruba",
+      "family": "AOS-CX",
+      "train": "10.13",
+      "version": "10.13.1031",
+      "observation_basis": "advisory_version_reference",
+      "release_date": null,
+      "date_status": "unknown",
+      "announcement_date": null,
+      "platforms_stated": [],
+      "evidence": [
+        {
+          "source_id": "aruba-04669",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "10.13.1031 and above"
+        }
+      ]
+    },
+    {
+      "vendor": "aruba",
+      "family": "AOS-CX",
+      "train": "10.13",
+      "version": "10.13.1161",
+      "observation_basis": "advisory_version_reference",
+      "release_date": null,
+      "date_status": "unknown",
+      "announcement_date": null,
+      "platforms_stated": [],
+      "evidence": [
+        {
+          "source_id": "aruba-05027",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above"
         }
       ]
     }
@@ -1624,5 +2010,6 @@
         "arista-febee22fd3bcc2e460936930"
       ]
     }
-  ]
+  ],
+  "release_identity": "vendor_train_version"
 }

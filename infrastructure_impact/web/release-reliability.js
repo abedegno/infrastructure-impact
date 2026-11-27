@@ -34,6 +34,24 @@
           : 0,
     ];
   }
+  const releaseObservations = (cat) => cat.releases.flatMap((r) => r.observations ?? [r]);
+  function mergedRelease(observations) {
+    const rows = observations.filter((r, i) => !observations.slice(0, i).some((p) => equal(p, r))),
+      merged = clone(rows[0]);
+    if (rows.some((r) => r.family !== merged.family)) fail('conflicting release family');
+    merged.platforms_stated = [...new Set(rows.flatMap((r) => r.platforms_stated))].sort();
+    merged.evidence = [];
+    for (const e of rows.flatMap((r) => r.evidence))
+      if (!merged.evidence.some((p) => equal(p, e))) merged.evidence.push(clone(e));
+    for (const field of ['release_date', 'announcement_date']) {
+      const values = [...new Set(rows.map((r) => r[field]))];
+      merged[field] = values.length === 1 ? values[0] : null;
+    }
+    merged.date_status = merged.release_date ? 'stated' : 'unknown';
+    if (new Set(rows.map((r) => r.observation_basis)).size > 1) delete merged.observation_basis;
+    if (rows.length > 1) merged.observations = rows;
+    return merged;
+  }
   function derive(cat, config) {
     const sources = new Map(cat.sources.map((s) => [s.source_id, s])),
       pairs = [],
@@ -49,68 +67,124 @@
         for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
         return 0;
       };
+    const regular = (vendor, version) => {
+      const key = versionKey(vendor, version);
+      return vendor === 'aruba' ? key[2] % 10 === 0 : key[3] === 0;
+    };
     for (const t of config.trains) {
       const groups = new Map(),
-        releases = cat.releases.filter((f) => same(f, t)),
+        releases = releaseObservations(cat).filter((f) => same(f, t)),
         regex = new RegExp(t.base_pattern),
         replacement = t.base_replacement.replace(/\\([0-9]+)/g, '$$$1');
       for (const f of releases) {
-        if (!f.release_date || !regex.test(f.version)) continue;
+        if ((!t.respin_rule && !f.release_date) || !regex.test(f.version)) continue;
         const base = f.version.replace(regex, replacement);
         for (const platform of scope(f, t).slice().sort()) {
           const key = JSON.stringify([base, platform]);
           if (!groups.has(key)) groups.set(key, { base, platform, versions: new Map() });
           const versions = groups.get(key).versions,
             old = versions.get(f.version);
-          if (!old || (original(f, sources) && !original(old, sources))) versions.set(f.version, f);
+          if (
+            !old ||
+            (t.respin_rule &&
+              ((Boolean(f.release_date) && !old.release_date) ||
+                (Boolean(f.release_date) === Boolean(old.release_date) &&
+                  original(f, sources) &&
+                  !original(old, sources)))) ||
+            (!t.respin_rule && original(f, sources) && !original(old, sources))
+          )
+            versions.set(f.version, f);
         }
       }
       for (const { base, platform, versions } of groups.values()) {
-        const ordered = [...versions.values()].sort(
-          (a, b) =>
-            a.release_date.localeCompare(b.release_date) ||
-            compareVersion(t.vendor, a.version, b.version),
-        );
-        for (let i = 1; i < ordered.length; i++) {
-          const prev = ordered[i - 1],
-            curr = ordered[i];
+        const ordered = [...versions.values()]
+          .filter((f) => f.release_date)
+          .sort(
+            (a, b) =>
+              a.release_date.localeCompare(b.release_date) ||
+              compareVersion(t.vendor, a.version, b.version),
+          );
+        for (let i = 1; i < ordered.length; i++)
           if (
-            curr.release_date < config.start ||
-            curr.release_date > [config.end, cat.generated_at.slice(0, 10)].sort()[0]
+            t.respin_rule &&
+            compareVersion(t.vendor, ordered[i].version, ordered[i - 1].version) <= 0
+          )
+            fail('nonmonotonic release chronology');
+        let candidates = ordered.slice(1).map((f, i) => [ordered[i], f]);
+        if (t.respin_rule) {
+          const byVersion = [...versions.values()].sort((a, b) =>
+            compareVersion(t.vendor, a.version, b.version),
+          );
+          candidates = byVersion
+            .filter((f) => !regular(t.vendor, f.version))
+            .map((curr) => [
+              byVersion
+                .filter(
+                  (f) =>
+                    regular(t.vendor, f.version) &&
+                    compareVersion(t.vendor, f.version, curr.version) < 0,
+                )
+                .at(-1),
+              curr,
+            ]);
+        }
+        for (const [prev, curr] of candidates) {
+          if (
+            curr.release_date &&
+            (curr.release_date < config.start ||
+              curr.release_date > [config.end, cat.generated_at.slice(0, 10)].sort()[0])
           )
             continue;
-          const days = dayGap(prev.release_date, curr.release_date);
-          if (compareVersion(t.vendor, curr.version, prev.version) <= 0)
+          if (!t.respin_rule && compareVersion(t.vendor, curr.version, prev.version) <= 0)
             fail('nonmonotonic release chronology');
-          if (days < 0 || days > 90) continue;
+          const days =
+            prev?.release_date && curr.release_date
+              ? dayGap(prev.release_date, curr.release_date)
+              : null;
+          if (days !== null && (days < 0 || days > 90)) continue;
           const explicit = cat.statements.filter(
             (f) =>
               same(f, t) &&
               f.status === 'corrective_respin' &&
-              f.version === prev.version &&
+              f.version === (prev?.version ?? null) &&
               f.related_release === curr.version &&
               f.platforms_stated.includes(platform),
           );
-          pairs.push({
+          const pair = {
             vendor: t.vendor,
             train: t.train,
             base_version: base,
-            previous_release: prev.version,
+            previous_release: prev?.version ?? null,
             followup_release: curr.version,
-            previous_release_date: prev.release_date,
+            previous_release_date: prev?.release_date ?? null,
             followup_release_date: curr.release_date,
             days,
-            within_30_days: days <= 30,
-            within_90_days: true,
+            within_30_days: days !== null ? days <= 30 : null,
+            within_90_days: days !== null ? true : null,
             classification: explicit.length ? 'corrective_respin' : 'possible_respin',
             reason: explicit.length ? explicit[0].evidence[0].quote : null,
             platforms_stated: [platform],
             production_eligible:
+              prev != null &&
+              days !== null &&
               original(prev, sources) &&
               original(curr, sources) &&
               explicit.every((f) => original(f, sources)),
-            evidence: [...prev.evidence, ...curr.evidence, ...explicit.flatMap((f) => f.evidence)],
-          });
+            evidence: [
+              ...(prev?.evidence ?? []),
+              ...curr.evidence,
+              ...explicit.flatMap((f) => f.evidence),
+            ],
+          };
+          if (t.respin_rule) {
+            pair.respin_rule = t.respin_rule;
+            if (t.vendor === 'aruba') {
+              const build = versionKey(t.vendor, curr.version)[2];
+              pair.expected_regular_build = `${t.train}.${String(build - (build % 10)).padStart(4, '0')}`;
+              pair.expected_regular_build_absent = !versions.has(pair.expected_regular_build);
+            }
+          }
+          pairs.push(pair);
         }
       }
     }
@@ -137,7 +211,7 @@
           ),
           status = coverage && start <= end ? coverage.status : 'unknown',
           reason = coverage?.reason ?? 'No reviewed enumeration and date coverage judgement',
-          releases = cat.releases.filter((f) => same(f, t)),
+          releases = releaseObservations(cat).filter((f) => same(f, t)),
           during = (day) => day != null && start <= end && start <= day && day <= end,
           dated = releases.filter((f) => during(f.release_date)),
           ids = (a) => new Set(a.map((f) => f.version));
@@ -224,6 +298,7 @@
               (f) =>
                 same(f, t) &&
                 during(f.followup_release_date) &&
+                f.days !== null &&
                 f.days <= Number(name.split('_').at(-1)) &&
                 (!name.startsWith('corrective') || f.classification === 'corrective_respin'),
             );
@@ -262,6 +337,15 @@
             coverage.source_ids.length > 0 &&
             t.platforms.every((model) => coverage.platforms.includes(model)) &&
             coverage.source_ids.every((id) => sources.get(id).capture_kind === 'original_document');
+          if (name.includes('respin'))
+            signalComplete =
+              signalComplete &&
+              !pairs.some(
+                (f) =>
+                  same(f, t) &&
+                  f.days === null &&
+                  (f.followup_release_date === null || during(f.followup_release_date)),
+              );
           if (['software_defect_notices', 'deferral_notices'].includes(name)) {
             const kinds =
               name === 'software_defect_notices'
@@ -385,12 +469,60 @@
         fact: f,
       })),
     );
+    for (const [index, f] of pairs.entries())
+      if (f.respin_rule)
+        review.push({
+          type: 'respin',
+          index,
+          vendor: f.vendor,
+          train: f.train,
+          classification: f.classification,
+          notice_date: null,
+          action_date: null,
+          platforms_stated: f.platforms_stated,
+          evidence: f.evidence,
+          review_status: 'independent_human_review_pending',
+          fact: f,
+        });
     return { annual, pairs, review };
   }
 
   function validate(report, identity = report) {
     C.identity(report, identity);
     C.validate('release-reliability-v1.json', report);
+    if (report.published_staircase_version) {
+      const s = report.upgrade_selection,
+        study = s?.study;
+      if (
+        report.staircase_join_version !== 1 ||
+        !study ||
+        !equal(s, publishedSelection(report, study)) ||
+        study.requested_vendor !== null ||
+        study.requested_cve_ids !== null ||
+        study.requested_window !== 'all' ||
+        study.scope_level !== 'os_family' ||
+        !equal(
+          Object.keys(study).sort(),
+          [
+            'requested_vendor',
+            'effective_vendors',
+            'scope_level',
+            'requested_window',
+            'effective_windows',
+            'requested_cve_ids',
+            'effective_cve_ids',
+            'definition_sha256',
+          ].sort(),
+        ) ||
+        !equal(study.effective_vendors, ['cisco', 'aruba', 'arista']) ||
+        !equal(study.effective_windows, [
+          'cisco:os_family:all',
+          'aruba:os_family:all',
+          'arista:os_family:all',
+        ])
+      )
+        fail('invalid published staircase selection');
+    }
     const config = report.config,
       trainIds = new Set();
     if (
@@ -407,6 +539,16 @@
       )
         fail('invalid or duplicate configured train');
       trainIds.add(key);
+      if (
+        train.respin_rule &&
+        train.respin_rule !==
+          {
+            cisco: 'letter_suffix',
+            aruba: 'non_decadal_build',
+            arista: 'subrelease',
+          }[train.vendor]
+      )
+        fail('invalid vendor respin rule');
       try {
         new RegExp(train.base_pattern);
       } catch {
@@ -441,6 +583,18 @@
       const cat = report.catalogue,
         sources = new Map(),
         dates = new Map();
+      const releaseIds = new Set();
+      for (const r of cat.releases) {
+        const key = JSON.stringify([r.vendor, r.train, r.version]);
+        if (cat.release_identity && releaseIds.has(key)) fail('duplicate release identity');
+        releaseIds.add(key);
+        if (
+          r.observations &&
+          (r.observations.some((o) => JSON.stringify([o.vendor, o.train, o.version]) !== key) ||
+            !equal(mergedRelease(r.observations), r))
+        )
+          fail('release observation union differs');
+      }
       const hosts = {
         cisco: ['www.cisco.com', 'cisco.com'],
         aruba: [
@@ -450,6 +604,7 @@
           'arubanetworks.com',
           'www.arubanetworks.com',
           'support.hpe.com',
+          'csaf.arubanetworking.hpe.com',
         ],
         arista: ['www.arista.com', 'arista.com'],
       };
@@ -481,7 +636,7 @@
         sources.set(source.source_id, source);
       }
       for (const section of ['releases', 'notices', 'statements'])
-        for (const f of cat[section]) {
+        for (const f of section === 'releases' ? releaseObservations(cat) : cat[section]) {
           const receipts = f.evidence.map((e) => {
             const source = sources.get(e.source_id);
             if (!source || source.vendor !== f.vendor) fail('missing or cross-vendor source');
@@ -577,12 +732,72 @@
       fact.evidence.every((e) => sources.get(e.source_id)?.capture_kind === 'original_document'),
     intersection = (a, b) => a.filter((v) => b.includes(v)),
     sorted = (a) => [...new Set(a)].sort();
+  function publishedSelection(report, study) {
+    return {
+      kind: 'configured_staircases',
+      start: report.config.start,
+      end: report.config.end,
+      trains: report.config.trains.map((t) => ({ vendor: t.vendor, train: t.train })),
+      study: clone(study),
+    };
+  }
+  function validatePublished(report, identity = report) {
+    validate(report, identity);
+    if (
+      (report.upgrade_selection !== null || report.upgrade_annotations.length) &&
+      !report.published_staircase_version
+    )
+      fail('Published reliability report contains selected analysis');
+    return report;
+  }
+  function catalogueMatch(report, g) {
+    const candidates = report.catalogue.releases.filter(
+        (r) => r.vendor === g.vendor && r.train === g.train,
+      ),
+      exact = candidates.filter((r) => r.version === g.target);
+    let variants = [];
+    if (!exact.length && g.vendor === 'cisco') {
+      try {
+        const key = versionKey('cisco', g.target).slice(0, 3);
+        variants = candidates.filter((r) => equal(versionKey('cisco', r.version).slice(0, 3), key));
+      } catch {}
+    }
+    const found = exact.length ? exact : variants,
+      observations = found.flatMap((r) => r.observations ?? [r]),
+      scope = new Set(observations.flatMap((r) => r.platforms_stated)),
+      evidence = [];
+    for (const e of observations.flatMap((r) => r.evidence))
+      if (!evidence.some((p) => equal(p, e))) evidence.push(clone(e));
+    return {
+      present: Boolean(exact.length),
+      match_type: exact.length ? 'exact' : variants.length ? 'suffix_variant' : 'not_found',
+      versions: sorted(found.map((r) => r.version)),
+      scope_status:
+        exact.length && g.models.length && g.models.every((m) => scope.has(m))
+          ? 'matched'
+          : 'model_unresolved',
+      evidence,
+      release_observations: observations.map((o) => ({
+        version: o.version,
+        release_date: o.release_date,
+        platforms_stated: clone(o.platforms_stated),
+        evidence: clone(o.evidence),
+      })),
+    };
+  }
   function annotations(report, selected) {
     const groups = new Map(),
       cat = report.catalogue,
       sources = new Map((cat?.sources ?? []).map((s) => [s.source_id, s]));
     for (const row of selected.rows)
       for (const event of row.events) {
+        if (
+          report.staircase_join_version === 1 &&
+          (!report.config.trains.some((t) => t.vendor === row.vendor && t.train === row.train) ||
+            event.date < report.config.start ||
+            event.date > report.config.end)
+        )
+          continue;
         const key = JSON.stringify([row.vendor, row.train, event.date, event.target]);
         if (!groups.has(key))
           groups.set(key, {
@@ -627,6 +842,7 @@
           'Upgrade rows do not establish exact models; matches are model-unresolved context.',
         );
       if (!cat) continue;
+      if (report.staircase_join_version === 1) g.target_catalogue = catalogueMatch(report, g);
       for (const [kind, facts] of [
         ['notice', cat.notices],
         ['statement', cat.statements],
@@ -673,6 +889,16 @@
             production_eligible: f.production_eligible ?? original(f, sources),
             evidence: clone(f.evidence),
           });
+          if (report.staircase_join_version === 1)
+            Object.assign(g.matches.at(-1), {
+              related_release:
+                kind === 'respin'
+                  ? (f.followup_release ?? null)
+                  : (f.replacement_release ?? f.related_release ?? null),
+              days_after_step: day
+                ? Math.round((Date.parse(day) - Date.parse(g.date)) / 86400000)
+                : null,
+            });
         }
     }
     return values;
@@ -681,6 +907,7 @@
     validate(report);
     C.identity(selected, report);
     const out = clone(report);
+    delete out.published_staircase_version;
     out.upgrade_selection = clone(selected.selection);
     if (out.availability === 'available') out.upgrade_annotations = annotations(report, selected);
     return validate(out);
@@ -747,6 +974,7 @@
         models: canonicalJSON(a.models),
         matches: canonicalJSON(a.matches),
         upgrade_selection: canonicalJSON(report.upgrade_selection),
+        payload: report.staircase_join_version === 1 ? canonicalJSON(a) : undefined,
       });
     const catalogue = report.catalogue ?? {};
     for (const [kind, facts] of [
@@ -829,11 +1057,21 @@
       selected
         .map(
           (a) =>
-            `<article class="switching-row"><h5>${esc(a.vendor)} · ${esc(a.train)} · ${esc(a.date)} → ${esc(a.target)}</h5><p>Scenario / policy: ${a.references.map((r) => esc(r.scenario) + ' / ' + esc(r.policy)).join('; ')}. Models: ${esc(a.models.join(', ') || 'unknown')}.</p>${!a.matches.length ? '<p>No matching release evidence observed; status unknown.</p>' : ''}${a.matches.map((m) => `<details><summary>${esc(m.classification)} · ${esc(m.scope_status)}</summary><p>Notice date: ${esc(m.notice_date)}; action date: ${esc(m.action_date)}; software release date: ${esc(m.release_date)}. Previous release date: ${esc(m.previous_release_date)}; software release gap days: ${esc(m.days)}. Chronology: ${esc(m.chronology)}. Source model scope: ${esc(m.platforms_stated.join(', ') || 'unknown')}. Production eligible: ${esc(m.production_eligible)}.</p>${sourceLinks(report, m.evidence, a.vendor)}</details>`).join('')}<p>${a.caveats.map(esc).join('; ')}</p></article>`,
+            `<article class="switching-row"><h5>${esc(a.vendor)} · ${esc(a.train)} · ${esc(a.date)} → ${esc(a.target)}</h5>${catalogueMarker(report, a)}<p>Scenario / policy: ${a.references.map((r) => esc(r.scenario) + ' / ' + esc(r.policy)).join('; ')}. Models: ${esc(a.models.join(', ') || 'unknown')}.</p>${!a.matches.length ? '<p>No matching notice, action or follow-up observed; status unknown.</p>' : ''}${a.matches.map((m) => `<details><summary>${esc(m.classification)} · ${esc(m.scope_status)}</summary><p>Notice date: ${esc(m.notice_date)}; action date: ${esc(m.action_date)}; software release date: ${esc(m.release_date)}. Related release: ${esc(m.related_release)}. Previous release date: ${esc(m.previous_release_date)}; software release gap days: ${esc(m.days)}; days after upgrade step: ${esc(m.days_after_step)}. Chronology: ${esc(m.chronology)}. Source model scope: ${esc(m.platforms_stated.join(', ') || 'unknown')}. Production eligible: ${esc(m.production_eligible)}.</p>${sourceLinks(report, m.evidence, a.vendor)}</details>`).join('')}<p>${a.caveats.map(esc).join('; ')}</p></article>`,
         )
         .join('') +
       '</section>'
     );
+  }
+  function catalogueMarker(report, a) {
+    const c = a.target_catalogue;
+    if (!c) return '';
+    const label = c.present
+      ? 'Exact target recorded'
+      : c.match_type === 'suffix_variant'
+        ? 'Suffix variant only; exact target unknown'
+        : 'No target record observed';
+    return `<details class="release-catalogue-marker" data-version-match="${esc(c.match_type)}"><summary>${esc(label)} · ${esc(c.scope_status)}</summary><p>Catalogue versions: ${esc(c.versions.join(', ') || 'unknown')}. Catalogue absence is not withdrawal evidence. A suffix variant does not transfer notices or fixes to the target.</p>${c.release_observations.map((o) => `<p>${esc(o.version)} · Software release date: ${esc(o.release_date)} · Stated models: ${esc(o.platforms_stated.join(', ') || 'unknown')}</p>`).join('')}${c.evidence.length ? sourceLinks(report, c.evidence, a.vendor) : ''}</details>`;
   }
   function deriveCoverage(report) {
     const result = Object.fromEntries(
@@ -877,7 +1115,7 @@
           f.vendor === train.vendor &&
           f.train === train.train &&
           (f.family ?? train.family) === train.family,
-        releases = report.catalogue.releases.filter(same),
+        releases = releaseObservations(report.catalogue).filter(same),
         notices = report.catalogue.notices.filter(same),
         models = train.platforms.map((model) => {
           const scoped = releases.filter((r) => r.platforms_stated.includes(model)),
@@ -915,7 +1153,7 @@
         notice_model_unresolved_ids: sorted(
           new Set(notices.filter((n) => !n.platforms_stated.length).map((n) => n.notice_id)),
         ),
-        release_evidence: clone(releases),
+        release_evidence: clone(report.catalogue.releases.filter(same)),
         notice_evidence: clone(notices),
         statement_evidence: clone(report.catalogue.statements.filter(same)),
         coverage_judgements: clone(report.catalogue.coverage.filter(same)),
@@ -1143,6 +1381,7 @@
   window.InfrastructureReleaseReliability = {
     selectionDetails,
     validate,
+    validatePublished,
     withUpgrades,
     csvExport,
     coverageReport,
