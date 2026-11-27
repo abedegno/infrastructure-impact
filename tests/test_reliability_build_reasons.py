@@ -164,3 +164,59 @@ def test_reason_literal_can_end_a_sentence():
     proof["evidence"][0]["quote"] = "Fixed release: 10.13.1005."
     d["releases"][0].update(build_reason="security_fix", build_reason_evidence=[proof])
     cat.validate_catalogue(d)
+
+
+def test_every_same_model_source_is_retained_without_changing_timing_winner():
+    d, c = configured("aruba", [("10.13.1000", "2024-01-01"), ("10.13.1005", "2024-02-01")])
+    other = deepcopy(d["releases"][1])
+    other["evidence"][0]["locator"] = "Second original source"
+    d["sources"].append(
+        {
+            **d["sources"][0],
+            "source_id": "s2",
+            "capture_kind": "tool_excerpt",
+            "original_sha256": None,
+            "excerpt_sha256": "c" * 64,
+        }
+    )
+    other["evidence"][0]["source_id"] = "s2"
+    other["release_date"] = None
+    other["date_status"] = "unknown"
+    d["releases"].append(other)
+    value = cat.deduplicate_releases(unique(d))
+    (pair,) = cat.find_respins(value, c)
+    assert pair["days"] == 31 and pair["production_eligible"] is True
+    assert {e["locator"] for e in pair["evidence"]} == {
+        "Release history / row",
+        "Second original source",
+    }
+    assert len(pair["release_observations"]) == 3
+    assert all(e["locator"] == "Release history / row" for e in pair["timing_evidence"])
+    assert {e["source_id"] for e in pair["timing_evidence"]} == {"s1"}
+
+
+def test_a_defect_predecessor_must_precede_its_followup_version():
+    d, _ = configured("aruba", [("10.13.1005", None)])
+    proof = reason("defect_fix")
+    proof["predecessor"] = "10.13.1010"
+    proof["evidence"][0]["quote"] = "10.13.1005 fixes a defect in 10.13.1010"
+    d["releases"][0].update(build_reason="defect_fix", build_reason_evidence=[proof])
+    with pytest.raises(ValueError, match="reason"):
+        cat.validate_catalogue(d)
+
+
+def test_primary_excerpt_reason_stays_labelled_and_does_not_create_timing_eligibility():
+    d, c = configured("aruba", [("10.13.1000", "2024-01-01"), ("10.13.1005", "2024-02-01")])
+    d["sources"][0].update(
+        capture_kind="tool_excerpt", original_sha256=None, excerpt_sha256="b" * 64
+    )
+    d["releases"][1].update(build_reason="security_fix", build_reason_evidence=[reason()])
+    report = rr.build_report(unique(d), c, publication=None, generated_at=d["generated_at"])
+    (pair,) = report["respins"]
+    assert pair["build_reason"] == "security_fix" and pair["production_eligible"] is False
+    metric = report["annual"][0]["metrics"]["possible_respin_90"]
+    assert (
+        metric["research_only_count"] == 1
+        and metric["numerator"] is None
+        and metric["rate"] is None
+    )

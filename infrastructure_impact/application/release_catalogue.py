@@ -188,6 +188,8 @@ def validate_catalogue(value):
                             or predecessor == fact["version"]
                             or _version_key(fact["vendor"], predecessor)[:2]
                             != _version_key(fact["vendor"], fact["version"])[:2]
+                            or _version_key(fact["vendor"], predecessor)
+                            >= _version_key(fact["vendor"], fact["version"])
                             or not _literal_named(predecessor, proof["evidence"])
                         ):
                             raise ValueError("Defect build reason requires its stated predecessor")
@@ -412,6 +414,7 @@ def find_respins(value, config):
     for train in config["trains"]:
         corrected = "respin_rule" in train
         groups = defaultdict(dict)
+        captures = defaultdict(list)
         for row in _releases(value, train):
             match = re.fullmatch(train["base_pattern"], row["version"])
             if not match or (not corrected and not row["release_date"]):
@@ -419,6 +422,7 @@ def find_respins(value, config):
             base = match.expand(train["base_replacement"])
             for platform in sorted(_scope(row, train)):
                 key = (base, platform)
+                captures[key].append(row)
                 # Duplicate source rows do not create extra releases.
                 existing = groups[key].get(row["version"])
                 if (
@@ -524,6 +528,20 @@ def find_respins(value, config):
                         "evidence": evidence,
                     },
                 )
+                if value.get("respin_identity"):
+                    row["timing_evidence"] = deepcopy(row["evidence"])
+                    row["release_observations"] = _union(
+                        r
+                        for r in captures[base, platform]
+                        if r["version"]
+                        in {previous["version"] if previous else None, current["version"]}
+                    )
+                    row["evidence"] = _union(
+                        [
+                            *row["evidence"],
+                            *(e for r in row["release_observations"] for e in r["evidence"]),
+                        ]
+                    )
                 if corrected:
                     row["respin_rule"] = train["respin_rule"]
                     if train["vendor"] == "aruba":
@@ -559,6 +577,8 @@ def _deduplicate_respins(rows, catalogue):
             row = deepcopy(anchors[0])
             row["platforms_stated"] = sorted({p for o in scoped for p in o["platforms_stated"]})
             row["evidence"] = _union(e for o in scoped for e in o["evidence"])
+            for key in ("timing_evidence", "release_observations"):
+                row[key] = _union(item for o in scoped for item in o.get(key, []))
             for field in (
                 "previous_release_date",
                 "followup_release_date",

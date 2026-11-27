@@ -72,6 +72,20 @@ def test_browser_release_reliability_parity(tmp_path, case):
                 if other["version"] == "10.13.1005":
                     other["release_date"] = "2025-02-05"
                 cat["releases"].append(other)
+            capture = deepcopy(cat["releases"][2])
+            capture.update(release_date=None, date_status="unknown")
+            capture["evidence"][0]["locator"] = "Another source for the same model"
+            cat["sources"].append(
+                {
+                    **cat["sources"][0],
+                    "source_id": "s2",
+                    "capture_kind": "tool_excerpt",
+                    "original_sha256": None,
+                    "excerpt_sha256": "c" * 64,
+                }
+            )
+            capture["evidence"][0]["source_id"] = "s2"
+            cat["releases"].append(capture)
             from infrastructure_impact.application.release_catalogue import deduplicate_releases
 
             cat = deduplicate_releases(cat)

@@ -2232,8 +2232,84 @@
                       }
                     }
                   }
+                },
+                "timing_evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_id",
+                      "locator",
+                      "quote"
+                    ],
+                    "properties": {
+                      "source_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "locator": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      },
+                      "quote": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    }
+                  },
+                  "maxItems": 20000,
+                  "minItems": 1
+                },
+                "release_observations": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "$ref": "#/properties/catalogue/anyOf/1/properties/releases/items/properties/observations/items"
+                  }
                 }
               }
+            }
+          },
+          "timing_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "locator",
+                "quote"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            },
+            "maxItems": 20000,
+            "minItems": 1
+          },
+          "release_observations": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "$ref": "#/properties/catalogue/anyOf/1/properties/releases/items/properties/observations/items"
             }
           }
         }

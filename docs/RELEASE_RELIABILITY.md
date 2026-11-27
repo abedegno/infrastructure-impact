@@ -9,7 +9,7 @@ Respin records now use a unique vendor/train/predecessor/follow-up identity.
 Original platform observations remain attached; conflicting dates or intervals
 stay unknown on the union. A resolved predecessor replaces the redundant null
 identity, without assigning that predecessor to another platform. Annual counts
-use the scoped observations and count distinct follow-up versions.
+use the scoped observations and count distinct follow-up versions. Each pair also retains all contributing release captures in `release_observations`; `timing_evidence` identifies the selected dated/original inputs separately from corroborating sources.
 
 `build_reason` is independent of `possible_respin` timing: `security_fix` needs an
 advisory naming the fixed literal; `defect_fix` needs an explicit non-security

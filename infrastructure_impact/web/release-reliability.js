@@ -35,6 +35,12 @@
     ];
   }
   const releaseObservations = (cat) => cat.releases.flatMap((r) => r.observations ?? [r]);
+  function compareVersion(vendor, a, b) {
+    const x = versionKey(vendor, a),
+      y = versionKey(vendor, b);
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
+    return 0;
+  }
   const unionFacts = (values) =>
     values.filter((v, i) => !values.slice(0, i).some((p) => equal(p, v))).map(clone);
   const buildReason = (proofs) => {
@@ -68,6 +74,8 @@
           row = clone(anchors[0]);
         row.platforms_stated = [...new Set(scoped.flatMap((o) => o.platforms_stated))].sort();
         row.evidence = unionFacts(scoped.flatMap((o) => o.evidence));
+        for (const key of ['timing_evidence', 'release_observations'])
+          row[key] = unionFacts(scoped.flatMap((o) => o[key] ?? []));
         for (const key of [
           'previous_release_date',
           'followup_release_date',
@@ -132,13 +140,7 @@
         f.vendor === t.vendor && f.train === t.train && (f.family ?? t.family) === t.family,
       scope = (f, t) => intersection(f.platforms_stated, t.platforms),
       eligible = (f, t) => original(f, sources) && scope(f, t).length > 0,
-      dayGap = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000),
-      compareVersion = (vendor, a, b) => {
-        const x = versionKey(vendor, a),
-          y = versionKey(vendor, b);
-        for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
-        return 0;
-      };
+      dayGap = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
     const regular = (vendor, version) => {
       const key = versionKey(vendor, version);
       return vendor === 'aruba' ? key[2] % 10 === 0 : key[3] === 0;
@@ -153,7 +155,9 @@
         const base = f.version.replace(regex, replacement);
         for (const platform of scope(f, t).slice().sort()) {
           const key = JSON.stringify([base, platform]);
-          if (!groups.has(key)) groups.set(key, { base, platform, versions: new Map() });
+          if (!groups.has(key))
+            groups.set(key, { base, platform, versions: new Map(), captures: [] });
+          groups.get(key).captures.push(f);
           const versions = groups.get(key).versions,
             old = versions.get(f.version);
           if (
@@ -168,7 +172,7 @@
             versions.set(f.version, f);
         }
       }
-      for (const { base, platform, versions } of groups.values()) {
+      for (const { base, platform, versions, captures } of groups.values()) {
         const ordered = [...versions.values()]
           .filter((f) => f.release_date)
           .sort(
@@ -255,6 +259,16 @@
               pair.expected_regular_build = `${t.train}.${String(build - (build % 10)).padStart(4, '0')}`;
               pair.expected_regular_build_absent = !versions.has(pair.expected_regular_build);
             }
+          }
+          if (cat.respin_identity) {
+            pair.timing_evidence = clone(pair.evidence);
+            pair.release_observations = unionFacts(
+              captures.filter((r) => [prev?.version, curr.version].includes(r.version)),
+            );
+            pair.evidence = unionFacts([
+              ...pair.evidence,
+              ...pair.release_observations.flatMap((r) => r.evidence),
+            ]);
           }
           pairs.push(pair);
         }
@@ -786,6 +800,7 @@
                     versionKey(f.vendor, p.predecessor).slice(0, 2),
                     versionKey(f.vendor, f.version).slice(0, 2),
                   ) ||
+                  compareVersion(f.vendor, p.predecessor, f.version) >= 0 ||
                   !literalNamed(p.predecessor, p.evidence))
               )
                 fail('defect build reason requires stated predecessor');

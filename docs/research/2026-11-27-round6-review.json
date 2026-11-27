@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "publication": null,
-  "generated_at": "2026-11-27T17:25:56.150110+00:00",
+  "generated_at": "2026-11-27T17:35:04.684103+00:00",
   "sources": [
     {
       "vendor": "cisco",
@@ -597,6 +597,89 @@
             "quote": "Dublin 17.12.7a"
           }
         ],
+        "timing_evidence": [
+          {
+            "source_id": "cisco-c53a168eb6152b87789b15b5",
+            "locator": "Boot Loader Versions / Release column",
+            "quote": "Dublin 17.12.7a"
+          },
+          {
+            "source_id": "cisco-9300-images",
+            "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+            "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin"
+          },
+          {
+            "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+            "locator": "ROMMON Versions / Release column",
+            "quote": "Dublin 17.12.7a"
+          }
+        ],
+        "release_observations": [
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.7a",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9200"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-c53a168eb6152b87789b15b5",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.7a"
+              }
+            ],
+            "build_reason": "unknown",
+            "build_reason_evidence": []
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.7a",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.7a"
+              }
+            ],
+            "build_reason": "unknown",
+            "build_reason_evidence": []
+          },
+          {
+            "vendor": "cisco",
+            "family": "IOS XE",
+            "train": "17.12",
+            "version": "17.12.7",
+            "observation_basis": "version_table",
+            "release_date": null,
+            "date_status": "unknown",
+            "announcement_date": null,
+            "platforms_stated": [
+              "Catalyst 9300"
+            ],
+            "evidence": [
+              {
+                "source_id": "cisco-9300-images",
+                "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+                "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin"
+              }
+            ]
+          }
+        ],
         "respin_rule": "letter_suffix",
         "build_reason": "unknown",
         "build_reason_evidence": [],
@@ -623,6 +706,37 @@
                 "source_id": "cisco-c53a168eb6152b87789b15b5",
                 "locator": "Boot Loader Versions / Release column",
                 "quote": "Dublin 17.12.7a"
+              }
+            ],
+            "timing_evidence": [
+              {
+                "source_id": "cisco-c53a168eb6152b87789b15b5",
+                "locator": "Boot Loader Versions / Release column",
+                "quote": "Dublin 17.12.7a"
+              }
+            ],
+            "release_observations": [
+              {
+                "vendor": "cisco",
+                "family": "IOS XE",
+                "train": "17.12",
+                "version": "17.12.7a",
+                "observation_basis": "version_table",
+                "release_date": null,
+                "date_status": "unknown",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "Catalyst 9200"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "cisco-c53a168eb6152b87789b15b5",
+                    "locator": "Boot Loader Versions / Release column",
+                    "quote": "Dublin 17.12.7a"
+                  }
+                ],
+                "build_reason": "unknown",
+                "build_reason_evidence": []
               }
             ],
             "respin_rule": "letter_suffix"
@@ -654,6 +768,62 @@
                 "source_id": "cisco-19ecc8fedb88e02ddccd111c",
                 "locator": "ROMMON Versions / Release column",
                 "quote": "Dublin 17.12.7a"
+              }
+            ],
+            "timing_evidence": [
+              {
+                "source_id": "cisco-9300-images",
+                "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+                "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin"
+              },
+              {
+                "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+                "locator": "ROMMON Versions / Release column",
+                "quote": "Dublin 17.12.7a"
+              }
+            ],
+            "release_observations": [
+              {
+                "vendor": "cisco",
+                "family": "IOS XE",
+                "train": "17.12",
+                "version": "17.12.7a",
+                "observation_basis": "version_table",
+                "release_date": null,
+                "date_status": "unknown",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "Catalyst 9300"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "cisco-19ecc8fedb88e02ddccd111c",
+                    "locator": "ROMMON Versions / Release column",
+                    "quote": "Dublin 17.12.7a"
+                  }
+                ],
+                "build_reason": "unknown",
+                "build_reason_evidence": []
+              },
+              {
+                "vendor": "cisco",
+                "family": "IOS XE",
+                "train": "17.12",
+                "version": "17.12.7",
+                "observation_basis": "version_table",
+                "release_date": null,
+                "date_status": "unknown",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "Catalyst 9300"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "cisco-9300-images",
+                    "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+                    "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin"
+                  }
+                ]
               }
             ],
             "respin_rule": "letter_suffix"
@@ -716,6 +886,47 @@
             "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
           }
         ],
+        "timing_evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+            "quote": "10.13.1101  | 09/05/2025"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          }
+        ],
+        "release_observations": [
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1101",
+            "observation_basis": "release_history",
+            "release_date": "2025-05-09",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6300"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+                "quote": "10.13.1101  | 09/05/2025"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ],
+            "build_reason": "unknown",
+            "build_reason_evidence": []
+          }
+        ],
         "respin_rule": "non_decadal_build",
         "expected_regular_build": "10.13.1100",
         "expected_regular_build_absent": true,
@@ -749,6 +960,47 @@
                 "source_id": "aruba-7c2f272815fd0daa4236a87d",
                 "locator": "Products Supported / paragraph / rendered line85",
                 "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ],
+            "timing_evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+                "quote": "10.13.1101  | 09/05/2025"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ],
+            "release_observations": [
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1101",
+                "observation_basis": "release_history",
+                "release_date": "2025-05-09",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6300"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                    "locator": "Version history table / Version number=10.13.1101 / rendered line 104",
+                    "quote": "10.13.1101  | 09/05/2025"
+                  },
+                  {
+                    "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                    "locator": "Products Supported / paragraph / rendered line85",
+                    "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+                  }
+                ],
+                "build_reason": "unknown",
+                "build_reason_evidence": []
               }
             ],
             "respin_rule": "non_decadal_build",
@@ -855,6 +1107,144 @@
             "quote": "10.13.1005  | 22/03/2024"
           }
         ],
+        "timing_evidence": [
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-7c2f272815fd0daa4236a87d",
+            "locator": "Products Supported / paragraph / rendered line85",
+            "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+          },
+          {
+            "source_id": "aruba-a25d9956d6d2dc4468d91467",
+            "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+            "quote": "10.13.1005  | 22/03/2024"
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+            "quote": "10.13.1005  | 22/03/2024"
+          }
+        ],
+        "release_observations": [
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1000",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-31",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6300"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+                "quote": "10.13.1000  | 31/01/2024"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ]
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1005",
+            "observation_basis": "release_history",
+            "release_date": "2024-03-22",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6300"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+                "quote": "10.13.1005  | 22/03/2024"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ],
+            "build_reason": "unknown",
+            "build_reason_evidence": []
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1000",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-31",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                "quote": "10.13.1000  | 31/01/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ]
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1005",
+            "observation_basis": "release_history",
+            "release_date": "2024-03-22",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+                "quote": "10.13.1005  | 22/03/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ],
+            "build_reason": "unknown",
+            "build_reason_evidence": []
+          }
+        ],
         "respin_rule": "non_decadal_build",
         "expected_regular_build": "10.13.1000",
         "expected_regular_build_absent": false,
@@ -893,11 +1283,82 @@
                 "source_id": "aruba-a25d9956d6d2dc4468d91467",
                 "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
                 "quote": "10.13.1005  | 22/03/2024"
+              }
+            ],
+            "timing_evidence": [
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+                "quote": "10.13.1000  | 31/01/2024"
               },
               {
                 "source_id": "aruba-7c2f272815fd0daa4236a87d",
                 "locator": "Products Supported / paragraph / rendered line85",
                 "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              },
+              {
+                "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+                "quote": "10.13.1005  | 22/03/2024"
+              },
+              {
+                "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                "locator": "Products Supported / paragraph / rendered line85",
+                "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+              }
+            ],
+            "release_observations": [
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1000",
+                "observation_basis": "release_history",
+                "release_date": "2024-01-31",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6300"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                    "locator": "Version history table / Version number=10.13.1000 / rendered line 114",
+                    "quote": "10.13.1000  | 31/01/2024"
+                  },
+                  {
+                    "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                    "locator": "Products Supported / paragraph / rendered line85",
+                    "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+                  }
+                ]
+              },
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1005",
+                "observation_basis": "release_history",
+                "release_date": "2024-03-22",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6300"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-a25d9956d6d2dc4468d91467",
+                    "locator": "Version history table / Version number=10.13.1005 / rendered line 116",
+                    "quote": "10.13.1005  | 22/03/2024"
+                  },
+                  {
+                    "source_id": "aruba-7c2f272815fd0daa4236a87d",
+                    "locator": "Products Supported / paragraph / rendered line85",
+                    "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
+                  }
+                ],
+                "build_reason": "unknown",
+                "build_reason_evidence": []
               }
             ],
             "respin_rule": "non_decadal_build",
@@ -936,11 +1397,82 @@
                 "source_id": "aruba-685df04322baa38b62cf829d",
                 "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
                 "quote": "10.13.1005  | 22/03/2024"
+              }
+            ],
+            "timing_evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                "quote": "10.13.1000  | 31/01/2024"
               },
               {
                 "source_id": "aruba-3a765657cd1176ec63b71323",
                 "locator": "Products Supported / paragraph / rendered line87",
                 "quote": "This release applies to the 6200 Switch series."
+              },
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+                "quote": "10.13.1005  | 22/03/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ],
+            "release_observations": [
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1000",
+                "observation_basis": "release_history",
+                "release_date": "2024-01-31",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6200"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-685df04322baa38b62cf829d",
+                    "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                    "quote": "10.13.1000  | 31/01/2024"
+                  },
+                  {
+                    "source_id": "aruba-3a765657cd1176ec63b71323",
+                    "locator": "Products Supported / paragraph / rendered line87",
+                    "quote": "This release applies to the 6200 Switch series."
+                  }
+                ]
+              },
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1005",
+                "observation_basis": "release_history",
+                "release_date": "2024-03-22",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6200"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-685df04322baa38b62cf829d",
+                    "locator": "Version history table / Version number=10.13.1005 / rendered line 96",
+                    "quote": "10.13.1005  | 22/03/2024"
+                  },
+                  {
+                    "source_id": "aruba-3a765657cd1176ec63b71323",
+                    "locator": "Products Supported / paragraph / rendered line87",
+                    "quote": "This release applies to the 6200 Switch series."
+                  }
+                ],
+                "build_reason": "unknown",
+                "build_reason_evidence": []
               }
             ],
             "respin_rule": "non_decadal_build",
@@ -1015,6 +1547,77 @@
             "quote": "10.13.1003  | 05/03/2024"
           }
         ],
+        "timing_evidence": [
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+            "quote": "10.13.1000  | 31/01/2024"
+          },
+          {
+            "source_id": "aruba-3a765657cd1176ec63b71323",
+            "locator": "Products Supported / paragraph / rendered line87",
+            "quote": "This release applies to the 6200 Switch series."
+          },
+          {
+            "source_id": "aruba-685df04322baa38b62cf829d",
+            "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+            "quote": "10.13.1003  | 05/03/2024"
+          }
+        ],
+        "release_observations": [
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1000",
+            "observation_basis": "release_history",
+            "release_date": "2024-01-31",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                "quote": "10.13.1000  | 31/01/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ]
+          },
+          {
+            "vendor": "aruba",
+            "family": "AOS-CX",
+            "train": "10.13",
+            "version": "10.13.1003",
+            "observation_basis": "release_history",
+            "release_date": "2024-03-05",
+            "date_status": "stated",
+            "announcement_date": null,
+            "platforms_stated": [
+              "6200"
+            ],
+            "evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+                "quote": "10.13.1003  | 05/03/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ],
+            "build_reason": "unknown",
+            "build_reason_evidence": []
+          }
+        ],
         "respin_rule": "non_decadal_build",
         "expected_regular_build": "10.13.1000",
         "expected_regular_build_absent": false,
@@ -1053,11 +1656,82 @@
                 "source_id": "aruba-685df04322baa38b62cf829d",
                 "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
                 "quote": "10.13.1003  | 05/03/2024"
+              }
+            ],
+            "timing_evidence": [
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                "quote": "10.13.1000  | 31/01/2024"
               },
               {
                 "source_id": "aruba-3a765657cd1176ec63b71323",
                 "locator": "Products Supported / paragraph / rendered line87",
                 "quote": "This release applies to the 6200 Switch series."
+              },
+              {
+                "source_id": "aruba-685df04322baa38b62cf829d",
+                "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+                "quote": "10.13.1003  | 05/03/2024"
+              },
+              {
+                "source_id": "aruba-3a765657cd1176ec63b71323",
+                "locator": "Products Supported / paragraph / rendered line87",
+                "quote": "This release applies to the 6200 Switch series."
+              }
+            ],
+            "release_observations": [
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1000",
+                "observation_basis": "release_history",
+                "release_date": "2024-01-31",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6200"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-685df04322baa38b62cf829d",
+                    "locator": "Version history table / Version number=10.13.1000 / rendered line 98",
+                    "quote": "10.13.1000  | 31/01/2024"
+                  },
+                  {
+                    "source_id": "aruba-3a765657cd1176ec63b71323",
+                    "locator": "Products Supported / paragraph / rendered line87",
+                    "quote": "This release applies to the 6200 Switch series."
+                  }
+                ]
+              },
+              {
+                "vendor": "aruba",
+                "family": "AOS-CX",
+                "train": "10.13",
+                "version": "10.13.1003",
+                "observation_basis": "release_history",
+                "release_date": "2024-03-05",
+                "date_status": "stated",
+                "announcement_date": null,
+                "platforms_stated": [
+                  "6200"
+                ],
+                "evidence": [
+                  {
+                    "source_id": "aruba-685df04322baa38b62cf829d",
+                    "locator": "Version history table / Version number=10.13.1003 / rendered line 97",
+                    "quote": "10.13.1003  | 05/03/2024"
+                  },
+                  {
+                    "source_id": "aruba-3a765657cd1176ec63b71323",
+                    "locator": "Products Supported / paragraph / rendered line87",
+                    "quote": "This release applies to the 6200 Switch series."
+                  }
+                ],
+                "build_reason": "unknown",
+                "build_reason_evidence": []
               }
             ],
             "respin_rule": "non_decadal_build",
