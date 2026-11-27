@@ -1764,8 +1764,7 @@
             max_bytes: Math.min(options.max_bytes ?? 8000000, 8000000),
           });
           window.InfrastructureReleaseReliability.validate(report, catalog);
-          if (report.upgrade_selection !== null || report.upgrade_annotations.length)
-            throw Error('Published reliability report contains selected analysis');
+          window.InfrastructureReleaseReliability.validatePublished(report, catalog);
           return report;
         })().catch((error) => {
           reliabilityPromise = null;

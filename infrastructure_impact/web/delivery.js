@@ -736,8 +736,7 @@ async function createStaticDelivery(fetchPart, siteBase) {
           new TextDecoder('utf-8', { fatal: true }).decode(raw),
         );
         window.InfrastructureReleaseReliability.validate(report, index);
-        if (report.upgrade_selection !== null || report.upgrade_annotations.length)
-          throw Error('Published reliability report contains selected analysis');
+        window.InfrastructureReleaseReliability.validatePublished(report, index);
         return report;
       })().catch((error) => {
         reliabilityPromise = null;

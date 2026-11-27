@@ -26,6 +26,7 @@ _HOSTS = {
         "arubanetworks.com",
         "www.arubanetworks.com",
         "support.hpe.com",
+        "csaf.arubanetworking.hpe.com",
     },
     "arista": {"www.arista.com", "arista.com"},
 }

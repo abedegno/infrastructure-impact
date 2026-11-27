@@ -794,9 +794,7 @@ class Application:
             if asset.exists():
                 with asset.open("rb") as stream:
                     report = strict_loads(stream.read(8_000_001), max_bytes=8_000_000)
-                report = reliability.validate_report(report, **identity)
-                if report["upgrade_selection"] is not None or report["upgrade_annotations"]:
-                    raise ValueError("Published reliability report contains selected analysis")
+                report = reliability.validate_published_report(report, **identity)
         if report is None:
             report = reliability.unavailable_report(**identity)
         if include is not None:

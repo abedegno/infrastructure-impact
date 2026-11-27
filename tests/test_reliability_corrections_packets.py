@@ -21,20 +21,28 @@ def test_packaged_unique_records_preserve_every_pinned_observation_and_replay_pr
     def canonical(rows):
         return Counter(json.dumps(r, sort_keys=True) for r in rows)
 
-    assert canonical(original) == canonical(old["releases"])
-    assert len(packaged["releases"]) == 40
+    assert canonical(original) >= canonical(old["releases"])
+    assert len(original) == len(old["releases"]) + 3
+    assert len(packaged["releases"]) == 43
     assert Counter(r["vendor"] for r in packaged["releases"]) == {
-        "cisco": 8,
-        "aruba": 24,
+        "cisco": 9,
+        "aruba": 26,
         "arista": 8,
     }
-    for field in ("sources", "notices", "statements", "coverage"):
+    for field in ("notices", "statements", "coverage"):
         assert packaged[field] == old[field]
+    assert packaged["sources"][: len(old["sources"])] == old["sources"]
     preview = json.loads(
         (root / "docs/research/2026-11-27-reliability-corrections-preview.json").read_text()
     )
     assert (
-        reliability.build_report(publication=None, generated_at=preview["generated_at"]) == preview
+        reliability.build_report(
+            preview["catalogue"],
+            preview["config"],
+            publication=None,
+            generated_at=preview["generated_at"],
+        )
+        == preview
     )
     aruba = next(r for r in preview["annual"] if r["vendor"] == "aruba" and r["year"] == 2024)
     assert aruba["metrics"]["possible_respin_90"]["observed_count"] == 2

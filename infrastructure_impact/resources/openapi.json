@@ -1760,7 +1760,7 @@
     "/api/v1/release-reliability": {
       "get": {
         "summary": "Generation-bound release catalogue metrics and optional selected upgrade context",
-        "description": "Catalogue metrics are independent of study filters. Missing legacy roots return unavailable evidence. Study controls require include_upgrades=1; selected analysis supplies annotations only. Unknown rates remain null. CSV includes typed payload rows for source receipts, coverage judgements, releases, notices, statements, respins, pending reviews and validation; source IDs and rate-support inputs remain resolvable within the export.",
+        "description": "Catalogue metrics are independent of study filters. Scientific publications include a declared configured-train/date default staircase join; include_upgrades=1 replaces it with selected context. Exact catalogue entries, suffix-only leads, missing entries and exact-version actions remain distinct. Missing legacy roots return unavailable evidence. Study controls require include_upgrades=1; selected analysis supplies annotations only. Unknown rates remain null. CSV includes typed payload rows for source receipts, coverage judgements, releases, notices, statements, respins, pending reviews and validation; source IDs and rate-support inputs remain resolvable within the export. New-version annotation payloads preserve the full catalogue marker and timing evidence.",
         "parameters": [
           {
             "name": "format",

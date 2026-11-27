@@ -105,9 +105,11 @@ for IOS XE 17.12, AOS-CX 10.13 and EOS 4.33. Per-train tables retain observed
 counts, source eligibility and coverage; unsupported rates remain unavailable.
 Source-linked staircase context keeps notice, action and software dates separate
 and does not change upgrade counts or infer device applicability.
-The [27 November correction preview](docs/research/2026-11-27-reliability-corrections.md)
-fixes rebuild rules and duplicate release records; version-gap findings and the
-updated review packet remain unpublished pending the next approved phase.
+The [27 November corrections](docs/research/2026-11-27-reliability-corrections.md)
+fix rebuild rules and duplicate records. Scientific publications include bounded
+default staircase annotations, exact/suffix/missing catalogue markers and source
+links. [Public-date research](docs/research/2026-11-27-reliability-public-dates.md)
+retains unsupported release dates and the 17.9.6 withdrawal claim as unknown.
 
 Use the [local reliability refresh](docs/RELIABILITY_REFRESH.md) to prepare a
 separate candidate and pending-review report from original source captures.

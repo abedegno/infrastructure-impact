@@ -338,7 +338,7 @@ def test_cli_rolling_replay_preserves_announcements_coverage_and_packaged_defaul
     baseline = read_json(BASELINE)
     cache = tmp_path / "cache"
     raw = tmp_path / "incoming"
-    cutoff = "2026-11-26T00:00:00Z"
+    cutoff = max("2026-11-26T00:00:00Z", baseline["generated_at"])
     initial = (
         (ARISTA, rss(("4.33.99M", "2026-11-24 23:30:00 -0100")), "2026-11-25T16:00:00Z"),
         (ARISTA, rss(("4.33.100M", "2026-11-25 16:15:00 +0000")), CAPTURED),
@@ -759,8 +759,10 @@ def test_matching_baseline_observation_does_not_hide_other_conflicting_receipts(
 def test_external_catalogue_receipt_calendar_cutoffs(
     refresh, tmp_path, generated, retained, captured, expected_instant
 ):
-    cli, _, collection = refresh
-    baseline = read_json(BASELINE)
+    from checks.build_release_catalogue import build_catalogue
+
+    cli, app, collection = refresh
+    baseline = app.deduplicate_releases(build_catalogue())
     baseline["generated_at"] = generated
     baseline["sources"][0]["retrieved_at"] = retained
     baseline_file = tmp_path / "external.json"

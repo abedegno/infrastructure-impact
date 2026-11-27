@@ -14,14 +14,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.parametrize(
-    "case", ["packaged", "missing_aruba_base", "model_specific_dates", "undated_original_first"]
+    "case",
+    [
+        "packaged",
+        "missing_aruba_base",
+        "model_specific_dates",
+        "undated_original_first",
+        "staircase_join",
+    ],
 )
 def test_browser_release_reliability_parity(tmp_path, case):
     node = shutil.which("node")
     if not node:
         pytest.skip("Node.js is unavailable")
     publication = {"id": "release-ui", "advisory_schema_version": 2}
-    report = rr.build_report(publication=publication, generated_at="2026-11-25T18:00:00Z")
+    report = rr.build_report(publication=publication, generated_at="2026-11-28T00:00:00Z")
     if case != "packaged":
         from test_reliability_corrections import configured
 
@@ -51,7 +58,11 @@ def test_browser_release_reliability_parity(tmp_path, case):
             earlier.update(release_date=None, date_status="unknown")
             cat["releases"].insert(0, earlier)
         report = rr.build_report(
-            cat, conf, publication=publication, generated_at=report["generated_at"]
+            cat,
+            conf,
+            publication=publication,
+            generated_at=report["generated_at"],
+            staircase_join_version=1 if case == "staircase_join" else None,
         )
     upgrades = dict(
         publication=publication,
@@ -68,6 +79,11 @@ def test_browser_release_reliability_parity(tmp_path, case):
             for scenario in ["publisher_first_fixed", "known_fixed_target"]
         ],
     )
+    if case == "staircase_join":
+        for row in upgrades["rows"]:
+            row.update(
+                vendor="aruba", train="10.13", events=[dict(date="2025-01-05", target="10.13.1000")]
+            )
     selected = rr.with_upgrades(report, upgrades)
     path = tmp_path / "vectors.json"
     path.write_text(

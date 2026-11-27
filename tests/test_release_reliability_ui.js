@@ -64,6 +64,11 @@ if (process.argv[2]) {
   assert(!html.includes('href="javascript:'), 'unsafe source URL cannot become a link');
   const steps = R.renderSteps(selected, vectors.upgrades.rows, vectors.upgrades.selection);
   assert(steps.includes('Model') || !selected.upgrade_annotations.length);
+  if (selected.staircase_join_version === 1 && selected.upgrade_annotations.length) {
+    assert(steps.includes('release-catalogue-marker'));
+    assert(steps.includes('data-version-match="exact"'));
+    assert(steps.includes('Notice date:') && steps.includes('action date:'));
+  }
 }
 console.log('Release reliability browser tests passed');
 if (process.argv[2]) {

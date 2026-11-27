@@ -1503,6 +1503,12 @@
                   },
                   "maxItems": 20000,
                   "minItems": 1
+                },
+                "related_release": {
+                  "type": ["string", "null"]
+                },
+                "days_after_step": {
+                  "type": ["integer", "null"]
                 }
               }
             }
@@ -1512,6 +1518,115 @@
             "maxItems": 20000,
             "items": {
               "type": "string"
+            }
+          },
+          "target_catalogue": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "present",
+              "match_type",
+              "versions",
+              "scope_status",
+              "evidence",
+              "release_observations"
+            ],
+            "properties": {
+              "present": {
+                "type": "boolean"
+              },
+              "match_type": {
+                "enum": ["exact", "suffix_variant", "not_found"]
+              },
+              "versions": {
+                "type": "array",
+                "maxItems": 20000,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "scope_status": {
+                "enum": ["matched", "model_unresolved"]
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["source_id", "locator", "quote"],
+                  "properties": {
+                    "source_id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "locator": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024
+                    },
+                    "quote": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 2000
+                    }
+                  }
+                },
+                "maxItems": 20000,
+                "minItems": 0
+              },
+              "release_observations": {
+                "type": "array",
+                "maxItems": 20000,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["version", "release_date", "platforms_stated", "evidence"],
+                  "properties": {
+                    "version": {
+                      "type": "string"
+                    },
+                    "release_date": {
+                      "type": ["string", "null"],
+                      "format": "date"
+                    },
+                    "platforms_stated": {
+                      "type": "array",
+                      "maxItems": 20000,
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["source_id", "locator", "quote"],
+                        "properties": {
+                          "source_id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "locator": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 1024
+                          },
+                          "quote": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 2000
+                          }
+                        }
+                      },
+                      "maxItems": 20000,
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -1930,6 +2045,14 @@
           "const": "independent_human_review_pending"
         }
       }
+    },
+    "staircase_join_version": {
+      "const": 1,
+      "type": "integer"
+    },
+    "published_staircase_version": {
+      "const": 1,
+      "type": "integer"
     }
   },
   "$id": "urn:infrastructure-impact:release-reliability:1"

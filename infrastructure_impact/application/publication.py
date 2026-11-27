@@ -323,12 +323,19 @@ def public_projection(
     from .switching_validation import rebuild as rebuild_switching_validation
 
     rebuild_switching_validation(data)
+    from .release_reliability import _with_published_analysis
     from .release_reliability import build_report as build_reliability
     from .switching_validation import attach_release_reliability
 
     data["release_reliability"] = build_reliability(
-        publication=data.get("publication"), generated_at=data["generated_at"]
+        publication=data.get("publication"),
+        generated_at=data["generated_at"],
+        staircase_join_version=1,
     )
+    if "switching_analysis" in data:
+        data["release_reliability"] = _with_published_analysis(
+            data["release_reliability"], data["switching_analysis"], data["switching_comparison"]
+        )
     data["switching_validation"] = attach_release_reliability(
         data["switching_validation"], data["release_reliability"]
     )
@@ -665,14 +672,25 @@ def reliability_review(data):
 def write_reliability_assets(destination, data):
     if "release_reliability" not in data:
         return
-    if (
-        data["release_reliability"]["upgrade_selection"] is not None
-        or data["release_reliability"]["upgrade_annotations"]
-    ):
-        raise ValueError("Published reliability report contains selected analysis")
-    from .release_reliability import csv_export
+    from .release_reliability import _with_published_analysis, csv_export, validate_published_report
     from .static_delivery import encode
 
+    validate_published_report(
+        data["release_reliability"],
+        publication=data["publication"],
+        generated_at=data["generated_at"],
+    )
+    report = data["release_reliability"]
+    if report.get("published_staircase_version"):
+        if "switching_analysis" not in data or "switching_comparison" not in data:
+            raise ValueError("Published staircase requires its complete source context")
+        base = dict(report, upgrade_selection=None, upgrade_annotations=[])
+        base.pop("published_staircase_version")
+        expected = _with_published_analysis(
+            base, data["switching_analysis"], data["switching_comparison"]
+        )
+        if any(report[k] != expected[k] for k in ("upgrade_selection", "upgrade_annotations")):
+            raise ValueError("Published staircase differs from complete source context")
     for name, value in (
         ("release-reliability.json", data["release_reliability"]),
         ("release-reliability-review.json", reliability_review(data)),

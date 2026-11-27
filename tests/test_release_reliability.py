@@ -6,7 +6,7 @@ from test_release_catalogue import config, evidence, release, specimen
 from infrastructure_impact.application import release_reliability as rr
 
 PUB = {"id": "release-test", "advisory_schema_version": 2}
-NOW = "2026-11-25T18:00:00Z"
+NOW = "2026-11-28T00:00:00Z"
 
 
 def build(d=None, c=None):
@@ -113,7 +113,7 @@ def test_csv_is_safe_and_keeps_publication_context():
     report = build()
     report["limitations"][0] = "=SUM(A1)"
     output = rr.csv_export(report)
-    assert "release-test" in output and "2026-11-25T18:00:00Z" in output
+    assert "release-test" in output and NOW in output
     assert "'=SUM(A1)" in output
     with pytest.raises(ValueError):
         rr.csv_export(report, max_bytes=10)
@@ -373,7 +373,7 @@ def test_csv_retains_resolvable_source_facts_and_review_items():
 
     report = rr.build_report(
         publication={"id": "csv-proof", "advisory_schema_version": 2},
-        generated_at="2026-11-26T00:00:00Z",
+        generated_at=NOW,
     )
     rows = list(csv.DictReader(io.StringIO(rr.csv_export(report))))
     sources = [json.loads(row["payload"]) for row in rows if row["row_type"] == "catalogue_source"]

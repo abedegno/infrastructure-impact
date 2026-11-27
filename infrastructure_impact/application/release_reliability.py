@@ -321,7 +321,9 @@ def _review(catalogue, respins=()):
     ]
 
 
-def build_report(catalogue=None, config=None, *, publication, generated_at):
+def build_report(
+    catalogue=None, config=None, *, publication, generated_at, staircase_join_version=None
+):
     """Build from packaged public facts without selecting or hydrating study claims."""
     catalogue = copy.deepcopy(
         catalogue
@@ -369,6 +371,10 @@ def build_report(catalogue=None, config=None, *, publication, generated_at):
         limitations=copy.deepcopy(LIMITATIONS),
         method=copy.deepcopy(METHOD),
     )
+    if staircase_join_version is not None:
+        if type(staircase_join_version) is not int or staircase_join_version != 1:
+            raise ValueError("Unsupported staircase join version")
+        report["staircase_join_version"] = staircase_join_version
     if available:
         report["respins"] = catalogue_tools.find_respins(catalogue, config)
         report["annual"] = _annual(catalogue, config, report["respins"])
@@ -396,6 +402,8 @@ def validate_report(report, *, publication=_UNSET, generated_at=None):
         raise ValueError("Release reliability generation time differs")
     _timestamp(report["generated_at"])
     catalogue_tools.validate_config(report["config"])
+    if "published_staircase_version" in report:
+        _validate_published_selection(report)
     if report["availability"] == "unavailable":
         if any(
             report[k]
@@ -455,10 +463,150 @@ def validate_report(report, *, publication=_UNSET, generated_at=None):
     return report
 
 
+def _published_selection(report, study):
+    return dict(
+        kind="configured_staircases",
+        start=report["config"]["start"],
+        end=report["config"]["end"],
+        trains=[{k: t[k] for k in ("vendor", "train")} for t in report["config"]["trains"]],
+        study=copy.deepcopy(study),
+    )
+
+
+def _validate_published_selection(report):
+    selected = report["upgrade_selection"]
+    study = selected.get("study") if isinstance(selected, dict) else None
+    if (
+        report.get("staircase_join_version") != 1
+        or not isinstance(study, dict)
+        or selected != _published_selection(report, study)
+        or study.get("requested_vendor") is not None
+        or study.get("requested_cve_ids") is not None
+        or study.get("requested_window") != "all"
+        or study.get("scope_level") != "os_family"
+        or set(study)
+        != {
+            "requested_vendor",
+            "effective_vendors",
+            "scope_level",
+            "requested_window",
+            "effective_windows",
+            "requested_cve_ids",
+            "effective_cve_ids",
+            "definition_sha256",
+        }
+        or study.get("effective_vendors") != ["cisco", "aruba", "arista"]
+        or study.get("effective_windows")
+        != [f"{v}:os_family:all" for v in ("cisco", "aruba", "arista")]
+    ):
+        raise ValueError("Invalid published staircase selection")
+
+
+def validate_published_report(report, **identity):
+    """Only the writer's bounded default context may accompany a published root."""
+    validate_report(report, **identity)
+    if (
+        report["upgrade_selection"] is not None or report["upgrade_annotations"]
+    ) and not report.get("published_staircase_version"):
+        raise ValueError("Published reliability report contains selected analysis")
+    return report
+
+
+def _with_published_analysis(report, compiled, study):
+    """Writer-only join from its already validated complete compiled source frame.
+
+    Expand only configured train constraints, retain pre-period walk state, and
+    never materialize another complete selected report or change upgrade counts.
+    """
+    if report["availability"] != "available":
+        return report
+    from . import switching_analysis as analysis
+    from . import switching_upgrades as upgrades
+
+    for source in (compiled, study):
+        if any(source[k] != report[k] for k in ("publication", "generated_at")):
+            raise ValueError("Published staircase source identity differs")
+    selection = _published_selection(report, study["selection"])
+    _validate_published_selection(
+        dict(report, upgrade_selection=selection, published_staircase_version=1)
+    )
+    if compiled["definition_sha256"] != study["selection"]["definition_sha256"]:
+        raise ValueError("Published staircase definition differs")
+    targets = {(t["vendor"], t["train"]) for t in report["config"]["trains"]}
+    source = compiled["requirements"]
+    constraints = []
+    for req in source["requirements"]:
+        member = source["members"][req["claim_id"]]
+        if (member["vendor"], req["train"]) in targets and (
+            member["date"] is None
+            or study["definition"]["start_date"] <= member["date"] <= compiled["observation_end"]
+        ):
+            constraints.append(analysis._expand(source, req))
+    rows = upgrades._rows(
+        constraints,
+        end=compiled["observation_end"],
+        vendors=study["selection"]["effective_vendors"],
+    )
+    selected = {k: report[k] for k in ("publication", "generated_at")}
+    selected.update(selection=selection, rows=rows)
+    result = with_upgrades(report, selected)
+    result["published_staircase_version"] = 1
+    return validate_published_report(result)
+
+
+def _catalogue_match(report, group):
+    candidates = [
+        r
+        for r in report["catalogue"]["releases"]
+        if (r["vendor"], r["train"]) == (group["vendor"], group["train"])
+    ]
+    exact = [r for r in candidates if r["version"] == group["target"]]
+    variants = []
+    if not exact and group["vendor"] == "cisco":
+        try:
+            key = catalogue_tools._version_key("cisco", group["target"])[:3]
+            variants = [
+                r
+                for r in candidates
+                if catalogue_tools._version_key("cisco", r["version"])[:3] == key
+            ]
+        except ValueError:
+            pass
+    found = exact or variants
+    observations = [o for r in found for o in r.get("observations", [r])]
+    evidence = []
+    for o in observations:
+        for e in o["evidence"]:
+            if e not in evidence:
+                evidence.append(copy.deepcopy(e))
+    scope = {p for o in observations for p in o["platforms_stated"]}
+    return dict(
+        present=bool(exact),
+        match_type="exact" if exact else "suffix_variant" if variants else "not_found",
+        versions=sorted({r["version"] for r in found}),
+        scope_status="matched"
+        if exact and group["models"] and set(group["models"]) <= scope
+        else "model_unresolved",
+        evidence=evidence,
+        release_observations=[
+            {k: o[k] for k in ("version", "release_date", "platforms_stated", "evidence")}
+            for o in observations
+        ],
+    )
+
+
 def _annotations(report, selected):
     groups = {}
     for row in selected["rows"]:
         for event in row["events"]:
+            if report.get("staircase_join_version") == 1 and (
+                not any(
+                    (row["vendor"], row["train"]) == (t["vendor"], t["train"])
+                    for t in report["config"]["trains"]
+                )
+                or not report["config"]["start"] <= event["date"] <= report["config"]["end"]
+            ):
+                continue
             key = (row["vendor"], row["train"], event["date"], event["target"])
             group = groups.setdefault(
                 key,
@@ -492,6 +640,8 @@ def _annotations(report, selected):
             )
         if not catalogue:
             continue
+        if report.get("staircase_join_version") == 1:
+            group["target_catalogue"] = _catalogue_match(report, group)
         for section, kind in (
             ("notices", "notice"),
             ("statements", "statement"),
@@ -542,6 +692,17 @@ def _annotations(report, selected):
                         evidence=fact["evidence"],
                     )
                 )
+                if report.get("staircase_join_version") == 1:
+                    group["matches"][-1].update(
+                        related_release=fact.get("followup_release")
+                        if kind == "respin"
+                        else fact.get("replacement_release", fact.get("related_release")),
+                        days_after_step=(
+                            date.fromisoformat(day) - date.fromisoformat(group["date"])
+                        ).days
+                        if day
+                        else None,
+                    )
     return [groups[k] for k in sorted(groups)]
 
 
@@ -554,6 +715,7 @@ def with_upgrades(report, selected_upgrades):
     ):
         raise ValueError("Selected upgrades publication identity differs")
     result = copy.deepcopy(report)
+    result.pop("published_staircase_version", None)
     result["upgrade_selection"] = copy.deepcopy(selected_upgrades["selection"])
     if result["availability"] == "available":
         result["upgrade_annotations"] = _annotations(report, selected_upgrades)
@@ -639,6 +801,11 @@ def csv_export(report, *, max_bytes=None):
                         separators=(",", ":"),
                         ensure_ascii=False,
                     ),
+                    payload=json.dumps(
+                        annotation, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+                    )
+                    if report.get("staircase_join_version") == 1
+                    else None,
                 )
             )
         catalogue = report["catalogue"] or {}

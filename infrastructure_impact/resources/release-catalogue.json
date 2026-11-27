@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-25T16:48:07.849674+00:00",
+  "generated_at": "2026-11-27T11:29:31.014316+00:00",
   "review_status": "independent_human_review_pending",
   "sources": [
     {
@@ -245,6 +245,33 @@
       "original_sha256": "a88666706254a2b922e9e76026ea1602109dd5ada5ee624e6e47ed7adc6de7ef",
       "excerpt_sha256": null,
       "source_id": "arista-febee22fd3bcc2e460936930"
+    },
+    {
+      "source_id": "cisco-9300-images",
+      "vendor": "cisco",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/upgrading_the_switch_software.html",
+      "retrieved_at": "2026-11-27T11:29:31.014316+00:00",
+      "capture_kind": "tool_excerpt",
+      "original_sha256": null,
+      "excerpt_sha256": "df17a80b072d1e4f89254ce5682e0bd308e999e5685a1b9ebc83f5b137adcebe"
+    },
+    {
+      "source_id": "aruba-04669",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "retrieved_at": "2026-11-27T11:20:49.882570+00:00",
+      "capture_kind": "original_document",
+      "original_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "excerpt_sha256": null
+    },
+    {
+      "source_id": "aruba-05027",
+      "vendor": "aruba",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2026/hpe_aruba_networking_-_hpesbnw05027.json",
+      "retrieved_at": "2026-11-27T11:20:51.598374+00:00",
+      "capture_kind": "original_document",
+      "original_sha256": "cb5b3327c97f3dd20718278feec4413c5e3a31a524319c186d0fb6c226f629fd",
+      "excerpt_sha256": null
     }
   ],
   "releases": [
@@ -1603,6 +1630,60 @@
           "source_id": "arista-febee22fd3bcc2e460936930",
           "locator": "RSS channel/item[12]/title and pubDate",
           "quote": "EOS-4.33.11M is now available for download."
+        }
+      ]
+    },
+    {
+      "vendor": "cisco",
+      "family": "IOS XE",
+      "train": "17.12",
+      "version": "17.12.7",
+      "observation_basis": "version_table",
+      "release_date": null,
+      "date_status": "unknown",
+      "announcement_date": null,
+      "platforms_stated": ["Catalyst 9300"],
+      "evidence": [
+        {
+          "source_id": "cisco-9300-images",
+          "locator": "Software Images table / Cisco IOS XE Dublin 17.12.7 / CAT9K_IOSXE row; rendered lines 112-113",
+          "quote": "Cisco IOS XE Dublin 17.12.7 | CAT9K_IOSXE | cat9k_iosxe.17.12.07.SPA.bin"
+        }
+      ]
+    },
+    {
+      "vendor": "aruba",
+      "family": "AOS-CX",
+      "train": "10.13",
+      "version": "10.13.1031",
+      "observation_basis": "advisory_version_reference",
+      "release_date": null,
+      "date_status": "unknown",
+      "announcement_date": null,
+      "platforms_stated": [],
+      "evidence": [
+        {
+          "source_id": "aruba-04669",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "10.13.1031 and above"
+        }
+      ]
+    },
+    {
+      "vendor": "aruba",
+      "family": "AOS-CX",
+      "train": "10.13",
+      "version": "10.13.1161",
+      "observation_basis": "advisory_version_reference",
+      "release_date": null,
+      "date_status": "unknown",
+      "announcement_date": null,
+      "platforms_stated": [],
+      "evidence": [
+        {
+          "source_id": "aruba-05027",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above"
         }
       ]
     }
