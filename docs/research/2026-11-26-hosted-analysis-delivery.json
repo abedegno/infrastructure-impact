@@ -111,5 +111,15 @@
     "strict_verifier": "operator_native_parity",
     "private_inputs": false,
     "network_requests": 0
+  },
+  "ordinary_default_without_hardlinks": {
+    "scope": "Actual fresh default snapshot CLI, authored synthetic state, os.link syscall emulated unavailable",
+    "returncode": 0,
+    "hard_link_calls": 0,
+    "physical_inventory_and_capacity": "passed",
+    "strict_operator_native_parity": "passed",
+    "delivery_root": "absent",
+    "private_inputs": false,
+    "network_requests": 0
   }
 }
