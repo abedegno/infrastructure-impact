@@ -150,21 +150,38 @@ def test_certification_retained_selected_rejected_before_checkout(tmp_path):
         "request_missing",
         "request_hash",
         "request_null",
+        "paired_wrong_id",
+        "extra_identity_field",
         "paired_null",
         "paired_missing",
         "paired_injection",
         "default",
     ],
 )
+@pytest.mark.parametrize("field", ["switching_analysis_profile", "analysis_delivery_profile"])
 def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
-    setup, monkeypatch, mutation
+    setup, monkeypatch, mutation, field
 ):
     import json
 
+    from test_analysis_delivery_profiles import DIGEST, expected
+    from test_analysis_delivery_profiles import PROFILE as DELIVERY
     from test_target_import_stage import receipt, serve, snapshot
 
     from infrastructure_impact.application import import_candidate, target_import_stage
 
+    testing_delivery = field == "analysis_delivery_profile"
+    identifier = DELIVERY if testing_delivery else PROFILE
+    identity = (
+        {"profile_id": DELIVERY, "input_sha256": DIGEST}
+        if testing_delivery
+        else profiles.profile(PROFILE).identity()
+    )
+    enabled = mutation not in ("paired_injection", "default")
+    selectors = {"switching_analysis_profile": PROFILE} if testing_delivery else {}
+    if enabled:
+        selectors[field] = identifier
+    observed_argv = []
     database, selected, raws, output, home = setup
     from contextlib import closing
 
@@ -188,24 +205,25 @@ def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
     real_verify = import_candidate.verify
 
     def verify(database, public, profile, **kwargs):
-        expected_selector = "" if mutation in ("paired_injection", "default") else PROFILE
-        assert kwargs.get("switching_analysis_profile", "") == expected_selector
+        assert kwargs == {"publication_format": "v2", **selectors}
         context_path = database.parent.parent / "home/target-import-context.json"
         context = json.loads(context_path.read_bytes())
-        if expected_selector:
-            assert context["switching_analysis_profile"] == profiles.profile(PROFILE).identity()
+        if enabled:
+            assert context[field] == identity
         else:
-            assert "switching_analysis_profile" not in context
+            assert field not in context
         if mutation == "paired_injection":
-            context["switching_analysis_profile"] = profiles.profile(PROFILE).identity()
+            context[field] = identity
         if mutation in ("missing", "paired_missing"):
-            del context["switching_analysis_profile"]
+            del context[field]
         if mutation == "hash":
-            context["switching_analysis_profile"]["input_sha256"] = "0" * 64
-        if mutation == "null":
-            context["switching_analysis_profile"] = None
-        if mutation == "paired_null":
-            context["switching_analysis_profile"] = None
+            context[field]["input_sha256"] = "0" * 64
+        if mutation == "extra_identity_field":
+            context[field]["extra"] = 1
+        if mutation == "paired_wrong_id":
+            context[field]["profile_id"] = "unknown"
+        if mutation in ("null", "paired_null"):
+            context[field] = None
         context_path.write_text(json.dumps(context))
         real_run = import_candidate.subprocess.run
 
@@ -222,41 +240,74 @@ def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
                 str(public),
                 "v2",
             ]
-            if expected_selector:
-                expected_argv += ["--switching-analysis-profile", expected_selector]
+            for key, value in selectors.items():
+                expected_argv += ["--" + key.replace("_", "-"), value]
             assert args[0] == expected_argv
             request_path = database.parent.parent / "home/target-import-request.json"
             request = json.loads(request_path.read_bytes())
             if mutation in ("request_missing", "paired_missing"):
-                del request["switching_analysis_profile"]
+                del request[field]
             elif mutation == "paired_injection":
-                request["switching_analysis_profile"] = profiles.profile(PROFILE).identity()
+                request[field] = identity
+            elif mutation == "paired_wrong_id":
+                request[field]["profile_id"] = "unknown"
             elif mutation == "request_hash":
-                request["switching_analysis_profile"]["input_sha256"] = "0" * 64
+                request[field]["input_sha256"] = "0" * 64
             elif mutation in ("request_null", "paired_null"):
-                request["switching_analysis_profile"] = None
+                request[field] = None
             request_path.write_text(json.dumps(request))
+            observed_argv.append(args[0])
             return real_run(*args, **options)
 
         with monkeypatch.context() as patch:
             patch.setattr(import_candidate.subprocess, "run", tampered_run)
             return real_verify(database, public, profile, **kwargs)
 
-    monkeypatch.setattr(target_import_stage, "verify", verify)
-    result = target_import_stage.stage(
-        database,
-        selected,
-        accepted["fingerprint"],
-        output,
-        lock_home=home,
-        accepted_preview=accepted,
-        publication_format="v2",
-        **(
-            {"switching_analysis_profile": PROFILE}
-            if mutation not in ("paired_injection", "default")
-            else {}
-        ),
-    )
+    monkeypatch.setattr(import_candidate, "verify", verify)
+    if testing_delivery and mutation is None:
+        from infrastructure_impact.application.target_import_contracts import preview_bytes
+        from infrastructure_impact.cli import main
+        from infrastructure_impact.collection import target_import_profiles
+
+        monkeypatch.setattr(target_import_profiles, "profile", lambda _: selected)
+        preview_path = output.parent / "accepted-preview.json"
+        preview_path.write_bytes(preview_bytes(accepted, selected=selected))
+        code = main(
+            [
+                "target-import",
+                "stage",
+                "--profile",
+                selected.profile_id,
+                "--database",
+                str(database),
+                "--preview",
+                str(preview_path),
+                "--output",
+                str(output),
+                "--home",
+                str(home),
+                "--publication-format",
+                "v2",
+                "--switching-analysis-profile",
+                PROFILE,
+                "--analysis-delivery-profile",
+                DELIVERY,
+            ]
+        )
+        assert code == 0
+        result = json.loads((output / "result.json").read_bytes())
+    else:
+        result = target_import_stage.stage(
+            database,
+            selected,
+            accepted["fingerprint"],
+            output,
+            lock_home=home,
+            accepted_preview=accepted,
+            publication_format="v2",
+            **selectors,
+        )
+    assert len(observed_argv) == 1
     assert snapshot(database) == before
     assert (result["outcome"] == "completed") is (mutation in (None, "default")), __import__(
         "json"
@@ -265,13 +316,21 @@ def test_selected_stage_fresh_worker_binds_context_and_blocks_invalid_candidate(
         from infrastructure_impact.application.publication_reader import PublicationReader
 
         assert PublicationReader(output / "public").switching_analysis()["availability"] == (
-            "unavailable" if mutation == "default" else "available"
+            "available" if "switching_analysis_profile" in selectors else "unavailable"
         )
+        from infrastructure_impact.application import analysis_precomputed
+
+        reader = PublicationReader(output / "public")
+        assert (analysis_precomputed.ROOT in reader.catalog["roots"]) is (
+            testing_delivery and enabled
+        )
+        if testing_delivery and enabled:
+            assert [v["options"] for v in reader._precomputed_manifest()["views"]] == expected()
         request = json.loads((output / "private/home/target-import-request.json").read_bytes())
         if mutation == "default":
-            assert "switching_analysis_profile" not in request
+            assert field not in request
         else:
-            assert request["switching_analysis_profile"] == profiles.profile(PROFILE).identity()
+            assert request[field] == identity
         assert len(json.dumps(request)) < 30_000
     else:
         assert result["staged_database"] is None
@@ -564,8 +623,9 @@ def test_public_artifact_wrapper_requires_completed_receipt_and_generation(tmp_p
 
 
 @pytest.mark.parametrize("failure", ["build", "parity"])
+@pytest.mark.parametrize("selected_delivery", [False, True])
 def test_selected_failed_candidate_cannot_promote_or_publish(
-    target_recovery, tmp_path, monkeypatch, failure
+    target_recovery, tmp_path, monkeypatch, failure, selected_delivery
 ):
     from test_hosted_maintenance import effect_values
     from test_hosted_target_import import apply, state_bytes
@@ -577,8 +637,15 @@ def test_selected_failed_candidate_cannot_promote_or_publish(
     serve(monkeypatch, selected, raws)
     before = state_bytes(state)
 
+    from test_analysis_delivery_profiles import PROFILE as DELIVERY
+
+    seen = []
+    requested = {"publication_format": "v2", "switching_analysis_profile": PROFILE}
+    if selected_delivery:
+        requested["analysis_delivery_profile"] = DELIVERY
+
     def rejected(database, public, profile, **kwargs):
-        assert kwargs == {"publication_format": "v2", "switching_analysis_profile": PROFILE}
+        seen.append(kwargs)
         value = import_candidate._empty("validation_failed", publication_format="v2")
         value["audit_passed"] = True
         if failure == "parity":
@@ -593,8 +660,15 @@ def test_selected_failed_candidate_cannot_promote_or_publish(
             target_recovery,
             monkeypatch,
             output,
-            extra=("--publication-format", "v2", "--switching-analysis-profile", PROFILE),
+            extra=(
+                "--publication-format",
+                "v2",
+                "--switching-analysis-profile",
+                PROFILE,
+                *(("--analysis-delivery-profile", DELIVERY) if selected_delivery else ()),
+            ),
         )
+    assert seen == [requested]
     assert state_bytes(state) == before
     assert not output.exists()
     assert effect_values(effects) == {"mode": "apply"}

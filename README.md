@@ -314,8 +314,13 @@ An opt-in [precomputed analysis preview](docs/ANALYSIS_PRECOMPUTED.md) prepares
 common vendor/year selections during publication. Eligible selections load their
 own bounded gzip parts; custom filters retain the compiled analysis path. The
 prototype preserves native and browser JSON and both CSV exports. It is disabled
-by default, with hosted activation and full default-view capacity separately gated.
+by default. The eight-view capacity check is complete; hosted activation remains separately gated.
 The [pinned public-data measurement](docs/research/2026-11-26-precomputed-analysis-preview.md) records the original loading improvement. The [worker/eight-view verification](docs/research/2026-11-26-analysis-worker-verification.md) records improved responsiveness, exact worker-produced downloads, the cold-time tradeoff and the complete capacity proof. Hosted activation remains disabled.
+The installed `campus-switching-common-views-v1` delivery profile provides the
+reviewed eight choices (All/Cisco/Aruba/Arista × all/2025) through the existing
+operator paths. It requires v2 and explicit scientific-analysis opt-in; blank
+configuration preserves the ordinary publication. See the
+[operator wiring and activation proposal](docs/research/2026-11-26-hosted-analysis-delivery.md).
 
 ### Release reliability coverage
 

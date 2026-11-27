@@ -1,14 +1,16 @@
 """Validated, immutable public generations with an atomic current pointer."""
 
+import fcntl
 import gzip
 import io
 import json
 import os
 import re
 import shutil
+import stat
 import tempfile
 from contextlib import closing
-from hashlib import sha256
+from hashlib import file_digest, sha256
 from pathlib import Path
 from uuid import uuid4
 
@@ -872,10 +874,17 @@ def publish(
     *,
     publication_format="v1",
     include_switching_analysis=False,
+    analysis_delivery_profile: str = "",
 ):
+    from .analysis_delivery_profiles import build_profile
     from .publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
+    delivery = build_profile(
+        analysis_delivery_profile,
+        publication_format=publication_format,
+        include_switching_analysis=include_switching_analysis,
+    )
     root = Path(root or Paths.from_env().publications)
     generations = root / "generations"
     generations.mkdir(parents=True, exist_ok=True)
@@ -899,7 +908,12 @@ def publish(
     )
     stage = Path(tempfile.mkdtemp(prefix=".staging-", dir=generations))
     try:
-        write_bundle(stage, data, publication_format=publication_format)
+        write_bundle(
+            stage,
+            data,
+            publication_format=publication_format,
+            **(delivery.build_options() if delivery is not None else {}),
+        )
         stage.chmod(0o755)  # The separate reader container mounts only this public directory.
         final = generations / generation
         stage.rename(final)
@@ -912,19 +926,279 @@ def publish(
     return final
 
 
+def _snapshot_stat(info):
+    return (
+        info.st_dev,
+        info.st_ino,
+        info.st_mode,
+        info.st_size,
+        info.st_mtime_ns,
+        info.st_ctime_ns,
+    )
+
+
+def _snapshot_entries(directory, *, exclude=None):
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("Unsafe snapshot destination")
+    entries = {}
+    pending = [directory]
+    while pending:
+        for path in pending.pop().iterdir():
+            if path == exclude:
+                continue
+            info = path.lstat()
+            if stat.S_ISDIR(info.st_mode):
+                pending.append(path)
+            elif not stat.S_ISREG(info.st_mode):
+                raise ValueError("Unsafe entry in snapshot destination")
+            entries[path.relative_to(directory)] = _snapshot_stat(info)
+    return entries
+
+
+def _validate_previous_export(directory, generations):
+    """Only retire an unmodified export of a generation retained by this publisher."""
+    from ..publication_codec import strict_loads
+    from .publication_v2 import INDEX
+
+    entries = _snapshot_entries(directory)
+    if not entries:
+        return entries
+    manifest = directory / "manifest.json"
+    if manifest.is_symlink() or not manifest.is_file():
+        raise ValueError("Unmanaged snapshot destination")
+    with os.fdopen(os.open(manifest, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+        raw = stream.read(INDEX + 1)
+    receipt = strict_loads(raw, max_bytes=INDEX)
+    identifier = receipt.get("generation") if isinstance(receipt, dict) else None
+    if not isinstance(identifier, str) or not re.fullmatch(r"[0-9a-f]{32}", identifier):
+        raise ValueError("Unknown snapshot generation")
+    original = generations / identifier / "manifest.json"
+    if (
+        original.parent.is_symlink()
+        or original.is_symlink()
+        or not original.is_file()
+        or original.read_bytes() != raw
+    ):
+        raise ValueError("Unknown snapshot manifest")
+
+    expected = {**receipt["sha256"], "manifest.json": sha256(raw).hexdigest()}
+    directories = {parent for name in expected for parent in Path(name).parents}
+    for relative in entries:
+        path = directory / relative
+        if path.is_dir() and relative in directories:
+            continue
+        digest = expected.pop(str(relative), None)
+        if digest is None or not path.is_file():
+            raise ValueError("Unmanaged entry in snapshot destination")
+        with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW), "rb") as stream:
+            if file_digest(stream, "sha256").hexdigest() != digest:
+                raise ValueError("Modified file in snapshot destination")
+    if expected:
+        raise ValueError("Incomplete snapshot destination")
+    return entries
+
+
+class _ChangedSnapshotSource(ValueError):
+    """A private staged entry changed after inventory and needs recovery."""
+
+
+def _install_snapshot_entry(source, target, key, placed, *, parent_fd=None, expected=None):
+    """Transfer a private tree using only exclusive creations in the public directory."""
+    info = source.lstat()
+    if expected is not None and _snapshot_stat(info) != expected.get(key):
+        raise _ChangedSnapshotSource("Changed staged snapshot entry")
+    if stat.S_ISREG(info.st_mode):
+        os.link(source, target, dst_dir_fd=parent_fd, follow_symlinks=False)
+        placed[key] = _snapshot_stat(info)
+        if expected is not None:
+            source.unlink()  # Keep prior backups intact through the entire restoration.
+        # Linking and unlinking change ctime. Keep the source inode, mode and size
+        # in the expectation so a replacement at the public name fails inspection.
+        current = os.stat(target, dir_fd=parent_fd, follow_symlinks=False)
+        placed[key] = (*placed[key][:-1], current.st_ctime_ns)
+        return
+    if not stat.S_ISDIR(info.st_mode):
+        raise ValueError("Unsafe entry in snapshot installation")
+
+    os.mkdir(target, 0o700, dir_fd=parent_fd)
+    placed[key] = _snapshot_stat(info)
+    fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd)
+    try:
+        for child in source.iterdir():
+            _install_snapshot_entry(
+                child, child.name, key / child.name, placed, parent_fd=fd, expected=expected
+            )
+        os.fchmod(fd, stat.S_IMODE(info.st_mode))
+        os.utime(fd, ns=(info.st_atime_ns, info.st_mtime_ns))
+    finally:
+        placed[key] = _snapshot_stat(os.fstat(fd))
+        os.close(fd)
+
+
+def _refresh_export(generation, destination):
+    entries = _validate_previous_export(destination, generation.parent)
+    # The output may be a bind mount. Stage on that filesystem and keep its root inode.
+    workspace = Path(tempfile.mkdtemp(prefix=".snapshot-", dir=destination))
+    staged, previous = workspace / "new", workspace / "previous"
+    keep_backup = False
+    installed = {}
+    try:
+        # Test the output filesystem before staging or retiring any accepted contents.
+        probe = workspace / "link-check"
+        probe.touch()
+        os.link(probe, workspace / "link-check-alias")
+        shutil.copytree(generation, staged)
+        staged_entries = _snapshot_entries(staged)
+        previous.mkdir()
+        try:
+            roots = [key for key in entries if len(key.parts) == 1]
+            for key in sorted(roots, key=lambda key: key.name != "manifest.json"):
+                backup = previous / key
+                (destination / key).rename(backup)
+                # Renaming updates ctime on the moved entry, but not its descendants.
+                entries[key] = (*entries[key][:-1], backup.lstat().st_ctime_ns)
+            if set(destination.iterdir()) != {workspace} or _snapshot_entries(previous) != entries:
+                raise ValueError("Snapshot destination changed during export")
+
+            # Expose the new manifest only once its files are in place.
+            for entry in sorted(staged.iterdir(), key=lambda path: path.name == "manifest.json"):
+                target = destination / entry.name
+                _install_snapshot_entry(
+                    entry, target, Path(entry.name), installed, expected=staged_entries
+                )
+            if (
+                installed.keys() != staged_entries.keys()
+                or _snapshot_entries(destination, exclude=workspace) != installed
+                or _snapshot_entries(previous) != entries
+            ):
+                raise ValueError("Snapshot destination changed during export")
+        except BaseException as failure:
+            # If restoration itself fails, preserve the backup for recovery.
+            keep_backup = True
+            recovered = workspace / "recovered"
+            recovered.mkdir()
+            edited = False
+            installed_roots = [key for key in installed if len(key.parts) == 1]
+            for key in reversed(installed_roots):
+                target = destination / key
+                if not os.path.lexists(target):
+                    edited = True
+                    continue
+                if target.lstat().st_ctime_ns != installed[key][-1]:
+                    edited = True
+                target.rename(recovered / key)
+                installed[key] = (*installed[key][:-1], (recovered / key).lstat().st_ctime_ns)
+            conflicts = False
+            for backup in sorted(previous.iterdir(), key=lambda path: path.name == "manifest.json"):
+                target = destination / backup.name
+                try:
+                    _install_snapshot_entry(backup, target, Path(backup.name), {})
+                except FileExistsError:
+                    conflicts = True
+                except (OSError, ValueError) as exc:
+                    raise ValueError(
+                        "Snapshot restoration failed; backup retained at " + str(workspace)
+                    ) from exc
+            if conflicts:
+                raise ValueError("Conflicting snapshot entry; backup retained at " + str(workspace))
+            # Inspect after moving the new trees back. An uncoordinated writer
+            # may have added or changed a descendant before the installation failed.
+            try:
+                edited = edited or _snapshot_entries(recovered) != installed
+            except (ValueError, OSError):
+                edited = True
+            if isinstance(failure, _ChangedSnapshotSource):
+                raise ValueError(
+                    "Concurrent snapshot edits retained at " + str(workspace)
+                ) from failure
+            if edited:
+                raise ValueError("Concurrent snapshot edits retained at " + str(recovered))
+            keep_backup = False
+            raise
+    finally:
+        if not keep_backup:
+            shutil.rmtree(workspace)
+
+
+def _previous_precomputed_export(destination, generations):
+    from .analysis_precomputed import ROOT
+    from .publication_v2 import INDEX
+
+    scripts = ("analysis-precomputed.js", "analysis-worker-client.js")
+    if any(os.path.lexists(destination / name) for name in scripts):
+        return True
+    if any(destination.glob(".snapshot-*/previous")):
+        return True
+
+    # These are hints for selecting strict ownership verification. The verifier
+    # still authenticates the manifest and hashes every file before retirement.
+    for name, marker in (
+        ("manifest.json", b'"analysis-precomputed.js"'),
+        ("publication-v2.json", json.dumps(ROOT).encode()),
+        ("index.html", b"data-analysis-worker="),
+    ):
+        path = destination / name
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        except FileNotFoundError:
+            continue
+        with os.fdopen(fd, "rb") as stream:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise ValueError("Unsafe snapshot metadata")
+            raw = stream.read(INDEX)
+        if marker in raw:
+            return True
+        if name == "manifest.json":
+            # The writer records this ID first. Even a stripped manifest can
+            # identify the retained original when both public scripts are gone.
+            match = re.search(rb'"generation"\s*:\s*"([0-9a-f]{32})"', raw)
+            if match and (generations / match[1].decode("ascii") / scripts[0]).is_file():
+                return True
+    return False
+
+
+def _export_generation(generation, destination, *, precomputed_delivery=False):
+    """Reconcile a complete generation inside the operator's regular output directory."""
+    destination.mkdir(parents=True, exist_ok=True)
+    directory_fd = os.open(destination, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        fcntl.flock(directory_fd, fcntl.LOCK_EX)
+        if precomputed_delivery or _previous_precomputed_export(destination, generation.parent):
+            _refresh_export(generation, destination)
+        else:
+            shutil.copytree(generation, destination, dirs_exist_ok=True)
+    finally:
+        os.close(directory_fd)
+
+
 def build(
     output=None,
     *,
     publication_format="v1",
     include_switching_analysis=False,
     switching_analysis_input=None,
+    analysis_delivery_profile: str = "",
 ):
     """Publish from the evidence vault and export a static reader bundle."""
     from ..collection.config import load_config
+    from .analysis_delivery_profiles import build_profile
 
+    delivery = build_profile(
+        analysis_delivery_profile,
+        publication_format=publication_format,
+        include_switching_analysis=include_switching_analysis,
+    )
     if switching_analysis_input is not None and not include_switching_analysis:
         raise ValueError("Analysis source input requires explicit opt-in")
     paths = Paths.from_env()
+    destination = Path(output or paths.snapshot)
+    absolute = destination.absolute()
+    if any(p.is_symlink() for p in (absolute, *absolute.parents)):
+        raise ValueError("Unsafe snapshot destination")
+    resolved = destination.resolve()
+    publications = paths.publications.resolve()
+    if resolved.is_relative_to(publications) or publications.is_relative_to(resolved):
+        raise ValueError("Snapshot destination overlaps publication storage")
     with closing(connect(read_only=True)) as db:
         data = state(db)
         data["coverage"] = coverage(
@@ -942,11 +1216,11 @@ def build(
         public_release_urls=public_urls,
         publication_format=publication_format,
         include_switching_analysis=include_switching_analysis,
+        **(
+            {"analysis_delivery_profile": analysis_delivery_profile} if delivery is not None else {}
+        ),
     )
-    destination = Path(output or paths.snapshot)
-    # Deployment archives need regular assets, not an external current symlink.
-    destination.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(generation, destination, dirs_exist_ok=True)
+    _export_generation(generation, resolved, precomputed_delivery=delivery is not None)
     print(
         json.dumps(
             {

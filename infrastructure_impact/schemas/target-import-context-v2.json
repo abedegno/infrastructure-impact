@@ -685,6 +685,19 @@
           "const": 59
         }
       }
+    },
+    "analysis_delivery_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_id", "input_sha256"],
+      "properties": {
+        "profile_id": {
+          "const": "campus-switching-common-views-v1"
+        },
+        "input_sha256": {
+          "const": "79de64408c9df10cebeee363422784940e5288073d14dc0f7925e9b1d5e10dfc"
+        }
+      }
     }
   },
   "required": [
@@ -716,10 +729,22 @@
         },
         "profile": {
           "$ref": "target-import-manifest-v1.json"
+        },
+        "switching_analysis_profile": {
+          "$ref": "#/properties/switching_analysis_profile"
+        },
+        "analysis_delivery_profile": {
+          "$ref": "#/properties/analysis_delivery_profile"
         }
       },
-      "required": ["format", "schema_version", "publication_format", "profile"]
+      "required": ["format", "schema_version", "publication_format", "profile"],
+      "dependentRequired": {
+        "analysis_delivery_profile": ["switching_analysis_profile"]
+      }
     }
   },
-  "$schema": "https://json-schema.org/draft/2020-12/schema"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "dependentRequired": {
+    "analysis_delivery_profile": ["switching_analysis_profile"]
+  }
 }

@@ -43,6 +43,18 @@ def check_switching_analysis_profile(package):
     assert sum(len(f["advisory_context"]) for f in frame["api_results"]) == 1800
 
 
+def check_analysis_delivery_profile(package):
+    from infrastructure_impact.application.analysis_delivery_profiles import profile
+
+    profile_id = "campus-switching-common-views-v1"
+    digest = "79de64408c9df10cebeee363422784940e5288073d14dc0f7925e9b1d5e10dfc"
+    raw = (package / "resources/analysis-delivery" / (profile_id + ".json")).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == digest
+    selected = profile(profile_id)
+    assert selected.identity() == {"profile_id": profile_id, "input_sha256": digest}
+    assert selected.options() == json.loads(raw)
+
+
 def main():
     if os.environ.get("IMPACT_EXPECTED_PACKAGE_VERSION"):
         assert version("infrastructure-impact") == os.environ["IMPACT_EXPECTED_PACKAGE_VERSION"]
@@ -72,6 +84,7 @@ def main():
     assert registry.get("arista").parse_release_history is not None
     package = Path(infrastructure_impact.__file__).parent
     check_switching_analysis_profile(package)
+    check_analysis_delivery_profile(package)
     for worker_source in ("analysis-worker.js", "analysis-worker-client.js"):
         assert (package / "web" / worker_source).is_file(), worker_source
     for name, digest in json.loads(

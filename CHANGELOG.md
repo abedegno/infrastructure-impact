@@ -2,6 +2,8 @@
 
 ## Unreleased — release reliability
 
+- Add a closed, disabled hosted delivery profile for the eight verified vendor/year analysis views, with explicit scientific opt-in, independent isolated verification and compatibility checks before private collection. Keep current hosted settings and activation unchanged.
+
 - Run eligible precomputed analysis and exact byte downloads in an immutable dedicated worker, with independent caller cancellation, bounded lifecycle and retry. Expand CSV rows lazily and refresh the optional analysis panel without rebuilding the whole comparison. Record the full eight-view/native and accepted-artifact capacity proof plus browser responsiveness, wall-time and memory caveats; hosting stays disabled.
 
 - Add a disabled precomputed-analysis prototype for common vendor/year selections, with independent bounded gzip parts, exact native/browser export parity and custom-selection fallback. Keep the original compiled root, native source-authority checks and existing budgets.

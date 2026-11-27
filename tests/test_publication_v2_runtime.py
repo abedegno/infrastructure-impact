@@ -321,7 +321,9 @@ def test_worker_checks_capacity_before_native_parity(tmp_path, monkeypatch, fmt,
     monkeypatch.setattr(reporting, "report", lambda: calls.append("report"))
     monkeypatch.setattr(publication, "build", lambda *args, **kw: calls.append("build"))
     monkeypatch.setattr(publication_v2, "inspect_bundle", lambda *args: object())
-    monkeypatch.setattr(publication_v2, "native_parity", lambda *args: calls.append("native"))
+    monkeypatch.setattr(
+        publication_v2, "operator_native_parity", lambda *args: calls.append("native")
+    )
     monkeypatch.setattr(worker, "_inspect_bundle", lambda *args: object())
     monkeypatch.setattr(worker, "_parity", lambda *args: calls.append("native"))
 

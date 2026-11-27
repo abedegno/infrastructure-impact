@@ -1,11 +1,14 @@
 # Precomputed analysis preview
 
-The [four-view public-data replay](research/2026-11-26-precomputed-analysis-preview.md) found a useful loading improvement with exact exports. This remains a disabled local prototype. Whole-process memory including exports, real-browser behavior, default-view capacity and hosted historical inventory are separate activation gates.
+The [four-view public-data replay](research/2026-11-26-precomputed-analysis-preview.md) found a useful loading improvement with exact exports. Delivery remains disabled by default. The later [worker/eight-view verification](research/2026-11-26-analysis-worker-verification.md) records browser behavior, measured capacity and retained-artifact inventory, with explicit memory and cold-time limitations.
 
 The v2 publication writers accept `analysis_precomputed_delivery=True` to build
 a local preview from a complete public switching-analysis projection. Both
 writers default to disabled. This preview is an alternative to the existing
-vendor-delivery preview. It has no hosted configuration or CLI activation.
+vendor-delivery preview. The [named operator profile](HOSTED_SERVICE.md) now wires
+these options through the snapshot and hosted paths; live hosted activation
+remains separately gated. The closed `campus-switching-common-views-v1` profile
+fixes the year to 2025 and does not use the rolling low-level default below.
 
 Pass `analysis_precomputed_options` as a list of selection dictionaries. The
 supported keys are `vendor`, `window`, `scope_level`, and `cve_ids`. Omitted fields

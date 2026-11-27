@@ -29,13 +29,20 @@ def next_daily(current, hour=8, minute=15, zone="Europe/London"):
     return candidate.astimezone(timezone.utc)
 
 
-def collect_once(*, publication_format="v1", switching_analysis_profile: str = ""):
+def collect_once(
+    *,
+    publication_format="v1",
+    switching_analysis_profile: str = "",
+    analysis_delivery_profile: str = "",
+):
     from .application.publication_v2 import publication_format as validate_format
 
     validate_format(publication_format)
-    from .application.switching_analysis_profiles import hosted_profile
+    from .application.analysis_delivery_profiles import hosted_profiles
 
-    analysis = hosted_profile(switching_analysis_profile, publication_format=publication_format)
+    analysis, delivery = hosted_profiles(
+        switching_analysis_profile, analysis_delivery_profile, publication_format=publication_format
+    )
     paths = Paths.from_env()
     for directory in ("benchmark", "data", "ops"):
         (paths.home / directory).mkdir(parents=True, exist_ok=True)
@@ -58,6 +65,9 @@ def collect_once(*, publication_format="v1", switching_analysis_profile: str = "
 
         if analysis is not None:
             build_fn = partial(build_fn, **analysis.build_options())
+
+        if delivery is not None:
+            build_fn = partial(build_fn, analysis_delivery_profile=analysis_delivery_profile)
 
         result = execute(collect_sources, benchmark, report, build_fn, status_fn=write_status)
         LOG.info("Collection result %s", json.dumps(result))
