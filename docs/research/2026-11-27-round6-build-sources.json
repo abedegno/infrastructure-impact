@@ -1,0 +1,525 @@
+{
+  "schema_version": 1,
+  "kind": "round6_build_sources",
+  "recorded_at": "2026-11-27T17:12:42.193889+00:00",
+  "review_status": "independent_human_review_pending",
+  "source_policy": "Primary anonymous public sources only; no mirrors, logins, gated-route retries, challenge bypass or private evidence. Full vendor originals outside Git.",
+  "build_reason_definitions": {
+    "security_fix": "Vendor advisory explicitly names literal build as fixed, with advisory ID and exact locator/quote.",
+    "defect_fix": "Notes/notice explicitly fixes a non-security defect in its predecessor, with exact locator/quote. A resolved-defect list without predecessor evidence is insufficient.",
+    "both": "Both evidentiary requirements satisfied.",
+    "unknown": "Neither requirement established; no timing inference."
+  },
+  "prior_packets": [
+    {
+      "path": "docs/research/2026-11-27-reliability-version-gaps.json",
+      "packet_sha256": "7e559ac69b6ce2b6294f4e582332f0f3238a4a6c5e2e6e2b3235241d3d687744"
+    },
+    {
+      "path": "docs/research/2026-11-27-reliability-public-dates.json",
+      "packet_sha256": "06a53c8ea2add9834b27075ec0f6f8e127feb809726d45dbf3f847f35c6274fa"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "cisco-c9200-17127a-caveats",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/caveats.html",
+      "locator": "Resolved Caveats in Cisco IOS XE Dublin 17.12.7a / Applicable Models C9200 / CSCws28363",
+      "quote": "Resolved Caveats in Cisco IOS XE Dublin 17.12.7a | CSCws28363 | C9200 | 9200 suddenly stops flow sending to SWC(uploading stuck)",
+      "scope": [
+        "Catalyst 9200"
+      ],
+      "document_revision_date": "2026-08-05",
+      "capture_kind": "indexed_primary_tool_excerpt",
+      "original_sha256": null,
+      "retrieved_at": "2026-11-27T17:11:20.922Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "tool_response_receipt": "search-07",
+      "production_admission": "not_eligible_research_only",
+      "excerpt_sha256": "41a8a8fef49f60c69a355a3f4f334f9ecf26411efc2b122f70a46f10ae62a84f",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/cisco-c9200-17127a-caveats.excerpt.json",
+      "fingerprint_scope": "exact locally serialized selected excerpt record; not publisher bytes"
+    },
+    {
+      "source_id": "cisco-c9300-17127a-caveats",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/caveats.html",
+      "locator": "Chapter contents / resolved caveats heading",
+      "quote": "Resolved Caveats in Cisco IOS XE Dublin 17.12.7a",
+      "scope": [
+        "Catalyst 9300"
+      ],
+      "capture_kind": "indexed_primary_tool_excerpt",
+      "original_sha256": null,
+      "retrieved_at": "2026-11-27T17:11:20.922Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "tool_response_receipt": "search-07",
+      "production_admission": "not_eligible_research_only",
+      "excerpt_sha256": "8b947195f19a16be69023962df27bb74a2a73a561e24eedf4170c9476b1cd7ad",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/cisco-c9300-17127a-caveats.excerpt.json",
+      "fingerprint_scope": "exact locally serialized selected excerpt record; not publisher bytes"
+    },
+    {
+      "source_id": "aruba-6200-early-history",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-19.html",
+      "locator": "Version history / Version number, Release date, Remarks / rows 10.13.1003 and 10.13.1005",
+      "quote": "10.13.1003 | 05/03/2024 | Released, fully supported, and posted on the Web.\n10.13.1005 | 22/03/2024 | Released, fully supported, and posted on the Web.",
+      "scope": [
+        "Aruba 6200"
+      ],
+      "capture_kind": "indexed_primary_tool_excerpt",
+      "original_sha256": null,
+      "retrieved_at": "2026-11-27T17:10:26.179Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "tool_response_receipt": "search-01",
+      "production_admission": "not_eligible_research_only",
+      "excerpt_sha256": "15a82b26f00f95da0d7111de78fb89ef82afa804c8dade634c94e60d96e93f86",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/aruba-6200-early-history.excerpt.json",
+      "fingerprint_scope": "exact locally serialized selected excerpt record; not publisher bytes"
+    },
+    {
+      "source_id": "aruba-6200-1101-history",
+      "source_url": "https://arubanetworking.hpe.com/techdocs/AOS-CX/Consolidated_RNs/6200%20Release%20Notes/aos-cx-10-13-xx/version-history-25.html",
+      "locator": "Version history / Version number and Release date / 10.13.1101 row (Remarks blank)",
+      "quote": "10.13.1101 | 09/05/2025",
+      "scope": [
+        "Aruba 6200"
+      ],
+      "capture_kind": "indexed_primary_tool_excerpt",
+      "original_sha256": null,
+      "retrieved_at": "2026-11-27T17:10:26.179Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "tool_response_receipt": "search-01",
+      "production_admission": "not_eligible_research_only",
+      "excerpt_sha256": "2e3d4ddbc0a5695dc7e321b2ccad56210600a6aab3e339525d38cf9885adafce",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/aruba-6200-1101-history.excerpt.json",
+      "fingerprint_scope": "exact locally serialized selected excerpt record; not publisher bytes"
+    },
+    {
+      "source_id": "aruba-04669",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2024/hpe_aruba_networking_-_hpesbnw04669.json",
+      "capture_kind": "original_document_reused_public_cache",
+      "original_sha256": "07e221b234c64d09ef18a2d291639e2bbca2d6f4bd511dbb6325fee088daa138",
+      "excerpt_sha256": null,
+      "retrieved_at": "2026-11-27T11:20:49.882570+00:00",
+      "retrieval_time_basis": "original successful anonymous original-byte fetch completion; rehashed during this pass",
+      "cache_path": "$RELIABILITY_CORRECTIONS_CACHE/aruba-04669.body",
+      "status": 200,
+      "scope": [
+        "AOS-CX software family; no individual model binding inferred"
+      ],
+      "advisory_id": "HPESBNW04669",
+      "advisory_notice_date": "2024-07-09T17:00:00.000Z",
+      "advisory_revision_date": "2024-07-31T20:00:00.000Z"
+    },
+    {
+      "source_id": "aruba-05027",
+      "source_url": "https://csaf.arubanetworking.hpe.com/2026/hpe_aruba_networking_-_hpesbnw05027.json",
+      "capture_kind": "original_document_reused_public_cache",
+      "original_sha256": "cb5b3327c97f3dd20718278feec4413c5e3a31a524319c186d0fb6c226f629fd",
+      "excerpt_sha256": null,
+      "retrieved_at": "2026-11-27T11:20:51.598374+00:00",
+      "retrieval_time_basis": "original successful anonymous original-byte fetch completion; rehashed during this pass",
+      "cache_path": "$RELIABILITY_CORRECTIONS_CACHE/aruba-05027.body",
+      "status": 200,
+      "scope": [
+        "AOS-CX software family; no individual model binding inferred"
+      ],
+      "advisory_id": "HPESBNW05027",
+      "advisory_notice_date": "2026-03-10T16:00:00.000Z",
+      "advisory_revision_date": "2026-03-10T16:00:00.000Z"
+    }
+  ],
+  "findings": [
+    {
+      "version": "17.12.5a",
+      "vendor": "Cisco",
+      "intended_scope": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
+      "existence_status": "unknown",
+      "build_reason": "unknown",
+      "security_fix_status": "unknown",
+      "defect_fix_status": "unknown",
+      "observation_basis": "No literal image/release/advisory evidence binding this build to requested switch models in bounded indexed primary search. Router/SD-WAN/8000V references and third-party expanded bug fixed-version lists do not qualify.",
+      "evidence_source_ids": [],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "os_family_only_security_reason_status": "unknown",
+      "os_family_only_security_reason_basis": "Bounded exact-literal official advisory indexed search returned no results. Router-only release notes do not qualify for transfer to IOS XE OS-family evidence."
+    },
+    {
+      "version": "17.12.5b",
+      "vendor": "Cisco",
+      "intended_scope": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
+      "existence_status": "unknown",
+      "build_reason": "unknown",
+      "security_fix_status": "unknown",
+      "defect_fix_status": "unknown",
+      "observation_basis": "No literal image/release/advisory evidence binding this build to requested switch models in bounded indexed primary search. Router/SD-WAN/8000V references and third-party expanded bug fixed-version lists do not qualify.",
+      "evidence_source_ids": [],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "os_family_only_security_reason_status": "unknown",
+      "os_family_only_security_reason_basis": "Bounded exact-literal official advisory indexed search returned no results. Router-only release notes do not qualify for transfer to IOS XE OS-family evidence."
+    },
+    {
+      "version": "17.12.7a",
+      "vendor": "Cisco",
+      "intended_scope": [
+        "Catalyst 9200"
+      ],
+      "existence_status": "supported_indexed_primary",
+      "build_reason": "unknown",
+      "security_fix_status": "unknown",
+      "defect_fix_status": "predecessor_not_established",
+      "observation_basis": "The resolved-caveat heading and C9200 row identify a literal flow-export issue resolved in this build; the predecessor and an explicit non-security classification are not established.",
+      "evidence_source_ids": [
+        "cisco-c9200-17127a-caveats",
+        "cisco-c9300-17127a-caveats"
+      ],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "predecessor_version": "unknown; notes establish resolved defect but do not name its first affected version",
+      "scope_limit": "Do not transfer C9200 defect applicability to C9300. C9300 has a release-caveat heading reference only.",
+      "existence_observations": [
+        {
+          "scope": [
+            "Catalyst 9200"
+          ],
+          "source_id": "cisco-c9200-17127a-caveats",
+          "basis": "Literal release heading and resolved C9200 caveat row"
+        },
+        {
+          "scope": [
+            "Catalyst 9300"
+          ],
+          "source_id": "cisco-c9300-17127a-caveats",
+          "basis": "Literal release-caveat heading; no image or binary date established"
+        }
+      ],
+      "candidate_reason_evidence": [
+        {
+          "source_id": "cisco-c9200-17127a-caveats",
+          "locator": "Resolved Caveats in Cisco IOS XE Dublin 17.12.7a / CSCws28363 / Applicable Models C9200",
+          "quote": "9200 suddenly stops flow sending to SWC(uploading stuck)",
+          "advisory_id": null,
+          "limit": "Predecessor not established; not sufficient for admitted defect_fix."
+        }
+      ]
+    },
+    {
+      "version": "10.13.1003",
+      "vendor": "Aruba",
+      "intended_scope": [
+        "Aruba 6200"
+      ],
+      "existence_status": "supported_indexed_primary",
+      "build_reason": "unknown",
+      "security_fix_status": "unknown",
+      "defect_fix_status": "unknown",
+      "observation_basis": "Explicit literal version row in model-specific vendor Version history. This proves a release-history observation; it states no security/defect release reason.",
+      "evidence_source_ids": [
+        "aruba-6200-early-history"
+      ],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "release_date_observation": {
+        "date": "2024-03-05",
+        "date_kind": "software_release_date",
+        "source_id": "aruba-6200-early-history",
+        "normalization": "DD/MM/YYYY to YYYY-MM-DD",
+        "production_admission": "not_eligible_research_only"
+      }
+    },
+    {
+      "version": "10.13.1005",
+      "vendor": "Aruba",
+      "intended_scope": [
+        "Aruba 6200"
+      ],
+      "existence_status": "supported_indexed_primary",
+      "build_reason": "unknown",
+      "security_fix_status": "unknown",
+      "defect_fix_status": "unknown",
+      "observation_basis": "Explicit literal version row in model-specific vendor Version history. This proves a release-history observation; it states no security/defect release reason.",
+      "evidence_source_ids": [
+        "aruba-6200-early-history"
+      ],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "release_date_observation": {
+        "date": "2024-03-22",
+        "date_kind": "software_release_date",
+        "source_id": "aruba-6200-early-history",
+        "normalization": "DD/MM/YYYY to YYYY-MM-DD",
+        "production_admission": "not_eligible_research_only"
+      }
+    },
+    {
+      "version": "10.13.1101",
+      "vendor": "Aruba",
+      "intended_scope": [
+        "Aruba 6200"
+      ],
+      "existence_status": "supported_indexed_primary",
+      "build_reason": "unknown",
+      "security_fix_status": "unknown",
+      "defect_fix_status": "unknown",
+      "observation_basis": "Explicit literal version row in model-specific vendor Version history. This proves a release-history observation; it states no security/defect release reason.",
+      "evidence_source_ids": [
+        "aruba-6200-1101-history"
+      ],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "release_date_observation": {
+        "date": "2025-05-09",
+        "date_kind": "software_release_date",
+        "source_id": "aruba-6200-1101-history",
+        "normalization": "DD/MM/YYYY to YYYY-MM-DD",
+        "production_admission": "not_eligible_research_only"
+      }
+    },
+    {
+      "version": "10.13.1031",
+      "vendor": "Aruba",
+      "intended_scope": [
+        "AOS-CX software family; individual model binding unknown"
+      ],
+      "existence_status": "supported_original_primary",
+      "build_reason": "security_fix",
+      "security_fix_status": "supported",
+      "defect_fix_status": "unknown",
+      "observation_basis": "Vendor advisory explicitly names literal as fixed product and vendor_fix remediation. Not inferred from timing.",
+      "evidence_source_ids": [
+        "aruba-04669"
+      ],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "advisory_id": "HPESBNW04669",
+      "cve_ids": [
+        "CVE-2024-6387"
+      ],
+      "reason_evidence": [
+        {
+          "source_id": "aruba-04669",
+          "advisory_id": "HPESBNW04669",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "10.13.1031 and above",
+          "fixed_product_id": "10.13.1031_aos-cx"
+        }
+      ]
+    },
+    {
+      "version": "10.13.1161",
+      "vendor": "Aruba",
+      "intended_scope": [
+        "AOS-CX software family; individual model binding unknown"
+      ],
+      "existence_status": "supported_original_primary",
+      "build_reason": "security_fix",
+      "security_fix_status": "supported",
+      "defect_fix_status": "unknown",
+      "observation_basis": "Vendor advisory explicitly names literal as fixed product and vendor_fix remediation. Not inferred from timing.",
+      "evidence_source_ids": [
+        "aruba-05027"
+      ],
+      "software_release_date": null,
+      "withdrawal_status": "unknown",
+      "deferral_status": "unknown",
+      "supersession_status": "unknown",
+      "advisory_id": "HPESBNW05027",
+      "cve_ids": [
+        "CVE-2026-23813",
+        "CVE-2026-23814",
+        "CVE-2026-23815",
+        "CVE-2026-23816",
+        "CVE-2026-23817"
+      ],
+      "reason_evidence": [
+        {
+          "source_id": "aruba-05027",
+          "advisory_id": "HPESBNW05027",
+          "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+          "quote": "AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above",
+          "fixed_product_id": "10.13.1161"
+        }
+      ]
+    }
+  ],
+  "search_receipts": [
+    {
+      "receipt_id": "search-01",
+      "queries": [
+        "site:cisco.com \"17.12.5a\" \"9300\"",
+        "site:cisco.com \"17.12.5b\" \"9200\"",
+        "site:cisco.com \"17.12.7a\" \"security\" \"fixed\"",
+        "site:arubanetworking.hpe.com \"10.13.1003\" \"10.13.1005\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:26.179Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-01.json",
+      "tool_response_sha256": "f3507bfbd7cb8c36294bcfadb5f678b3ed934398f837604c69570b6a02066bf4",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-02",
+      "queries": [
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300 \"17.12.5a\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200 \"17.12.5b\"",
+        "site:sec.cloudapps.cisco.com \"17.12.5b\"",
+        "site:arubanetworking.hpe.com \"10.13.1101\" \"fix\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:34.681Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-02.json",
+      "tool_response_sha256": "d570b312fb183d60526566eb8e8923fc42cd49073dcf4dbe7095707a076b258a",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-03",
+      "queries": [
+        "site:www.cisco.com \"cat9k_iosxe.17.12.05a\"",
+        "site:www.cisco.com \"cat9k_lite_iosxe.17.12.05b\"",
+        "site:sec.cloudapps.cisco.com \"17.12.7a\"",
+        "site:arubanetworking.hpe.com \"10.13.1003\" \"Resolved\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:43.439Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-03.json",
+      "tool_response_sha256": "cd6781ffe6695b898364bca588ab0af72da76d90139bbb700e5893ad9d8d033b",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-04",
+      "queries": [
+        "\"17.12.5a\" \"Catalyst 9300\" \"Software Images\"",
+        "\"17.12.5b\" \"Catalyst 9200\"",
+        "site:arubanetworking.hpe.com \"10.13.1005\" security",
+        "site:arubanetworking.hpe.com \"10.13.1101\" \"HPESB\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:52.822Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-04.json",
+      "tool_response_sha256": "8a4700cf90644c962b09d29046f118dc6251db941137eaea5e6db141b617015b",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-05",
+      "queries": [
+        "site:www.cisco.com \"17.12.5a\" \"upgrading_the_switch_software\"",
+        "site:www.cisco.com \"17.12.5b\" \"release_notes\" \"9300\"",
+        "site:arubanetworking.hpe.com \"10.13.1003\" \"resolved-issues\"",
+        "site:arubanetworking.hpe.com \"10.13.1005\" \"resolved-issues\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:05.311Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-05.json",
+      "tool_response_sha256": "f1b8a06aa69a6acf5e4bd909fff4b84e7046a8ce00932ce0b1a638e7485d8181",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-06",
+      "queries": [
+        "site:www.cisco.com \"17.12.5a\" \"Catalyst 9200\" -site:community.cisco.com",
+        "site:www.cisco.com \"17.12.5b\" \"Software Images\"",
+        "site:arubanetworking.hpe.com \"10.13.1101\" \"Resolved Issues\" \"10.13\"",
+        "site:arubanetworking.hpe.com \"10.13.1003\" \"Security\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:12.656Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-06.json",
+      "tool_response_sha256": "65c17564aa3c11c559bd185aff069d9de1057797271d4824427578aa5dfd1e7d",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-07",
+      "queries": [
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200 \"17.12.7a\" \"Resolved\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300 \"17.12.5a\" \"Software\"",
+        "site:arubanetworking.hpe.com \"10.13.1101\" \"10.13.1100\"",
+        "site:csaf.arubanetworking.hpe.com \"10.13.1005\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:20.922Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-07.json",
+      "tool_response_sha256": "217d55dbbfaaf71ca1f3d712fbfcfb687d9801bbf046857757fa579924e06642",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-08",
+      "queries": [
+        "site:arubanetworking.hpe.com \"10.13.1003\" \"crash\"",
+        "site:arubanetworking.hpe.com \"10.13.1005\" \"Resolved issues in\"",
+        "site:arubanetworking.hpe.com \"10.13.1101\" \"Resolved issues in\"",
+        "site:www.cisco.com \"17.12.5b\" \"catalyst9300/software\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:30.497Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-08.json",
+      "tool_response_sha256": "088e93c363381efa7df95500d6fa9879bf86fa57f7db09045f8890921cbba32b",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    },
+    {
+      "receipt_id": "search-09",
+      "queries": [
+        "site:sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/ \"17.12.5a\"",
+        "site:sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/ \"17.12.5b\""
+      ],
+      "retrieved_at": "2026-11-27T17:17:25.508Z",
+      "retrieval_time_basis": "Local recording of returned indexed web response; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/build-sources/search-09.json",
+      "tool_response_sha256": "2ae186c5fef464f0782ae528a781e48e7d214089c5011cf7b484a1be376de343",
+      "original_sha256": null,
+      "fingerprint_scope": "entire locally serialized tool response receipt; not publisher bytes"
+    }
+  ],
+  "access": {
+    "cisco_robots_status": 403,
+    "cisco_robots_receipt": "$RELIABILITY_CORRECTIONS_CACHE/cisco-robots.json",
+    "aruba_docs_robots_status": 403,
+    "aruba_docs_robots_receipt": "$RELIABILITY_CORRECTIONS_CACHE/aruba-docs-robots.json",
+    "origin_requests_this_pass": 0,
+    "web_detail_opens_this_pass": 0,
+    "search_batches": 9,
+    "tool_transport_status": "not supplied; no invented status"
+  },
+  "limitations": [
+    "All indexed excerpts remain research-only; original-document hashes are null for them.",
+    "Software dates are separate from document/advisory dates. No dates inferred from publication, crawl time or adjacent builds.",
+    "Aruba 1031/1161 release dates and individual model applicability remain unknown.",
+    "Cisco 5a/5b existence in requested model scope is unconfirmed, not disproved.",
+    "C9300 7a heading documents the literal; C9200 resolved-defect candidate observation is model-specific and does not establish predecessor.",
+    "Resolved-caveat defect fix does not prove which literal predecessor first contained the defect."
+  ],
+  "stop_reason": "Eight original bounded primary-only batches plus one exact-literal official Cisco security-advisory batch returned repeated histories, unrelated router/WLC material, or no results. Unknown retained; not an exhaustive absence claim.",
+  "cache_root_convention": {
+    "$RELIABILITY_ROUND6_CACHE": "outside-Git data/reliability-round6-20261127",
+    "$RELIABILITY_CORRECTIONS_CACHE": "outside-Git data/reliability-corrections-20261127"
+  }
+}

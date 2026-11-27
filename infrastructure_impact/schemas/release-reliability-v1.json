@@ -32,7 +32,10 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["id", "advisory_schema_version"],
+          "required": [
+            "id",
+            "advisory_schema_version"
+          ],
           "properties": {
             "id": {
               "type": "string",
@@ -40,7 +43,10 @@
               "maxLength": 128
             },
             "advisory_schema_version": {
-              "enum": [1, 2]
+              "enum": [
+                1,
+                2
+              ]
             }
           }
         }
@@ -51,14 +57,23 @@
       "format": "date-time"
     },
     "availability": {
-      "enum": ["available", "unavailable"]
+      "enum": [
+        "available",
+        "unavailable"
+      ]
     },
     "dataset_observed_at": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "catalogue_sha256": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^[a-f0-9]{64}$"
     },
     "catalogue": {
@@ -114,7 +129,11 @@
                     "maxLength": 128
                   },
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "source_url": {
                     "type": "string",
@@ -137,14 +156,23 @@
                     ]
                   },
                   "capture_kind": {
-                    "enum": ["original_document", "tool_excerpt"]
+                    "enum": [
+                      "original_document",
+                      "tool_excerpt"
+                    ]
                   },
                   "original_sha256": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "pattern": "^[a-f0-9]{64}$"
                   },
                   "excerpt_sha256": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "pattern": "^[a-f0-9]{64}$"
                   }
                 }
@@ -169,7 +197,11 @@
                 ],
                 "properties": {
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "family": {
                     "type": "string",
@@ -187,7 +219,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["source_id", "locator", "quote"],
+                      "required": [
+                        "source_id",
+                        "locator",
+                        "quote"
+                      ],
                       "properties": {
                         "source_id": {
                           "type": "string",
@@ -215,15 +251,24 @@
                     "maxLength": 128
                   },
                   "release_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "date_status": {
-                    "enum": ["stated", "unknown"]
+                    "enum": [
+                      "stated",
+                      "unknown"
+                    ]
                   },
                   "announcement_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
@@ -267,7 +312,11 @@
                       ],
                       "properties": {
                         "vendor": {
-                          "enum": ["cisco", "aruba", "arista"]
+                          "enum": [
+                            "cisco",
+                            "aruba",
+                            "arista"
+                          ]
                         },
                         "family": {
                           "type": "string",
@@ -285,7 +334,11 @@
                           "items": {
                             "type": "object",
                             "additionalProperties": false,
-                            "required": ["source_id", "locator", "quote"],
+                            "required": [
+                              "source_id",
+                              "locator",
+                              "quote"
+                            ],
                             "properties": {
                               "source_id": {
                                 "type": "string",
@@ -313,15 +366,24 @@
                           "maxLength": 128
                         },
                         "release_date": {
-                          "type": ["string", "null"],
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "format": "date",
                           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                         },
                         "date_status": {
-                          "enum": ["stated", "unknown"]
+                          "enum": [
+                            "stated",
+                            "unknown"
+                          ]
                         },
                         "announcement_date": {
-                          "type": ["string", "null"],
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "format": "date",
                           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                         },
@@ -344,6 +406,182 @@
                             "advisory_version_reference",
                             "notice_version_reference"
                           ]
+                        },
+                        "build_reason": {
+                          "enum": [
+                            "security_fix",
+                            "defect_fix",
+                            "both",
+                            "unknown"
+                          ]
+                        },
+                        "build_reason_evidence": {
+                          "type": "array",
+                          "maxItems": 20000,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "reason",
+                              "advisory_id",
+                              "predecessor",
+                              "platforms_stated",
+                              "evidence"
+                            ],
+                            "properties": {
+                              "reason": {
+                                "enum": [
+                                  "security_fix",
+                                  "defect_fix"
+                                ]
+                              },
+                              "advisory_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "predecessor": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "platforms_stated": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "maxItems": 20000,
+                                "uniqueItems": true
+                              },
+                              "evidence": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "source_id",
+                                    "locator",
+                                    "quote"
+                                  ],
+                                  "properties": {
+                                    "source_id": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 128
+                                    },
+                                    "locator": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 1024
+                                    },
+                                    "quote": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  }
+                                },
+                                "maxItems": 20000,
+                                "minItems": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "build_reason": {
+                    "enum": [
+                      "security_fix",
+                      "defect_fix",
+                      "both",
+                      "unknown"
+                    ]
+                  },
+                  "build_reason_evidence": {
+                    "type": "array",
+                    "maxItems": 20000,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "reason",
+                        "advisory_id",
+                        "predecessor",
+                        "platforms_stated",
+                        "evidence"
+                      ],
+                      "properties": {
+                        "reason": {
+                          "enum": [
+                            "security_fix",
+                            "defect_fix"
+                          ]
+                        },
+                        "advisory_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "predecessor": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "platforms_stated": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "maxItems": 20000,
+                          "uniqueItems": true
+                        },
+                        "evidence": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "source_id",
+                              "locator",
+                              "quote"
+                            ],
+                            "properties": {
+                              "source_id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "locator": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "quote": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2000
+                              }
+                            }
+                          },
+                          "maxItems": 20000,
+                          "minItems": 1
                         }
                       }
                     }
@@ -373,7 +611,11 @@
                 ],
                 "properties": {
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "family": {
                     "type": "string",
@@ -391,7 +633,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["source_id", "locator", "quote"],
+                      "required": [
+                        "source_id",
+                        "locator",
+                        "quote"
+                      ],
                       "properties": {
                         "source_id": {
                           "type": "string",
@@ -424,12 +670,18 @@
                     "maxLength": 1000
                   },
                   "notice_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "action_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
@@ -454,7 +706,10 @@
                     "uniqueItems": true
                   },
                   "replacement_release": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "minLength": 1,
                     "maxLength": 128
                   },
@@ -474,7 +729,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["version", "platforms_stated", "conditions"],
+                      "required": [
+                        "version",
+                        "platforms_stated",
+                        "conditions"
+                      ],
                       "properties": {
                         "version": {
                           "type": "string",
@@ -500,12 +759,18 @@
                     }
                   },
                   "revision_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "date_note": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "minLength": 1,
                     "maxLength": 2000
                   }
@@ -532,7 +797,11 @@
                 ],
                 "properties": {
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "family": {
                     "type": "string",
@@ -550,7 +819,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["source_id", "locator", "quote"],
+                      "required": [
+                        "source_id",
+                        "locator",
+                        "quote"
+                      ],
                       "properties": {
                         "source_id": {
                           "type": "string",
@@ -589,17 +862,26 @@
                     ]
                   },
                   "notice_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "action_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "related_release": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "minLength": 1,
                     "maxLength": 128
                   },
@@ -635,7 +917,11 @@
                 ],
                 "properties": {
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "train": {
                     "type": "string",
@@ -649,7 +935,11 @@
                     "maximum": 2100
                   },
                   "status": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "platforms": {
                     "type": "array",
@@ -687,28 +977,60 @@
                     "additionalProperties": false,
                     "properties": {
                       "releases_shipped": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "deferred_or_withdrawn": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "possible_respin_30": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "possible_respin_90": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "corrective_respin_30": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "corrective_respin_90": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "software_defect_notices": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       },
                       "deferral_notices": {
-                        "enum": ["complete", "partial", "unknown"]
+                        "enum": [
+                          "complete",
+                          "partial",
+                          "unknown"
+                        ]
                       }
                     }
                   },
@@ -722,6 +1044,9 @@
             },
             "release_identity": {
               "const": "vendor_train_version"
+            },
+            "respin_identity": {
+              "const": "vendor_train_previous_followup"
             }
           }
         }
@@ -730,7 +1055,12 @@
     "config": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema_version", "start", "end", "trains"],
+      "required": [
+        "schema_version",
+        "start",
+        "end",
+        "trains"
+      ],
       "properties": {
         "schema_version": {
           "const": 1
@@ -781,7 +1111,11 @@
                 "type": "string"
               },
               "respin_rule": {
-                "enum": ["letter_suffix", "non_decadal_build", "subrelease"]
+                "enum": [
+                  "letter_suffix",
+                  "non_decadal_build",
+                  "subrelease"
+                ]
               }
             }
           }
@@ -818,7 +1152,10 @@
             "format": "date"
           },
           "period_end": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date"
           },
           "year_to_date": {
@@ -854,30 +1191,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -904,30 +1265,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -954,30 +1339,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -1004,30 +1413,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -1054,30 +1487,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -1104,30 +1561,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -1154,30 +1635,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -1204,30 +1709,54 @@
                 ],
                 "properties": {
                   "observed_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "numerator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "denominator": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "research_only_count": {
-                    "type": ["integer", "null"],
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "rate": {
-                    "type": ["number", "null"],
+                    "type": [
+                      "number",
+                      "null"
+                    ],
                     "minimum": 0
                   },
                   "coverage": {
-                    "enum": ["complete", "partial", "unknown"]
+                    "enum": [
+                      "complete",
+                      "partial",
+                      "unknown"
+                    ]
                   },
                   "evidence_class": {
-                    "enum": ["mixed", "research_only", "original_document", "unknown"]
+                    "enum": [
+                      "mixed",
+                      "research_only",
+                      "original_document",
+                      "unknown"
+                    ]
                   },
                   "model_unresolved_count": {
                     "type": "integer",
@@ -1277,35 +1806,59 @@
             "type": "string"
           },
           "previous_release": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "followup_release": {
             "type": "string"
           },
           "previous_release_date": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date"
           },
           "followup_release_date": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date"
           },
           "days": {
-            "type": ["integer", "null"],
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 0,
             "maximum": 90
           },
           "within_30_days": {
-            "type": ["boolean", "null"]
+            "type": [
+              "boolean",
+              "null"
+            ]
           },
           "within_90_days": {
-            "enum": [true, null]
+            "enum": [
+              true,
+              null
+            ]
           },
           "classification": {
-            "enum": ["possible_respin", "corrective_respin"]
+            "enum": [
+              "possible_respin",
+              "corrective_respin"
+            ]
           },
           "reason": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "platforms_stated": {
             "type": "array",
@@ -1322,7 +1875,11 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["source_id", "locator", "quote"],
+              "required": [
+                "source_id",
+                "locator",
+                "quote"
+              ],
               "properties": {
                 "source_id": {
                   "type": "string",
@@ -1345,13 +1902,415 @@
             "minItems": 1
           },
           "respin_rule": {
-            "enum": ["letter_suffix", "non_decadal_build", "subrelease"]
+            "enum": [
+              "letter_suffix",
+              "non_decadal_build",
+              "subrelease"
+            ]
           },
           "expected_regular_build": {
             "type": "string"
           },
           "expected_regular_build_absent": {
             "type": "boolean"
+          },
+          "build_reason": {
+            "enum": [
+              "security_fix",
+              "defect_fix",
+              "both",
+              "unknown"
+            ]
+          },
+          "build_reason_evidence": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "reason",
+                "advisory_id",
+                "predecessor",
+                "platforms_stated",
+                "evidence"
+              ],
+              "properties": {
+                "reason": {
+                  "enum": [
+                    "security_fix",
+                    "defect_fix"
+                  ]
+                },
+                "advisory_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "predecessor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "platforms_stated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "maxItems": 20000,
+                  "uniqueItems": true
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_id",
+                      "locator",
+                      "quote"
+                    ],
+                    "properties": {
+                      "source_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "locator": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      },
+                      "quote": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    }
+                  },
+                  "maxItems": 20000,
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          "observations": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "vendor",
+                "train",
+                "base_version",
+                "previous_release",
+                "followup_release",
+                "previous_release_date",
+                "followup_release_date",
+                "days",
+                "within_30_days",
+                "within_90_days",
+                "classification",
+                "reason",
+                "platforms_stated",
+                "production_eligible",
+                "evidence"
+              ],
+              "properties": {
+                "vendor": {
+                  "type": "string"
+                },
+                "train": {
+                  "type": "string"
+                },
+                "base_version": {
+                  "type": "string"
+                },
+                "previous_release": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "followup_release": {
+                  "type": "string"
+                },
+                "previous_release_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date"
+                },
+                "followup_release_date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date"
+                },
+                "days": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 90
+                },
+                "within_30_days": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "within_90_days": {
+                  "enum": [
+                    true,
+                    null
+                  ]
+                },
+                "classification": {
+                  "enum": [
+                    "possible_respin",
+                    "corrective_respin"
+                  ]
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "platforms_stated": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "production_eligible": {
+                  "type": "boolean"
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_id",
+                      "locator",
+                      "quote"
+                    ],
+                    "properties": {
+                      "source_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "locator": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      },
+                      "quote": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    }
+                  },
+                  "maxItems": 20000,
+                  "minItems": 1
+                },
+                "respin_rule": {
+                  "enum": [
+                    "letter_suffix",
+                    "non_decadal_build",
+                    "subrelease"
+                  ]
+                },
+                "expected_regular_build": {
+                  "type": "string"
+                },
+                "expected_regular_build_absent": {
+                  "type": "boolean"
+                },
+                "build_reason": {
+                  "enum": [
+                    "security_fix",
+                    "defect_fix",
+                    "both",
+                    "unknown"
+                  ]
+                },
+                "build_reason_evidence": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "reason",
+                      "advisory_id",
+                      "predecessor",
+                      "platforms_stated",
+                      "evidence"
+                    ],
+                    "properties": {
+                      "reason": {
+                        "enum": [
+                          "security_fix",
+                          "defect_fix"
+                        ]
+                      },
+                      "advisory_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "predecessor": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "platforms_stated": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "maxItems": 20000,
+                        "uniqueItems": true
+                      },
+                      "evidence": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "source_id",
+                            "locator",
+                            "quote"
+                          ],
+                          "properties": {
+                            "source_id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "locator": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 1024
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          }
+                        },
+                        "maxItems": 20000,
+                        "minItems": 1
+                      }
+                    }
+                  }
+                },
+                "timing_evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_id",
+                      "locator",
+                      "quote"
+                    ],
+                    "properties": {
+                      "source_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "locator": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      },
+                      "quote": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    }
+                  },
+                  "maxItems": 20000,
+                  "minItems": 1
+                },
+                "release_observations": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "$ref": "#/properties/catalogue/anyOf/1/properties/releases/items/properties/observations/items"
+                  }
+                }
+              }
+            }
+          },
+          "timing_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "locator",
+                "quote"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            },
+            "maxItems": 20000,
+            "minItems": 1
+          },
+          "release_observations": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "$ref": "#/properties/catalogue/anyOf/1/properties/releases/items/properties/observations/items"
+            }
           }
         }
       }
@@ -1392,7 +2351,10 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["scenario", "policy"],
+              "required": [
+                "scenario",
+                "policy"
+              ],
               "properties": {
                 "scenario": {
                   "type": "string"
@@ -1433,39 +2395,68 @@
               ],
               "properties": {
                 "type": {
-                  "enum": ["notice", "statement", "respin"]
+                  "enum": [
+                    "notice",
+                    "statement",
+                    "respin"
+                  ]
                 },
                 "classification": {
                   "type": "string"
                 },
                 "notice_id": {
-                  "type": ["string", "null"]
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "notice_date": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date"
                 },
                 "action_date": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date"
                 },
                 "release_date": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date"
                 },
                 "previous_release_date": {
-                  "type": ["string", "null"],
+                  "type": [
+                    "string",
+                    "null"
+                  ],
                   "format": "date"
                 },
                 "days": {
-                  "type": ["integer", "null"],
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
                   "minimum": 0
                 },
                 "chronology": {
-                  "enum": ["unknown", "after_step", "on_or_before_step"]
+                  "enum": [
+                    "unknown",
+                    "after_step",
+                    "on_or_before_step"
+                  ]
                 },
                 "scope_status": {
-                  "enum": ["matched", "model_unresolved"]
+                  "enum": [
+                    "matched",
+                    "model_unresolved"
+                  ]
                 },
                 "platforms_stated": {
                   "type": "array",
@@ -1482,7 +2473,11 @@
                   "items": {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": ["source_id", "locator", "quote"],
+                    "required": [
+                      "source_id",
+                      "locator",
+                      "quote"
+                    ],
                     "properties": {
                       "source_id": {
                         "type": "string",
@@ -1505,10 +2500,104 @@
                   "minItems": 1
                 },
                 "related_release": {
-                  "type": ["string", "null"]
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "days_after_step": {
-                  "type": ["integer", "null"]
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "build_reason": {
+                  "enum": [
+                    "security_fix",
+                    "defect_fix",
+                    "both",
+                    "unknown"
+                  ]
+                },
+                "build_reason_evidence": {
+                  "type": "array",
+                  "maxItems": 20000,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "reason",
+                      "advisory_id",
+                      "predecessor",
+                      "platforms_stated",
+                      "evidence"
+                    ],
+                    "properties": {
+                      "reason": {
+                        "enum": [
+                          "security_fix",
+                          "defect_fix"
+                        ]
+                      },
+                      "advisory_id": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "predecessor": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "platforms_stated": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "maxItems": 20000,
+                        "uniqueItems": true
+                      },
+                      "evidence": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "source_id",
+                            "locator",
+                            "quote"
+                          ],
+                          "properties": {
+                            "source_id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "locator": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 1024
+                            },
+                            "quote": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          }
+                        },
+                        "maxItems": 20000,
+                        "minItems": 1
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -1536,7 +2625,11 @@
                 "type": "boolean"
               },
               "match_type": {
-                "enum": ["exact", "suffix_variant", "not_found"]
+                "enum": [
+                  "exact",
+                  "suffix_variant",
+                  "not_found"
+                ]
               },
               "versions": {
                 "type": "array",
@@ -1546,14 +2639,21 @@
                 }
               },
               "scope_status": {
-                "enum": ["matched", "model_unresolved"]
+                "enum": [
+                  "matched",
+                  "model_unresolved"
+                ]
               },
               "evidence": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["source_id", "locator", "quote"],
+                  "required": [
+                    "source_id",
+                    "locator",
+                    "quote"
+                  ],
                   "properties": {
                     "source_id": {
                       "type": "string",
@@ -1581,13 +2681,21 @@
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["version", "release_date", "platforms_stated", "evidence"],
+                  "required": [
+                    "version",
+                    "release_date",
+                    "platforms_stated",
+                    "evidence"
+                  ],
                   "properties": {
                     "version": {
                       "type": "string"
                     },
                     "release_date": {
-                      "type": ["string", "null"],
+                      "type": [
+                        "string",
+                        "null"
+                      ],
                       "format": "date"
                     },
                     "platforms_stated": {
@@ -1602,7 +2710,11 @@
                       "items": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": ["source_id", "locator", "quote"],
+                        "required": [
+                          "source_id",
+                          "locator",
+                          "quote"
+                        ],
                         "properties": {
                           "source_id": {
                             "type": "string",
@@ -1623,6 +2735,94 @@
                       },
                       "maxItems": 20000,
                       "minItems": 1
+                    },
+                    "build_reason": {
+                      "enum": [
+                        "security_fix",
+                        "defect_fix",
+                        "both",
+                        "unknown"
+                      ]
+                    },
+                    "build_reason_evidence": {
+                      "type": "array",
+                      "maxItems": 20000,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "reason",
+                          "advisory_id",
+                          "predecessor",
+                          "platforms_stated",
+                          "evidence"
+                        ],
+                        "properties": {
+                          "reason": {
+                            "enum": [
+                              "security_fix",
+                              "defect_fix"
+                            ]
+                          },
+                          "advisory_id": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "predecessor": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "platforms_stated": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "maxItems": 20000,
+                            "uniqueItems": true
+                          },
+                          "evidence": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "source_id",
+                                "locator",
+                                "quote"
+                              ],
+                              "properties": {
+                                "source_id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "locator": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 1024
+                                },
+                                "quote": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 2000
+                                }
+                              }
+                            },
+                            "maxItems": 20000,
+                            "minItems": 1
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -1633,7 +2833,10 @@
       }
     },
     "upgrade_selection": {
-      "type": ["object", "null"]
+      "type": [
+        "object",
+        "null"
+      ]
     },
     "review_packet": {
       "type": "array",
@@ -1656,7 +2859,12 @@
         ],
         "properties": {
           "type": {
-            "enum": ["notice", "statement", "respin"]
+            "enum": [
+              "notice",
+              "statement",
+              "respin",
+              "build_reason"
+            ]
           },
           "index": {
             "type": "integer",
@@ -1672,11 +2880,17 @@
             "type": "string"
           },
           "notice_date": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date"
           },
           "action_date": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date"
           },
           "platforms_stated": {
@@ -1691,7 +2905,11 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["source_id", "locator", "quote"],
+              "required": [
+                "source_id",
+                "locator",
+                "quote"
+              ],
               "properties": {
                 "source_id": {
                   "type": "string",
@@ -1737,7 +2955,11 @@
                 ],
                 "properties": {
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "family": {
                     "type": "string",
@@ -1755,7 +2977,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["source_id", "locator", "quote"],
+                      "required": [
+                        "source_id",
+                        "locator",
+                        "quote"
+                      ],
                       "properties": {
                         "source_id": {
                           "type": "string",
@@ -1788,12 +3014,18 @@
                     "maxLength": 1000
                   },
                   "notice_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "action_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
@@ -1818,7 +3050,10 @@
                     "uniqueItems": true
                   },
                   "replacement_release": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "minLength": 1,
                     "maxLength": 128
                   },
@@ -1838,7 +3073,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["version", "platforms_stated", "conditions"],
+                      "required": [
+                        "version",
+                        "platforms_stated",
+                        "conditions"
+                      ],
                       "properties": {
                         "version": {
                           "type": "string",
@@ -1864,12 +3103,18 @@
                     }
                   },
                   "revision_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "date_note": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "minLength": 1,
                     "maxLength": 2000
                   }
@@ -1892,7 +3137,11 @@
                 ],
                 "properties": {
                   "vendor": {
-                    "enum": ["cisco", "aruba", "arista"]
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
                   },
                   "family": {
                     "type": "string",
@@ -1910,7 +3159,11 @@
                     "items": {
                       "type": "object",
                       "additionalProperties": false,
-                      "required": ["source_id", "locator", "quote"],
+                      "required": [
+                        "source_id",
+                        "locator",
+                        "quote"
+                      ],
                       "properties": {
                         "source_id": {
                           "type": "string",
@@ -1949,17 +3202,26 @@
                     ]
                   },
                   "notice_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "action_date": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
                   },
                   "related_release": {
-                    "type": ["string", "null"],
+                    "type": [
+                      "string",
+                      "null"
+                    ],
                     "minLength": 1,
                     "maxLength": 128
                   },
@@ -1977,8 +3239,503 @@
               },
               {
                 "$ref": "#/properties/respins/items"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "vendor",
+                  "family",
+                  "train",
+                  "evidence",
+                  "version",
+                  "release_date",
+                  "date_status",
+                  "announcement_date",
+                  "platforms_stated"
+                ],
+                "properties": {
+                  "vendor": {
+                    "enum": [
+                      "cisco",
+                      "aruba",
+                      "arista"
+                    ]
+                  },
+                  "family": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "train": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 24,
+                    "pattern": "^\\d+\\.\\d+$"
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "source_id",
+                        "locator",
+                        "quote"
+                      ],
+                      "properties": {
+                        "source_id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "locator": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1024
+                        },
+                        "quote": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        }
+                      }
+                    },
+                    "maxItems": 20000,
+                    "minItems": 1
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "release_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "date_status": {
+                    "enum": [
+                      "stated",
+                      "unknown"
+                    ]
+                  },
+                  "announcement_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  },
+                  "platforms_stated": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "maxItems": 20000,
+                    "uniqueItems": true
+                  },
+                  "observation_basis": {
+                    "enum": [
+                      "release_history",
+                      "version_table",
+                      "availability_announcement",
+                      "document_index_reference",
+                      "advisory_version_reference",
+                      "notice_version_reference"
+                    ]
+                  },
+                  "observations": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 20000,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "vendor",
+                        "family",
+                        "train",
+                        "evidence",
+                        "version",
+                        "release_date",
+                        "date_status",
+                        "announcement_date",
+                        "platforms_stated"
+                      ],
+                      "properties": {
+                        "vendor": {
+                          "enum": [
+                            "cisco",
+                            "aruba",
+                            "arista"
+                          ]
+                        },
+                        "family": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "train": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 24,
+                          "pattern": "^\\d+\\.\\d+$"
+                        },
+                        "evidence": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "source_id",
+                              "locator",
+                              "quote"
+                            ],
+                            "properties": {
+                              "source_id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "locator": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "quote": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2000
+                              }
+                            }
+                          },
+                          "maxItems": 20000,
+                          "minItems": 1
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "release_date": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "date_status": {
+                          "enum": [
+                            "stated",
+                            "unknown"
+                          ]
+                        },
+                        "announcement_date": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "platforms_stated": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "maxItems": 20000,
+                          "uniqueItems": true
+                        },
+                        "observation_basis": {
+                          "enum": [
+                            "release_history",
+                            "version_table",
+                            "availability_announcement",
+                            "document_index_reference",
+                            "advisory_version_reference",
+                            "notice_version_reference"
+                          ]
+                        },
+                        "build_reason": {
+                          "enum": [
+                            "security_fix",
+                            "defect_fix",
+                            "both",
+                            "unknown"
+                          ]
+                        },
+                        "build_reason_evidence": {
+                          "type": "array",
+                          "maxItems": 20000,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "reason",
+                              "advisory_id",
+                              "predecessor",
+                              "platforms_stated",
+                              "evidence"
+                            ],
+                            "properties": {
+                              "reason": {
+                                "enum": [
+                                  "security_fix",
+                                  "defect_fix"
+                                ]
+                              },
+                              "advisory_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "predecessor": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "platforms_stated": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "maxItems": 20000,
+                                "uniqueItems": true
+                              },
+                              "evidence": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "source_id",
+                                    "locator",
+                                    "quote"
+                                  ],
+                                  "properties": {
+                                    "source_id": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 128
+                                    },
+                                    "locator": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 1024
+                                    },
+                                    "quote": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "maxLength": 2000
+                                    }
+                                  }
+                                },
+                                "maxItems": 20000,
+                                "minItems": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "build_reason": {
+                    "enum": [
+                      "security_fix",
+                      "defect_fix",
+                      "both",
+                      "unknown"
+                    ]
+                  },
+                  "build_reason_evidence": {
+                    "type": "array",
+                    "maxItems": 20000,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "reason",
+                        "advisory_id",
+                        "predecessor",
+                        "platforms_stated",
+                        "evidence"
+                      ],
+                      "properties": {
+                        "reason": {
+                          "enum": [
+                            "security_fix",
+                            "defect_fix"
+                          ]
+                        },
+                        "advisory_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "predecessor": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "platforms_stated": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128
+                          },
+                          "maxItems": 20000,
+                          "uniqueItems": true
+                        },
+                        "evidence": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "source_id",
+                              "locator",
+                              "quote"
+                            ],
+                            "properties": {
+                              "source_id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "locator": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "quote": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 2000
+                              }
+                            }
+                          },
+                          "maxItems": 20000,
+                          "minItems": 1
+                        }
+                      }
+                    }
+                  }
+                }
               }
             ]
+          },
+          "build_reason": {
+            "enum": [
+              "security_fix",
+              "defect_fix",
+              "both",
+              "unknown"
+            ]
+          },
+          "build_reason_evidence": {
+            "type": "array",
+            "maxItems": 20000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "reason",
+                "advisory_id",
+                "predecessor",
+                "platforms_stated",
+                "evidence"
+              ],
+              "properties": {
+                "reason": {
+                  "enum": [
+                    "security_fix",
+                    "defect_fix"
+                  ]
+                },
+                "advisory_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "predecessor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "platforms_stated": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "maxItems": 20000,
+                  "uniqueItems": true
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "source_id",
+                      "locator",
+                      "quote"
+                    ],
+                    "properties": {
+                      "source_id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "locator": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024
+                      },
+                      "quote": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    }
+                  },
+                  "maxItems": 20000,
+                  "minItems": 1
+                }
+              }
+            }
           }
         }
       }
@@ -1986,10 +3743,17 @@
     "validation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "checks", "review_status"],
+      "required": [
+        "status",
+        "checks",
+        "review_status"
+      ],
       "properties": {
         "status": {
-          "enum": ["passed", "unavailable"]
+          "enum": [
+            "passed",
+            "unavailable"
+          ]
         },
         "checks": {
           "type": "array",

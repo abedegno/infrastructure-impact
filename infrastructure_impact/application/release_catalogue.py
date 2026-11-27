@@ -31,6 +31,26 @@ _HOSTS = {
     "arista": {"www.arista.com", "arista.com"},
 }
 RESPIN_RULES = {"cisco": "letter_suffix", "aruba": "non_decadal_build", "arista": "subrelease"}
+RESPIN_IDENTITY = "vendor_train_previous_followup"
+
+
+def _reason(proofs):
+    kinds = {p["reason"] for p in proofs}
+    return "both" if len(kinds) == 2 else next(iter(kinds), "unknown")
+
+
+def _union(values):
+    result = []
+    for value in values:
+        if value not in result:
+            result.append(deepcopy(value))
+    return result
+
+
+def _literal_named(version, evidence):
+    return any(
+        version in re.findall(r"[A-Za-z0-9]+(?:\.[A-Za-z0-9]+)*", e["quote"]) for e in evidence
+    )
 
 
 def _version_key(vendor, literal):
@@ -145,6 +165,34 @@ def validate_catalogue(value):
                 if f"{parts[0]}.{parts[1]}" != fact["train"]:
                     raise ValueError("Fixed release conflicts with declared train")
             if section == "releases":
+                proofs = fact.get("build_reason_evidence", [])
+                if ("build_reason" in fact or proofs) and fact.get("build_reason") != _reason(
+                    proofs
+                ):
+                    raise ValueError("Build reason differs from its source proofs")
+                for proof in proofs:
+                    if not all(
+                        e["source_id"] in sources
+                        and sources[e["source_id"]]["vendor"] == fact["vendor"]
+                        for e in proof["evidence"]
+                    ):
+                        raise ValueError("Build reason source missing or cross-vendor")
+                    if not _literal_named(fact["version"], proof["evidence"]):
+                        raise ValueError("Build reason does not name the literal release")
+                    if proof["reason"] == "security_fix" and not proof["advisory_id"]:
+                        raise ValueError("Security build reason requires an advisory identifier")
+                    if proof["reason"] == "defect_fix":
+                        predecessor = proof["predecessor"]
+                        if (
+                            not predecessor
+                            or predecessor == fact["version"]
+                            or _version_key(fact["vendor"], predecessor)[:2]
+                            != _version_key(fact["vendor"], fact["version"])[:2]
+                            or _version_key(fact["vendor"], predecessor)
+                            >= _version_key(fact["vendor"], fact["version"])
+                            or not _literal_named(predecessor, proof["evidence"])
+                        ):
+                            raise ValueError("Defect build reason requires its stated predecessor")
                 if (fact["date_status"] == "stated") != bool(fact["release_date"]):
                     raise ValueError("Release date status conflicts with release date")
                 if fact["release_date"]:
@@ -193,6 +241,11 @@ def _merge_release(rows):
     merged["date_status"] = "stated" if merged["release_date"] else "unknown"
     if len({row.get("observation_basis") for row in observations}) > 1:
         merged.pop("observation_basis", None)
+    if any("build_reason" in row for row in observations):
+        merged["build_reason_evidence"] = _union(
+            p for row in observations for p in row.get("build_reason_evidence", [])
+        )
+        merged["build_reason"] = _reason(merged["build_reason_evidence"])
     if len(observations) > 1:
         merged["observations"] = observations
     return merged
@@ -361,6 +414,7 @@ def find_respins(value, config):
     for train in config["trains"]:
         corrected = "respin_rule" in train
         groups = defaultdict(dict)
+        captures = defaultdict(list)
         for row in _releases(value, train):
             match = re.fullmatch(train["base_pattern"], row["version"])
             if not match or (not corrected and not row["release_date"]):
@@ -368,6 +422,7 @@ def find_respins(value, config):
             base = match.expand(train["base_replacement"])
             for platform in sorted(_scope(row, train)):
                 key = (base, platform)
+                captures[key].append(row)
                 # Duplicate source rows do not create extra releases.
                 existing = groups[key].get(row["version"])
                 if (
@@ -473,6 +528,20 @@ def find_respins(value, config):
                         "evidence": evidence,
                     },
                 )
+                if value.get("respin_identity"):
+                    row["timing_evidence"] = deepcopy(row["evidence"])
+                    row["release_observations"] = _union(
+                        r
+                        for r in captures[base, platform]
+                        if r["version"]
+                        in {previous["version"] if previous else None, current["version"]}
+                    )
+                    row["evidence"] = _union(
+                        [
+                            *row["evidence"],
+                            *(e for r in row["release_observations"] for e in r["evidence"]),
+                        ]
+                    )
                 if corrected:
                     row["respin_rule"] = train["respin_rule"]
                     if train["vendor"] == "aruba":
@@ -481,4 +550,58 @@ def find_respins(value, config):
                         row["expected_regular_build"] = expected
                         row["expected_regular_build_absent"] = expected not in versions
                 row["platforms_stated"].append(platform)
-    return list(result.values())
+    rows = list(result.values())
+    return (
+        _deduplicate_respins(rows, value)
+        if value.get("respin_identity") == RESPIN_IDENTITY
+        else rows
+    )
+
+
+def _deduplicate_respins(rows, catalogue):
+    """Unique public pairs preserve every scoped observation and unresolved anchor."""
+    groups = defaultdict(list)
+    for row in rows:
+        groups[row["vendor"], row["train"], row["followup_release"]].append(row)
+    release_groups = defaultdict(list)
+    for r in catalogue["releases"]:
+        release_groups[r["vendor"], r["train"], r["version"]].append(r)
+    releases = {key: _merge_release(facts) for key, facts in release_groups.items()}
+    result = []
+    for identity, observations in groups.items():
+        predecessors = list(dict.fromkeys(o["previous_release"] for o in observations))
+        resolved = [p for p in predecessors if p is not None]
+        for predecessor in resolved or [None]:
+            scoped = _union(o for o in observations if o["previous_release"] in {predecessor, None})
+            anchors = [o for o in scoped if o["previous_release"] == predecessor]
+            row = deepcopy(anchors[0])
+            row["platforms_stated"] = sorted({p for o in scoped for p in o["platforms_stated"]})
+            row["evidence"] = _union(e for o in scoped for e in o["evidence"])
+            for key in ("timing_evidence", "release_observations"):
+                row[key] = _union(item for o in scoped for item in o.get(key, []))
+            for field in (
+                "previous_release_date",
+                "followup_release_date",
+                "days",
+                "within_30_days",
+                "within_90_days",
+                "reason",
+            ):
+                values = {o[field] for o in scoped}
+                row[field] = values.pop() if len(values) == 1 else None
+            row["classification"] = (
+                "corrective_respin"
+                if all(o["classification"] == "corrective_respin" for o in scoped)
+                else "possible_respin"
+            )
+            row["production_eligible"] = all(o["production_eligible"] for o in scoped)
+            if "expected_regular_build_absent" in row:
+                row["expected_regular_build_absent"] = any(
+                    o["expected_regular_build_absent"] for o in scoped
+                )
+            release = releases[identity]
+            row["build_reason"] = release.get("build_reason", "unknown")
+            row["build_reason_evidence"] = deepcopy(release.get("build_reason_evidence", []))
+            row["observations"] = scoped
+            result.append(row)
+    return result

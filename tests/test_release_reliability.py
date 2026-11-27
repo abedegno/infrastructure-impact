@@ -52,9 +52,15 @@ def test_frozen_metrics_preserve_research_and_unknown_rates():
     assert all(
         r["review_status"] == "independent_human_review_pending" for r in report["review_packet"]
     )
-    assert len(report["review_packet"]) == len(report["respins"]) + len(
-        report["catalogue"]["notices"]
-    ) + len(report["catalogue"]["statements"])
+    reason_facts = [
+        r for r in report["catalogue"]["releases"] if r.get("build_reason", "unknown") != "unknown"
+    ]
+    assert len(report["review_packet"]) == (
+        len(report["respins"])
+        + len(report["catalogue"]["notices"])
+        + len(report["catalogue"]["statements"])
+        + len(reason_facts)
+    )
 
 
 def test_future_capture_is_unavailable_and_identity_fails_closed():
@@ -264,7 +270,9 @@ def test_standalone_review_items_retain_full_source_identity_and_scope():
         if item["type"] == "respin":
             assert item["fact"] == report["respins"][item["index"]]
             continue
-        section = "notices" if item["type"] == "notice" else "statements"
+        section = {"notice": "notices", "statement": "statements", "build_reason": "releases"}[
+            item["type"]
+        ]
         assert item["fact"] == report["catalogue"][section][item["index"]]
 
 

@@ -2,6 +2,8 @@
 
 ## Unreleased — release reliability
 
+- Deduplicate respin pairs and retain scoped timing observations, preferring a resolved predecessor without transferring it to other models. Add independent, source-backed build reasons to releases, review packets and staircase markers; retain explicit unknowns for unsupported Cisco builds/dates. Record the outside-cohort 17.9.6 control as `not_established`; release denominators and rates remain unavailable.
+
 - Publish a bounded default reliability join for configured 2024–2026 switching staircases; show exact/suffix/missing catalogue markers, exact-version actions/notices and separate follow-up/step timing. Preserve caller selection, unknown model applicability, CSV evidence payloads and legacy reads. Add three source-stated version references with unknown software dates. Record the bounded public-date search and unverified 17.9.6 withdrawal control; no release dates, denominators or rates are invented.
 
 - Correct configurable rebuild detection: AOS-CX decadal maintenance builds are not respins; retain missing regular-base candidates with unknown intervals. Deduplicate release identities without transferring dates, scope or original-source eligibility between model observations. Add uniqueness checks, native/browser parity and a refreshed pending-review preview. Record the 17.12.7/17.12.7a and 10.13.1031/1161 source findings; staircase and publication work remain deferred.

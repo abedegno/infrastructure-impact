@@ -61,6 +61,8 @@ def _eligible(fact, sources, train):
 
 
 def _annual(catalogue, config, respins):
+    # Timing and capture eligibility belong to each original scoped observation.
+    respins = [o for r in respins for o in r.get("observations", [r])]
     summary = catalogue_tools.catalogue_summary(catalogue, config)
     sources = {s["source_id"]: s for s in catalogue["sources"]}
     coverages = {(c["vendor"], c["train"], c["year"]): c for c in catalogue["coverage"]}
@@ -302,13 +304,18 @@ def _review(catalogue, respins=()):
         for section, kind in (("notices", "notice"), ("statements", "statement"))
         for index, fact in enumerate(catalogue[section])
     ]
-    return notices + [
+    respin_items = [
         dict(
             type="respin",
             index=index,
             vendor=fact["vendor"],
             train=fact["train"],
             classification=fact["classification"],
+            **(
+                {k: copy.deepcopy(fact[k]) for k in ("build_reason", "build_reason_evidence")}
+                if "build_reason" in fact
+                else {}
+            ),
             notice_date=None,
             action_date=None,
             platforms_stated=fact["platforms_stated"],
@@ -319,6 +326,30 @@ def _review(catalogue, respins=()):
         for index, fact in enumerate(respins)
         if "respin_rule" in fact
     ]
+    reason_items = [
+        dict(
+            type="build_reason",
+            index=index,
+            vendor=fact["vendor"],
+            train=fact["train"],
+            classification=fact["build_reason"],
+            build_reason=fact["build_reason"],
+            build_reason_evidence=copy.deepcopy(fact["build_reason_evidence"]),
+            notice_date=None,
+            action_date=None,
+            platforms_stated=sorted(
+                {p for proof in fact["build_reason_evidence"] for p in proof["platforms_stated"]}
+            ),
+            evidence=catalogue_tools._union(
+                e for proof in fact["build_reason_evidence"] for e in proof["evidence"]
+            ),
+            review_status=PENDING,
+            fact=copy.deepcopy(fact),
+        )
+        for index, fact in enumerate(catalogue["releases"])
+        if fact.get("build_reason", "unknown") != "unknown"
+    ]
+    return notices + respin_items + reason_items
 
 
 def build_report(
@@ -365,6 +396,11 @@ def build_report(
                 "model_scope",
                 "same_base_chronology",
                 *(["unique_release_identity"] if catalogue.get("release_identity") else []),
+                *(
+                    ["unique_respin_identity", "build_reason_provenance"]
+                    if catalogue.get("respin_identity")
+                    else []
+                ),
             ],
             review_status=PENDING,
         ),
@@ -430,6 +466,13 @@ def validate_report(report, *, publication=_UNSET, generated_at=None):
         ] != _hash(cat):
             raise ValueError("Catalogue identity differs")
         pairs = catalogue_tools.find_respins(cat, report["config"])
+        if cat.get("respin_identity"):
+            identities = [
+                (r["vendor"], r["train"], r["previous_release"], r["followup_release"])
+                for r in report["respins"]
+            ]
+            if len(set(identities)) != len(identities):
+                raise ValueError("Duplicate respin identity")
         if (
             report["respins"] != pairs
             or report["annual"] != _annual(cat, report["config"], pairs)
@@ -589,7 +632,18 @@ def _catalogue_match(report, group):
         else "model_unresolved",
         evidence=evidence,
         release_observations=[
-            {k: o[k] for k in ("version", "release_date", "platforms_stated", "evidence")}
+            {
+                k: copy.deepcopy(o[k])
+                for k in (
+                    "version",
+                    "release_date",
+                    "platforms_stated",
+                    "evidence",
+                    "build_reason",
+                    "build_reason_evidence",
+                )
+                if k in o
+            }
             for o in observations
         ],
     )
@@ -648,6 +702,16 @@ def _annotations(report, selected):
             ("respins", "respin"),
         ):
             for fact in report["respins"] if section == "respins" else catalogue[section]:
+                if kind == "respin" and "observations" in fact:
+                    scoped = [
+                        o
+                        for o in fact["observations"]
+                        if o["previous_release"] == fact["previous_release"]
+                        and (not models or models & set(o["platforms_stated"]))
+                    ]
+                    if not scoped:
+                        continue
+                    fact = catalogue_tools._deduplicate_respins(scoped, catalogue)[0]
                 if (fact["vendor"], fact["train"]) != (group["vendor"], group["train"]):
                     continue
                 versions = (
@@ -692,6 +756,13 @@ def _annotations(report, selected):
                         evidence=fact["evidence"],
                     )
                 )
+                if kind == "respin" and "build_reason" in fact:
+                    group["matches"][-1].update(
+                        {
+                            k: copy.deepcopy(fact[k])
+                            for k in ("build_reason", "build_reason_evidence")
+                        }
+                    )
                 if report.get("staircase_join_version") == 1:
                     group["matches"][-1].update(
                         related_release=fact.get("followup_release")

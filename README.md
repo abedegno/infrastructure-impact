@@ -110,6 +110,11 @@ fix rebuild rules and duplicate records. Scientific publications include bounded
 default staircase annotations, exact/suffix/missing catalogue markers and source
 links. [Public-date research](docs/research/2026-11-27-reliability-public-dates.md)
 retains unsupported release dates and the 17.9.6 withdrawal claim as unknown.
+The [round-six follow-up](docs/research/2026-11-27-round6-summary.md) deduplicates
+respin pairs while preserving model-specific observations, and separates timing
+from source-backed build reasons. Aruba 1031/1161 have advisory-stated security
+fixes; that does not establish their release dates or individual switch models.
+The outside-cohort Cisco 17.9.6 control is explicitly `not_established`.
 
 Use the [local reliability refresh](docs/RELIABILITY_REFRESH.md) to prepare a
 separate candidate and pending-review report from original source captures.
