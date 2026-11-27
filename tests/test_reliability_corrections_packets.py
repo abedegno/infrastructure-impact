@@ -19,7 +19,14 @@ def test_packaged_unique_records_preserve_every_pinned_observation_and_replay_pr
     original = [r for row in packaged["releases"] for r in row.get("observations", [row])]
 
     def canonical(rows):
-        return Counter(json.dumps(r, sort_keys=True) for r in rows)
+        # Additive reason enrichment must preserve every prior capture fact.
+        return Counter(
+            json.dumps(
+                {k: v for k, v in r.items() if k not in {"build_reason", "build_reason_evidence"}},
+                sort_keys=True,
+            )
+            for r in rows
+        )
 
     assert canonical(original) >= canonical(old["releases"])
     assert len(original) == len(old["releases"]) + 3

@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
         "model_specific_dates",
         "undated_original_first",
         "staircase_join",
+        "unique_respins",
     ],
 )
 def test_browser_release_reliability_parity(tmp_path, case):
@@ -57,12 +58,29 @@ def test_browser_release_reliability_parity(tmp_path, case):
             earlier = deepcopy(cat["releases"][0])
             earlier.update(release_date=None, date_status="unknown")
             cat["releases"].insert(0, earlier)
+        elif case == "unique_respins":
+            from copy import deepcopy
+
+            from test_reliability_build_reasons import reason, unique
+
+            unique(cat)
+            conf["trains"][0]["platforms"].append("second model")
+            cat["releases"][2].update(build_reason="security_fix", build_reason_evidence=[reason()])
+            for row in list(cat["releases"]):
+                other = deepcopy(row)
+                other["platforms_stated"] = ["second model"]
+                if other["version"] == "10.13.1005":
+                    other["release_date"] = "2025-02-05"
+                cat["releases"].append(other)
+            from infrastructure_impact.application.release_catalogue import deduplicate_releases
+
+            cat = deduplicate_releases(cat)
         report = rr.build_report(
             cat,
             conf,
             publication=publication,
             generated_at=report["generated_at"],
-            staircase_join_version=1 if case == "staircase_join" else None,
+            staircase_join_version=1 if case in {"staircase_join", "unique_respins"} else None,
         )
     upgrades = dict(
         publication=publication,
@@ -79,7 +97,7 @@ def test_browser_release_reliability_parity(tmp_path, case):
             for scenario in ["publisher_first_fixed", "known_fixed_target"]
         ],
     )
-    if case == "staircase_join":
+    if case in {"staircase_join", "unique_respins"}:
         for row in upgrades["rows"]:
             row.update(
                 vendor="aruba", train="10.13", events=[dict(date="2025-01-05", target="10.13.1000")]
@@ -95,6 +113,7 @@ def test_browser_release_reliability_parity(tmp_path, case):
                 csv=rr.csv_export(selected),
                 coverage=coverage.build_coverage(report),
                 coverage_csv=coverage.csv_export(coverage.build_coverage(report)),
+                expected_build_reason=case == "unique_respins",
             )
         )
     )

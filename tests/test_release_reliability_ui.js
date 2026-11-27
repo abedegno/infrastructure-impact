@@ -69,6 +69,14 @@ if (process.argv[2]) {
     assert(steps.includes('data-version-match="exact"'));
     assert(steps.includes('Notice date:') && steps.includes('action date:'));
   }
+  if (vectors.expected_build_reason) {
+    assert(steps.includes('Build reason: security_fix'));
+  }
+  if (selected.catalogue.respin_identity) {
+    const bad = JSON.parse(JSON.stringify(selected));
+    bad.respins.push(JSON.parse(JSON.stringify(bad.respins[0])));
+    assert.throws(() => R.validate(bad), /duplicate respin identity/);
+  }
 }
 console.log('Release reliability browser tests passed');
 if (process.argv[2]) {
