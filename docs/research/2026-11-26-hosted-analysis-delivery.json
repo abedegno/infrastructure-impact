@@ -78,5 +78,38 @@
     "current_files": 266,
     "private_inputs": false,
     "network_requests": 0
+  },
+  "initial_rehearsal_note": "Initial strict checks predate the separate operator wrapper. Current strict operator and legacy library compatibility are recorded in operator_boundary.",
+  "operator_boundary": {
+    "scope": "Independent fresh queries against retained authored synthetic generations; no publication or network",
+    "checks": [
+      {
+        "name": "legacy-omitted",
+        "status": "passed",
+        "seconds": 1.247
+      },
+      {
+        "name": "legacy-explicit-none",
+        "status": "passed",
+        "seconds": 0.815
+      },
+      {
+        "name": "named-operator",
+        "status": "passed"
+      },
+      {
+        "name": "blank-operator-unexpected-root",
+        "status": "rejected",
+        "reason": "Unexpected selected analysis root for configured operator mode"
+      },
+      {
+        "name": "named-operator-missing-root",
+        "status": "rejected",
+        "reason": "Missing native selected analysis source or mandatory logical root"
+      }
+    ],
+    "strict_verifier": "operator_native_parity",
+    "private_inputs": false,
+    "network_requests": 0
   }
 }
