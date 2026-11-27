@@ -1008,7 +1008,9 @@ def verify_projection(reader, projected, *, analysis_precomputed_options=None):
     ):
         from .release_reliability import build_report
 
-        projected = dict(projected, release_reliability=build_report(**reader.identity))
+        projected = dict(
+            projected, release_reliability=build_report(**reader.identity, staircase_join_version=1)
+        )
     views = dict(logical_views(projected))
     complete_summary = summary(projected["switching_comparison"])
     ranges = reader.ranges("snapshot.json")
