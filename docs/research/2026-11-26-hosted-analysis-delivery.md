@@ -34,9 +34,12 @@ performance claims. No vendor requests, private evidence or live collection were
 A separate real CLI run then cleared the selector while reusing the selected
 output directory. It removed 171 obsolete files, left 266 current files, and
 passed exact physical inventory, capacity and fresh native verification. Managed
-contents are staged and refreshed without replacing the destination directory,
-preserving held working directories and mounted outputs. Modified or unmanaged
-destinations are rejected safely rather than overlaid. The covering
+refresh applies when the build selects precomputed delivery or when the output
+contains evidence of a prior precomputed export. It preserves the destination
+directory for held working directories and mounted outputs, authenticates a
+nonempty prior export, and rejects modified or unmanaged contents. With blank
+delivery and an ordinary output, snapshot overwrites matching paths and leaves
+other files in place. The covering
 snapshot/hosted/architecture regression run passed 139 tests and 12 subtests
 after the directory-identity fix. The earlier 14-module
 profile/operator regression run passed 536 tests.
@@ -45,16 +48,18 @@ The profile never establishes release-denominator completeness or vendor quality
 Existing unknowns and independent human review pending remain unchanged. The
 previous cold-time regression and low-memory/browser limitations still apply.
 
-Existing nonempty exports must match a retained local generation. Use a fresh
-output directory if that prior generation is unavailable or the export was
-modified. The output filesystem must support hard links. Each link exposes a
+For managed refresh, a nonempty export must match a retained local generation.
+Use a fresh directory if that generation is unavailable or the export was
+modified. A named export and a transition from precomputed to blank require
+hard links on the output filesystem. Ordinary blank exports can use filesystems
+without hard links. Each link exposes a
 complete staged file at its final name and fails atomically if that name is
 occupied. Refresh tests this capability before retiring prior contents. Use a
 hard-link-capable output volume if the check fails. Refresh also needs temporary
 space on that filesystem. Forced termination can leave scratch data for recovery.
-Readers of the export directory may observe a transition between manifests. A concurrent edit fails the refresh,
-restores prior entries where safe, and preserves changed bytes at a reported
-recovery path. That directory needs operator attention before reuse. The
+Readers of the export directory may observe a transition between manifests.
+A concurrent edit fails the managed refresh, restores prior entries where safe,
+and preserves changed bytes at a reported recovery path. That directory needs operator attention before reuse. The
 subsequent install/rollback regression run passed 118 tests and 12 subtests;
 these overlapping runs are not additive test totals. The separately served generation
 and its atomic `current` pointer retain their existing behavior. Mounted-output

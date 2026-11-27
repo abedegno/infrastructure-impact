@@ -335,6 +335,9 @@ def test_snapshot_refresh_removes_previous_selected_assets(recovery, tmp_path, m
         "symlink",
         "destination_link",
         "parent_link",
+        "removed_scripts",
+        "corrupt_manifest",
+        "stripped_manifest_and_scripts",
     ],
 )
 def test_snapshot_refresh_preserves_unmanaged_entries(recovery, tmp_path, monkeypatch, extra):
@@ -345,10 +348,10 @@ def test_snapshot_refresh_preserves_unmanaged_entries(recovery, tmp_path, monkey
     monkeypatch.setenv("IMPACT_BASE_PATH", "/")
     output = tmp_path / "exports/public"
 
-    def build(target):
-        main(["snapshot", "--output", str(target), "--publication-format", "v2"])
+    def build(target, *extra_args):
+        main(["snapshot", "--output", str(target), "--publication-format", "v2", *extra_args])
 
-    build(output)
+    build(output, "--include-switching-analysis", "--analysis-delivery-profile", DELIVERY)
     sentinel = tmp_path / "keep"
     sentinel.write_text("keep")
     target = output
@@ -363,6 +366,18 @@ def test_snapshot_refresh_preserves_unmanaged_entries(recovery, tmp_path, monkey
         (output / "manifest.json").write_text(json.dumps(manifest))
     elif extra == "edited":
         (output / "index.html").write_text("keep")
+    elif extra in {"removed_scripts", "corrupt_manifest", "stripped_manifest_and_scripts"}:
+        for name in ("analysis-precomputed.js", "analysis-worker-client.js"):
+            (output / name).unlink()
+        manifest_path = output / "manifest.json"
+        if extra == "corrupt_manifest":
+            manifest_path.write_text("{")
+        elif extra == "stripped_manifest_and_scripts":
+            manifest = json.loads(manifest_path.read_bytes())
+            for name in ("analysis-precomputed.js", "analysis-worker-client.js"):
+                del manifest["sha256"][name]
+            manifest_path.write_text(json.dumps(manifest))
+            (output / "publication-v2.json").unlink()
     elif extra == "extra_directory":
         (output / "owner").mkdir()
     elif extra == "symlink":
@@ -376,7 +391,7 @@ def test_snapshot_refresh_preserves_unmanaged_entries(recovery, tmp_path, monkey
         link.symlink_to(output.parent, target_is_directory=True)
         target = link / output.name
     original = (output / "manifest.json").read_bytes()
-    with pytest.raises(ValueError, match="snapshot"):
+    with pytest.raises(ValueError):
         build(target)
     assert (output / "manifest.json").read_bytes() == original
     assert sentinel.read_text() == "keep"
@@ -433,7 +448,7 @@ def test_snapshot_refresh_keeps_existing_directory_identity(tmp_path, monkeypatc
     fd = os.open(destination, os.O_RDONLY | os.O_DIRECTORY)
     try:
         for generation in (old, new):
-            publication._export_generation(generation, destination)
+            publication._export_generation(generation, destination, precomputed_delivery=True)
             with os.fdopen(os.open("manifest.json", os.O_RDONLY, dir_fd=fd), "rb") as stream:
                 assert json.load(stream)["generation"] == generation.name
             assert os.path.samestat(os.fstat(fd), destination.stat())
@@ -445,7 +460,7 @@ def test_snapshot_refresh_keeps_existing_directory_identity(tmp_path, monkeypatc
 def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatch, failure):
     old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
-    publication._export_generation(old, destination)
+    publication._export_generation(old, destination, precomputed_delivery=True)
     rename = Path.rename
     link = os.link
 
@@ -470,7 +485,7 @@ def test_snapshot_refresh_rolls_back_on_replacement_failure(tmp_path, monkeypatc
     monkeypatch.setattr(os, "link", interrupt_install)
     monkeypatch.setattr(Path, "rename", edit_during_backup)
     with pytest.raises((ValueError, OSError), match="changed|simulated"):
-        publication._export_generation(new, destination)
+        publication._export_generation(new, destination, precomputed_delivery=True)
     assert (destination / "index.html").read_text() == old.name
     assert not list(destination.glob(".snapshot-*"))
     if failure == "concurrent_edit":
@@ -484,7 +499,7 @@ def test_snapshot_refresh_preserves_edits_in_newly_installed_tree(
 ):
     old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
-    publication._export_generation(old, destination)
+    publication._export_generation(old, destination, precomputed_delivery=True)
     link = os.link
     content = b"concurrent operator edit"
 
@@ -497,7 +512,7 @@ def test_snapshot_refresh_preserves_edits_in_newly_installed_tree(
 
     monkeypatch.setattr(os, "link", edit_before_manifest)
     with pytest.raises(ValueError) as error:
-        publication._export_generation(new, destination)
+        publication._export_generation(new, destination, precomputed_delivery=True)
     assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
     assert (destination / "data/view.json").read_text() == old.name
     preserved = [p for p in destination.rglob(note) if p.read_bytes() == content]
@@ -515,7 +530,7 @@ def test_snapshot_refresh_preserves_collision_at_file_installation(
 ):
     old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
-    publication._export_generation(old, destination)
+    publication._export_generation(old, destination, precomputed_delivery=True)
     target = destination / "manifest.json"
     original = target.read_bytes()
     content = b"concurrent operator file"
@@ -540,7 +555,7 @@ def test_snapshot_refresh_preserves_collision_at_file_installation(
     monkeypatch.setattr(os, "rename", intercept(os.rename))
     monkeypatch.setattr(os, "link", intercept(os.link))
     with pytest.raises(ValueError, match="retained at") as error:
-        publication._export_generation(new, destination)
+        publication._export_generation(new, destination, precomputed_delivery=True)
     assert target.read_bytes() == content
     workspace = next(destination.glob(".snapshot-*"))
     assert str(workspace) in str(error.value)
@@ -552,7 +567,7 @@ def test_snapshot_refresh_preserves_collision_at_file_installation(
 def test_snapshot_refresh_preserves_colliding_directory_inode(tmp_path, monkeypatch, collision):
     old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
-    publication._export_generation(old, destination)
+    publication._export_generation(old, destination, precomputed_delivery=True)
     target = destination / "data"
     mkdir, link = os.mkdir, os.link
     restoring = False
@@ -575,7 +590,7 @@ def test_snapshot_refresh_preserves_colliding_directory_inode(tmp_path, monkeypa
     monkeypatch.setattr(os, "mkdir", create_directory)
     monkeypatch.setattr(os, "link", interrupt_install)
     with pytest.raises(ValueError, match="retained at") as error:
-        publication._export_generation(new, destination)
+        publication._export_generation(new, destination, precomputed_delivery=True)
     assert os.path.samestat(collision_stat, target.stat())
     assert list(target.iterdir()) == []
     workspace = next(destination.glob(".snapshot-*"))
@@ -584,30 +599,10 @@ def test_snapshot_refresh_preserves_colliding_directory_inode(tmp_path, monkeypa
     assert (destination / "index.html").read_text() == old.name
 
 
-def test_snapshot_refresh_retains_previous_export_on_filesystem_without_links(
-    tmp_path, monkeypatch
-):
-    import errno
-
-    old, new = _fixture_generations(tmp_path)
-    destination = tmp_path / "snapshot"
-    publication._export_generation(old, destination)
-
-    def unsupported_link(*args, **kwargs):
-        raise OSError(errno.ENOTSUP, "filesystem does not support hard links")
-
-    monkeypatch.setattr(os, "link", unsupported_link)
-    with pytest.raises(OSError, match="hard links"):
-        publication._export_generation(new, destination)
-    assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
-    assert (destination / "data/view.json").read_text() == old.name
-    assert not list(destination.glob(".snapshot-*"))
-
-
 def test_snapshot_refresh_rejects_edit_in_staging_before_install(tmp_path, monkeypatch):
     old, new = _fixture_generations(tmp_path)
     destination = tmp_path / "snapshot"
-    publication._export_generation(old, destination)
+    publication._export_generation(old, destination, precomputed_delivery=True)
     content = b"concurrent edit to staged file"
     rename = Path.rename
 
@@ -618,9 +613,60 @@ def test_snapshot_refresh_rejects_edit_in_staging_before_install(tmp_path, monke
 
     monkeypatch.setattr(Path, "rename", edit_after_inventory)
     with pytest.raises(ValueError, match="retained at") as error:
-        publication._export_generation(new, destination)
+        publication._export_generation(new, destination, precomputed_delivery=True)
     workspace = next(destination.glob(".snapshot-*"))
     assert str(workspace) in str(error.value)
     assert any(path.read_bytes() == content for path in workspace.rglob("index.html"))
     assert (destination / "manifest.json").read_bytes() == (old / "manifest.json").read_bytes()
     assert (destination / "index.html").read_text() == old.name
+
+
+@pytest.mark.parametrize("publication_format", ["v1", "v2"])
+def test_blank_snapshot_overlays_without_link_support(
+    recovery, tmp_path, monkeypatch, publication_format
+):
+    from infrastructure_impact.cli import main
+
+    _, database, _, _ = recovery
+    monkeypatch.setenv("IMPACT_DATABASE", str(database))
+    monkeypatch.setenv("IMPACT_BASE_PATH", "/")
+    monkeypatch.setattr(os, "link", forbidden)
+    output = tmp_path / "plain"
+    args = ["snapshot", "--output", str(output), "--publication-format", publication_format]
+    main(args)
+    first = json.loads((output / "manifest.json").read_bytes())["generation"]
+    (output / "owner-note.txt").write_text("keep")
+    (output / "index.html").write_text("replace")
+    main(args)
+    assert json.loads((output / "manifest.json").read_bytes())["generation"] != first
+    assert (output / "owner-note.txt").read_text() == "keep"
+    assert (output / "index.html").read_text() != "replace"
+
+
+@pytest.mark.parametrize("previously_selected", [False, True])
+def test_snapshot_refresh_checks_link_support_before_retiring_output(
+    recovery, tmp_path, monkeypatch, previously_selected
+):
+    import errno
+
+    from infrastructure_impact.cli import main
+
+    _, database, _, _ = recovery
+    monkeypatch.setenv("IMPACT_DATABASE", str(database))
+    monkeypatch.setenv("IMPACT_BASE_PATH", "/")
+    output = tmp_path / "export"
+    args = ["snapshot", "--output", str(output), "--publication-format", "v2"]
+    selected = ["--include-switching-analysis", "--analysis-delivery-profile", DELIVERY]
+    main(args + (selected if previously_selected else []))
+    manifest = (output / "manifest.json").read_bytes()
+    index = (output / "index.html").read_bytes()
+
+    def unsupported_link(*args, **kwargs):
+        raise OSError(errno.ENOTSUP, "no hard links")
+
+    monkeypatch.setattr(os, "link", unsupported_link)
+    with pytest.raises(OSError, match="no hard links"):
+        main(args + ([] if previously_selected else selected))
+    assert (output / "manifest.json").read_bytes() == manifest
+    assert (output / "index.html").read_bytes() == index
+    assert not list(output.glob(".snapshot-*"))

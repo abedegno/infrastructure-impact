@@ -1120,13 +1120,53 @@ def _refresh_export(generation, destination):
             shutil.rmtree(workspace)
 
 
-def _export_generation(generation, destination):
+def _previous_precomputed_export(destination, generations):
+    from .analysis_precomputed import ROOT
+    from .publication_v2 import INDEX
+
+    scripts = ("analysis-precomputed.js", "analysis-worker-client.js")
+    if any(os.path.lexists(destination / name) for name in scripts):
+        return True
+    if any(destination.glob(".snapshot-*/previous")):
+        return True
+
+    # These are hints for selecting strict ownership verification. The verifier
+    # still authenticates the manifest and hashes every file before retirement.
+    for name, marker in (
+        ("manifest.json", b'"analysis-precomputed.js"'),
+        ("publication-v2.json", json.dumps(ROOT).encode()),
+        ("index.html", b"data-analysis-worker="),
+    ):
+        path = destination / name
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        except FileNotFoundError:
+            continue
+        with os.fdopen(fd, "rb") as stream:
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise ValueError("Unsafe snapshot metadata")
+            raw = stream.read(INDEX)
+        if marker in raw:
+            return True
+        if name == "manifest.json":
+            # The writer records this ID first. Even a stripped manifest can
+            # identify the retained original when both public scripts are gone.
+            match = re.search(rb'"generation"\s*:\s*"([0-9a-f]{32})"', raw)
+            if match and (generations / match[1].decode("ascii") / scripts[0]).is_file():
+                return True
+    return False
+
+
+def _export_generation(generation, destination, *, precomputed_delivery=False):
     """Reconcile a complete generation inside the operator's regular output directory."""
     destination.mkdir(parents=True, exist_ok=True)
     directory_fd = os.open(destination, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
         fcntl.flock(directory_fd, fcntl.LOCK_EX)
-        _refresh_export(generation, destination)
+        if precomputed_delivery or _previous_precomputed_export(destination, generation.parent):
+            _refresh_export(generation, destination)
+        else:
+            shutil.copytree(generation, destination, dirs_exist_ok=True)
     finally:
         os.close(directory_fd)
 
@@ -1180,7 +1220,7 @@ def build(
             {"analysis_delivery_profile": analysis_delivery_profile} if delivery is not None else {}
         ),
     )
-    _export_generation(generation, resolved)
+    _export_generation(generation, resolved, precomputed_delivery=delivery is not None)
     print(
         json.dumps(
             {
