@@ -180,7 +180,7 @@
       "build_reason": "unknown",
       "security_fix_status": "unknown",
       "defect_fix_status": "predecessor_not_established",
-      "observation_basis": "Literal 17.12.7a resolved-caveat row identifies a non-security flow-export defect for C9200, but no predecessor is identified, so admitted build_reason is unknown.",
+      "observation_basis": "The resolved-caveat heading and C9200 row identify a literal flow-export issue resolved in this build; the predecessor and an explicit non-security classification are not established.",
       "evidence_source_ids": [
         "cisco-c9200-17127a-caveats",
         "cisco-c9300-17127a-caveats"
