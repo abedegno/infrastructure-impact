@@ -52,9 +52,9 @@ def test_frozen_metrics_preserve_research_and_unknown_rates():
     assert all(
         r["review_status"] == "independent_human_review_pending" for r in report["review_packet"]
     )
-    assert len(report["review_packet"]) == len(report["catalogue"]["notices"]) + len(
-        report["catalogue"]["statements"]
-    )
+    assert len(report["review_packet"]) == len(report["respins"]) + len(
+        report["catalogue"]["notices"]
+    ) + len(report["catalogue"]["statements"])
 
 
 def test_future_capture_is_unavailable_and_identity_fails_closed():
@@ -261,6 +261,9 @@ def test_standalone_review_items_retain_full_source_identity_and_scope():
     items = report["review_packet"]
     assert items
     for item in items:
+        if item["type"] == "respin":
+            assert item["fact"] == report["respins"][item["index"]]
+            continue
         section = "notices" if item["type"] == "notice" else "statements"
         assert item["fact"] == report["catalogue"][section][item["index"]]
 

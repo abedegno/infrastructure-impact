@@ -35,6 +35,9 @@ def test_pinned_summary_does_not_claim_denominators_or_review():
         8,
         5,
     ]
+    # The historical publication retains its explicit legacy configuration.
+    for train in config["trains"]:
+        train.pop("respin_rule", None)
     pairs = find_respins(value, config)
     assert len(pairs) == 21 and all(r["classification"] == "possible_respin" for r in pairs)
     assert not any(r["production_eligible"] for r in pairs)

@@ -83,7 +83,7 @@ def _annual(catalogue, config, respins):
                 train["family"],
             )
 
-        releases = [r for r in catalogue["releases"] if same(r)]
+        releases = catalogue_tools._releases(catalogue, train)
         train_notices = [r for r in catalogue["notices"] if same(r)]
         notices = [r for r in train_notices if during(r["notice_date"])]
         statements = [r for r in catalogue["statements"] if same(r) and r["status"] in ACTIONS]
@@ -153,6 +153,7 @@ def _annual(catalogue, config, respins):
                     for r in respins
                     if same(r)
                     and during(r["followup_release_date"])
+                    and r["days"] is not None
                     and r["days"] <= interval
                     and (not corrective or r["classification"] == "corrective_respin")
                 ]
@@ -189,6 +190,13 @@ def _annual(catalogue, config, respins):
                     for s in judgement["source_ids"]
                 )
             )
+            if "respin" in metric:
+                signal_complete = signal_complete and not any(
+                    same(r)
+                    and r["days"] is None
+                    and (r["followup_release_date"] is None or during(r["followup_release_date"]))
+                    for r in respins
+                )
             if metric in {"software_defect_notices", "deferral_notices"}:
                 potential_notices = [
                     notice
@@ -276,8 +284,8 @@ def _annual(catalogue, config, respins):
     return result
 
 
-def _review(catalogue):
-    return [
+def _review(catalogue, respins=()):
+    notices = [
         dict(
             type=kind,
             index=index,
@@ -293,6 +301,23 @@ def _review(catalogue):
         )
         for section, kind in (("notices", "notice"), ("statements", "statement"))
         for index, fact in enumerate(catalogue[section])
+    ]
+    return notices + [
+        dict(
+            type="respin",
+            index=index,
+            vendor=fact["vendor"],
+            train=fact["train"],
+            classification=fact["classification"],
+            notice_date=None,
+            action_date=None,
+            platforms_stated=fact["platforms_stated"],
+            evidence=fact["evidence"],
+            review_status=PENDING,
+            fact=copy.deepcopy(fact),
+        )
+        for index, fact in enumerate(respins)
+        if "respin_rule" in fact
     ]
 
 
@@ -310,6 +335,8 @@ def build_report(catalogue=None, config=None, *, publication, generated_at):
     )
     catalogue_tools.validate_catalogue(catalogue)
     catalogue_tools.validate_config(config)
+    if any("respin_rule" in train for train in config["trains"]):
+        catalogue = catalogue_tools.deduplicate_releases(catalogue)
     available = _timestamp(catalogue["generated_at"]) <= _timestamp(generated_at)
     if not available:
         return unavailable_report(publication=publication, generated_at=generated_at)
@@ -335,6 +362,7 @@ def build_report(catalogue=None, config=None, *, publication, generated_at):
                 "date_separation",
                 "model_scope",
                 "same_base_chronology",
+                *(["unique_release_identity"] if catalogue.get("release_identity") else []),
             ],
             review_status=PENDING,
         ),
@@ -344,7 +372,7 @@ def build_report(catalogue=None, config=None, *, publication, generated_at):
     if available:
         report["respins"] = catalogue_tools.find_respins(catalogue, config)
         report["annual"] = _annual(catalogue, config, report["respins"])
-        report["review_packet"] = _review(catalogue)
+        report["review_packet"] = _review(catalogue, report["respins"])
     return validate_report(report, publication=publication, generated_at=generated_at)
 
 
@@ -397,7 +425,7 @@ def validate_report(report, *, publication=_UNSET, generated_at=None):
         if (
             report["respins"] != pairs
             or report["annual"] != _annual(cat, report["config"], pairs)
-            or report["review_packet"] != _review(cat)
+            or report["review_packet"] != _review(cat, pairs)
         ):
             raise ValueError("Release reliability derived facts differ")
     if report["upgrade_annotations"]:

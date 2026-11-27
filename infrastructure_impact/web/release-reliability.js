@@ -34,6 +34,24 @@
           : 0,
     ];
   }
+  const releaseObservations = (cat) => cat.releases.flatMap((r) => r.observations ?? [r]);
+  function mergedRelease(observations) {
+    const rows = observations.filter((r, i) => !observations.slice(0, i).some((p) => equal(p, r))),
+      merged = clone(rows[0]);
+    if (rows.some((r) => r.family !== merged.family)) fail('conflicting release family');
+    merged.platforms_stated = [...new Set(rows.flatMap((r) => r.platforms_stated))].sort();
+    merged.evidence = [];
+    for (const e of rows.flatMap((r) => r.evidence))
+      if (!merged.evidence.some((p) => equal(p, e))) merged.evidence.push(clone(e));
+    for (const field of ['release_date', 'announcement_date']) {
+      const values = [...new Set(rows.map((r) => r[field]))];
+      merged[field] = values.length === 1 ? values[0] : null;
+    }
+    merged.date_status = merged.release_date ? 'stated' : 'unknown';
+    if (new Set(rows.map((r) => r.observation_basis)).size > 1) delete merged.observation_basis;
+    if (rows.length > 1) merged.observations = rows;
+    return merged;
+  }
   function derive(cat, config) {
     const sources = new Map(cat.sources.map((s) => [s.source_id, s])),
       pairs = [],
@@ -49,68 +67,124 @@
         for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
         return 0;
       };
+    const regular = (vendor, version) => {
+      const key = versionKey(vendor, version);
+      return vendor === 'aruba' ? key[2] % 10 === 0 : key[3] === 0;
+    };
     for (const t of config.trains) {
       const groups = new Map(),
-        releases = cat.releases.filter((f) => same(f, t)),
+        releases = releaseObservations(cat).filter((f) => same(f, t)),
         regex = new RegExp(t.base_pattern),
         replacement = t.base_replacement.replace(/\\([0-9]+)/g, '$$$1');
       for (const f of releases) {
-        if (!f.release_date || !regex.test(f.version)) continue;
+        if ((!t.respin_rule && !f.release_date) || !regex.test(f.version)) continue;
         const base = f.version.replace(regex, replacement);
         for (const platform of scope(f, t).slice().sort()) {
           const key = JSON.stringify([base, platform]);
           if (!groups.has(key)) groups.set(key, { base, platform, versions: new Map() });
           const versions = groups.get(key).versions,
             old = versions.get(f.version);
-          if (!old || (original(f, sources) && !original(old, sources))) versions.set(f.version, f);
+          if (
+            !old ||
+            (t.respin_rule &&
+              ((Boolean(f.release_date) && !old.release_date) ||
+                (Boolean(f.release_date) === Boolean(old.release_date) &&
+                  original(f, sources) &&
+                  !original(old, sources)))) ||
+            (!t.respin_rule && original(f, sources) && !original(old, sources))
+          )
+            versions.set(f.version, f);
         }
       }
       for (const { base, platform, versions } of groups.values()) {
-        const ordered = [...versions.values()].sort(
-          (a, b) =>
-            a.release_date.localeCompare(b.release_date) ||
-            compareVersion(t.vendor, a.version, b.version),
-        );
-        for (let i = 1; i < ordered.length; i++) {
-          const prev = ordered[i - 1],
-            curr = ordered[i];
+        const ordered = [...versions.values()]
+          .filter((f) => f.release_date)
+          .sort(
+            (a, b) =>
+              a.release_date.localeCompare(b.release_date) ||
+              compareVersion(t.vendor, a.version, b.version),
+          );
+        for (let i = 1; i < ordered.length; i++)
           if (
-            curr.release_date < config.start ||
-            curr.release_date > [config.end, cat.generated_at.slice(0, 10)].sort()[0]
+            t.respin_rule &&
+            compareVersion(t.vendor, ordered[i].version, ordered[i - 1].version) <= 0
+          )
+            fail('nonmonotonic release chronology');
+        let candidates = ordered.slice(1).map((f, i) => [ordered[i], f]);
+        if (t.respin_rule) {
+          const byVersion = [...versions.values()].sort((a, b) =>
+            compareVersion(t.vendor, a.version, b.version),
+          );
+          candidates = byVersion
+            .filter((f) => !regular(t.vendor, f.version))
+            .map((curr) => [
+              byVersion
+                .filter(
+                  (f) =>
+                    regular(t.vendor, f.version) &&
+                    compareVersion(t.vendor, f.version, curr.version) < 0,
+                )
+                .at(-1),
+              curr,
+            ]);
+        }
+        for (const [prev, curr] of candidates) {
+          if (
+            curr.release_date &&
+            (curr.release_date < config.start ||
+              curr.release_date > [config.end, cat.generated_at.slice(0, 10)].sort()[0])
           )
             continue;
-          const days = dayGap(prev.release_date, curr.release_date);
-          if (compareVersion(t.vendor, curr.version, prev.version) <= 0)
+          if (!t.respin_rule && compareVersion(t.vendor, curr.version, prev.version) <= 0)
             fail('nonmonotonic release chronology');
-          if (days < 0 || days > 90) continue;
+          const days =
+            prev?.release_date && curr.release_date
+              ? dayGap(prev.release_date, curr.release_date)
+              : null;
+          if (days !== null && (days < 0 || days > 90)) continue;
           const explicit = cat.statements.filter(
             (f) =>
               same(f, t) &&
               f.status === 'corrective_respin' &&
-              f.version === prev.version &&
+              f.version === (prev?.version ?? null) &&
               f.related_release === curr.version &&
               f.platforms_stated.includes(platform),
           );
-          pairs.push({
+          const pair = {
             vendor: t.vendor,
             train: t.train,
             base_version: base,
-            previous_release: prev.version,
+            previous_release: prev?.version ?? null,
             followup_release: curr.version,
-            previous_release_date: prev.release_date,
+            previous_release_date: prev?.release_date ?? null,
             followup_release_date: curr.release_date,
             days,
-            within_30_days: days <= 30,
-            within_90_days: true,
+            within_30_days: days !== null ? days <= 30 : null,
+            within_90_days: days !== null ? true : null,
             classification: explicit.length ? 'corrective_respin' : 'possible_respin',
             reason: explicit.length ? explicit[0].evidence[0].quote : null,
             platforms_stated: [platform],
             production_eligible:
+              prev != null &&
+              days !== null &&
               original(prev, sources) &&
               original(curr, sources) &&
               explicit.every((f) => original(f, sources)),
-            evidence: [...prev.evidence, ...curr.evidence, ...explicit.flatMap((f) => f.evidence)],
-          });
+            evidence: [
+              ...(prev?.evidence ?? []),
+              ...curr.evidence,
+              ...explicit.flatMap((f) => f.evidence),
+            ],
+          };
+          if (t.respin_rule) {
+            pair.respin_rule = t.respin_rule;
+            if (t.vendor === 'aruba') {
+              const build = versionKey(t.vendor, curr.version)[2];
+              pair.expected_regular_build = `${t.train}.${String(build - (build % 10)).padStart(4, '0')}`;
+              pair.expected_regular_build_absent = !versions.has(pair.expected_regular_build);
+            }
+          }
+          pairs.push(pair);
         }
       }
     }
@@ -137,7 +211,7 @@
           ),
           status = coverage && start <= end ? coverage.status : 'unknown',
           reason = coverage?.reason ?? 'No reviewed enumeration and date coverage judgement',
-          releases = cat.releases.filter((f) => same(f, t)),
+          releases = releaseObservations(cat).filter((f) => same(f, t)),
           during = (day) => day != null && start <= end && start <= day && day <= end,
           dated = releases.filter((f) => during(f.release_date)),
           ids = (a) => new Set(a.map((f) => f.version));
@@ -224,6 +298,7 @@
               (f) =>
                 same(f, t) &&
                 during(f.followup_release_date) &&
+                f.days !== null &&
                 f.days <= Number(name.split('_').at(-1)) &&
                 (!name.startsWith('corrective') || f.classification === 'corrective_respin'),
             );
@@ -262,6 +337,15 @@
             coverage.source_ids.length > 0 &&
             t.platforms.every((model) => coverage.platforms.includes(model)) &&
             coverage.source_ids.every((id) => sources.get(id).capture_kind === 'original_document');
+          if (name.includes('respin'))
+            signalComplete =
+              signalComplete &&
+              !pairs.some(
+                (f) =>
+                  same(f, t) &&
+                  f.days === null &&
+                  (f.followup_release_date === null || during(f.followup_release_date)),
+              );
           if (['software_defect_notices', 'deferral_notices'].includes(name)) {
             const kinds =
               name === 'software_defect_notices'
@@ -385,6 +469,21 @@
         fact: f,
       })),
     );
+    for (const [index, f] of pairs.entries())
+      if (f.respin_rule)
+        review.push({
+          type: 'respin',
+          index,
+          vendor: f.vendor,
+          train: f.train,
+          classification: f.classification,
+          notice_date: null,
+          action_date: null,
+          platforms_stated: f.platforms_stated,
+          evidence: f.evidence,
+          review_status: 'independent_human_review_pending',
+          fact: f,
+        });
     return { annual, pairs, review };
   }
 
@@ -407,6 +506,16 @@
       )
         fail('invalid or duplicate configured train');
       trainIds.add(key);
+      if (
+        train.respin_rule &&
+        train.respin_rule !==
+          {
+            cisco: 'letter_suffix',
+            aruba: 'non_decadal_build',
+            arista: 'subrelease',
+          }[train.vendor]
+      )
+        fail('invalid vendor respin rule');
       try {
         new RegExp(train.base_pattern);
       } catch {
@@ -441,6 +550,18 @@
       const cat = report.catalogue,
         sources = new Map(),
         dates = new Map();
+      const releaseIds = new Set();
+      for (const r of cat.releases) {
+        const key = JSON.stringify([r.vendor, r.train, r.version]);
+        if (cat.release_identity && releaseIds.has(key)) fail('duplicate release identity');
+        releaseIds.add(key);
+        if (
+          r.observations &&
+          (r.observations.some((o) => JSON.stringify([o.vendor, o.train, o.version]) !== key) ||
+            !equal(mergedRelease(r.observations), r))
+        )
+          fail('release observation union differs');
+      }
       const hosts = {
         cisco: ['www.cisco.com', 'cisco.com'],
         aruba: [
@@ -481,7 +602,7 @@
         sources.set(source.source_id, source);
       }
       for (const section of ['releases', 'notices', 'statements'])
-        for (const f of cat[section]) {
+        for (const f of section === 'releases' ? releaseObservations(cat) : cat[section]) {
           const receipts = f.evidence.map((e) => {
             const source = sources.get(e.source_id);
             if (!source || source.vendor !== f.vendor) fail('missing or cross-vendor source');
@@ -877,7 +998,7 @@
           f.vendor === train.vendor &&
           f.train === train.train &&
           (f.family ?? train.family) === train.family,
-        releases = report.catalogue.releases.filter(same),
+        releases = releaseObservations(report.catalogue).filter(same),
         notices = report.catalogue.notices.filter(same),
         models = train.platforms.map((model) => {
           const scoped = releases.filter((r) => r.platforms_stated.includes(model)),
@@ -915,7 +1036,7 @@
         notice_model_unresolved_ids: sorted(
           new Set(notices.filter((n) => !n.platforms_stated.length).map((n) => n.notice_id)),
         ),
-        release_evidence: clone(releases),
+        release_evidence: clone(report.catalogue.releases.filter(same)),
         notice_evidence: clone(notices),
         statement_evidence: clone(report.catalogue.statements.filter(same)),
         coverage_judgements: clone(report.catalogue.coverage.filter(same)),

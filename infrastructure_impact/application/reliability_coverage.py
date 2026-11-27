@@ -5,7 +5,7 @@ from copy import deepcopy
 from decimal import Decimal
 
 from ..exports import csv_table
-from .release_catalogue import CAVEAT, _original
+from .release_catalogue import CAVEAT, _original, _releases
 from .release_reliability import validate_report
 
 FIELDS = [
@@ -63,7 +63,7 @@ def build_coverage(report):
                 train["family"],
             )
 
-        releases = [r for r in cat["releases"] if same(r)]
+        releases = _releases(cat, train)
         notices = [n for n in cat["notices"] if same(n)]
         models = []
         for model in train["platforms"]:
@@ -105,7 +105,7 @@ def build_coverage(report):
                 notice_model_unresolved_ids=sorted(
                     {n["notice_id"] for n in notices if not n["platforms_stated"]}
                 ),
-                release_evidence=deepcopy(releases),
+                release_evidence=deepcopy([r for r in cat["releases"] if same(r)]),
                 notice_evidence=deepcopy(notices),
                 statement_evidence=deepcopy([f for f in cat["statements"] if same(f)]),
                 coverage_judgements=deepcopy([f for f in cat["coverage"] if same(f)]),

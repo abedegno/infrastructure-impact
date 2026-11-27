@@ -89,6 +89,23 @@ if (process.argv[2]) {
   assert(R.csvExport(guarded).includes("'=SUM(A1)"));
   assert(R.csvExport(guarded).includes("'\t@danger"));
   assert(R.renderSteps(v.selected, v.upgrades.rows, { different: true }).includes('unavailable'));
+  if (v.report.catalogue.release_identity) {
+    bad = copy(v.report);
+    bad.catalogue.releases.push(copy(bad.catalogue.releases[0]));
+    bad.catalogue_sha256 = context.window.InfrastructureSwitchingContracts.fingerprint(
+      bad.catalogue,
+    );
+    assert.throws(() => R.validate(bad), /duplicate release identity/);
+    const index = v.report.catalogue.releases.findIndex((r) => r.observations);
+    if (index >= 0) {
+      bad = copy(v.report);
+      bad.catalogue.releases[index].platforms_stated.push('unstated model');
+      bad.catalogue_sha256 = context.window.InfrastructureSwitchingContracts.fingerprint(
+        bad.catalogue,
+      );
+      assert.throws(() => R.validate(bad), /observation union/);
+    }
+  }
 }
 // Exercise the real app loader with late completion and mixed generation roots.
 (async () => {
