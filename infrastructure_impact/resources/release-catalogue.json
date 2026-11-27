@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-27T11:29:31.014316+00:00",
+  "generated_at": "2026-11-27T17:25:56.150110+00:00",
   "review_status": "independent_human_review_pending",
   "sources": [
     {
@@ -284,7 +284,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-db37a2d5618261d87b16ea9e",
@@ -307,7 +310,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-db37a2d5618261d87b16ea9e",
@@ -325,7 +330,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-6301c9eaf82fb91a7ccc10b8",
@@ -345,7 +352,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-f358dcffeb791b44773e352d",
@@ -368,7 +378,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-f358dcffeb791b44773e352d",
@@ -386,7 +398,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-e6de11fab6560d91e357a719",
@@ -406,7 +420,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-936a1cac7cbfdc877cafd910",
@@ -429,7 +446,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-936a1cac7cbfdc877cafd910",
@@ -447,7 +466,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-edaf6687a83eb1bb987713b7",
@@ -467,7 +488,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-90382cb9f0b6c95c12496c9e",
@@ -490,7 +514,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-90382cb9f0b6c95c12496c9e",
@@ -508,7 +534,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-b8d99593613c20785f170711",
@@ -528,7 +556,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-bf73ec0fd87975d457fb57d0",
@@ -551,7 +582,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-bf73ec0fd87975d457fb57d0",
@@ -569,7 +602,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-e6f8a678cc81d5a689e02c92",
@@ -589,7 +624,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-010f08f71ceee8eab60413e5",
@@ -612,7 +650,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-010f08f71ceee8eab60413e5",
@@ -630,7 +670,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-dce61016b00eaa32f36c014c",
@@ -650,7 +692,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-c53a168eb6152b87789b15b5",
@@ -673,14 +718,18 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-c53a168eb6152b87789b15b5",
               "locator": "Boot Loader Versions / Release column",
               "quote": "Dublin 17.12.7a"
             }
-          ]
+          ],
+          "build_reason": "unknown",
+          "build_reason_evidence": []
         },
         {
           "vendor": "cisco",
@@ -691,16 +740,22 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-19ecc8fedb88e02ddccd111c",
               "locator": "ROMMON Versions / Release column",
               "quote": "Dublin 17.12.7a"
             }
-          ]
+          ],
+          "build_reason": "unknown",
+          "build_reason_evidence": []
         }
-      ]
+      ],
+      "build_reason": "unknown",
+      "build_reason_evidence": []
     },
     {
       "vendor": "cisco",
@@ -711,7 +766,10 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-a1f06c26952a3f4835d48be5",
@@ -734,7 +792,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "evidence": [
             {
               "source_id": "cisco-a1f06c26952a3f4835d48be5",
@@ -752,7 +812,9 @@
           "release_date": null,
           "date_status": "unknown",
           "announcement_date": null,
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "evidence": [
             {
               "source_id": "cisco-88396228eabada30ddcfe39b",
@@ -772,7 +834,9 @@
       "release_date": "2026-09-10",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -795,7 +859,9 @@
       "release_date": "2026-08-14",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -818,7 +884,9 @@
       "release_date": "2026-06-11",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -841,7 +909,9 @@
       "release_date": "2026-04-23",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -864,7 +934,9 @@
       "release_date": "2026-02-13",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -887,7 +959,9 @@
       "release_date": "2025-12-12",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -910,7 +984,9 @@
       "release_date": "2025-10-17",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -933,7 +1009,9 @@
       "release_date": "2025-09-05",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -956,7 +1034,9 @@
       "release_date": "2025-07-28",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -979,7 +1059,9 @@
       "release_date": "2025-06-12",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1002,7 +1084,9 @@
       "release_date": "2025-05-09",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1014,7 +1098,9 @@
           "locator": "Products Supported / paragraph / rendered line85",
           "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
         }
-      ]
+      ],
+      "build_reason": "unknown",
+      "build_reason_evidence": []
     },
     {
       "vendor": "aruba",
@@ -1025,7 +1111,9 @@
       "release_date": "2025-03-20",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1048,7 +1136,9 @@
       "release_date": "2025-01-30",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1071,7 +1161,9 @@
       "release_date": "2024-12-12",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1094,7 +1186,9 @@
       "release_date": "2024-10-24",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1117,7 +1211,9 @@
       "release_date": "2024-09-19",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1140,7 +1236,9 @@
       "release_date": "2024-08-01",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1163,7 +1261,9 @@
       "release_date": "2024-06-27",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1186,7 +1286,9 @@
       "release_date": "2024-05-20",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1209,7 +1311,9 @@
       "release_date": "2024-04-09",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6300"],
+      "platforms_stated": [
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1232,7 +1336,10 @@
       "release_date": "2024-01-31",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6200", "6300"],
+      "platforms_stated": [
+        "6200",
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1265,7 +1372,9 @@
           "release_date": "2024-01-31",
           "date_status": "stated",
           "announcement_date": null,
-          "platforms_stated": ["6300"],
+          "platforms_stated": [
+            "6300"
+          ],
           "evidence": [
             {
               "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1288,7 +1397,9 @@
           "release_date": "2024-01-31",
           "date_status": "stated",
           "announcement_date": null,
-          "platforms_stated": ["6200"],
+          "platforms_stated": [
+            "6200"
+          ],
           "evidence": [
             {
               "source_id": "aruba-685df04322baa38b62cf829d",
@@ -1313,7 +1424,10 @@
       "release_date": "2024-01-10",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6200", "6300"],
+      "platforms_stated": [
+        "6200",
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1346,7 +1460,9 @@
           "release_date": "2024-01-10",
           "date_status": "stated",
           "announcement_date": null,
-          "platforms_stated": ["6300"],
+          "platforms_stated": [
+            "6300"
+          ],
           "evidence": [
             {
               "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1369,7 +1485,9 @@
           "release_date": "2024-01-10",
           "date_status": "stated",
           "announcement_date": null,
-          "platforms_stated": ["6200"],
+          "platforms_stated": [
+            "6200"
+          ],
           "evidence": [
             {
               "source_id": "aruba-685df04322baa38b62cf829d",
@@ -1394,7 +1512,10 @@
       "release_date": "2024-03-22",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6200", "6300"],
+      "platforms_stated": [
+        "6200",
+        "6300"
+      ],
       "evidence": [
         {
           "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1427,7 +1548,9 @@
           "release_date": "2024-03-22",
           "date_status": "stated",
           "announcement_date": null,
-          "platforms_stated": ["6300"],
+          "platforms_stated": [
+            "6300"
+          ],
           "evidence": [
             {
               "source_id": "aruba-a25d9956d6d2dc4468d91467",
@@ -1439,7 +1562,9 @@
               "locator": "Products Supported / paragraph / rendered line85",
               "quote": "This release applies to the 6300 , 6300L and 6400 Switch series."
             }
-          ]
+          ],
+          "build_reason": "unknown",
+          "build_reason_evidence": []
         },
         {
           "vendor": "aruba",
@@ -1450,7 +1575,9 @@
           "release_date": "2024-03-22",
           "date_status": "stated",
           "announcement_date": null,
-          "platforms_stated": ["6200"],
+          "platforms_stated": [
+            "6200"
+          ],
           "evidence": [
             {
               "source_id": "aruba-685df04322baa38b62cf829d",
@@ -1462,9 +1589,13 @@
               "locator": "Products Supported / paragraph / rendered line87",
               "quote": "This release applies to the 6200 Switch series."
             }
-          ]
+          ],
+          "build_reason": "unknown",
+          "build_reason_evidence": []
         }
-      ]
+      ],
+      "build_reason": "unknown",
+      "build_reason_evidence": []
     },
     {
       "vendor": "aruba",
@@ -1475,7 +1606,9 @@
       "release_date": "2024-03-05",
       "date_status": "stated",
       "announcement_date": null,
-      "platforms_stated": ["6200"],
+      "platforms_stated": [
+        "6200"
+      ],
       "evidence": [
         {
           "source_id": "aruba-685df04322baa38b62cf829d",
@@ -1487,7 +1620,9 @@
           "locator": "Products Supported / paragraph / rendered line87",
           "quote": "This release applies to the 6200 Switch series."
         }
-      ]
+      ],
+      "build_reason": "unknown",
+      "build_reason_evidence": []
     },
     {
       "vendor": "arista",
@@ -1613,7 +1748,9 @@
           "locator": "RSS channel/item[5]/title and pubDate",
           "quote": "EOS-4.33.11.2M is now available for download."
         }
-      ]
+      ],
+      "build_reason": "unknown",
+      "build_reason_evidence": []
     },
     {
       "vendor": "arista",
@@ -1642,7 +1779,9 @@
       "release_date": null,
       "date_status": "unknown",
       "announcement_date": null,
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9300"
+      ],
       "evidence": [
         {
           "source_id": "cisco-9300-images",
@@ -1667,6 +1806,22 @@
           "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
           "quote": "10.13.1031 and above"
         }
+      ],
+      "build_reason": "security_fix",
+      "build_reason_evidence": [
+        {
+          "reason": "security_fix",
+          "advisory_id": "HPESBNW04669",
+          "predecessor": null,
+          "platforms_stated": [],
+          "evidence": [
+            {
+              "source_id": "aruba-04669",
+              "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+              "quote": "10.13.1031 and above"
+            }
+          ]
+        }
       ]
     },
     {
@@ -1685,6 +1840,22 @@
           "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
           "quote": "AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above"
         }
+      ],
+      "build_reason": "security_fix",
+      "build_reason_evidence": [
+        {
+          "reason": "security_fix",
+          "advisory_id": "HPESBNW05027",
+          "predecessor": null,
+          "platforms_stated": [],
+          "evidence": [
+            {
+              "source_id": "aruba-05027",
+              "locator": "/vulnerabilities/0/remediations/0/details; /vulnerabilities/0/product_status/fixed; /product_tree",
+              "quote": "AOS-CX 10.13.xxxx: AOS-CX 10.13.1161 and above"
+            }
+          ]
+        }
       ]
     }
   ],
@@ -1697,8 +1868,16 @@
       "title": "Conditional Umbrella registration issue for Catalyst 9200/9300 using API keys. The affected-release table explicitly names 17.12.1\u201317.12.4. Token registration is excluded; certificate replacement is prescribed. No release withdrawal is stated.",
       "notice_date": "2025-01-17",
       "action_date": null,
-      "affected_releases": ["17.12.1", "17.12.2", "17.12.3", "17.12.4"],
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "affected_releases": [
+        "17.12.1",
+        "17.12.2",
+        "17.12.3",
+        "17.12.4"
+      ],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "replacement_release": null,
       "classification": "configuration_remediation",
       "revision_date": "2025-01-17",
@@ -1721,7 +1900,9 @@
       "notice_date": null,
       "action_date": null,
       "affected_releases": [],
-      "platforms_stated": ["Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9300"
+      ],
       "replacement_release": null,
       "classification": "hardware",
       "revision_date": "2025-01-27",
@@ -1744,7 +1925,10 @@
       "notice_date": "2024-05-14",
       "action_date": null,
       "affected_releases": [],
-      "platforms_stated": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms_stated": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "replacement_release": null,
       "classification": "configuration_remediation",
       "revision_date": null,
@@ -1752,12 +1936,16 @@
       "fixed_releases": [
         {
           "version": "17.12.2",
-          "platforms_stated": ["Catalyst 9200"],
+          "platforms_stated": [
+            "Catalyst 9200"
+          ],
           "conditions": "Conditional SUDI display defect; affected-unit status and platform subcase require review"
         },
         {
           "version": "17.12.1",
-          "platforms_stated": ["Catalyst 9300"],
+          "platforms_stated": [
+            "Catalyst 9300"
+          ],
           "conditions": "Not Affected-unit SUDI display defect only; not a remedy for all affected certificates"
         }
       ],
@@ -1777,7 +1965,9 @@
       "title": "EOS 4.33.3F deferred due to software defect Bug ID 1165537",
       "notice_date": "2025-07-01",
       "action_date": null,
-      "affected_releases": ["4.33.3F"],
+      "affected_releases": [
+        "4.33.3F"
+      ],
       "platforms_stated": [],
       "replacement_release": null,
       "classification": "release_deferral",
@@ -1826,7 +2016,10 @@
       "train": "17.12",
       "year": 2024,
       "status": "partial",
-      "platforms": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "enumeration_complete": false,
       "date_coverage_complete": false,
       "reason": "Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved.",
@@ -1857,7 +2050,10 @@
       "train": "17.12",
       "year": 2025,
       "status": "partial",
-      "platforms": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "enumeration_complete": false,
       "date_coverage_complete": false,
       "reason": "Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved.",
@@ -1888,7 +2084,10 @@
       "train": "17.12",
       "year": 2026,
       "status": "partial",
-      "platforms": ["Catalyst 9200", "Catalyst 9300"],
+      "platforms": [
+        "Catalyst 9200",
+        "Catalyst 9300"
+      ],
       "enumeration_complete": false,
       "date_coverage_complete": false,
       "reason": "Eight unique versions in model-specific boot-loader tables, without release dates. Historical download and withdrawal coverage unestablished. Current notice index inspected; six older leads and C9200 index unresolved.",
@@ -1919,7 +2118,10 @@
       "train": "10.13",
       "year": 2024,
       "status": "partial",
-      "platforms": ["6200", "6300"],
+      "platforms": [
+        "6200",
+        "6300"
+      ],
       "enumeration_complete": false,
       "date_coverage_complete": false,
       "reason": "Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established.",
@@ -1935,7 +2137,10 @@
       "train": "10.13",
       "year": 2025,
       "status": "partial",
-      "platforms": ["6200", "6300"],
+      "platforms": [
+        "6200",
+        "6300"
+      ],
       "enumeration_complete": false,
       "date_coverage_complete": false,
       "reason": "Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established.",
@@ -1951,7 +2156,10 @@
       "train": "10.13",
       "year": 2026,
       "status": "partial",
-      "platforms": ["6200", "6300"],
+      "platforms": [
+        "6200",
+        "6300"
+      ],
       "enumeration_complete": false,
       "date_coverage_complete": false,
       "reason": "Rendered release-history rows only: 6300 has broader history than6200; TOC-only versions excluded; original document routes blocked. Complete release and notice enumeration not established.",
@@ -2011,5 +2219,6 @@
       ]
     }
   ],
-  "release_identity": "vendor_train_version"
+  "release_identity": "vendor_train_version",
+  "respin_identity": "vendor_train_previous_followup"
 }

@@ -1,0 +1,541 @@
+{
+  "schema_version": 1,
+  "kind": "release_reliability_round6_dates_and_outside_cohort_control",
+  "recorded_at": "2026-11-27T17:13:09.347371+00:00",
+  "review_status": "independent_human_review_pending",
+  "production_eligible": false,
+  "raw_cache_root": "$RELIABILITY_ROUND6_CACHE/dates-control",
+  "source_policy": "Primary official public anonymous sources only. Known Cisco robots403 respected: search-index excerpts are research only, not original documents. No login, challenge bypass, mirror, alternate-host bypass, private artifacts or customer information.",
+  "scope": {
+    "cisco_train": "IOS XE 17.12",
+    "cisco_models": [
+      "Catalyst 9200",
+      "Catalyst 9300"
+    ],
+    "arista_train": "EOS 4.33",
+    "arista_models": [
+      "720XP",
+      "720DP"
+    ],
+    "outside_cohort_control": "Cisco IOS XE 17.9.6"
+  },
+  "result": {
+    "new_admissible_model_bound_binary_release_dates": 0,
+    "cisco_1712_model_dates": "unknown",
+    "arista_433_model_dates": "unknown",
+    "denominator_complete": false,
+    "catalogue_changes": 0
+  },
+  "control_17_9_6": {
+    "outside_cohort": true,
+    "result": "not_established",
+    "allowed_result_enum": [
+      "deferred",
+      "withdrawn",
+      "superseded_by_17.9.6a_reason_stated",
+      "superseded_reason_unknown",
+      "not_established"
+    ],
+    "withdrawal_status": "unknown",
+    "deferral_status": "unknown",
+    "supersession_status": "unknown",
+    "notice_date": null,
+    "action_date": null,
+    "release_date": null,
+    "reason": "Publisher states a fix in 17.9.6a but the retained evidence does not explicitly state 17.9.6 was superseded, withdrawn or deferred. Fix identity alone cannot establish the replacement relationship; neither supersession enum is justified.",
+    "fresh_evidence_ids": [
+      "c9300-1796a-fix-fresh",
+      "c9300-1796a-caveat-fresh"
+    ],
+    "tried_receipts": [
+      "search01",
+      "search02",
+      "search03"
+    ],
+    "prior_control_already_recorded": true,
+    "prior_control_locator": "docs/research/2026-11-25-round4-cisco.json / id=control-1796a-fix; also docs/research/2026-11-25-publisher-event-sample.json / Cisco C9300 17.9.6a sample",
+    "prior_control": {
+      "id": "control-1796a-fix",
+      "statement": "The 17.9.6a section explicitly provides a fix for CSCwm57734. This proves a bug-fix release identity, not withdrawal of 17.9.6 or a release/action date.",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/whats_new_in_cisco_ios_cupertino_179x.html",
+      "source_locator": "Whats New in Cisco IOS XE Cupertino 17.9.6a",
+      "retrieved_at": "2026-11-25T16:48:07.849674+00:00",
+      "capture_method": "anonymous_origin_http_html",
+      "original_sha256": "a5ce5ab46cd2f84451af144a9b35740c2001918a11d038ad5fb15d42f3c19866",
+      "excerpt_sha256": "3102f64baa7aa2639f6f962c5b4e01105f4e8c86c7882b8d9ce89b46b9f61314",
+      "excerpt_path": "$RELEASE_RELIABILITY_CACHE/cisco/control-1796a-fix.excerpt.txt",
+      "review_status": "review_pending",
+      "fresh_exact_quote_evidence_id": "c9300-1796a-fix-fresh",
+      "prior_exact_quote_location": "docs/research/2026-11-25-round4-cisco.json / control-1796a-fix / quoted_statements; retained original and excerpt hashes rechecked separately"
+    }
+  },
+  "evidence": [
+    {
+      "id": "c9200-1712-book-revision",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200.html",
+      "locator": "Release Notes book / Updated metadata immediately before Book Table of Contents",
+      "quote": "Updated:\n    August 5, 2026",
+      "date_kind": "document_revision",
+      "date": "2026-08-05",
+      "receipt": "search04",
+      "decision": "Rejected as binary release date; labels the book update.",
+      "retrieved_at": "2026-11-27T17:10:54.061Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "99ce0e378d695a5ccefd5555afe3b7cae95d6138fa8cd1705967d8a76ff15901",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9200-1712-book-revision.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "c9200-1712-whatsnew-revision",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200/whats_new_in_cisco_ios_dublin_1712x.html",
+      "locator": "What's New chapter / Updated metadata",
+      "quote": "Updated:\n    August 5, 2026",
+      "date_kind": "document_revision",
+      "date": "2026-08-05",
+      "receipt": "search05",
+      "decision": "Rejected as binary release date; chapter-wide revision.",
+      "retrieved_at": "2026-11-27T17:11:03.015Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "0d447ad26bcb4d3347f999ffc166def998df79f18c43c9967c28b2ebb9ec1176",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9200-1712-whatsnew-revision.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "c9300-1712-images-revision",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300/upgrading_the_switch_software.html",
+      "locator": "Upgrading the Switch Software / Updated metadata",
+      "quote": "Updated:\n    August 5, 2026",
+      "date_kind": "document_revision",
+      "date": "2026-08-05",
+      "receipt": "search04",
+      "decision": "Rejected as binary release date; image chapter metadata.",
+      "retrieved_at": "2026-11-27T17:10:54.061Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "d0114a34924b901030f2da22a78a8934a8c00ed5ee3fc4aca7869344058080db",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9300-1712-images-revision.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "c9300-1712-image",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ol-17-12-9300.pdf",
+      "locator": "Printed page 33 / Software Images / first data row (Release, Image Type, File Name)",
+      "quote": "<td rowspan=\"2\">Cisco IOS XE Dublin 17.12.7</td>\n<td>CAT9K_IOSXE</td>\n<td>cat9k_iosxe.17.12.07.SPA.bin</td>",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "receipt": "search04",
+      "decision": "Image identity only; no release-date column in retained table excerpt.",
+      "retrieved_at": "2026-11-27T17:10:54.061Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "a341d6547f9cb9cafe14f9ce15e14ea0718208da6a40f2476476cd9e5922d2a6",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9300-1712-image.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes",
+      "quote_type": "exact returned tool excerpt including HTML table-cell delimiters"
+    },
+    {
+      "id": "c9200-1712-image",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ol-17-12-9200.pdf",
+      "locator": "Upgrading the Switch Software / Software Images / 17.12.1 row",
+      "quote": "<tr><td>Cisco IOS XE Dublin 17.12.1</td><td>CAT9K_LITE_IOSXE</td><td>cat9k_lite_iosxe.17.12.01.SPA.bin</td></tr>",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "receipt": "search04",
+      "decision": "Image identity only; no date assignment.",
+      "retrieved_at": "2026-11-27T17:10:54.061Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "55668f8b0deffe0c2f56ca2291dfb142700fa6ccfda4d47f3f0e8f21ab0d2f93",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9200-1712-image.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes",
+      "quote_type": "exact returned tool excerpt including HTML table-cell delimiters"
+    },
+    {
+      "id": "c9300-1712-reference-revision",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/command_reference/b_1712_9300_cr.html",
+      "locator": "Command Reference book / Updated metadata",
+      "quote": "Updated:\n    July 28, 2023",
+      "date_kind": "document_revision",
+      "date": "2023-07-28",
+      "receipt": "search08",
+      "decision": "Rejected as binary release date even though coincident with other-platform ISSU date; source labels update.",
+      "retrieved_at": "2026-11-27T17:11:33.190Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "ea7230d0cc0c278c5967c1262135de021d68c83b1257db9b217196732df3fab7",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9300-1712-reference-revision.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "catalyst-recommendation-revision",
+      "source_url": "https://www.cisco.com/c/en/us/support/docs/switches/catalyst-9300-series-switches/214814-recommended-releases-for-catalyst-9200-9.html",
+      "locator": "Revision History / row 24.0 / Publish Date and Comments",
+      "quote": "24.0  | 26-Nov-2025  | Updated 17.15.4 and 17.12.6 to the recommended releases",
+      "date_kind": "document_revision",
+      "date": "2025-11-26",
+      "receipt": "search01",
+      "decision": "Recommendation-document revision; does not assign 17.12.6 binary publication date.",
+      "retrieved_at": "2026-11-27T17:10:29.339Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "937381b89fecc5a4887c47876daf6bb7ca97fcf12281b67b4e12a88ef4afb522",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/catalyst-recommendation-revision.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "arista-release-bulletin-index",
+      "source_url": "https://www.arista.com/en/support/product-documentation",
+      "locator": "Product Bulletins :: EOS / 4.33 entries",
+      "quote": ".EOS Release 4.33.2F\n.EOS Release 4.33.1F\n.EOS Release 4.33.0F",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "receipt": "search07",
+      "decision": "Release bulletin index exists; excerpt states no dates or 720XP/720DP applicability. Previously gated detail route not retried.",
+      "retrieved_at": "2026-11-27T17:11:15.483Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "ed888fbeb3fa3eb18a3a0550adb1993b9a525ca0fe5016b727d47f95279da984",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/arista-release-bulletin-index.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "arista-toi-date-control",
+      "source_url": "https://www.arista.com/en/support/toi/eos-4-33-0f",
+      "locator": "Configurable Transmit Queue 7 / Posted and Updated metadata",
+      "quote": "Posted on October 18, 2024\n    Updated on October 18, 2024",
+      "date_kind": "document_revision",
+      "date": "2024-10-18",
+      "receipt": "search07",
+      "decision": "TOI article metadata, not EOS binary release date. Posted date separately 2024-10-18, date_kind=document_publication.",
+      "retrieved_at": "2026-11-27T17:11:15.483Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "64918c6a416a2fd15ff8ec00fc5d1989c251aed9257096df1552cc6edff75f02",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/arista-toi-date-control.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "arista-certification-control",
+      "source_url": "https://www.arista.com/assets/data/pdf/ComplianceCertifications/2106801.pdf",
+      "locator": "Page 2 / DTR #4 paragraph",
+      "quote": "On 10 April 2025, the following extension was approved via DTR #4",
+      "date_kind": "certification_approval",
+      "date": "2025-04-10",
+      "receipt": "search06",
+      "decision": "Certification approval, not binary publication. This vendor-hosted certification is a rejected date control only, not adopted technical release evidence.",
+      "retrieved_at": "2026-11-27T17:11:09.828Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "fa19872ab761686bd82d82d96d79a5b6bcc0f951e93a83006e9a73be99f4c4bf",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/arista-certification-control.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "c9300-1796a-fix-fresh",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/whats_new_in_cisco_ios_cupertino_179x.html",
+      "locator": "Whats New in Cisco IOS XE Cupertino 17.9.6a / paragraph after heading",
+      "quote": "This release provides a fix for CSCwm57734: Dot1x auth fail vlan can't assign IP with dhcp.",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "receipt": "search03",
+      "decision": "Explicit fix in 17.9.6a; not an explicit withdrawal, deferral or supersession of 17.9.6.",
+      "retrieved_at": "2026-11-27T17:10:45.093Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "6ca18b662aede7d4ecc54153c6aa689e6966c88d1bf80a44fa21b60a97cfbc90",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9300-1796a-fix-fresh.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    },
+    {
+      "id": "c9300-1796a-caveat-fresh",
+      "source_url": "https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/release_notes/ol-17-9-9300/caveats.html",
+      "locator": "Resolved Caveats in Cisco IOS XE Cupertino 17.9.6a / CSCwm57734 row",
+      "quote": "CSCwm57734  | All Models  | Dot1x auth fail vlan can't assign IP with dhcp",
+      "date_kind": "no_date_stated",
+      "date": null,
+      "receipt": "search03",
+      "decision": "Corroborates fix identity in C9300 release notes only; does not state first affected release or replacement relationship.",
+      "retrieved_at": "2026-11-27T17:10:45.093Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "capture_kind": "tool_excerpt",
+      "production_eligible": false,
+      "original_document_sha256": null,
+      "tool_excerpt_sha256": "d0e622c8187c1353b95f0804a145040cde6d3a55b6b56a51b9f16c76b0e6f000",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/c9300-1796a-caveat-fresh.excerpt.json",
+      "fingerprint_scope": "tool_excerpt: locally extracted fact record; not original document bytes"
+    }
+  ],
+  "reused_lifecycle_image": {
+    "url": "https://www.arista.com/assets/images/article/EOS-Life-Cycle-Policy.jpg",
+    "locator": "EOS release support matrix: row Arista EOS 4.33.x; column Initial Release Date; image1220x610, rowy212–263; footer Last Updated",
+    "short_quote": "Arista EOS 4.33.x | 10-Oct-2024; Last Updated: Oct. 23, 2026",
+    "quote_type": "visual_transcription_of_table_cells_and_footer",
+    "retrieved_at": "2026-11-25T18:37:15.106817+00:00",
+    "retrieved_at_precision": "instant",
+    "retrieval_time_basis": "local file modification time at successful bounded anonymous fetch completion",
+    "capture_method": "anonymous_origin_image",
+    "original_sha256": "2f073645658b4caa092351ab8fee8a6141e9ec6acf6243a860fee57621e86f27",
+    "excerpt_sha256": null,
+    "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-eos-lifecycle.jpg",
+    "capture_kind": "original_document",
+    "date_observations": [
+      {
+        "date": "2024-10-10",
+        "date_kind": "train_initial_release_date",
+        "binary_release": null,
+        "model_binding": null
+      },
+      {
+        "date": "2026-10-23",
+        "date_kind": "document_revision"
+      }
+    ],
+    "new_retrieval_claimed": false
+  },
+  "rehashed_existing_captures": [
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/control179-origin.response",
+      "sha256": "a5ce5ab46cd2f84451af144a9b35740c2001918a11d038ad5fb15d42f3c19866",
+      "check": "Existing anonymous public capture rehashed; no origin request",
+      "fingerprint_scope": "original_document"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/control-1796a-fix.excerpt.txt",
+      "sha256": "3102f64baa7aa2639f6f962c5b4e01105f4e8c86c7882b8d9ce89b46b9f61314",
+      "check": "Existing anonymous public capture rehashed; no origin request",
+      "fingerprint_scope": "tool_excerpt"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/coverage-c9300-whatsnew.response",
+      "sha256": "8a37a88819a1b16a38d8e4911bef05b3db27aab3f85dd0c850384cd9fe176ab5",
+      "check": "Existing anonymous public capture rehashed; no origin request",
+      "fingerprint_scope": "original_document"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/cisco/coverage-c9200-whatsnew.response",
+      "sha256": "a30f478f577073da0b48b9e0f30e4494bfd4ebd085756c2745632c990174969c",
+      "check": "Existing anonymous public capture rehashed; no origin request",
+      "fingerprint_scope": "original_document"
+    },
+    {
+      "cache_path": "$RELEASE_RELIABILITY_CACHE/arista/coverage-eos-lifecycle.jpg",
+      "sha256": "2f073645658b4caa092351ab8fee8a6141e9ec6acf6243a860fee57621e86f27",
+      "check": "Existing anonymous public capture rehashed; no origin request",
+      "fingerprint_scope": "original_document"
+    }
+  ],
+  "prior_packets": [
+    {
+      "path": "docs/research/2026-11-27-reliability-public-dates.json",
+      "packet_sha256": "06a53c8ea2add9834b27075ec0f6f8e127feb809726d45dbf3f847f35c6274fa",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-27-reliability-public-dates.md",
+      "packet_sha256": "9dd848531b1559315a13cb54baee6ae756ff486072e6dc2bcd59119a96597c7c",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-26-reliability-cisco-followup.json",
+      "packet_sha256": "25834b1856fee74348d64b7c1635db06b786349989faaa0767cadc7e8838300c",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-26-reliability-cisco-followup.md",
+      "packet_sha256": "e99f8f87c7116eac345d66577e4a2ac90e1176a77671e9ac4109dc4efc83aa0c",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-27-reliability-version-gaps.json",
+      "packet_sha256": "7e559ac69b6ce2b6294f4e582332f0f3238a4a6c5e2e6e2b3235241d3d687744",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-25-round4-cisco.json",
+      "packet_sha256": "69e59e627d08c0cfa84bf2f997f3df4323cc18a54112c93a84e4694e8cf40521",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-25-publisher-event-sample.json",
+      "packet_sha256": "d75fba2dfa2e236cdc9854661b74b3e06a546cacb828e9dc895b7b736282b6e9",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    },
+    {
+      "path": "docs/research/2026-11-25-round4-coverage-arista.json",
+      "packet_sha256": "5186c8a25afc6ec24fffe56adee7959713335564c5ae38237ff9102636d112fe",
+      "fingerprint_scope": "local research packet bytes; not publisher source bytes"
+    }
+  ],
+  "search_receipts": [
+    {
+      "id": "search01",
+      "queries": [
+        "site:www.cisco.com \"17.9.6\" \"17.9.6a\" \"superseded\"",
+        "site:www.cisco.com \"17.9.6\" \"17.9.6a\" \"replaced\"",
+        "site:www.cisco.com \"Catalyst 9300\" \"17.12\" \"Document History\"",
+        "site:www.cisco.com \"Catalyst 9200\" \"17.12\" \"Release Information\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:29.339Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search01.tool.json",
+      "tool_excerpt_sha256": "620fdb1fb6451f43cc4610d297c47c08c690facab43467ad71641a9b2cf62366",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search02",
+      "queries": [
+        "site:www.cisco.com \"17.9.6a\" \"17.9.6\" \"CSC\" \"supersedes\"",
+        "site:www.cisco.com \"17.9.6\" \"deferred\"",
+        "site:www.cisco.com \"17.9.6\" \"withdrawn\"",
+        "site:www.cisco.com \"17.9.6a\" \"replaces\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:37.044Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search02.tool.json",
+      "tool_excerpt_sha256": "0eaf395d161408380f95de52177e34b2e54efc87021b24da298309bb39f59900",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search03",
+      "queries": [
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-9/ \"17.9.6a\" \"CSCwm57734\"",
+        "site:www.cisco.com \"17.9.6\" \"superseded by\"",
+        "site:www.cisco.com \"17.9.6\" \"no longer\"",
+        "site:www.cisco.com \"17.9.6\" \"defer\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:45.093Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search03.tool.json",
+      "tool_excerpt_sha256": "454ee3cb0577dd7ed79e1df4d89e3b252d027d52594e9833e176a9009d1fc17e",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search04",
+      "queries": [
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ \"Document History\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ \"Updated\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ \"Software Images\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ \"Release Date\""
+      ],
+      "retrieved_at": "2026-11-27T17:10:54.061Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search04.tool.json",
+      "tool_excerpt_sha256": "16058ebd6191e40dc06952c0a357677d7d7907c08b816a430f0912df5e8f4526",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search05",
+      "queries": [
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ \"Document Change History\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ \"What's New\" \"Updated\"",
+        "site:www.arista.com \"4.33\" \"720XP\" \"release\" \"date\"",
+        "site:www.arista.com \"4.33\" \"720DP\" \"release\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:03.015Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search05.tool.json",
+      "tool_excerpt_sha256": "4027d0300cf0ac3c8ca248e11124c5c300e94239d9a4eb3bfdfb993bd496149d",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search06",
+      "queries": [
+        "site:arista.com \"4.33.0F\" \"Release\" \"Date\"",
+        "site:arista.com \"4.33\" \"720DP\"",
+        "site:arista.com \"4.33\" \"release information\"",
+        "site:arista.com \"4.33\" \"release notes\" \"720XP\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:09.828Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search06.tool.json",
+      "tool_excerpt_sha256": "7372498c419c57fb59cf14e81b1cad10058469e4ea8e5b31d2a3ccb8c0270692",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search07",
+      "queries": [
+        "site:www.arista.com/en/ \"EOS-4.33\" \"Release Date\"",
+        "site:www.arista.com/en/ \"EOS Release 4.33.0F\"",
+        "site:www.arista.com \"EOS-Life-Cycle-Policy\" \"4.33\"",
+        "site:www.arista.com \"4.33\" \"720XP\" \"Software Download\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:15.483Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search07.tool.json",
+      "tool_excerpt_sha256": "a206387a115480d3f045e7a3c32849f8b0cf0a79ea737c83af4229fcdbbe97a3",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    },
+    {
+      "id": "search08",
+      "queries": [
+        "site:www.arista.com/assets/images/ \"EOS\" \"4.33\"",
+        "site:www.arista.com/en/support/ \"4.33\" \"Initial Release Date\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9300/software/release/17-12/release_notes/ \"July\" \"2023\"",
+        "site:www.cisco.com/c/en/us/td/docs/switches/lan/catalyst9200/software/release/17-12/release_notes/ \"Release Information\""
+      ],
+      "retrieved_at": "2026-11-27T17:11:33.190Z",
+      "retrieval_time_basis": "Local time immediately after web tool returned; origin retrieval instant unknown",
+      "cache_path": "$RELIABILITY_ROUND6_CACHE/dates-control/search08.tool.json",
+      "tool_excerpt_sha256": "c01a60152f076a073c5088592aaacf989433e84ac90b87f2fcfcb61af6835bc8",
+      "original_document_sha256": null,
+      "fingerprint_scope": "tool_excerpt: complete locally serialized returned tool object, not publisher document bytes"
+    }
+  ],
+  "bounded_search": {
+    "search_batches": 8,
+    "queries": 32,
+    "source_types_tried": [
+      "document-history/revision searches",
+      "What's New chapters",
+      "release-information and release-note/product-documentation indices",
+      "Cisco software-image tables",
+      "Arista lifecycle image (existing original capture rehashed)",
+      "Arista certification/TOI dates (rejected controls)"
+    ],
+    "origin_requests": 0,
+    "detail_opens": 0,
+    "known_cisco_robots_status": 403,
+    "robots_refetch": false,
+    "blocked_routes_retried": false,
+    "rss_dates_promoted": false,
+    "query_result_caution": "Mixed search responses are retained without claiming per-query empty results or complete historical enumeration.",
+    "stop_reason": "Eight targeted batches reached a repetitive mixture of document updates, image identities, release indexes, TOI and certification material. No explicit binary/model/date assignment or 17.9.6 publisher action found. Unknown is retained; no claim that public evidence cannot exist."
+  },
+  "date_policy": [
+    "Document revision dates always date_kind=document_revision, including rows headed Date/Release in document change histories.",
+    "Arista lifecycle train initial date has no literal 4.33 binary or 720XP/720DP assignment.",
+    "RSS announcement dates, advisory notice dates, certification dates and TOI article metadata never substitute for binary release dates.",
+    "Notice date, publisher action date and software release date stay separate; all three control dates are null."
+  ]
+}

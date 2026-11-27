@@ -5,6 +5,21 @@ collected. It does not rank vendor quality, measure exposure or count actual
 customer upgrades. Independent human review is pending. Missing evidence stays
 unknown rather than zero.
 
+Respin records now use a unique vendor/train/predecessor/follow-up identity.
+Original platform observations remain attached; conflicting dates or intervals
+stay unknown on the union. A resolved predecessor replaces the redundant null
+identity, without assigning that predecessor to another platform. Annual counts
+use the scoped observations and count distinct follow-up versions.
+
+`build_reason` is independent of `possible_respin` timing: `security_fix` needs an
+advisory naming the fixed literal; `defect_fix` needs an explicit non-security
+predecessor fix; `both` needs both proofs. Otherwise it is `unknown`. Reason proofs
+retain advisory identifiers, locators, quotes, stated models and source receipts.
+They do not establish model applicability, a software date, a corrective respin,
+or the absence of other changes. The [round-six findings](research/2026-11-27-round6-summary.md)
+and pending review packet retain the unresolved Cisco cases. Historical roots
+without the optional `respin_identity` discriminator keep their original semantics.
+
 ## Scope and sources
 
 The initial configured trains are IOS XE 17.12 (Catalyst 9200/9300), AOS-CX 10.13
